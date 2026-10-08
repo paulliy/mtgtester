@@ -1,3 +1,4 @@
+import { counterCount } from '../state/counters';
 /**
  * `Value` — a number that is either constant or computed from game state (ADR 0005). This is
  * the abstraction X spells, characteristic-defining abilities (Tarmogoyf), and "equal to its
@@ -17,10 +18,30 @@
  * silent zero would make an X-valued effect quietly do nothing (brief §6.3).
  */
 
+import { assertNever } from '../utils/assert-never';
 import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
+import type { ObjectFacts, SourceCastState } from './source-identity';
 import type { EffectRef } from './ability';
+
+/** Specialized numeric consumers must reject referents lacking a proven lifetime path. */
+export function assertNumericReference(
+  reference: EffectRef,
+): asserts reference is number | 'source' | 'triggerObject' {
+  if (typeof reference === 'number') return;
+  switch (reference) {
+    case 'source':
+    case 'triggerObject':
+      return;
+    case 'attachedToSource':
+      throw new Error('numeric attachment references have no supported lifetime contract');
+    case 'eventPlayer':
+      throw new Error('numeric permanent reference cannot refer to an event player');
+    default:
+      assertNever(reference, 'numeric effect reference');
+  }
+}
 
 /** What a resolving ability knows that the board alone does not. */
 export interface ValueScope {
@@ -28,6 +49,12 @@ export interface ValueScope {
   controllerId: PlayerId;
   /** The source object's card id, for `self`-relative selectors. */
   sourceCardId?: string;
+  /** Exact source incarnation and its departure facts for CR 608.2h. */
+  sourceObjectId?: string;
+  sourceFacts?: ObjectFacts;
+  /** A resolving spell's selected stack characteristics, including announced X. */
+  resolvingSourceManaValue?: number;
+  sourceCastState?: SourceCastState;
   /** The X announced when the spell was cast (CR 601.2b). */
   x?: number;
   /** Damage that caused the trigger — Old Gnawbone's "that many". */
@@ -64,6 +91,10 @@ export interface ValueScope {
    * looking the card up at resolution, which would find a new object blinked in response.
    */
   eventObjectId?: string;
+  /** A zone-change event may find only the new object in its first public destination. */
+  eventObjectDestinationId?: string;
+  /** Last known facts of that exact event incarnation, refreshed immediately before it leaves. */
+  triggerObjectFacts?: ObjectFacts;
   /** Total counters on an activated ability's source, captured before costs are paid. */
   sourceCountersTotal?: number;
   /**
@@ -85,11 +116,14 @@ export type TriggerScope = Pick<
   | 'triggerCount'
   | 'spellManaValue'
   | 'manaSpent'
+  | 'treasureManaSpent'
   | 'eventPlayerId'
   | 'stationPower'
   | 'sourceCountersTotal'
   | 'triggerObjectId'
   | 'eventObjectId'
+  | 'eventObjectDestinationId'
+  | 'triggerObjectFacts'
 >;
 
 export type Value =
@@ -205,8 +239,52 @@ export function isDynamicValue(value: Value): boolean {
     case 'negate':
     case 'times':
       return isDynamicValue(value.of);
-    default:
+    case 'cardTypesInAllGraveyards':
+    case 'countPermanents':
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'aurasYouControlAttachedToCreatures':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'devotionTo':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'countersOnSelf':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       return true;
+    default:
+      return assertNever(value, 'isDynamicValue');
   }
 }
 
@@ -220,8 +298,51 @@ export function needsScope(value: Value): boolean {
     case 'negate':
     case 'times':
       return needsScope(value.of);
-    default:
+    case 'countPermanents':
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'aurasYouControlAttachedToCreatures':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'devotionTo':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'countersOnSelf':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'commanderCastCount':
+    case 'commanderIdentityColorCount':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       return true;
+    default:
+      return assertNever(value, 'needsScope');
   }
 }
 
@@ -284,7 +405,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.sourceCounters === undefined) {
         throw new Error('engine bug: source counters need a layer evaluation scope');
       }
-      return scope.sourceCounters[value.counter] ?? 0;
+      return counterCount(scope.sourceCounters, value.counter);
     case 'countPermanents':
       if (!scope?.countPermanents) {
         throw new Error('engine bug: value countPermanents needs a layer evaluation scope');
@@ -319,9 +440,46 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       const player = ctx.state.players.find((p) => p.id === scope.controllerId);
       return player?.commanderColorIdentity.length ?? 0;
     }
-    default:
+    case 'countTappedPermanents':
+    case 'countPermanentsControlledByTarget':
+    case 'countCardsInZone':
+    case 'colorsAmongPermanents':
+    case 'countOpponents':
+    case 'greatestToughnessAmong':
+    case 'greatestPowerAmong':
+    case 'greatestManaValueAmong':
+    case 'totalPowerOfAttackers':
+    case 'totalPowerAmong':
+    case 'xValue':
+    case 'optionalCostCount':
+    case 'damageDealt':
+    case 'triggerCount':
+    case 'spellManaValue':
+    case 'manaSpent':
+    case 'treasureManaSpent':
+    case 'energyPaid':
+    case 'energyAvailable':
+    case 'stationPower':
+    case 'allCountersOnSelf':
+    case 'countersOnTarget':
+    case 'manaValueOfTarget':
+    case 'lifeTotal':
+    case 'countOpponentsWithFewerCreatures':
+    case 'creaturesDiedThisTurn':
+    case 'powerOfSource':
+    case 'toughnessOfSource':
+    case 'powerOfTarget':
+    case 'opponentsLostLifeThisTurn':
+    case 'powerOfTriggerObject':
+    case 'cardsInTargetHand':
+    case 'tappedCreaturesControlledByTarget':
+    case 'attackingCreatures':
+    case 'spellsCastThisTurn':
+    case 'countersOnTriggerObject':
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,
       );
+    default:
+      return assertNever(value, 'layer Value');
   }
 }

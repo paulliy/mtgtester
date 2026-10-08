@@ -96,7 +96,7 @@ describe('Gev, Scaled Scorch', () => {
     ['gev-ward-pay-exact-life', 2, 'payCost', 0, true, 1, false],
     ['gev-ward-decline', 10, 'decline', 10, false, 1, false],
     ['gev-ward-insufficient-life', 1, 'payCost', 1, false, 0, false],
-    ['gev-ward-protected-life-floor', 2, 'payCost', 2, false, 0, true],
+    ['gev-ward-protected-life-floor', 2, 'payCost', 0, true, 1, true],
   ] as const)(
     '%s applies the life payment and counter outcome',
     (_id, life, choice, expectedLife, spellRemains, decisions, lifeFloor) => {

@@ -4046,20 +4046,32 @@
     },
     "73413bd5-8c40-4d45-8f05-c20c39ee4017": {
       "name": "Madame Null, Power Broker",
-      "oracleSha256": "ecce90e398a9e1b95406e24aef4c745d0798766a21b1477bcda9253a7bdda293",
-      "implementationStatus": "implemented-reviewed",
+      "oracleSha256": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it.",
           "implementation": [
-            "mayPayLifeForTriggerPowerAndCounter looking up the entering creature by cardId"
+            "mayPayLifeForTriggerPowerAndCounter: exact event-object facts and last-known power; payLife affordability; counters only on the bound incarnation"
           ],
           "engineTestIds": [
             "madame-null-pay-life-for-counters",
             "madame-null-decline",
-            "madame-null-not-self-or-opponent"
+            "madame-null-not-self-or-opponent",
+            "madame-null-viewer-pay-life",
+            "madame-null-viewer-decline",
+            "madame-null-viewer-unfunded",
+            "madame-null-viewer-blink",
+            "madame-null-viewer-destroyed"
           ],
-          "viewerScenarioIds": []
+          "viewerScenarioIds": [
+            "madame-null-viewer-pay-life",
+            "madame-null-viewer-decline",
+            "madame-null-viewer-unfunded",
+            "madame-null-viewer-blink",
+            "madame-null-viewer-destroyed"
+          ],
+          "id": "madame-null-event-identity-life-payment"
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4324,6 +4336,2369 @@
           ],
           "engineTestIds": ["Phyrexian Tower must allow its chosen sacrifice"],
           "viewerScenarioIds": ["regression-viewer-mana-source-order"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5cf86603-cc47-4644-890a-0997c694817f": {
+      "name": "Sivitri, Dragon Master",
+      "oracleSha256": "f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments.",
+      "clauses": [
+        {
+          "oracleText": "+1: Until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays 2 life for each of those creatures.",
+          "implementation": [
+            "unsupported: The attack-tax loyalty ability is an executable noOp; the engine has no implementation of its required attack payments."
+          ],
+          "engineTestIds": ["sivitri-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "941c9acd-2773-456a-88d5-0537735f93c6": {
+      "name": "Zurgo and Ojutai",
+      "oracleSha256": "45392f93794edf49d1b74a1d73be74a4c4ce7f0815f3f49262a78b6a94618493",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented.",
+      "clauses": [
+        {
+          "oracleText": "Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. You may return one of those Dragons to its owner's hand.",
+          "implementation": [
+            "unsupported: The combat-damage look/select/order/optional-return clause is an executable noOp; the linked choices are not implemented."
+          ],
+          "engineTestIds": ["zurgo-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "efd8dc6c-8233-45b2-99bd-e38ca2e0b35f": {
+      "name": "Forbidding Spirit",
+      "oracleSha256": "a15c65a6ecf3766c5ab5a38ef6ed59680bbd503c8bb0098a1924f2cf7fe2e9fc",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The enters-the-battlefield attack-tax trigger is an executable noOp; the engine has no implementation of its required attack payments through the next turn.",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {2} for each of those creatures.",
+          "implementation": [
+            "unsupported: The enters-the-battlefield attack-tax trigger is an executable noOp; the engine has no implementation of its required attack payments through the next turn."
+          ],
+          "engineTestIds": ["forbidding-spirit-noop-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "099b8d2c-b482-48dd-b6bc-dedf546d66c5": {
+      "name": "Marang River Regent // Coil and Catch",
+      "oracleSha256": "a61b03077e75c21a2b78e2698ff0ead3653977e2e29c32b34a6fb84e73b72f8d",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce.",
+      "clauses": [
+        {
+          "oracleText": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
+          "implementation": [
+            "unsupported: Coil and Catch’s draw-three/discard-one clause was replaced with a targeted bounce."
+          ],
+          "engineTestIds": ["coil-and-catch-substitute-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6d4e7943-1fdf-4085-8af0-658badbd0cb8": {
+      "name": "Monster Manual // Zoological Study",
+      "oracleSha256": "f1a88cb9b7a2583e8fec1dea7413b1c0476db8c46cffd38a9da7928858a7ba1e",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Zoological Study’s mill-five and milled-creature recovery Adventure was omitted.",
+      "clauses": [
+        {
+          "oracleText": "Mill five cards, then return a creature card milled this way to your hand. (Then exile this card. You may cast the artifact later from exile.)",
+          "implementation": [
+            "unsupported: Zoological Study’s mill-five and milled-creature recovery Adventure was omitted."
+          ],
+          "engineTestIds": ["zoological-study-omission-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b": {
+      "name": "Bloomvine Regent // Claim Territory",
+      "oracleSha256": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search.",
+      "clauses": [
+        {
+          "oracleText": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
+          "implementation": [
+            "unsupported: Claim Territory’s two-Forest split-destination search was replaced with a single basic-land-to-hand search."
+          ],
+          "engineTestIds": ["claim-territory-substitute-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cc187110-1148-4090-bbb8-e205694a39f5": {
+      "name": "Counterspell",
+      "oracleSha256": "6a3c9be444a6680f94cee9f52ce8059456a80b77f407c19a6c004105138b1eec",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "spell-only stack targets",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "counterspell-target-controller-P1",
+            "counterspell-target-controller-P2",
+            "counterspell-reject-self",
+            "counterspell-spell-only-targets"
+          ],
+          "viewerScenarioIds": [
+            "counterspell-viewer-own-counter",
+            "counterspell-viewer-opponent-counter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3407fe41-fdd3-4119-8f70-4bc4590a379f": {
+      "name": "Negate",
+      "oracleSha256": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "negate-target-controller-P1",
+            "negate-target-controller-P2",
+            "negate-reject-self",
+            "negate-spell-only-targets",
+            "Negate-reject-creature"
+          ],
+          "viewerScenarioIds": ["negate-viewer-own-counter", "negate-viewer-opponent-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c61fe162-2202-4e56-9ba0-393547f9875f": {
+      "name": "Mana Leak",
+      "oracleSha256": "03099f6c339bfd576aa3e49f1c4da939008e5b5191c5f3531181a570f22d2ba0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell unless its controller pays {3}.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "spell-only stack targets",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "mana-leak-target-controller-P1",
+            "mana-leak-target-controller-P2",
+            "mana-leak-reject-self",
+            "mana-leak-spell-only-targets",
+            "mana-leak-controller-pays-P1",
+            "mana-leak-controller-pays-P2"
+          ],
+          "viewerScenarioIds": ["mana-leak-viewer-own-counter", "mana-leak-viewer-opponent-counter"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3adc3af3-5086-4d61-b38c-c1dddeaeebe6": {
+      "name": "Stubborn Denial",
+      "oracleSha256": "bdaa41055aa2184ee87b53e0f78353afe78283a064ccc310e3e6984e5c136f40",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell unless its controller pays {1}.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "normal casting, cost payment, and counter resolution"
+          ],
+          "engineTestIds": [
+            "stubborn-denial-target-controller-P1",
+            "stubborn-denial-target-controller-P2",
+            "stubborn-denial-reject-self",
+            "stubborn-denial-spell-only-targets",
+            "Stubborn Denial-reject-creature",
+            "stubborn-denial-controller-pays-P1",
+            "stubborn-denial-controller-pays-P2"
+          ],
+          "viewerScenarioIds": [
+            "stubborn-denial-viewer-own-counter",
+            "stubborn-denial-viewer-opponent-counter"
+          ]
+        },
+        {
+          "oracleText": "Ferocious — If you control a creature with power 4 or greater, counter that spell instead.",
+          "implementation": [
+            "controller-neutral spell target legality",
+            "noncreature restriction",
+            "resolution-time Ferocious condition"
+          ],
+          "engineTestIds": [
+            "stubborn-denial-ferocious-P1",
+            "stubborn-denial-ferocious-P2",
+            "stubborn-denial-controller-pays-P1",
+            "stubborn-denial-controller-pays-P2"
+          ],
+          "viewerScenarioIds": [
+            "stubborn-denial-viewer-own-counter",
+            "stubborn-denial-viewer-opponent-counter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d75b9c82-1b49-4c3e-a1b5-aeef57d6644b": {
+      "name": "Cyclonic Rift",
+      "oracleSha256": "e7bcda93b9a5eb7da57ef672cc3d98c8ef99ae5f56ffd1c15eeeb84d5cdace66",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return target nonland permanent you don't control to its owner's hand.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Cyclonic Rift overload affects protected opposing nonlands and leaves yours and lands",
+            "cyclonic-rift-normal-target-restrictions"
+          ],
+          "viewerScenarioIds": ["cyclonic-rift-viewer-normal", "cyclonic-rift-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {6}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Cyclonic Rift overload affects protected opposing nonlands and leaves yours and lands",
+            "cyclonic-rift-normal-target-restrictions"
+          ],
+          "viewerScenarioIds": ["cyclonic-rift-viewer-normal", "cyclonic-rift-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3567c3c8-b3c7-45b7-935b-b1fdbc973720": {
+      "name": "Vandalblast",
+      "oracleSha256": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target artifact you don't control.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Vandalblast overload destroys opposing artifacts through protection but honors indestructible",
+            "normal Vandalblast still targets exactly one legal opposing artifact"
+          ],
+          "viewerScenarioIds": ["vandalblast-viewer-normal", "vandalblast-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {4}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "Vandalblast overload destroys opposing artifacts through protection but honors indestructible",
+            "normal Vandalblast still targets exactly one legal opposing artifact"
+          ],
+          "viewerScenarioIds": ["vandalblast-viewer-normal", "vandalblast-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48ddba1e-2ad7-463f-9307-d2379a800e51": {
+      "name": "Mizzium Mortars",
+      "oracleSha256": "a8b84af0101a57acbab827a74a893cff542c2df54914b65eda9d28335a16642a",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Mizzium Mortars deals 4 damage to target creature you don't control.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Mortars-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {3}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Mortars-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "99fd4b51-1698-4168-9366-a6ea2df22361": {
+      "name": "Electrickery",
+      "oracleSha256": "ea68376ab3f57c56cfc902f12a38c8a3c0cf553648d70a22cf98d679391c41df",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Electrickery deals 1 damage to target creature you don't control.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Electrickery-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Electrickery-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "02d998a6-0afd-4be1-a209-05618fcc43ea": {
+      "name": "Mizzium Skin",
+      "oracleSha256": "aa793c5b072acf01aa3eb2ecf691e780b27b2768f1c6f0d989f9ab22a80bf6fa",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted.",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gets +0/+1 and gains hexproof until end of turn.",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Skin-overload-contained"],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Overload {1}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "unsupported: Unsupported Overload scope has no faithful executable alternative; no substitute effect is permitted."
+          ],
+          "engineTestIds": ["Mizzium Skin-overload-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b01d61cc-9844-4191-86a0-f2db6d42d6e5": {
+      "name": "Damn",
+      "oracleSha256": "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target creature. A creature destroyed this way can't be regenerated.",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "damn-overload-destroys-each-creature-without-regeneration",
+            "damn-normal-targets-one-creature-and-prevents-regeneration",
+            "damn-simultaneous-indestructible"
+          ],
+          "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
+        },
+        {
+          "oracleText": "Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "guarded explicit Overload ability",
+            "normal and alternative casting, cost payment, and zone transitions"
+          ],
+          "engineTestIds": [
+            "damn-overload-destroys-each-creature-without-regeneration",
+            "damn-normal-targets-one-creature-and-prevents-regeneration"
+          ],
+          "viewerScenarioIds": ["damn-viewer-normal", "damn-viewer-overload"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0296d57e-e5b9-456f-bb21-eb584adefb4c": {
+      "name": "Gollum, Silent Slinker // Meager Meal",
+      "oracleSha256": "f8a80a8a9ac6f361fad42de176c66285eb8752ada6fe734511074149f7414ad9",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Put a +1/+1 counter on up to one target creature. Target player gains 2 life. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Meager Meal: unrecognized rules text: \"Put a +1/+1 counter on up to one target creature. Target player gains 2 life.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Meager Meal: unrecognized rules text: \"Put a +1/+1 counter on up to one target creature. Target player gains 2 life.\""
+    },
+    "04fbb7aa-0dd4-4ac6-837d-822227fb6356": {
+      "name": "Faerie Guidemother // Gift of the Fae",
+      "oracleSha256": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+1 and gains flying until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["gift-of-the-fae-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "09193c40-538c-4154-a671-076eece35e54": {
+      "name": "Tuinvale Treefolk // Oaken Boon",
+      "oracleSha256": "7544b8308d45410e86f6f9c14d264a7033c5a0eb6b2536915a7be277e4491b07",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Put two +1/+1 counters on target creature. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["oaken-boon-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0961b68d-bb0c-4bfb-ad78-01f90b3b97c8": {
+      "name": "Amethyst Dragon // Explosive Crystal",
+      "oracleSha256": "f1e4440c61a9f4d5942c2589cda75f6a7ce50a02bf2cc4bb1e93c99481355a1b",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Explosive Crystal deals 4 damage divided as you choose among any number of targets. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Explosive Crystal: unrecognized rules text: \"~ deals 4 damage divided as you choose among any number of targets.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Explosive Crystal: unrecognized rules text: \"~ deals 4 damage divided as you choose among any number of targets.\""
+    },
+    "09f09d0a-6054-4545-b81e-0295773cc5f0": {
+      "name": "The Arkenstone // Seek the Heart",
+      "oracleSha256": "e0502f8d5121134d8f7045ff4780abfe7fe98efaba83cf9db6b984784d16d68f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle. (Then exile this card. You may cast the artifact later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Seek the Heart: unrecognized rules text: \"Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Seek the Heart: unrecognized rules text: \"Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle.\""
+    },
+    "0f222f3d-f02b-42b9-aedf-fb7ed92d4889": {
+      "name": "Two-Headed Hunter // Twice the Rage",
+      "oracleSha256": "70dec740af0e3e6c4f015d8d470f00534cff0f462eee0ec033eb51718854f54d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gains double strike until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["twice-the-rage-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "105aea98-8eb9-4fb2-a0cb-7c7513317c5b": {
+      "name": "Twining Twins // Swift Spiral",
+      "oracleSha256": "f11ba0e7da5bb2a6cde3005674f15eddd0fc5f3f7199c2ca7bc7b40628f15186",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+          "implementation": [
+            "explicit unsupported spell clause: Swift Spiral: unrecognized rules text: \"Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Swift Spiral: unrecognized rules text: \"Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step.\""
+    },
+    "10c0f814-e302-49ff-aded-1b8d8424fd60": {
+      "name": "Foulmire Knight // Profane Insight",
+      "oracleSha256": "6147ece0c740e8e6f6b52e7a7fc85e9010317a91cca56c6c02c91290cb99d0e4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "You draw a card and you lose 1 life. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana",
+            "free-face",
+            "free-face Cascade limit",
+            "face-impulse-permission",
+            "face-impulse-lab"
+          ],
+          "viewerScenarioIds": [
+            "profane-insight-viewer-normal-face",
+            "mosswort-viewer-free-adventure-face",
+            "profane-insight-viewer-impulse-face"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "11ad6e75-9bbd-40ea-b04a-e6a61db3bcda": {
+      "name": "Smitten Swordmaster // Curry Favor",
+      "oracleSha256": "95c85cc00ff930a70266794bc2730818ca201c8039a2a2ffbc84459b519f2160",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You gain X life and each opponent loses X life, where X is the number of Knights you control.",
+          "implementation": [
+            "explicit unsupported spell clause: Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Curry Favor: unrecognized rules text: \"You gain X life and each opponent loses X life, where X is the number of Knights you control.\""
+    },
+    "1c751201-24ba-4e5c-bf44-71c3e4693a92": {
+      "name": "Conceited Witch // Price of Beauty",
+      "oracleSha256": "23bbae1af85f057688108e60ba2342889e0d84b5b418629904999968a4f668f1",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Create a Wicked Role token attached to target creature you control. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Price of Beauty: unrecognized rules text: \"Create a Wicked Role token attached to target creature you control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Price of Beauty: unrecognized rules text: \"Create a Wicked Role token attached to target creature you control.\""
+    },
+    "1f9efad1-9f51-47aa-a5a7-9c8103435a01": {
+      "name": "Hypnotic Sprite // Mesmeric Glare",
+      "oracleSha256": "7e2a0716669c18aa4a333053d947377e29279e27ac99cba374b396b5d9016ebc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell with mana value 3 or less. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Mesmeric Glare: unrecognized rules text: \"Counter target spell with mana value 3 or less.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Mesmeric Glare: unrecognized rules text: \"Counter target spell with mana value 3 or less.\""
+    },
+    "22d82f4c-2896-477e-8d20-8fe43acd4ba2": {
+      "name": "Picklock Prankster // Free the Fae",
+      "oracleSha256": "8978c741c951dc259bb2025586aa8bff8167e754b21d92f04a5ef62dbd001951",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Mill four cards. Then put an instant, sorcery, or Faerie card from among the milled cards into your hand.",
+          "implementation": [
+            "explicit unsupported spell clause: Free the Fae: unrecognized rules text: \"Mill four cards. Then put an instant, sorcery, or Faerie card from among the milled cards into your hand.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Free the Fae: unrecognized rules text: \"Mill four cards. Then put an instant, sorcery, or Faerie card from among the milled cards into your hand.\""
+    },
+    "23cda76b-6e47-4922-a38d-93f7aae1eb00": {
+      "name": "Dirgur Island Dragon // Skimming Strike",
+      "oracleSha256": "9e682154b339327c917e7c35f867307e9bd92a9ca55394fadce81e2479b87ad6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Tap up to one target creature. Draw a card. (Then shuffle this card into its owner's library.)",
+          "implementation": [
+            "explicit unsupported spell clause: Skimming Strike: unrecognized rules text: \"Tap up to one target creature. Draw a card.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Skimming Strike: unrecognized rules text: \"Tap up to one target creature. Draw a card.\""
+    },
+    "27e17542-549b-4c05-8091-c10a245c916b": {
+      "name": "Great Ugly-Looking Goblin // Clap! Snap!",
+      "oracleSha256": "6d89104f9c19a53bdce3b26d7bd675305cd296e5d138be404ee0c8e9c9cf955a",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Amass Goblins 2. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Clap! Snap!: unrecognized rules text: \"Amass Goblins 2.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Clap! Snap!: unrecognized rules text: \"Amass Goblins 2.\""
+    },
+    "288da486-393c-4995-ad02-c5093a71970d": {
+      "name": "Beorn, Reluctant Host // Till and Tend",
+      "oracleSha256": "721dbf7cde3634c197fc3353c980ae9b0bd5ba0bfc635d24518ed6b90d2fb4f4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Till and Tend: unrecognized rules text: \"You may play an additional land this turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Till and Tend: unrecognized rules text: \"You may play an additional land this turn.\""
+    },
+    "38503d34-f4f9-4eeb-9b1e-4fec1df921b3": {
+      "name": "An Unexpected Party // At the Door",
+      "oracleSha256": "185a996cf70329dfb715d86b95f8236ea44428f7633ff11979461e0019b679db",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create X 2/2 red Dwarf creature tokens. (Then exile this card. You may cast the enchantment later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["at-the-door-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "396b088d-f9af-4ee1-843f-dbe1633f9cc8": {
+      "name": "Obyra's Attendants // Desperate Parry",
+      "oracleSha256": "f3a83ae1eb6eeda1fd96104de73e60b67b686db86e4eab26355ab38d8374b1e0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets -4/-0 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["desperate-parry-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3ef02f2b-b611-40c3-a1d5-8b34989643cf": {
+      "name": "Pollen-Shield Hare // Hare Raising",
+      "oracleSha256": "e139ce1467890defe4570012d05bc71e1a9f3ab90acd017ac9b18133ededd3e1",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains vigilance and gets +X/+X until end of turn, where X is the number of creatures you control.",
+          "implementation": [
+            "explicit unsupported spell clause: Hare Raising: unrecognized rules text: \"Target creature you control gains vigilance and gets +X/+X until end of turn, where X is the number of creatures you control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Hare Raising: unrecognized rules text: \"Target creature you control gains vigilance and gets +X/+X until end of turn, where X is the number of creatures you control.\""
+    },
+    "3fb5fe93-f61a-46bc-85ef-419ed1ea3522": {
+      "name": "Stonehide Ancient // Warning Tremor",
+      "oracleSha256": "54d28d41801700b34e48dc3ca0abc3bf58b3b9392c525366ae3ea71994ae7bb2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Warning Tremor deals 2 damage to any target.\nThe next Dragon spell you cast costs {2} less to cast.",
+          "implementation": [
+            "explicit unsupported spell clause: Warning Tremor: unrecognized rules text: \"The next Dragon spell you cast costs {2} less to cast.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Warning Tremor: unrecognized rules text: \"The next Dragon spell you cast costs {2} less to cast.\""
+    },
+    "496c9633-ff17-48df-9b24-1d8cbfd06126": {
+      "name": "Garenbrig Carver // Shield's Might",
+      "oracleSha256": "dff2740deec27a0c8c11296690a612761fecd2de81f776acbd6fb51fcb012e35",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["shields-might-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4cc014f3-05e0-442e-9dee-03eab1aa65a3": {
+      "name": "Lindblum, Industrial Regency // Mage Siege",
+      "oracleSha256": "80ab53e52dcf211b07b9bb0a5678f1d8afaac6ac0a9c2b9bab7c76a406426ec1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create a 0/1 black Wizard creature token with \"Whenever you cast a noncreature spell, this token deals 1 damage to each opponent.\"",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["mage-siege-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4e34a49d-f031-48ac-a458-97b79124b76c": {
+      "name": "Midgar, City of Mako // Reactor Raid",
+      "oracleSha256": "3ff3a77164f4eefb79fd5179b7f8ab1405381c8ea0b66f5409e3166918d8a3b9",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may sacrifice an artifact or creature. If you do, draw two cards. (Then exile this card. You may play the land later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Reactor Raid: unrecognized rules text: \"You may sacrifice an artifact or creature. If you do, draw two cards.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Reactor Raid: unrecognized rules text: \"You may sacrifice an artifact or creature. If you do, draw two cards.\""
+    },
+    "4f4358cb-59df-46d9-be27-69929f5a615c": {
+      "name": "Ishgard, the Holy See // Faith & Grief",
+      "oracleSha256": "ef44e30f600f256db46e08f62fb1105de5fff5f2affbfe630e424aee16b7f5fb",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Return up to two target artifact and/or enchantment cards from your graveyard to your hand. (Then exile this card. You may play the land later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Faith & Grief: unrecognized rules text: \"Return up to two target artifact and/or enchantment cards from your graveyard to your hand.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Faith & Grief: unrecognized rules text: \"Return up to two target artifact and/or enchantment cards from your graveyard to your hand.\""
+    },
+    "5005df36-a100-492d-89b9-e221793cfb56": {
+      "name": "Tempest Hart // Scan the Clouds",
+      "oracleSha256": "cfd60af08656def49aaf5e3cb2c6587d40c591abb89e8e7c086b8406c39aae8a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Draw two cards, then discard two cards. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["scan-the-clouds-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "50bee80e-89df-48c2-b608-ba66ff3e794a": {
+      "name": "Imodane's Recruiter // Train Troops",
+      "oracleSha256": "ab0ee450b6d1eff6d00fa4c688cb9c5f2b92d9c062062eda4647825866b5c35c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create two 2/2 white Knight creature tokens with vigilance. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["train-troops-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "52e439d0-a263-4d53-9ae3-fa1f8aa8293e": {
+      "name": "Embereth Shieldbreaker // Battle Display",
+      "oracleSha256": "b8baefc955e29763b993cc5c44d90dc5baab93aeadf18d720331478d7a7b517b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy target artifact. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["battle-display-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "56b0cb64-b886-413e-bb20-392bf12d3926": {
+      "name": "Crystal Dragon // Rob the Hoard",
+      "oracleSha256": "01325c8dd9bb53ff36a07f8d7adebb407a75f90fc3da63121683d0ba8f78fbab",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Return target artifact, enchantment, or legendary card from your graveyard to your hand. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Rob the Hoard: unrecognized rules text: \"Return target artifact, enchantment, or legendary card from your graveyard to your hand.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Rob the Hoard: unrecognized rules text: \"Return target artifact, enchantment, or legendary card from your graveyard to your hand.\""
+    },
+    "5df44b8d-b337-49d8-8427-34253f52cb47": {
+      "name": "Decadent Dragon // Expensive Taste",
+      "oracleSha256": "f526863c10d25ef90de79016ff4dfe96da4730d89ba31714f6ac42760b8dfc27",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.",
+          "implementation": [
+            "explicit unsupported spell clause: Expensive Taste: unrecognized rules text: \"Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Expensive Taste: unrecognized rules text: \"Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.\""
+    },
+    "5f2b3ea8-99ee-47a4-8a1c-4b27478d524c": {
+      "name": "Zanarkand, Ancient Metropolis // Lasting Fayth",
+      "oracleSha256": "7df6a6321a1f34d6c704cba92922a1920876521d88dd4961582a566511308503",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Create a 1/1 colorless Hero creature token. Put a +1/+1 counter on it for each land you control. (Then exile this card. You may play the land later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Lasting Fayth: unrecognized rules text: \"Create a 1/1 colorless Hero creature token. Put a +1/+1 counter on it for each land you control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Lasting Fayth: unrecognized rules text: \"Create a 1/1 colorless Hero creature token. Put a +1/+1 counter on it for each land you control.\""
+    },
+    "639a8804-8513-4ba4-8683-ea1e2e5a9530": {
+      "name": "Rosethorn Acolyte // Seasonal Ritual",
+      "oracleSha256": "cdc42fa27547837c3d909e26b860727ac825f98c1ef4535874aa1e5680f01896",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Add one mana of any color. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Seasonal Ritual: unrecognized rules text: \"Add one mana of any color.\""
+    },
+    "6505a53b-00db-44c4-8eaa-09a1a01451a4": {
+      "name": "Glóin the Mighty // Easy Pickings",
+      "oracleSha256": "1a3fa5186e45225f7060aa55ad0db47276957869b58714f870f621af6f4915ad",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Easy Pickings deals 1 damage to each creature your opponents control. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana",
+            "face-commander-tax"
+          ],
+          "viewerScenarioIds": [
+            "easy-pickings-viewer-normal-face",
+            "easy-pickings-viewer-commander-face"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "68f36dfa-bbd2-4860-b09b-37e35136be72": {
+      "name": "Bramble Familiar // Fetch Quest",
+      "oracleSha256": "8217032a57a5b897949603680b0ebc4da62c1c018f5155b2028cd9e893f6525c",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Mill seven cards. Then put a creature, enchantment, or land card from among the milled cards onto the battlefield.",
+          "implementation": [
+            "explicit unsupported spell clause: Fetch Quest: unrecognized rules text: \"Mill seven cards. Then put a creature, enchantment, or land card from among the milled cards onto the battlefield.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Fetch Quest: unrecognized rules text: \"Mill seven cards. Then put a creature, enchantment, or land card from among the milled cards onto the battlefield.\""
+    },
+    "6c370299-9803-4cb5-97ba-c17831797b54": {
+      "name": "Karvanista, Loyal Lupari // Lupari Shield",
+      "oracleSha256": "99ac8436b415aba82ddb34f89b2f6f3422cca4c1db4005d6726481dc91af5eb2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Humans you control gain indestructible until your next turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Lupari Shield: unrecognized rules text: \"Humans you control gain indestructible until your next turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Lupari Shield: unrecognized rules text: \"Humans you control gain indestructible until your next turn.\""
+    },
+    "6d611800-5b0e-40ca-82a2-5b294a1ebf6d": {
+      "name": "Shepherd of the Flock // Usher to Safety",
+      "oracleSha256": "7d73d1539c5c508aecf86e1c8760198eaca766fdc2d4aad2fda7150b4aa8a2f4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Return target permanent you control to its owner's hand. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["usher-to-safety-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "70a702fe-1dd6-4d7b-a85a-45744ecad741": {
+      "name": "Velvetwing Butterflies // Gaze in Wonder",
+      "oracleSha256": "0247da919dba19dc57bd78557ec779afe2afe0159981e9ba00a3e53e046fd3d6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Tap one or two target creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Gaze in Wonder: unrecognized rules text: \"Tap one or two target creatures.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Gaze in Wonder: unrecognized rules text: \"Tap one or two target creatures.\""
+    },
+    "788a1d3f-8d73-4ecd-97ac-77906a873cfe": {
+      "name": "Sea Hag // Aquatic Ingress",
+      "oracleSha256": "8aaeed4c8480ac8d07de92a833494b6a12f561a713bd9c9717d1d01c6ce79ebc",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Up to two target creatures each get +1/+0 until end of turn and can't be blocked this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Aquatic Ingress: unrecognized rules text: \"Up to two target creatures each get +1/+0 until end of turn and can't be blocked this turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Aquatic Ingress: unrecognized rules text: \"Up to two target creatures each get +1/+0 until end of turn and can't be blocked this turn.\""
+    },
+    "7cee6d43-5dec-4989-85ec-c635ec783ec7": {
+      "name": "Sagu Wildling // Roost Seek",
+      "oracleSha256": "f997e2d8f7092364903b38c042797174867921f3f62d277c3d8976be2282394b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle. (Also shuffle this card.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Omen resolution shuffle"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana",
+            "free-face",
+            "face-impulse-permission",
+            "face-impulse-lab"
+          ],
+          "viewerScenarioIds": ["roost-seek-viewer-normal-face", "roost-seek-viewer-impulse-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8a0e35ac-6c03-4922-b3b4-e419419fe3d7": {
+      "name": "Bofur, Reliable Guardian // Concerted Care",
+      "oracleSha256": "2ac080c4876bc2f35e96353ef6b83f20e9f7f9cb8b4a5d89fd8ffa7507eb2417",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Target artifact or creature you control gains hexproof and indestructible until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Concerted Care: unrecognized rules text: \"Target artifact or creature you control gains hexproof and indestructible until end of turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Concerted Care: unrecognized rules text: \"Target artifact or creature you control gains hexproof and indestructible until end of turn.\""
+    },
+    "93e4308e-e701-440e-861a-a30324654095": {
+      "name": "Silverflame Squire // On Alert",
+      "oracleSha256": "3f14e028196c80fd66eb72f20601363ab48397a85ca2842f5e5f6aac3ba3c3bf",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 until end of turn. Untap it. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["on-alert-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "96aab05a-49bc-418a-9980-f3322955de1e": {
+      "name": "Colossal Badger // Dig Deep",
+      "oracleSha256": "e2de0bea44b3ebe4fcbc504727825bd38da4c3ee45e6262a40957a50cf32a070",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Choose target creature. Mill four cards, then put a +1/+1 counter on that creature for each creature card milled this way.",
+          "implementation": [
+            "explicit unsupported spell clause: Dig Deep: unrecognized rules text: \"Choose target creature. Mill four cards, then put a +1/+1 counter on that creature for each creature card milled this way.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Dig Deep: unrecognized rules text: \"Choose target creature. Mill four cards, then put a +1/+1 counter on that creature for each creature card milled this way.\""
+    },
+    "9c247a17-361c-435e-90c8-ce9c6b71f7db": {
+      "name": "Oakhame Ranger // Bring Back",
+      "oracleSha256": "597f192ed6467b83f7eb6fb634fd1d9bd3581329a3916cd83876a495f05b207b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create two 1/1 white Human creature tokens. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["bring-back-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a1d17244-9c92-4094-9843-d7ee31c85ea4": {
+      "name": "Realm-Cloaked Giant // Cast Off",
+      "oracleSha256": "a24caaea63b65839b17e8182c2a9fcbb7f2649e98e1ef2bfebe8d7066394dbdc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["cast-off-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a2192c80-c48f-44e2-807c-2f9ee1aa1152": {
+      "name": "Beanstalk Wurm // Plant Beans",
+      "oracleSha256": "02f950e975bf811cef8ede88a5696b037d694e2bf32db8f67bafc9c9060c6648",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Plant Beans: unrecognized rules text: \"You may play an additional land this turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Plant Beans: unrecognized rules text: \"You may play an additional land this turn.\""
+    },
+    "a73d9109-36e0-40ea-ab06-5c5f7eb4ac54": {
+      "name": "Bilbo, Luckwearer // Burglar's Plot",
+      "oracleSha256": "d251e9cbbeef3703077bb0422ba6f617b5697e4148b560cc472b9b12689a5470",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exchange control of two target nonland permanents that share a card type. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Burglar's Plot: unrecognized rules text: \"Exchange control of two target nonland permanents that share a card type.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Burglar's Plot: unrecognized rules text: \"Exchange control of two target nonland permanents that share a card type.\""
+    },
+    "a78b063a-7f74-465a-9670-34f927f4bfe9": {
+      "name": "Aquatic Alchemist // Bubble Up",
+      "oracleSha256": "17dfd03dc045add0607b785bf3fb8bb340aae8c7765419083a736697bcbef928",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Bubble Up: unrecognized rules text: \"Put target instant or sorcery card from your graveyard on top of your library.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Bubble Up: unrecognized rules text: \"Put target instant or sorcery card from your graveyard on top of your library.\""
+    },
+    "ba610f08-61a7-47fe-9a80-32b5ce51b118": {
+      "name": "Woodland Acolyte // Mend the Wilds",
+      "oracleSha256": "f5f96c0e61f618a8aea7980123840a07d9f904deb5d24d378f6cf1af1bce8d9d",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Put target permanent card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Mend the Wilds: unrecognized rules text: \"Put target permanent card from your graveyard on top of your library.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Mend the Wilds: unrecognized rules text: \"Put target permanent card from your graveyard on top of your library.\""
+    },
+    "bbb6867f-7186-41de-9828-21be469178c1": {
+      "name": "Frolicking Familiar // Blow Off Steam",
+      "oracleSha256": "b33cc724d4863acca78a3f5112bdfebfd738cfec3da786cc05eaa7dec0113cbc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Blow Off Steam deals 1 damage to any target. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["blow-off-steam-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bd513d9d-5aa2-4860-bd86-8b5d9430f133": {
+      "name": "Jidoor, Aristocratic Capital // Overture",
+      "oracleSha256": "ad36b5b3520fdbcece214bf09ffe5c416003629aae1b647bc023a8ffb639eff2",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Target opponent mills half their library, rounded down. (Then exile this card. You may play the land later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Overture: unrecognized rules text: \"Target opponent mills half their library, rounded down.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Overture: unrecognized rules text: \"Target opponent mills half their library, rounded down.\""
+    },
+    "bd575e82-99e7-44c7-ab93-d33f5678e1ad": {
+      "name": "Threadbind Clique // Rip the Seams",
+      "oracleSha256": "2fdefa93c2d2af46398c3ef33c0c9f231818b156a6bd5d285bfb4bdc52395043",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Destroy target tapped creature. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Rip the Seams: unrecognized rules text: \"Destroy target tapped creature.\""
+    },
+    "c075637a-e94c-4b8d-8a9e-20ee3dfa8fe7": {
+      "name": "Fang Dragon // Forktail Sweep",
+      "oracleSha256": "c659b8da42cc11db41431201cc87d9ba1b080fc31749f032b8d7008e5572e58e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Forktail Sweep deals 1 damage to each creature you don't control. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Forktail Sweep: unrecognized rules text: \"~ deals 1 damage to each creature you don't control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Forktail Sweep: unrecognized rules text: \"~ deals 1 damage to each creature you don't control.\""
+    },
+    "c0abbed2-d213-47ef-8d6c-4a21efb9a55f": {
+      "name": "Fae of Wishes // Granted",
+      "oracleSha256": "2d36f7f1294bfa2620150fc4c5cf95701879be7dfb3d719380a56fdc7b9c1e23",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may reveal a noncreature card you own from outside the game and put it into your hand.",
+          "implementation": [
+            "explicit unsupported spell clause: Granted: unrecognized rules text: \"You may reveal a noncreature card you own from outside the game and put it into your hand.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Granted: unrecognized rules text: \"You may reveal a noncreature card you own from outside the game and put it into your hand.\""
+    },
+    "c5632f18-7904-4a29-82be-6a6ef8e85e18": {
+      "name": "Emerald Dragon // Dissonant Wave",
+      "oracleSha256": "75c34bf29133acdd938f8f9bf5b683a7013670d2f1ec328fdf9f8d31a9c590ed",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Counter target activated or triggered ability from a noncreature source. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Dissonant Wave: unrecognized rules text: \"Counter target activated or triggered ability from a noncreature source.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Dissonant Wave: unrecognized rules text: \"Counter target activated or triggered ability from a noncreature source.\""
+    },
+    "c8f6cc1f-b7e4-470d-8d48-ef848d7c1116": {
+      "name": "Lonesome Unicorn // Rider in Need",
+      "oracleSha256": "294c6a6c10bd00986e54805eac0ca985651580e023bd6de062521979da53002f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create a 2/2 white Knight creature token with vigilance. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["rider-in-need-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ca8535f2-1f96-4836-bd32-5e952f9bee72": {
+      "name": "Topaz Dragon // Entropic Cloud",
+      "oracleSha256": "572d6514b08420cfb62da7bfa626b2d17218b1c7b96beb7d062af4bc4a0c1021",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures you control gain deathtouch until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["entropic-cloud-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cdb84830-faf2-4beb-8d57-ad696d75876b": {
+      "name": "Bellowing Bruiser // Beat a Path",
+      "oracleSha256": "b23d048f04885d184c1634cb78310f62474c642fee6fd87be43a96c9990a7d77",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Beat a Path: unrecognized rules text: \"Up to two target creatures can't block this turn.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Beat a Path: unrecognized rules text: \"Up to two target creatures can't block this turn.\""
+    },
+    "d02179a0-a6b7-49ef-a73e-cf11cabb896f": {
+      "name": "Horn of Valhalla // Ysgard's Call",
+      "oracleSha256": "83286b713c5253e0aea484b73a6f065021a0e7f1918c63194f6369a7824f147f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create X 1/1 white Soldier creature tokens. (Then exile this card. You may cast the artifact later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["ysgards-call-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "db6fbdc9-1c45-416f-a08e-2082f65adb65": {
+      "name": "Animating Faerie // Bring to Life",
+      "oracleSha256": "0e082f2ccac593bc7e6d19f66b24c116a69406f52a6f3fff7dd3139837c2f1a6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it.",
+          "implementation": [
+            "explicit unsupported spell clause: Bring to Life: unrecognized rules text: \"Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Bring to Life: unrecognized rules text: \"Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it.\""
+    },
+    "dba1d231-6b03-44ad-ab8c-be0c8fe1b6db": {
+      "name": "Lake-town Mariners // Gone Fishing",
+      "oracleSha256": "2be9fa04105a999387ae3509ade1fc209111dbc8b9bdb0a6986e68c8ea77e1d4",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.",
+          "implementation": [
+            "explicit unsupported spell clause: Gone Fishing: unrecognized rules text: \"Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Gone Fishing: unrecognized rules text: \"Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.\""
+    },
+    "df555f60-2164-49dc-be67-00aca9eb0d45": {
+      "name": "Minecart Daredevil // Ride the Rails",
+      "oracleSha256": "011c698728670258b5af06f6e981fcea9eee9ed0f9753b95d55bda462ebd70d0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+1 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["ride-the-rails-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e0b5b3af-af89-4b91-8b55-947ec095d6f2": {
+      "name": "Ettercap // Web Shot",
+      "oracleSha256": "0b9b3446e1622da54ac9b69423c1f9775d874c51d71794e40a880c90da89bea6",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Destroy target creature with flying. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Web Shot: unrecognized rules text: \"Destroy target creature with flying.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Web Shot: unrecognized rules text: \"Destroy target creature with flying.\""
+    },
+    "e24916ff-7566-4f27-8e31-732311a4a88c": {
+      "name": "Stormshriek Feral // Flush Out",
+      "oracleSha256": "b3f35f2f7f727ffbbf729a33e782b9abdda4b079cd9d23c29e46c1a4c4e73a53",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Discard a card. If you do, draw two cards. (Then shuffle this card into its owner's library.)",
+          "implementation": [
+            "explicit unsupported spell clause: Flush Out: unrecognized rules text: \"Discard a card. If you do, draw two cards.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Flush Out: unrecognized rules text: \"Discard a card. If you do, draw two cards.\""
+    },
+    "e67bd8eb-66db-48af-82f8-74f5595f1928": {
+      "name": "Curious Pair // Treats to Share",
+      "oracleSha256": "853803a1a7608887f1d3d1a7a8ba4c532231c0f6b6520088455083135ddc6351",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Create a Food token. (Then exile this card. You may cast the creature later from exile. A Food token is an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["treats-to-share-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ea27c8bf-33c5-443f-b8b2-51235efc2491": {
+      "name": "Ardenvale Tactician // Dizzying Swoop",
+      "oracleSha256": "7237cbc8573c2438b73cf9f66ffec61e5e293680e778104f3cffa7e969563c8f",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Tap up to two target creatures. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Dizzying Swoop: unrecognized rules text: \"Tap up to two target creatures.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Dizzying Swoop: unrecognized rules text: \"Tap up to two target creatures.\""
+    },
+    "f6771d32-395e-4832-b33d-cbc12dff1516": {
+      "name": "Thranduil, Sindarin Liege // Silvan Rally",
+      "oracleSha256": "06196599de9628e77fa563e390ba68a34de2d6a4fdde7d513ddf13a6d7d5b54e",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Mill four cards, then put up to two land cards from among them into your hand. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Silvan Rally: unrecognized rules text: \"Mill four cards, then put up to two land cards from among them into your hand.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Silvan Rally: unrecognized rules text: \"Mill four cards, then put up to two land cards from among them into your hand.\""
+    },
+    "f762c225-1c8c-4f12-aa88-c8c89e0a7185": {
+      "name": "Gingerbread Hunter // Puny Snack",
+      "oracleSha256": "84dae8d5dda46754cf0940c8ab0ae82c8f482127d11f9a9388faa97907bae26b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets -2/-2 until end of turn. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["puny-snack-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f88a096e-7497-4297-ab65-f18769b1cc47": {
+      "name": "Merchant of the Vale // Haggle",
+      "oracleSha256": "ee78ac8b837ae0db0dd0a3b940baa65a9bfb9ca289850a43a0d8e72463b4d6b5",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "You may discard a card. If you do, draw a card. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "explicit unsupported spell clause: Haggle: unrecognized rules text: \"You may discard a card. If you do, draw a card.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Haggle: unrecognized rules text: \"You may discard a card. If you do, draw a card.\""
+    },
+    "fa85f9e6-69ff-4669-b70a-440aa7b16c97": {
+      "name": "Bilbo Baggins, Burglar // Take a Glance",
+      "oracleSha256": "2cf37143ed93f90312075d4043c5beabad860b0dd61f50e0514ba38b4065c46c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Scry 2. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["take-a-glance-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fc75cfec-e1f6-4cb5-8a3c-2f7b2c39c03f": {
+      "name": "Smaug, the Great Calamity // Spew Flame",
+      "oracleSha256": "e6130c94687539e1de2ca04aea4494e16c57f6d3efa612838be03a3b6f3e6484",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Spew Flame deals 5 damage to target creature. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["spew-flame-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fef67393-9b7b-495d-8b03-865537386d42": {
+      "name": "Ferocious Werefox // Guard Change",
+      "oracleSha256": "8ae13a55d7a76704207c7cb4f9b4e671599232e33e7124604003d2d6e32a5a96",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Create a Monster Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has trample.)",
+          "implementation": [
+            "explicit unsupported spell clause: Guard Change: unrecognized rules text: \"Create a Monster Role token attached to target creature you control.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Guard Change: unrecognized rules text: \"Create a Monster Role token attached to target creature you control.\""
+    },
+    "ff812a78-3fe7-47bc-9984-1c2380cff5b1": {
+      "name": "Twinmaw Stormbrood // Charring Bite",
+      "oracleSha256": "e4a32ed5cdf16ad1fb9782f2c9f950187b93d3bc5befa3ad637ab498438aef21",
+      "implementationStatus": "unsupported",
+      "clauses": [
+        {
+          "oracleText": "Charring Bite deals 5 damage to target creature without flying. (Then shuffle this card into its owner's library.)",
+          "implementation": [
+            "explicit unsupported spell clause: Charring Bite: unrecognized rules text: \"~ deals 5 damage to target creature without flying.\""
+          ],
+          "engineTestIds": ["face-unparsed-clause-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": [],
+      "unsupportedReason": "Charring Bite: unrecognized rules text: \"~ deals 5 damage to target creature without flying.\""
+    },
+    "fff28b30-9903-4a0a-a723-31216abd457d": {
+      "name": "Young Blue Dragon // Sand Augury",
+      "oracleSha256": "bd4ccc1fedd99e43490c17e6b0b2c4b4792495d6bcb74460c678af5c64acb025",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Scry 1, then draw a card. (Then exile this card. You may cast the creature later from exile.)",
+          "implementation": [
+            "fully interpreted selected spell face",
+            "face-specific cost, colors, types, mana value and ability",
+            "Adventure exile permission"
+          ],
+          "engineTestIds": [
+            "face-canonical-normal-path",
+            "face-canonical-front-path",
+            "face-stack-characteristics",
+            "face-protection",
+            "face-restricted-mana",
+            "face-reduction",
+            "face-cast-triggers",
+            "face-copy",
+            "face-canonical-no-mana"
+          ],
+          "viewerScenarioIds": ["sand-augury-viewer-normal-face"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "042cc9d9-ad13-401f-b2f5-c2f1558d7e44": {
+      "name": "Arachnoid Adaptation",
+      "oracleSha256": "d9b73202b6cace12f3e6abeb0092c444da95d44ad7134e58dbc2f99fc00ef689",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["arachnoid-adaptation-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0bdebad7-a05e-439a-b5a9-241a2d09f943": {
+      "name": "Riverguard's Reflexes",
+      "oracleSha256": "958fcc747fc08cf88815c740febbebcc04b5fce9a6bbff9e8b7cc81458fdfb35",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 and gains first strike until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["riverguards-reflexes-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1347224f-421e-4270-8e50-cf25c875909c": {
+      "name": "Acrobatic Leap",
+      "oracleSha256": "fcfacb70bc721c6162126f36d5c5e017cf01518bcfbede8a3c901ae0b55252d1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["acrobatic-leap-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1ab592fa-adfb-4879-af6c-0204eab323fb": {
+      "name": "Burst of Strength",
+      "oracleSha256": "206527eb5bdd82c2847b01cfffead941f32c30165781efbf6dd79878e3ccb832",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Put a +1/+1 counter on target creature and untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["burst-of-strength-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5372445b-5f67-435e-a736-61c6cb4f9c6e": {
+      "name": "Vines of the Recluse",
+      "oracleSha256": "f2c0d781f78d8f0913015639fd49335ca94290b11bbbe8d4b6e795653e45f41e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+2 and gains reach until end of turn. Untap it. (A creature with reach can block creatures with flying.)",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["vines-of-the-recluse-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "629b3aee-b8fd-495a-a988-815a0aaf3e82": {
+      "name": "Dragonscale Boon",
+      "oracleSha256": "7ee3ea23ccddee7bf5fb93516721c0f1203123c2ecd92d2bbb91f4d5a7d0e38f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Put two +1/+1 counters on target creature and untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["dragonscale-boon-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6ec9a14a-0a62-4f8a-9147-3cab01411a65": {
+      "name": "Witch's Web",
+      "oracleSha256": "d172c753f92c81cf243538129405b14792d3855b02124a7cb1779ca958ed8b79",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +3/+3 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["witchs-web-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a39c758d-82be-4d8c-bb3e-8ee8a6c6788b": {
+      "name": "Pillar Launch",
+      "oracleSha256": "f162418730ef90329bb2d144683d20b18a3b5cf53d6490f138478bb3202e7222",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["pillar-launch-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a5f10b54-10db-4c92-a596-8afea4e470f5": {
+      "name": "Bull's Strength",
+      "oracleSha256": "9864fcb04d3b818b414c01e9bdba9611ddfd87b05deeefa82a19936e67ffc26d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 and gains trample until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["bulls-strength-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ab0aea13-1dbc-424a-ab7e-cdb303036a56": {
+      "name": "High Stride",
+      "oracleSha256": "7d49b4a305963db938ffbbf0229a4528ca68bf8a22a1ebe6dacde8b1b61c9d3c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+3 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["high-stride-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "afa9cf24-cd02-41f5-9141-f6ff6f27d528": {
+      "name": "Wings of the Cosmos",
+      "oracleSha256": "5fdd92ddcf33636bf004e8dec6f43428aab4951e034712138ad64148d9998c08",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["wings-of-the-cosmos-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b4f89885-eeb9-46c7-9820-9758b624ca24": {
+      "name": "Tethermage's Advantage",
+      "oracleSha256": "36b77da298d6fcb670df886fd7daa9afcdde766eb1054ead7e28d8606bf8aa8e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["tethermages-advantage-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e2a32a0f-bf06-4cb3-a704-ff0f783f19e4": {
+      "name": "Vault Skyward",
+      "oracleSha256": "fd8263eb64b7120b6769f85483db2b4ab42f56da2675a07e69c902b28705bfe1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gains flying until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["vault-skyward-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e920c955-66f5-4c6e-a2a8-8b282f9e456e": {
+      "name": "Leaping Ambush",
+      "oracleSha256": "0ceaf5dd626757903c087aacc1c4ebf9ace2633c6aa0183b8d80c9b4966cb319",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+3 and gains reach until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["leaping-ambush-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f2025f2e-c931-48dd-af21-8f0a591befb4": {
+      "name": "Escape from Orthanc",
+      "oracleSha256": "82bad50387182e151dbc5d48f8ed6425f58ad0068f66c6dd2790c931900048dd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["escape-from-orthanc-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f522e161-f249-4add-8326-b6ab0de8ba57": {
+      "name": "Soldier On",
+      "oracleSha256": "5c067367598458f5a1d6415e141acaa9627c834f0ed4c746675709b909a8b221",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Put two +1/+1 counters on target creature. Untap it.",
+          "implementation": [
+            "explicit single battlefield-target pronoun binding",
+            "existing first-clause effect",
+            "untap the same initially legal target"
+          ],
+          "engineTestIds": ["target-untap-normal-path", "face-pronoun-scope"],
+          "viewerScenarioIds": ["soldier-on-viewer-target-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd": {
+      "name": "Black Bolt, Inhuman King",
+      "oracleSha256": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
+      "clauses": [
+        {
+          "oracleText": "Lethal Voice — Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+          "implementation": [
+            "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
+          ],
+          "engineTestIds": ["black-bolt-inhuman-king-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "65410f7a-c749-4b23-ad61-8a7136efcad2": {
+      "name": "Blur of Blades",
+      "oracleSha256": "ea522ddfaffffbcb02069421f8a25bba4867265aa0281ac0b9b4bfcb76e80dc7",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The ordinary spell does not bind the chosen creature controller for its second damage instruction.",
+      "clauses": [
+        {
+          "oracleText": "Put a -1/-1 counter on target creature. Blur of Blades deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The ordinary spell does not bind the chosen creature controller for its second damage instruction."
+          ],
+          "engineTestIds": ["blur-of-blades-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b0c50079-5376-47ff-82c5-d52dbf49afdf": {
+      "name": "Consign to the Pit",
+      "oracleSha256": "432ac6b2fdf0e5ca024d50ffc83ff7c4678a76afc4d1f3126d4c9a3d5fef3f06",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The ordinary spell does not retain the destroyed creature controller for its second damage instruction.",
+      "clauses": [
+        {
+          "oracleText": "Destroy target creature. Consign to the Pit deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The ordinary spell does not retain the destroyed creature controller for its second damage instruction."
+          ],
+          "engineTestIds": ["consign-to-the-pit-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7127fc35-600c-4397-8c01-5327d3c4944b": {
+      "name": "Dingus Staff",
+      "oracleSha256": "fa26a662e0d1a4e2bdabcbb0164f9e7d8df110cd13333ee0af014c9e00c5a825",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The dies dispatcher does not bind the dead creature controller required by the damage clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever a creature dies, this artifact deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The dies dispatcher does not bind the dead creature controller required by the damage clause."
+          ],
+          "engineTestIds": ["dingus-staff-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "33a6d78a-a3c7-44f1-8ce9-d6632123fec1": {
+      "name": "Insolence",
+      "oracleSha256": "27763625e27b1e341fb84b8ec0ad0699da88842e1fb68d3cdcfedc28cfa1565e",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-tapped dispatcher does not bind the enchanted creature controller required by the damage clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever enchanted creature becomes tapped, this Aura deals 2 damage to that creature's controller.",
+          "implementation": [
+            "unsupported: The becomes-tapped dispatcher does not bind the enchanted creature controller required by the damage clause."
+          ],
+          "engineTestIds": ["insolence-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a": {
+      "name": "Scalelord Reckoner",
+      "oracleSha256": "a6a82e4dd70176ed433a4e46d925a47cf78b67c1d75217f031d10d1a75fb54dc",
+      "implementationStatus": "unsupported",
+      "unsupportedReason": "The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause.",
+      "clauses": [
+        {
+          "oracleText": "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+          "implementation": [
+            "unsupported: The becomes-targeted dispatcher does not bind the targeting player needed by the destroy target controlled by that player clause."
+          ],
+          "engineTestIds": ["scalelord-reckoner-event-player-contained"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "17a59d3d-9e01-48cd-bb4a-3eaaa077751c": {
+      "name": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "marchesa-first-public-destination",
+          "oracleText": "Whenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
+          "implementation": [
+            "Exact first public destination for a controlled creature dying with a +1/+1 counter; one-shot end-step return from any owner’s graveyard; no tracking through intervening exile or a later incarnation"
+          ],
+          "engineTestIds": [
+            "marchesa-viewer-first-zone-own",
+            "marchesa-viewer-first-zone-opponent-owned",
+            "marchesa-viewer-first-zone-no-counter",
+            "marchesa-viewer-first-zone-opponent-controlled",
+            "marchesa-viewer-first-zone-exiled",
+            "batch-death-first-destination",
+            "marchesa-viewer-simultaneous-deaths"
+          ],
+          "viewerScenarioIds": [
+            "marchesa-viewer-first-zone-own",
+            "marchesa-viewer-first-zone-opponent-owned",
+            "marchesa-viewer-first-zone-no-counter",
+            "marchesa-viewer-first-zone-opponent-controlled",
+            "marchesa-viewer-first-zone-exiled",
+            "marchesa-viewer-simultaneous-deaths"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ac2173f9-f223-440a-9231-fd98762bdc6f": {
+      "name": "Force of Negation",
+      "oracleSha256": "b8a0dc17dcd160b416c672ab9e916b5615465e19a3d3a4a2bddcc23138561cf4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "unrestricted noncreature stack-spell targeting",
+            "countered spell moves to exile"
+          ],
+          "engineTestIds": [
+            "force-of-negation-target-controller-P1",
+            "force-of-negation-target-controller-P2",
+            "force-of-negation-reject-self",
+            "force-of-negation-spell-only-targets",
+            "force-of-negation-reject-creature"
+          ],
+          "viewerScenarioIds": [
+            "force-of-negation-viewer-own-counter",
+            "force-of-negation-viewer-opponent-counter"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

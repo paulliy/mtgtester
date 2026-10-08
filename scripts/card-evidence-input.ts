@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import type { Readable } from 'node:stream';
 import ts from 'typescript';
@@ -88,6 +88,10 @@ export function validateCurrentEvidenceSources(
 }
 
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+/** Evidence documents reject duplicate JSON keys before schema validation. */
+export function parseEvidenceJson(text: string): unknown {
+  return uniqueJson(text);
+}
 function requireInput(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`Viewer evidence input: ${message}`);
 }
@@ -489,10 +493,11 @@ function reportTargets(
             attachmentFile(outputRoot, reportPath, attachment['path']);
           }
         }
-        const id = Object.entries(SCENARIO_TITLES).find(
-          ([, title]) => titles.length === 0 && title === spec['title'],
-        )?.[0];
-        if (id) {
+        const id =
+          Object.entries(SCENARIO_TITLES).find(
+            ([, title]) => titles.length === 0 && title === spec['title'],
+          )?.[0] ?? key;
+        {
           const traces = attachments.filter((a) => a['name'] === 'trace');
           requireInput(
             traces.length === 1 &&
@@ -509,7 +514,7 @@ function reportTargets(
   }
   walk(array(report['suites'], 'suites'), [], true);
   requireInput(
-    seen.size === expected.size && Object.keys(targets).length === 10,
+    seen.size === expected.size && Object.keys(targets).length === expected.size,
     'missing catalog execution',
   );
   return targets;
@@ -841,11 +846,70 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     });
     for (const path of paths) union.add(path);
   }
+  // Generator imports cannot discover Vue imports or the separately launched server. Bind
+  // the complete owned runtime input trees conservatively, including new files, rather than
+  // allowing an unlisted component/session dependency to leave an old receipt current.
+  const runtimeRoots = [
+    'packages/engine/src',
+    'packages/bot/src',
+    'packages/server/src',
+    'packages/shared/src',
+    'apps/web/src',
+    'apps/web/public',
+  ];
+  const runtimeRouting: string[][] = [];
+  const visitedRuntimeDirectories = new Set<string>();
+  function collect(directory: string): void {
+    if (!existsSync(resolve(root, directory))) return;
+    const actualDirectory = realpathSync(resolve(root, directory));
+    const localDirectory = relative(root, actualDirectory).split(sep).join('/');
+    requireInput(
+      localDirectory !== '' &&
+        localDirectory !== '..' &&
+        !localDirectory.startsWith('../') &&
+        !isAbsolute(localDirectory),
+      `runtime directory escapes repository: ${directory}`,
+    );
+    runtimeRouting.push([directory, localDirectory]);
+    if (visitedRuntimeDirectories.has(actualDirectory)) return;
+    visitedRuntimeDirectories.add(actualDirectory);
+    for (const entry of readdirSync(resolve(root, directory), { withFileTypes: true })) {
+      const path = `${directory}/${entry.name}`;
+      const metadata = entry.isSymbolicLink() ? statSync(resolve(root, path)) : entry;
+      if (metadata.isDirectory()) collect(path);
+      else if (metadata.isFile()) {
+        const actual = confinedFile(root, resolve(root, path));
+        const local = relative(root, actual).split(sep).join('/');
+        runtimeRouting.push([path, local]);
+        union.add(local);
+      } else requireInput(false, `unsupported runtime input: ${path}`);
+    }
+  }
+  for (const directory of runtimeRoots) collect(directory);
+  for (const path of [
+    'package.json',
+    'bun.lock',
+    'playwright.config.ts',
+    'apps/web/package.json',
+    'apps/web/index.html',
+    'apps/web/vite.config.ts',
+    'packages/server/package.json',
+  ])
+    if (existsSync(resolve(root, path))) {
+      confinedFile(root, resolve(root, path));
+      union.add(path);
+    }
   const files = [...union].sort();
   // Strings privately capture immutable structured identities; callers cannot replace tuples.
   return {
     files,
-    identity: JSON.stringify({ closures, sources: JSON.parse(sourceIdentity(root, files)) }),
+    identity: JSON.stringify({
+      closures,
+      runtimeRouting: runtimeRouting.sort((a, b) =>
+        JSON.stringify(a).localeCompare(JSON.stringify(b)),
+      ),
+      sources: JSON.parse(sourceIdentity(root, files)),
+    }),
   };
 }
 
@@ -983,6 +1047,38 @@ export function parseViewerEvidenceOptions(argv: readonly string[]): ViewerInput
 
 // Frozen machine-report identities; independently checked against the spec AST in unit tests.
 export const VIEWER_CATALOG: readonly CatalogSpec[] = [
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: pay life for the entering creature'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: decline the life payment'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: skip an unaffordable life payment'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Madame Null: keep separate blinked incarnations'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Madame Null: read the departed creature's power"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return your dead creature'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: return an opponent-owned creature'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: ignore a creature without a +1/+1 counter'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: ignore an opponent-controlled creature'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Marchesa: skip the card exiled by Bojuka Bog'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Easy Pickings: cast an Adventure commander from the command zone'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: cast a hidden Adventure spell face'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: cast a hidden permanent on the spell stack'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mosswort Bridge: a hidden land still needs a land play'],
+  },
   { file: 'card-test-lab.spec.ts', titlePath: ['Tribute Mage: exact mana-value search'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Gev, Scaled Scorch: ward — pay 2 life'] },
   {
@@ -1334,6 +1430,105 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: ['Twinflame Tyrant: double damage from your spell'],
+  },
+  ...(
+    JSON.parse(
+      readFileSync(
+        resolve(import.meta.dirname, '../packages/engine/tests/fixtures/target-untap-oracle.json'),
+        'utf8',
+      ),
+    ) as { cards: { card: { name: string } }[] }
+  ).cards.map(({ card }) => ({
+    file: 'card-test-lab.spec.ts',
+    titlePath: [`${card.name}: affect and untap one target`],
+  })),
+  { file: 'card-test-lab.spec.ts', titlePath: ['Faerie Guidemother: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Gift of the Fae: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Tuinvale Treefolk: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Oaken Boon: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Two-Headed Hunter: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Twice the Rage: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Foulmire Knight: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Profane Insight: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['An Unexpected Party: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['At the Door: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Obyra's Attendants: play the ordinary front"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Desperate Parry: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Garenbrig Carver: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Shield's Might: cast the selected spell face"] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Lindblum, Industrial Regency: play the ordinary front'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Mage Siege: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Tempest Hart: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Scan the Clouds: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Imodane's Recruiter: play the ordinary front"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Train Troops: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Embereth Shieldbreaker: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Battle Display: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Gl\u00f3in the Mighty: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Easy Pickings: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Shepherd of the Flock: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Usher to Safety: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Sagu Wildling: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Roost Seek: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Silverflame Squire: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['On Alert: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Oakhame Ranger: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Bring Back: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Realm-Cloaked Giant: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Cast Off: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Frolicking Familiar: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Blow Off Steam: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Lonesome Unicorn: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Rider in Need: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Topaz Dragon: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Entropic Cloud: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Horn of Valhalla: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Ysgard's Call: cast the selected spell face"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Minecart Daredevil: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Ride the Rails: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Curious Pair: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Treats to Share: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Gingerbread Hunter: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Puny Snack: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Bilbo Baggins, Burglar: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Take a Glance: cast the selected spell face'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Smaug, the Great Calamity: play the ordinary front'],
+  },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Spew Flame: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Young Blue Dragon: play the ordinary front'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Sand Augury: cast the selected spell face'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Counterspell: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Counterspell: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Negate: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Negate: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Mana Leak: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Mana Leak: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Stubborn Denial: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Stubborn Denial: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Force of Negation: counter your own spell'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Force of Negation: counter an opponent's spell"] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Cyclonic Rift: overload without targets'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Vandalblast: overload without targets'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Damn: one normal target'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ['Damn: overload without targets'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Profane Insight: cast the spell face from temporary exile'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Roost Seek: cast the spell face from temporary exile'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Marchesa: return creatures after simultaneous deaths'],
   },
 ];
 for (const spec of VIEWER_CATALOG) {

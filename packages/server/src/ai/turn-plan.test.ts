@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
-import { TurnPlanManager } from './turn-plan';
+import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 
 function makeRequest(overrides: Partial<DecisionRequest> = {}): DecisionRequest {
   return {
@@ -285,4 +285,75 @@ describe('TurnPlanManager', () => {
       expect(invalidated).toBe(true);
     }
   });
+});
+
+describe('late strategy action reconciliation', () => {
+  const activation = {
+    id: 1,
+    type: 'activateAbility',
+    description: 'Activate Dawn of Hope',
+    interaction: { kind: 'source' as const, sourceId: 'dawn-1', sourceCardId: 'dawn-card' },
+    targets: [{ slot: 0, label: 'Target', options: ['creature-a', 'creature-b'] }],
+  };
+  const planned = {
+    id: 'once',
+    type: 'activateAbility',
+    name: 'Dawn of Hope',
+    source: { objectId: 'dawn-1' },
+    phase: 'precombatMain' as const,
+    step: null,
+    targets: [{ slot: 0, choice: 'creature-a' }],
+  };
+  function accepted(): AcceptedPlanAction {
+    return {
+      turn: 1,
+      player: 'P1',
+      phase: 'precombatMain',
+      step: null,
+      action: activation,
+      targets: [{ slot: 0, choice: 'creature-a' }],
+    };
+  }
+
+  it('consumes one accepted occurrence, keeps remaining steps, and satisfies its dependency', () => {
+    const manager = new TurnPlanManager();
+    manager.recordPlan(
+      makeRequest(),
+      [planned, { ...planned, id: 'twice', dependencies: ['once'] }],
+      undefined,
+      {
+        acceptedSinceSource: [accepted()],
+      },
+    );
+    expect(manager.getQueue().map((action) => action.id)).toEqual(['twice']);
+    expect(
+      manager
+        .getLifecycleEvents()
+        .filter((event) => event.status === 'already_accomplished')
+        .map((event) => event.actionId),
+    ).toEqual(['once']);
+    expect(manager.tryExecutePlan(makeRequest({ legalActions: [activation] }))?.actionId).toBe(1);
+  });
+
+  it.each(['player', 'turn', 'phase', 'source', 'target'] as const)(
+    'retains a step when the accepted action has a different %s',
+    (difference) => {
+      const action = accepted();
+      if (difference === 'player') action.player = 'P2';
+      if (difference === 'turn') action.turn = 2;
+      if (difference === 'phase') action.phase = 'postcombatMain';
+      if (difference === 'source')
+        action.action = {
+          ...activation,
+          interaction: { kind: 'source', sourceId: 'dawn-2', sourceCardId: 'dawn-card' },
+        };
+      if (difference === 'target') action.targets = [{ slot: 0, choice: 'creature-b' }];
+      const manager = new TurnPlanManager();
+      manager.recordPlan(makeRequest(), [planned], undefined, { acceptedSinceSource: [action] });
+      expect(manager.getQueue().map((action) => action.id)).toEqual(['once']);
+      expect(
+        manager.getLifecycleEvents().some((event) => event.status === 'already_accomplished'),
+      ).toBe(false);
+    },
+  );
 });

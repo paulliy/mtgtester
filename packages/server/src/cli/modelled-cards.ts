@@ -36,6 +36,7 @@ function generateMarkdown(pool: SupportedPool): string {
     '# Modelled Cards by Engine',
     '',
     `Generated from the engine-supported card pool.`,
+    'This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.',
     '',
     `**Total**: ${nonLands.length} modeled non-land cards`,
     '',

@@ -44,6 +44,15 @@ request:
 The manifest declares requirements and mappings. Tools generate pass/fail/skip evidence; humans do
 not handwrite success flags.
 
+Primitive prerequisites are generated separately from those declarations. Run
+`bun run test:primitive-contracts --output <new-directory>` for current executable receipts,
+then `bun run card-capabilities --primitive-evidence <directory> --review-manifest <manifest>`
+to enforce them for reviewed claims against exact Oracle pins. The CLI fails on unknown or
+experimental dependencies, unsupported contract scope, stale receipts or missing pins.
+CI checks new and changed reviewed declarations against the base commit using
+`bun run primitive-promotions --base <full-commit-sha> --primitive-evidence <directory>`.
+Unchanged historical review labels never supply current primitive, card or viewer evidence.
+
 The Card Test Lab now runs deterministic prepared scenarios through the production engine and
 WebSocket protocol. Its Playwright suite drives the real frontend and backend and retains traces.
 Use it for reproducible clause-level viewer evidence. A curated 100-card match remains necessary
@@ -130,6 +139,21 @@ needed — it never guesses or falls back to "close enough" (brief §6.3).
    `mana('{2}{R}')` / `TAP` / `SAC_SELF` for costs, `targetSlots` when an ability has more than one
    target, `lord` / `auraBuff` / `costReductionFor` for statics. ESLint blocks the two primitives
    these replace (`registerOverride`, `parseManaCost`) inside `overrides/`.
+
+   Use `graveyardCardTarget(owner, options)` to declare controller/opponent/any graveyard
+   ownership or an earlier ordinary player slot. Use `counterSpellTarget(kind, options)` for
+   stack spells; its default includes all controllers. Both builders preserve absent keys and
+   reject unknown options. The final ability validator still checks slot dependencies and effect
+   domains. `targetSlots` retains every own named key, including prototype-named keys.
+
+   Dangerous effect envelopes also have guarded builders: `returnGraveyardCard` chooses an
+   explicit destination; `searchLibraryCards` keeps library choices separate from targets;
+   `castWithoutManaCost` exposes only existing hand/search routes; and
+   `playLinkedExiledCardWithoutManaCost` uses an existing Hideaway link. Use
+   `graveyardAlternativeCost` for the distinct Flashback/Escape destinations and
+   `exileUntilThisSourceLeaves` for a battlefield source's lifetime. These helpers preserve
+   omitted keys and reject unsupported origins/options. They still require a valid owning
+   ability and independent card evidence; a builder is not a review certificate.
 
    `def` may **only compose existing, already-tested `Effect`/`Ability` primitives** — a new
    executor primitive is out of scope for an override and belongs in the engine itself. If a card

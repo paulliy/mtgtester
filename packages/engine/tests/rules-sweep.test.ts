@@ -740,61 +740,39 @@ describe('casting from exile', () => {
   });
 });
 
-describe('casting from the top of the library (fuzz: Omen card)', () => {
-  // The real name: the Omen half comes from this card's registered override.
-  const bloomvineRegent = () =>
-    oracle({
-      name: 'Bloomvine Regent // Claim Territory',
-      manaCost: '{3}{G}{G} // {2}{G}',
-      typeLine: 'Creature — Dragon // Sorcery — Omen',
-      types: ['Creature'],
-      subtypes: ['Dragon'],
-      oracleText:
-        'Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.',
-      power: '4',
-      toughness: '5',
-      keywords: ['Flying'],
-      layout: 'adventure',
-    });
-
-  function topOfLibraryCtx(): { ctx: GameContext; cardId: string } {
+describe('casting a contained spell face from the top of the library', () => {
+  it('halts before offering the formerly substituted Omen card', () => {
     const ctx = pod();
     ctx.state.phase = 'precombatMain';
-    for (let i = 0; i < 5; i++) spawn(ctx, 'P1', forest());
-    // Korlessa, Scale Singer's shape: "you may cast Dragon spells from the top of your library".
-    const def = registerDef(
-      ctx,
-      oracle({ name: 'Sweep Dragon Seer', typeLine: 'Enchantment', manaCost: '{2}{U}' }),
-    );
+    for (let i = 0; i < 6; i++) spawn(ctx, 'P1', forest());
+    const seer = oracle({ name: 'Sweep Dragon Seer', typeLine: 'Enchantment', manaCost: '{2}{U}' });
+    const def = registerDef(ctx, seer);
     def.ruleStatics = [{ kind: 'castFromZone', zone: 'libraryTop', filter: ofSubtype('Dragon') }];
-    spawn(ctx, 'P1', oracle({ name: 'Sweep Dragon Seer', typeLine: 'Enchantment' }));
-    const card = conjure(ctx, 'P1', bloomvineRegent(), 'library');
-    return { ctx, cardId: card.id };
-  }
-
-  const castsOf = (ctx: GameContext, cardId: string) =>
-    computePriorityOptions(ctx, ctx.state.players[0]!).filter(
-      (o) => o.type === 'castSpell' && (o.payload as { objectId: string }).objectId === cardId,
+    spawn(ctx, 'P1', seer);
+    const card = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Bloomvine Regent // Claim Territory',
+        manaCost: '{3}{G}{G} // {2}{G}',
+        typeLine: 'Creature — Dragon // Sorcery — Omen',
+        types: ['Creature'],
+        subtypes: ['Dragon'],
+        oracleText:
+          'Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.',
+        power: '4',
+        toughness: '5',
+        keywords: ['Flying'],
+        layout: 'adventure',
+      }),
+      'library',
     );
-
-  it('offers only casts that can actually be applied', () => {
-    const { ctx, cardId } = topOfLibraryCtx();
-    const offered = castsOf(ctx, cardId);
-    expect(offered.some((o) => o.description.includes('Bloomvine Regent'))).toBe(true);
-    for (const [i] of offered.entries()) {
-      const fresh = topOfLibraryCtx();
-      const option = castsOf(fresh.ctx, fresh.cardId)[i]!;
-      expect(() =>
-        pump(
-          applyPriorityAction(
-            fresh.ctx,
-            fresh.ctx.state.players[0]!,
-            option.payload as PriorityActionPayload,
-            { index: 0, targets: new Map() },
-          ),
-        ),
-      ).not.toThrow();
-    }
+    const before = structuredClone(ctx.state);
+    expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow(
+      /explicitly unsupported: Claim Territory/,
+    );
+    expect(ctx.state).toEqual(before);
+    expect(ctx.state.players[0]!.library[0]?.id).toBe(card.id);
   });
 });
 

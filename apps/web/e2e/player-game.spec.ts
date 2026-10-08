@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './setup-test';
 
 /**
  * A real single-player game against built-in bots, driven through the player board: keep, the
@@ -10,9 +10,9 @@ import { expect, test } from '@playwright/test';
  * on turn 3 holding five Forests and Elvish Mystic. After the Mystic resolves P1 has nothing left
  * to do, so the server passes for them until their next turn (turn 7). The generated decks come
  * from the supported pool, so a change to which cards are modeled can change what a seed deals;
- * re-pick the seed then (coverage PR01 moved this from `e2e-6`).
+ * re-pick the seed then (event-player containment moved this from `e2e-2578`).
  */
-const SEED = 'e2e-26';
+const SEED = 'e2e-15162';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
   await page.goto('/');

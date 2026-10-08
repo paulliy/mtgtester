@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "cards": [
+    {
+      "sha256": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
+      "card": {
+        "oracleId": "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd",
+        "scryfallId": "0d484566-6816-4535-a754-dbda8073ae73",
+        "name": "Black Bolt, Inhuman King",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Inhuman Noble Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inhuman",
+          "Noble",
+          "Hero"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, Black Bolt gets +2/+2 until end of turn.\nLethal Voice — Whenever Black Bolt becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Lethal Voice"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ea522ddfaffffbcb02069421f8a25bba4867265aa0281ac0b9b4bfcb76e80dc7",
+      "card": {
+        "oracleId": "65410f7a-c749-4b23-ad61-8a7136efcad2",
+        "scryfallId": "b53f5b9b-d24b-4e9a-bc90-7ed198cd1132",
+        "name": "Blur of Blades",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Put a -1/-1 counter on target creature. Blur of Blades deals 2 damage to that creature's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "432ac6b2fdf0e5ca024d50ffc83ff7c4678a76afc4d1f3126d4c9a3d5fef3f06",
+      "card": {
+        "oracleId": "b0c50079-5376-47ff-82c5-d52dbf49afdf",
+        "scryfallId": "09991fad-4282-4a17-bfb1-03eaa13502df",
+        "name": "Consign to the Pit",
+        "manaCost": "{5}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target creature. Consign to the Pit deals 2 damage to that creature's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fa26a662e0d1a4e2bdabcbb0164f9e7d8df110cd13333ee0af014c9e00c5a825",
+      "card": {
+        "oracleId": "7127fc35-600c-4397-8c01-5327d3c4944b",
+        "scryfallId": "065b4358-5dee-4f13-bff9-8254bdb92069",
+        "name": "Dingus Staff",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature dies, this artifact deals 2 damage to that creature's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "27763625e27b1e341fb84b8ec0ad0699da88842e1fb68d3cdcfedc28cfa1565e",
+      "card": {
+        "oracleId": "33a6d78a-a3c7-44f1-8ce9-d6632123fec1",
+        "scryfallId": "d8009a37-f966-4a71-9a2a-469127758dc6",
+        "name": "Insolence",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhenever enchanted creature becomes tapped, this Aura deals 2 damage to that creature's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a6a82e4dd70176ed433a4e46d925a47cf78b67c1d75217f031d10d1a75fb54dc",
+      "card": {
+        "oracleId": "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a",
+        "scryfallId": "c91c3606-d037-4b97-a7b6-ab1ed09bc976",
+        "name": "Scalelord Reckoner",
+        "manaCost": "{3}{W}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, destroy target nonland permanent that player controls.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}
