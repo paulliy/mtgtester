@@ -942,6 +942,37 @@ const pinned = require('./pinned.json');
       await expect(loadViewerEvidence(f.paths, f.options)).rejects.toThrow(/missing source/);
     });
   });
+  it.each([
+    'packages/server/src/match/player-yield.ts',
+    'apps/web/src/stores/combatPlan.ts',
+    'apps/web/src/components/DecisionPanel.vue',
+    'playwright.config.ts',
+  ])('rejects a missing real viewer runtime input %s', async (omitted) => {
+    await withFixture(async (f) => {
+      expect(f.options.sourceFiles).toContain(omitted);
+      f.manifest.files = f.manifest.files.filter((file) => file.path !== omitted);
+      f.seal();
+      await expect(loadViewerEvidence(f.paths, f.options)).rejects.toThrow(/missing source/);
+    });
+  });
+  it('invalidates a loaded viewer receipt when a new owned runtime file appears', async () => {
+    await withCopiedFixture(async (f, copy) => {
+      const evidence = await loadViewerEvidence(f.paths, { ...f.options, repoRoot: copy });
+      const path = resolve(copy, 'apps/web/src/new-runtime-input.ts');
+      writeFileSync(path, 'export const newlyLoadedBehavior = true;\n');
+      expect(() => validateCurrentEvidenceSources(evidence, copy)).toThrow(
+        /dependency closure routing drifted/,
+      );
+    });
+  });
+  it('rejects runtime directory links escaping the captured repository', async () => {
+    await withCopiedFixture(async (f, copy) => {
+      symlinkSync(f.root, resolve(copy, 'apps/web/src/outside-repository'), 'junction');
+      expect(() => getViewerEvidenceSourceFiles(copy)).toThrow(
+        /runtime directory escapes repository/,
+      );
+    });
+  });
   it.each(cards)(
     'binds independently discovered runtime and pinned inputs in %s output list',
     (card) => {
@@ -1104,6 +1135,32 @@ sys.stdout.buffer.write(data)
         union.add(path);
       }
     }
+    // Flat filesystem inventory is independent of generator imports and the loader's recursive
+    // routing walk. Vue and separately launched server inputs must also be in the exact union.
+    for (const directory of [
+      'packages/engine/src',
+      'packages/bot/src',
+      'packages/server/src',
+      'packages/shared/src',
+      'apps/web/src',
+      'apps/web/public',
+    ]) {
+      if (!fs.existsSync(resolve(repoRoot, directory))) continue;
+      for (const path of fs.readdirSync(resolve(repoRoot, directory), { recursive: true })) {
+        const local = `${directory}/${path}`;
+        if (fs.statSync(resolve(repoRoot, local)).isFile()) union.add(local);
+      }
+    }
+    for (const path of [
+      'package.json',
+      'bun.lock',
+      'playwright.config.ts',
+      'apps/web/package.json',
+      'apps/web/index.html',
+      'apps/web/vite.config.ts',
+      'packages/server/package.json',
+    ])
+      if (fs.existsSync(resolve(repoRoot, path))) union.add(path);
     expect(getViewerEvidenceSourceFiles(repoRoot)).toEqual([...union].sort());
   });
 
@@ -1166,13 +1223,13 @@ sys.stdout.buffer.write(data)
       for (const spec of f.report.suites[0]!.specs)
         spec.tests[0]!.results[0]!.attachments[0]!.path = 'output/synthetic.zip';
       f.manifest.files.push({
-        path: 'package.json',
-        sha256: hash(readFileSync(resolve(repoRoot, 'package.json'))),
+        path: 'README.md',
+        sha256: hash(readFileSync(resolve(repoRoot, 'README.md'))),
       });
       f.seal();
       const context = await loadViewerEvidence(f.paths, f.options);
       expect(context.traces['war-room-viewer-colorless-mana']!.path).toBe(f.tracePath);
-      expect(context.files['package.json']).toBe(f.manifest.files.at(-1)!.sha256);
+      expect(context.files['README.md']).toBe(f.manifest.files.at(-1)!.sha256);
       expect(Object.isFrozen(context)).toBe(true);
       expect(Object.isFrozen(context.files)).toBe(true);
       expect(Object.isFrozen(context.traces)).toBe(true);

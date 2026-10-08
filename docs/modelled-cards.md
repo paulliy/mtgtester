@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 5808 modeled non-land cards
+**Total**: 5802 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -476,7 +476,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bitterbloom Bearer
 - Bitterbow Sharpshooters
 - Bituminous Blast
-- Black Bolt, Inhuman King
 - Black Knight
 - Black Market Connections
 - Black Panther, Vanguard
@@ -566,7 +565,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Bloom Tender
 - Blossoming Defense
 - Blue Marvel, Adam Brashear
-- Blur of Blades
 - Blur Sliver
 - Blurred Mongoose
 - Boa Constrictor
@@ -974,7 +972,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Conscripted Infantry
 - Consecrated Sphinx
 - Consider
-- Consign to the Pit
 - Constricting Tendrils
 - Consulate Dreadnought
 - Consulate Skygate
@@ -1268,7 +1265,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Dimir Informant
 - Dimir Locket
 - Dimir Signet
-- Dingus Staff
 - Dinosaur Stampede
 - Diplomatic Immunity
 - Dire Fleet Hoarder
@@ -2504,7 +2500,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Inordinate Rage
 - Insatiable Avarice
 - Insatiable Harpy
-- Insolence
 - Insolent Neonate
 - Inspiration
 - Inspired Charge
@@ -4201,7 +4196,6 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Scaled Herbalist
 - Scaled Nurturer
 - Scaled Wurm
-- Scalelord Reckoner
 - Scampering Scorcher
 - Scar
 - Scarblade Scout

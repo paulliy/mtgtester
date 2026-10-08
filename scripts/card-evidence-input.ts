@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import type { Readable } from 'node:stream';
 import ts from 'typescript';
@@ -846,11 +846,70 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     });
     for (const path of paths) union.add(path);
   }
+  // Generator imports cannot discover Vue imports or the separately launched server. Bind
+  // the complete owned runtime input trees conservatively, including new files, rather than
+  // allowing an unlisted component/session dependency to leave an old receipt current.
+  const runtimeRoots = [
+    'packages/engine/src',
+    'packages/bot/src',
+    'packages/server/src',
+    'packages/shared/src',
+    'apps/web/src',
+    'apps/web/public',
+  ];
+  const runtimeRouting: string[][] = [];
+  const visitedRuntimeDirectories = new Set<string>();
+  function collect(directory: string): void {
+    if (!existsSync(resolve(root, directory))) return;
+    const actualDirectory = realpathSync(resolve(root, directory));
+    const localDirectory = relative(root, actualDirectory).split(sep).join('/');
+    requireInput(
+      localDirectory !== '' &&
+        localDirectory !== '..' &&
+        !localDirectory.startsWith('../') &&
+        !isAbsolute(localDirectory),
+      `runtime directory escapes repository: ${directory}`,
+    );
+    runtimeRouting.push([directory, localDirectory]);
+    if (visitedRuntimeDirectories.has(actualDirectory)) return;
+    visitedRuntimeDirectories.add(actualDirectory);
+    for (const entry of readdirSync(resolve(root, directory), { withFileTypes: true })) {
+      const path = `${directory}/${entry.name}`;
+      const metadata = entry.isSymbolicLink() ? statSync(resolve(root, path)) : entry;
+      if (metadata.isDirectory()) collect(path);
+      else if (metadata.isFile()) {
+        const actual = confinedFile(root, resolve(root, path));
+        const local = relative(root, actual).split(sep).join('/');
+        runtimeRouting.push([path, local]);
+        union.add(local);
+      } else requireInput(false, `unsupported runtime input: ${path}`);
+    }
+  }
+  for (const directory of runtimeRoots) collect(directory);
+  for (const path of [
+    'package.json',
+    'bun.lock',
+    'playwright.config.ts',
+    'apps/web/package.json',
+    'apps/web/index.html',
+    'apps/web/vite.config.ts',
+    'packages/server/package.json',
+  ])
+    if (existsSync(resolve(root, path))) {
+      confinedFile(root, resolve(root, path));
+      union.add(path);
+    }
   const files = [...union].sort();
   // Strings privately capture immutable structured identities; callers cannot replace tuples.
   return {
     files,
-    identity: JSON.stringify({ closures, sources: JSON.parse(sourceIdentity(root, files)) }),
+    identity: JSON.stringify({
+      closures,
+      runtimeRouting: runtimeRouting.sort((a, b) =>
+        JSON.stringify(a).localeCompare(JSON.stringify(b)),
+      ),
+      sources: JSON.parse(sourceIdentity(root, files)),
+    }),
   };
 }
 

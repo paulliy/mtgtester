@@ -808,6 +808,23 @@ and report the exact failed action, attempted recovery, and remaining work.
 
 ## Current exit audit
 
+- The captured `8db02ac` viewer run passes 137 cases, including all five Madame Null cases,
+  then reports Chromium “Target crashed” in Mosswort Bridge and skips 84 cases. Its failed
+  report and unchanged-source manifest are finalized. Historical traces occupied most of the
+  `/tmp` volume; every archive was copied to the larger workspace volume, byte-hash verified,
+  and retained at its old path through a link. New browser artifacts will use workspace storage.
+  Resource pressure is removed without changing assertions or retry policy.
+- Integrated current main `91a6dd5` with no conflicts, preserving smart yield and combat controls.
+  Its 57 player-control/protocol tests and production/test/tooling types, lint and formatting pass.
+  Refreshed inventory removes exactly the six contained consumers, yielding 5,802 non-land names.
+- Generator import discovery did not cover all separately launched server/Vue runtime inputs.
+  Viewer capture now includes the complete owned runtime trees and launch/package configuration,
+  recording confined link routing as well as bytes. A first expanded parser run retains 160 passes
+  and ten failures caused by rejecting legitimate links and stale exact-inventory assumptions.
+  Routing is now tracked rather than banned: all 15 affected routing/inventory/omission cases pass,
+  followed by two new-file/confinement cases. Filtered skips are not complete-suite evidence;
+  the full 171-case loader suite remains part of the required repository run.
+
 The architecture for all six phases is implemented. Final repository gates and a complete,
 current real-viewer receipt remain required before declaring the roadmap complete or opening
 its completion PR. The earlier execution records describe checkpoints, not current blockers.
