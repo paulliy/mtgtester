@@ -5,7 +5,7 @@ import { permanentManaValue } from '../src/actions/legal';
 import { selectPermanents } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
-import { moveObject, transformPermanent } from '../src/state/objects';
+import { applyCopy, moveObject, transformPermanent } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -142,6 +142,26 @@ describe('permanent mana value across double faces (CR 202.3b, 712.8e, 712.8f)',
 
     expect(ctx.state.battlefield.some((perm) => perm.id === transformed.id)).toBe(false);
     expect(ctx.state.battlefield.some((perm) => perm.id === smaller.id)).toBe(true);
+  });
+
+  it('gives a copy of a transformed DFC mana value 0, and a copy of its front face 4', () => {
+    const ctx = pod('mana-value-copy-of-back-face');
+    const transformed = spawn(ctx, 'P2', transformingCard());
+    transformPermanent(ctx, transformed);
+    const untransformed = spawn(ctx, 'P2', transformingCard());
+    const backCopy = spawn(ctx, 'P1', bear());
+    const frontCopy = spawn(ctx, 'P1', bear());
+
+    applyCopy(ctx, backCopy, transformed);
+    applyCopy(ctx, frontCopy, untransformed);
+
+    // CR 712.8e: a permanent copying the back face of a nonmodal DFC has mana value 0.
+    expect(permanentManaValue(ctx, backCopy)).toBe(0);
+    expect(selects(ctx, backCopy, manaValueAtMost(0))).toBe(true);
+    expect(selects(ctx, backCopy, manaValueAtLeast(1))).toBe(false);
+    // The transformed original still reads its front face.
+    expect(permanentManaValue(ctx, transformed)).toBe(4);
+    expect(permanentManaValue(ctx, frontCopy)).toBe(4);
   });
 
   it('gives a modal DFC played as its land face mana value 0', () => {

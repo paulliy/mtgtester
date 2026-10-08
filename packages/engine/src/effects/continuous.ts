@@ -41,7 +41,7 @@ import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
-import { manaValueOf } from '../mana/cost';
+import { manaValueOf, parseManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, setCached } from './layer-cache';
 
@@ -251,7 +251,7 @@ function effectExists(work: WorkMap, effect: LayerEffect): boolean {
  * - A modal DFC played as its land face (`face: 'back'`) has only that face's characteristics
  *   (CR 712.8f), and a land face has no mana cost: mana value 0.
  * - A transformed nonmodal DFC (`transformed`) uses its FRONT face's mana cost (CR 202.3b,
- *   712.8e), so transforming never changes its mana value. Only a copy of a back face has mana
+ *   712.8e), so transforming never changes its mana value. A copy of a back face has mana
  *   value 0.
  *
  * A face-down permanent has no mana cost, so its mana value is 0 whatever card it is (CR 708.2).
@@ -264,6 +264,10 @@ function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | und
     const landFace = def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace;
     if (landFace !== undefined) return 0;
   }
+  // A copy takes the copied object's mana cost (CR 707.2), not its def's: `applyCopy` keeps the
+  // target's front-face `oracleId` but its CURRENT cost, which for a transformed target is the
+  // back face's — so a copy of a back face reads 0 (CR 712.8e).
+  if (perm.copyOriginal !== undefined) return manaValueOf(parseManaCost(perm.manaCost).cost);
   return manaValueOf(def.manaCost);
 }
 
