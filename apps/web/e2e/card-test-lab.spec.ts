@@ -2853,7 +2853,9 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
     .poll(
       async () => {
         if (await target.isVisible()) return true;
-        if (await pass.isVisible()) await pass.click();
+        // The viewer passes on its own when passing is its only legal action, so the button can
+        // vanish between the check and the click; never let one click block the poll.
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 15_000 },
@@ -2870,7 +2872,8 @@ async function awaitResolution(page: Page, resolves: string, before: number): Pr
     .poll(
       async () => {
         if ((await resolved.count()) > before) return true;
-        if ((await empty.count()) === 0 && (await pass.isEnabled())) await pass.click();
+        if ((await empty.count()) === 0 && (await pass.isEnabled()))
+          await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 15_000 },
@@ -3036,7 +3039,9 @@ test('Sceptre of Eternal Glory: mixed lands give one mana', async ({ page }) => 
 test('Weathered Wayfarer: behind on lands, reveal a land', async ({ page }) => {
   await runScenario(page, 'Weathered Wayfarer: behind on lands, reveal a land');
   await activate(page, 'Weathered Wayfarer', /Search your library/);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  // The viewer may pass on its own when passing is the only legal action, so never click Pass
+  // once unconditionally: pass only while the search prompt has not appeared.
+  await passUntil(page, page.getByRole('button', { name: 'Find nothing' }));
   await expect(page.getByText(/search your library/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
   await expect(page.locator('.panel-group').filter({ hasText: 'Island' })).toHaveCount(1);
