@@ -544,12 +544,6 @@
     "def": {}
   },
   {
-    "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
-    "name": "Dream Devourer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
     "name": "Illuminor Szeras",
     "handledLines": [
@@ -14503,12 +14497,6 @@
   {
     "oracleId": "oracle-dragon-tempest",
     "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-dream-devourer",
-    "name": "Dream Devourer",
     "handledLines": [],
     "def": {}
   },

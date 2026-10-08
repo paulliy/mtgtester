@@ -850,3 +850,30 @@ describe('Grim Haruspex Card Test Lab scenario', () => {
     replays('grim-haruspex-viewer-morph', steps);
   });
 });
+
+describe('Dream Devourer Card Test Lab scenarios', () => {
+  it('dream-devourer-viewer-foretell — foretell the Bolt face down; the Devourer gets +2/+0', () => {
+    const steps: Step[] = [{ action: 'Foretell Lab Foretell Bolt ({2})' }];
+    const { scenario, state, seat, onBattlefield } = run('dream-devourer-viewer-foretell', steps);
+    expect(seat('P1').hand).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Foretell Bolt']);
+    expect(onBattlefield('Mountain').every((land) => land.tapped)).toBe(true);
+    // Opponents read only that a card was foretold.
+    const opponentLog = formatPlayerLog(scenario.engine.eventsSince(0), 'P2').map(
+      (line) => line.text,
+    );
+    expect(opponentLog).toContain('Foretell a card ({2})');
+    expect(opponentLog.some((line) => line.includes('Lab Foretell Bolt'))).toBe(false);
+    expect(opponentLog.some((line) => /Dream Devourer.*resolves/.test(line))).toBe(true);
+    replays('dream-devourer-viewer-foretell', steps);
+  });
+
+  it('dream-devourer-viewer-foretold-cast — the foretold Bolt is cast from exile for {R}', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Foretell Bolt ({R}) (foretold)', targets: ['P2'] }];
+    const { state, seat } = run('dream-devourer-viewer-foretold-cast', steps);
+    expect(seat('P2').life).toBe(38);
+    expect(state.exile).toEqual([]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Foretell Bolt']);
+    replays('dream-devourer-viewer-foretold-cast', steps);
+  });
+});

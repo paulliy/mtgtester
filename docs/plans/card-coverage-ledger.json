@@ -724,6 +724,21 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
+    "name": "Dream Devourer",
+    "package": "PR02.26",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Foretell grant is omitted, and the pump fires on any spell you cast."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
     "name": "Elite Scaleguard",
     "package": "W3",

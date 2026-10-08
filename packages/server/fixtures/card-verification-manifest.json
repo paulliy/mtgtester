@@ -1524,13 +1524,42 @@
     "0ff7440b-b831-40a9-81c4-99d77bf93b8d": {
       "name": "Dream Devourer",
       "oracleSha256": "daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "dream-devourer-grant",
+          "oracleText": "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}. (During your turn, you may pay {2} and exile it from your hand face down. Cast it on a later turn for its foretell cost.)",
+          "implementation": [
+            "interpreted rule static grantForetell (reduction 2)",
+            "foretell special action during your turn: pay {2}, exile a nonland hand card face down, recording its foretell cost (mana cost less {2} generic only)",
+            "a foretold card is cast by its owner on a later turn for that cost, kept even if Dream Devourer has left; no other alternative cost",
+            "hidden information: the exiled card shows as a face-down card and other seats' log reads 'Foretell a card'"
+          ],
+          "engineTestIds": [
+            "dream-devourer-pinned-oracle-supported",
+            "dream-devourer-foretell-offered",
+            "dream-devourer-needs-devourer",
+            "dream-devourer-foretell-face-down",
+            "dream-devourer-cast-later-turn",
+            "dream-devourer-colored-cost-stays",
+            "dream-devourer-cost-kept-without-it"
+          ],
+          "viewerScenarioIds": [
+            "dream-devourer-viewer-foretell",
+            "dream-devourer-viewer-foretold-cast"
+          ]
+        },
+        {
+          "id": "dream-devourer-pump",
           "oracleText": "Whenever you foretell a card, this creature gets +2/+0 until end of turn.",
-          "implementation": ["explicitly unsupported; Foretell omitted; pumps on any spell"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted foretells trigger (you), queued by the foretell special action, not by casting a foretold card; pumpEachUntilEot self +2/+0"
+          ],
+          "engineTestIds": [
+            "dream-devourer-pinned-oracle-supported",
+            "dream-devourer-foretell-face-down"
+          ],
+          "viewerScenarioIds": ["dream-devourer-viewer-foretell"]
         }
       ],
       "gameplayAiScenarioIds": []

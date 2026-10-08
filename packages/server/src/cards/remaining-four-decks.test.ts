@@ -171,7 +171,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Tomik, Wielder of Law',
       'Combat Calligrapher',
       'Comeuppance',
-      'Dream Devourer',
       'Malakir Rebirth // Malakir Mire',
       'Mangara, the Diplomat',
       'Michiko Konda, Truth Seeker',

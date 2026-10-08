@@ -3672,3 +3672,32 @@ test('Grim Haruspex: cast it face down, turn it face up, then draw', async ({ pa
   await expect(permanent(page, 'Lab Zombie')).toHaveCount(0);
   await expect(handCard(page, 'Swamp')).toBeVisible();
 });
+
+test('Dream Devourer: foretell a card for {2}', async ({ page }) => {
+  await runScenario(page, 'Dream Devourer: foretell a card for {2}');
+  const bolt = handCard(page, 'Lab Foretell Bolt');
+  await expect(bolt).toHaveClass(/actionable/);
+  // Two Mountains cannot cast it, so foretelling is the card's only action.
+  await bolt.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Foretell Lab Foretell Bolt/).first()).toBeVisible();
+  await expect(page.getByText(/Dream Devourer.*resolves/).first()).toBeVisible();
+  await expect(handCard(page, 'Lab Foretell Bolt')).toHaveCount(0);
+});
+
+test('Dream Devourer: cast a foretold card for {R}', async ({ page }) => {
+  await runScenario(page, 'Dream Devourer: cast a foretold card for {R}');
+  const foretold = page
+    .locator('.zones-strip .zone', { hasText: 'Exile' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Foretell Bolt', exact: true }) });
+  await expect(foretold).toHaveClass(/actionable/, { timeout: 15_000 });
+  await foretold.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
+});

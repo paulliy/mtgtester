@@ -1847,7 +1847,7 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard',
+  when: 'gainsLife' | 'drawsCard' | 'foretells',
   playerId: PlayerId,
   amount?: number,
 ): void {

@@ -3010,6 +3010,8 @@ const TOKEN_CREATED_TRIGGER_HEAD_RE =
 // `draws?` plus an either-possessive keeps one regex over both rather than two that drift.
 const DRAW_COUNT_TRIGGER_HEAD_RE =
   /^whenever (you|a player|an opponent) draws? (?:their|your) (second|third|fourth|fifth|sixth) card each turn, (.*)$/;
+/** "Whenever you foretell a card" (Dream Devourer): the foretell special action (CR 702.143c). */
+const FORETELL_TRIGGER_HEAD_RE = /^whenever you foretell a card, (.*)$/;
 const DRAW_TRIGGER_HEAD_RE = /^whenever (you|a player|an opponent) draws? (?:a|one) card, (.*)$/;
 const DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE =
   /^whenever (you|a player|an opponent) draws? a card except the first one they draw in each of their draw steps, (.*)$/;
@@ -3635,6 +3637,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const drawCount = firstLine.match(DRAW_COUNT_TRIGGER_HEAD_RE);
   const drawExceptFirst = firstLine.match(DRAW_EXCEPT_FIRST_TRIGGER_HEAD_RE);
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
+  const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
   if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
@@ -3797,6 +3800,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
     body = tokenCreated[3] as string;
+  } else if (foretell !== null) {
+    heads = [{ when: 'foretells', player: 'you' }];
+    body = foretell[1] as string;
   } else if (drawCount !== null || draw !== null) {
     const match = drawCount ?? draw;
     if (match === null) return null;
@@ -5558,6 +5564,14 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
         },
       ];
     }
+  }
+  // "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal
+  // to its mana cost reduced by {2}." (Dream Devourer).
+  {
+    const m = lower.match(
+      /^each nonland card in your hand without foretell has foretell\. its foretell cost is equal to its mana cost reduced by \{(\d+)\}\.?(?:\s*\(.*\))?$/,
+    );
+    if (m !== null) return [{ kind: 'grantForetell', reduction: Number(m[1]) }];
   }
   // "Boast abilities you activate cost {1} less to activate for each Dragon you control."
   // (Dragonkin Berserker): every Boast ability you activate, whatever its source.

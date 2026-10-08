@@ -205,12 +205,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Display of Power',
     'Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.',
   );
-  // Catalog audit queen-batch-2: Foretell claimed as any-cast pump.
-  unsupportedCard(
-    '0ff7440b-b831-40a9-81c4-99d77bf93b8d',
-    'Dream Devourer',
-    'Foretell grant is omitted, and the pump fires on any spell you cast.',
-  );
   // Catalog audit queen-batch-3: optional once-per-attack-group is a per-attacker grant.
   unsupportedCard(
     '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb',

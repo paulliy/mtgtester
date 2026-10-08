@@ -98,6 +98,12 @@ export type RuleStatic =
     }
   /** "Play with the top card of your library revealed." */
   | { kind: 'revealTopLibrary' }
+  /**
+   * "Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to
+   * its mana cost reduced by {2}." (Dream Devourer, CR 702.143a): the foretell special action
+   * for its controller's hand cards, each keeping that cost once foretold.
+   */
+  | { kind: 'grantForetell'; reduction: number }
   /** Additional land plays available to the controller each turn. */
   | { kind: 'additionalLandDrops'; count: Value }
   /** Opponents/players cannot activate abilities of matching battlefield sources. */

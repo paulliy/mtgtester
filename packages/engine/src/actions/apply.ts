@@ -43,6 +43,7 @@ import {
   moveObject,
   queueCastTriggers,
   queueKeywordCastTriggers,
+  queuePlayerTriggersForEvent,
   queueTriggersForEvent,
   removeFromCurrentZone,
 } from '../state/objects';
@@ -53,6 +54,7 @@ import {
   getDefByOracleId,
   playFromZonePermission,
   wardCostOf,
+  gatherRuleStatics,
 } from '../state/queries';
 import type {
   EngineCardObject,
@@ -486,12 +488,24 @@ export function* applyPriorityAction(
         }
       }
       let castingAdditionalCosts: AbilityCost[] = [...(def.spellAdditionalCosts ?? [])];
+      // A foretold card is cast on a later turn for its foretell cost (CR 702.143a).
+      const foretold =
+        payload.fromExile === true &&
+        obj.ownerId === player.id &&
+        obj.foretold !== undefined &&
+        obj.foretold.turn < s.turnNumber
+          ? obj.foretold
+          : null;
       if (
         payload.fromExile === true &&
         obj.onAdventure !== true &&
-        obj.playableUntilEotBy !== player.id
+        obj.playableUntilEotBy !== player.id &&
+        foretold === null
       ) {
         throw new Error('exile cast permission is not legal');
+      }
+      if (foretold !== null && payload.alternativeCast !== undefined) {
+        throw new Error('a foretold card is cast only for its foretell cost');
       }
       if (payload.reboundCast === true) {
         throw new Error('rebound cards may be cast only while their delayed trigger resolves');
@@ -597,7 +611,10 @@ export function* applyPriorityAction(
         ability = alt.ability ?? { kind: 'spell', targets: [], effects: [] };
         targets = validateChosenTargets(ctx, def, player.id, outcome.targets);
       } else {
-        cost = withX(addGeneric(def.manaCost ?? emptyCost(), tax), payload.x ?? 0);
+        cost = withX(
+          foretold !== null ? foretold.cost : addGeneric(def.manaCost ?? emptyCost(), tax),
+          payload.x ?? 0,
+        );
         const selectedModes =
           payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
         castingAdditionalCosts = [
@@ -1131,6 +1148,37 @@ export function* applyPriorityAction(
       debug(ctx, 'stack', `${player.id} activates ${perm.name} — ${description}`);
       queueWardTriggers(ctx, player.id, id, allTargets);
       queueBecomesTargetedTriggers(ctx, player.id, allTargets);
+      return;
+    }
+
+    case 'foretell': {
+      // Foretell (CR 702.143a/b): a special action during your turn — pay {2}, exile the card
+      // face down. It keeps the foretell cost it had in hand (Dream Devourer's mana cost
+      // reduced by {2}) and may be cast after this turn.
+      const card = player.hand.find((candidate) => candidate.id === payload.objectId);
+      const grant = gatherRuleStatics(ctx).find(
+        (entry) => entry.static.kind === 'grantForetell' && entry.controllerId === player.id,
+      );
+      const def = card === undefined ? undefined : getDefByOracleId(ctx, card.oracleId, card.name);
+      if (
+        card === undefined ||
+        grant === undefined ||
+        grant.static.kind !== 'grantForetell' ||
+        s.currentTurnPlayer !== player.id ||
+        def === undefined ||
+        def.types.includes('Land') ||
+        def.manaCost === null
+      ) {
+        throw new Error('illegal action: this card cannot be foretold');
+      }
+      const foretellCost = subtractGeneric(def.manaCost, grant.static.reduction);
+      yield* payManaCost(ctx, player, { ...emptyCost(), generic: 2 });
+      const exiled = yield* moveObject(ctx, card, { zone: 'exile', faceDown: true });
+      if (exiled !== null && exiled.zone === 'exile') {
+        (exiled as EngineCardObject).foretold = { turn: s.turnNumber, cost: foretellCost };
+      }
+      emit(ctx, 'foretold', { player: player.id }, player.id);
+      queuePlayerTriggersForEvent(ctx, 'foretells', player.id);
       return;
     }
 

@@ -4044,6 +4044,164 @@ describe('Grim Haruspex', () => {
   });
 });
 
+describe('Dream Devourer', () => {
+  const devourer = pinned('Dream Devourer');
+  const BOLT = oracle({
+    name: 'Devourer Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{2}{R}',
+    colors: ['R'],
+    oracleText: 'Devourer Lab Bolt deals 2 damage to any target.',
+    power: null,
+    toughness: null,
+  });
+  const GREEN = oracle({
+    name: 'Devourer Lab Growth',
+    typeLine: 'Sorcery',
+    manaCost: '{1}{G}{G}',
+    colors: ['G'],
+    oracleText: 'Draw a card.',
+    power: null,
+    toughness: null,
+  });
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', devourer.card);
+    const bolt = conjure(ctx, 'P1', BOLT, 'hand');
+    const land = conjure(ctx, 'P1', forest(), 'hand');
+    return { ctx, self, bolt, land };
+  }
+
+  const foretellOf = (ctx: GameContext, objectId: string) =>
+    priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as { kind: string; objectId?: string };
+      return payload.kind === 'foretell' && payload.objectId === objectId;
+    });
+
+  /** Foretell `objectId` now; returns the face-down exiled card. */
+  function foretell(ctx: GameContext, objectId: string, cardId: string) {
+    addMana(playerById(ctx, 'P1'), generic(2));
+    takeAction(ctx, 'P1', foretellOf(ctx, objectId)!.payload as PriorityActionPayload);
+    return ctx.state.exile.find((card) => card.cardId === cardId)!;
+  }
+
+  /** Move to P1's next turn, so foretold cards become castable. */
+  function nextTurn(ctx: GameContext) {
+    ctx.state.turnNumber += 4;
+  }
+
+  it('dream-devourer-pinned-oracle-supported — a foretell grant and a +2/+0 trigger on foretelling', () => {
+    expect(devourer.sha256).toBe(
+      'daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0',
+    );
+    expect(devourer.card.oracleText).toBe(
+      'Each nonland card in your hand without foretell has foretell. Its foretell cost is equal to its mana cost reduced by {2}. (During your turn, you may pay {2} and exile it from your hand face down. Cast it on a later turn for its foretell cost.)\nWhenever you foretell a card, this creature gets +2/+0 until end of turn.',
+    );
+    expectModeled(devourer.card);
+    expect(getOverride(devourer.card.oracleId)).toBeUndefined();
+    const def = interpretCard(devourer.card);
+    expect(def.ruleStatics).toEqual([{ kind: 'grantForetell', reduction: 2 }]);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: { when: 'foretells', player: 'you' },
+        effects: [{ op: 'pumpEachUntilEot', selector: { kind: 'self' }, power: 2, toughness: 0 }],
+      }),
+    ]);
+  });
+
+  it('dream-devourer-foretell-offered — on your turn, each nonland hand card may be foretold for {2}', () => {
+    const { ctx, bolt, land } = ready('devourer-offered');
+    addMana(playerById(ctx, 'P1'), generic(2));
+    const option = foretellOf(ctx, bolt.id);
+    expect(option?.description).toBe('Foretell Devourer Lab Bolt ({2})');
+    expect(option?.data?.['publicDescription']).toBe('Foretell a card ({2})');
+    expect(foretellOf(ctx, land.id)).toBeUndefined();
+    // Not on an opponent's turn.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(foretellOf(ctx, bolt.id)).toBeUndefined();
+  });
+
+  it('dream-devourer-needs-devourer — without it, nothing has foretell', () => {
+    const ctx = pod('devourer-none');
+    const bolt = conjure(ctx, 'P1', BOLT, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(2));
+    expect(foretellOf(ctx, bolt.id)).toBeUndefined();
+  });
+
+  it('dream-devourer-foretell-face-down — the card is exiled face down, hidden from others, and the Devourer gets +2/+0', () => {
+    const { ctx, self, bolt } = ready('devourer-exile');
+    const exiled = foretell(ctx, bolt.id, bolt.cardId);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    expect(exiled.foretold).toEqual({
+      turn: ctx.state.turnNumber,
+      cost: parseManaCost('{R}').cost,
+    });
+    // A special action: nothing on the stack except the Devourer's own trigger.
+    expect(ctx.state.stack).toEqual([]);
+    const opponentView = JSON.stringify(buildPlayerView(ctx, 'P2'));
+    expect(opponentView).not.toContain('Devourer Lab Bolt');
+    expect(opponentView).toContain('Face-down card');
+    expect(JSON.stringify(buildPlayerView(ctx, 'P1'))).toContain('Devourer Lab Bolt');
+    expect(
+      ctx.state.eventLog.some((event) => JSON.stringify(event).includes('Devourer Lab Bolt')),
+    ).toBe(false);
+    settle(ctx);
+    expect(effectivePT(ctx, self)).toEqual({ power: 2, toughness: 3 });
+  });
+
+  it('dream-devourer-cast-later-turn — a foretold card is cast only on a later turn, for its foretell cost', () => {
+    const { ctx, bolt } = ready('devourer-cast');
+    const exiled = foretell(ctx, bolt.id, bolt.cardId);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }]);
+    expect(castOptionsFor(ctx, 'P1', exiled.id)).toEqual([]);
+    nextTurn(ctx);
+    const options = castOptionsFor(ctx, 'P1', exiled.id);
+    expect(options.map((option) => option.description)).toEqual([
+      'Cast Devourer Lab Bolt ({R}) (foretold)',
+    ]);
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P2']]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(ctx.state.exile.some((card) => card.cardId === bolt.cardId)).toBe(false);
+  });
+
+  it('dream-devourer-colored-cost-stays — the reduction takes only generic mana', () => {
+    const { ctx } = ready('devourer-colored');
+    const growth = conjure(ctx, 'P1', GREEN, 'hand');
+    const exiled = foretell(ctx, growth.id, growth.cardId);
+    expect(exiled.foretold?.cost).toEqual(parseManaCost('{G}{G}').cost);
+    nextTurn(ctx);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }]);
+    expect(castOptionsFor(ctx, 'P1', exiled.id)).toEqual([]);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }]);
+    expect(castOptionsFor(ctx, 'P1', exiled.id).map((option) => option.description)).toEqual([
+      'Cast Devourer Lab Growth ({G}{G}) (foretold)',
+    ]);
+  });
+
+  it('dream-devourer-cost-kept-without-it — the foretell cost stays after the Devourer leaves', () => {
+    const { ctx, self, bolt } = ready('devourer-gone');
+    const exiled = foretell(ctx, bolt.id, bolt.cardId);
+    settle(ctx);
+    pump(moveObject(ctx, self, { zone: 'graveyard' }));
+    nextTurn(ctx);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }]);
+    expect(castOptionsFor(ctx, 'P1', exiled.id).map((option) => option.description)).toEqual([
+      'Cast Devourer Lab Bolt ({R}) (foretold)',
+    ]);
+  });
+});
+
 describe('Killian, Ink Duelist', () => {
   const killian = pinned('Killian, Ink Duelist');
   const SHOCK = oracle({
@@ -4601,6 +4759,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Dream Devourer',
+    sha256: 'daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0',
+    clauseCount: 2,
+  },
   {
     name: 'Grim Haruspex',
     sha256: 'a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef',

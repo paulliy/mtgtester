@@ -212,6 +212,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'changing-loyalty-viewer-replicate',
       'changing-loyalty-viewer-steal',
       'grim-haruspex-viewer-morph',
+      'dream-devourer-viewer-foretell',
+      'dream-devourer-viewer-foretold-cast',
     ]);
   });
 

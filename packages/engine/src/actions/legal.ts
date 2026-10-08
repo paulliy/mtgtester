@@ -131,6 +131,8 @@ export type PriorityActionPayload =
       modes?: number[];
     }
   | { kind: 'companionToHand' }
+  /** Foretell (CR 702.143a): pay {2} and exile this hand card face down. */
+  | { kind: 'foretell'; objectId: ObjectId }
   /** Morph's special action (CR 702.37e, 116.2b): pay the morph cost, turn it face up. */
   | { kind: 'turnFaceUp'; objectId: ObjectId };
 
@@ -222,6 +224,8 @@ export function modalSelections(
   return out;
 }
 const COMPANION_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
+/** The foretell special action's cost (CR 702.143a). */
+const FORETELL_COST: ParsedManaCost = { ...emptyCost(), generic: 2 };
 /** The face-down cast cost of a morph card (CR 702.37c). */
 const FACE_DOWN_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
 
@@ -1225,6 +1229,10 @@ export function computePriorityOptions(
 
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
     const reboundCast = fromExile && obj.reboundCastBy === player.id;
+    // A foretold card is cast on a later turn for the foretell cost it was exiled with
+    // (CR 702.143a), never for its mana cost or another alternative cost.
+    const foretold =
+      fromExile && obj.ownerId === player.id && obj.foretold !== undefined ? obj.foretold : null;
     const spellAdditionalCosts = def.spellAdditionalCosts ?? [];
     const sourceInHand = !fromCommand && !fromLibraryTop && !fromExile && !fromGraveyard;
     if (
@@ -1236,7 +1244,11 @@ export function computePriorityOptions(
       return;
     const additionalManaCost = manaPortionOf(spellAdditionalCosts);
     const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId);
-    const unreduced = reboundCast ? emptyCost() : addGeneric(def.manaCost, tax);
+    const unreduced = reboundCast
+      ? emptyCost()
+      : foretold !== null
+        ? foretold.cost
+        : addGeneric(def.manaCost, tax);
     // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
     // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
     // kicker's, not just for whatever generic mana the printed cost happens to have.
@@ -1384,7 +1396,7 @@ export function computePriorityOptions(
                   ? ` from the command zone${tax > 0 ? `, commander tax {${tax}}` : ''}`
                   : '') +
                 (fromLibraryTop ? ' from the top of your library' : '') +
-                (fromExile ? ' from exile' : '') +
+                (fromExile ? (foretold !== null ? ' (foretold)' : ' from exile') : '') +
                 (fromGraveyard ? ' from your graveyard' : '') +
                 (reboundCast ? ' without paying its mana cost' : '') +
                 (variant.slot !== undefined && variant.slot >= 0
@@ -1690,7 +1702,11 @@ export function computePriorityOptions(
     // One pass per card even when both permissions apply, or every option is offered twice.
     if (
       (obj.ownerId === player.id && obj.onAdventure === true) ||
-      obj.playableUntilEotBy === player.id
+      obj.playableUntilEotBy === player.id ||
+      // Foretold: castable after the turn it was foretold (CR 702.143a).
+      (obj.ownerId === player.id &&
+        obj.foretold !== undefined &&
+        obj.foretold.turn < ctx.state.turnNumber)
     ) {
       considerCast(obj, false, false, true);
     }
@@ -2026,6 +2042,37 @@ export function computePriorityOptions(
           abilityIndex: index,
         },
       });
+    }
+  }
+
+  // Foretell (CR 702.143a, 702.143b): during your turn, any time you have priority, pay {2} and
+  // exile a card with foretell from your hand face down — a special action. Dream Devourer gives
+  // nonland cards in hand foretell for their mana cost reduced by {2}.
+  const foretellGrant = gatherRuleStatics(ctx).find(
+    (entry) => entry.static.kind === 'grantForetell' && entry.controllerId === player.id,
+  );
+  if (foretellGrant !== undefined && ctx.state.currentTurnPlayer === player.id) {
+    const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+    if (canPay(FORETELL_COST, player.manaEntries, baseCastSources, allows, player.life)) {
+      for (const card of player.hand) {
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        if (def.types.includes('Land') || def.manaCost === null) continue;
+        options.push({
+          type: 'activateAbility',
+          description: `Foretell ${card.name} ({2})`,
+          payload: { kind: 'foretell', objectId: card.id },
+          data: {
+            sourceName: card.name,
+            sourceZone: 'hand',
+            abilityDescription: 'Foretell',
+            manaCost: describeManaCost(FORETELL_COST),
+            ...paymentPreview(ctx, player, FORETELL_COST, baseCastSources, allows),
+            // The exiled card is hidden (CR 702.143a): `formatPlayerLog`.
+            publicDescription: 'Foretell a card ({2})',
+          },
+          interaction: { kind: 'source', sourceId: card.id, sourceCardId: card.cardId },
+        });
+      }
     }
   }
 

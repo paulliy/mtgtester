@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 42,
+      "uniqueOracleIds": 41,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5900,6 +5900,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: Morph is a face-down cast for {3} (on the stack as a vanilla 2/2 with hidden identity) and a turn-face-up special action for the morph cost, and the interpreter reads Morph {B}; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0ff7440b-b831-40a9-81c4-99d77bf93b8d",
+      "name": "Dream Devourer",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the foretell grant (a foretell special action for nonland hand cards, castable from exile on a later turn for the mana cost reduced by {2} generic, kept after the Devourer leaves) and the 'whenever you foretell a card' trigger; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

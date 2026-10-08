@@ -1274,7 +1274,9 @@ export type TriggerWhen =
   | 'beginningOfCombat'
   | 'gainsLife'
   | 'dealtDamage'
-  | 'drawsCard';
+  | 'drawsCard'
+  /** "Whenever you foretell a card" (CR 702.143c). */
+  | 'foretells';
 
 /** The object-event half of `TriggerHead`. */
 export type ObjectTriggerWhen =
@@ -1357,7 +1359,8 @@ export type TriggerHead =
   | { when: 'precombatMain'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
-  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' };
+  | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
+  | { when: 'foretells'; player: 'you' };
 
 /**
  * When a triggered ability fires.

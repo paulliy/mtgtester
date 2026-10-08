@@ -183,6 +183,12 @@ export interface EngineCardObject extends EngineObject {
   playableUntilEotBy?: PlayerId;
   /** Rebound's one-shot permission to cast this card from exile at the next upkeep. */
   reboundCastBy?: PlayerId;
+  /**
+   * Foretold (CR 702.143a): exiled face down on turn `turn`, castable by its owner on a later
+   * turn for `cost`, which it keeps even if the effect that granted foretell is gone (Dream
+   * Devourer). Hidden from every other player until it is cast.
+   */
+  foretold?: { turn: number; cost: import('../mana/cost').ParsedManaCost };
 }
 
 /** The keywords that change how a source's damage is dealt (CR 702.2, 702.15, 702.90). */

@@ -288,7 +288,10 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     }),
     exile: spectator.exile.map((card) => {
       const engineCard = ctx.state.exile.find((candidate) => candidate.id === card.id);
-      if (engineCard?.attachedToCardId === undefined || engineCard.ownerId === playerId) {
+      if (
+        (engineCard?.attachedToCardId === undefined && engineCard?.foretold === undefined) ||
+        engineCard.ownerId === playerId
+      ) {
         return card;
       }
       return {
@@ -372,6 +375,9 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
 
     case 'resolved':
       return { ...base, text: `${str(p, 'description') ?? 'spell'} resolves` };
+
+    case 'foretold':
+      return { ...base, text: 'foretells a card' };
 
     case 'turnedFaceUp':
       return { ...base, text: `turns ${str(p, 'name') ?? 'a permanent'} face up` };

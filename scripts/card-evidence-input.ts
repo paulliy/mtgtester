@@ -1506,6 +1506,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Grim Haruspex: cast it face down, turn it face up, then draw'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dream Devourer: foretell a card for {2}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dream Devourer: cast a foretold card for {R}'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

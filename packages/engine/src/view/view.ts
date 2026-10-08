@@ -140,11 +140,12 @@ function permanentViews(ctx: GameContext): PermanentView[] {
 /**
  * Every player's exile zone, redacted the same way the human browser view redacts it
  * (`view/spectator.ts:buildPlayerBoardState`): a card exiled face down (`attachedToCardId`
- * set — currently only hideaway) reports as "Face-down card" to everyone but its owner.
+ * set by hideaway, or a foretold card) reports as "Face-down card" to everyone but its owner.
  */
 function exileViews(ctx: GameContext, playerId: PlayerId): CardView[] {
   return ctx.state.exile.map((card) =>
-    card.attachedToCardId === undefined || card.ownerId === playerId
+    (card.attachedToCardId === undefined && card.foretold === undefined) ||
+    card.ownerId === playerId
       ? nameOnlyView(card.id, card.name)
       : nameOnlyView(card.id, 'Face-down card'),
   );

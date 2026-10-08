@@ -38,6 +38,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Convergence of Dominion',
       'Dragonkin Berserker',
       'Dread Return',
+      'Dream Devourer',
       'Endless Atlas',
       'Fabled Passage',
       'Flare of Denial',

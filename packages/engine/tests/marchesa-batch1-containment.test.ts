@@ -124,7 +124,6 @@ const REASONS: Record<string, string> = {
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   Comeuppance:
     'All-damage prevention and reflection are implemented as preventCombatDamageToController.',
-  'Dream Devourer': 'Foretell grant is omitted, and the pump fires on any spell you cast.',
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
   'Mangara, the Diplomat':
     'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
@@ -308,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Convergence of Dominion',
     'Changing Loyalty',
     'Grim Haruspex',
+    'Dream Devourer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

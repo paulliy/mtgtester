@@ -7058,6 +7058,82 @@ function grimHaruspexScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_FORETELL_BOLT = card({
+  oracleId: 'lab-foretell-bolt',
+  name: 'Lab Foretell Bolt',
+  typeLine: 'Instant',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  oracleText: 'Lab Foretell Bolt deals 2 damage to any target.',
+});
+
+function dreamDevourerScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    alreadyForetold: boolean;
+  },
+): CardTestScenario {
+  const devourer = pinnedFrom(MARCHESA_BATCH1, 'Dream Devourer');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: devourer.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [devourer.card, LAB_FORETELL_BOLT, MOUNTAIN, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: spec.alreadyForetold ? [] : ['Lab Foretell Bolt'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.alreadyForetold
+            ? ['Dream Devourer', 'Mountain']
+            : ['Dream Devourer', 'Mountain', 'Mountain'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      ...(spec.alreadyForetold
+        ? { foretold: [{ playerId: 'P1', cardNames: ['Lab Foretell Bolt'], reduction: 2 }] }
+        : {}),
+    },
+  });
+}
+
+const dreamDevourerForetellScenario = (gameId: GameId): CardTestScenario =>
+  dreamDevourerScenario(gameId, {
+    id: 'dream-devourer-viewer-foretell',
+    title: 'Dream Devourer: foretell a card for {2}',
+    instructions: ['Foretell Lab Foretell Bolt from your hand for {2}.'],
+    expectedOutcome:
+      'Lab Foretell Bolt is exiled face down, and Dream Devourer gets +2/+0 until end of turn.',
+    clauseIds: ['dream-devourer-grant', 'dream-devourer-pump'],
+    alreadyForetold: false,
+  });
+
+const dreamDevourerForetoldCastScenario = (gameId: GameId): CardTestScenario =>
+  dreamDevourerScenario(gameId, {
+    id: 'dream-devourer-viewer-foretold-cast',
+    title: 'Dream Devourer: cast a foretold card for {R}',
+    instructions: [
+      'Lab Foretell Bolt was foretold last turn. Cast it from exile for {R}, targeting P2.',
+    ],
+    expectedOutcome: 'Lab Foretell Bolt deals 2 damage to P2.',
+    clauseIds: ['dream-devourer-grant'],
+    alreadyForetold: true,
+  });
+
 function changingLoyaltyScenario(
   gameId: GameId,
   spec: {
@@ -7371,6 +7447,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'changing-loyalty-viewer-replicate',
   'changing-loyalty-viewer-steal',
   'grim-haruspex-viewer-morph',
+  'dream-devourer-viewer-foretell',
+  'dream-devourer-viewer-foretold-cast',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7539,6 +7617,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'changing-loyalty-viewer-replicate': changingLoyaltyReplicateScenario,
   'changing-loyalty-viewer-steal': changingLoyaltyStealScenario,
   'grim-haruspex-viewer-morph': grimHaruspexScenario,
+  'dream-devourer-viewer-foretell': dreamDevourerForetellScenario,
+  'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
 };
 
 export function createCardTestScenario(
