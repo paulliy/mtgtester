@@ -41,7 +41,7 @@ import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { LayerValueScope } from '../cards/value';
 import type { ManaUnit } from '../mana/cost';
-import { manaValueOf } from '../mana/cost';
+import { manaValueOf, parseManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { digestOf, getCached, setCached } from './layer-cache';
 
@@ -243,6 +243,34 @@ function effectExists(work: WorkMap, effect: LayerEffect): boolean {
   return source !== undefined && !source.chars.loseAbilities;
 }
 
+/**
+ * A permanent's mana value (CR 202.3), or `undefined` when its def can't be found. Mana value is
+ * a printed characteristic, not a layer's derived output, and reads X as 0 off the stack (202.3e).
+ *
+ * Two kinds of "back face" must not be confused here:
+ * - A modal DFC played as its land face (`face: 'back'`) has only that face's characteristics
+ *   (CR 712.8f), and a land face has no mana cost: mana value 0.
+ * - A transformed nonmodal DFC (`transformed`) uses its FRONT face's mana cost (CR 202.3b,
+ *   712.8e), so transforming never changes its mana value. A copy of a back face has mana
+ *   value 0.
+ *
+ * A face-down permanent has no mana cost, so its mana value is 0 whatever card it is (CR 708.2).
+ */
+function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | undefined {
+  const def = ctx.defs.get(perm.oracleId);
+  if (def === undefined) return undefined;
+  if (perm.faceDown) return 0;
+  if (perm.face === 'back') {
+    const landFace = def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace;
+    if (landFace !== undefined) return 0;
+  }
+  // A copy takes the copied object's mana cost (CR 707.2), not its def's: `applyCopy` keeps the
+  // target's front-face `oracleId` but its CURRENT cost, which for a transformed target is the
+  // back face's — so a copy of a back face reads 0 (CR 712.8e).
+  if (perm.copyOriginal !== undefined) return manaValueOf(parseManaCost(perm.manaCost).cost);
+  return manaValueOf(def.manaCost);
+}
+
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
 export function candidateOf(
   ctx: GameContext,
@@ -264,19 +292,10 @@ export function candidateOf(
       }
     }
   }
-  // Mana value (CR 202.3) is a printed characteristic, not a layer's derived output, and reads
-  // X as 0 off the stack (202.3b) — the same rule `cardZoneCandidate` applies for library/hand/
-  // graveyard cards via `spellManaValue(def, undefined)`. Absent (not 0) when the def can't be
-  // found, so `manaValueAtMost`/`manaValueAtLeast` correctly never match rather than matching
-  // everything as mana value 0. A face-down permanent has no mana cost, so its mana value is 0
-  // whatever card it is (CR 708.2).
-  const ownDef = ctx.defs.get(perm.oracleId);
-  const manaValue =
-    ownDef === undefined
-      ? undefined
-      : perm.face === 'back' || perm.faceDown
-        ? 0
-        : manaValueOf(ownDef.manaCost);
+  // Absent (not 0) when the def can't be found, so `manaValueAtMost`/`manaValueAtLeast`
+  // correctly never match rather than matching everything as mana value 0. Off the battlefield,
+  // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
+  const manaValue = printedManaValue(ctx, perm);
 
   return {
     cardId: perm.cardId,

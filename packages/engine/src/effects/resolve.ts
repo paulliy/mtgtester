@@ -5,7 +5,7 @@ import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
-import { targetCandidates, targetIsLegal } from '../targets/legality';
+import { permanentManaValue, targetCandidates, targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -3026,9 +3026,7 @@ export function* executeAbility(
       case 'sacrificeGreatestEachOpponent': {
         // A permanent's own mana value: a face-down permanent's is 0 (CR 708.2).
         const metricOf = (perm: EnginePermanent): number =>
-          effect.metric === 'power'
-            ? effectivePT(ctx, perm).power
-            : (candidateOf(ctx, perm, computeCharacteristics(ctx, perm)).manaValue ?? 0);
+          effect.metric === 'power' ? effectivePT(ctx, perm).power : permanentManaValue(ctx, perm);
         const selected: EnginePermanent[] = [];
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
