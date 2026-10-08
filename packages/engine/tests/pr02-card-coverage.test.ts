@@ -2727,6 +2727,134 @@ describe('Blasphemous Edict', () => {
   });
 });
 
+describe('Dread Return', () => {
+  const dread = pinned('Dread Return');
+  const FLASHBACK = /from your graveyard/;
+
+  /** Dread Return and a creature card in P1's graveyard, and `fodder` creatures on the battlefield. */
+  function setup(seed: string, fodder: number) {
+    const ctx = pod(seed);
+    const spell = conjure(ctx, 'P1', dread.card, 'graveyard');
+    const target = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Dread Buried Giant',
+        typeLine: 'Creature — Giant',
+        power: '5',
+        toughness: '5',
+      }),
+      'graveyard',
+    );
+    const bodies = Array.from({ length: fodder }, (_, i) =>
+      spawn(ctx, 'P1', oracle({ name: `Dread Fodder ${i + 1}`, typeLine: 'Creature — Zombie' })),
+    );
+    return { ctx, spell, target, bodies };
+  }
+
+  const flashbackOption = (ctx: GameContext, objectId: string) =>
+    castOptionsFor(ctx, 'P1', objectId).find((option) => FLASHBACK.test(option.description));
+
+  it('dread-return-pinned-oracle-supported — the reanimation and a flashback whose whole cost is three sacrifices', () => {
+    expect(dread.sha256).toBe('bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553');
+    expect(dread.card.oracleText).toBe(
+      'Return target creature card from your graveyard to the battlefield.\nFlashback—Sacrifice three creatures. (You may cast this card from your graveyard for its flashback cost. Then exile it.)',
+    );
+    expectModeled(dread.card);
+    expect(getOverride(dread.card.oracleId)).toBeUndefined();
+    const def = interpretCard(dread.card);
+    expect(def.alternativeCasts).toEqual([
+      expect.objectContaining({
+        kind: 'nonMana',
+        from: 'graveyard',
+        manaCost: { generic: 0, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+        exileOnResolution: true,
+        costs: [expect.objectContaining({ kind: 'sacrificeOther', count: 3 })],
+      }),
+    ]);
+  });
+
+  it('dread-return-flashback-sacrifice-three — sacrifice three creatures, return the target, exile Dread Return', () => {
+    const { ctx, spell, target, bodies } = setup('dread-flashback', 3);
+    const option = flashbackOption(ctx, spell.id);
+    expect(option).toBeDefined();
+    expect(option?.targets?.[0]?.options).toEqual([target.id]);
+    const { decisions } = takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    // Exactly three creatures for three sacrifices: nothing to choose, so nothing is asked.
+    expect(decisions.filter((decision) => /sacrifice/i.test(decision.prompt))).toEqual([]);
+    for (const body of bodies) {
+      expect(ctx.state.battlefield.some((perm) => perm.id === body.id)).toBe(false);
+    }
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === target.cardId)).toBe(true);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(spell.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).not.toContain(spell.cardId);
+  });
+
+  it('dread-return-flashback-needs-three-creatures — two creatures cannot pay it, and an opponent’s do not count', () => {
+    const { ctx, spell } = setup('dread-two', 2);
+    spawn(ctx, 'P2', oracle({ name: 'Dread Rival Zombie', typeLine: 'Creature — Zombie' }));
+    expect(flashbackOption(ctx, spell.id)).toBeUndefined();
+    spawn(ctx, 'P1', oracle({ name: 'Dread Third Zombie', typeLine: 'Creature — Zombie' }));
+    expect(flashbackOption(ctx, spell.id)).toBeDefined();
+  });
+
+  it('dread-return-flashback-sorcery-speed — a sorcery’s flashback waits for your main phase', () => {
+    const { ctx, spell } = setup('dread-timing', 3);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(flashbackOption(ctx, spell.id)).toBeUndefined();
+  });
+
+  it('dread-return-flashback-exiled-when-countered-by-rules — an illegal target still sends it to exile', () => {
+    const { ctx, spell, target } = setup('dread-fizzle', 3);
+    takeAction(
+      ctx,
+      'P1',
+      flashbackOption(ctx, spell.id)!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    const buried = playerById(ctx, 'P1').graveyard.find((card) => card.cardId === target.cardId)!;
+    pump(moveObject(ctx, buried, { zone: 'exile' }));
+    resolveTop(ctx);
+    // CR 702.34a: a flashback spell is exiled whenever it would leave the stack.
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(spell.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).not.toContain(spell.cardId);
+  });
+
+  it('dread-return-normal-cast — {2}{B}{B} from hand returns the target, and the card goes to the graveyard', () => {
+    const ctx = pod('dread-hand');
+    const target = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Dread Buried Giant', typeLine: 'Creature — Giant' }),
+      'graveyard',
+    );
+    const inHand = conjure(ctx, 'P1', dread.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, { symbol: 'B' }, ...generic(2)]);
+    const options = castOptionsFor(ctx, 'P1', inHand.id);
+    expect(options).toHaveLength(1);
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === target.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).toContain(inHand.cardId);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -2739,6 +2867,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Dread Return',
+    sha256: 'bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553',
+    clauseCount: 2,
+  },
   {
     name: 'Blasphemous Edict',
     sha256: '6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3',

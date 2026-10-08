@@ -6235,6 +6235,26 @@ export function interpretCard(card: OracleCard): CardDefinition {
       : knownAbilityWordStripped;
     if (line.length === 0) continue;
     const lower = line.toLowerCase().replace(/\.$/, '');
+    // "Flashback—Sacrifice three creatures" (Dread Return): a flashback cost with no mana at all.
+    {
+      const nonManaFlashback = lower.match(/^flashback[\u2014\u2013-]\s*([^{].*)$/);
+      const costs =
+        nonManaFlashback === null
+          ? null
+          : parseGraveyardAlternativeCosts(nonManaFlashback[1] as string);
+      if (costs !== null && costs.every((cost) => cost.kind !== 'mana')) {
+        if (alternativeCasts === undefined) alternativeCasts = [];
+        alternativeCasts.push({
+          kind: 'nonMana',
+          from: 'graveyard',
+          manaCost: emptyCost(),
+          costs,
+          exileOnResolution: true,
+          description: line,
+        });
+        continue;
+      }
+    }
     {
       const graveyardAlternative = lower.match(
         /^(flashback|escape)(?:\s+|[\u2014\u2013-])((?:\{[^}]+\})+)(?:,\s*(.+))?$/,

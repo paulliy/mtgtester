@@ -765,21 +765,26 @@ export function* paySpellAdditionalCosts(
                 controllerId: player.id,
               }),
           );
-          if (options.length === 0)
+          if (options.length < count - i)
             throw new Error('engine bug: spell additional sacrifice cost became unpayable');
-          const chosen = yield* chooseCard(ctx, {
-            player: player.id,
-            prompt:
-              player.id +
-              ': choose a permanent to sacrifice as a spell cost (' +
-              (i + 1) +
-              ' of ' +
-              count +
-              ').',
-            cards: options,
-            type: 'sacrifice',
-            verb: 'Sacrifice',
-          });
+          // Exactly as many candidates as sacrifices still owed: every one goes, so there is
+          // nothing to choose (Dread Return's flashback with exactly three creatures).
+          const forced = options.length === count - i ? options[0]! : null;
+          const chosen =
+            forced ??
+            (yield* chooseCard(ctx, {
+              player: player.id,
+              prompt:
+                player.id +
+                ': choose a permanent to sacrifice as a spell cost (' +
+                (i + 1) +
+                ' of ' +
+                count +
+                ').',
+              cards: options,
+              type: 'sacrifice',
+              verb: 'Sacrifice',
+            }));
           if (chosen === null)
             throw new Error('engine bug: spell additional sacrifice choice was invalid');
           const permanent = chosen as EnginePermanent;

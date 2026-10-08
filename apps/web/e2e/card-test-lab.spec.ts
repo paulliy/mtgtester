@@ -3383,3 +3383,22 @@ test('Blasphemous Edict: pay {B} with thirteen creatures out', async ({ page }) 
   await expect(permanent(page, 'Lab Zombie')).toHaveCount(0);
   await expect(permanent(page, 'Swamp')).toBeVisible();
 });
+
+test('Dread Return: flash it back by sacrificing three creatures', async ({ page }) => {
+  await runScenario(page, 'Dread Return: flash it back by sacrificing three creatures');
+  const graveyard = page.locator('.zones-strip .zone', { hasText: 'Graveyard' });
+  const thumb = (name: string) =>
+    graveyard.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name, exact: true }),
+    });
+  await expect(thumb('Dread Return')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await thumb('Dread Return').click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(thumb('Lab Ox')).toHaveClass(/targetable/);
+  await thumb('Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Zombie')).toHaveCount(0, { timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+});

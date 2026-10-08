@@ -1449,6 +1449,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Blasphemous Edict: pay {B} with thirteen creatures out'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dread Return: flash it back by sacrificing three creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

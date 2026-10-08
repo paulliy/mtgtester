@@ -614,3 +614,19 @@ describe('Blasphemous Edict Card Test Lab scenario', () => {
     replays('blasphemous-edict-viewer-pay-b', steps);
   });
 });
+
+describe('Dread Return Card Test Lab scenario', () => {
+  it('dread-return-viewer-flashback — three Zombies pay for the flashback, Lab Ox returns, Dread Return is exiled', () => {
+    const steps: Step[] = [{ action: 'from your graveyard', targets: ['Lab Ox'] }];
+    const { state, seat, onBattlefield } = run('dread-return-viewer-flashback', steps);
+    expect(onBattlefield('Lab Zombie')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(state.exile.map((card) => card.name)).toEqual(['Dread Return']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual([
+      'Lab Zombie',
+      'Lab Zombie',
+      'Lab Zombie',
+    ]);
+    replays('dread-return-viewer-flashback', steps);
+  });
+});

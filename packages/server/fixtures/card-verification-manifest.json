@@ -2430,15 +2430,35 @@
     "352b64d2-2ae5-44ee-a64f-94932ef545d3": {
       "name": "Dread Return",
       "oracleSha256": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "dread-return-reanimate",
+          "oracleText": "Return target creature card from your graveyard to the battlefield.",
+          "implementation": [
+            "interpreted spell: target cardInGraveyard creature (yours), effect graveyardToBattlefield"
+          ],
+          "engineTestIds": [
+            "dread-return-pinned-oracle-supported",
+            "dread-return-flashback-sacrifice-three",
+            "dread-return-normal-cast"
+          ],
+          "viewerScenarioIds": ["dread-return-viewer-flashback"]
+        },
+        {
+          "id": "dread-return-flashback",
           "oracleText": "Flashback—Sacrifice three creatures.",
           "implementation": [
-            "explicitly unsupported; flashback claimed without a flashback alternative"
+            "interpreted graveyard nonMana alternativeCast: mana cost {0}, sacrificeOther count 3 of your creatures paid while casting, sorcery timing, exileOnResolution (CR 702.34a); exactly three candidates are sacrificed without a prompt"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "dread-return-pinned-oracle-supported",
+            "dread-return-flashback-sacrifice-three",
+            "dread-return-flashback-needs-three-creatures",
+            "dread-return-flashback-sorcery-speed",
+            "dread-return-flashback-exiled-when-countered-by-rules"
+          ],
+          "viewerScenarioIds": ["dread-return-viewer-flashback"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -144,12 +144,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       },
     },
   );
-  // Catalog audit necron-remaining-batch-4: flashback claimed without a flashback alternative.
-  unsupportedCard(
-    '352b64d2-2ae5-44ee-a64f-94932ef545d3',
-    'Dread Return',
-    'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
-  );
+  // Dread Return: restored in coverage PR02. The interpreter reads "Flashback—Sacrifice three
+  // creatures" as a graveyard alternative cast, so no override remains.
   // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
   // three or more lands with the same name" as an activation condition, so no override remains.
   // Catalog audit necron-remaining-batch-3: except-six-or-more is unconditional unblockable.

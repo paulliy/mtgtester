@@ -32,6 +32,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Canoptek Wraith',
       'Carrion Feeder',
       "Conjurer's Closet",
+      'Dread Return',
       'Endless Atlas',
       'Fabled Passage',
       'Flare of Denial',

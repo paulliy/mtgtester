@@ -6590,6 +6590,34 @@ function blasphemousEdictScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function dreadReturnScenario(gameId: GameId): CardTestScenario {
+  const dread = pinnedFrom(MARCHESA_BATCH1, 'Dread Return');
+  const zombies = [LAB_ZOMBIE, LAB_ZOMBIE, LAB_ZOMBIE];
+  return pr01Scenario(gameId, {
+    id: 'dread-return-viewer-flashback',
+    title: 'Dread Return: flash it back by sacrificing three creatures',
+    instructions: [
+      'Dread Return and Lab Ox are in your graveyard; three Lab Zombies are on the battlefield.',
+      'Cast Dread Return from your graveyard for its flashback cost, targeting Lab Ox.',
+    ],
+    expectedOutcome:
+      'The three Lab Zombies are sacrificed, Lab Ox returns to the battlefield, and Dread Return is exiled.',
+    oracleSha256: dread.sha256,
+    clauseIds: ['dread-return-reanimate', 'dread-return-flashback'],
+    decks: {
+      P1: [dread.card, LAB_OX, ...zombies, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: zombies.map((zombie) => zombie.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Dread Return', 'Lab Ox'] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6823,6 +6851,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'flare-of-denial-viewer-sacrifice-counter',
   'flare-of-malice-viewer-sacrifice-edict',
   'blasphemous-edict-viewer-pay-b',
+  'dread-return-viewer-flashback',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6976,6 +7005,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'flare-of-denial-viewer-sacrifice-counter': flareOfDenialScenario,
   'flare-of-malice-viewer-sacrifice-edict': flareOfMaliceScenario,
   'blasphemous-edict-viewer-pay-b': blasphemousEdictScenario,
+  'dread-return-viewer-flashback': dreadReturnScenario,
 };
 
 export function createCardTestScenario(

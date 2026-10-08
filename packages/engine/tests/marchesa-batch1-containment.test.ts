@@ -190,7 +190,6 @@ const REASONS: Record<string, string> = {
   'Triarch Stalker':
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
-  'Dread Return': 'Flashback—Sacrifice three creatures is claimed without a flashback alternative.',
   'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Their Number Is Legion': 'Tokens are not created tapped, and graveyard cast is omitted.',
@@ -312,6 +311,7 @@ describe('Marchesa catalog audit containment', () => {
     'Flare of Denial',
     'Flare of Malice',
     'Blasphemous Edict',
+    'Dread Return',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -2277,12 +2277,6 @@
     }
   },
   {
-    "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
-    "name": "Dread Return",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "355603d1-f62d-407a-8fa9-74e7dca8ecf9",
     "name": "Era of Innovation",
     "handledLines": [
@@ -14485,12 +14479,6 @@
   {
     "oracleId": "oracle-dragonkin-berserker",
     "name": "Dragonkin Berserker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-dread-return",
-    "name": "Dread Return",
     "handledLines": [],
     "def": {}
   },

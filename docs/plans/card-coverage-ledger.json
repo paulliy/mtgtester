@@ -624,6 +624,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
+    "name": "Dread Return",
+    "package": "PR02.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Flashback—Sacrifice three creatures is claimed without a flashback alternative."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
     "name": "Elite Scaleguard",
     "package": "W3",

@@ -197,6 +197,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'flare-of-denial-viewer-sacrifice-counter',
       'flare-of-malice-viewer-sacrifice-edict',
       'blasphemous-edict-viewer-pay-b',
+      'dread-return-viewer-flashback',
     ]);
   });
 

@@ -174,9 +174,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('352b64d2-2ae5-44ee-a64f-94932ef545d3', 'Dread Return', [
-    'Flashback—Sacrifice three creatures.',
-  ]);
+  // Dread Return: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   defineCard(
     '899415fd-4164-42a5-a0c7-eef1967c5ec5',
