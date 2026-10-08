@@ -5760,6 +5760,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads the sacrifice-a-nontoken-black-creature alternative cost (nonMana alternativeCast with a sacrificeOther cost) and the greatest-mana-value edict (sacrificeGreatestEachOpponent over creatures and planeswalkers); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
+      "name": "Blasphemous Edict",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the {B} alternative cost with its 'thirteen or more creatures on the battlefield' condition (counted across all players) and 'each player sacrifices thirteen creatures'; the hand alternative-cost path now charges the alternative's mana. Engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

@@ -123,7 +123,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Aether Channeler',
       'Cytoplast Manipulator',
       'Flayer of the Hatebound',
-      'Blasphemous Edict',
       'Flare of Duplication',
       'River Kelpie',
       'Twilight Diviner',

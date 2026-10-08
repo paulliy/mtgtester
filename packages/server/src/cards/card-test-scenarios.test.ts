@@ -196,6 +196,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ghost-ark-viewer-crew-and-unearth',
       'flare-of-denial-viewer-sacrifice-counter',
       'flare-of-malice-viewer-sacrifice-edict',
+      'blasphemous-edict-viewer-pay-b',
     ]);
   });
 

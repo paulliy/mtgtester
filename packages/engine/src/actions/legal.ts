@@ -32,6 +32,7 @@ import {
   planPayment,
   subtractColored,
   subtractGeneric,
+  totalPips,
   withX,
 } from '../mana/cost';
 import type { ManaSource, ParsedManaCost } from '../mana/cost';
@@ -1329,7 +1330,9 @@ export function computePriorityOptions(
                 type: 'castSpell',
                 description: fromGraveyard
                   ? `Cast ${obj.name} from your graveyard (${describeManaCost(cost)})`
-                  : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
+                  : totalPips(cost) > 0
+                    ? `Cast ${obj.name} for ${describeManaCost(cost)} (alternate cost)`
+                    : 'Cast ' + obj.name + ' without paying its mana cost (alternate cost)',
                 payload: {
                   kind: 'castSpell',
                   objectId: obj.id,
@@ -1342,7 +1345,7 @@ export function computePriorityOptions(
                   instantSpeed,
                   sourceName: obj.name,
                   sourceZone: fromCommand ? 'command' : fromGraveyard ? 'graveyard' : 'hand',
-                  manaCost: fromGraveyard ? describeManaCost(cost) : 'free',
+                  manaCost: fromGraveyard || totalPips(cost) > 0 ? describeManaCost(cost) : 'free',
                   ...paymentPreview(ctx, player, cost, sources, allows),
                   castVariant: 'nonMana',
                   abilityCosts: alternativeCosts,

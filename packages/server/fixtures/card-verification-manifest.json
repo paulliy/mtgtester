@@ -354,19 +354,33 @@
     "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e": {
       "name": "Blasphemous Edict",
       "oracleSha256": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "blasphemous-edict-alternative",
           "oracleText": "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {B}, condition countPermanents(creature, all players) >= 13, checked when cast; the alternative's mana is charged"
+          ],
+          "engineTestIds": [
+            "blasphemous-edict-pinned-oracle-supported",
+            "blasphemous-edict-needs-thirteen-creatures",
+            "blasphemous-edict-alternative-pays-b",
+            "blasphemous-edict-normal-cast"
+          ],
+          "viewerScenarioIds": ["blasphemous-edict-viewer-pay-b"]
         },
         {
+          "id": "blasphemous-edict-sacrifice-thirteen",
           "oracleText": "Each player sacrifices thirteen creatures of their choice.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect sacrificeEachPlayer count 13, filter creature: each player chooses in APNAP order, a player with thirteen or fewer creatures sacrifices all of them without a prompt, and all are sacrificed at once"
+          ],
+          "engineTestIds": [
+            "blasphemous-edict-pinned-oracle-supported",
+            "blasphemous-edict-each-player-sacrifices-thirteen"
+          ],
+          "viewerScenarioIds": ["blasphemous-edict-viewer-pay-b"]
         }
       ],
       "gameplayAiScenarioIds": []

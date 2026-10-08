@@ -6550,6 +6550,46 @@ function flareOfMaliceScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_ZOMBIE = card({
+  oracleId: 'lab-zombie',
+  name: 'Lab Zombie',
+  typeLine: 'Creature — Zombie',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function blasphemousEdictScenario(gameId: GameId): CardTestScenario {
+  const edict = pinnedFrom(MARCHESA_BATCH1, 'Blasphemous Edict');
+  const zombies = Array.from({ length: 11 }, () => LAB_ZOMBIE);
+  return pr01Scenario(gameId, {
+    id: 'blasphemous-edict-viewer-pay-b',
+    title: 'Blasphemous Edict: pay {B} with thirteen creatures out',
+    instructions: [
+      'There are thirteen creatures on the battlefield: your Lab Ox and Lab Generic Bear, and P2’s eleven Lab Zombies.',
+      'Cast Blasphemous Edict for {B} with your Swamp.',
+    ],
+    expectedOutcome:
+      'Each player sacrifices thirteen creatures: every creature on the battlefield is sacrificed, with no choice to make, and the Swamp is tapped.',
+    oracleSha256: edict.sha256,
+    clauseIds: ['blasphemous-edict-alternative', 'blasphemous-edict-sacrifice-thirteen'],
+    decks: {
+      P1: [edict.card, SWAMP, LAB_OX, LAB_GENERIC_BEAR],
+      P2: [...zombies, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Blasphemous Edict'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Lab Ox', 'Lab Generic Bear'] },
+        { playerId: 'P2', cardNames: zombies.map((zombie) => zombie.name) },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6782,6 +6822,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ghost-ark-viewer-crew-and-unearth',
   'flare-of-denial-viewer-sacrifice-counter',
   'flare-of-malice-viewer-sacrifice-edict',
+  'blasphemous-edict-viewer-pay-b',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6934,6 +6975,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ghost-ark-viewer-crew-and-unearth': ghostArkScenario,
   'flare-of-denial-viewer-sacrifice-counter': flareOfDenialScenario,
   'flare-of-malice-viewer-sacrifice-edict': flareOfMaliceScenario,
+  'blasphemous-edict-viewer-pay-b': blasphemousEdictScenario,
 };
 
 export function createCardTestScenario(

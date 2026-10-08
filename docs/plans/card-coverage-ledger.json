@@ -269,6 +269,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
+    "name": "Blasphemous Edict",
+    "package": "PR02.24",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The thirteen-creature {B} alternative cost is claimed without an alternativeCast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
     "name": "Boseiju, Who Endures",
     "package": "W4",

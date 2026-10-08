@@ -555,7 +555,8 @@ export function* applyPriorityAction(
           throw new Error('non-mana alternative cost condition is not met');
         }
         castingAdditionalCosts = [...castingAdditionalCosts, ...(alt.costs ?? [])];
-        cost = payload.fromGraveyard === true ? alt.manaCost : emptyCost();
+        // The alternative's own mana cost: {0} for a pitch spell, {B} for Blasphemous Edict.
+        cost = alt.manaCost;
         exileOnResolution = alt.exileOnResolution === true;
         escaped = alt.escaped === true;
         ability = resolveCastAbility(def, undefined, obj.name) ?? {

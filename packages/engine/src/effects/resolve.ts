@@ -3148,6 +3148,11 @@ export function* executeAbility(
                   computeCharacteristics(ctx, perm).types.includes('Creature')),
             );
             if (candidates.length === 0) break;
+            // Owing at least as many as they have is no choice at all: all of them go.
+            if (candidates.length <= effect.count - i) {
+              selected.push(...candidates);
+              break;
+            }
             const chosen = yield* chooseCard(ctx, {
               player: player.id,
               prompt: `${source.name}: choose a ${effect.filter === 'any' ? 'permanent' : 'creature'} to sacrifice (${i + 1} of ${effect.count})`,

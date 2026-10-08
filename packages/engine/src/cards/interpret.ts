@@ -141,6 +141,12 @@ const NUMBER_WORDS: Record<string, number> = {
   eight: 8,
   nine: 9,
   ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  twenty: 20,
 };
 
 function parseAmount(word: string): number | null {
@@ -772,6 +778,13 @@ function parseEffectSentence(
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  // "Each player sacrifices thirteen creatures of their choice" (Blasphemous Edict).
+  {
+    const many = s.match(/^each player sacrifices (\w+) creatures(?: of their choice)?$/);
+    const count = many === null ? null : parseAmount(many[1] as string);
+    if (count !== null && count > 1)
+      return [{ op: 'sacrificeEachPlayer', count, filter: 'creature' }];
+  }
   // Ghost Ark: "each artifact creature card in your graveyard gains unearth {3} until end of
   // turn". The grant ends at cleanup or when that card leaves the graveyard (CR 400.7).
   {
@@ -3367,6 +3380,17 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
       };
     }
   }
+  // "if there are thirteen or more creatures on the battlefield" (Blasphemous Edict) — every
+  // player's permanents count.
+  {
+    const total = clause.match(/^there are (\w+) or more (.+) on the battlefield$/);
+    if (total !== null) {
+      const n = parseAmount(total[1] as string);
+      const selector = parseSubject(total[2] as string, card);
+      if (n === null || selector === null) return null;
+      return countPermanents(selector, 'all', '>=', n);
+    }
+  }
   // "if you control four or more creatures" — a threshold rather than the bare "you control a
   // creature" below, which is the same condition with an implied n of 1. The subject is stripped
   // of its count before `parseTriggerSubject` sees it, so it reads the same singular grammar.
@@ -4513,13 +4537,27 @@ function parseGraveyardAlternativeCosts(costText: string): AbilityCost[] | null 
 /** Parse a non-mana alternate-cost line such as Force of Will's pitch cost. */
 function parseNonManaAlternativeCost(
   line: string,
-): { costs: AbilityCost[]; condition?: Condition } | null {
+  card: OracleCard,
+): { costs: AbilityCost[]; manaCost?: ParsedManaCost; condition?: Condition } | null {
   const match = line.match(
-    /^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost$/,
+    /^(if it's not your turn, )?you may (.+) rather than pay (?:this spell's|its) mana cost(?: if (.+))?$/,
   );
   if (match === null) return null;
+  // "... if there are thirteen or more creatures on the battlefield" (Blasphemous Edict): a
+  // condition on choosing the alternative cost, checked as the spell is cast.
+  const trailing = match[3] === undefined ? undefined : parseConditionClause(match[3], card);
+  if (trailing === null) return null;
   const costs: AbilityCost[] = [];
+  let manaCost: ParsedManaCost | undefined;
   for (const part of (match[2] as string).split(' and ')) {
+    // "You may pay {B} rather than pay this spell's mana cost": a replacement mana cost.
+    const pay = part.match(/^pay ((?:\{[^}]+\})+)$/);
+    if (pay !== null && manaCost === undefined) {
+      const parsed = parseManaCost((pay[1] as string).toUpperCase() as never);
+      if (parsed.cost === null) return null;
+      manaCost = parsed.cost;
+      continue;
+    }
     const payLife = part.match(/^(?:pay) (\d+) life$/);
     if (payLife !== null) {
       costs.push({ kind: 'payLife', amount: Number(payLife[1]) });
@@ -4552,12 +4590,15 @@ function parseNonManaAlternativeCost(
     }
     return null;
   }
-  return costs.length > 0
-    ? {
-        costs,
-        ...(match[1] !== undefined ? { condition: { kind: 'notYourTurn' } as Condition } : {}),
-      }
-    : null;
+  if (costs.length === 0 && manaCost === undefined) return null;
+  if (match[1] !== undefined && trailing !== undefined) return null;
+  const condition: Condition | undefined =
+    match[1] !== undefined ? { kind: 'notYourTurn' } : trailing;
+  return {
+    costs,
+    ...(manaCost !== undefined ? { manaCost } : {}),
+    ...(condition !== undefined ? { condition } : {}),
+  };
 }
 
 /** Parse the "As an additional cost to cast this spell, ..." header. */
@@ -6229,13 +6270,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
         spellAdditionalCosts.push(...additionalCosts);
         continue;
       }
-      const alternativeCosts = parseNonManaAlternativeCost(lower);
+      const alternativeCosts = parseNonManaAlternativeCost(lower, card);
       if (alternativeCosts !== null) {
         if (alternativeCasts === undefined) alternativeCasts = [];
         alternativeCasts.push({
           kind: 'nonMana',
-          manaCost: parseManaCost('{0}').cost!,
-          costs: alternativeCosts.costs,
+          manaCost: alternativeCosts.manaCost ?? parseManaCost('{0}').cost!,
+          ...(alternativeCosts.costs.length > 0 ? { costs: alternativeCosts.costs } : {}),
           ...(alternativeCosts.condition !== undefined
             ? { condition: alternativeCosts.condition }
             : {}),

@@ -2611,6 +2611,122 @@ describe('Flare of Malice', () => {
   });
 });
 
+describe('Blasphemous Edict', () => {
+  const edict = pinned('Blasphemous Edict');
+  const ALT_B = /for \{B\} \(alternate cost\)/;
+
+  const bodies = (ctx: GameContext, playerId: string, n: number, prefix: string) =>
+    Array.from({ length: n }, (_, i) =>
+      spawn(ctx, playerId, oracle({ name: `${prefix} ${i + 1}`, typeLine: 'Creature — Zombie' })),
+    );
+
+  it('blasphemous-edict-pinned-oracle-supported — a conditional {B} alternative cost and a thirteen-creature edict', () => {
+    expect(edict.sha256).toBe('6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3');
+    expect(edict.card.oracleText).toBe(
+      "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.\nEach player sacrifices thirteen creatures of their choice.",
+    );
+    expectModeled(edict.card);
+    expect(getOverride(edict.card.oracleId)).toBeUndefined();
+    const def = interpretCard(edict.card);
+    expect(def.alternativeCasts).toEqual([
+      expect.objectContaining({
+        kind: 'nonMana',
+        manaCost: { generic: 0, colored: { W: 0, U: 0, B: 1, R: 0, G: 0 }, colorless: 0 },
+        condition: {
+          kind: 'countPermanents',
+          selector: ofType('Creature'),
+          scope: 'all',
+          cmp: '>=',
+          n: 13,
+        },
+      }),
+    ]);
+    expect(def.spellAbility?.effects).toEqual([
+      { op: 'sacrificeEachPlayer', count: 13, filter: 'creature' },
+    ]);
+  });
+
+  it('blasphemous-edict-needs-thirteen-creatures — twelve creatures on the battlefield do not unlock {B}', () => {
+    const ctx = pod('edict-twelve');
+    bodies(ctx, 'P1', 6, 'Edict Own');
+    bodies(ctx, 'P2', 6, 'Edict Rival');
+    const inHand = conjure(ctx, 'P1', edict.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+    // Every player's creatures count, not only yours: the thirteenth is an opponent's.
+    bodies(ctx, 'P3', 1, 'Edict Third');
+    expect(castOptionsFor(ctx, 'P1', inHand.id).map((option) => option.description)).toEqual([
+      expect.stringMatching(ALT_B),
+    ]);
+  });
+
+  it('blasphemous-edict-alternative-pays-b — the alternative cost spends {B}, not nothing', () => {
+    const ctx = pod('edict-pays-b');
+    bodies(ctx, 'P2', 13, 'Edict Rival');
+    const inHand = conjure(ctx, 'P1', edict.card, 'hand');
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find((entry) =>
+      ALT_B.test(entry.description),
+    );
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(inHand.cardId);
+  });
+
+  it('blasphemous-edict-each-player-sacrifices-thirteen — each player sacrifices thirteen of their choice, or all they have', () => {
+    const ctx = pod('edict-resolve');
+    const mine = bodies(ctx, 'P1', 14, 'Edict Own');
+    const theirs = bodies(ctx, 'P2', 3, 'Edict Rival');
+    const relic = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Edict Relic', typeLine: 'Artifact', power: null, toughness: null }),
+    );
+    const inHand = conjure(ctx, 'P1', edict.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    takeAction(
+      ctx,
+      'P1',
+      castOptionsFor(ctx, 'P1', inHand.id).find((entry) => ALT_B.test(entry.description))!
+        .payload as PriorityActionPayload,
+    );
+    const prompts: string[] = [];
+    resolveTop(ctx, (decision) => {
+      prompts.push(`${decision.player}: ${decision.prompt}`);
+      // P1 keeps its last creature: choose every other one first.
+      const keep = decision.options.findIndex((option) => !/Edict Own 14/.test(option.description));
+      return { index: Math.max(0, keep), targets: new Map() };
+    });
+    const alive = (perm: EnginePermanent) =>
+      ctx.state.battlefield.some((candidate) => candidate.id === perm.id);
+    // P1 chose thirteen of fourteen; P2 owed thirteen and had three, so all went unasked.
+    expect(prompts).toHaveLength(13);
+    expect(prompts.every((prompt) => prompt.startsWith('P1:'))).toBe(true);
+    expect(mine.filter(alive).map((perm) => perm.name)).toEqual(['Edict Own 14']);
+    expect(theirs.filter(alive)).toEqual([]);
+    expect(alive(relic)).toBe(true);
+  });
+
+  it('blasphemous-edict-normal-cast — {3}{B}{B} casts it at sorcery speed with no creature count', () => {
+    const ctx = pod('edict-normal');
+    const inHand = conjure(ctx, 'P1', edict.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, { symbol: 'B' }, ...generic(3)]);
+    const options = castOptionsFor(ctx, 'P1', inHand.id);
+    expect(options.map((option) => ALTERNATE.test(option.description))).toEqual([false]);
+    takeAction(ctx, 'P1', options[0]!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    // A sorcery: not on an opponent's turn.
+    const later = pod('edict-normal-off-turn');
+    later.state.currentTurnPlayer = 'P2';
+    later.state.activePlayerIndex = 1;
+    const offTurn = conjure(later, 'P1', edict.card, 'hand');
+    addMana(playerById(later, 'P1'), [{ symbol: 'B' }, { symbol: 'B' }, ...generic(3)]);
+    expect(castOptionsFor(later, 'P1', offTurn.id)).toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -2623,6 +2739,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Blasphemous Edict',
+    sha256: '6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3',
+    clauseCount: 2,
+  },
   {
     name: 'Flare of Malice',
     sha256: 'd358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0',

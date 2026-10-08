@@ -3370,3 +3370,16 @@ test('Flare of Malice: sacrifice a black creature; P2 loses its biggest creature
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
   await expect(permanent(page, 'Lab Generic Bear')).toBeVisible();
 });
+
+test('Blasphemous Edict: pay {B} with thirteen creatures out', async ({ page }) => {
+  await runScenario(page, 'Blasphemous Edict: pay {B} with thirteen creatures out');
+  const edict = handCard(page, 'Blasphemous Edict');
+  await expect(edict).toHaveClass(/actionable/);
+  await edict.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Zombie')).toHaveCount(0);
+  await expect(permanent(page, 'Swamp')).toBeVisible();
+});

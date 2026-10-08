@@ -597,3 +597,20 @@ describe('Flare of Malice Card Test Lab scenario', () => {
     replays('flare-of-malice-viewer-sacrifice-edict', steps);
   });
 });
+
+describe('Blasphemous Edict Card Test Lab scenario', () => {
+  it('blasphemous-edict-viewer-pay-b — {B} casts it, and all thirteen creatures are sacrificed unasked', () => {
+    const steps: Step[] = [{ action: 'for {B} (alternate cost)' }];
+    const { state, seat, onBattlefield, prompts } = run('blasphemous-edict-viewer-pay-b', steps);
+    expect(state.battlefield.filter((perm) => perm.typeLine.includes('Creature'))).toEqual([]);
+    expect(onBattlefield('Swamp')[0]?.tapped).toBe(true);
+    expect(seat('P2').graveyard).toHaveLength(11);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Blasphemous Edict', 'Lab Generic Bear', 'Lab Ox']);
+    expect(prompts.some((prompt) => /sacrifice/i.test(prompt))).toBe(false);
+    replays('blasphemous-edict-viewer-pay-b', steps);
+  });
+});

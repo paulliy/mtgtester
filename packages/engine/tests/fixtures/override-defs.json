@@ -4306,12 +4306,6 @@
     "def": {}
   },
   {
-    "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
-    "name": "Blasphemous Edict",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
     "name": "Vindictive Lich",
     "handledLines": [],
@@ -12541,12 +12535,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-blasphemous-edict",
-    "name": "Blasphemous Edict",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-blossoming-defense",

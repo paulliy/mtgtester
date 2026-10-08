@@ -144,12 +144,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 5: the {B}-if-13-creatures alternative cost is claimed but not authored.
-  unsupportedCard(
-    '6cf50e21-0f60-4e9a-b910-ebe1bad2a29e',
-    'Blasphemous Edict',
-    'The thirteen-creature {B} alternative cost is claimed without an alternativeCast.',
-  );
+  // Blasphemous Edict: restored in coverage PR02. The interpreter reads the conditional {B}
+  // alternative cost and "each player sacrifices thirteen creatures", so no override remains.
   // Catalog audit batch 2: connive always puts a counter, and the return trigger omits
   // the equal-or-lesser-power filter.
   unsupportedCard(
