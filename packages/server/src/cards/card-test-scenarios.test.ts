@@ -211,6 +211,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kogla-and-yidaro-viewer-discard',
       'changing-loyalty-viewer-replicate',
       'changing-loyalty-viewer-steal',
+      'grim-haruspex-viewer-morph',
     ]);
   });
 

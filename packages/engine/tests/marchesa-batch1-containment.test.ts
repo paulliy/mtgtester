@@ -50,7 +50,6 @@ const REASONS: Record<string, string> = {
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
   'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
   'Glen Elendra Archmage': 'Persist is claimed without a persist/undying replacement.',
-  'Grim Haruspex': 'Morph cost is stored but never offered as a face-down alternative cast.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
@@ -308,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Dragonkin Berserker',
     'Convergence of Dominion',
     'Changing Loyalty',
+    'Grim Haruspex',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

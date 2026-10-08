@@ -6068,6 +6068,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let announcesX = false;
   let castFromGraveyard = false;
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
+  let morphCost: ParsedManaCost | undefined;
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -7027,6 +7028,18 @@ export function interpretCard(card: OracleCard): CardDefinition {
      * and belongs with the other cost-bearing keywords in
      * `docs/plans/post-tier3-card-coverage.md`, not with a one-line parse.
      */
+    // "Morph {B}" (CR 702.37): cast face down as a 2/2 for {3} (`castFaceDown`), and turn it
+    // face up any time you have priority by paying this cost (`turnFaceUp`).
+    {
+      const m = lower.match(/^morph ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          morphCost = cost.cost;
+          continue;
+        }
+      }
+    }
     // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
     // trigger copying the spell once per payment (`queueKeywordCastTriggers`).
     {
@@ -7412,6 +7425,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
     ...(announcesX ? { announcesX: true } : {}),
     ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
+    ...(morphCost !== undefined ? { morphCost } : {}),
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   });

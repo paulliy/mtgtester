@@ -3642,3 +3642,33 @@ test("Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it", async ({ 
   ).toHaveCount(0);
   await expect(permanent(page, 'Changing Loyalty')).toHaveCount(0);
 });
+
+test('Grim Haruspex: cast it face down, turn it face up, then draw', async ({ page }) => {
+  await runScenario(page, 'Grim Haruspex: cast it face down, turn it face up, then draw');
+  const haruspex = handCard(page, 'Grim Haruspex');
+  await expect(haruspex).toHaveClass(/actionable/);
+  await haruspex.click();
+  // Its normal cast and the face-down morph cast are separate choices.
+  await expect(page.getByRole('button', { name: 'Cast {2}{B}', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /^Cast Grim Haruspex face down for \{3\}/ }).click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Face-down creature spell', 0);
+
+  // You see your own face-down permanent; turning it face up is a special action.
+  await activate(page, 'Grim Haruspex', /Turn face up/);
+  await expect(page.getByText(/turns Grim Haruspex face up/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Zombie').click();
+  await confirm(page);
+  // The draw is a Swamp, so passing on would stop at the land-drop reminder: stop at the draw.
+  await passUntil(page, page.getByText(/Grim Haruspex.*draw a card.*resolves/).first());
+  await expect(permanent(page, 'Lab Zombie')).toHaveCount(0);
+  await expect(handCard(page, 'Swamp')).toBeVisible();
+});

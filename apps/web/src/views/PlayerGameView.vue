@@ -1463,7 +1463,11 @@ function abandon(): void {
                     <small>{{ actionCost(action).join(' · ') }}</small>
                   </button>
                   <button
-                    v-if="action.type === 'activateAbility'"
+                    v-if="
+                      action.type === 'activateAbility' &&
+                      action.interaction?.kind === 'source' &&
+                      action.interaction.abilityIndex !== undefined
+                    "
                     type="button"
                     class="yield-ability"
                     title="Hide this optional ability until you re-enable it"

@@ -212,7 +212,8 @@ export interface EngineStackObject extends StackObject {
    */
   sourceDamageKeywords?: DamageKeyword[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
-  alternativeCastKind?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
+  alternativeCastKind?:
+    'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;

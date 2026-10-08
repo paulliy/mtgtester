@@ -321,12 +321,6 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 8: Morph is stored on the definition but never offered as a cast.
-  unsupportedCard(
-    '72aef1d8-11df-4bc2-af83-907b05df73a8',
-    'Grim Haruspex',
-    'Morph cost is stored but never offered as a face-down alternative cast.',
-  );
   defineCard(
     '366a218e-84d3-4cf9-bbc8-f2f8ecce92a3',
     'Herald of Secret Streams',

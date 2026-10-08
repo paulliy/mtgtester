@@ -752,13 +752,40 @@
     "72aef1d8-11df-4bc2-af83-907b05df73a8": {
       "name": "Grim Haruspex",
       "oracleSha256": "a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Morph {B}",
-          "implementation": ["explicitly unsupported; morphCost is never offered as a cast"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "id": "grim-haruspex-morph",
+          "oracleText": "Morph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+          "implementation": [
+            "interpreted Morph {B} as morphCost",
+            "castFaceDown: from hand at sorcery speed for {3} (less reductions that apply to a vanilla colorless creature spell), on the stack under a face-down 2/2 definition with no name, color or abilities; resolves into a face-down permanent",
+            "turnFaceUp special action any time you have priority: pay the morph cost, no stack, keeps status, counters and damage, does not re-enter",
+            "hidden information: the stack, castSpell event and other seats' log name only a face-down creature spell until it is turned face up"
+          ],
+          "engineTestIds": [
+            "grim-haruspex-pinned-oracle-supported",
+            "grim-haruspex-face-down-cast",
+            "grim-haruspex-face-down-sorcery-speed",
+            "grim-haruspex-face-down-has-no-abilities",
+            "grim-haruspex-turn-face-up",
+            "grim-haruspex-normal-cast",
+            "grim-haruspex-public-log"
+          ],
+          "viewerScenarioIds": ["grim-haruspex-viewer-morph"]
+        },
+        {
+          "id": "grim-haruspex-draw",
+          "oracleText": "Whenever another nontoken creature you control dies, draw a card.",
+          "implementation": [
+            "interpreted dies trigger: another nontoken creature you control; draw 1. A face-down Haruspex has no abilities, so it does not trigger"
+          ],
+          "engineTestIds": [
+            "grim-haruspex-pinned-oracle-supported",
+            "grim-haruspex-draws-face-up",
+            "grim-haruspex-face-down-has-no-abilities"
+          ],
+          "viewerScenarioIds": ["grim-haruspex-viewer-morph"]
         }
       ],
       "gameplayAiScenarioIds": []

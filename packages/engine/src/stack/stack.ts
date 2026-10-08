@@ -184,6 +184,8 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       zone: 'battlefield',
       controllerId: spell.controllerId,
       ...(def.subtypes.includes('Aura') ? { attachedTo: spell.targets[0] } : {}),
+      // A face-down spell becomes a face-down permanent (CR 708.4).
+      ...(spell.alternativeCastKind === 'faceDown' ? { faceDown: true } : {}),
     });
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({

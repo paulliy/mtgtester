@@ -908,6 +908,24 @@ export function* moveObjects(
  *
  * The id is derived from the spec, so N Treasures share one definition entry.
  */
+/**
+ * The definition a face-down spell is cast with (CR 708.2a, 708.4): a 2/2 creature with no
+ * name, mana cost, color, types beyond creature, or abilities. A morph card cast face down is
+ * put on the stack under this definition, so cast triggers, reductions and restrictions see
+ * only what is public.
+ */
+export function faceDownSpellOracleId(ctx: GameContext): OracleId {
+  return registerTokenDef(ctx, {
+    name: 'Face-down creature spell',
+    typeLine: 'Creature',
+    types: ['Creature'],
+    subtypes: [],
+    colors: [],
+    power: 2,
+    toughness: 2,
+  });
+}
+
 function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
   const evalPower =
     spec.power === null || spec.power === undefined

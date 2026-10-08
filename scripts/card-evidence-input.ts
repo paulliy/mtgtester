@@ -1502,6 +1502,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Grim Haruspex: cast it face down, turn it face up, then draw'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

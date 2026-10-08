@@ -132,7 +132,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Dark Confidant',
       'Gleeful Arsonist',
       'Glen Elendra Archmage',
-      'Grim Haruspex',
       'Iron Apprentice',
       'Kardur, Doomscourge',
       'Mana Sculpt',

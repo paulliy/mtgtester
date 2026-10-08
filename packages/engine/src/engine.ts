@@ -251,6 +251,11 @@ export class Engine implements EngineDriver {
                 response.combatDamageSplit,
               )
             : action.description,
+        // What other players see of a hidden-information action (a face-down cast names its
+        // card only to its caster): `formatPlayerLog` shows this to them instead.
+        ...(typeof action.data?.['publicDescription'] === 'string'
+          ? { publicDescription: action.data['publicDescription'] }
+          : {}),
         targets: [...targets.entries()].map(([slot, choice]) => ({ slot, choice })),
         // Preserve the exact wire response as submitted. The targets field above is the
         // normalized engine outcome (including forced single-option slots); replay needs both.

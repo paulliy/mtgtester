@@ -4599,12 +4599,6 @@
     }
   },
   {
-    "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
-    "name": "Grim Haruspex",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "73413bd5-8c40-4d45-8f05-c20c39ee4017",
     "name": "Madame Null, Power Broker",
     "handledLines": [
@@ -16098,12 +16092,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-grim-haruspex",
-    "name": "Grim Haruspex",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-gut-true-soul-zealot",

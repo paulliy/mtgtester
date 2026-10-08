@@ -7026,6 +7026,38 @@ const koglaYidaroDiscardScenario = (gameId: GameId): CardTestScenario =>
     inHandOnly: true,
   });
 
+function grimHaruspexScenario(gameId: GameId): CardTestScenario {
+  const haruspex = pinnedFrom(MARCHESA_BATCH1, 'Grim Haruspex');
+  return pr01Scenario(gameId, {
+    id: 'grim-haruspex-viewer-morph',
+    title: 'Grim Haruspex: cast it face down, turn it face up, then draw',
+    instructions: [
+      'Cast Grim Haruspex face down for {3}.',
+      'Turn it face up for {B}.',
+      'Cast Lab Doom on your Lab Zombie.',
+    ],
+    expectedOutcome: 'Grim Haruspex is a face-up 3/2, Lab Zombie dies, and you draw a card.',
+    oracleSha256: haruspex.sha256,
+    clauseIds: ['grim-haruspex-morph', 'grim-haruspex-draw'],
+    decks: {
+      P1: [haruspex.card, LAB_DOOM, LAB_ZOMBIE, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Grim Haruspex', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Lab Zombie'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function changingLoyaltyScenario(
   gameId: GameId,
   spec: {
@@ -7338,6 +7370,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kogla-and-yidaro-viewer-discard',
   'changing-loyalty-viewer-replicate',
   'changing-loyalty-viewer-steal',
+  'grim-haruspex-viewer-morph',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7505,6 +7538,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kogla-and-yidaro-viewer-discard': koglaYidaroDiscardScenario,
   'changing-loyalty-viewer-replicate': changingLoyaltyReplicateScenario,
   'changing-loyalty-viewer-steal': changingLoyaltyStealScenario,
+  'grim-haruspex-viewer-morph': grimHaruspexScenario,
 };
 
 export function createCardTestScenario(

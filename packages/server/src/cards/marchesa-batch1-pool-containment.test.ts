@@ -46,6 +46,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Forum of Amity',
       'Frontier Siege',
       'Ghost Ark',
+      'Grim Haruspex',
       'Harvest Season',
       'Hour of Reckoning',
       'Hunting Wilds',

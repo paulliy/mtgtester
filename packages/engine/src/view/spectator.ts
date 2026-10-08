@@ -373,6 +373,9 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'resolved':
       return { ...base, text: `${str(p, 'description') ?? 'spell'} resolves` };
 
+    case 'turnedFaceUp':
+      return { ...base, text: `turns ${str(p, 'name') ?? 'a permanent'} face up` };
+
     case 'spellCopied':
       return { ...base, text: `copies ${str(p, 'name') ?? 'a spell'}` };
 
@@ -531,16 +534,32 @@ export function formatPlayerLog(
   playerId: string,
 ): SpectatorLogLine[] {
   return formatSpectatorLog(
-    events.filter((event) => {
-      if (event.actorSeat === playerId) return true;
-      // Opponents' draws and library manipulation reveal hidden information only to the
-      // spectator projection. Their public zone changes (discard and mill) remain narrated.
-      if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
-      if (event.type !== 'decision') return true;
-      const decisionType = event.payload['decisionType'];
-      return (
-        decisionType !== 'mulligan' && decisionType !== 'bottomCards' && decisionType !== 'general'
-      );
-    }),
+    events
+      .map((event) => {
+        // Another seat's hidden-information action (a face-down cast) reads as its public
+        // description, never its card's name.
+        const publicDescription = event.payload['publicDescription'];
+        if (
+          event.type !== 'decision' ||
+          event.actorSeat === playerId ||
+          typeof publicDescription !== 'string'
+        ) {
+          return event;
+        }
+        return { ...event, payload: { ...event.payload, description: publicDescription } };
+      })
+      .filter((event) => {
+        if (event.actorSeat === playerId) return true;
+        // Opponents' draws and library manipulation reveal hidden information only to the
+        // spectator projection. Their public zone changes (discard and mill) remain narrated.
+        if (['draw', 'scry', 'surveil'].includes(event.type)) return false;
+        if (event.type !== 'decision') return true;
+        const decisionType = event.payload['decisionType'];
+        return (
+          decisionType !== 'mulligan' &&
+          decisionType !== 'bottomCards' &&
+          decisionType !== 'general'
+        );
+      }),
   );
 }

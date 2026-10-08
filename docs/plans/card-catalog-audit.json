@@ -5893,6 +5893,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr02",
       "note": "Shadowed unimplemented() deleted together with the silverquill-influence-remaining.ts registration; see that entry."
+    },
+    {
+      "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
+      "name": "Grim Haruspex",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: Morph is a face-down cast for {3} (on the stack as a vanilla 2/2 with hidden identity) and a turn-face-up special action for the morph cost, and the interpreter reads Morph {B}; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

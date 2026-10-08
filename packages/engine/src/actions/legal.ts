@@ -67,7 +67,7 @@ import {
   convokeSourcesFor,
   spellHasConvoke,
 } from '../state/queries';
-import { playerById, spellManaValue } from '../state/objects';
+import { faceDownSpellOracleId, playerById, spellManaValue } from '../state/objects';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -110,7 +110,8 @@ export type PriorityActionPayload =
       modes?: number[];
       /** Number of times the card's optional additional cost was paid. */
       optionalCostCount?: number;
-      alternativeCast?: 'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree';
+      alternativeCast?:
+        'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -129,7 +130,9 @@ export type PriorityActionPayload =
       /** The announced modes of a modal activated ability (CR 602.2b, 700.2a). */
       modes?: number[];
     }
-  | { kind: 'companionToHand' };
+  | { kind: 'companionToHand' }
+  /** Morph's special action (CR 702.37e, 116.2b): pay the morph cost, turn it face up. */
+  | { kind: 'turnFaceUp'; objectId: ObjectId };
 
 function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
   const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
@@ -219,6 +222,8 @@ export function modalSelections(
   return out;
 }
 const COMPANION_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
+/** The face-down cast cost of a morph card (CR 702.37c). */
+const FACE_DOWN_COST: ParsedManaCost = { ...emptyCost(), generic: 3 };
 
 /**
  * The mana components of an activation cost, summed. Everything else (tap, sacrifice, counters)
@@ -1167,6 +1172,53 @@ export function computePriorityOptions(
     const sources = spellHasConvoke(def)
       ? [...baseCastSources, ...convokeSourcesFor(ctx, player.id)]
       : baseCastSources;
+    // Morph (CR 702.37c): cast this card from hand face down as a 2/2 creature spell for {3}.
+    // The face-down spell has no abilities (CR 708.4), so it is cast at sorcery speed, and only
+    // reductions that apply to a vanilla colorless creature spell apply to it.
+    if (
+      def.morphCost !== undefined &&
+      sorcerySpeed &&
+      !fromCommand &&
+      !fromLibraryTop &&
+      !fromExile &&
+      !fromGraveyard
+    ) {
+      const faceDownId = faceDownSpellOracleId(ctx);
+      const faceDownReduction = costReductionFor(ctx, player.id, faceDownId, obj.cardId);
+      const cost = subtractGeneric(
+        faceDownReduction.colored === undefined
+          ? FACE_DOWN_COST
+          : subtractColored(FACE_DOWN_COST, faceDownReduction.colored),
+        faceDownReduction.generic,
+      );
+      const faceDownAllows = allowanceFor(ctx, player.id, {
+        kind: 'castSpell',
+        oracleId: faceDownId,
+        isCommander: false,
+      });
+      if (canPay(cost, player.manaEntries, baseCastSources, faceDownAllows, player.life)) {
+        options.push({
+          type: 'castSpell',
+          description: `Cast ${obj.name} face down for ${describeManaCost(cost)}`,
+          payload: {
+            kind: 'castSpell',
+            objectId: obj.id,
+            fromCommand: false,
+            alternativeCast: 'faceDown',
+          },
+          data: {
+            instantSpeed: false,
+            sourceName: obj.name,
+            sourceZone: 'hand',
+            manaCost: describeManaCost(cost),
+            ...paymentPreview(ctx, player, cost, baseCastSources, faceDownAllows),
+            castVariant: 'faceDown',
+            // What other players may learn of this action (CR 708.5): `formatPlayerLog`.
+            publicDescription: `Cast a face-down creature spell for ${describeManaCost(cost)}`,
+          },
+        });
+      }
+    }
     if (def.manaCost === null) return; // cost-less nonland card: not castable
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
     if (!instantSpeed && !sorcerySpeed) return;
@@ -1975,6 +2027,31 @@ export function computePriorityOptions(
         },
       });
     }
+  }
+
+  // Morph (CR 702.37e): any time you have priority, turn a face-down permanent you control
+  // with morph face up by paying its morph cost. A special action: no stack, no response.
+  for (const perm of ctx.state.battlefield) {
+    if (perm.controllerId !== player.id || perm.faceDown !== true) continue;
+    const morphCost = getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+    if (morphCost === undefined) continue;
+    // Neither casting nor activating: restricted mana cannot pay it.
+    const allows = allowanceFor(ctx, player.id, { kind: 'other' });
+    if (!canPay(morphCost, player.manaEntries, baseCastSources, allows, player.life)) continue;
+    options.push({
+      type: 'activateAbility',
+      description: `Turn ${perm.name} face up (${describeManaCost(morphCost)})`,
+      payload: { kind: 'turnFaceUp', objectId: perm.id },
+      data: {
+        sourceName: perm.name,
+        sourceZone: 'battlefield',
+        abilityDescription: 'Turn face up',
+        manaCost: describeManaCost(morphCost),
+        ...paymentPreview(ctx, player, morphCost, baseCastSources, allows),
+        publicDescription: `Turn a face-down permanent face up`,
+      },
+      interaction: { kind: 'source', sourceId: perm.id, sourceCardId: perm.cardId },
+    });
   }
 
   // Companion: pay {3} at sorcery speed to move it to hand, once per game (brief §5.7).

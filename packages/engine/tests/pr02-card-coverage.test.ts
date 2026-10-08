@@ -10,7 +10,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { OracleCard } from '@mtg/shared';
+import type { GameEvent, OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import {
@@ -21,7 +21,7 @@ import {
 import type { ActivatedAbility } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { constant } from '../src/cards/value';
-import { allOf, IS_TOKEN, not, ofType } from '../src/cards/selector';
+import { allOf, IS_TOKEN, not, ofType, YOURS as YOURS_SELECTOR } from '../src/cards/selector';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
@@ -35,7 +35,8 @@ import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
 import { moveObject, playerById } from '../src/state/objects';
-import { manaSourcesFor, selfMayTap } from '../src/state/queries';
+import { effectivePT, manaSourcesFor, selfMayTap } from '../src/state/queries';
+import { formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -3868,6 +3869,181 @@ describe('Changing Loyalty', () => {
   });
 });
 
+describe('Grim Haruspex', () => {
+  const haruspex = pinned('Grim Haruspex');
+  const FACE_DOWN = /^Cast Grim Haruspex face down for \{3\}$/;
+  const creature = (name: string) => oracle({ name, typeLine: 'Creature — Soldier' });
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    const inHand = conjure(ctx, 'P1', haruspex.card, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(3));
+    return { ctx, inHand };
+  }
+
+  /** Cast it face down and let the spell resolve; returns the face-down permanent. */
+  function faceDown(ctx: GameContext, objectId: string) {
+    const option = castOptionsFor(ctx, 'P1', objectId).find((entry) =>
+      FACE_DOWN.test(entry.description),
+    );
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    return ctx.state.battlefield.find((perm) => perm.name === 'Grim Haruspex')!;
+  }
+
+  const turnUp = (ctx: GameContext, perm: EnginePermanent) =>
+    priorityOptions(ctx, 'P1').find((option) => {
+      const payload = option.payload as { kind: string; objectId?: string };
+      return payload.kind === 'turnFaceUp' && payload.objectId === perm.id;
+    });
+
+  it('grim-haruspex-pinned-oracle-supported — morph {B} and a draw on another nontoken creature dying', () => {
+    expect(haruspex.sha256).toBe(
+      'a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef',
+    );
+    expect(haruspex.card.oracleText).toBe(
+      'Morph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\nWhenever another nontoken creature you control dies, draw a card.',
+    );
+    expectModeled(haruspex.card);
+    expect(getOverride(haruspex.card.oracleId)).toBeUndefined();
+    const def = interpretCard(haruspex.card);
+    expect(def.morphCost).toEqual(parseManaCost('{B}').cost);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: {
+          when: 'dies',
+          subject: {
+            kind: 'permanent',
+            selector: allOf({ kind: 'other' }, not(IS_TOKEN), YOURS_SELECTOR, ofType('Creature')),
+          },
+        },
+        effects: [{ op: 'draw', count: constant(1) }],
+      }),
+    ]);
+  });
+
+  it('grim-haruspex-face-down-cast — {3} casts it face down as a vanilla 2/2 creature spell', () => {
+    const { ctx, inHand } = ready('haruspex-cast');
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find((entry) =>
+      FACE_DOWN.test(entry.description),
+    );
+    expect(option?.data?.['publicDescription']).toBe('Cast a face-down creature spell for {3}');
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    const spell = ctx.state.stack.at(-1)!;
+    expect(spell.description).toBe('Face-down creature spell');
+    const spellDef = ctx.defs.get(spell.sourceOracleId)!;
+    expect(spellDef).toMatchObject({ types: ['Creature'], colors: [], power: 2, toughness: 2 });
+    expect(spellDef.triggers).toEqual([]);
+    expect(ctx.state.eventLog.find((event) => event.type === 'castSpell')?.payload['name']).toBe(
+      'Face-down creature spell',
+    );
+    // No other player can learn what it is.
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).not.toContain('Grim Haruspex');
+    resolveTop(ctx);
+    const perm = ctx.state.battlefield.find((candidate) => candidate.cardId === inHand.cardId)!;
+    expect(perm.faceDown).toBe(true);
+    expect(effectivePT(ctx, perm)).toEqual({ power: 2, toughness: 2 });
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).not.toContain('Grim Haruspex');
+  });
+
+  it('grim-haruspex-face-down-sorcery-speed — the face-down cast is not offered at instant speed', () => {
+    const { ctx, inHand } = ready('haruspex-instant');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+  });
+
+  it('grim-haruspex-face-down-has-no-abilities — face down, another creature dying draws nothing', () => {
+    const { ctx, inHand } = ready('haruspex-silent');
+    faceDown(ctx, inHand.id);
+    const soldier = spawn(ctx, 'P1', creature('Haruspex Soldier'));
+    const hand = playerById(ctx, 'P1').hand.length;
+    pump(moveObject(ctx, soldier, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(hand);
+  });
+
+  it('grim-haruspex-turn-face-up — {B} turns it face up as a special action, keeping its status', () => {
+    const { ctx, inHand } = ready('haruspex-up');
+    const perm = faceDown(ctx, inHand.id);
+    perm.tapped = true;
+    perm.damageMarked = 1;
+    expect(turnUp(ctx, perm)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    // Any time you have priority — on an opponent's turn too.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const option = turnUp(ctx, perm);
+    expect(option?.description).toBe('Turn Grim Haruspex face up ({B})');
+    expect(option?.data?.['publicDescription']).toBe('Turn a face-down permanent face up');
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(perm.faceDown).toBe(false);
+    expect(perm.tapped).toBe(true);
+    expect(perm.damageMarked).toBe(1);
+    expect(effectivePT(ctx, perm)).toEqual({ power: 3, toughness: 2 });
+    // A special action: nothing went on the stack, and it did not enter the battlefield again.
+    expect(ctx.state.stack).toEqual([]);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    expect(turnUp(ctx, perm)).toBeUndefined();
+  });
+
+  it('grim-haruspex-draws-face-up — face up, another nontoken creature you control dying draws a card', () => {
+    const { ctx, inHand } = ready('haruspex-draws');
+    const perm = faceDown(ctx, inHand.id);
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    takeAction(ctx, 'P1', turnUp(ctx, perm)!.payload as PriorityActionPayload);
+    const soldier = spawn(ctx, 'P1', creature('Haruspex Soldier'));
+    const token = spawn(ctx, 'P1', creature('Haruspex Token'), { isToken: true });
+    const rival = spawn(ctx, 'P2', creature('Haruspex Rival'));
+    const hand = playerById(ctx, 'P1').hand.length;
+    for (const dying of [token, rival]) pump(moveObject(ctx, dying, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(hand);
+    pump(moveObject(ctx, soldier, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(hand + 1);
+  });
+
+  it('grim-haruspex-normal-cast — it can still be cast face up for {2}{B}', () => {
+    const ctx = pod('haruspex-normal');
+    const inHand = conjure(ctx, 'P1', haruspex.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, ...generic(2)]);
+    const normal = castOptionsFor(ctx, 'P1', inHand.id).find((entry) =>
+      /^Cast Grim Haruspex \(\{2\}\{B\}\)$/.test(entry.description),
+    );
+    takeAction(ctx, 'P1', normal!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const perm = ctx.state.battlefield.find((candidate) => candidate.cardId === inHand.cardId)!;
+    expect(perm.faceDown).not.toBe(true);
+    expect(turnUp(ctx, perm)).toBeUndefined();
+  });
+
+  it('grim-haruspex-public-log — other seats read a face-down cast by its public description', () => {
+    const event = {
+      sequence: 1,
+      turn: 1,
+      phase: 'precombatMain',
+      step: null,
+      actorSeat: 'P1',
+      type: 'decision',
+      payload: {
+        decisionType: 'priority',
+        description: 'Cast Grim Haruspex face down for {3}',
+        publicDescription: 'Cast a face-down creature spell for {3}',
+      },
+    } as GameEvent;
+    expect(formatPlayerLog([event], 'P2').map((line) => line.text)).toEqual([
+      'Cast a face-down creature spell for {3}',
+    ]);
+    expect(formatPlayerLog([event], 'P1').map((line) => line.text)).toEqual([
+      'Cast Grim Haruspex face down for {3}',
+    ]);
+  });
+});
+
 describe('Killian, Ink Duelist', () => {
   const killian = pinned('Killian, Ink Duelist');
   const SHOCK = oracle({
@@ -4425,6 +4601,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Grim Haruspex',
+    sha256: 'a82c1aeef591b7eaeb584f94d66076ac45cfafde3a65de88cdb36f4ae14866ef',
+    clauseCount: 2,
+  },
   {
     name: 'Changing Loyalty',
     sha256: 'c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0',

@@ -4,6 +4,7 @@
  * scenarios through the real frontend; this suite pins their authoritative outcomes and replay.
  */
 import type { DecisionRequest } from '@mtg/shared';
+import { formatPlayerLog } from '@mtg/engine';
 import { describe, expect, it } from 'vitest';
 import { createCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
@@ -820,5 +821,32 @@ describe('Changing Loyalty Card Test Lab scenarios', () => {
         .sort(),
     ).toEqual(['Changing Loyalty', 'Lab Doom']);
     replays('changing-loyalty-viewer-steal', steps);
+  });
+});
+
+describe('Grim Haruspex Card Test Lab scenario', () => {
+  it('grim-haruspex-viewer-morph — cast it face down, turn it face up, and draw when Lab Zombie dies', () => {
+    const steps: Step[] = [
+      { action: 'Cast Grim Haruspex face down for {3}' },
+      { action: 'Turn Grim Haruspex face up ({B})' },
+      { action: 'Cast Lab Doom', targets: ['Lab Zombie'] },
+    ];
+    const { scenario, seat, onBattlefield } = run('grim-haruspex-viewer-morph', steps);
+    const haruspex = onBattlefield('Grim Haruspex');
+    expect(haruspex).toHaveLength(1);
+    expect((haruspex[0] as { faceDown?: boolean }).faceDown).toBe(false);
+    expect(onBattlefield('Lab Zombie')).toEqual([]);
+    // Lab Doom left the hand; the Haruspex trigger drew the last Swamp.
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Swamp']);
+    // Opponents read the cast by its public description, and learn the name only once it is
+    // turned face up.
+    const opponentLog = formatPlayerLog(scenario.engine.eventsSince(0), 'P2').map(
+      (line) => line.text,
+    );
+    expect(opponentLog).toContain('Cast a face-down creature spell for {3}');
+    const turned = opponentLog.indexOf('turns Grim Haruspex face up');
+    expect(turned).toBeGreaterThan(0);
+    expect(opponentLog.slice(0, turned).some((line) => line.includes('Grim Haruspex'))).toBe(false);
+    replays('grim-haruspex-viewer-morph', steps);
   });
 });

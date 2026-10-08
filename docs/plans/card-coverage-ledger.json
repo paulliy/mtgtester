@@ -1171,6 +1171,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
+    "name": "Grim Haruspex",
+    "package": "PR02.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Morph cost is stored but never offered as a face-down alternative cast."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "7c565975-aebc-4599-ac32-5594c718e2cb",
     "name": "Guard Gomazoa",
     "package": "W8",

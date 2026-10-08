@@ -38,6 +38,7 @@ import {
 } from '../mana/cost';
 import {
   additionalTypedTriggerCopies,
+  faceDownSpellOracleId,
   makePermanent,
   moveObject,
   queueCastTriggers,
@@ -460,6 +461,10 @@ export function* applyPriorityAction(
       const obj = fromZone.find((o) => o.id === payload.objectId);
       if (obj === undefined) throw new Error('engine bug: spell to cast not found');
       const def = getDefByOracleId(ctx, obj.oracleId, obj.name);
+      if (payload.alternativeCast === 'faceDown') {
+        yield* castFaceDown(ctx, player, obj, def);
+        return;
+      }
       let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
       if (
         payload.fromGraveyard === true &&
@@ -1129,6 +1134,25 @@ export function* applyPriorityAction(
       return;
     }
 
+    case 'turnFaceUp': {
+      const perm = s.battlefield.find((candidate) => candidate.id === payload.objectId);
+      const morphCost =
+        perm === undefined ? undefined : getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+      if (
+        perm === undefined ||
+        perm.controllerId !== player.id ||
+        perm.faceDown !== true ||
+        morphCost === undefined
+      ) {
+        throw new Error('illegal action: nothing to turn face up');
+      }
+      yield* payManaCost(ctx, player, morphCost);
+      // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
+      perm.faceDown = false;
+      emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
+      return;
+    }
+
     case 'companionToHand': {
       const companion = player.companion;
       if (companion === null || player.companionMovedToHand) {
@@ -1147,6 +1171,74 @@ export function* applyPriorityAction(
       return;
     }
   }
+}
+
+/**
+ * Morph's face-down cast (CR 702.37c, 708.4): from hand, for {3} less any reduction that
+ * applies to a vanilla colorless creature spell, as a 2/2 creature spell with no name, cost,
+ * color or abilities. The stack object carries the face-down definition, so cast triggers and
+ * every other player see only that; the card resolves into a face-down permanent.
+ */
+function* castFaceDown(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  obj: EngineCardObject,
+  def: CardDefinition,
+): GameGen<void> {
+  if (def.morphCost === undefined || !player.hand.some((card) => card.id === obj.id)) {
+    throw new Error('illegal action: this card cannot be cast face down');
+  }
+  const faceDownId = faceDownSpellOracleId(ctx);
+  const reduction = costReductionFor(ctx, player.id, faceDownId, obj.cardId);
+  const base: ParsedManaCost = { ...emptyCost(), generic: 3 };
+  const cost = subtractGeneric(
+    reduction.colored === undefined ? base : subtractColored(base, reduction.colored),
+    reduction.generic,
+  );
+  const manaPayment = yield* payManaCost(ctx, player, cost, {
+    kind: 'castSpell',
+    oracleId: faceDownId,
+    isCommander: false,
+  });
+  removeFromCurrentZone(ctx, obj);
+  const spellCard: EngineCardObject = {
+    ...obj,
+    id: `o-${ctx.state.nextObjectNum++}` as ObjectId,
+    zone: 'stack',
+  };
+  const spellEntry: EngineStackObject = {
+    id: spellCard.id,
+    sourceId: spellCard.id,
+    controllerId: player.id,
+    kind: 'spell',
+    description: 'Face-down creature spell',
+    targets: [],
+    card: spellCard,
+    ability: { kind: 'spell', targets: [], effects: [] },
+    sourceOracleId: faceDownId,
+    sourceCardId: obj.cardId,
+    isCommanderCast: false,
+    alternativeCastKind: 'faceDown',
+    triggerScope: { manaSpent: manaPayment.manaSpent },
+  };
+  ctx.state.stack.push(spellEntry);
+  breakYieldsForStop(ctx, spellEntry);
+  emit(
+    ctx,
+    'castSpell',
+    {
+      player: player.id,
+      name: 'Face-down creature spell',
+      cardId: obj.cardId,
+      targets: [],
+      fromCommand: false,
+      commanderTax: 0,
+      faceDown: true,
+    },
+    player.id,
+  );
+  debug(ctx, 'stack', `${player.id} casts a face-down creature spell`);
+  queueCastTriggers(ctx, spellEntry);
 }
 
 export { makePermanent };
