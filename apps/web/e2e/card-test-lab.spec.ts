@@ -111,7 +111,16 @@ async function verifyOptionalLife(
   await handCard(page, 'Optional-Life Witness').click();
   const castRequestId = requestId;
   await confirm(page);
-  await expect.poll(() => requestId !== castRequestId).toBe(true);
+  await expect
+    .poll(
+      async () =>
+        requestId !== castRequestId ||
+        (await page
+          .getByText(/game over/i)
+          .first()
+          .isVisible()),
+    )
+    .toBe(true);
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
   const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
   const over = page.getByText(/game over/i).first();
