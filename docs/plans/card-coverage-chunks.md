@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 is complete and PR02 is next. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 and PR02 are complete and PR03 is next. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
@@ -9,19 +9,19 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR01 by interpreting every card in the committed
+numbers below were measured after PR02 by interpreting every card in the committed
 `packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
 `bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
 same numbers.
 
-| Population            | Before PR01     | After PR01      | Remaining |
-| --------------------- | --------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) |       263 |
-| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) |        14 |
-| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) |       273 |
+| Population            | Before PR01     | After PR01      | After PR02      | Remaining |
+| --------------------- | --------------- | --------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) |       230 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) |        12 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) |       240 |
 
-PR01 landed exactly as planned: all 29 cards are modeled, no card regressed, and the remaining
-count for every deck matches the PR01 column below.
+PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
+and the remaining count for every deck matches the PR01 and PR02 columns below.
 
 The 302 remaining cards fall into two groups:
 
