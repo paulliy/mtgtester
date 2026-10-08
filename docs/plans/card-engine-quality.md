@@ -840,9 +840,11 @@ and report the exact failed action, attempted recovery, and remaining work.
   All four web audit smoke checks pass. Final primitive/capability/promotion receipts and
   the complete current real-viewer receipt are run against the final committed inputs.
 
-The architecture for all six phases is implemented. Final repository gates and a complete,
-current real-viewer receipt remain required before declaring the roadmap complete or opening
-its completion PR. The earlier execution records describe checkpoints, not current blockers.
+The architecture for all six phases is implemented and PR #14 is open. Publication gates
+passed on tree `2cff6660a319a16d3642886826e6ef0dd8bc12e8`: 4,537 full-suite tests, 2,374
+card-gate tests, 222 actual Lab cases, two DB-backed cases, four mocked smoke cases, and 42
+primitive contracts. Current review corrections require fresh evidence. Earlier execution
+records describe historical checkpoints and do not certify changed source.
 
 | Phase | Implemented exit mechanism                                                                                                                                          | Independent verification route                                                                               |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -880,3 +882,18 @@ Independent normal-path regressions and pinned real-viewer requirements have bee
 Current integrated full-suite, card, primitive, browser and static gates are required before
 these review corrections are considered verified. Earlier successful receipts remain
 historical and are not rebound to this changed source tree.
+
+Review verification checkpoint: the integrated implementation at `b1ac8dd` passed the complete
+local suite (339 files, 4,578 tests, no skips), production/test/tooling types, lint, formatting,
+build, unchanged snapshots, and fresh primitive receipts with capability/promotion validation.
+The full 35,063-card Oracle comparison found only the six documented unsupported containments
+and Force of Negation's target-controller correction. Remote quality, card/primitive/promotion,
+and AI/privacy jobs also passed that implementation.
+
+Browser follow-up runs remain preserved. The commander driver's log assertion now matches the
+physical card name, while a legal response spell in that prepared scenario retains priority so
+its selected spell face can be inspected on the public stack. The Madame Null driver waits for
+the server's new decision and its matching controls, including a direct terminal state when no
+payment is possible. These are scenario/driver corrections; printed clauses and outcome
+assertions are retained. The affected final scenario/manifest/face contracts pass 360 tests.
+Latest-head CI and a fresh complete viewer receipt remain required for review closure.

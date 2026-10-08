@@ -186,3 +186,31 @@ it('face-commander-lab normally casts and resolves Easy Pickings as a commander 
       .eventLog.some((event) => event.type === 'damage' && event.payload['amount'] === 1),
   ).toBe(true);
 });
+
+it('face-commander-stack-lab retains a real response choice while Easy Pickings is on the public stack', () => {
+  const engine = createCardTestScenario(
+    'easy-pickings-viewer-commander-face',
+    'commander-stack-lab',
+  )!.engine;
+  const opening = engine.advance();
+  expect(opening.kind).toBe('decision');
+  if (opening.kind !== 'decision') throw new Error('missing normal commander announcement');
+  const action = opening.request.legalActions.find(
+    (action) => action.data?.['castVariant'] === 'adventure',
+  )!;
+  expect(action.description).toContain('Easy Pickings');
+  engine.submit({ requestId: opening.request.requestId, actionId: action.id });
+  const response = engine.advance();
+  expect(response.kind).toBe('decision');
+  expect(engine.spectatorState().stack.map((spell) => spell.description)).toEqual([
+    'Easy Pickings',
+  ]);
+  if (response.kind !== 'decision') throw new Error('missing normal response priority');
+  expect(
+    response.request.legalActions.some(
+      (action) =>
+        action.type === 'castSpell' &&
+        action.description.includes('Independent Commander Response'),
+    ),
+  ).toBe(true);
+});

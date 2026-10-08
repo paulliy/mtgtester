@@ -81,6 +81,7 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
   const other = witness('Chosen Face Bear', 'Creature — Bear');
   const artifact = witness('Chosen Face Artifact', 'Artifact');
   const giant = witness('Face Giant Witness', 'Creature — Giant');
+  const response = witness('Independent Commander Response', 'Instant', 'You gain 1 life.');
   const mana = [...lands, ...lands];
   const library = entry.expected.search
     ? [...lands]
@@ -96,7 +97,13 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
     commanders: seat === 'P1' && entry.mode === 'commander' ? [entry.card] : [],
     cards:
       seat === 'P1'
-        ? [...(entry.mode === 'commander' ? [] : [entry.card]), own, giant, ...mana, ...library]
+        ? [
+            ...(entry.mode === 'commander' ? [response] : [entry.card]),
+            own,
+            giant,
+            ...mana,
+            ...library,
+          ]
         : seat === 'P2'
           ? [other, artifact, ...lands]
           : [...lands],
@@ -139,8 +146,12 @@ export function spellFaceScenario(id: string, gameId: GameId): CardTestScenario 
           phase: 'precombatMain',
           step: null,
           turnNumber: 1,
-          hand:
-            entry.mode === 'commander' ? [] : [{ playerId: 'P1', cardNames: [entry.card.name] }],
+          hand: [
+            {
+              playerId: 'P1',
+              cardNames: [entry.mode === 'commander' ? response.name : entry.card.name],
+            },
+          ],
           battlefield: [
             { playerId: 'P1', cardNames: [...mana.map((card) => card.name), own.name, giant.name] },
             { playerId: 'P2', cardNames: [other.name], tapped: entry.expected.untap ?? false },

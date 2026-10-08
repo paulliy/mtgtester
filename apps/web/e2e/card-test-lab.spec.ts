@@ -3366,7 +3366,10 @@ async function runSelectedFaceViewer(
   }
   if (expected.opponentsOnly) expect(own!.damageMarked).toBe(0);
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(
-    (expected.draw ?? 0) - (expected.discard ?? 0) + (expected.search || expected.bounce ? 1 : 0),
+    (commander ? 1 : 0) +
+      (expected.draw ?? 0) -
+      (expected.discard ?? 0) +
+      (expected.search || expected.bounce ? 1 : 0),
   );
 }
 
