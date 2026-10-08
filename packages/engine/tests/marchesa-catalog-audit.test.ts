@@ -83,7 +83,7 @@ describe('Marchesa override catalog audit inventory', () => {
     }
 
     const grandfathered = [...unique.entries()].filter(([id]) => !reviewed.has(id));
-    expect(restored.size).toBe(2);
+    expect(restored.size).toBe(3);
     expect(unique.size).toBe(44 - restored.size);
     expect(reviewed.size).toBe(44 - restored.size);
     expect(grandfathered.length).toBe(0);

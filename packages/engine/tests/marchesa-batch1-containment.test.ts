@@ -47,8 +47,6 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Flare of Malice':
-    'Sacrifice-a-nontoken-black-creature alternative cost is claimed without an alternativeCast.',
   'Flayer of the Hatebound':
     'Enters-from-graveyard is implemented as any creature you control entering.',
   'Firkraag, Cunning Instigator':
@@ -314,6 +312,7 @@ describe('Marchesa catalog audit containment', () => {
     'Soul-Guide Lantern',
     'Ghost Ark',
     'Flare of Denial',
+    'Flare of Malice',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -250,11 +250,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Flare of Duplication',
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
   );
-  unsupportedCard(
-    '4ce156f8-6b0b-41ce-9e8f-b2735c757406',
-    'Flare of Malice',
-    'Sacrifice-a-nontoken-black-creature alternative cost is claimed without an alternativeCast.',
-  );
+  // Flare of Malice: restored in coverage PR02. The interpreter reads the sacrifice alternative
+  // cost and the greatest-mana-value sacrifice, so no override remains.
   // Catalog audit batch 4: any of your creatures entering fires this, not only graveyard origin.
   unsupportedCard(
     'ba9f3c5d-556f-48d1-8d87-723f7893cfcd',

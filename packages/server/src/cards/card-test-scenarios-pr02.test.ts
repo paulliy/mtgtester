@@ -580,3 +580,20 @@ describe('Flare of Denial Card Test Lab scenario', () => {
     replays('flare-of-denial-viewer-sacrifice-counter', steps);
   });
 });
+
+describe('Flare of Malice Card Test Lab scenario', () => {
+  it('flare-of-malice-viewer-sacrifice-edict — the Bear pays for it and P2 sacrifices Lab Ox', () => {
+    const steps: Step[] = [{ action: 'alternate cost' }];
+    const { seat, onBattlefield } = run('flare-of-malice-viewer-sacrifice-edict', steps);
+    expect(onBattlefield('Lab Black Bear')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(onBattlefield('Lab Generic Bear')).toHaveLength(1);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Flare of Malice', 'Lab Black Bear']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    replays('flare-of-malice-viewer-sacrifice-edict', steps);
+  });
+});

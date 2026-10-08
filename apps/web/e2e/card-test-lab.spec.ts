@@ -3352,3 +3352,21 @@ test("Flare of Denial: sacrifice a blue creature to counter P2's spell", async (
   await passUntil(page, page.getByText(/Lab Pending Spell is countered by Flare of Denial/i));
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
 });
+
+test('Flare of Malice: sacrifice a black creature; P2 loses its biggest creature', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Flare of Malice: sacrifice a black creature; P2 loses its biggest creature',
+  );
+  const flare = handCard(page, 'Flare of Malice');
+  await expect(flare).toHaveClass(/actionable/);
+  await flare.click();
+  await expect(page.getByRole('button', { name: 'Confirm' })).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Black Bear')).toHaveCount(0, { timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Generic Bear')).toBeVisible();
+});

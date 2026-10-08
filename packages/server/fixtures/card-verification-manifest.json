@@ -430,19 +430,34 @@
     "4ce156f8-6b0b-41ce-9e8f-b2735c757406": {
       "name": "Flare of Malice",
       "oracleSha256": "d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "flare-of-malice-sacrifice-alternative",
           "oracleText": "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {0}, cost sacrificeOther of a nontoken black creature you control, paid while casting (CR 601.2h)"
+          ],
+          "engineTestIds": [
+            "flare-of-malice-pinned-oracle-supported",
+            "flare-of-malice-sacrifice-alternative",
+            "flare-of-malice-sacrifice-needs-nontoken-black",
+            "flare-of-malice-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-malice-viewer-sacrifice-edict"]
         },
         {
+          "id": "flare-of-malice-greatest-mana-value",
           "oracleText": "Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell effect sacrificeGreatestEachOpponent: selector creatureOrPlaneswalker, metric manaValue; each opponent chooses among tied permanents"
+          ],
+          "engineTestIds": [
+            "flare-of-malice-pinned-oracle-supported",
+            "flare-of-malice-greatest-mana-value",
+            "flare-of-malice-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-malice-viewer-sacrifice-edict"]
         }
       ],
       "gameplayAiScenarioIds": []

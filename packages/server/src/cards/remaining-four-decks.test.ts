@@ -125,7 +125,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Flayer of the Hatebound',
       'Blasphemous Edict',
       'Flare of Duplication',
-      'Flare of Malice',
       'River Kelpie',
       'Twilight Diviner',
       'Pensive Professor',

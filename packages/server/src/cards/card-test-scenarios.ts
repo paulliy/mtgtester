@@ -6521,6 +6521,35 @@ function flareOfDenialScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function flareOfMaliceScenario(gameId: GameId): CardTestScenario {
+  const flare = pinnedFrom(MARCHESA_BATCH1, 'Flare of Malice');
+  return pr01Scenario(gameId, {
+    id: 'flare-of-malice-viewer-sacrifice-edict',
+    title: 'Flare of Malice: sacrifice a black creature; P2 loses its biggest creature',
+    instructions: [
+      'You have no lands. Cast Flare of Malice for its alternative cost, sacrificing Lab Black Bear.',
+      'P2 controls Lab Ox (mana value 4) and Lab Generic Bear (mana value 1).',
+    ],
+    expectedOutcome:
+      'Lab Black Bear is sacrificed, P2 sacrifices Lab Ox, and Lab Generic Bear stays.',
+    oracleSha256: flare.sha256,
+    clauseIds: ['flare-of-malice-sacrifice-alternative', 'flare-of-malice-greatest-mana-value'],
+    decks: {
+      P1: [flare.card, LAB_BLACK_BEAR, FOREST],
+      P2: [LAB_OX, LAB_GENERIC_BEAR, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flare of Malice'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Black Bear'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Generic Bear'] },
+      ],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6752,6 +6781,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'soul-guide-lantern-viewer-draw',
   'ghost-ark-viewer-crew-and-unearth',
   'flare-of-denial-viewer-sacrifice-counter',
+  'flare-of-malice-viewer-sacrifice-edict',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6903,6 +6933,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'soul-guide-lantern-viewer-draw': soulGuideLanternDrawScenario,
   'ghost-ark-viewer-crew-and-unearth': ghostArkScenario,
   'flare-of-denial-viewer-sacrifice-counter': flareOfDenialScenario,
+  'flare-of-malice-viewer-sacrifice-edict': flareOfMaliceScenario,
 };
 
 export function createCardTestScenario(

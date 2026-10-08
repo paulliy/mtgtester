@@ -5753,6 +5753,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "4ce156f8-6b0b-41ce-9e8f-b2735c757406",
+      "name": "Flare of Malice",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registration deleted: the interpreter reads the sacrifice-a-nontoken-black-creature alternative cost (nonMana alternativeCast with a sacrificeOther cost) and the greatest-mana-value edict (sacrificeGreatestEachOpponent over creatures and planeswalkers); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
     }
   ]
 }

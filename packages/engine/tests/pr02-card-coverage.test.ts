@@ -2380,6 +2380,124 @@ describe('Flare of Denial', () => {
   });
 });
 
+describe('Flare of Malice', () => {
+  const flare = pinned('Flare of Malice');
+
+  const withMV = (name: string, typeLine: string, mv: number) =>
+    oracle({
+      name,
+      typeLine,
+      manaCost: `{${mv}}`,
+      cmc: mv,
+      ...(typeLine.includes('Planeswalker') ? { loyalty: '3', power: null, toughness: null } : {}),
+      ...(typeLine.includes('Creature') ? {} : { power: null, toughness: null }),
+    });
+
+  /** P2: a 3-MV creature and a 4-MV planeswalker. P3: two 2-MV creatures and a 5-MV artifact. */
+  function boards(seed: string) {
+    const ctx = pod(seed);
+    const p2Creature = spawn(ctx, 'P2', withMV('Malice P2 Ogre', 'Creature — Ogre', 3));
+    const p2Walker = spawn(
+      ctx,
+      'P2',
+      withMV('Malice P2 Walker', 'Legendary Planeswalker — Test', 4),
+    );
+    const p3First = spawn(ctx, 'P3', withMV('Malice P3 First', 'Creature — Elf', 2));
+    const p3Second = spawn(ctx, 'P3', withMV('Malice P3 Second', 'Creature — Elf', 2));
+    const p3Relic = spawn(ctx, 'P3', withMV('Malice P3 Relic', 'Artifact', 5));
+    const mine = spawn(ctx, 'P1', withMV('Malice Own Giant', 'Creature — Giant', 6));
+    return { ctx, p2Creature, p2Walker, p3First, p3Second, p3Relic, mine };
+  }
+
+  const onBattlefield = (ctx: GameContext, perm: EnginePermanent) =>
+    ctx.state.battlefield.some((candidate) => candidate.id === perm.id);
+
+  it('flare-of-malice-pinned-oracle-supported — a sacrifice alternative cost and a greatest-mana-value edict', () => {
+    expect(flare.sha256).toBe('d358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0');
+    expect(flare.card.oracleText).toBe(
+      "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.\nEach opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
+    );
+    expectModeled(flare.card);
+    expect(getOverride(flare.card.oracleId)).toBeUndefined();
+    const def = interpretCard(flare.card);
+    expect(def.alternativeCasts?.[0]?.costs).toEqual([
+      expect.objectContaining({ kind: 'sacrificeOther' }),
+    ]);
+    expect(def.spellAbility?.effects).toEqual([
+      {
+        op: 'sacrificeGreatestEachOpponent',
+        selector: 'creatureOrPlaneswalker',
+        metric: 'manaValue',
+        action: 'sacrifice',
+      },
+    ]);
+  });
+
+  it('flare-of-malice-sacrifice-alternative — sacrifice a nontoken black creature and pay no mana', () => {
+    const { ctx } = boards('malice-alt');
+    const wizard = spawn(ctx, 'P1', coloredCreature('Malice Black Wizard', 'B'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    const options = castOptionsFor(ctx, 'P1', inHand.id);
+    expect(options.map((option) => ALTERNATE.test(option.description))).toEqual([true]);
+    takeAction(ctx, 'P1', options[0]!.payload as PriorityActionPayload);
+    expect(onBattlefield(ctx, wizard)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain(
+      'Malice Black Wizard',
+    );
+    expect(ctx.state.stack.at(-1)?.sourceCardId).toBe(inHand.cardId);
+  });
+
+  it('flare-of-malice-greatest-mana-value — each opponent sacrifices their greatest creature or planeswalker', () => {
+    const { ctx, p2Creature, p2Walker, p3First, p3Second, p3Relic, mine } = boards('malice-edict');
+    spawn(ctx, 'P1', coloredCreature('Malice Black Wizard', 'B'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    takeAction(
+      ctx,
+      'P1',
+      castOptionsFor(ctx, 'P1', inHand.id)[0]!.payload as PriorityActionPayload,
+    );
+    const offered: string[][] = [];
+    resolveTop(ctx, (decision) => {
+      offered.push(decision.options.map((option) => option.description));
+      return optionMatching(decision, /Malice P3 Second/);
+    });
+    // P2's 4-MV planeswalker outranks its 3-MV creature.
+    expect(onBattlefield(ctx, p2Walker)).toBe(false);
+    expect(onBattlefield(ctx, p2Creature)).toBe(true);
+    // P3's 5-MV artifact is neither a creature nor a planeswalker; its two 2-MV creatures tie,
+    // and P3 chooses which.
+    expect(offered).toHaveLength(1);
+    expect(offered[0]?.join(' | ')).toMatch(/Malice P3 First/);
+    expect(offered[0]?.join(' | ')).not.toMatch(/Malice P3 Relic/);
+    expect(onBattlefield(ctx, p3Second)).toBe(false);
+    expect(onBattlefield(ctx, p3First)).toBe(true);
+    expect(onBattlefield(ctx, p3Relic)).toBe(true);
+    // P4 controls nothing; your own creatures are untouched.
+    expect(onBattlefield(ctx, mine)).toBe(true);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Malice P2 Walker']);
+  });
+
+  it('flare-of-malice-sacrifice-needs-nontoken-black — a token or a nonblack creature cannot pay it', () => {
+    const { ctx } = boards('malice-unpayable');
+    spawn(ctx, 'P1', coloredCreature('Malice Black Token', 'B'), { isToken: true });
+    spawn(ctx, 'P1', coloredCreature('Malice Blue Wizard', 'U'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+  });
+
+  it('flare-of-malice-normal-cast — {2}{B}{B} casts it without a sacrifice', () => {
+    const { ctx, p2Walker } = boards('malice-normal');
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, { symbol: 'B' }, ...generic(2)]);
+    const options = castOptionsFor(ctx, 'P1', inHand.id);
+    expect(options.map((option) => ALTERNATE.test(option.description))).toEqual([false]);
+    takeAction(ctx, 'P1', options[0]!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx, answers([[/sacrifice/i, /Malice P3 First/]]));
+    expect(onBattlefield(ctx, p2Walker)).toBe(false);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -2392,6 +2510,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Flare of Malice',
+    sha256: 'd358e361fe29eb5d7bb7a2b7150da42213f3ec722749868738013cf835d87ec0',
+    clauseCount: 2,
+  },
   {
     name: 'Flare of Denial',
     sha256: 'bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34',

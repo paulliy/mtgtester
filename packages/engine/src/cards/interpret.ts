@@ -747,6 +747,23 @@ function parseEffectSentence(
       }
     }
   }
+  // "Each opponent sacrifices a creature or planeswalker with the greatest mana value among
+  // creatures and planeswalkers they control" (Flare of Malice). Ties are the sacrificer's choice.
+  {
+    const greatest = s.match(
+      /^each opponent sacrifices a (creature|creature or planeswalker) with the greatest (power|mana value) among (creatures|creatures and planeswalkers) they control$/,
+    );
+    if (greatest !== null && (greatest[1] === 'creature') === (greatest[3] === 'creatures')) {
+      return [
+        {
+          op: 'sacrificeGreatestEachOpponent',
+          selector: greatest[1] === 'creature' ? 'creature' : 'creatureOrPlaneswalker',
+          metric: greatest[2] === 'power' ? 'power' : 'manaValue',
+          action: 'sacrifice',
+        },
+      ];
+    }
+  }
   {
     const sacrifice = s.match(/^each opponent sacrifices an? (.+?)(?: of their choice)?$/);
     if (sacrifice !== null) {
