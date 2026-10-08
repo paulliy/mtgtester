@@ -104,7 +104,7 @@ export interface CardDefinition {
   colorIdentity: Color[];
   /** Parsed cost; null for lands / cost-less cards (and for unmodeled costs). */
   manaCost: ParsedManaCost | null;
-  /** True if the printed cost contains symbols we cannot pay yet ({X}, hybrid, …). */
+  /** True if the printed cost contains symbols we cannot pay ({2/W}, snow, …). */
   hasUnsupportedCost: boolean;
   /** Parsed printed P/T; null for non-creatures. `*` values are unmodeled. */
   power: number | null;

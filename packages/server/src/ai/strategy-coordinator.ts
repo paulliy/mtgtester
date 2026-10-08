@@ -21,7 +21,7 @@ import type { StrategyProfile } from '../decks/strategy-profile';
 import { PublicMemoryTracker } from './public-memory';
 import { observationHash, type PlanArtifactMetadata } from './plan-lifecycle';
 import { extractStateFeatures } from './state-features';
-import { TurnPlanManager } from './turn-plan';
+import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import { preparePromptForCaching } from './prompt-cache';
 
@@ -184,6 +184,7 @@ export class StrategyCoordinator {
   /** Generation tracking for strategist calls to reject stale/invalidated in-flight plans. */
   private strategistGeneration = 0;
   private activeGeneration = 0;
+  private pendingAcceptedActions: AcceptedPlanAction[] | null = null;
   /** The in-flight (or last-settled) strategist call, for tests and turn-boundary bookkeeping. */
   private inFlight: Promise<void> | null = null;
   /** Aborts whatever strategist call is currently in flight (or queued, unstarted). */
@@ -261,6 +262,7 @@ export class StrategyCoordinator {
       this.plannedPlayer = activePlayer;
       this.strategy = null;
       this.activeGeneration = 0;
+      this.pendingAcceptedActions = null;
       this.strategyAttempted = false;
       this.replanned = false;
       this.turnPlan.clear();
@@ -325,6 +327,8 @@ export class StrategyCoordinator {
     signal: AbortSignal,
   ): Promise<void> {
     const activePlayer = strategyRequest.activePlayer;
+    const acceptedActions: AcceptedPlanAction[] = [];
+    this.pendingAcceptedActions = acceptedActions;
     const view = this.engine.view(activePlayer);
     const sourceEvents =
       typeof this.engine.eventsSince === 'function' ? this.engine.eventsSince(0) : [];
@@ -407,6 +411,7 @@ export class StrategyCoordinator {
       this.turnPlan.recordPlan(strategyRequest, strategy.plannedActions, this.engine, {
         metadata,
         sourceView: view,
+        acceptedSinceSource: acceptedActions,
       });
       this.logger?.log(strategyRequest, result, false, false, 'strategist');
       this.onStrategy?.(strategyRequest.turn, activePlayer, strategy.intent, result.meta.model);
@@ -427,6 +432,8 @@ export class StrategyCoordinator {
         'decision',
         `strategist call failed for ${activePlayer}: ${(error as Error).message}`,
       );
+    } finally {
+      if (this.pendingAcceptedActions === acceptedActions) this.pendingAcceptedActions = null;
     }
   }
 
@@ -455,6 +462,22 @@ export class StrategyCoordinator {
     // An action taken while the strategist is thinking does not cancel or invalidate the
     // response. Its intent remains useful; TurnPlanManager checks the current phase and legal
     // action menu before executing any planned step.
+    const action = request.legalActions.find((action) => action.id === response.actionId);
+    if (
+      this.pendingAcceptedActions !== null &&
+      request.turn === this.plannedTurn &&
+      request.decidingPlayer === this.plannedPlayer &&
+      action !== undefined
+    ) {
+      this.pendingAcceptedActions.push({
+        turn: request.turn,
+        player: request.decidingPlayer,
+        phase: request.phase,
+        step: request.step,
+        action,
+        ...(response.targets === undefined ? {} : { targets: response.targets }),
+      });
+    }
   }
 
   planLifecycle() {

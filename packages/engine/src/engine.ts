@@ -241,6 +241,7 @@ export class Engine implements EngineDriver {
         requestId: request.requestId,
         decisionType: request.decisionType,
         actionId: action.id,
+        ...(action.type === 'castFree' ? { actionType: 'castFree' } : {}),
         // A combat-damage division is answered by its split, not by the preset option the
         // `actionId` names ("All 3 damage to …"); describe what was actually submitted.
         description:

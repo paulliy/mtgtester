@@ -344,6 +344,8 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       // A combat-damage division is narrated by the `damageAssignmentDivision` event, which
       // records the division the engine actually applied (after validating the response).
       if (str(p, 'decisionType') === 'assignCombatDamage') return null;
+      // Configuration is followed by one authoritative cast event, including forced choices.
+      if (str(p, 'actionType') === 'castFree') return null;
       // Passing priority is the overwhelming majority of decisions and says nothing.
       if (/^pass\b/i.test(description)) return null;
       // A land play is announced twice — "Play Swamp" here and "plays Swamp" from the
@@ -353,6 +355,11 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       if (/^Play\s/.test(description)) return null;
       return { ...base, text: description };
     }
+
+    case 'castSpell':
+      return p['duringResolution'] === true
+        ? { ...base, text: `casts ${str(p, 'name') ?? 'a spell'} without paying its mana cost` }
+        : null;
 
     case 'playLand':
       return { ...base, text: `plays ${str(p, 'name') ?? 'a land'}` };

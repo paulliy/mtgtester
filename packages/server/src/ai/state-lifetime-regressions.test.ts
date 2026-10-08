@@ -73,9 +73,13 @@ describe('AI state and complete cache contracts', () => {
       const deferred = new Promise<AiResult>((resolve) => {
         deliver = resolve;
       });
+      let strategySignal: AbortSignal | undefined;
       const strategist = {
         activeModel: 'deterministic-fixture',
-        requestDecision: vi.fn(() => deferred),
+        requestDecision: vi.fn((_prompt, _request, signal?: AbortSignal) => {
+          strategySignal = signal;
+          return deferred;
+        }),
       } as unknown as AiClient;
       let tacticalActivations = 0;
       const tactician = {
@@ -141,6 +145,9 @@ describe('AI state and complete cache contracts', () => {
           delivered = true;
           deliver(plannedResult);
           await coordinator.settled();
+          expect(coordinator.guidanceFor('P1').strategy?.intent).toBe(
+            plannedResult.response.turnStrategy!.intent,
+          );
         }
         if (
           !delivered &&
@@ -151,6 +158,9 @@ describe('AI state and complete cache contracts', () => {
           delivered = true;
           deliver(plannedResult);
           await coordinator.settled();
+          expect(coordinator.guidanceFor('P1').strategy?.intent).toBe(
+            plannedResult.response.turnStrategy!.intent,
+          );
         }
         const response =
           request.decidingPlayer === 'P1' ? await provider.decide(request) : first(request);
@@ -161,6 +171,11 @@ describe('AI state and complete cache contracts', () => {
           break;
       }
       expect(delivered).toBe(true);
+      expect(strategySignal?.aborted).toBe(false);
+      expect(strategist.requestDecision).toHaveBeenCalledTimes(1);
+      expect(
+        coordinator.planLifecycle().some((event) => event.status === 'already_accomplished'),
+      ).toBe(arrival === 'delayed');
       expect(tacticalActivations).toBe(arrival === 'delayed' ? 1 : 0);
       const soldiers = engine.view('P1').battlefield.filter((item) => item.name === 'Soldier');
       expect(soldiers).toHaveLength(1);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computePriorityOptions } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { activated as activatedAbility } from '../src/cards/templates';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
@@ -52,9 +53,11 @@ function pod(seed = 'planeswalkers-test'): GameContext {
 }
 
 describe('Increment 17: Planeswalkers & Hybrid Mana', () => {
-  it('correctly models Kiora and Sivitri', () => {
+  it('models Kiora and contains Sivitri’s unimplemented attack-tax ability', () => {
     expect(interpretCard(kiora()).modeled).toBe(true);
-    expect(interpretCard(sivitri()).modeled).toBe(true);
+    const def = interpretCard(sivitri());
+    expect(def.modeled).toBe(false);
+    expect(def.unmodeledReasons.join('; ')).toContain('noOp');
   });
 
   it('parses hybrid cost {2}{G/U} and allows payment with G or U', () => {
@@ -140,11 +143,31 @@ const p1Of = (ctx: GameContext): EnginePlayerState =>
 describe('CR 606.3: loyalty ability activation is once per PERMANENT per turn', () => {
   it('activating one loyalty ability takes every other loyalty ability of that planeswalker off the table too', () => {
     const ctx = pod();
-    spawn(ctx, 'P1', sivitri());
+    const probe = oracle({
+      name: 'Loyalty budget probe',
+      typeLine: 'Planeswalker — Probe',
+      loyalty: '4',
+    });
+    ctx.defs.set(probe.oracleId, {
+      ...interpretCard(probe),
+      activatedAbilities: [
+        activatedAbility({
+          costs: [{ kind: 'loyalty', delta: 1 }],
+          effects: [],
+          description: '+1: Add loyalty',
+        }),
+        activatedAbility({
+          costs: [{ kind: 'loyalty', delta: -3 }],
+          effects: [],
+          description: '−3: Remove loyalty',
+        }),
+      ],
+    });
+    spawn(ctx, 'P1', probe);
 
     const before = computePriorityOptions(ctx, p1Of(ctx));
-    expect(before.some((o) => o.description.startsWith('Sivitri, Dragon Master: +1:'))).toBe(true);
-    expect(before.some((o) => o.description.startsWith('Sivitri, Dragon Master: −3:'))).toBe(true);
+    expect(before.some((o) => o.description.startsWith('Loyalty budget probe: +1:'))).toBe(true);
+    expect(before.some((o) => o.description.startsWith('Loyalty budget probe: −3:'))).toBe(true);
 
     let activated = false;
     pump(runPrioritySequence(ctx), (d) => {
@@ -157,11 +180,11 @@ describe('CR 606.3: loyalty ability activation is once per PERMANENT per turn', 
     });
 
     const after = computePriorityOptions(ctx, p1Of(ctx));
-    expect(after.some((o) => o.description.startsWith('Sivitri, Dragon Master: +1:'))).toBe(false);
+    expect(after.some((o) => o.description.startsWith('Loyalty budget probe: +1:'))).toBe(false);
     // Not just the ability that was used — CR 606.3 blocks the *permanent's* other loyalty
     // abilities too, since only one loyalty ability activation is allowed per planeswalker
     // per turn, regardless of which ability.
-    expect(after.some((o) => o.description.startsWith('Sivitri, Dragon Master: −3:'))).toBe(false);
+    expect(after.some((o) => o.description.startsWith('Loyalty budget probe: −3:'))).toBe(false);
   });
 
   // Real card, real oracleId — hits the hand-authored override registered in

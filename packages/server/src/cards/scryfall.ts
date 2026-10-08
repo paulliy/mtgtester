@@ -42,6 +42,7 @@ interface RawCardFace {
   loyalty?: string;
   defense?: string;
   colors?: string[];
+  color_indicator?: string[];
 }
 
 const SUPERTYPES = new Set(['Basic', 'Legendary', 'Snow', 'World', 'Ongoing', 'Host', 'Elite']);
@@ -83,20 +84,6 @@ export function parseTypeLine(typeLine: string): {
   return { supertypes, types, subtypes };
 }
 
-/** First non-empty value across the top-level field and any card face (front first). */
-function faceFallback<K extends keyof RawCardFace>(
-  card: RawScryfallCard,
-  topLevel: string | undefined,
-  key: K,
-): string | undefined {
-  if (topLevel !== undefined && topLevel !== '') return topLevel;
-  for (const face of card.card_faces ?? []) {
-    const v = face[key];
-    if (typeof v === 'string' && v !== '') return v;
-  }
-  return topLevel;
-}
-
 /**
  * Convert a raw bulk entry to an `OracleCard`, or `null` if it isn't a resolvable game card
  * (missing oracle id, or a token/emblem/art-series entry).
@@ -105,10 +92,16 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
   if (!card.oracle_id || !card.name) return null;
   if (card.layout && NON_GAME_LAYOUTS.has(card.layout)) return null;
 
-  const typeLine = card.type_line ?? faceFallback(card, undefined, 'type_line') ?? '';
+  const front = card.card_faces?.[0];
+  const typeLine = front?.type_line ?? card.type_line ?? '';
+  const printedCost = front?.mana_cost ?? card.mana_cost;
+  const costColors = (cost: string | undefined): string[] =>
+    [...COLOR_SET].filter((color) =>
+      (cost?.match(/\{[^}]+\}/g) ?? []).some((symbol) => symbol.includes(color)),
+    );
   const { supertypes, types, subtypes } = parseTypeLine(typeLine);
-  const manaCost = faceFallback(card, card.mana_cost, 'mana_cost') ?? null;
-  const oracleText = card.oracle_text ?? faceFallback(card, undefined, 'oracle_text') ?? '';
+  const manaCost = printedCost ?? null;
+  const oracleText = front?.oracle_text ?? card.oracle_text ?? '';
 
   const back = card.card_faces?.[1];
 
@@ -118,7 +111,9 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
     name: card.name,
     manaCost: manaCost === '' ? null : manaCost,
     cmc: card.cmc ?? 0,
-    colors: toColors(card.colors ?? card.card_faces?.[0]?.colors),
+    colors: toColors(
+      front?.colors ?? front?.color_indicator ?? card.colors ?? costColors(printedCost),
+    ),
     colorIdentity: toColors(card.color_identity),
     typeLine,
     supertypes,
@@ -133,12 +128,7 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
     layout: card.layout ?? 'normal',
     commanderLegality: toCommanderLegality(card.legalities),
     isBasicLand: supertypes.includes('Basic') && types.includes('Land'),
-    // A true SECOND face's own characteristics (modal DFC, transform, …) — unlike every field
-    // above, not merged with the front via `faceFallback`. Adventure/split/omen cards have a
-    // `card_faces[1]` too, but every printed template this engine reads for those already comes
-    // through as the FRONT face's own oracle text (an Adventure's spell half is a clause on the
-    // front card, not a second independent object the way an MDFC's back face is) — `backFace`
-    // exists for interpret.ts's `modal_dfc` handling and is otherwise unused today.
+    // Each face keeps its own cost, text and colors; top-level split strings are display data.
     ...(back !== undefined
       ? {
           backFace: {
@@ -149,7 +139,7 @@ export function toOracleCard(card: RawScryfallCard): OracleCard | null {
               back.mana_cost === undefined || back.mana_cost === ''
                 ? null
                 : (back.mana_cost as OracleCard['manaCost']),
-            colors: toColors(back.colors),
+            colors: toColors(back.colors ?? back.color_indicator ?? costColors(back.mana_cost)),
             power: back.power ?? null,
             toughness: back.toughness ?? null,
             loyalty: back.loyalty ?? null,

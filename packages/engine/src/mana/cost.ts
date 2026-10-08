@@ -3,9 +3,9 @@
  * engine-owned). Phase 2 models the symbols that cover the fixture decks and the vast
  * majority of real cards: generic {N}, the five colors, and colorless {C}.
  *
- * {X}, hybrid ({W/U}, {2/W}), Phyrexian ({G/P}) and snow ({S}) costs are NOT modeled yet —
- * `parseManaCost` reports them as unsupported so the card interpreter can mark the card
- * unmodeled and the engine can halt loudly instead of mispaying (brief §6.3).
+ * Announced {X}, two-color hybrid ({W/U}), and Phyrexian ({G/P}) symbols are modeled.
+ * Two-brid ({2/W}) and snow ({S}) remain unsupported; parsing keeps those cards explicit
+ * rather than substituting a different payment (brief §6.3).
  */
 
 import type { Color, ManaCostString, ManaPool } from '@mtg/shared';
@@ -14,10 +14,11 @@ import { ALL_COLORS } from '@mtg/shared';
 // `ParsedManaCost` from here).
 import type {
   AbilityCost,
-  Effect,
+  ManaRider,
   ManaEntry,
   ManaRestriction,
   ManaSpendTrigger,
+  ManaAbilitySpec,
 } from '../cards/ability';
 import { emptyPool, selectEntriesToSpend, summarize } from './pool';
 
@@ -44,7 +45,7 @@ export interface ParsedManaCost {
 
 export interface ManaCostParseResult {
   cost: ParsedManaCost | null;
-  /** Symbols we cannot model yet ({X}, hybrid, Phyrexian, …); non-empty ⇒ cost is null. */
+  /** Symbols we cannot model ({2/W}, snow, …); non-empty ⇒ cost is null. */
   unsupportedSymbols: string[];
 }
 
@@ -194,6 +195,10 @@ export interface ManaSource {
   cardId: string;
   /** Distinguishes repeated activations of a source from its alternative abilities. */
   activation?: number;
+  /** Production needs a state-dependent read; the fixed-production witness cannot certify it. */
+  stateDependentProduction?: true;
+  /** Unresolved printed/granted production, evaluated after this activation pays its costs. */
+  productionSpec?: ManaAbilitySpec;
   /** Shared, finite resources consumed by this activation. */
   resources?: readonly { key: string; amount: number; available: number }[];
   /** Eligible physical cards for each sacrifice in the activation cost. */
@@ -244,7 +249,7 @@ export interface ManaSource {
    * permanent with several mana abilities has several riders and only the activated one applies;
    * `interchangeableSignature` keeps abilities with different riders in different sources.
    */
-  onActivate?: readonly Effect[];
+  onActivate?: readonly ManaRider[];
   /**
    * "…add two mana of any ONE color" (Ilysian Caryatid) — every unit of this source must
    * resolve to the SAME symbol. Only meaningful with more than one unit; forces the backtracker
@@ -364,6 +369,8 @@ export function planPayment(
   allows: ManaAllowance = ALLOW_NOTHING,
   lifeTotal = 0,
 ): PaymentPlan | null {
+  // CR 119.4b: even below zero, no-life payments and Phyrexian pips paid with mana are legal.
+  lifeTotal = Math.max(0, lifeTotal);
   if ((cost.phyrexian?.length ?? 0) > 0) {
     const pips = cost.phyrexian as Color[];
     const expand = (

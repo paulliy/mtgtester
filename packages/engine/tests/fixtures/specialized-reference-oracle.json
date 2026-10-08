@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "cards": [
+    {
+      "sha256": "3fd679e8d950b507d99a4a070fcc8d785e9eaae1ffc54f74694a0460a67e32ed",
+      "card": {
+        "oracleId": "73413bd5-8c40-4d45-8f05-c20c39ee4017",
+        "scryfallId": "4e712d5c-d6fe-40bb-b8e5-5f50c6ea8d4f",
+        "name": "Madame Null, Power Broker",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Creature — Demon Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Demon",
+          "Advisor"
+        ],
+        "oracleText": "Deathtouch\nWhenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "41e727b47d14f27bed6317531dd9ee6c33e680ec786e7cf9975934380b9f8946",
+      "card": {
+        "oracleId": "938b4e2c-88d9-4637-bc00-e228920c9a78",
+        "scryfallId": "2c249609-9cf7-46f1-b94c-9329add966bb",
+        "name": "Murder",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2bd24a1b0ffbe6449fce34f75456b500b8ddb19f7ea5f4fe68bfec3ed193b09c",
+      "card": {
+        "oracleId": "ad0070db-6454-41cb-861f-8f5b8fc2a3b8",
+        "scryfallId": "dc143ba3-2a58-4980-9fa0-a05a9e9ed082",
+        "name": "Ghostly Flicker",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Exile two target artifacts, creatures, and/or lands you control, then return those cards to the battlefield under your control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

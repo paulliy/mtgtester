@@ -18,6 +18,16 @@ describe('seeded PRNG (brief §5.9)', () => {
     expect(runA).not.toEqual(runB);
   });
 
+  it('clones the current stream without coupling later draws', () => {
+    const rng = new Prng('advanced-stream');
+    for (let i = 0; i < 13; i++) rng.nextUint32();
+    const copy = rng.clone();
+    const expected = rng.clone();
+    const copiedDraws = Array.from({ length: 8 }, () => copy.nextUint32());
+    expect(Array.from({ length: 8 }, () => rng.nextUint32())).toEqual(copiedDraws);
+    expect(expected.nextUint32()).toBe(copiedDraws[0]);
+  });
+
   it('nextInt stays in bounds and hits every value', () => {
     const rng = new Prng('bounds');
     const seen = new Set<number>();
@@ -35,6 +45,8 @@ describe('seeded PRNG (brief §5.9)', () => {
     expect(() => rng.nextInt(0)).toThrow(RangeError);
     expect(() => rng.nextInt(-1)).toThrow(RangeError);
     expect(() => rng.nextInt(1.5)).toThrow(RangeError);
+    expect(() => rng.nextInt(0x100000001)).toThrow(RangeError);
+    expect(rng.nextInt(0x100000000)).toBeGreaterThanOrEqual(0);
   });
 
   it('shuffle is a deterministic permutation', () => {

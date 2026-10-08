@@ -1,3 +1,6 @@
+import { counterCount } from '../state/counters';
+import { eventObjectFacts, sourceObjectState, eventObjectState } from './source-identity';
+import { assertNever } from '../utils/assert-never';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
  *
@@ -26,9 +29,9 @@ import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
 import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
-import { computeCharacteristics, matchesSelector, selectPermanents } from '../effects/continuous';
+import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
-import { ofType } from './selector';
+import { ofType, selectMatches } from './selector';
 import type { PlayerId } from '@mtg/shared';
 import type { EnginePermanent } from '../state/types';
 
@@ -185,13 +188,55 @@ export function isChoiceCondition(condition: Condition): boolean {
       return condition.of.some(isChoiceCondition);
     case 'not':
       return isChoiceCondition(condition.of);
-    default:
+    case 'countPermanents':
+    case 'opponentControlsMore':
+    case 'opponentCount':
+    case 'excessDamageDealtTo':
+    case 'opponentDealtDamageThisTurn':
+    case 'totalCreaturePower':
+    case 'isUntapped':
+    case 'wasKicked':
+    case 'announcedXAtLeast':
+    case 'escaped':
+    case 'hasCounters':
+    case 'enteredThisTurn':
+    case 'createdTokenThisTurn':
+    case 'hadToAttackThisCombat':
+    case 'triggerObjectHadToAttackThisCombat':
+    case 'triggerObjectMatches':
+    case 'chosenOptionIs':
+    case 'controlsYourCommander':
+    case 'controlsACommander':
+    case 'opponentIsMonarch':
+    case 'notYourTurn':
+    case 'yourTurn':
+    case 'attackingPlayerHasMoreLife':
+    case 'attackingPlayerHasMoreLifeThanYou':
+    case 'triggerObjectAttackingOpponent':
+    case 'eventPlayerDrawCount':
+    case 'notFirstDrawInOwnDrawStep':
+    case 'cardsInYourGraveyard':
+    case 'sourceHasCounters':
+    case 'castSpellThisTurn':
+    case 'controlsLandsWithSameName':
       return false;
+    default:
+      assertNever(condition, 'condition classification');
   }
 }
 
-const compare = (actual: number, cmp: Comparison, n: number): boolean =>
-  cmp === '>=' ? actual >= n : cmp === '<=' ? actual <= n : actual === n;
+function compare(actual: number, cmp: Comparison, n: number): boolean {
+  switch (cmp) {
+    case '>=':
+      return actual >= n;
+    case '<=':
+      return actual <= n;
+    case '==':
+      return actual === n;
+    default:
+      return assertNever(cmp, 'Comparison');
+  }
+}
 
 /**
  * Answer a state condition. Throws on a choice condition — see the module comment.
@@ -204,6 +249,13 @@ export function evaluateCondition(
   condition: Condition,
   source: SelectorSource,
 ): boolean {
+  const scope = {
+    ...source,
+    sourceCardId: source.cardId,
+    ...(source.objectId === undefined ? {} : { sourceObjectId: source.objectId }),
+    controllerId: source.controllerId as PlayerId,
+  };
+  const sourceState = () => sourceObjectState(ctx, scope);
   switch (condition.kind) {
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
@@ -219,12 +271,9 @@ export function evaluateCondition(
       return player !== undefined && compare(player.graveyard.length, condition.cmp, condition.n);
     }
     case 'sourceHasCounters': {
-      const self = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
-      // A source that has left the battlefield has no counters, which is the right answer for
-      // every printing of this shape ("if it has no ice counters on it" cannot fire on a
-      // creature that is no longer there to transform).
+      const self = sourceState();
       if (self === undefined) return false;
-      return compare(self.counters[condition.counter] ?? 0, condition.cmp, condition.n);
+      return compare(counterCount(self.counters, condition.counter), condition.cmp, condition.n);
     }
     case 'notFirstDrawInOwnDrawStep': {
       const eventPlayer = source.eventPlayerId;
@@ -283,9 +332,9 @@ export function evaluateCondition(
       return ctx.state.currentTurnPlayer === source.controllerId;
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
-      const attacker = ctx.state.battlefield.find(
-        (permanent) => permanent.cardId === source.triggerObjectCardId,
-      );
+      const information = eventObjectState(ctx, scope);
+      const attacker =
+        information !== undefined && !('candidate' in information) ? information : undefined;
       return (
         attacker !== undefined &&
         attacker.attacking !== null &&
@@ -321,32 +370,34 @@ export function evaluateCondition(
     }
     case 'isUntapped': {
       if (source?.cardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const perm = sourceState();
       return perm !== undefined && !perm.tapped;
     }
     case 'enteredThisTurn': {
       if (source?.cardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const perm = sourceState();
       return perm !== undefined && perm.enteredTurnNumber === ctx.state.turnNumber;
     }
     case 'hadToAttackThisCombat': {
       if (source?.cardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const perm = sourceState();
       return perm?.hadToAttackThisCombat === true;
     }
     case 'triggerObjectHadToAttackThisCombat': {
       if (source.triggerObjectCardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+      const perm = eventObjectState(ctx, scope);
       return perm?.hadToAttackThisCombat === true;
     }
     case 'triggerObjectMatches': {
-      if (source.triggerObjectCardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
-      return perm !== undefined && matchesSelector(ctx, perm, condition.selector, source);
+      const facts = eventObjectFacts(ctx, {
+        ...source,
+        controllerId: source.controllerId as PlayerId,
+      });
+      return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
     }
     case 'chosenOptionIs': {
       if (source?.cardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const perm = sourceState();
       return perm !== undefined && perm.chosenOption === condition.value;
     }
     case 'controlsACommander':
@@ -368,9 +419,8 @@ export function evaluateCondition(
     case 'attackingPlayerHasMoreLife': {
       // Printed dethrone: "attacks the player with the most life or tied for most life".
       const attacker =
-        source.triggerObjectCardId === undefined
-          ? ctx.state.battlefield.find((p) => p.cardId === source.cardId)
-          : ctx.state.battlefield.find((p) => p.cardId === source.triggerObjectCardId);
+        source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
+      if (attacker !== undefined && 'candidate' in attacker) return false;
       if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
       const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
       if (defender === undefined) return false;
@@ -381,7 +431,8 @@ export function evaluateCondition(
       return defender.life === mostLife;
     }
     case 'attackingPlayerHasMoreLifeThanYou': {
-      const attacker = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const attacker = sourceState();
+      if (attacker !== undefined && 'candidate' in attacker) return false;
       if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
       const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
@@ -391,33 +442,40 @@ export function evaluateCondition(
       return ctx.state.createdTokenThisTurn?.[source.controllerId] === true;
     case 'wasKicked': {
       if (source?.cardId === undefined) return false;
-      const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
-      if (perm !== undefined) return perm.wasKicked === true || perm.kicked === true;
-      const stackObj = ctx.state.stack.find(
-        (s) => s.sourceCardId === source.cardId || s.card?.cardId === source.cardId,
+      const perm = sourceState();
+      if (perm !== undefined)
+        return perm.wasKicked === true || ('kicked' in perm && perm.kicked === true);
+      if (source.sourceCastState !== undefined) return source.sourceCastState.wasKicked;
+      const stackObj = ctx.state.stack.find((s) =>
+        source.objectId === undefined
+          ? s.sourceCardId === source.cardId || s.card?.cardId === source.cardId
+          : s.id === source.objectId,
       );
       return stackObj !== undefined && (stackObj.wasKicked === true || stackObj.kicked === true);
     }
     case 'announcedXAtLeast': {
       if (source.cardId === undefined) return false;
-      const permanent = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
+      const permanent = sourceState();
       if (permanent !== undefined) return (permanent.announcedX ?? 0) >= condition.n;
-      const stackObject = ctx.state.stack.find(
-        (candidate) =>
-          candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId,
+      if (source.sourceCastState !== undefined)
+        return source.sourceCastState.announcedX >= condition.n;
+      const stackObject = ctx.state.stack.find((candidate) =>
+        source.objectId === undefined
+          ? candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId
+          : candidate.id === source.objectId,
       );
       return (stackObject?.announcedX ?? 0) >= condition.n;
     }
     case 'escaped': {
       if (source.cardId === undefined) return false;
-      const permanent = ctx.state.battlefield.find(
-        (candidate) => candidate.cardId === source.cardId,
-      );
+      const permanent = sourceState();
       if (permanent !== undefined) return permanent.escaped === true;
+      if (source.sourceCastState !== undefined) return source.sourceCastState.escaped;
       return ctx.state.stack.some(
         (candidate) =>
-          (candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId) &&
-          candidate.escaped === true,
+          (source.objectId === undefined
+            ? candidate.sourceCardId === source.cardId || candidate.card?.cardId === source.cardId
+            : candidate.id === source.objectId) && candidate.escaped === true,
       );
     }
     case 'hasCounters': {
@@ -425,11 +483,14 @@ export function evaluateCondition(
       // would recursively recompute the very characteristics whose condition is being checked.
       const matched =
         condition.selector.kind === 'self'
-          ? ctx.state.battlefield.filter((perm) => perm.cardId === source?.cardId)
+          ? (() => {
+              const self = sourceState();
+              return self === undefined ? [] : [self];
+            })()
           : selectPermanents(ctx, condition.selector, source);
       return matched.some((perm) => {
         const count = condition.counter
-          ? (perm.counters[condition.counter] ?? 0)
+          ? counterCount(perm.counters, condition.counter)
           : Object.values(perm.counters).reduce((a, b) => a + b, 0);
         return compare(count, condition.cmp, condition.n);
       });
@@ -452,6 +513,9 @@ export function evaluateCondition(
       throw new Error(
         'engine bug: mayPayMana is a choice condition — use resolveCondition, not evaluateCondition',
       );
+
+    default:
+      assertNever(condition, 'condition');
   }
 }
 

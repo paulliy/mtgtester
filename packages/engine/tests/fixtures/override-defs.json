@@ -404,6 +404,12 @@
     }
   },
   {
+    "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
+    "name": "Marang River Regent // Coil and Catch",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "09b7ea91-2620-4c45-af3c-60bbeab89966",
     "name": "Eiganjo Dynastorian // Replenish",
     "handledLines": [],
@@ -4266,6 +4272,12 @@
   {
     "oracleId": "6c948f71-5c86-450c-8828-df4d8deaf1dd",
     "name": "Intermediate Chirography",
+    "handledLines": [],
+    "def": {}
+  },
+  {
+    "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
+    "name": "Monster Manual // Zoological Study",
     "handledLines": [],
     "def": {}
   },
@@ -9674,6 +9686,12 @@
     }
   },
   {
+    "oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
+    "name": "Bloomvine Regent // Claim Territory",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "da93264e-4e04-401a-9809-e4e1056cf604",
     "name": "Inkshield",
     "handledLines": [
@@ -12571,6 +12589,12 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-bloomvine-regent-claim-territory",
+    "name": "Bloomvine Regent // Claim Territory",
+    "handledLines": [],
+    "def": {}
   },
   {
     "oracleId": "oracle-blossoming-defense",
@@ -17590,6 +17614,12 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-marang-river-regent-coil-and-catch",
+    "name": "Marang River Regent // Coil and Catch",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "oracle-marchesa-the-black-rose",
     "name": "Marchesa, the Black Rose",
     "handledLines": [
@@ -17951,6 +17981,12 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-monster-manual-zoological-study",
+    "name": "Monster Manual // Zoological Study",
+    "handledLines": [],
+    "def": {}
   },
   {
     "oracleId": "oracle-mordant-dragon",

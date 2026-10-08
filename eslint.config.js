@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import { cardAuthoringPlugin } from './scripts/eslint/card-authoring.js';
+import { castingBoundaryPlugin } from './scripts/eslint/casting-boundary.js';
 import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
@@ -11,6 +13,29 @@ const TOKEN_SPEC_LITERAL_SELECTOR =
   "ObjectExpression:has(Property[key.name='typeLine']):has(Property[key.name='subtypes']):has(Property[key.name='colors']):not(:has(Property[key.name='oracleId']))";
 const TOKEN_SPEC_LITERAL_MESSAGE =
   'Build a token with creatureToken()/artifactToken() (cards/tokens.ts), or reference a named catalog export directly, rather than a raw TokenSpec object literal — this drift is exactly what produced three different Treasure tokens and a Soldier that disagreed on its own color.';
+
+// Flat-config rule arrays replace earlier arrays; strict files must retain every base ban.
+const OVERRIDE_RESTRICTIONS = [
+  {
+    selector: "CallExpression[callee.name='registerOverride']",
+    message:
+      'Use defineCard(oracleId, name, handledLines, def) — it registers both the real and the fixture oracle id, so the two cannot drift apart. Use unimplemented(...) for a card with no authored behavior yet.',
+  },
+  {
+    selector: "CallExpression[callee.name='parseManaCost']",
+    message:
+      "Use mana('{2}{R}') for a cost component or manaCost('{2}{R}') for a ParsedManaCost. Both throw on an unparseable cost, where parseManaCost(s).cost! yields a null cost the payment solver treats as free.",
+  },
+  {
+    selector: TOKEN_SPEC_LITERAL_SELECTOR,
+    message: TOKEN_SPEC_LITERAL_MESSAGE,
+  },
+  {
+    selector: "Property[key.name='op'][value.value='noOp']",
+    message:
+      'Executable noOp effects are prohibited in authored card data. Keep the card explicitly unsupported until its behavior is implemented.',
+  },
+];
 
 export default tseslint.config(
   {
@@ -41,6 +66,11 @@ export default tseslint.config(
     },
   },
   {
+    files: ['packages/engine/src/**/*.ts'],
+    plugins: { 'casting-boundary': castingBoundaryPlugin },
+    rules: { 'casting-boundary/constructors': 'error' },
+  },
+  {
     // Authored card overrides go through the shared builders (`cards/templates.ts`). The point of
     // that layer is that the same mechanic is written the same way everywhere, which only holds if
     // new cards cannot quietly go back to raw literals — the drift these rules block is exactly
@@ -51,29 +81,10 @@ export default tseslint.config(
       'packages/engine/src/cards/overrides/index.ts',
       'packages/engine/src/cards/overrides/snapshot.ts',
     ],
+    plugins: { 'card-authoring': cardAuthoringPlugin },
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "CallExpression[callee.name='registerOverride']",
-          message:
-            'Use defineCard(oracleId, name, handledLines, def) — it registers both the real and the fixture oracle id, so the two cannot drift apart. Use unimplemented(...) for a card with no authored behavior yet.',
-        },
-        {
-          selector: "CallExpression[callee.name='parseManaCost']",
-          message:
-            "Use mana('{2}{R}') for a cost component or manaCost('{2}{R}') for a ParsedManaCost. Both throw on an unparseable cost, where parseManaCost(s).cost! yields a null cost the payment solver treats as free.",
-        },
-        {
-          selector: TOKEN_SPEC_LITERAL_SELECTOR,
-          message: TOKEN_SPEC_LITERAL_MESSAGE,
-        },
-        {
-          selector: "Property[key.name='op'][value.value='noOp']",
-          message:
-            'Executable noOp effects are prohibited in authored card data. Keep the card explicitly unsupported until its behavior is implemented.',
-        },
-      ],
+      'no-restricted-syntax': ['error', ...OVERRIDE_RESTRICTIONS],
+      'card-authoring/guard-legacy-builders': 'error',
     },
   },
   {
@@ -81,6 +92,7 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': [
         'error',
+        ...OVERRIDE_RESTRICTIONS,
         {
           selector:
             "ObjectExpression:has(Property[key.name='kind'][value.value=/^(spell|triggered|activated)$/])",

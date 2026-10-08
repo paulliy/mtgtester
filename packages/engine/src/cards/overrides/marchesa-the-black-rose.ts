@@ -1,7 +1,8 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP } from '../templates';
+import { TAP, spell, targetSlots } from '../templates';
+import { counterSpellTarget } from '../target-builders';
 import type { Ability } from '../ability';
 import { constant } from '../value';
 import { allOf, anyOf, hasCounter, IS_TOKEN, OTHER, not, ofType, YOURS } from '../selector';
@@ -232,13 +233,13 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   // Coverage PR02: the interpreter reads the sacrifice-a-nontoken-blue-creature alternative cost.
   // Kept, like Fierce Guardianship, for one difference: the generic "counter target spell" rule
   // targets only an opponent's spell, while Flare of Denial may counter any spell.
+  const denial = targetSlots({ spell: counterSpellTarget('spell') });
   defineCard('437cfd16-94bc-43ba-afd8-e9e9d028a4ca', 'Flare of Denial', [], {
-    spellAbility: {
-      kind: 'spell',
-      targets: [{ kind: 'spell' }],
-      effects: [{ op: 'counter', target: 0 }],
+    spellAbility: spell({
+      targets: denial.targets,
+      effects: [{ op: 'counter', target: denial.slot.spell }],
       description: 'Counter target spell',
-    },
+    }),
   });
   // Catalog audit batch 5: sacrifice-a-nontoken-creature alternative costs are claimed, not authored.
   unsupportedCard(

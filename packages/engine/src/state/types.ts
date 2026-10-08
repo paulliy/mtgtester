@@ -33,6 +33,7 @@ import type {
   CardDefinition,
   KeywordAbility,
 } from '../cards/definition';
+import type { ObjectFacts } from '../cards/source-identity';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -59,6 +60,10 @@ export interface EngineObject extends GameObject {
 }
 
 export interface EnginePermanent extends PermanentState, EngineObject {
+  /** Departure facts belong to this old object only; reincarnation never copies them. */
+  lastKnownFacts?: ObjectFacts;
+  /** First public destination of this departing incarnation, for CR 400.7e triggers. */
+  firstDestinationObjectId?: ObjectId;
   zone: 'battlefield';
   /** Controller established by entering, distinct from later control-changing effects. */
   defaultControllerId?: PlayerId;
@@ -195,6 +200,12 @@ export interface EngineCardObject extends EngineObject {
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  /** Last known rules facts of this ability's source incarnation. */
+  sourceFacts?: ObjectFacts;
+  /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
+  castInProgress?: true;
+  /** Selected characteristics on the stack; copies retain these without changing physical card data. */
+  spellDefinition?: CardDefinition;
   /** The card object being cast, for spells (moves to its destination on resolution). */
   card: EngineCardObject | null;
   /** The ability being resolved (spell or triggered) — drives the executor and fizzle. */
@@ -392,6 +403,7 @@ export interface CombatState {
 
 /** A triggered ability that has triggered but is not yet on the stack (CR 603.3b). */
 export interface PendingTrigger {
+  sourceFacts?: ObjectFacts;
   /** Battlefield incarnation that generated the trigger, retained after it leaves. */
   sourceObjectId?: ObjectId;
   /** The source's colors as it left before this went on the stack (CR 113.7a). */
@@ -528,6 +540,14 @@ export interface GameContext {
   defs: Map<OracleId, CardDefinition>;
   rng: Prng;
   debugLog: DebugEntry[];
+  /**
+   * Resolution-local CR 400.7j transitions. Only the context executing this effect carries
+   * this map; unrelated moves while a decision is suspended cannot rebind its referents.
+   * A hidden-zone destination ends tracking, represented by null.
+   */
+  resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
+  /** CR 608.2h departure information for objects moved by the resolving effect. */
+  resolutionObjectFacts?: Map<ObjectId, ObjectFacts>;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

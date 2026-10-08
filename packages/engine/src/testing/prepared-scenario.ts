@@ -1,6 +1,7 @@
 import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { makePermanent } from '../state/objects';
 import { subtractGeneric } from '../mana/cost';
+import { preparedScenarioSpell } from '../casting/preview';
 import type { EngineCardObject, GameContext } from '../state/types';
 
 export interface PreparedScenarioSpec {
@@ -8,11 +9,14 @@ export interface PreparedScenarioSpec {
   phase: Phase;
   step: Step | null;
   turnNumber: number;
+  lifeTotals?: Array<{ playerId: PlayerId; life: number }>;
   hand: Array<{ playerId: PlayerId; cardNames: string[] }>;
   battlefield: Array<{
     playerId: PlayerId;
     cardNames: string[];
     tapped?: boolean;
+    controllerId?: PlayerId;
+    counters?: Record<string, number>;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /**
@@ -22,6 +26,8 @@ export interface PreparedScenarioSpec {
   foretold?: Array<{ playerId: PlayerId; cardNames: string[]; reduction: number }>;
   /** Starting energy counters (CR 122.1) per player, standing in for energy gained earlier. */
   energy?: Array<{ playerId: PlayerId; amount: number }>;
+  /** Arrange known initial library tops; subsequent moves use ordinary rules. */
+  libraryTop?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Arrange already-cast spells below the tested response. */
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
@@ -78,6 +84,13 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
   ctx.state.step = spec.step;
   ctx.state.priorityPlayerIndex = null;
 
+  for (const entry of spec.lifeTotals ?? []) {
+    const player = ctx.state.players.find((player) => player.id === entry.playerId);
+    if (player === undefined || !Number.isSafeInteger(entry.life) || entry.life <= 0)
+      throw new Error('prepared scenario requires a positive life total for a known player');
+    player.life = entry.life;
+  }
+
   for (const entry of spec.hand) {
     const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId)!;
     for (const name of entry.cardNames) {
@@ -90,7 +103,8 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
   for (const entry of spec.battlefield) {
     for (const name of entry.cardNames) {
       const card = takeNamedCard(ctx, entry.playerId, name, true);
-      const permanent = makePermanent(ctx, card, entry.playerId);
+      const permanent = makePermanent(ctx, card, entry.controllerId ?? entry.playerId);
+      if (entry.counters !== undefined) permanent.counters = { ...entry.counters };
       // The arranged position stands in for a settled mid-game board: arranged permanents have
       // been under the player's control since before this turn, so they are neither summoning
       // sick nor "entered this turn".
@@ -131,6 +145,12 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
     }
   }
 
+  for (const entry of spec.libraryTop ?? []) {
+    const player = ctx.state.players.find((candidate) => candidate.id === entry.playerId)!;
+    const cards = entry.cardNames.map((name) => takeNamedCard(ctx, entry.playerId, name));
+    player.library.unshift(...cards);
+  }
+
   for (const entry of spec.stack ?? []) {
     for (const name of entry.cardNames) {
       const card = takeNamedCard(ctx, entry.playerId, name);
@@ -139,19 +159,7 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
         throw new Error(`prepared scenario stack card ${name} has no spell ability`);
       }
       card.zone = 'stack';
-      ctx.state.stack.push({
-        id: card.id,
-        sourceId: card.id,
-        controllerId: entry.playerId,
-        kind: 'spell',
-        description: card.name,
-        targets: [],
-        card,
-        ability: def.spellAbility,
-        sourceOracleId: card.oracleId,
-        sourceCardId: card.cardId,
-        isCommanderCast: false,
-      });
+      ctx.state.stack.push(preparedScenarioSpell(card, def, entry.playerId));
     }
   }
 }

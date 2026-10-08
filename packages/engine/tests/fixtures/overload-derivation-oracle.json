@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "retrievedAt": "2026-10-07",
+  "cards": [
+    {
+      "sha256": "e7bcda93b9a5eb7da57ef672cc3d98c8ef99ae5f56ffd1c15eeeb84d5cdace66",
+      "card": {
+        "oracleId": "d75b9c82-1b49-4c3e-a1b5-aeef57d6644b",
+        "scryfallId": "dfb7c4b9-f2f4-4d4e-baf2-86551c8150fe",
+        "name": "Cyclonic Rift",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Return target nonland permanent you don't control to its owner's hand.\nOverload {6}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "939b8ed66d5dbaf542fffb63c75bf1731472c8b7a57754627419c4e7c35b25e9",
+      "card": {
+        "oracleId": "3567c3c8-b3c7-45b7-935b-b1fdbc973720",
+        "scryfallId": "71067239-d46f-4201-a91c-6aa4c41fa8b1",
+        "name": "Vandalblast",
+        "manaCost": "{R}",
+        "cmc": 1,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target artifact you don't control.\nOverload {4}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a8b84af0101a57acbab827a74a893cff542c2df54914b65eda9d28335a16642a",
+      "card": {
+        "oracleId": "48ddba1e-2ad7-463f-9307-d2379a800e51",
+        "scryfallId": "544b2931-0af1-4743-b7c1-91e1dc9294d5",
+        "name": "Mizzium Mortars",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Mizzium Mortars deals 4 damage to target creature you don't control.\nOverload {3}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ea68376ab3f57c56cfc902f12a38c8a3c0cf553648d70a22cf98d679391c41df",
+      "card": {
+        "oracleId": "99fd4b51-1698-4168-9366-a6ea2df22361",
+        "scryfallId": "5ed81ee8-d5e4-4127-876e-9bff81f9c726",
+        "name": "Electrickery",
+        "manaCost": "{R}",
+        "cmc": 1,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Electrickery deals 1 damage to target creature you don't control.\nOverload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "aa793c5b072acf01aa3eb2ecf691e780b27b2768f1c6f0d989f9ab22a80bf6fa",
+      "card": {
+        "oracleId": "02d998a6-0afd-4be1-a209-05618fcc43ea",
+        "scryfallId": "d9859344-4efc-4b87-a3fb-147e496cee68",
+        "name": "Mizzium Skin",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gets +0/+1 and gains hexproof until end of turn.\nOverload {1}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d",
+      "card": {
+        "oracleId": "b01d61cc-9844-4191-86a0-f2db6d42d6e5",
+        "scryfallId": "84056124-1a6f-4274-bee2-74cf0debddb5",
+        "name": "Damn",
+        "manaCost": "{B}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Destroy target creature. A creature destroyed this way can't be regenerated.\nOverload {2}{W}{W} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Overload"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

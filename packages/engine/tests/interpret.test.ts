@@ -476,9 +476,7 @@ describe('oracle-text interpreter (brief §6)', () => {
       }),
     );
     expect(negate.modeled).toBe(true);
-    expect(negate.spellAbility?.targets).toEqual([
-      { kind: 'noncreatureSpell', controller: 'opponent' },
-    ]);
+    expect(negate.spellAbility?.targets).toEqual([{ kind: 'noncreatureSpell' }]);
   });
 
   it('destroys target with an arbitrary permanent-type alternation not in the fixed compound list', () => {

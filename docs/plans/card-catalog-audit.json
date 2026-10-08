@@ -5646,6 +5646,12 @@
       "reviewedOracleIds": 18,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed",
+      "note": "Explicit support exclusions for three confirmed omitted or substituted spell faces. Pinned Oracle and negative engine evidence are recorded in the verification manifest; no completed-card claim."
     }
   ],
   "interpreterRestored": [

@@ -38,14 +38,17 @@ function objectNames(scenario: CardTestScenario): Map<string, string> {
  * Prefer the scripted steps in order; each step is consumed once. Anything else passes priority,
  * so the scenario ends once every player passes with an empty stack.
  */
-function scripted(steps: Step[]) {
+function scripted(steps: Step[], ordered = false) {
   const remaining = [...steps];
   return (request: DecisionRequest, scenario: CardTestScenario): Choice => {
     for (const [index, step] of remaining.entries()) {
       const action = request.legalActions.find((candidate) =>
         candidate.description.includes(step.action),
       );
-      if (action === undefined) continue;
+      if (action === undefined) {
+        if (ordered) break;
+        continue;
+      }
       remaining.splice(index, 1);
       if (step.targets === undefined) return { actionId: action.id };
       const slots =
@@ -76,10 +79,10 @@ function scripted(steps: Step[]) {
   };
 }
 
-function run(scenarioId: string, steps: Step[]) {
+function run(scenarioId: string, steps: Step[], ordered = false) {
   const scenario = createCardTestScenario(scenarioId, 'card-lab-pr01');
   expect(scenario, scenarioId).not.toBeNull();
-  const choose = scripted(steps);
+  const choose = scripted(steps, ordered);
   const prompts: string[] = [];
   const offered: string[][] = [];
   let decisions = 0;
@@ -894,4 +897,28 @@ describe('Kogla, the Titan Ape Card Test Lab scenarios', () => {
     expect(seat('P2').life).toBe(33);
     replays('kogla-viewer-bounce-and-attack', attackSteps);
   });
+});
+
+it('free-face-lab casts a hidden printed Adventure through the resolving Bridge instruction', () => {
+  const result = run(
+    'mosswort-viewer-free-adventure-face',
+    [
+      { action: 'Play Mosswort Bridge' },
+      { action: 'Exile face down' },
+      { action: 'Cast Lab Wake', targets: ['Mosswort Bridge'] },
+      { action: 'Mosswort Bridge: {G}' },
+      { action: 'Play Foulmire Knight' },
+      { action: 'Cast Profane Insight' },
+    ],
+    true,
+  );
+  expect(result.seat('P1').life, JSON.stringify(result.offered)).toBe(39);
+  const adventurer = result.state.exile.find((card) => card.name.startsWith('Foulmire Knight'))!;
+  expect('onAdventure' in adventurer && adventurer.onAdventure).toBe(true);
+  expect(result.onBattlefield('Foulmire Knight // Profane Insight')).toHaveLength(0);
+  expect(
+    result.state.eventLog.filter(
+      (event) => event.type === 'castSpell' && event.payload['name'] === 'Profane Insight',
+    ),
+  ).toHaveLength(1);
 });

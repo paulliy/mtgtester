@@ -15,7 +15,13 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
-import { manaSourcesFor } from '../src/state/queries';
+import { manaSourcesFor, resolveDynamicUnits } from '../src/state/queries';
+import type { ManaAbilitySpec } from '../src/cards/ability';
+import {
+  assertValidModeledDefinition,
+  enforceCardDefinition,
+  validateOverrideDefinition,
+} from '../src/cards/authoring-validation';
 import type { GameContext } from '../src/state/types';
 import {
   commanderFor,
@@ -99,6 +105,47 @@ function symbolsFor(ctx: GameContext, name: string): string[][] {
 }
 
 describe('state-derived mana production', () => {
+  it.each(['inventedProduction', '__proto__', 'toString', null, 7])(
+    'rejects unknown dynamic production %s instead of reading opponent lands',
+    (dynamic) => {
+      const ctx = ctxWithCommander(['G']);
+      const stone = spawn(ctx, 'P1', fellwarStone());
+      spawn(ctx, 'P2', island());
+      const ability = { units: [], dynamic } as unknown as ManaAbilitySpec;
+      const definition = { ...ctx.defs.get(stone.oracleId)!, manaAbilities: [ability] };
+      expect(enforceCardDefinition(definition).modeled).toBe(false);
+      expect(() => assertValidModeledDefinition(definition)).toThrow('unknown dynamic mana kind');
+      expect(() => resolveDynamicUnits(ctx, ability, stone)).toThrow('dynamic mana kind');
+      expect(
+        validateOverrideDefinition({
+          oracleId: definition.oracleId,
+          name: definition.name,
+          handledLines: [],
+          def: { manaAbilities: [ability] },
+        }),
+      ).toContainEqual({
+        path: 'override.def.manaAbilities[0].dynamic',
+        message: 'unknown dynamic mana kind',
+      });
+      ctx.defs.set(stone.oracleId, definition);
+      expect(() => manaSourcesFor(ctx, 'P1')).toThrow('dynamic mana kind');
+    },
+  );
+
+  it('rejects unknown dynamic production in a granted mana ability', () => {
+    const definition = {
+      ...interpretCard(chromaticLantern()),
+      staticEffects: [
+        {
+          affects: { kind: 'type', value: 'Land' },
+          op: { layer: 6, addManaAbility: { units: [['G']], dynamic: 'inventedProduction' } },
+        },
+      ],
+    } as unknown as import('../src/cards/definition').CardDefinition;
+    expect(enforceCardDefinition(definition).modeled).toBe(false);
+    expect(() => assertValidModeledDefinition(definition)).toThrow('unknown dynamic mana kind');
+  });
+
   it("reads the controller's commander color identity, wherever the commander is", () => {
     const ctx = ctxWithCommander(['B', 'G', 'R']);
     spawn(ctx, 'P1', commandTower());

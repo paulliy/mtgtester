@@ -5,7 +5,7 @@
  * inventory.
  */
 
-import { mana } from '../templates';
+import { activated, mana, targetSlots, triggered } from '../templates';
 import { defineCard } from './index';
 
 export function registerCoveragePr02Overrides(): void {
@@ -13,6 +13,10 @@ export function registerCoveragePr02Overrides(): void {
   // channel-style hand ability. Its "up to one" target may be left empty; the shuffle reads the
   // discarded card in the graveyard (it does nothing if the card has left), and the draw happens
   // either way.
+  const fight = targetSlots({ creature: { kind: 'creature', controller: 'opponent' } });
+  const channel = targetSlots({
+    artifactOrEnchantment: { kind: 'artifactOrEnchantment', count: { min: 0, max: 1 } },
+  });
   defineCard(
     'fe8c2b7e-f80d-4acb-a976-edcf436a78a9',
     'Kogla and Yidaro',
@@ -24,50 +28,47 @@ export function registerCoveragePr02Overrides(): void {
     ],
     {
       triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [{ kind: 'creature', controller: 'opponent' }],
-          effects: [],
-          modes: {
-            minChoices: 1,
-            maxChoices: 1,
-            options: [
-              {
-                description: 'It gains trample and haste until end of turn',
-                effects: [
-                  { op: 'grantKeywordUntilEot', target: 'source', keyword: 'trample' },
-                  { op: 'grantKeywordUntilEot', target: 'source', keyword: 'haste' },
-                ],
-                targetSlots: [],
-              },
-              {
-                description: "It fights target creature you don't control",
-                effects: [{ op: 'fight', first: 'source', second: 0 }],
-                targetSlots: [0],
-              },
-            ],
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            targets: fight.targets,
+            effects: [],
+            modes: {
+              minChoices: 1,
+              maxChoices: 1,
+              options: [
+                {
+                  description: 'It gains trample and haste until end of turn',
+                  effects: [
+                    { op: 'grantKeywordUntilEot', target: 'source', keyword: 'trample' },
+                    { op: 'grantKeywordUntilEot', target: 'source', keyword: 'haste' },
+                  ],
+                  targetSlots: [],
+                },
+                {
+                  description: "It fights target creature you don't control",
+                  effects: [{ op: 'fight', first: 'source', second: fight.slot.creature }],
+                  targetSlots: [fight.slot.creature],
+                },
+              ],
+            },
+            description: 'When Kogla and Yidaro enters, choose one',
           },
-          description: 'When Kogla and Yidaro enters, choose one',
-        },
+        ),
       ],
       activatedAbilities: [
-        {
+        activated({
           costs: [mana('{2}{R}{G}'), { kind: 'discardSelf' }],
-          timing: 'any',
           zone: 'hand',
-          ability: {
-            kind: 'activated',
-            targets: [{ kind: 'artifactOrEnchantment', count: { min: 0, max: 1 } }],
-            effects: [
-              { op: 'destroyEachChosen', targetSlot: 0 },
-              { op: 'shuffleSourceFromGraveyardIntoLibrary' },
-              { op: 'draw', count: { kind: 'const', n: 1 } },
-            ],
-            description:
-              'Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card',
-          },
-        },
+          targets: channel.targets,
+          effects: [
+            { op: 'destroyEachChosen', targetSlot: channel.slot.artifactOrEnchantment },
+            { op: 'shuffleSourceFromGraveyardIntoLibrary' },
+            { op: 'draw', count: { kind: 'const', n: 1 } },
+          ],
+          description:
+            'Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card',
+        }),
       ],
     },
   );

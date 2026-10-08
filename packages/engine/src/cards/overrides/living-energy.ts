@@ -3,7 +3,17 @@
  */
 
 import { constant } from '../value';
-import { SAC_SELF, TAP, mana, manaCost, spell, targetSlots } from '../templates';
+import {
+  SAC_SELF,
+  TAP,
+  activated,
+  mana,
+  manaCost,
+  spell,
+  targetSlots,
+  triggered,
+} from '../templates';
+import { graveyardCardTarget } from '../target-builders';
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
@@ -457,35 +467,30 @@ const RAMPAGING_AETHERHOOD_DEF: Partial<CardDefinition> = {
 
 const PEEMA_TRAILBLAZER_DEF: Partial<CardDefinition> = {
   triggers: [
-    {
-      kind: 'triggered',
-      trigger: { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
-      targets: [],
-      effects: [{ op: 'gainEnergy', amount: { kind: 'damageDealt' } }],
-      description: 'Combat damage to a player — gain that much energy',
-    },
+    triggered(
+      { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+      {
+        effects: [{ op: 'gainEnergy', amount: { kind: 'damageDealt' } }],
+        description: 'Combat damage to a player — gain that much energy',
+      },
+    ),
   ],
   activatedAbilities: [
-    {
-      // Exhaust (CR 702.177a): the cost is only the energy, and the ability works once.
+    // Exhaust (CR 702.177a): the cost is only the energy, and the ability works once.
+    activated({
       costs: [{ kind: 'payEnergy', amount: 6 }],
-      timing: 'any',
       exhaust: true,
-      ability: {
-        kind: 'activated',
-        targets: [],
-        effects: [
-          { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
-          // Counted on resolution, after the counters: "Then draw cards equal to …".
-          {
-            op: 'draw',
-            count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' },
-          },
-        ],
-        description:
-          'Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.',
-      },
-    },
+      effects: [
+        { op: 'putCounters', target: 'source', counter: '+1/+1', count: 2 },
+        // Counted on resolution, after the counters: "Then draw cards equal to …".
+        {
+          op: 'draw',
+          count: { kind: 'greatestPowerAmong', selector: ofType('Creature'), scope: 'you' },
+        },
+      ],
+      description:
+        'Exhaust — Pay six {E}: Put two +1/+1 counters on this creature. Then draw cards equal to the greatest power among creatures you control.',
+    }),
   ],
 };
 
@@ -761,6 +766,7 @@ export function registerLIVING_ENERGYOverrides(): void {
 
   // Coverage PR02: the four energy activations are appended to the parsed Crew 4 instead of
   // replacing activatedAbilities. Paying four energy animates it without crewing it.
+  const battlewagonTap = targetSlots({ creature: { kind: 'creature' } });
   extendCard(
     'cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0',
     'Bespoke Battlewagon',
@@ -772,47 +778,28 @@ export function registerLIVING_ENERGYOverrides(): void {
     ],
     {
       activatedAbilities: [
-        {
+        activated({
           costs: [TAP],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [{ op: 'gainEnergy', amount: constant(2) }],
-            description: '{T}: You get {E}{E}.',
-          },
-        },
-        {
+          effects: [{ op: 'gainEnergy', amount: constant(2) }],
+          description: '{T}: You get {E}{E}.',
+        }),
+        activated({
           costs: [TAP, { kind: 'payEnergy', amount: 2 }],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [{ kind: 'creature' }],
-            effects: [{ op: 'tapTarget', target: 0 }],
-            description: '{T}, Pay {E}{E}: Tap target creature.',
-          },
-        },
-        {
+          targets: battlewagonTap.targets,
+          effects: [{ op: 'tapTarget', target: battlewagonTap.slot.creature }],
+          description: '{T}, Pay {E}{E}: Tap target creature.',
+        }),
+        activated({
           costs: [TAP, { kind: 'payEnergy', amount: 3 }],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [{ op: 'draw', count: constant(1) }],
-            description: '{T}, Pay {E}{E}{E}: Draw a card.',
-          },
-        },
-        {
+          effects: [{ op: 'draw', count: constant(1) }],
+          description: '{T}, Pay {E}{E}{E}: Draw a card.',
+        }),
+        activated({
           costs: [{ kind: 'payEnergy', amount: 4 }],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [{ op: 'becomeArtifactCreature' }],
-            description:
-              'Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.',
-          },
-        },
+          effects: [{ op: 'becomeArtifactCreature' }],
+          description:
+            'Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn.',
+        }),
       ],
     },
   );
@@ -958,13 +945,13 @@ export function registerLIVING_ENERGYOverrides(): void {
     ['When this land enters, you get {E} .', '{T}, Pay {E}: Add one mana of any color.'],
     {
       triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [],
-          effects: [{ op: 'gainEnergy', amount: constant(1) }],
-          description: 'Enters — gain one energy',
-        },
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'gainEnergy', amount: constant(1) }],
+            description: 'Enters — gain one energy',
+          },
+        ),
       ],
       manaAbilities: [
         { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
@@ -1026,13 +1013,13 @@ export function registerLIVING_ENERGYOverrides(): void {
     ['When this artifact enters, you get {E}{E}{E} .', '{T}, Pay {E}: Add one mana of any color.'],
     {
       triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [],
-          effects: [{ op: 'gainEnergy', amount: constant(3) }],
-          description: 'Enters — gain three energy',
-        },
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'gainEnergy', amount: constant(3) }],
+            description: 'Enters — gain three energy',
+          },
+        ),
       ],
       manaAbilities: [
         { units: [['W', 'U', 'B', 'R', 'G']], costs: [TAP, { kind: 'payEnergy', amount: 1 }] },
@@ -1233,6 +1220,7 @@ export function registerLIVING_ENERGYOverrides(): void {
   // Coverage PR02: the two unparsed lines are appended to the parsed "{1}, {T}, Sacrifice this
   // artifact: Draw a card." as separate abilities, so the opponent-graveyard exile is its own
   // free {T}-and-sacrifice ability and the draw keeps its {1}.
+  const lanternExile = targetSlots({ card: graveyardCardTarget('any') });
   extendCard(
     '1b5e6560-ff2e-4475-96cb-63f64c8a86db',
     'Soul-Guide Lantern',
@@ -1242,25 +1230,21 @@ export function registerLIVING_ENERGYOverrides(): void {
     ],
     {
       triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }],
-          effects: [{ op: 'exileCard', target: 0 }],
-          description: 'Exile target card from a graveyard',
-        },
+        triggered(
+          { when: 'enters', subject: { kind: 'self' } },
+          {
+            targets: lanternExile.targets,
+            effects: [{ op: 'exileCard', target: lanternExile.slot.card }],
+            description: 'Exile target card from a graveyard',
+          },
+        ),
       ],
       activatedAbilities: [
-        {
+        activated({
           costs: [TAP, SAC_SELF],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [{ op: 'exileEachOpponentGraveyard' }],
-            description: "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
-          },
-        },
+          effects: [{ op: 'exileEachOpponentGraveyard' }],
+          description: "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+        }),
       ],
     },
   );

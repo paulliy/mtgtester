@@ -2678,7 +2678,7 @@ describe('Flare of Malice', () => {
 
 describe('Blasphemous Edict', () => {
   const edict = pinned('Blasphemous Edict');
-  const ALT_B = /for \{B\} \(alternate cost\)/;
+  const ALT_B = /\(\{B\}\) \(alternate cost\)/;
 
   const bodies = (ctx: GameContext, playerId: string, n: number, prefix: string) =>
     Array.from({ length: n }, (_, i) =>
@@ -4529,7 +4529,9 @@ describe('Killian, Ink Duelist', () => {
     addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, ...generic(1)]);
     const options = castOptionsFor(ctx, 'P1', flash.id);
     expect(options.map((option) => option.description)).toEqual([
-      expect.stringMatching(/from your graveyard \(\{1\}\{R\}\) — reduced for its target/),
+      expect.stringMatching(
+        /\(\{1\}\{R\}\) \(alternate cost\) from your graveyard — reduced for its target/,
+      ),
     ]);
     takeAction(
       ctx,

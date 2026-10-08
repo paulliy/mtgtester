@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './setup-test';
 
 test('real DB-backed supported-pool setup previews and starts a human game', async ({ page }) => {
   await page.goto('/');

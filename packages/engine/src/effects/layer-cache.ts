@@ -49,6 +49,11 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
   CACHE.set(ctx, entry);
 }
 
+/** Discard a speculative casting pass after in-place recovery. */
+export function clearCached(ctx: GameContext): void {
+  CACHE.delete(ctx);
+}
+
 /**
  * Oracle ids and counter names are drawn from a small fixed vocabulary and are shared across
  * games, so hashing them once is safe and bounded.

@@ -601,7 +601,7 @@ describe('Flare of Malice Card Test Lab scenario', () => {
 
 describe('Blasphemous Edict Card Test Lab scenario', () => {
   it('blasphemous-edict-viewer-pay-b — {B} casts it, and all thirteen creatures are sacrificed unasked', () => {
-    const steps: Step[] = [{ action: 'for {B} (alternate cost)' }];
+    const steps: Step[] = [{ action: '({B}) (alternate cost)' }];
     const { state, seat, onBattlefield, prompts } = run('blasphemous-edict-viewer-pay-b', steps);
     expect(state.battlefield.filter((perm) => perm.typeLine.includes('Creature'))).toEqual([]);
     expect(onBattlefield('Swamp')[0]?.tapped).toBe(true);

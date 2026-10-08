@@ -1,3 +1,4 @@
+import { assertNever } from '../utils/assert-never';
 /**
  * `Selector` — a predicate over permanents (ADR 0005, extended by ADR 0008). One abstraction
  * covers targeting, "each", and the *affected set* of a continuous effect (Blood Moon's
@@ -82,6 +83,13 @@ export interface SelectorCandidate {
 
 /** The object a relative selector ("self", "you control") is resolved against. */
 export interface SelectorSource {
+  /** Exact identities/facts when evaluating a resolving triggered ability. */
+  objectId?: string;
+  sourceFacts?: import('./source-identity').ObjectFacts;
+  sourceCastState?: import('./source-identity').SourceCastState;
+  eventObjectId?: string;
+  triggerObjectId?: string;
+  triggerObjectFacts?: import('./source-identity').ObjectFacts;
   cardId: string;
   controllerId: string;
   /** For an Aura/Equipment: the card id of the permanent it is attached to, if any. */
@@ -232,8 +240,30 @@ export function selectorIsEventOnly(selector: Selector): boolean {
       // Attack/block assignment is game state, not output from a continuous-effect layer.
       // Static effects such as attacking-creature anthems may therefore use this selector.
       return false;
-    default:
+    case 'self':
+    case 'other':
+    case 'attachedToSource':
+    case 'type':
+    case 'subtype':
+    case 'supertype':
+    case 'color':
+    case 'chosenColor':
+    case 'chosenType':
+    case 'chosenSubtype':
+    case 'controller':
+    case 'manaValueAtMost':
+    case 'manaValueAtLeast':
+    case 'hasAnyCounter':
+    case 'hasCounter':
+    case 'isToken':
+    case 'enteredThisTurn':
+    case 'isCommander':
+    case 'isMonocolored':
+    case 'isEnchanted':
+    case 'isEquipped':
       return false;
+    default:
+      assertNever(selector, 'selector classification');
   }
 }
 
@@ -316,5 +346,8 @@ export function selectMatches(
       return selector.of.some((s) => selectMatches(candidate, s, source));
     case 'not':
       return !selectMatches(candidate, selector.of, source);
+
+    default:
+      assertNever(selector, 'selector');
   }
 }

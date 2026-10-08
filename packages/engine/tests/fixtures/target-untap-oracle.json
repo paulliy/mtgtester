@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 1,
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261006090155.jsonl.gz",
+  "cards": [
+    {
+      "sha256": "d9b73202b6cace12f3e6abeb0092c444da95d44ad7134e58dbc2f99fc00ef689",
+      "card": {
+        "oracleId": "042cc9d9-ad13-401f-b2f5-c2f1558d7e44",
+        "scryfallId": "8278069a-bd92-40ee-b7d5-e740dddb00fa",
+        "name": "Arachnoid Adaptation",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "958fcc747fc08cf88815c740febbebcc04b5fce9a6bbff9e8b7cc81458fdfb35",
+      "card": {
+        "oracleId": "0bdebad7-a05e-439a-b5a9-241a2d09f943",
+        "scryfallId": "88a79f3e-ca74-467c-b0a8-22802ac5b465",
+        "name": "Riverguard's Reflexes",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +2/+2 and gains first strike until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fcfacb70bc721c6162126f36d5c5e017cf01518bcfbede8a3c901ae0b55252d1",
+      "card": {
+        "oracleId": "1347224f-421e-4270-8e50-cf25c875909c",
+        "scryfallId": "a8b4bc34-cc8d-41d0-88ee-f40ec95cc0b8",
+        "name": "Acrobatic Leap",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "206527eb5bdd82c2847b01cfffead941f32c30165781efbf6dd79878e3ccb832",
+      "card": {
+        "oracleId": "1ab592fa-adfb-4879-af6c-0204eab323fb",
+        "scryfallId": "d1cbd617-9f2e-4882-b8f0-dfc2fced2281",
+        "name": "Burst of Strength",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Put a +1/+1 counter on target creature and untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f2c0d781f78d8f0913015639fd49335ca94290b11bbbe8d4b6e795653e45f41e",
+      "card": {
+        "oracleId": "5372445b-5f67-435e-a736-61c6cb4f9c6e",
+        "scryfallId": "02109319-105b-4c00-abf9-1f012ae98e33",
+        "name": "Vines of the Recluse",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+2 and gains reach until end of turn. Untap it. (A creature with reach can block creatures with flying.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7ee3ea23ccddee7bf5fb93516721c0f1203123c2ecd92d2bbb91f4d5a7d0e38f",
+      "card": {
+        "oracleId": "629b3aee-b8fd-495a-a988-815a0aaf3e82",
+        "scryfallId": "5aadb382-f912-4ccb-98bc-1abdef733126",
+        "name": "Dragonscale Boon",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Put two +1/+1 counters on target creature and untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d172c753f92c81cf243538129405b14792d3855b02124a7cb1779ca958ed8b79",
+      "card": {
+        "oracleId": "6ec9a14a-0a62-4f8a-9147-3cab01411a65",
+        "scryfallId": "0d021207-76be-4bc9-bb71-df991a04d8d8",
+        "name": "Witch's Web",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +3/+3 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f162418730ef90329bb2d144683d20b18a3b5cf53d6490f138478bb3202e7222",
+      "card": {
+        "oracleId": "a39c758d-82be-4d8c-bb3e-8ee8a6c6788b",
+        "scryfallId": "f177e9cc-0c41-417d-9215-5ff23a1a0657",
+        "name": "Pillar Launch",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9864fcb04d3b818b414c01e9bdba9611ddfd87b05deeefa82a19936e67ffc26d",
+      "card": {
+        "oracleId": "a5f10b54-10db-4c92-a596-8afea4e470f5",
+        "scryfallId": "092cab70-c771-4c96-a5ce-22f2e32e3ea8",
+        "name": "Bull's Strength",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +2/+2 and gains trample until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7d49b4a305963db938ffbbf0229a4528ca68bf8a22a1ebe6dacde8b1b61c9d3c",
+      "card": {
+        "oracleId": "ab0aea13-1dbc-424a-ab7e-cdb303036a56",
+        "scryfallId": "09c8cf4b-8e65-4a1c-b458-28b5ab56b390",
+        "name": "High Stride",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+3 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5fdd92ddcf33636bf004e8dec6f43428aab4951e034712138ad64148d9998c08",
+      "card": {
+        "oracleId": "afa9cf24-cd02-41f5-9141-f6ff6f27d528",
+        "scryfallId": "d6b26c95-f90d-43fb-8c99-2a3aa13ac2c6",
+        "name": "Wings of the Cosmos",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "36b77da298d6fcb670df886fd7daa9afcdde766eb1054ead7e28d8606bf8aa8e",
+      "card": {
+        "oracleId": "b4f89885-eeb9-46c7-9820-9758b624ca24",
+        "scryfallId": "38589a7c-9cfb-4bcc-845e-9dc205095853",
+        "name": "Tethermage's Advantage",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fd8263eb64b7120b6769f85483db2b4ab42f56da2675a07e69c902b28705bfe1",
+      "card": {
+        "oracleId": "e2a32a0f-bf06-4cb3-a704-ff0f783f19e4",
+        "scryfallId": "4e934192-2ea3-48fe-a2a9-42c2ee9b22f7",
+        "name": "Vault Skyward",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gains flying until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0ceaf5dd626757903c087aacc1c4ebf9ace2633c6aa0183b8d80c9b4966cb319",
+      "card": {
+        "oracleId": "e920c955-66f5-4c6e-a2a8-8b282f9e456e",
+        "scryfallId": "2785f716-274c-495c-b4e3-71a72e22f856",
+        "name": "Leaping Ambush",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+3 and gains reach until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "82bad50387182e151dbc5d48f8ed6425f58ad0068f66c6dd2790c931900048dd",
+      "card": {
+        "oracleId": "f2025f2e-c931-48dd-af21-8f0a591befb4",
+        "scryfallId": "f4ff3330-dcca-4435-87e7-871be91a68b0",
+        "name": "Escape from Orthanc",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets +1/+3 and gains flying until end of turn. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5c067367598458f5a1d6415e141acaa9627c834f0ed4c746675709b909a8b221",
+      "card": {
+        "oracleId": "f522e161-f249-4add-8326-b6ab0de8ba57",
+        "scryfallId": "9692fd8c-9eb0-459b-bd65-cd1018927d14",
+        "name": "Soldier On",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Put two +1/+1 counters on target creature. Untap it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}
