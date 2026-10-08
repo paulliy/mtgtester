@@ -2215,6 +2215,172 @@ describe('Ghost Ark', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Group D: alternative casting
+// ---------------------------------------------------------------------------------------------
+
+/** Every cast option the player has for `objectId` right now, in option order. */
+function castOptionsFor(ctx: GameContext, playerId: string, objectId: string) {
+  return priorityOptions(ctx, playerId).filter((option) => {
+    const payload = option.payload as PriorityActionPayload;
+    return payload.kind === 'castSpell' && payload.objectId === objectId;
+  });
+}
+
+const ALTERNATE = /alternate cost/;
+
+const coloredCreature = (name: string, color: 'U' | 'B' | 'G') =>
+  oracle({
+    name,
+    typeLine: 'Creature — Wizard',
+    manaCost: `{${color}}`,
+    colors: [color],
+    power: '1',
+    toughness: '1',
+  });
+
+const LAB_SHOCK = oracle({
+  name: 'Flare Lab Shock',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  colors: ['R'],
+  oracleText: 'Flare Lab Shock deals 2 damage to any target.',
+  power: null,
+  toughness: null,
+});
+
+const LAB_BEAR = oracle({
+  name: 'Flare Lab Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}',
+  power: '2',
+  toughness: '2',
+});
+
+/** P1 casts a creature spell that stays on the stack: something for a counterspell to target. */
+function ownSpellOnStack(ctx: GameContext) {
+  const bear = conjure(ctx, 'P1', LAB_BEAR, 'hand');
+  addMana(playerById(ctx, 'P1'), generic(1));
+  takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', bear.id)!.payload as PriorityActionPayload);
+  return ctx.state.stack.at(-1)!;
+}
+
+describe('Flare of Denial', () => {
+  const flare = pinned('Flare of Denial');
+
+  it('flare-of-denial-pinned-oracle-supported — a sacrifice alternative cost and an unrestricted counter', () => {
+    expect(flare.sha256).toBe('bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34');
+    expect(flare.card.oracleText).toBe(
+      "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.\nCounter target spell.",
+    );
+    expectModeled(flare.card);
+    const def = interpretCard(flare.card);
+    expect(def.alternativeCasts).toHaveLength(1);
+    expect(def.alternativeCasts?.[0]).toMatchObject({ kind: 'nonMana' });
+    expect(def.alternativeCasts?.[0]?.from).toBeUndefined();
+    expect(def.alternativeCasts?.[0]?.costs).toEqual([
+      expect.objectContaining({ kind: 'sacrificeOther' }),
+    ]);
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'spell' }]);
+    expect(def.spellAbility?.effects).toEqual([{ op: 'counter', target: 0 }]);
+  });
+
+  it('flare-of-denial-sacrifice-alternative — sacrifice a nontoken blue creature, pay no mana, counter the spell', () => {
+    const ctx = pod('flare-denial-alt');
+    const merfolk = spawn(ctx, 'P1', coloredCreature('Flare Blue Merfolk', 'U'));
+    const spell = ownSpellOnStack(ctx);
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    const alternative = castOptionsFor(ctx, 'P1', inHand.id).find((option) =>
+      ALTERNATE.test(option.description),
+    );
+    expect(alternative).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      alternative!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, spell.id]]),
+    );
+    expect(ctx.state.battlefield.some((perm) => perm.id === merfolk.id)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain(
+      'Flare Blue Merfolk',
+    );
+    resolveTop(ctx);
+    expect(ctx.state.stack).toEqual([]);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(
+      expect.arrayContaining(['Flare Lab Bear', 'Flare of Denial']),
+    );
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Flare Lab Bear')).toBe(false);
+  });
+
+  it('flare-of-denial-sacrifice-needs-nontoken-blue — a token or a nonblue creature cannot pay it', () => {
+    const ctx = pod('flare-denial-unpayable');
+    spawn(ctx, 'P1', coloredCreature('Flare Blue Token', 'U'), { isToken: true });
+    spawn(ctx, 'P1', coloredCreature('Flare Black Wizard', 'B'));
+    ownSpellOnStack(ctx);
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+    // The opponent's blue creature is not yours to sacrifice.
+    spawn(ctx, 'P2', coloredCreature('Flare Rival Merfolk', 'U'));
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+    spawn(ctx, 'P1', coloredCreature('Flare Blue Merfolk', 'U'));
+    expect(
+      castOptionsFor(ctx, 'P1', inHand.id).some((option) => ALTERNATE.test(option.description)),
+    ).toBe(true);
+  });
+
+  it('flare-of-denial-needs-a-spell — with nothing on the stack there is nothing to cast it at', () => {
+    const ctx = pod('flare-denial-no-target');
+    spawn(ctx, 'P1', coloredCreature('Flare Blue Merfolk', 'U'));
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    expect(castOptionsFor(ctx, 'P1', inHand.id)).toEqual([]);
+  });
+
+  it('flare-of-denial-counters-any-spell — an opponent’s instant or your own spell are both targets', () => {
+    const ctx = pod('flare-denial-any-spell');
+    spawn(ctx, 'P1', coloredCreature('Flare Blue Merfolk', 'U'));
+    const own = ownSpellOnStack(ctx);
+    const shock = conjure(ctx, 'P2', LAB_SHOCK, 'hand');
+    addMana(playerById(ctx, 'P2'), [{ symbol: 'R' }]);
+    takeAction(
+      ctx,
+      'P2',
+      castOptionFor(ctx, 'P2', shock.id)!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P1']]),
+    );
+    const theirs = ctx.state.stack.at(-1)!;
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    const option = castOptionsFor(ctx, 'P1', inHand.id).find((entry) =>
+      ALTERNATE.test(entry.description),
+    );
+    expect(option?.targets?.[0]?.options).toEqual(expect.arrayContaining([own.id, theirs.id]));
+  });
+
+  it('flare-of-denial-normal-cast — {1}{U}{U} still casts it without a sacrifice', () => {
+    const ctx = pod('flare-denial-normal');
+    const merfolk = spawn(ctx, 'P1', coloredCreature('Flare Blue Merfolk', 'U'));
+    const spell = ownSpellOnStack(ctx);
+    const inHand = conjure(ctx, 'P1', flare.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'U' }, { symbol: 'U' }, { symbol: 'C' }]);
+    const normal = castOptionsFor(ctx, 'P1', inHand.id).find(
+      (option) => !ALTERNATE.test(option.description),
+    );
+    expect(normal).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      normal!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, spell.id]]),
+    );
+    expect(ctx.state.battlefield.some((perm) => perm.id === merfolk.id)).toBe(true);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    expect(ctx.state.stack).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2226,6 +2392,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Flare of Denial',
+    sha256: 'bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34',
+    clauseCount: 2,
+  },
   {
     name: 'Ghost Ark',
     sha256: 'bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc',

@@ -45,8 +45,6 @@ const REASONS: Record<string, string> = {
     'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
   'Deflecting Swat':
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
-  'Flare of Denial':
-    'Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
   'Flare of Malice':
@@ -315,6 +313,7 @@ describe('Marchesa catalog audit containment', () => {
     'Peema Trailblazer',
     'Soul-Guide Lantern',
     'Ghost Ark',
+    'Flare of Denial',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -556,3 +556,27 @@ describe('Ghost Ark Card Test Lab scenario', () => {
     replays('ghost-ark-viewer-crew-and-unearth', steps);
   });
 });
+
+describe('Flare of Denial Card Test Lab scenario', () => {
+  it("flare-of-denial-viewer-sacrifice-counter — sacrificing the Merfolk counters P2's spell", () => {
+    const steps: Step[] = [{ action: 'alternate cost', targets: ['Lab Pending Spell'] }];
+    const { state, seat, onBattlefield, offered } = run(
+      'flare-of-denial-viewer-sacrifice-counter',
+      steps,
+    );
+    // No lands: the alternative cost is the only way to cast it.
+    expect(offered[0]?.filter((action) => action.includes('Flare of Denial'))).toEqual([
+      expect.stringMatching(/alternate cost/),
+    ]);
+    expect(onBattlefield('Lab Blue Merfolk')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Flare of Denial', 'Lab Blue Merfolk']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
+    expect(seat('P2').hand).toEqual([]);
+    expect(state.stack).toEqual([]);
+    replays('flare-of-denial-viewer-sacrifice-counter', steps);
+  });
+});

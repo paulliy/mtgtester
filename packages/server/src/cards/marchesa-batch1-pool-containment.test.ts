@@ -33,6 +33,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       "Conjurer's Closet",
       'Endless Atlas',
       'Fabled Passage',
+      'Flare of Denial',
       'Foe-Razer Regent',
       'Forum of Amity',
       'Frontier Siege',

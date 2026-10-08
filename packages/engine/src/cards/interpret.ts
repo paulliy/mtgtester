@@ -4367,31 +4367,43 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
       const count = countWord === 'a' || countWord === 'an' ? 1 : (parseAmount(countWord) ?? 1);
       const noun = (picked[3] as string).replace(/s$/, '');
       const subtype = card === undefined ? null : resolveSubtype(noun, card);
+      // "Sacrifice a nontoken blue creature" (the Flares' alternative cost): a token or color
+      // qualifier on a creature.
+      const qualified = noun.match(/^(nontoken )?(?:(white|blue|black|red|green) )?creature$/);
+      const qualifiers: Selector[] =
+        qualified === null
+          ? []
+          : [
+              ...(qualified[1] !== undefined ? [not(IS_TOKEN)] : []),
+              ...(qualified[2] !== undefined ? [ofColor(COLOR_WORDS[qualified[2]] as Color)] : []),
+            ];
       const base =
-        noun === 'artifact or creature'
-          ? anyOf(ofType('Artifact'), ofType('Creature'))
-          : noun === 'artifact'
-            ? ofType('Artifact')
-            : noun === 'creature'
-              ? ofType('Creature')
-              : noun === 'land'
-                ? ofType('Land')
-                : noun === 'permanent'
-                  ? anyOf(
-                      ofType('Artifact'),
-                      ofType('Creature'),
-                      ofType('Enchantment'),
-                      ofType('Land'),
-                      ofType('Planeswalker'),
-                      ofType('Battle'),
-                    )
-                  : noun === 'servo'
-                    ? ofSubtype('Servo')
-                    : noun === 'token'
-                      ? IS_TOKEN
-                      : subtype !== null
-                        ? ofSubtype(subtype)
-                        : null;
+        qualifiers.length > 0
+          ? allOf(ofType('Creature'), ...qualifiers)
+          : noun === 'artifact or creature'
+            ? anyOf(ofType('Artifact'), ofType('Creature'))
+            : noun === 'artifact'
+              ? ofType('Artifact')
+              : noun === 'creature'
+                ? ofType('Creature')
+                : noun === 'land'
+                  ? ofType('Land')
+                  : noun === 'permanent'
+                    ? anyOf(
+                        ofType('Artifact'),
+                        ofType('Creature'),
+                        ofType('Enchantment'),
+                        ofType('Land'),
+                        ofType('Planeswalker'),
+                        ofType('Battle'),
+                      )
+                    : noun === 'servo'
+                      ? ofSubtype('Servo')
+                      : noun === 'token'
+                        ? IS_TOKEN
+                        : subtype !== null
+                          ? ofSubtype(subtype)
+                          : null;
       if (base === null) return null;
       costs.push({
         kind: 'sacrificeOther',
@@ -4509,6 +4521,16 @@ function parseNonManaAlternativeCost(
         kind: 'exileCardFromHand',
         selector: ofColor(colors[exile[1] as string] as Color),
       });
+      continue;
+    }
+    // "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost" (the
+    // Flares). A spell is never a permanent, so "a creature" can never be the spell itself.
+    if (/^sacrifice /.test(part)) {
+      const sacrifice = parseActivationCosts(part);
+      if (sacrifice === null || sacrifice.some((cost) => cost.kind !== 'sacrificeOther')) {
+        return null;
+      }
+      costs.push(...sacrifice);
       continue;
     }
     return null;

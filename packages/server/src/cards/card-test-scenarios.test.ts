@@ -194,6 +194,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'soul-guide-lantern-viewer-exile-graveyards',
       'soul-guide-lantern-viewer-draw',
       'ghost-ark-viewer-crew-and-unearth',
+      'flare-of-denial-viewer-sacrifice-counter',
     ]);
   });
 

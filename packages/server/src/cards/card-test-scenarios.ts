@@ -6483,6 +6483,44 @@ function ghostArkScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_BLUE_MERFOLK = card({
+  oracleId: 'lab-blue-merfolk',
+  name: 'Lab Blue Merfolk',
+  typeLine: 'Creature — Merfolk',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  power: '1',
+  toughness: '1',
+});
+
+function flareOfDenialScenario(gameId: GameId): CardTestScenario {
+  const flare = pinnedFrom(MARCHESA_BATCH1, 'Flare of Denial');
+  return pr01Scenario(gameId, {
+    id: 'flare-of-denial-viewer-sacrifice-counter',
+    title: "Flare of Denial: sacrifice a blue creature to counter P2's spell",
+    instructions: [
+      "P2's Lab Pending Spell is on the stack and you have no lands.",
+      'Cast Flare of Denial for its alternative cost, sacrificing Lab Blue Merfolk, targeting Lab Pending Spell.',
+    ],
+    expectedOutcome:
+      'Lab Blue Merfolk is sacrificed, Lab Pending Spell is countered, and both cards are in graveyards.',
+    oracleSha256: flare.sha256,
+    clauseIds: ['flare-of-denial-sacrifice-alternative', 'flare-of-denial-counter'],
+    decks: {
+      P1: [flare.card, LAB_BLUE_MERFOLK, FOREST],
+      P2: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flare of Denial'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Blue Merfolk'] }],
+      stack: [{ playerId: 'P2', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6713,6 +6751,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'soul-guide-lantern-viewer-exile-graveyards',
   'soul-guide-lantern-viewer-draw',
   'ghost-ark-viewer-crew-and-unearth',
+  'flare-of-denial-viewer-sacrifice-counter',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6863,6 +6902,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'soul-guide-lantern-viewer-exile-graveyards': soulGuideLanternExileScenario,
   'soul-guide-lantern-viewer-draw': soulGuideLanternDrawScenario,
   'ghost-ark-viewer-crew-and-unearth': ghostArkScenario,
+  'flare-of-denial-viewer-sacrifice-counter': flareOfDenialScenario,
 };
 
 export function createCardTestScenario(

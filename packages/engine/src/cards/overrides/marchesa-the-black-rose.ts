@@ -233,12 +233,18 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       description: 'Counter target noncreature spell',
     },
   });
+  // Coverage PR02: the interpreter reads the sacrifice-a-nontoken-blue-creature alternative cost.
+  // Kept, like Fierce Guardianship, for one difference: the generic "counter target spell" rule
+  // targets only an opponent's spell, while Flare of Denial may counter any spell.
+  defineCard('437cfd16-94bc-43ba-afd8-e9e9d028a4ca', 'Flare of Denial', [], {
+    spellAbility: {
+      kind: 'spell',
+      targets: [{ kind: 'spell' }],
+      effects: [{ op: 'counter', target: 0 }],
+      description: 'Counter target spell',
+    },
+  });
   // Catalog audit batch 5: sacrifice-a-nontoken-creature alternative costs are claimed, not authored.
-  unsupportedCard(
-    '437cfd16-94bc-43ba-afd8-e9e9d028a4ca',
-    'Flare of Denial',
-    'Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast.',
-  );
   unsupportedCard(
     'f586ecb8-310c-4f40-a766-6a7ca46a254d',
     'Flare of Duplication',

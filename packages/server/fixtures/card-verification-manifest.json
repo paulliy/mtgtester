@@ -374,19 +374,35 @@
     "437cfd16-94bc-43ba-afd8-e9e9d028a4ca": {
       "name": "Flare of Denial",
       "oracleSha256": "bf7016907d2dd85f89b718bc7cb81fa45db2423f52bfee50eff788eab5d3ac34",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "flare-of-denial-sacrifice-alternative",
           "oracleText": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.",
-          "implementation": ["explicitly unsupported; alternativeCast omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted nonMana alternativeCast from hand: mana cost {0}, cost sacrificeOther of a nontoken blue creature you control, paid while casting (CR 601.2h)"
+          ],
+          "engineTestIds": [
+            "flare-of-denial-pinned-oracle-supported",
+            "flare-of-denial-sacrifice-alternative",
+            "flare-of-denial-sacrifice-needs-nontoken-blue",
+            "flare-of-denial-needs-a-spell",
+            "flare-of-denial-normal-cast"
+          ],
+          "viewerScenarioIds": ["flare-of-denial-viewer-sacrifice-counter"]
         },
         {
+          "id": "flare-of-denial-counter",
           "oracleText": "Counter target spell.",
-          "implementation": ["explicitly unsupported pending a faithful alternative cost"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored spellAbility: target any spell (the generic grammar limits it to an opponent's spell), effect counter"
+          ],
+          "engineTestIds": [
+            "flare-of-denial-pinned-oracle-supported",
+            "flare-of-denial-sacrifice-alternative",
+            "flare-of-denial-counters-any-spell"
+          ],
+          "viewerScenarioIds": ["flare-of-denial-viewer-sacrifice-counter"]
         }
       ],
       "gameplayAiScenarioIds": []

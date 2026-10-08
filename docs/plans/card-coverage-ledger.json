@@ -745,6 +745,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
+    "name": "Flare of Denial",
+    "package": "PR02.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Sacrifice-a-nontoken-blue-creature alternative cost is claimed without an alternativeCast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
     "name": "Flickerwisp",
     "package": "W4",

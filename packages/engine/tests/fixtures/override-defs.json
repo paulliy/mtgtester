@@ -2769,7 +2769,23 @@
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
-    "def": {}
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
@@ -15136,7 +15152,23 @@
     "oracleId": "oracle-flare-of-denial",
     "name": "Flare of Denial",
     "handledLines": [],
-    "def": {}
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-flare-of-duplication",

@@ -3336,3 +3336,19 @@ test('Ghost Ark: crew it, then unearth an artifact creature', async ({ page }) =
   // The Ark can still be crewed again, so the viewer waits for an explicit pass.
   await passUntil(page, page.getByText(/game over/i).first());
 });
+
+test("Flare of Denial: sacrifice a blue creature to counter P2's spell", async ({ page }) => {
+  await runScenario(page, "Flare of Denial: sacrifice a blue creature to counter P2's spell");
+  const flare = handCard(page, 'Flare of Denial');
+  await expect(flare).toHaveClass(/actionable/);
+  await flare.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });
+  await expect(pending).toHaveClass(/targetable/);
+  await pending.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Blue Merfolk')).toHaveCount(0, { timeout: 15_000 });
+  await passUntil(page, page.getByText(/Lab Pending Spell is countered by Flare of Denial/i));
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});

@@ -1437,6 +1437,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Ghost Ark: crew it, then unearth an artifact creature'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Flare of Denial: sacrifice a blue creature to counter P2's spell"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
