@@ -8,13 +8,30 @@ Players holding combat tricks should be able to skip quiet priority windows whil
 opportunities to cast them during combat and in response to interaction.
 
 The server stores an explicit per-spell-instance or per-printed-activation preference. Smart
-yield hides that action during quiet priority windows. It offers the action again before the
-player declares attackers, throughout combat involving their creatures or attacks against them,
-and while any opponent spell or ability is on the stack. Opponent stack activity stops yield
-even without explicit targets, so sweepers and other indirect interaction remain answerable.
+yield hides that action during quiet priority windows. It offers the action again at relevant
+combat checkpoints and for new opponent stack interaction, with the utility exceptions below.
+Opponent stack activity stops yield even without explicit targets, so sweepers and other
+indirect interaction remain answerable.
 Self-controlled stack objects targeting the player or their permanents also stop yield.
 
 The preference persists after such a stop and hides the action again when play becomes quiet.
+Passing priority declines the currently visible stack objects and combat checkpoint for every
+smart-yielded action on that menu. Resolving a declined object or another player's pass does not
+reoffer it. A new stack object or a changed relevant combat checkpoint does. Choosing Smart yield
+also declines the current opportunity immediately; it must not reoffer the action it just yielded.
+Only accepted submissions update this session-local memory; reconnection preserves it. The
+declined-opportunity memory resets each turn, while yield preferences continue to persist.
+
+Combat stops use the action's legal targets and source: unrelated utility activations stay quiet.
+Stops occur before attacks, after attacks/blocks, and between first-strike and normal damage;
+ordinary post-damage and end-of-combat priority do not wake an action. Known value-only
+activations (draw, scry, or library search) stay quiet for stack objects targeting unrelated
+permanents, but wake for interaction targeting their source or the player. They are also offered
+once at the last opponent's end step before the viewer's turn, to use spare mana before untapping.
+This classification uses descriptive modeled effect operations on the legal menu; unknown,
+compound, and team-protection abilities keep conservative stops. Untargeted opponent interaction
+remains a conservative stop because it may affect the source indirectly. Other actions retain the
+conservative opponent-stack policy.
 Resume removes it. The existing Yield always option remains available for activations. All
 modes and X values of one spell share its preference; other copies are independent.
 

@@ -913,3 +913,8 @@ lint, format, build, and unchanged interpretation/override snapshots. The new Or
 is included in all five generator source closures, and benchmark compatibility hashes are
 refreshed. Complete engine, browser, primitive and current-head CI evidence is still pending;
 interrupted and failed iterations remain historical, without generated passing claims.
+
+Main subsequently advanced to `6b400d9` with smart-yield/session corrections. The branch
+integrates that change and refreshes benchmark compatibility against the combined engine.
+The partial pre-integration browser/full-suite execution is not passing evidence; complete
+verification must use the combined source, including the new smart-yield browser cases.

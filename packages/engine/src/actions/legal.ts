@@ -1338,6 +1338,12 @@ export function computePriorityOptions(
               manaCost: describeManaCost(manaCost),
               ...paymentPreview(ctx, player, manaCost, jointSources, allows),
               abilityCosts: activated.costs,
+              // Descriptive policy input only. Include every mode conservatively so
+              // smart yield cannot hide an untargeted team buff/protection mode.
+              abilityEffectOps: [
+                ...activated.ability.effects,
+                ...(activated.ability.modes?.options.flatMap((mode) => mode.effects) ?? []),
+              ].map((effect) => effect.op),
               ...(xSymbols > 0 ? { x } : {}),
             },
             interaction: {
