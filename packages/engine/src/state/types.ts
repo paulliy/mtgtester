@@ -109,6 +109,12 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   activationsThisTurn: number[];
   /** Exhaust abilities (by index) this object has already activated (CR 702.177). */
   exhaustedAbilities?: number[];
+  /**
+   * Returned by unearth: "If it would leave the battlefield, exile it instead of putting it
+   * anywhere else" (CR 702.84a). `moveObject` redirects every other destination to exile. A new
+   * object after any zone change (CR 400.7), so the flag never outlives this permanent.
+   */
+  unearthed?: true;
   /** 903.9a: set when a commander arrives in graveyard/exile, cleared at the next SBA
    * check after its owner has been offered the command-zone move.
    */

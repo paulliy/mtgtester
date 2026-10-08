@@ -1433,6 +1433,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Soul-Guide Lantern: pay {1} and sacrifice it to draw'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ghost Ark: crew it, then unearth an artifact creature'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

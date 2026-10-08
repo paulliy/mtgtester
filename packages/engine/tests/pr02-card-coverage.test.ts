@@ -19,11 +19,11 @@ import { ofType } from '../src/cards/selector';
 import { fixtureOracleId, getOverride, registerOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { endUntilEotEffects } from '../src/effects/resolve';
+import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { runCombatAndExtraCombats } from '../src/turn/turn';
+import { queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { prepareScenario } from '../src/testing/prepared-scenario';
 import { moveObject, playerById } from '../src/state/objects';
@@ -1965,6 +1965,256 @@ describe('Soul-Guide Lantern', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.12 Ghost Ark
+// ---------------------------------------------------------------------------------------------
+
+describe('Ghost Ark', () => {
+  const ark = pinned('Ghost Ark');
+  const CREW = /Crew 2/;
+  const UNEARTH = /\(graveyard\): Unearth \{3\}$/;
+
+  const thopter = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact Creature — Thopter',
+      manaCost: '{2}',
+      power: '2',
+      toughness: '2',
+    });
+
+  /** Ghost Ark, a 2-power crew member, and graveyards holding each kind of card. */
+  function arkWithGraveyard(seed: string) {
+    const ctx = pod(seed);
+    const source = spawn(ctx, 'P1', ark.card);
+    const crew = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Ark Deckhand', typeLine: 'Creature — Human', power: '2', toughness: '2' }),
+    );
+    const robot = conjure(ctx, 'P1', thopter('Ark Thopter'), 'graveyard');
+    const beast = conjure(ctx, 'P1', SECRET_CARD('Ark Plain Creature'), 'graveyard');
+    const relic = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Ark Relic', typeLine: 'Artifact', manaCost: '{1}' }),
+      'graveyard',
+    );
+    const theirs = conjure(ctx, 'P2', thopter('Ark Rival Thopter'), 'graveyard');
+    return { ctx, source, crew, robot, beast, relic, theirs };
+  }
+
+  /** The unearth activation offered for the graveyard card named `name`, if any. */
+  function unearthFor(ctx: GameContext, playerId: string, name: string) {
+    return priorityOptions(ctx, playerId).find(
+      (option) =>
+        option.description.startsWith(`${name} (graveyard)`) && UNEARTH.test(option.description),
+    );
+  }
+
+  /** Crew the Ark through the normal activation path and resolve the crew ability. */
+  function crewArk(ctx: GameContext, source: EnginePermanent) {
+    const option = activationMatching(ctx, 'P1', source, CREW);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+  }
+
+  it('ghost-ark-pinned-oracle-supported — the interpreter reads flying, the crewed trigger and Crew 2', () => {
+    expect(ark.sha256).toBe('bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc');
+    expect(ark.card.oracleText).toBe(
+      'Flying\nRepair Barge — Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.\nCrew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)',
+    );
+    expectModeled(ark.card);
+    expect(getOverride(ark.card.oracleId)).toBeUndefined();
+    const def = interpretCard(ark.card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers.map((trigger) => trigger.trigger)).toEqual([
+      { when: 'becomesCrewed', subject: { kind: 'self' } },
+    ]);
+    expect(def.triggers[0]?.effects).toEqual([
+      {
+        op: 'grantUnearthToArtifactCreaturesInGraveyard',
+        cost: { generic: 3, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+      },
+    ]);
+    expect(def.activatedAbilities.map((entry) => entry.ability.effects)).toEqual([
+      [{ op: 'crewVehicle', minPower: 2 }],
+    ]);
+  });
+
+  it('ghost-ark-flying — the crewed Ark is a 3/3 flying artifact creature until end of turn', () => {
+    const { ctx, source } = arkWithGraveyard('ark-flying');
+    expect(computeCharacteristics(ctx, source).types).not.toContain('Creature');
+    crewArk(ctx, source);
+    const chars = computeCharacteristics(ctx, source);
+    expect(chars.types).toEqual(expect.arrayContaining(['Artifact', 'Creature']));
+    expect(chars.keywords).toContain('flying');
+    expect([chars.power, chars.toughness]).toEqual([3, 3]);
+  });
+
+  it('ghost-ark-crew-two — a 1-power creature cannot crew it; a 2-power one can', () => {
+    const ctx = pod('ark-crew-short');
+    const source = spawn(ctx, 'P1', ark.card);
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Ark Cabin Boy', typeLine: 'Creature — Human', power: '1', toughness: '1' }),
+    );
+    expect(activationMatching(ctx, 'P1', source, CREW)).toBeUndefined();
+    const { ctx: ready, source: readyArk, crew } = arkWithGraveyard('ark-crew-ready');
+    crewArk(ready, readyArk);
+    expect(crew.tapped).toBe(true);
+    expect(computeCharacteristics(ready, readyArk).types).toContain('Creature');
+  });
+
+  it('ghost-ark-crewed-grants-unearth — crewing it gives only your artifact creature cards unearth {3}', () => {
+    const { ctx, source } = arkWithGraveyard('ark-grant');
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+    crewArk(ctx, source);
+    // The crew ability resolving is the crewed event (CR 702.122e): one trigger, on the stack
+    // after priority, not yet resolved.
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual(['Ghost Ark']);
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeDefined();
+    expect(unearthFor(ctx, 'P1', 'Ark Plain Creature')).toBeUndefined();
+    expect(unearthFor(ctx, 'P1', 'Ark Relic')).toBeUndefined();
+    // "Your graveyard": the opponent's artifact creature card gains nothing, even on their turn.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    addMana(playerById(ctx, 'P2'), generic(3));
+    expect(unearthFor(ctx, 'P2', 'Ark Rival Thopter')).toBeUndefined();
+  });
+
+  it('ghost-ark-only-crew-fires — tapping it or animating it another way does not crew it', () => {
+    const { ctx, source } = arkWithGraveyard('ark-not-crewed');
+    source.tapped = true;
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: source.cardId,
+          name: source.name,
+          oracleId: source.oracleId,
+          controllerId: 'P1',
+        },
+        {
+          kind: 'activated',
+          targets: [],
+          effects: [{ op: 'becomeArtifactCreature' }],
+        },
+        [],
+      ),
+    );
+    expect(computeCharacteristics(ctx, source).types).toContain('Creature');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+  });
+
+  it('ghost-ark-unearth-returns-with-haste — pay {3}: the card returns with haste and is exiled at the next end step', () => {
+    const { ctx, source, robot } = arkWithGraveyard('ark-unearth');
+    crewArk(ctx, source);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    takeAction(ctx, 'P1', unearthFor(ctx, 'P1', 'Ark Thopter')!.payload as PriorityActionPayload);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    const returned = ctx.state.battlefield.find((perm) => perm.cardId === robot.cardId);
+    expect(returned).toBeDefined();
+    expect(computeCharacteristics(ctx, returned!).keywords).toContain('haste');
+    queueStepTriggers(ctx, 'endStep');
+    settle(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === robot.cardId)).toBe(false);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(robot.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).not.toContain(robot.cardId);
+  });
+
+  it('ghost-ark-unearth-is-sorcery-speed — the granted unearth waits for your main phase with an empty stack', () => {
+    const { ctx, source } = arkWithGraveyard('ark-sorcery');
+    crewArk(ctx, source);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeDefined();
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'declareAttackers';
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+  });
+
+  it('ghost-ark-unearthed-exiled-instead — an unearthed permanent that would leave the battlefield is exiled instead', () => {
+    for (const zone of ['graveyard', 'hand', 'library'] as const) {
+      const { ctx, source, robot } = arkWithGraveyard(`ark-replace-${zone}`);
+      crewArk(ctx, source);
+      settle(ctx);
+      addMana(playerById(ctx, 'P1'), generic(3));
+      takeAction(ctx, 'P1', unearthFor(ctx, 'P1', 'Ark Thopter')!.payload as PriorityActionPayload);
+      resolveTop(ctx);
+      const returned = ctx.state.battlefield.find((perm) => perm.cardId === robot.cardId)!;
+      pump(moveObject(ctx, returned, { zone }));
+      expect(
+        ctx.state.exile.map((card) => card.cardId),
+        zone,
+      ).toContain(robot.cardId);
+      const p1 = playerById(ctx, 'P1');
+      for (const other of [p1.graveyard, p1.hand, p1.library]) {
+        expect(
+          other.map((card) => card.cardId),
+          zone,
+        ).not.toContain(robot.cardId);
+      }
+    }
+  });
+
+  it('ghost-ark-grant-ends-at-cleanup — the unearth grant lasts until end of turn', () => {
+    const { ctx, source } = arkWithGraveyard('ark-cleanup');
+    crewArk(ctx, source);
+    settle(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeDefined();
+    endUntilEotEffects(ctx);
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+  });
+
+  it('ghost-ark-grant-survives-other-costs — paying another ability’s costs does not end the grant', () => {
+    const { ctx, source } = arkWithGraveyard('ark-other-costs');
+    crewArk(ctx, source);
+    settle(ctx);
+    // Any cost payment used to wipe every graveyard grant. A different ability, so nothing re-grants.
+    const lookout = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Ark Lookout',
+        typeLine: 'Artifact',
+        oracleText: '{T}: You gain 1 life.',
+      }),
+    );
+    const option = activationMatching(ctx, 'P1', lookout, /gain 1 life/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(lookout.tapped).toBe(true);
+    resolveTop(ctx);
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeDefined();
+  });
+
+  it('ghost-ark-grant-ends-when-card-leaves-graveyard — a card that leaves and returns is a new object without unearth', () => {
+    const { ctx, source, robot } = arkWithGraveyard('ark-new-object');
+    crewArk(ctx, source);
+    settle(ctx);
+    const card = playerById(ctx, 'P1').graveyard.find((entry) => entry.cardId === robot.cardId)!;
+    pump(moveObject(ctx, card, { zone: 'hand' }));
+    const inHand = playerById(ctx, 'P1').hand.find((entry) => entry.cardId === robot.cardId)!;
+    pump(moveObject(ctx, inHand, { zone: 'graveyard' }));
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(playerById(ctx, 'P1').graveyard.map((entry) => entry.cardId)).toContain(robot.cardId);
+    expect(unearthFor(ctx, 'P1', 'Ark Thopter')).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1976,6 +2226,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Ghost Ark',
+    sha256: 'bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc',
+    clauseCount: 3,
+  },
   {
     name: 'Soul-Guide Lantern',
     sha256: '93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec',

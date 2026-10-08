@@ -3299,3 +3299,40 @@ test('Soul-Guide Lantern: pay {1} and sacrifice it to draw', async ({ page }) =>
   await expect(handCard(page, 'Lantern Drawn Page')).toBeVisible();
   await expect(permanent(page, 'Soul-Guide Lantern')).toHaveCount(0);
 });
+
+test('Ghost Ark: crew it, then unearth an artifact creature', async ({ page }) => {
+  await runScenario(page, 'Ghost Ark: crew it, then unearth an artifact creature');
+  const ark = 'Ghost Ark';
+  const graveyard = page.locator('.zones-strip .zone', { hasText: 'Graveyard' });
+  const thumb = (name: string) =>
+    graveyard.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name, exact: true }),
+    });
+
+  await expect(permanent(page, ark)).toContainText(/flying/i);
+  // No unearth until the Ark becomes crewed.
+  await expect(thumb('Lab Ark Thopter')).toBeVisible();
+  await expect(thumb('Lab Ark Thopter')).not.toHaveClass(/actionable/);
+
+  const granted = 'gains unearth {3} until end of turn.';
+  const before = await page.getByText(`${granted} resolves`).count();
+  await activateAndResolve(page, ark, /Crew 2/, 'Crew 2');
+  await expect(permanent(page, 'Lab Giant').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, ark)).toContainText('3/3');
+  await awaitResolution(page, granted, before);
+
+  // Only the artifact creature card gains unearth.
+  await expect(thumb('Lab Ark Thopter')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(thumb('Lab Ark Spirit')).not.toHaveClass(/actionable/);
+  await thumb('Lab Ark Thopter').click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Unearth {3}', 0);
+
+  await expect(permanent(page, 'Lab Ark Thopter')).toBeVisible();
+  await expect(permanent(page, 'Lab Ark Thopter')).toContainText(/haste/i);
+  await expect(thumb('Lab Ark Thopter')).toHaveCount(0);
+  await expect(thumb('Lab Ark Spirit')).toBeVisible();
+  // The Ark can still be crewed again, so the viewer waits for an explicit pass.
+  await passUntil(page, page.getByText(/game over/i).first());
+});

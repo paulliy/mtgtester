@@ -3545,6 +3545,7 @@ export function* executeAbility(
           (candidate) => candidate.cardId === source.cardId,
         );
         if (permanent === undefined) break;
+        permanent.unearthed = true;
         ctx.state.effects.push({
           id: `eff-${ctx.state.nextObjectNum++}`,
           sourceId: source.cardId,
@@ -5010,6 +5011,9 @@ export function* executeAbility(
           timestamp: ctx.state.nextTimestamp++,
         });
         emit(ctx, 'becomeCreature', { source: source.name, target: perm.name });
+        // "Whenever this Vehicle becomes crewed" means "whenever a crew ability of it resolves"
+        // (CR 702.122e); another effect that animates the Vehicle does not crew it.
+        if (effect.op === 'crewVehicle') queueTriggersForObject(ctx, 'becomesCrewed', perm);
         break;
       }
       case 'fightUpToOneChosen': {
@@ -6414,6 +6418,9 @@ export function endUntilEotEffects(ctx: GameContext): void {
   for (const card of ctx.state.exile) {
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
   }
+  // "Gains unearth {3} until end of turn" (Ghost Ark) ends with the other until-end-of-turn
+  // effects (CR 514.2).
+  ctx.state.temporaryGraveyardAbilities = {};
 }
 
 /**
@@ -6975,7 +6982,6 @@ export function* payAbilityCosts(
     emit(ctx, 'exile', { target: perm.name, cardId: perm.cardId }, player.id);
     yield* moveObject(ctx, perm, { zone: 'exile' });
   }
-  ctx.state.temporaryGraveyardAbilities = {};
   return stationPower === undefined ? {} : { stationPower };
 }
 

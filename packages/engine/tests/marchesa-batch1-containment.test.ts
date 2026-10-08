@@ -187,7 +187,6 @@ const REASONS: Record<string, string> = {
     'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
   'Convergence of Dominion':
     'Graveyard activation cost reduction is claimed without a static effect.',
-  'Ghost Ark': 'Becomes-crewed is implemented as becomesTapped.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
@@ -315,6 +314,7 @@ describe('Marchesa catalog audit containment', () => {
     'Illuminor Szeras',
     'Peema Trailblazer',
     'Soul-Guide Lantern',
+    'Ghost Ark',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

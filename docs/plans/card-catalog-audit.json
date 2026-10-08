@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 40,
+      "uniqueOracleIds": 39,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 52,
+      "uniqueOracleIds": 51,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -5739,6 +5739,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: 'Remove a +1/+1 counter from a creature you control' now parses as the removeCountersFromAmong cost (any matching creature you control, the Sage included), and the Wizard enters-with-counter line was already interpreted; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+      "name": "Ghost Ark",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'Whenever this Vehicle becomes crewed' as a becomesCrewed trigger queued only when a crew ability resolves (CR 702.122e), and the until-end-of-turn unearth grant now lasts until cleanup or until the card leaves the graveyard, with unearth's exile-instead replacement (CR 702.84a); engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+      "name": "Ghost Ark",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
     }
   ]
 }

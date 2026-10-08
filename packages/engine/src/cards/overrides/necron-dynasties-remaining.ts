@@ -152,12 +152,6 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
   // three or more lands with the same name" as an activation condition, so no override remains.
-  // Catalog audit necron-remaining-batch-3: crewed is implemented as becomesTapped.
-  unsupportedCard(
-    'bb1b4786-3804-486b-9fd9-85848d24d362',
-    'Ghost Ark',
-    'Becomes-crewed is implemented as becomesTapped.',
-  );
   // Catalog audit necron-remaining-batch-3: except-six-or-more is unconditional unblockable.
   unsupportedCard(
     'b3329240-c812-45ea-a7f8-4d79cd4ed515',

@@ -535,3 +535,24 @@ describe('Soul-Guide Lantern Card Test Lab scenarios', () => {
     replays('soul-guide-lantern-viewer-draw', steps);
   });
 });
+
+describe('Ghost Ark Card Test Lab scenario', () => {
+  it('ghost-ark-viewer-crew-and-unearth — crewing grants unearth {3}; the Thopter returns with haste', () => {
+    const steps: Step[] = [
+      { action: 'Crew 2' },
+      { action: 'Lab Ark Thopter (graveyard): Unearth {3}' },
+    ];
+    const { state, seat, onBattlefield, offered } = run('ghost-ark-viewer-crew-and-unearth', steps);
+    expect(onBattlefield('Lab Giant')[0]?.tapped).toBe(true);
+    const effects = state.effects.map((effect) => effect.description);
+    expect(effects).toContain('Ghost Ark becomes an artifact creature until end of turn');
+    expect(effects).toContain('Lab Ark Thopter gains haste until end of turn');
+    expect(onBattlefield('Lab Ark Thopter')).toHaveLength(1);
+    expect(onBattlefield('Forest').every((forest) => forest.tapped)).toBe(true);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Ark Spirit']);
+    // Never offered before the crewed trigger resolved, and never for the non-artifact Spirit.
+    expect(offered[0]?.some((action) => action.includes('Unearth'))).toBe(false);
+    expect(offered.flat().some((action) => action.startsWith('Lab Ark Spirit'))).toBe(false);
+    replays('ghost-ark-viewer-crew-and-unearth', steps);
+  });
+});

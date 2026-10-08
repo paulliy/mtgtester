@@ -608,7 +608,7 @@ export type Effect =
   /**
    * "This Vehicle becomes an artifact creature until end of turn" from an ability other than
    * crew (Bespoke Battlewagon's energy ability). Same layer-4 effect as `crewVehicle`, but the
-   * Vehicle does not become crewed (CR 702.122b), so "becomes crewed" triggers do not fire.
+   * Vehicle does not become crewed (CR 702.122e), so "becomes crewed" triggers do not fire.
    */
   | { op: 'becomeArtifactCreature' }
   | { op: 'exileEach'; selector: Selector }
@@ -1209,6 +1209,8 @@ export type TriggerWhen =
   | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
+  /** "Whenever this Vehicle becomes crewed": a crew ability of it resolves (CR 702.122e). */
+  | 'becomesCrewed'
   | 'fights'
   /**
    * "Becomes the target of a spell or ability an opponent controls" (Thunderbreak Regent).
@@ -1237,6 +1239,8 @@ export type ObjectTriggerWhen =
   | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
   | 'becomesTapped'
+  /** "Whenever this Vehicle becomes crewed": a crew ability of it resolves (CR 702.122e). */
+  | 'becomesCrewed'
   | 'fights'
   | 'becomesTargeted'
   | 'enchantedPlayerAttacked'

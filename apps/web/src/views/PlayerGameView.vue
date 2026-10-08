@@ -552,6 +552,17 @@ const zoneTargetIds = computed(() => {
   return ids;
 });
 
+/**
+ * Sources of legal actions, for the zone strips: a graveyard card with unearth or flashback is
+ * clicked like a hand card. Hidden while a target choice is pending so a click there is never
+ * ambiguous.
+ */
+const zoneSourceIds = computed(() =>
+  selectedAction.value === null
+    ? [...actionableSourceIds.value].filter((id): id is ObjectId => id !== null)
+    : [],
+);
+
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
 function tryPlanAssign(target: ObjectId | string): boolean {
   if (combatPlan.mode !== 'composing' || focusedSourceId.value === null) return false;
@@ -1283,13 +1294,17 @@ function abandon(): void {
               label="Graveyard"
               :cards="human.graveyard"
               :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
               @select="chooseTarget"
+              @activate="selectSource"
             />
             <ZoneStrip
               label="Exile"
               :cards="humanExile"
               :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
               @select="chooseTarget"
+              @activate="selectSource"
             />
           </div>
 

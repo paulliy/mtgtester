@@ -755,6 +755,19 @@ function parseEffectSentence(
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  // Ghost Ark: "each artifact creature card in your graveyard gains unearth {3} until end of
+  // turn". The grant ends at cleanup or when that card leaves the graveyard (CR 400.7).
+  {
+    const unearth = s.match(
+      /^each artifact creature card in your graveyard gains unearth ((?:\{[^}]+\})+) until end of turn$/,
+    );
+    if (unearth !== null) {
+      const cost = parseManaCost((unearth[1] as string).toUpperCase() as never);
+      if (cost.cost !== null) {
+        return [{ op: 'grantUnearthToArtifactCreaturesInGraveyard', cost: cost.cost }];
+      }
+    }
+  }
   if (
     /^return (?:~|this (?:creature|artifact|enchantment|permanent)) to its owner's hand$/.test(s)
   ) {
@@ -2857,7 +2870,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -3753,7 +3766,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
               ? // City of Brass. `becomesTapped` is queued from every tap path already, including
                 // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
                 ['becomesTapped']
-              : ['dealsCombatDamageToPlayer'];
+              : event === 'becomes crewed'
+                ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                  // from another "becomes an artifact creature" effect.
+                  ['becomesCrewed']
+                : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;

@@ -2204,13 +2204,46 @@
     "bb1b4786-3804-486b-9fd9-85848d24d362": {
       "name": "Ghost Ark",
       "oracleSha256": "bd5d0a53132a9b86c3ced3f9f31a6856b362023b2b014b354c27ffdf92d12ffc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "ghost-ark-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword: flying"],
+          "engineTestIds": ["ghost-ark-pinned-oracle-supported", "ghost-ark-flying"],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
+        },
+        {
+          "id": "ghost-ark-crewed-unearth",
           "oracleText": "Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.",
-          "implementation": ["explicitly unsupported; becomes-crewed implemented as becomesTapped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted trigger: when becomesCrewed (queued only when a crew ability resolves, CR 702.122e), subject self, effect grantUnearthToArtifactCreaturesInGraveyard {3}; the grant ends at cleanup or when the card leaves the graveyard, and unearth exiles the permanent instead of letting it leave any other way (CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "ghost-ark-pinned-oracle-supported",
+            "ghost-ark-crewed-grants-unearth",
+            "ghost-ark-only-crew-fires",
+            "ghost-ark-unearth-returns-with-haste",
+            "ghost-ark-unearth-is-sorcery-speed",
+            "ghost-ark-unearthed-exiled-instead",
+            "ghost-ark-grant-ends-at-cleanup",
+            "ghost-ark-grant-survives-other-costs",
+            "ghost-ark-grant-ends-when-card-leaves-graveyard"
+          ],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
+        },
+        {
+          "id": "ghost-ark-crew",
+          "oracleText": "Crew 2",
+          "implementation": [
+            "interpreted activated ability: cost tapCreaturesTotalPower 2, effect crewVehicle"
+          ],
+          "engineTestIds": [
+            "ghost-ark-pinned-oracle-supported",
+            "ghost-ark-crew-two",
+            "ghost-ark-flying"
+          ],
+          "viewerScenarioIds": ["ghost-ark-viewer-crew-and-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []

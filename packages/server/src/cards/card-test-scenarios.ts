@@ -6434,6 +6434,55 @@ const LAB_LANTERN_PAGE = card({
   typeLine: 'Creature — Secret',
 });
 
+const LAB_ARK_THOPTER = card({
+  oracleId: 'lab-ark-thopter',
+  name: 'Lab Ark Thopter',
+  typeLine: 'Artifact Creature — Thopter',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+const LAB_ARK_SPIRIT = card({
+  oracleId: 'lab-ark-spirit',
+  name: 'Lab Ark Spirit',
+  typeLine: 'Creature — Spirit',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+
+function ghostArkScenario(gameId: GameId): CardTestScenario {
+  const ark = pinnedFrom(MARCHESA_BATCH1, 'Ghost Ark');
+  return pr01Scenario(gameId, {
+    id: 'ghost-ark-viewer-crew-and-unearth',
+    title: 'Ghost Ark: crew it, then unearth an artifact creature',
+    instructions: [
+      'Ghost Ark shows flying. Crew it with Lab Giant (Crew 2).',
+      'When the crewed trigger resolves, unearth Lab Ark Thopter from your graveyard for {3}.',
+      'Lab Ark Spirit is not an artifact, so it gets no unearth.',
+    ],
+    expectedOutcome:
+      'Ghost Ark is a 3/3 flying artifact creature, Lab Giant is tapped, Lab Ark Thopter is on the battlefield with haste, all three Forests are tapped, and Lab Ark Spirit stays in your graveyard.',
+    oracleSha256: ark.sha256,
+    clauseIds: ['ghost-ark-flying', 'ghost-ark-crewed-unearth', 'ghost-ark-crew'],
+    decks: {
+      P1: [ark.card, LAB_GIANT, LAB_ARK_THOPTER, LAB_ARK_SPIRIT, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Ghost Ark', 'Lab Giant', 'Forest', 'Forest', 'Forest'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ark Thopter', 'Lab Ark Spirit'] }],
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6663,6 +6712,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'soul-guide-lantern-viewer-enters-exile',
   'soul-guide-lantern-viewer-exile-graveyards',
   'soul-guide-lantern-viewer-draw',
+  'ghost-ark-viewer-crew-and-unearth',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6812,6 +6862,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'soul-guide-lantern-viewer-enters-exile': soulGuideLanternEntersScenario,
   'soul-guide-lantern-viewer-exile-graveyards': soulGuideLanternExileScenario,
   'soul-guide-lantern-viewer-draw': soulGuideLanternDrawScenario,
+  'ghost-ark-viewer-crew-and-unearth': ghostArkScenario,
 };
 
 export function createCardTestScenario(

@@ -36,6 +36,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Foe-Razer Regent',
       'Forum of Amity',
       'Frontier Siege',
+      'Ghost Ark',
       'Harvest Season',
       'Hunting Wilds',
       'Idol of Oblivion',

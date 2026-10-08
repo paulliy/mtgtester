@@ -91,7 +91,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Beacon of Unrest',
       'Canoptek Wraith',
       'Convergence of Dominion',
-      'Ghost Ark',
       'Hexmark Destroyer',
       'Imotekh the Stormlord',
       'Mystic Forge',

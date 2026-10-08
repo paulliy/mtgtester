@@ -504,15 +504,35 @@ export function* moveObject(
   const from = obj.zone;
   let target: MoveDestination = dest;
 
+  // CR 702.84a: an unearthed permanent that would leave the battlefield is exiled instead. Applied
+  // before the commander replacement below; either order ends in exile, since 903.9b only offers
+  // the command zone for a move to hand or library.
+  if (
+    from === 'battlefield' &&
+    (obj as EnginePermanent).unearthed === true &&
+    dest.zone !== 'exile'
+  ) {
+    target = {
+      zone: 'exile',
+      ...(dest.reason !== undefined ? { reason: dest.reason } : {}),
+      ...(dest.deferLeaveProcessing !== undefined
+        ? { deferLeaveProcessing: dest.deferLeaveProcessing }
+        : {}),
+      ...(dest.deferCardZoneTriggers !== undefined
+        ? { deferCardZoneTriggers: dest.deferCardZoneTriggers }
+        : {}),
+    };
+  }
+
   // CR 903.9b — commander headed to hand or library: owner may redirect to command zone.
-  if (obj.isCommander && (dest.zone === 'hand' || dest.zone === 'library')) {
+  if (obj.isCommander && (target.zone === 'hand' || target.zone === 'library')) {
     const outcome = yield {
       decisionType: 'commanderReplacement',
       player: obj.ownerId,
-      prompt: `${obj.name} would be put into your ${dest.zone}. Put it into the command zone instead?`,
+      prompt: `${obj.name} would be put into your ${target.zone}. Put it into the command zone instead?`,
       options: [
         { type: 'commanderToCommandZone', description: `Put ${obj.name} into the command zone` },
-        { type: 'keepMoving', description: `Let ${obj.name} go to your ${dest.zone}` },
+        { type: 'keepMoving', description: `Let ${obj.name} go to your ${target.zone}` },
       ],
     };
     if (outcome.index === 0) target = { zone: 'command' };
@@ -564,6 +584,9 @@ export function* moveObject(
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
   removeFromCurrentZone(ctx, obj, keepForLeaveProcessing);
+  // An ability granted to a card in a graveyard ("gains unearth {3} until end of turn") does not
+  // follow it to a new zone: it is a new object there (CR 400.7).
+  if (from === 'graveyard') delete ctx.state.temporaryGraveyardAbilities[obj.cardId];
 
   if (from === 'battlefield' && target.zone === 'graveyard') {
     (obj as unknown as EngineCardObject).rememberedCounters = {

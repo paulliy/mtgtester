@@ -948,6 +948,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
+    "name": "Ghost Ark",
+    "package": "PR02.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Becomes-crewed is implemented as becomesTapped."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
     "package": "W6",

@@ -195,9 +195,8 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('bb1b4786-3804-486b-9fd9-85848d24d362', 'Ghost Ark', [
-    'Repair Barge — Whenever this Vehicle becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.',
-  ]);
+  // Ghost Ark: restored in coverage PR02. The interpreter reads "whenever this Vehicle becomes
+  // crewed" (CR 702.122e) and the until-end-of-turn unearth grant, so no override remains.
 
   // Gilded Lotus: the generic grammar reads "Add three mana of any one color" (coverage PR02),
   // producing exactly the definition this override authored, so it was deleted (overrides rule 5).

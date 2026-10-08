@@ -7994,12 +7994,6 @@
     "def": {}
   },
   {
-    "oracleId": "bb1b4786-3804-486b-9fd9-85848d24d362",
-    "name": "Ghost Ark",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
     "handledLines": [],
@@ -15892,12 +15886,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-ghost-ark",
-    "name": "Ghost Ark",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-ghoulish-impetus",
