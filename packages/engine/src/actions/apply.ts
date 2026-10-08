@@ -1197,6 +1197,7 @@ export function* applyPriorityAction(
       yield* payManaCost(ctx, player, morphCost);
       // CR 708.8: it keeps its status, counters and damage, and does not enter the battlefield.
       perm.faceDown = false;
+      perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
       return;
     }

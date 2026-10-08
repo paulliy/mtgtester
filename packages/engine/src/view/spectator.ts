@@ -48,7 +48,9 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
   const isCreature = chars.types.includes('Creature');
   return {
     id: perm.id,
-    name: perm.name,
+    // The spectator projection sees everything; `buildPlayerBoardState` redacts a face-down
+    // permanent for everyone but its controller (CR 708.5).
+    name: perm.faceDown === true ? (ctx.defs.get(perm.oracleId)?.name ?? perm.name) : perm.name,
     typeLine: perm.typeLine,
     manaCost: perm.manaCost,
     oracleText: perm.oracleText,

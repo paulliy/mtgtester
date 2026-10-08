@@ -3611,6 +3611,87 @@ describe('Conclave Tribunal', () => {
     expect(castOptionFor(ctx, 'P1', two.id)).toBeUndefined();
   });
 
+  it('conclave-tribunal-drum-planner-scales — a Drum and many mana creatures price a cost just out of reach quickly', () => {
+    const ctx = pod('drum-scale');
+    for (let i = 0; i < 2; i++)
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Scale Drum',
+          typeLine: 'Artifact',
+          power: null,
+          toughness: null,
+          oracleText: '{T}, Tap an untapped creature you control: Add one mana of any color.',
+        }),
+      );
+    for (let i = 0; i < 8; i++)
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: `Scale Elf ${i}`,
+          typeLine: 'Creature — Elf',
+          colors: ['G'],
+          oracleText: '{T}: Add {G}.',
+        }),
+      );
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P1', forest());
+    // Twelve permanents can make twelve mana: each Drum only converts an elf's mana.
+    const spell = (name: string, manaCost: string) =>
+      conjure(
+        ctx,
+        'P1',
+        oracle({
+          name,
+          typeLine: 'Sorcery',
+          manaCost,
+          oracleText: 'Draw a card.',
+          power: null,
+          toughness: null,
+        }),
+        'hand',
+      );
+    const reachable = spell('Scale Twelve', '{11}{G}');
+    const beyond = spell('Scale Thirteen', '{12}{G}');
+    const started = Date.now();
+    expect(castOptionFor(ctx, 'P1', beyond.id)).toBeUndefined();
+    expect(castOptionFor(ctx, 'P1', reachable.id)).toBeDefined();
+    expect(Date.now() - started).toBeLessThan(3000);
+  });
+
+  it('conclave-tribunal-self-tapping-source — a creature may tap itself for its own tap-a-creature cost', () => {
+    const ctx = pod('self-tapper');
+    const tapper = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Self Tapper',
+        typeLine: 'Creature — Elf',
+        colors: ['G'],
+        oracleText: 'Tap an untapped creature you control: Add {G}.',
+      }),
+    );
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Tapper Spell',
+        typeLine: 'Sorcery',
+        manaCost: '{G}',
+        oracleText: 'Draw a card.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
+    const option = castOptionFor(ctx, 'P1', spell.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(tapper.tapped).toBe(true);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+  });
+
   it('conclave-tribunal-exile-until-leaves — its enters trigger exiles an opponent’s permanent until it leaves', () => {
     const ctx = pod('tribunal-exile');
     for (let i = 1; i <= 4; i++) spawn(ctx, 'P1', soldier(`Tribunal White ${i}`, ['W']));
@@ -3883,13 +3964,14 @@ describe('Grim Haruspex', () => {
 
   /** Cast it face down and let the spell resolve; returns the face-down permanent. */
   function faceDown(ctx: GameContext, objectId: string) {
+    const cardId = playerById(ctx, 'P1').hand.find((card) => card.id === objectId)!.cardId;
     const option = castOptionsFor(ctx, 'P1', objectId).find((entry) =>
       FACE_DOWN.test(entry.description),
     );
     expect(option).toBeDefined();
     takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
     resolveTop(ctx);
-    return ctx.state.battlefield.find((perm) => perm.name === 'Grim Haruspex')!;
+    return ctx.state.battlefield.find((perm) => perm.cardId === cardId)!;
   }
 
   const turnUp = (ctx: GameContext, perm: EnginePermanent) =>
@@ -3946,6 +4028,43 @@ describe('Grim Haruspex', () => {
     expect(perm.faceDown).toBe(true);
     expect(effectivePT(ctx, perm)).toEqual({ power: 2, toughness: 2 });
     expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).not.toContain('Grim Haruspex');
+  });
+
+  it('grim-haruspex-face-down-stays-nameless — targeting and damaging it never names it', () => {
+    const { ctx, inHand } = ready('haruspex-nameless');
+    const perm = faceDown(ctx, inHand.id);
+    expect(perm.name).toBe('Face-down permanent');
+    const ping = conjure(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Haruspex Rival Ping',
+        typeLine: 'Instant',
+        manaCost: '{R}',
+        colors: ['R'],
+        oracleText: 'Haruspex Rival Ping deals 1 damage to any target.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
+    addMana(playerById(ctx, 'P2'), [{ symbol: 'R' }]);
+    takeAction(
+      ctx,
+      'P2',
+      castOptionsFor(ctx, 'P2', ping.id)[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, perm.id]]),
+    );
+    resolveTop(ctx);
+    expect(perm.damageMarked).toBe(1);
+    expect(JSON.stringify(ctx.state.eventLog)).not.toContain('Grim Haruspex');
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).not.toContain('Grim Haruspex');
+    // Turned face up, it has its name again.
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
+    takeAction(ctx, 'P1', turnUp(ctx, perm)!.payload as PriorityActionPayload);
+    expect(perm.name).toBe('Grim Haruspex');
+    expect(JSON.stringify(buildPlayerView(ctx, 'P2'))).toContain('Grim Haruspex');
   });
 
   it('grim-haruspex-face-down-sorcery-speed — the face-down cast is not offered at instant speed', () => {
@@ -4187,6 +4306,44 @@ describe('Dream Devourer', () => {
     expect(castOptionsFor(ctx, 'P1', exiled.id).map((option) => option.description)).toEqual([
       'Cast Devourer Lab Growth ({G}{G}) (foretold)',
     ]);
+  });
+
+  it('dream-devourer-foretold-only-foretell-cost — a foretold card is not offered another alternative cost', () => {
+    const { ctx } = ready('devourer-no-alternative');
+    const free = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Devourer Free Bolt',
+        typeLine: 'Instant',
+        manaCost: '{2}{R}',
+        colors: ['R'],
+        oracleText:
+          'Devourer Free Bolt deals 2 damage to any target.\nIf you control a commander, you may cast this spell without paying its mana cost.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
+    const exiled = foretell(ctx, free.id, free.cardId);
+    settle(ctx);
+    nextTurn(ctx);
+    spawn(ctx, 'P1', oracle({ name: 'Devourer Commander', typeLine: 'Legendary Creature — Elf' }), {
+      isCommander: true,
+    });
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }]);
+    const options = castOptionsFor(ctx, 'P1', exiled.id);
+    expect(options.map((option) => option.description)).toEqual([
+      'Cast Devourer Free Bolt ({R}) (foretold)',
+    ]);
+    takeAction(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P2']]),
+    );
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
   });
 
   it('dream-devourer-cost-kept-without-it — the foretell cost stays after the Devourer leaves', () => {

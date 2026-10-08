@@ -207,6 +207,9 @@ export function changeController(
   perm.statuses = perm.statuses.filter((status) => status !== 'attacking' && status !== 'blocking');
 }
 
+/** What a face-down permanent is called while face down (CR 708.2a). */
+export const FACE_DOWN_PERMANENT_NAME = 'Face-down permanent';
+
 /** Build the battlefield form of an object (used by moveObject and by casting). */
 export function makePermanent(
   ctx: GameContext,
@@ -289,6 +292,9 @@ export function makePermanent(
   }
   return {
     ...reincarnate(ctx, obj, 'battlefield'),
+    // A face-down permanent has no name (CR 708.2a): every event, prompt and view that names it
+    // reads this, so its identity reaches no other player. The definition keeps the real one.
+    ...(faceDown ? { name: FACE_DOWN_PERMANENT_NAME } : {}),
     zone: 'battlefield',
     controllerId,
     defaultControllerId: controllerId,
@@ -799,7 +805,12 @@ export function* moveObject(
 
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
-    name: target.faceDown ? 'Face-down permanent' : obj.name,
+    // A face-down permanent leaving the battlefield is revealed (CR 708.9).
+    name: target.faceDown
+      ? FACE_DOWN_PERMANENT_NAME
+      : obj.zone === 'battlefield' && (obj as EnginePermanent).faceDown === true
+        ? (ctx.defs.get(obj.oracleId)?.name ?? obj.name)
+        : obj.name,
     from,
     to: target.zone,
     owner: obj.ownerId,

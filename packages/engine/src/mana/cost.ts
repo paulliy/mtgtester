@@ -543,7 +543,10 @@ function orderForActivation(
           return false;
         }
         for (const id of source.taps![index]!) {
-          if (gone.has(id) || tappedNow.has(id) || plannedIds.has(id)) continue;
+          // A source may tap itself for its own "tap an untapped creature" cost when nothing
+          // else taps it (CR 602.5a with `allowSelf`); every other planned source is tapped.
+          const selfTap = id === source.cardId && !source.costs.some((c) => c.kind === 'tap');
+          if (gone.has(id) || tappedNow.has(id) || (plannedIds.has(id) && !selfTap)) continue;
           if (chooseTap(index + 1, gone, new Set([...tappedNow, id]))) return true;
         }
         return false;
@@ -560,7 +563,38 @@ function orderForActivation(
     }
     return false;
   };
-  if (!search(poolEntries, plan.tapSources, new Set(), new Set())) return null;
+  // Tap costs first, as a matching (no ordering can rescue a plan without enough distinct
+  // untapped candidates), so an infeasible plan never reaches the ordering search below.
+  const tapDemands = plan.tapSources.flatMap((source) =>
+    (source.taps ?? []).map((group) =>
+      group.filter(
+        (id) =>
+          !plannedIds.has(id) ||
+          (id === source.cardId && !source.costs.some((c) => c.kind === 'tap')),
+      ),
+    ),
+  );
+  if (!sacrificesArePayable(tapDemands, new Set())) return null;
+  // A source with no mana cost, sacrifice, tap cost or self-removal only adds mana, so
+  // activating it first never hurts; only the others need their order searched. Searching every
+  // order of every source made one failing plan cost n! on a board of mana creatures.
+  const plain = (source: ManaSource): boolean =>
+    source.manaCost === undefined &&
+    source.sacrifices === undefined &&
+    source.taps === undefined &&
+    !source.costs.some((c) => c.kind === 'sacrificeSelf' || c.kind === 'exileSelf');
+  const first = plan.tapSources.filter(plain);
+  order.push(...first);
+  const afterFirst = [...poolEntries, ...first.flatMap(producedBy)];
+  if (
+    !search(
+      afterFirst,
+      plan.tapSources.filter((source) => !plain(source)),
+      new Set(),
+      new Set(),
+    )
+  )
+    return null;
   return { ...plan, tapSources: order, tapCardIds: order.map((s) => s.cardId) };
 }
 
@@ -666,14 +700,40 @@ function solveFrom(
     usableSources.map((s) => s.cardId).filter((id, i, ids) => ids.indexOf(id) !== i),
   );
   const hasResources = usableSources.some(
-    (s) => s.resources !== undefined || s.sacrifices !== undefined || s.taps !== undefined,
+    (s) => s.resources !== undefined || s.sacrifices !== undefined,
   );
+  // Tap costs on mana sources (Springleaf Drum) make a plan's success depend on which tap-cost
+  // sources it uses and on which of their candidates it already taps for mana. When every tap
+  // group draws from the same candidates ("an untapped creature you control"), only HOW MANY
+  // candidates the plan uses matters, so the key counts them; keying on every chosen source
+  // instead made the search exponential in mana creatures.
+  const tapGroups = usableSources.flatMap((s) => [...(s.taps ?? [])]);
+  const tapUniverse = new Set(tapGroups.flat());
+  const uniformTapGroups = tapGroups.every(
+    (group) => group.length === tapUniverse.size && group.every((id) => tapUniverse.has(id)),
+  );
+  const tapKey = (): string => {
+    if (tapGroups.length === 0) return '';
+    const tapSources = chosen
+      .filter((s) => s.taps !== undefined)
+      .map((s) => `${usableSources.indexOf(s)}`)
+      .join(',');
+    const used = chosen.filter((s) => tapUniverse.has(s.cardId));
+    return `|t${tapSources}|${
+      uniformTapGroups
+        ? used.length
+        : used
+            .map((s) => s.cardId)
+            .sort()
+            .join(',')
+    }`;
+  };
   const failed = new Set<string>();
   const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>
     `${srcIdx}|${needKey(need2)}|${chosen
       .filter((s) => hasResources || sharedIds.has(s.cardId))
       .map((s) => `${usableSources.indexOf(s)}`)
-      .join(',')}`;
+      .join(',')}${tapKey()}`;
 
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) {

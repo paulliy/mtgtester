@@ -1491,6 +1491,9 @@ export function computePriorityOptions(
       def.commanderFreeCast === true &&
       !fromCommand &&
       !fromGraveyard &&
+      // Its payload is hand-only; a foretold card is cast only for its foretell cost.
+      !fromExile &&
+      !fromLibraryTop &&
       ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander) &&
       canPaySpellAdditionalCosts(ctx, player, spellAdditionalCosts, obj.cardId, sourceInHand)
     ) {
@@ -2080,17 +2083,19 @@ export function computePriorityOptions(
   // with morph face up by paying its morph cost. A special action: no stack, no response.
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== player.id || perm.faceDown !== true) continue;
-    const morphCost = getDefByOracleId(ctx, perm.oracleId, perm.name).morphCost;
+    const faceUpDef = getDefByOracleId(ctx, perm.oracleId, perm.name);
+    const morphCost = faceUpDef.morphCost;
     if (morphCost === undefined) continue;
     // Neither casting nor activating: restricted mana cannot pay it.
     const allows = allowanceFor(ctx, player.id, { kind: 'other' });
     if (!canPay(morphCost, player.manaEntries, baseCastSources, allows, player.life)) continue;
     options.push({
       type: 'activateAbility',
-      description: `Turn ${perm.name} face up (${describeManaCost(morphCost)})`,
+      // Only its controller sees this option, and may look at the card (CR 708.5).
+      description: `Turn ${faceUpDef.name} face up (${describeManaCost(morphCost)})`,
       payload: { kind: 'turnFaceUp', objectId: perm.id },
       data: {
-        sourceName: perm.name,
+        sourceName: faceUpDef.name,
         sourceZone: 'battlefield',
         abilityDescription: 'Turn face up',
         manaCost: describeManaCost(morphCost),

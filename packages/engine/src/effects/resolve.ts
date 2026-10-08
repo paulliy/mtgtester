@@ -6283,7 +6283,17 @@ function* replicateCopies(
       sourceCardId: `tok-${ctx.state.nextObjectNum++}`,
       isCommanderCast: false,
       ...(original?.announcedX !== undefined ? { announcedX: original.announcedX } : {}),
-      ...(original?.countTargets !== undefined ? { countTargets: original.countTargets } : {}),
+      // A copy copies every decision made for the spell (CR 707.10), into its own records.
+      ...(original?.countTargets !== undefined
+        ? {
+            countTargets: Object.fromEntries(
+              Object.entries(original.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+            ),
+          }
+        : {}),
+      ...(original?.divisionAmounts !== undefined
+        ? { divisionAmounts: { ...original.divisionAmounts } }
+        : {}),
       ...(permanent
         ? {
             permanentSpellCopy: {
