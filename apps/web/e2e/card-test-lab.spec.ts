@@ -1366,17 +1366,8 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
 
   const arcane = handCard(page, 'Arcane Denial');
   await expect(arcane).toHaveClass(/actionable/);
-  // Yield directly from the playable list without selecting/casting, even with auto-confirm on.
-  await page.getByLabel('Skip confirm step').check();
-  await page.getByRole('button', { name: 'Smart yield Arcane Denial', exact: true }).click();
-  await expect(page.locator('.ignored-abilities')).toContainText('Smart yield');
-  await expect(arcane).toHaveClass(/actionable/);
-  await page.getByLabel('Skip confirm step').uncheck();
-  await arcane.click();
-  // An opponent's spell is already on the stack: smart yield must keep this response available.
-  await page.getByRole('button', { name: 'Smart yield', exact: true }).click();
-  await expect(page.locator('.ignored-abilities')).toContainText('Smart yield');
-  await expect(arcane).toHaveClass(/actionable/);
+  // This scenario casts the response. Declining it via Smart yield is exercised separately
+  // in player-smart-yield.spec.ts, where it must advance instead of reoffering the same spell.
   await arcane.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });

@@ -1393,7 +1393,7 @@ function abandon(): void {
             <div v-if="smartYieldAction" class="tray-actions">
               <button
                 type="button"
-                title="Skip quiet priority windows; offer this again for your combat, attacks against you, or any opponent spell or ability on the stack"
+                title="Skip this opportunity and quiet windows. Offer again for new interaction or relevant combat changes; passing declines that opportunity."
                 @click="yieldSelected('smart')"
               >
                 Smart yield
@@ -1626,7 +1626,7 @@ function abandon(): void {
                       "
                       type="button"
                       :aria-label="`Smart yield ${entry.name}`"
-                      title="Yield this copy during quiet priority windows"
+                      title="Skip this opportunity and quiet windows; offer this copy again for new interaction or relevant combat changes"
                       @click="smartYieldSource(entry.ids[0] ?? '')"
                     >
                       Smart yield
