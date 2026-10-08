@@ -499,3 +499,39 @@ describe('Peema Trailblazer Card Test Lab scenarios', () => {
     replays('peema-trailblazer-viewer-combat-energy', combatSteps);
   });
 });
+
+describe('Soul-Guide Lantern Card Test Lab scenarios', () => {
+  it('soul-guide-lantern-viewer-enters-exile — the enters trigger exiles the chosen graveyard card', () => {
+    const steps: Step[] = [
+      { action: 'Cast Soul-Guide Lantern' },
+      { action: 'Targets for Soul-Guide Lantern', targets: ['Lantern P2 Card'] },
+    ];
+    const { state, seat } = run('soul-guide-lantern-viewer-enters-exile', steps);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(seat('P3').graveyard.map((card) => card.name)).toEqual(['Lantern P3 Card']);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lantern P2 Card']);
+    replays('soul-guide-lantern-viewer-enters-exile', steps);
+  });
+
+  it("soul-guide-lantern-viewer-exile-graveyards — {T}, sacrifice: both opponents' graveyards are exiled", () => {
+    const steps: Step[] = [{ action: "Exile each opponent's graveyard" }];
+    const { state, seat, onBattlefield } = run('soul-guide-lantern-viewer-exile-graveyards', steps);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(seat('P3').graveyard).toEqual([]);
+    expect(state.exile.map((card) => card.name).sort()).toEqual([
+      'Lantern P2 Card',
+      'Lantern P3 Card',
+    ]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Soul-Guide Lantern']);
+    expect(onBattlefield('Forest')[0]?.tapped).toBe(false);
+    replays('soul-guide-lantern-viewer-exile-graveyards', steps);
+  });
+
+  it('soul-guide-lantern-viewer-draw — {1}, {T}, sacrifice: draws and leaves the graveyards', () => {
+    const steps: Step[] = [{ action: 'Draw a card' }];
+    const { seat } = run('soul-guide-lantern-viewer-draw', steps);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lantern Drawn Page']);
+    expect(seat('P2').graveyard).toHaveLength(1);
+    replays('soul-guide-lantern-viewer-draw', steps);
+  });
+});

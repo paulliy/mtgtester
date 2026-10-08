@@ -6418,6 +6418,100 @@ function peemaCombatEnergyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_GRAVE_CARD_P2 = card({
+  oracleId: 'lab-lantern-p2-card',
+  name: 'Lantern P2 Card',
+  typeLine: 'Creature — Spirit',
+});
+const LAB_GRAVE_CARD_P3 = card({
+  oracleId: 'lab-lantern-p3-card',
+  name: 'Lantern P3 Card',
+  typeLine: 'Creature — Spirit',
+});
+const LAB_LANTERN_PAGE = card({
+  oracleId: 'lab-lantern-page',
+  name: 'Lantern Drawn Page',
+  typeLine: 'Creature — Secret',
+});
+
+function soulGuideLanternScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    inHand: boolean;
+  },
+): CardTestScenario {
+  const lantern = pinnedFrom(MARCHESA_BATCH1, 'Soul-Guide Lantern');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: lantern.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [lantern.card, FOREST, LAB_LANTERN_PAGE],
+      P2: [LAB_GRAVE_CARD_P2, FOREST, FOREST],
+      P3: [LAB_GRAVE_CARD_P3, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: spec.inHand ? [{ playerId: 'P1', cardNames: ['Soul-Guide Lantern'] }] : [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.inHand ? ['Forest'] : ['Soul-Guide Lantern', 'Forest'],
+        },
+      ],
+      graveyard: [
+        { playerId: 'P2', cardNames: ['Lantern P2 Card'] },
+        { playerId: 'P3', cardNames: ['Lantern P3 Card'] },
+      ],
+    },
+  });
+}
+
+const soulGuideLanternEntersScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-enters-exile',
+    title: "Soul-Guide Lantern: enter and exile a card from P2's graveyard",
+    instructions: [
+      'Cast Soul-Guide Lantern with your Forest.',
+      "Its enters trigger targets a card in any graveyard: choose P2's Lantern P2 Card.",
+    ],
+    expectedOutcome: "Lantern P2 Card is exiled; P3's graveyard is untouched.",
+    clauseIds: ['soul-guide-lantern-enters-exile'],
+    inHand: true,
+  });
+
+const soulGuideLanternExileScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-exile-graveyards',
+    title: "Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard",
+    instructions: ["Activate {T}, Sacrifice Soul-Guide Lantern: Exile each opponent's graveyard."],
+    expectedOutcome:
+      "P2's and P3's graveyards are exiled, and Soul-Guide Lantern is in your graveyard. No mana is spent.",
+    clauseIds: ['soul-guide-lantern-exile-graveyards'],
+    inHand: false,
+  });
+
+const soulGuideLanternDrawScenario = (gameId: GameId): CardTestScenario =>
+  soulGuideLanternScenario(gameId, {
+    id: 'soul-guide-lantern-viewer-draw',
+    title: 'Soul-Guide Lantern: pay {1} and sacrifice it to draw',
+    instructions: [
+      'Activate {1}, {T}, Sacrifice Soul-Guide Lantern: Draw a card, paying with your Forest.',
+    ],
+    expectedOutcome:
+      'You draw Lantern Drawn Page and the Lantern is in your graveyard; the opponents keep their graveyards.',
+    clauseIds: ['soul-guide-lantern-draw'],
+    inHand: false,
+  });
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -6566,6 +6660,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'illuminor-szeras-viewer-sacrifice-for-black',
   'peema-trailblazer-viewer-exhaust',
   'peema-trailblazer-viewer-combat-energy',
+  'soul-guide-lantern-viewer-enters-exile',
+  'soul-guide-lantern-viewer-exile-graveyards',
+  'soul-guide-lantern-viewer-draw',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -6712,6 +6809,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'illuminor-szeras-viewer-sacrifice-for-black': illuminorSzerasScenario,
   'peema-trailblazer-viewer-exhaust': peemaExhaustScenario,
   'peema-trailblazer-viewer-combat-energy': peemaCombatEnergyScenario,
+  'soul-guide-lantern-viewer-enters-exile': soulGuideLanternEntersScenario,
+  'soul-guide-lantern-viewer-exile-graveyards': soulGuideLanternExileScenario,
+  'soul-guide-lantern-viewer-draw': soulGuideLanternDrawScenario,
 };
 
 export function createCardTestScenario(

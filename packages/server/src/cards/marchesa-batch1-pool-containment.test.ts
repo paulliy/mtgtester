@@ -57,6 +57,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sceptre of Eternal Glory',
       'Smothering Tithe',
       'Solar Transformer',
+      'Soul-Guide Lantern',
       'Sylvan Reclamation',
       'Thunderfoot Baloth',
       'Tomb Fortress',

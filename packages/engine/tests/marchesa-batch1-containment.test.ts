@@ -222,8 +222,6 @@ const REASONS: Record<string, string> = {
   'Territorial Aetherkite':
     'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
-  'Soul-Guide Lantern':
-    'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
   'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
@@ -316,6 +314,7 @@ describe('Marchesa catalog audit containment', () => {
     'Sage of Fables',
     'Illuminor Szeras',
     'Peema Trailblazer',
+    'Soul-Guide Lantern',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

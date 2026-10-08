@@ -190,6 +190,9 @@ describe('deterministic Card Test Lab scenarios', () => {
       'illuminor-szeras-viewer-sacrifice-for-black',
       'peema-trailblazer-viewer-exhaust',
       'peema-trailblazer-viewer-combat-energy',
+      'soul-guide-lantern-viewer-enters-exile',
+      'soul-guide-lantern-viewer-exile-graveyards',
+      'soul-guide-lantern-viewer-draw',
     ]);
   });
 

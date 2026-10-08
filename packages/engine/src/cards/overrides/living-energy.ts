@@ -1230,11 +1230,39 @@ export function registerLIVING_ENERGYOverrides(): void {
     PANHARMONICON_DEF,
   );
 
-  // Catalog audit living-energy-batch-3: graveyard exile is mashed with the {1} draw mode.
-  unsupportedCard(
+  // Coverage PR02: the two unparsed lines are appended to the parsed "{1}, {T}, Sacrifice this
+  // artifact: Draw a card." as separate abilities, so the opponent-graveyard exile is its own
+  // free {T}-and-sacrifice ability and the draw keeps its {1}.
+  extendCard(
     '1b5e6560-ff2e-4475-96cb-63f64c8a86db',
     'Soul-Guide Lantern',
-    'Opponent-graveyard exile is authored with a free draw instead of a separate {1} draw ability.',
+    [
+      'When this artifact enters, exile target card from a graveyard.',
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+    ],
+    {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: { when: 'enters', subject: { kind: 'self' } },
+          targets: [{ kind: 'cardInGraveyard', graveyardOwnerScope: 'any' }],
+          effects: [{ op: 'exileCard', target: 0 }],
+          description: 'Exile target card from a graveyard',
+        },
+      ],
+      activatedAbilities: [
+        {
+          costs: [TAP, SAC_SELF],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [{ op: 'exileEachOpponentGraveyard' }],
+            description: "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+          },
+        },
+      ],
+    },
   );
 
   // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current

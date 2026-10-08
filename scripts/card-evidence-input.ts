@@ -1421,6 +1421,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Peema Trailblazer: exhaust for counters and cards'],
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['Peema Trailblazer: combat damage gives energy'] },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Soul-Guide Lantern: enter and exile a card from P2's graveyard"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Soul-Guide Lantern: pay {1} and sacrifice it to draw'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

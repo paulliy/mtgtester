@@ -1279,8 +1279,60 @@
   {
     "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
     "name": "Soul-Guide Lantern",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, exile target card from a graveyard.",
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+            "effects": [
+              {
+                "op": "exileEachOpponentGraveyard"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target card from a graveyard",
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "graveyardOwnerScope": "any",
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "1d5ff280-7f4d-4801-aefd-9b6e6b1f2818",
@@ -20712,8 +20764,60 @@
   {
     "oracleId": "oracle-soul-guide-lantern",
     "name": "Soul-Guide Lantern",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this artifact enters, exile target card from a graveyard.",
+      "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+            "effects": [
+              {
+                "op": "exileEachOpponentGraveyard"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target card from a graveyard",
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "graveyardOwnerScope": "any",
+              "kind": "cardInGraveyard"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-spark-double",

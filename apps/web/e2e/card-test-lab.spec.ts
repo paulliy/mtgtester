@@ -3253,3 +3253,44 @@ test('Peema Trailblazer: combat damage gives energy', async ({ page }) => {
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('37');
 });
+
+test("Soul-Guide Lantern: enter and exile a card from P2's graveyard", async ({ page }) => {
+  await runScenario(page, "Soul-Guide Lantern: enter and exile a card from P2's graveyard");
+  const lantern = handCard(page, 'Soul-Guide Lantern');
+  await expect(lantern).toHaveClass(/actionable/);
+  await lantern.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Choose targets for Soul-Guide Lantern/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .getByRole('button', { name: /Lantern P2 Card/ })
+    .first()
+    .click();
+  const confirmButton = page.getByRole('button', { name: 'Confirm' });
+  if (await confirmButton.isVisible()) await confirmButton.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  // P2's graveyard card is now in exile; P3's graveyard card is untouched.
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('Exile (1)');
+  await expect(page.locator('.opponent[data-seat="P3"]')).not.toContainText('Exile (');
+});
+
+test("Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard", async ({ page }) => {
+  await runScenario(page, "Soul-Guide Lantern: sacrifice it to exile each opponent's graveyard");
+  await activateAndResolve(
+    page,
+    'Soul-Guide Lantern',
+    /Exile each opponent's graveyard/,
+    "Exile each opponent's graveyard.",
+  );
+  await expect(permanent(page, 'Soul-Guide Lantern')).toHaveCount(0);
+  await expect(page.getByText(/Graveyard\s*1/).first()).toBeVisible();
+});
+
+test('Soul-Guide Lantern: pay {1} and sacrifice it to draw', async ({ page }) => {
+  await runScenario(page, 'Soul-Guide Lantern: pay {1} and sacrifice it to draw');
+  await activateAndResolve(page, 'Soul-Guide Lantern', /Draw a card/, 'Draw a card.');
+  await expect(handCard(page, 'Lantern Drawn Page')).toBeVisible();
+  await expect(permanent(page, 'Soul-Guide Lantern')).toHaveCount(0);
+});

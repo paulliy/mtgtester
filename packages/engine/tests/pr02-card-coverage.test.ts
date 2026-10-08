@@ -1870,6 +1870,101 @@ describe('Peema Trailblazer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2.30 Soul-Guide Lantern
+// ---------------------------------------------------------------------------------------------
+
+describe('Soul-Guide Lantern', () => {
+  const lantern = pinned('Soul-Guide Lantern');
+  const EXILE_GRAVEYARDS = /Exile each opponent's graveyard/;
+  const DRAW = /Draw a card/;
+
+  function withGraveyards(seed: string) {
+    const ctx = pod(seed);
+    const mine = conjure(ctx, 'P1', SECRET_CARD('Lantern Own Card'), 'graveyard');
+    const theirs = conjure(ctx, 'P2', SECRET_CARD('Lantern P2 Card'), 'graveyard');
+    const third = conjure(ctx, 'P3', SECRET_CARD('Lantern P3 Card'), 'graveyard');
+    return { ctx, mine, theirs, third };
+  }
+
+  it('soul-guide-lantern-pinned-oracle-supported — appends the trigger and the exile ability to the parsed draw', () => {
+    expect(lantern.sha256).toBe('93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec');
+    expect(lantern.card.oracleText).toBe(
+      "When this artifact enters, exile target card from a graveyard.\n{T}, Sacrifice this artifact: Exile each opponent's graveyard.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
+    );
+    expectModeled(lantern.card);
+    expect(getOverride(lantern.card.oracleId)?.compose).toBe('append');
+    const def = interpretCard(lantern.card);
+    expect(def.activatedAbilities.map((entry) => entry.costs.map((cost) => cost.kind))).toEqual([
+      ['mana', 'tap', 'sacrificeSelf'],
+      ['tap', 'sacrificeSelf'],
+    ]);
+    expect(def.triggers[0]?.targets).toEqual([
+      { kind: 'cardInGraveyard', graveyardOwnerScope: 'any' },
+    ]);
+  });
+
+  it('soul-guide-lantern-enters-exiles-any-graveyard-card — cast normally, its trigger exiles an opponent’s card', () => {
+    const { ctx, theirs, mine } = withGraveyards('lantern-enters');
+    const inHand = conjure(ctx, 'P1', lantern.card, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(1));
+    takeAction(ctx, 'P1', castOptionFor(ctx, 'P1', inHand.id)!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const offered: string[][] = [];
+    settle(ctx, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot === undefined) return { index: 0, targets: new Map() };
+      offered.push([...slot.options]);
+      return { index: 0, targets: new Map([[slot.slot, theirs.id]]) };
+    });
+    // Any graveyard: yours and every opponent's cards are legal targets.
+    expect(offered[0]).toEqual(expect.arrayContaining([mine.id, theirs.id]));
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.cardId)).not.toContain(theirs.cardId);
+    expect(ctx.state.exile.map((card) => card.name)).toContain('Lantern P2 Card');
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).toContain(mine.cardId);
+  });
+
+  it('soul-guide-lantern-exile-opponents-graveyards — {T}, sacrifice: every opponent’s graveyard, not yours', () => {
+    const { ctx, mine } = withGraveyards('lantern-exile-all');
+    const source = spawn(ctx, 'P1', lantern.card);
+    const option = activationMatching(ctx, 'P1', source, EXILE_GRAVEYARDS);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(ctx.state.battlefield.some((perm) => perm.id === source.id)).toBe(false);
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P2').graveyard).toEqual([]);
+    expect(playerById(ctx, 'P3').graveyard).toEqual([]);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).toContain(mine.cardId);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toContain(
+      'Soul-Guide Lantern',
+    );
+  });
+
+  it('soul-guide-lantern-exile-costs-no-mana — the exile ability needs no mana; the draw needs {1}', () => {
+    const { ctx } = withGraveyards('lantern-costs');
+    const source = spawn(ctx, 'P1', lantern.card);
+    expect(activationMatching(ctx, 'P1', source, EXILE_GRAVEYARDS)).toBeDefined();
+    expect(activationMatching(ctx, 'P1', source, DRAW)).toBeUndefined();
+    source.tapped = true;
+    expect(activationsOf(ctx, 'P1', source)).toEqual([]);
+  });
+
+  it('soul-guide-lantern-draw — {1}, {T}, sacrifice it: draw a card, and the graveyards stay', () => {
+    const { ctx } = withGraveyards('lantern-draw');
+    const source = spawn(ctx, 'P1', lantern.card);
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const before = playerById(ctx, 'P1').hand.length;
+    takeAction(
+      ctx,
+      'P1',
+      activationMatching(ctx, 'P1', source, DRAW)!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(before + 1);
+    expect(playerById(ctx, 'P2').graveyard).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1881,6 +1976,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Soul-Guide Lantern',
+    sha256: '93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec',
+    clauseCount: 3,
+  },
   {
     name: 'Peema Trailblazer',
     sha256: 'ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51',

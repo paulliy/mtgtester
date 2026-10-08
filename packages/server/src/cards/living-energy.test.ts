@@ -38,7 +38,6 @@ const CATALOG_CONTAINED = new Set([
   'Territorial Aetherkite',
   'Duplicant',
   "Conjurer's Closet",
-  'Soul-Guide Lantern',
   'Adaptive Omnitool',
   'Druid of Purification',
   'Chaos Warp',

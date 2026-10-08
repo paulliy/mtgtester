@@ -2960,13 +2960,45 @@
     "1b5e6560-ff2e-4475-96cb-63f64c8a86db": {
       "name": "Soul-Guide Lantern",
       "oracleSha256": "93d00eeabc06f7b9cfb8d6d1ca01b8a6cce4ba7b83905a680d591c3aa5fb93ec",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
-          "implementation": ["explicitly unsupported; graveyard exile mashed with a free draw"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "soul-guide-lantern-enters-exile",
+          "oracleText": "When this artifact enters, exile target card from a graveyard.",
+          "implementation": [
+            "authored enters trigger (appended by extendCard): target cardInGraveyard with graveyardOwnerScope 'any', effect exileCard"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-enters-exiles-any-graveyard-card"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-enters-exile"]
+        },
+        {
+          "id": "soul-guide-lantern-exile-graveyards",
+          "oracleText": "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
+          "implementation": [
+            "authored activated ability (appended): costs [tap, sacrificeSelf] — no mana — effect exileEachOpponentGraveyard"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-exile-opponents-graveyards",
+            "soul-guide-lantern-exile-costs-no-mana"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-exile-graveyards"]
+        },
+        {
+          "id": "soul-guide-lantern-draw",
+          "oracleText": "{1}, {T}, Sacrifice this artifact: Draw a card.",
+          "implementation": [
+            "interpreted activated ability: costs [mana {1}, tap, sacrificeSelf], effect draw(1) — kept because extendCard appends instead of replacing"
+          ],
+          "engineTestIds": [
+            "soul-guide-lantern-pinned-oracle-supported",
+            "soul-guide-lantern-exile-costs-no-mana",
+            "soul-guide-lantern-draw"
+          ],
+          "viewerScenarioIds": ["soul-guide-lantern-viewer-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
