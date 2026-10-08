@@ -207,6 +207,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'killian-ink-duelist-viewer-reduced-bolt',
       'dragonkin-berserker-viewer-reduced-boast',
       'convergence-of-dominion-viewer-cheap-unearth',
+      'kogla-and-yidaro-viewer-enter-fight',
+      'kogla-and-yidaro-viewer-discard',
     ]);
   });
 

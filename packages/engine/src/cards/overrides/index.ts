@@ -64,6 +64,7 @@ import { registerW1RemainingOverrides } from './w1-remaining';
 import { registerW2RemainingOverrides } from './w2-remaining';
 import { registerReviewedFiveOverrides } from './reviewed-five';
 import { registerCoveragePr01Overrides } from './coverage-pr01';
+import { registerCoveragePr02Overrides } from './coverage-pr02';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -161,6 +162,7 @@ registerDeck('w1-remaining', registerW1RemainingOverrides);
 registerDeck('w2-remaining', registerW2RemainingOverrides);
 registerDeck('reviewed-five', registerReviewedFiveOverrides);
 registerDeck('coverage-pr01', registerCoveragePr01Overrides);
+registerDeck('coverage-pr02', registerCoveragePr02Overrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {

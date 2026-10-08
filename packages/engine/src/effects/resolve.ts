@@ -2198,6 +2198,16 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryPosition: 'bottom' });
         break;
       }
+      case 'shuffleSourceFromGraveyardIntoLibrary': {
+        const owner = ctx.state.players.find((player) =>
+          player.graveyard.some((card) => card.cardId === source.cardId),
+        );
+        const card = owner?.graveyard.find((candidate) => candidate.cardId === source.cardId);
+        if (owner === undefined || card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'library' });
+        shuffleLibrary(ctx, owner);
+        break;
+      }
       case 'resolvingSpellExile': {
         const entry = source.resolvingStackObject;
         if (entry?.kind !== 'spell' || entry.card === null) break;

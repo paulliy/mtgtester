@@ -3554,3 +3554,41 @@ test('Convergence of Dominion: Unearth {3} for {1}', async ({ page }) => {
   await expect(permanent(page, 'Lab Unearth Warrior')).toBeVisible();
   await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
 });
+
+test("Kogla and Yidaro: enter and fight P2's Lab Ox", async ({ page }) => {
+  await runScenario(page, "Kogla and Yidaro: enter and fight P2's Lab Ox");
+  const kogla = handCard(page, 'Kogla and Yidaro');
+  await expect(kogla).toHaveClass(/actionable/);
+  await kogla.click();
+  // Six lands pay for both the spell and the hand ability, so pick the spell explicitly.
+  await expect(
+    page.getByRole('button', { name: /^Destroy up to one target artifact/ }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Cast {2}{R}{R}{G}{G}' }).click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await page
+    .getByRole('button', { name: /^It fights target creature you don't control/ })
+    .click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Kogla and Yidaro')).toBeVisible();
+});
+
+test("Kogla and Yidaro: discard it to destroy P2's artifact", async ({ page }) => {
+  await runScenario(page, "Kogla and Yidaro: discard it to destroy P2's artifact");
+  const kogla = handCard(page, 'Kogla and Yidaro');
+  await expect(kogla).toHaveClass(/actionable/);
+  // Four lands cannot cast the spell, so the hand ability is the card's only action.
+  await kogla.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Target Lab Anrakyr Relic' }).click({ timeout: 15_000 });
+  // The library holds Kogla and Yidaro and a Forest once it is shuffled in; whichever is drawn,
+  // the ability has resolved. Passing now would stop at the land-drop reminder, so stop here.
+  await expect(page.getByText(/Kogla and Yidaro.*resolves/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  await expect(page.getByText(/draws (Forest|Kogla and Yidaro)/).first()).toBeVisible();
+});

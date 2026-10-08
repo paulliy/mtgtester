@@ -628,6 +628,12 @@ export type Effect =
    */
   | { op: 'resolvingSpellExile' }
   /**
+   * "Shuffle this card into your library from your graveyard" (Kogla and Yidaro): the ability's
+   * source card, if it is still in its owner's graveyard, goes into that library, which is then
+   * shuffled. If the card has left the graveyard, nothing happens.
+   */
+  | { op: 'shuffleSourceFromGraveyardIntoLibrary' }
+  /**
    * "Shuffle ~ into its owner's library" on a resolving spell (Beacon of Unrest): the card goes
    * from the stack into its owner's library, which that player then shuffles. A spell that
    * fizzles never reaches this instruction and goes to its owner's graveyard as usual.

@@ -11198,6 +11198,126 @@
     }
   },
   {
+    "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
+    "name": "Kogla and Yidaro",
+    "handledLines": [
+      "When ~ enters, choose one —",
+      "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+      "• It fights target creature you don't control.",
+      "• It gains trample and haste until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card",
+            "effects": [
+              {
+                "op": "destroyEachChosen",
+                "targetSlot": 0
+              },
+              {
+                "op": "shuffleSourceFromGraveyardIntoLibrary"
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "count": {
+                  "max": 1,
+                  "min": 0
+                },
+                "kind": "artifactOrEnchantment"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Kogla and Yidaro enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "It gains trample and haste until end of turn",
+                "effects": [
+                  {
+                    "keyword": "trample",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  },
+                  {
+                    "keyword": "haste",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "It fights target creature you don't control",
+                "effects": [
+                  {
+                    "first": "source",
+                    "op": "fight",
+                    "second": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
     "name": "Valakut Awakening // Valakut Stoneforge",
     "handledLines": [],
@@ -16686,6 +16806,126 @@
     "name": "Killian, Decisive Mentor",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-kogla-and-yidaro",
+    "name": "Kogla and Yidaro",
+    "handledLines": [
+      "When ~ enters, choose one —",
+      "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+      "• It fights target creature you don't control.",
+      "• It gains trample and haste until end of turn."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Destroy up to one target artifact or enchantment, shuffle this card into your library, then draw a card",
+            "effects": [
+              {
+                "op": "destroyEachChosen",
+                "targetSlot": 0
+              },
+              {
+                "op": "shuffleSourceFromGraveyardIntoLibrary"
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "count": {
+                  "max": 1,
+                  "min": 0
+                },
+                "kind": "artifactOrEnchantment"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Kogla and Yidaro enters, choose one",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "It gains trample and haste until end of turn",
+                "effects": [
+                  {
+                    "keyword": "trample",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  },
+                  {
+                    "keyword": "haste",
+                    "op": "grantKeywordUntilEot",
+                    "target": "source"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "It fights target creature you don't control",
+                "effects": [
+                  {
+                    "first": "source",
+                    "op": "fight",
+                    "second": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kogla-the-titan-ape",

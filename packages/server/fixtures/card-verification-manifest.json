@@ -5008,6 +5008,44 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "fe8c2b7e-f80d-4acb-a976-edcf436a78a9": {
+      "name": "Kogla and Yidaro",
+      "oracleSha256": "2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce",
+      "implementationStatus": "implemented-reviewed",
+      "clauses": [
+        {
+          "id": "kogla-and-yidaro-enters-modes",
+          "oracleText": "When Kogla and Yidaro enters, choose one —\n• It gains trample and haste until end of turn.\n• It fights target creature you don't control.",
+          "implementation": [
+            "coverage-pr02 override: modal enters trigger on self; mode 1 grants trample and haste to the source until end of turn",
+            "mode 2 fights (source, slot 0) with a creature an opponent controls; with no such creature the mode is not offered"
+          ],
+          "engineTestIds": [
+            "kogla-and-yidaro-pinned-oracle-supported",
+            "kogla-and-yidaro-trample-haste",
+            "kogla-and-yidaro-fight",
+            "kogla-and-yidaro-fight-needs-a-target"
+          ],
+          "viewerScenarioIds": ["kogla-and-yidaro-viewer-enter-fight"]
+        },
+        {
+          "id": "kogla-and-yidaro-discard",
+          "oracleText": "{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+          "implementation": [
+            "coverage-pr02 override: hand-zone activated ability costing {2}{R}{G} and discardSelf, with a 0..1 artifact-or-enchantment slot",
+            "destroyEachChosen slot 0, then shuffleSourceFromGraveyardIntoLibrary (a no-op once the card has left the graveyard), then draw 1"
+          ],
+          "engineTestIds": [
+            "kogla-and-yidaro-pinned-oracle-supported",
+            "kogla-and-yidaro-discard-ability",
+            "kogla-and-yidaro-up-to-one",
+            "kogla-and-yidaro-left-graveyard"
+          ],
+          "viewerScenarioIds": ["kogla-and-yidaro-viewer-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

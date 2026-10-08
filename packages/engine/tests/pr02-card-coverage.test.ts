@@ -50,7 +50,7 @@ interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
 }
 
-const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json'];
+const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json', 'fixtures/coverage-pr02-oracle.json'];
 const pinnedCards = PINNED_FILES.flatMap(
   (file) =>
     (JSON.parse(readFileSync(join(import.meta.dirname, file), 'utf8')) as PinnedFixture).cards,
@@ -3865,6 +3865,145 @@ describe('Convergence of Dominion', () => {
   });
 });
 
+describe('Kogla and Yidaro', () => {
+  const kogla = pinned('Kogla and Yidaro');
+  const TRAMPLE = /trample and haste/;
+  const FIGHT = /fights target creature/;
+  const relic = () =>
+    oracle({ name: 'Kogla Rival Relic', typeLine: 'Artifact', power: null, toughness: null });
+
+  /** Kogla enters; answer its mode choice with `mode` and any target with `target`. */
+  function enter(ctx: GameContext, mode: RegExp, target?: string) {
+    const self = enterFor(ctx, 'P1', kogla.card)!;
+    const modesOffered: string[][] = [];
+    settle(ctx, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined && target !== undefined) {
+        return { index: 0, targets: new Map([[slot.slot, target]]) };
+      }
+      if (decision.options.some((option) => TRAMPLE.test(option.description))) {
+        modesOffered.push(decision.options.map((option) => option.description));
+        return optionMatching(decision, mode);
+      }
+      return { index: 0, targets: new Map() };
+    });
+    return { self, modesOffered };
+  }
+
+  it('kogla-and-yidaro-pinned-oracle-supported — a modal enters trigger and a discard ability from hand', () => {
+    expect(kogla.sha256).toBe('2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce');
+    expect(kogla.card.oracleText).toBe(
+      "When Kogla and Yidaro enters, choose one —\n• It gains trample and haste until end of turn.\n• It fights target creature you don't control.\n{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.",
+    );
+    expectModeled(kogla.card);
+    const def = interpretCard(kogla.card);
+    expect(def.triggers[0]?.modes?.options.map((option) => option.description)).toEqual([
+      'It gains trample and haste until end of turn',
+      "It fights target creature you don't control",
+    ]);
+    expect(def.activatedAbilities[0]).toMatchObject({ zone: 'hand' });
+    expect(def.activatedAbilities[0]?.costs.map((cost) => cost.kind)).toEqual([
+      'mana',
+      'discardSelf',
+    ]);
+  });
+
+  it('kogla-and-yidaro-trample-haste — the first mode gives it trample and haste until end of turn', () => {
+    const ctx = pod('kogla-trample');
+    spawn(ctx, 'P2', oracle({ name: 'Kogla Rival Bear', typeLine: 'Creature — Bear' }));
+    const { self } = enter(ctx, TRAMPLE);
+    const keywords = computeCharacteristics(ctx, self).keywords;
+    expect(keywords).toEqual(expect.arrayContaining(['trample', 'haste']));
+    endUntilEotEffects(ctx);
+    expect(computeCharacteristics(ctx, self).keywords).not.toContain('haste');
+  });
+
+  it('kogla-and-yidaro-fight — the second mode fights a creature you don’t control', () => {
+    const ctx = pod('kogla-fight');
+    const bear = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Kogla Rival Bear', typeLine: 'Creature — Bear', power: '3', toughness: '3' }),
+    );
+    spawn(ctx, 'P1', oracle({ name: 'Kogla Own Bear', typeLine: 'Creature — Bear' }));
+    const { self } = enter(ctx, FIGHT, bear.id);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.some((perm) => perm.id === bear.id)).toBe(false);
+    expect(self.damageMarked).toBe(3);
+  });
+
+  it('kogla-and-yidaro-fight-needs-a-target — with no opposing creature only the first mode is offered', () => {
+    const ctx = pod('kogla-no-target');
+    spawn(ctx, 'P1', oracle({ name: 'Kogla Own Bear', typeLine: 'Creature — Bear' }));
+    const { self, modesOffered } = enter(ctx, TRAMPLE);
+    expect(modesOffered.flat().some((text) => FIGHT.test(text))).toBe(false);
+    expect(computeCharacteristics(ctx, self).keywords).toContain('haste');
+  });
+
+  it('kogla-and-yidaro-discard-ability — discard it for {2}{R}{G}: destroy an artifact, shuffle it in, draw', () => {
+    const ctx = pod('kogla-channel');
+    const target = spawn(ctx, 'P2', relic());
+    const inHand = conjure(ctx, 'P1', kogla.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'G' }, ...generic(2)]);
+    const option = priorityOptions(ctx, 'P1').find((entry) =>
+      /Kogla and Yidaro \(hand\)/.test(entry.description),
+    );
+    expect(option).toBeDefined();
+    const libraryBefore = playerById(ctx, 'P1').library.length;
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      return slot === undefined
+        ? { index: 0, targets: new Map() }
+        : { index: 0, targets: new Map([[slot.slot, target.id]]) };
+    });
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.cardId)).toContain(inHand.cardId);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.id === target.id)).toBe(false);
+    const p1 = playerById(ctx, 'P1');
+    expect(p1.graveyard.map((card) => card.cardId)).not.toContain(inHand.cardId);
+    // Shuffled in (+1), then one card drawn (-1).
+    expect(p1.library).toHaveLength(libraryBefore);
+    expect(p1.hand).toHaveLength(1);
+  });
+
+  it('kogla-and-yidaro-up-to-one — with no artifact or enchantment it still shuffles in and draws', () => {
+    const ctx = pod('kogla-no-relic');
+    const inHand = conjure(ctx, 'P1', kogla.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'G' }, ...generic(2)]);
+    const option = priorityOptions(ctx, 'P1').find((entry) =>
+      /Kogla and Yidaro \(hand\)/.test(entry.description),
+    );
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const p1 = playerById(ctx, 'P1');
+    expect(p1.graveyard.map((card) => card.cardId)).not.toContain(inHand.cardId);
+    expect(p1.hand).toHaveLength(1);
+  });
+
+  it('kogla-and-yidaro-left-graveyard — if the card left the graveyard, nothing is shuffled but you still draw', () => {
+    const ctx = pod('kogla-left');
+    const inHand = conjure(ctx, 'P1', kogla.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'R' }, { symbol: 'G' }, ...generic(2)]);
+    takeAction(
+      ctx,
+      'P1',
+      priorityOptions(ctx, 'P1').find((entry) =>
+        /Kogla and Yidaro \(hand\)/.test(entry.description),
+      )!.payload as PriorityActionPayload,
+    );
+    const discarded = playerById(ctx, 'P1').graveyard.find(
+      (card) => card.cardId === inHand.cardId,
+    )!;
+    pump(moveObject(ctx, discarded, { zone: 'exile' }));
+    const libraryBefore = playerById(ctx, 'P1').library.length;
+    resolveTop(ctx);
+    expect(ctx.state.exile.map((card) => card.cardId)).toContain(inHand.cardId);
+    expect(playerById(ctx, 'P1').library).toHaveLength(libraryBefore - 1);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(1);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3877,6 +4016,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Kogla and Yidaro',
+    sha256: '2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce',
+    clauseCount: 2,
+  },
   {
     name: 'Convergence of Dominion',
     sha256: 'd6f51e80f201a57dad225bd9f055c7d41727a5a5e286652550d2825dd828acdc',

@@ -1444,18 +1444,17 @@
   {
     "oracleId": "fe8c2b7e-f80d-4acb-a976-edcf436a78a9",
     "name": "Kogla and Yidaro",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When ~ enters, choose one —\"",
-      "unrecognized rules text: \"• It gains trample and haste until end of turn.\"",
-      "unrecognized rules text: \"• It fights target creature you don't control.\"",
-      "unrecognized rules text: \"{2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card.\""
-    ],
+    "package": "PR02.33",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["unrecognized rules text: \"When ~ enters, choose one —\""],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8b21062e-97b0-4967-96df-30e8309f4fba",

@@ -1486,6 +1486,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Convergence of Dominion: Unearth {3} for {1}'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kogla and Yidaro: enter and fight P2's Lab Ox"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kogla and Yidaro: discard it to destroy P2's artifact"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

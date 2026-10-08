@@ -203,6 +203,11 @@ const COVERAGE_PR01: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr01-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR02 cards that had no earlier pinned fixture. */
+const COVERAGE_PR02: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr02-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
   const entry = file.cards.find((candidate) => candidate.card.name === name);
   if (entry === undefined) throw new Error(`No pinned Oracle fixture for ${name}`);
@@ -6954,6 +6959,73 @@ function convergenceOfDominionScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function koglaYidaroScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    inHandOnly: boolean;
+  },
+): CardTestScenario {
+  const kogla = pinnedFrom(COVERAGE_PR02, 'Kogla and Yidaro');
+  const lands = [MOUNTAIN, MOUNTAIN, FOREST, FOREST, FOREST, FOREST];
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: kogla.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [kogla.card, ...lands, LAB_ZOMBIE],
+      P2: [LAB_OX, LAB_ANRAKYR_RELIC, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Kogla and Yidaro'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: spec.inHandOnly
+            ? ['Mountain', 'Forest', 'Forest', 'Forest']
+            : lands.map((land) => land.name),
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Anrakyr Relic'] },
+      ],
+    },
+  });
+}
+
+const koglaYidaroFightScenario = (gameId: GameId): CardTestScenario =>
+  koglaYidaroScenario(gameId, {
+    id: 'kogla-and-yidaro-viewer-enter-fight',
+    title: "Kogla and Yidaro: enter and fight P2's Lab Ox",
+    instructions: [
+      'Cast Kogla and Yidaro with your six lands.',
+      "Choose its second mode and fight P2's Lab Ox.",
+    ],
+    expectedOutcome: 'Lab Ox dies, and Kogla and Yidaro has 4 damage marked.',
+    clauseIds: ['kogla-and-yidaro-enters-modes'],
+    inHandOnly: false,
+  });
+
+const koglaYidaroDiscardScenario = (gameId: GameId): CardTestScenario =>
+  koglaYidaroScenario(gameId, {
+    id: 'kogla-and-yidaro-viewer-discard',
+    title: "Kogla and Yidaro: discard it to destroy P2's artifact",
+    instructions: [
+      "Activate Kogla and Yidaro's ability from your hand for {2}{R}{G}, targeting P2's Lab Anrakyr Relic.",
+    ],
+    expectedOutcome:
+      'Lab Anrakyr Relic is destroyed, Kogla and Yidaro is shuffled into your library, and you draw a card.',
+    clauseIds: ['kogla-and-yidaro-discard'],
+    inHandOnly: true,
+  });
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7197,6 +7269,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'killian-ink-duelist-viewer-reduced-bolt',
   'dragonkin-berserker-viewer-reduced-boast',
   'convergence-of-dominion-viewer-cheap-unearth',
+  'kogla-and-yidaro-viewer-enter-fight',
+  'kogla-and-yidaro-viewer-discard',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7360,6 +7434,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'killian-ink-duelist-viewer-reduced-bolt': killianScenario,
   'dragonkin-berserker-viewer-reduced-boast': dragonkinBerserkerScenario,
   'convergence-of-dominion-viewer-cheap-unearth': convergenceOfDominionScenario,
+  'kogla-and-yidaro-viewer-enter-fight': koglaYidaroFightScenario,
+  'kogla-and-yidaro-viewer-discard': koglaYidaroDiscardScenario,
 };
 
 export function createCardTestScenario(

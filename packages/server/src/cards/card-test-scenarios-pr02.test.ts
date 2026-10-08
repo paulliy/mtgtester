@@ -755,3 +755,28 @@ describe('Convergence of Dominion Card Test Lab scenario', () => {
     replays('convergence-of-dominion-viewer-cheap-unearth', steps);
   });
 });
+
+describe('Kogla and Yidaro Card Test Lab scenarios', () => {
+  it('kogla-and-yidaro-viewer-enter-fight — cast it, choose the fight, Lab Ox dies', () => {
+    const steps: Step[] = [
+      { action: 'Cast Kogla and Yidaro' },
+      { action: 'fights target creature' },
+    ];
+    const { onBattlefield } = run('kogla-and-yidaro-viewer-enter-fight', steps);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(onBattlefield('Kogla and Yidaro')[0]?.damageMarked).toBe(4);
+    replays('kogla-and-yidaro-viewer-enter-fight', steps);
+  });
+
+  it('kogla-and-yidaro-viewer-discard — discard it to destroy the Relic, shuffle it in, draw', () => {
+    const steps: Step[] = [
+      { action: 'Kogla and Yidaro (hand)' },
+      { action: 'Target Lab Anrakyr Relic' },
+    ];
+    const { seat, onBattlefield } = run('kogla-and-yidaro-viewer-discard', steps);
+    expect(onBattlefield('Lab Anrakyr Relic')).toEqual([]);
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(seat('P1').hand).toHaveLength(1);
+    replays('kogla-and-yidaro-viewer-discard', steps);
+  });
+});
