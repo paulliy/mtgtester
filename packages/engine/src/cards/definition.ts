@@ -194,7 +194,7 @@ export interface CardDefinition {
   announcesX?: boolean;
   /** An optional announced additional mana cost such as kicker, squad, or offspring. */
   optionalAdditionalCost?: {
-    mechanic: 'kicker' | 'squad' | 'offspring';
+    mechanic: 'kicker' | 'squad' | 'offspring' | 'replicate';
     cost: ParsedManaCost;
     repeatable?: true;
   };

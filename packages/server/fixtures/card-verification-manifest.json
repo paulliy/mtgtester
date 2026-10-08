@@ -986,13 +986,55 @@
     "cdfa9de4-7d7d-4638-8ac4-793ece6372dd": {
       "name": "Changing Loyalty",
       "oracleSha256": "c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
-          "oracleText": "Replicate {2}",
-          "implementation": ["explicitly unsupported; Replicate is not implemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "changing-loyalty-replicate",
+          "oracleText": "Flash\nReplicate {2} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies. Copies become tokens.)",
+          "implementation": [
+            "interpreted flash keyword",
+            "interpreted Replicate {2}: optionalAdditionalCost replicate, repeatable; each affordable count is its own cast option",
+            "queueKeywordCastTriggers puts a replicate trigger on the stack; replicateCopies makes one copy per payment, each keeping or changing its target (CR 707.10c), from last known information if the spell left the stack",
+            "a copy of a permanent spell becomes an uncreated token as it resolves (CR 608.3f), an Aura copy attached to its target"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-pinned-oracle-supported",
+            "changing-loyalty-replicate-counts",
+            "changing-loyalty-copies-become-aura-tokens",
+            "changing-loyalty-copy-may-keep-its-target",
+            "changing-loyalty-copies-use-last-known-information",
+            "changing-loyalty-flash"
+          ],
+          "viewerScenarioIds": ["changing-loyalty-viewer-replicate"]
+        },
+        {
+          "id": "changing-loyalty-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell with a creature target; it enters attached to that creature"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-pinned-oracle-supported",
+            "changing-loyalty-copies-become-aura-tokens"
+          ],
+          "viewerScenarioIds": [
+            "changing-loyalty-viewer-replicate",
+            "changing-loyalty-viewer-steal"
+          ]
+        },
+        {
+          "id": "changing-loyalty-steal",
+          "oracleText": "When enchanted creature dies, return it to the battlefield under your control.",
+          "implementation": [
+            "interpreted dies trigger on the permanent the Aura is attached to (attachedToSource, looked back across the death, CR 603.10a)",
+            "graveyardToBattlefield on the trigger object, found in its owner's graveyard, under the trigger controller's control"
+          ],
+          "engineTestIds": [
+            "changing-loyalty-steals-on-death",
+            "changing-loyalty-token-copy-steals-too",
+            "changing-loyalty-unattached-death-does-nothing"
+          ],
+          "viewerScenarioIds": ["changing-loyalty-viewer-steal"]
         }
       ],
       "gameplayAiScenarioIds": []

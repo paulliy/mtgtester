@@ -8755,12 +8755,6 @@
     }
   },
   {
-    "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
-    "name": "Changing Loyalty",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
     "name": "Bespoke Battlewagon",
     "handledLines": [
@@ -13293,12 +13287,6 @@
   {
     "oracleId": "oracle-champion-of-lambholt",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-changing-loyalty",
-    "name": "Changing Loyalty",
     "handledLines": [],
     "def": {}
   },

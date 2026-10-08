@@ -57,7 +57,15 @@ export function actionLabel(action: LegalAction): string {
   if (typeof variant === 'string') return variantLabel(action, variant);
   if (typeof ability === 'string') return ability;
   if (action.type === 'playLand') return 'Play land';
-  if (action.type === 'castSpell') return 'Cast';
+  if (action.type === 'castSpell') {
+    // Replicate, squad and kicker counts are separate cast options with the same verb.
+    const count = data(action, 'optionalCostCount');
+    const mechanic = data(action, 'optionalMechanic');
+    if (typeof count === 'number' && count > 0 && typeof mechanic === 'string') {
+      return `Cast with ${mechanic} ${count}`;
+    }
+    return 'Cast';
+  }
   // Combat actions (attack/block) land here: falling back to `action.type` renders every
   // option in a source's button list as the same bare word ("attack", "block", …), which is
   // indistinguishable when a creature can attack three different opponents. `description` is

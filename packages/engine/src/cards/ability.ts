@@ -563,6 +563,23 @@ export type Effect =
   | { op: 'preventCombatDamageAll' }
   | { op: 'preventCombatDamageToController' }
   | { op: 'copyTargetSpell'; target: number }
+  /**
+   * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller
+   * choosing to keep or change its targets (CR 707.10c). `spell` is the cast spell as it was put
+   * on the stack — the last known information the copies use if it has left (CR 707.10).
+   */
+  | {
+      op: 'replicateCopies';
+      count: number;
+      spell: {
+        stackObjectId: string;
+        oracleId: string;
+        name: string;
+        targets: string[];
+        oracleText: string;
+        manaCost: string | null;
+      };
+    }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }
   | { op: 'angelGrace' }
   | { op: 'arcbond'; target: EffectRef }

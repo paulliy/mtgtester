@@ -209,6 +209,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'convergence-of-dominion-viewer-cheap-unearth',
       'kogla-and-yidaro-viewer-enter-fight',
       'kogla-and-yidaro-viewer-discard',
+      'changing-loyalty-viewer-replicate',
+      'changing-loyalty-viewer-steal',
     ]);
   });
 

@@ -780,3 +780,45 @@ describe('Kogla and Yidaro Card Test Lab scenarios', () => {
     replays('kogla-and-yidaro-viewer-discard', steps);
   });
 });
+
+describe('Changing Loyalty Card Test Lab scenarios', () => {
+  it('changing-loyalty-viewer-replicate — replicate once; the copy enchants the Bear as a token', () => {
+    const steps: Step[] = [
+      { action: 'Cast Changing Loyalty ({3}{B}) — replicate 1', targets: ['Lab Ox'] },
+      { action: 'Target Lab Generic Bear' },
+    ];
+    const { state, onBattlefield } = run('changing-loyalty-viewer-replicate', steps);
+    const ox = onBattlefield('Lab Ox')[0]!;
+    const bear = onBattlefield('Lab Generic Bear')[0]!;
+    const auras = onBattlefield('Changing Loyalty');
+    expect(auras).toHaveLength(2);
+    // The engine state carries `isToken` beyond the shared permanent shape.
+    const isToken = (aura: (typeof auras)[number] | undefined) =>
+      (aura as { isToken?: boolean } | undefined)?.isToken;
+    expect(isToken(auras.find((aura) => aura.attachedTo === ox.id))).toBe(false);
+    expect(isToken(auras.find((aura) => aura.attachedTo === bear.id))).toBe(true);
+    expect(state.battlefield.filter((perm) => perm.name === 'Swamp').every((s) => s.tapped)).toBe(
+      true,
+    );
+    replays('changing-loyalty-viewer-replicate', steps);
+  });
+
+  it('changing-loyalty-viewer-steal — the enchanted Lab Ox dies and returns under your control', () => {
+    const steps: Step[] = [
+      { action: 'Cast Changing Loyalty ({1}{B})', targets: ['Lab Ox'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Ox'] },
+    ];
+    const { seat, onBattlefield } = run('changing-loyalty-viewer-steal', steps);
+    expect(onBattlefield('Lab Ox')).toEqual([
+      expect.objectContaining({ controllerId: 'P1', ownerId: 'P2' }),
+    ]);
+    expect(onBattlefield('Changing Loyalty')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Changing Loyalty', 'Lab Doom']);
+    replays('changing-loyalty-viewer-steal', steps);
+  });
+});

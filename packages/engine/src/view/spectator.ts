@@ -373,6 +373,9 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'resolved':
       return { ...base, text: `${str(p, 'description') ?? 'spell'} resolves` };
 
+    case 'spellCopied':
+      return { ...base, text: `copies ${str(p, 'name') ?? 'a spell'}` };
+
     case 'counterSpell':
       return {
         ...base,

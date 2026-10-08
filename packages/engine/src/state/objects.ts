@@ -1327,10 +1327,12 @@ export function queueTriggersForEvent(
       const from: SelectorSource = {
         cardId: source.cardId,
         controllerId: source.controllerId,
+        // "When enchanted creature dies" looks back (CR 603.10a): the dying permanent has left
+        // the battlefield, but the Aura is still attached to it until state-based actions run.
         attachedToCardId:
           source.attachedTo === null
             ? null
-            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
+            : (sources.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
       };
       const matched = subjects.filter((s) => {
         // "an opponent controls" (Thunderbreak Regent) — the watcher's own targeting spells
@@ -1694,6 +1696,36 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
   const def = ctx.defs.get(spell.sourceOracleId);
   if (def === undefined) return;
+  // Replicate (CR 702.56a): "When you cast this spell, if a replicate cost was paid for it, copy
+  // it for each time its replicate cost was paid."
+  const replicated = spell.optionalCostCounts?.replicate ?? 0;
+  if (def.optionalAdditionalCost?.mechanic === 'replicate' && replicated > 0) {
+    ctx.state.pendingTriggers.push({
+      controllerId: spell.controllerId,
+      sourceCardId: spell.sourceCardId,
+      sourceOracleId: spell.sourceOracleId,
+      sourceName: spell.description,
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [
+          {
+            op: 'replicateCopies',
+            count: replicated,
+            spell: {
+              stackObjectId: spell.id,
+              oracleId: spell.sourceOracleId,
+              name: spell.description,
+              targets: [...spell.targets],
+              oracleText: spell.card?.oracleText ?? '',
+              manaCost: spell.card?.manaCost ?? null,
+            },
+          },
+        ],
+        description: `${spell.description}: Replicate ${replicated}`,
+      },
+    });
+  }
   const cascadeCount = def.keywords.filter((keyword) => keyword === 'cascade').length;
   if (cascadeCount === 0) return;
 

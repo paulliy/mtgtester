@@ -85,7 +85,6 @@ const REASONS: Record<string, string> = {
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
-  'Changing Loyalty': 'Replicate is claimed without a replicate implementation.',
   'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
   'Fallen Ideal':
     'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
@@ -308,6 +307,7 @@ describe('Marchesa catalog audit containment', () => {
     'Killian, Ink Duelist',
     'Dragonkin Berserker',
     'Convergence of Dominion',
+    'Changing Loyalty',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

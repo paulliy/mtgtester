@@ -147,7 +147,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       "Tibalt's Trickery",
       'Animate Dead',
       'Arcane Lighthouse',
-      'Changing Loyalty',
       'Eldrazi Conscription',
       'Fallen Ideal',
       'Firemane Commando',

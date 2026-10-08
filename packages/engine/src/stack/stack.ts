@@ -9,7 +9,7 @@ import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
 import { executeAbility, isTargetStillLegal } from '../effects/resolve';
 import { emit, debug } from '../log/log';
-import { moveObject } from '../state/objects';
+import { makePermanent, moveObject, queueTriggersForObject } from '../state/objects';
 import { getDefByOracleId, sourceColorsOf } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
@@ -154,6 +154,8 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
   // instants/sorceries go to their owner's graveyard.
   if (top.kind === 'spell' && top.card !== null) {
     yield* finishSpellCard(ctx, top);
+  } else if (top.kind === 'spell' && top.permanentSpellCopy !== undefined) {
+    putPermanentSpellCopyOntoBattlefield(ctx, top);
   }
   emit(ctx, 'resolved', { description: top.description }, top.controllerId);
 }
@@ -221,4 +223,39 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   } else {
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }
+}
+
+/**
+ * A copy of a permanent spell becomes a token as it resolves (CR 608.3f, 707.10f) — not
+ * "created", so no token-creation trigger or replacement applies. An Aura copy enters attached
+ * to its target (CR 303.4f), as the spell it copies would.
+ */
+function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineStackObject): void {
+  const def = getDefByOracleId(ctx, spell.sourceOracleId, spell.description);
+  const perm = makePermanent(
+    ctx,
+    {
+      id: `o-${ctx.state.nextObjectNum++}`,
+      cardId: spell.sourceCardId,
+      oracleId: spell.sourceOracleId,
+      ownerId: spell.controllerId,
+      name: def.name,
+      typeLine: def.typeLine,
+      oracleText: spell.permanentSpellCopy?.oracleText ?? '',
+      manaCost: spell.permanentSpellCopy?.manaCost ?? null,
+      isToken: true,
+      isCommander: false,
+      zone: 'battlefield',
+    },
+    spell.controllerId,
+  );
+  if (def.subtypes.includes('Aura')) perm.attachedTo = spell.targets[0] ?? null;
+  ctx.state.battlefield.push(perm);
+  emit(
+    ctx,
+    'permanentSpellCopyResolved',
+    { name: def.name, cardId: perm.cardId },
+    spell.controllerId,
+  );
+  queueTriggersForObject(ctx, 'enters', perm);
 }

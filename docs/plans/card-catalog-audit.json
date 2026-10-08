@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 43,
+      "uniqueOracleIds": 42,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 54,
+      "uniqueOracleIds": 53,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5879,6 +5879,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr02",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+      "name": "Changing Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Registrations deleted (the unsupportedCard in silverquill-influence-remaining.ts and the shadowed unimplemented() in silverquill-influence.ts): Replicate is a repeatable optional cost with a cast trigger copying the spell, copies of a permanent spell resolve into tokens (an Aura copy attached to its target), and the interpreter reads 'When enchanted creature dies, return it to the battlefield under your control'; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+      "name": "Changing Loyalty",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr02",
+      "note": "Shadowed unimplemented() deleted together with the silverquill-influence-remaining.ts registration; see that entry."
     }
   ]
 }

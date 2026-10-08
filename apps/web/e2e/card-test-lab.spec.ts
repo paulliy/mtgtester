@@ -2161,7 +2161,7 @@ test('Hunting Wilds: kicked, two Forests become 3/3 haste creatures', async ({ p
   await wilds.click();
   // The card offers a plain cast and a kicked one; choose the kicker.
   await expect(page.getByRole('button', { name: 'Cast {3}{G}', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /^Cast \{6\}\{G\}\{G\}/ }).click();
+  await page.getByRole('button', { name: 'Cast with kicker 1 {6}{G}{G}' }).click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
 
@@ -2255,7 +2255,7 @@ test('Vastwood Surge: kicked, two basics and counters on your creatures', async 
   await surge.click();
   // The card offers a plain cast and a kicked one; choose the kicker.
   await expect(page.getByRole('button', { name: 'Cast {3}{G}', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /^Cast \{7\}\{G\}/ }).click();
+  await page.getByRole('button', { name: 'Cast with kicker 1 {7}{G}' }).click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
 
@@ -3591,4 +3591,54 @@ test("Kogla and Yidaro: discard it to destroy P2's artifact", async ({ page }) =
   });
   await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
   await expect(page.getByText(/draws (Forest|Kogla and Yidaro)/).first()).toBeVisible();
+});
+
+test("Changing Loyalty: replicate once onto both of P2's creatures", async ({ page }) => {
+  await runScenario(page, "Changing Loyalty: replicate once onto both of P2's creatures");
+  const loyalty = handCard(page, 'Changing Loyalty');
+  await expect(loyalty).toHaveClass(/actionable/);
+  await loyalty.click();
+  // The plain cast and the replicated one are separate choices.
+  await expect(page.getByRole('button', { name: 'Cast {1}{B}', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cast with replicate 1 {3}{B}' }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // The replicate trigger asks for each copy's target: keep Lab Ox or choose another creature.
+  await expect(page.getByRole('button', { name: 'Keep Lab Ox as the target' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Generic Bear' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/copies Changing Loyalty/).first()).toBeVisible();
+  await expect(page.getByText(/Copy of Changing Loyalty resolves/).first()).toBeVisible();
+  // The original and its token copy share one stacked chip on your side of the board.
+  await expect(permanent(page, 'Changing Loyalty')).toContainText('×2');
+});
+
+test("Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it", async ({ page }) => {
+  await runScenario(page, "Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it");
+  const loyalty = handCard(page, 'Changing Loyalty');
+  await expect(loyalty).toHaveClass(/actionable/);
+  await loyalty.click();
+  await page.getByRole('button', { name: 'Cast {1}{B}', exact: true }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await confirm(page);
+  await awaitResolution(page, 'Changing Loyalty', 0);
+  await expect(permanent(page, 'Changing Loyalty')).toBeVisible();
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await confirm(page);
+  const stolen = page.locator('.human-zone').getByRole('img', { name: 'Lab Ox', exact: true });
+  await passUntil(page, stolen);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).getByRole('img', { name: 'Lab Ox' }),
+  ).toHaveCount(0);
+  await expect(permanent(page, 'Changing Loyalty')).toHaveCount(0);
 });

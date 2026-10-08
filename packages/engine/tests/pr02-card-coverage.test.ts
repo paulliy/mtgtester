@@ -3712,6 +3712,162 @@ describe('Hour of Reckoning', () => {
   });
 });
 
+describe('Changing Loyalty', () => {
+  const loyalty = pinned('Changing Loyalty');
+  const creature = (name: string) => oracle({ name, typeLine: 'Creature — Ox' });
+
+  function ready(seed: string, mana: number) {
+    const ctx = pod(seed);
+    const ox = spawn(ctx, 'P2', creature('Loyalty Rival Ox'));
+    const bear = spawn(ctx, 'P2', creature('Loyalty Rival Bear'));
+    const inHand = conjure(ctx, 'P1', loyalty.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, ...generic(mana - 1)]);
+    return { ctx, ox, bear, inHand };
+  }
+
+  const replicates = (option: { payload?: unknown }) =>
+    (option.payload as PriorityActionPayload & { optionalCostCount?: number }).optionalCostCount ??
+    0;
+
+  /** Cast it with `count` replicate payments targeting `target`. */
+  function cast(ctx: GameContext, objectId: string, count: number, target: string) {
+    const option = castOptionsFor(ctx, 'P1', objectId).find((entry) => replicates(entry) === count);
+    expect(option, `replicate ${count}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target]]),
+    );
+  }
+
+  const attachedTo = (ctx: GameContext, id: string) =>
+    ctx.state.battlefield.filter(
+      (perm) => perm.attachedTo === id && perm.name === 'Changing Loyalty',
+    );
+
+  it('changing-loyalty-pinned-oracle-supported — flash, replicate {2}, enchant creature, and a steal-on-death trigger', () => {
+    expect(loyalty.sha256).toBe('c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0');
+    expect(loyalty.card.oracleText).toBe(
+      'Flash\nReplicate {2} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies. Copies become tokens.)\nEnchant creature\nWhen enchanted creature dies, return it to the battlefield under your control.',
+    );
+    expectModeled(loyalty.card);
+    expect(getOverride(loyalty.card.oracleId)).toBeUndefined();
+    const def = interpretCard(loyalty.card);
+    expect(def.keywords).toContain('flash');
+    expect(def.optionalAdditionalCost).toMatchObject({ mechanic: 'replicate', repeatable: true });
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: {
+          when: 'dies',
+          subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+        },
+        effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }],
+      }),
+    ]);
+  });
+
+  it('changing-loyalty-replicate-counts — each affordable number of replicate payments is offered', () => {
+    const { ctx, inHand } = ready('loyalty-counts', 6);
+    // {1}{B} plus {2} per copy: six mana pays for up to two copies.
+    expect(castOptionsFor(ctx, 'P1', inHand.id).map(replicates)).toEqual([0, 1, 2]);
+  });
+
+  it('changing-loyalty-copies-become-aura-tokens — a replicated copy chooses a new target and resolves into an Aura token', () => {
+    const { ctx, ox, bear, inHand } = ready('loyalty-copy', 4);
+    cast(ctx, inHand.id, 1, ox.id);
+    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
+    // The replicate trigger is on the stack above the spell; its copy retargets the Bear.
+    const prompts: string[] = [];
+    settle(ctx, (decision) => {
+      prompts.push(decision.prompt ?? '');
+      return optionMatching(decision, /Target Loyalty Rival Bear/);
+    });
+    expect(prompts).toContain('Changing Loyalty: choose a target for copy 1 of 1.');
+    const onOx = attachedTo(ctx, ox.id);
+    const onBear = attachedTo(ctx, bear.id);
+    expect(onOx).toHaveLength(1);
+    expect(onOx[0]?.isToken).toBe(false);
+    expect(onBear).toHaveLength(1);
+    expect(onBear[0]?.isToken).toBe(true);
+    expect(onBear[0]?.controllerId).toBe('P1');
+    // A copy of a permanent spell is not "created" (CR 608.3f).
+    expect(ctx.state.eventLog.some((event) => event.type === 'tokenCreated')).toBe(false);
+  });
+
+  it('changing-loyalty-copy-may-keep-its-target — the copy may keep the original target', () => {
+    const { ctx, ox, inHand } = ready('loyalty-keep', 4);
+    cast(ctx, inHand.id, 1, ox.id);
+    settle(ctx, (decision) => optionMatching(decision, /Keep Loyalty Rival Ox/));
+    expect(attachedTo(ctx, ox.id)).toHaveLength(2);
+  });
+
+  it('changing-loyalty-copies-use-last-known-information — the copies are created even if the original left the stack', () => {
+    const { ctx, ox, bear, inHand } = ready('loyalty-lki', 4);
+    cast(ctx, inHand.id, 1, ox.id);
+    // Counter the original before the replicate trigger resolves.
+    const original = ctx.state.stack.findIndex((entry) => entry.card?.cardId === inHand.cardId);
+    expect(original).toBeGreaterThanOrEqual(0);
+    ctx.state.stack.splice(original, 1);
+    settle(ctx, (decision) => optionMatching(decision, /Target Loyalty Rival Bear/));
+    expect(attachedTo(ctx, bear.id)).toEqual([expect.objectContaining({ isToken: true })]);
+    expect(attachedTo(ctx, ox.id)).toEqual([]);
+  });
+
+  it("changing-loyalty-steals-on-death — when the enchanted opponent's creature dies, it returns under your control", () => {
+    const { ctx, ox, inHand } = ready('loyalty-steal', 2);
+    cast(ctx, inHand.id, 0, ox.id);
+    settle(ctx);
+    expect(attachedTo(ctx, ox.id)).toHaveLength(1);
+    pump(moveObject(ctx, ox, { zone: 'graveyard' }));
+    settle(ctx);
+    const returned = ctx.state.battlefield.find((perm) => perm.cardId === ox.cardId);
+    expect(returned?.controllerId).toBe('P1');
+    expect(returned?.ownerId).toBe('P2');
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual([]);
+    // The Aura itself went to the graveyard once its creature left (CR 704.5m).
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Changing Loyalty']);
+  });
+
+  it('changing-loyalty-token-copy-steals-too — an Aura token from replicate has the same trigger', () => {
+    const { ctx, ox, bear, inHand } = ready('loyalty-token-steal', 4);
+    cast(ctx, inHand.id, 1, ox.id);
+    settle(ctx, (decision) => optionMatching(decision, /Target Loyalty Rival Bear/));
+    const token = attachedTo(ctx, bear.id)[0]!;
+    pump(moveObject(ctx, bear, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(ctx.state.battlefield.find((perm) => perm.cardId === bear.cardId)?.controllerId).toBe(
+      'P1',
+    );
+    // The token Aura ceased to exist rather than sitting in a graveyard (CR 704.5d).
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === token.cardId)).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+  });
+
+  it('changing-loyalty-flash — it can be cast on an opponent’s turn', () => {
+    const { ctx, ox, inHand } = ready('loyalty-flash', 2);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    cast(ctx, inHand.id, 0, ox.id);
+    settle(ctx);
+    expect(attachedTo(ctx, ox.id)).toHaveLength(1);
+  });
+
+  it('changing-loyalty-unattached-death-does-nothing — another creature dying does not trigger it', () => {
+    const { ctx, ox, bear, inHand } = ready('loyalty-other', 2);
+    cast(ctx, inHand.id, 0, ox.id);
+    settle(ctx);
+    pump(moveObject(ctx, bear, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual([
+      'Loyalty Rival Bear',
+    ]);
+    expect(attachedTo(ctx, ox.id)).toHaveLength(1);
+  });
+});
+
 describe('Killian, Ink Duelist', () => {
   const killian = pinned('Killian, Ink Duelist');
   const SHOCK = oracle({
@@ -4269,6 +4425,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Changing Loyalty',
+    sha256: 'c57a249316e0f083aae223224957ca14c9fd90badb941b38c27ed6c6cab578d0',
+    clauseCount: 3,
+  },
   {
     name: 'Kogla and Yidaro',
     sha256: '2282eee96e7fab34d482770704f913a3f2e579f20336e7ce52bf0c79d1df9fce',

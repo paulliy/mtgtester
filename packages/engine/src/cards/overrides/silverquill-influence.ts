@@ -66,11 +66,6 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.',
   ]);
 
-  unimplemented('cdfa9de4-7d7d-4638-8ac4-793ece6372dd', 'Changing Loyalty', [
-    'Replicate {2}',
-    'When enchanted creature dies, return it to the battlefield under your control.',
-  ]);
-
   unimplemented('27c366cf-00d7-47d4-9577-736bfc4a3b81', "Defacing Duskmage // Vandal's Edit", [
     'unsupported layout "prepare"',
     'Whenever an opponent draws their second card each turn, this creature becomes prepared.',

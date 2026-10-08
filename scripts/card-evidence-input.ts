@@ -1494,6 +1494,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Kogla and Yidaro: discard it to destroy P2's artifact"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Changing Loyalty: replicate once onto both of P2's creatures"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

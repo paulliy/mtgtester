@@ -70,7 +70,9 @@ export interface ValueScope {
    * Optional costs paid for the spell now resolving (kicker). It has already left the stack, so
    * `optionalCostCount` cannot find it there (Hunting Wilds' "if this spell was kicked").
    */
-  resolvingOptionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
+  resolvingOptionalCostCounts?: Partial<
+    Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>
+  >;
   countPermanents?: (selector: Selector, scope: 'you' | 'opponents' | 'all') => number;
 }
 
@@ -142,7 +144,7 @@ export type Value =
   /** The X announced for this spell (CR 601.2b). */
   | { kind: 'xValue' }
   /** Number of times an optional additional cost was paid for the resolving/entering spell. */
-  | { kind: 'optionalCostCount'; mechanic: 'kicker' | 'squad' | 'offspring' }
+  | { kind: 'optionalCostCount'; mechanic: 'kicker' | 'squad' | 'offspring' | 'replicate' }
   /** "that many" / "equal to that damage" — the damage that caused this trigger. */
   | { kind: 'damageDealt' }
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */

@@ -453,6 +453,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
+    "name": "Changing Loyalty",
+    "package": "PR02.25",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["Replicate is claimed without a replicate implementation."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr02-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
     "name": "Chimil, the Inner Sun",
     "package": "W5",

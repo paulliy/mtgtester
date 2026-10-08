@@ -1183,6 +1183,11 @@ function parseEffectSentence(
     return [{ op: 'noOp' }];
   }
 
+  // "When enchanted creature dies, return it to the battlefield under your control" (Changing
+  // Loyalty): "it" is the card the trigger's subject became, wherever it was put (CR 400.7).
+  if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
+    return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
+  }
   // "it gains double strike until end of turn" â€” the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
     const m = s.match(/^it gains ([a-z ]+) until end of turn$/);
@@ -6062,6 +6067,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   let spellModes: NonNullable<Ability['modes']> | undefined;
   let announcesX = false;
   let castFromGraveyard = false;
+  let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
@@ -7021,6 +7027,18 @@ export function interpretCard(card: OracleCard): CardDefinition {
      * and belongs with the other cost-bearing keywords in
      * `docs/plans/post-tier3-card-coverage.md`, not with a one-line parse.
      */
+    // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
+    // trigger copying the spell once per payment (`queueKeywordCastTriggers`).
+    {
+      const m = lower.match(/^replicate ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          optionalAdditionalCost = { mechanic: 'replicate', cost: cost.cost, repeatable: true };
+          continue;
+        }
+      }
+    }
     {
       const m = lower.match(/^unearth ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
       if (m) {
@@ -7393,6 +7411,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     ...(alternativeCasts ? { alternativeCasts } : {}),
     ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
     ...(announcesX ? { announcesX: true } : {}),
+    ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
     modeled: reasons.length === 0,
     unmodeledReasons: reasons,
   });

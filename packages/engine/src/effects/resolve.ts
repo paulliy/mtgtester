@@ -30,6 +30,7 @@ import type {
   TargetKind,
   TargetSpec,
 } from '../cards/definition';
+import { isPermanentCard } from '../cards/definition';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
 import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
 import type { GameGen } from '../decisions';
@@ -3739,6 +3740,10 @@ export function* executeAbility(
       case 'preventCombatDamageToController':
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         break;
+      case 'replicateCopies': {
+        yield* replicateCopies(ctx, controller.id, effect);
+        break;
+      }
       case 'copyTargetSpell': {
         const targetId = targets[effect.target];
         const original = ctx.state.stack.find(
@@ -4295,16 +4300,19 @@ export function* executeAbility(
         }
         break;
       case 'graveyardToBattlefield': {
-        const owner = playerById(ctx, source.controllerId);
         // `ref()` restricts `'triggerObject'` to the battlefield — right for effects that act
         // on a still-live permanent, but this op exists specifically to revive something that
         // has already left it (a "dies" trigger's object, by definition, always has). Look
         // that referent up directly by `triggerObjectCardId` instead of through `ref()`.
+        // The card went to its OWNER's graveyard, which for a stolen or enchanted opponent's
+        // creature (Changing Loyalty) is not the ability controller's.
         const cardObj =
           effect.target === 'triggerObject'
             ? triggerObjectCardId === undefined
               ? undefined
-              : owner.graveyard.find((c) => c.cardId === triggerObjectCardId)
+              : ctx.state.players
+                  .flatMap((player) => player.graveyard)
+                  .find((c) => c.cardId === triggerObjectCardId)
             : (() => {
                 const t = ref(effect.target);
                 // The target may be a permanent card in ANY player's graveyard, not just the
@@ -6214,6 +6222,82 @@ function* searchLibraryGroup(
 /** "Search your library for a `<filter>` card and cast that card without paying its mana cost"
  * (Sunforger) — `searchLibrary`'s single-destination search, but the found card is cast for
  * free via `resolveFreeCard` instead of moved to a zone. */
+/**
+ * Replicate's copies (CR 702.56a): `count` copies of the cast spell, each put on the stack with
+ * targets its controller keeps or changes (CR 707.10c). A copy of a permanent spell becomes a
+ * token as it resolves (CR 707.10f). If the spell has left the stack, its last known
+ * information is copied (CR 707.10).
+ */
+function* replicateCopies(
+  ctx: GameContext,
+  controllerId: PlayerId,
+  effect: Extract<Effect, { op: 'replicateCopies' }>,
+): GameGen<void> {
+  const original = ctx.state.stack.find(
+    (entry) => entry.id === effect.spell.stackObjectId && entry.kind === 'spell',
+  );
+  const def = getDefByOracleId(ctx, effect.spell.oracleId, effect.spell.name);
+  const ability = original?.ability ?? def.spellAbility;
+  if (ability === null || ability === undefined) return;
+  const originalTargets = original?.targets ?? (effect.spell.targets as ObjectId[]);
+  const permanent = isPermanentCard(def);
+  for (let copyIndex = 0; copyIndex < effect.count; copyIndex++) {
+    const targets = [...originalTargets];
+    for (const [slot, spec] of ability.targets.entries()) {
+      if (spec.count !== undefined) continue;
+      const current = targets[slot];
+      const fresh = computeTargetOptions(ctx, spec, controllerId, def.colors).filter(
+        (id) => id !== current,
+      );
+      if (fresh.length === 0) continue;
+      const nameOf = (id: ObjectId): string =>
+        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? String(id);
+      const choices = [...(current === undefined ? [] : [current]), ...fresh];
+      const outcome = yield {
+        decisionType: 'general' as const,
+        player: controllerId,
+        prompt: `${effect.spell.name}: choose a target for copy ${copyIndex + 1} of ${effect.count}.`,
+        options: choices.map((id, index) => ({
+          type: 'chooseTarget',
+          description:
+            index === 0 && current !== undefined
+              ? `Keep ${nameOf(id)} as the target`
+              : `Target ${nameOf(id)}`,
+        })),
+      };
+      targets[slot] = choices[outcome.index] ?? choices[0]!;
+    }
+    const copyId = `o-${ctx.state.nextObjectNum++}` as ObjectId;
+    const copy: EngineStackObject = {
+      id: copyId,
+      sourceId: copyId,
+      controllerId,
+      kind: 'spell',
+      description: `Copy of ${effect.spell.name}`,
+      targets,
+      card: null,
+      ability,
+      sourceOracleId: effect.spell.oracleId,
+      // A permanent copy's token takes this id as it resolves; a nonpermanent copy just needs
+      // one that is not the original card's.
+      sourceCardId: `tok-${ctx.state.nextObjectNum++}`,
+      isCommanderCast: false,
+      ...(original?.announcedX !== undefined ? { announcedX: original.announcedX } : {}),
+      ...(original?.countTargets !== undefined ? { countTargets: original.countTargets } : {}),
+      ...(permanent
+        ? {
+            permanentSpellCopy: {
+              oracleText: original?.card?.oracleText ?? effect.spell.oracleText,
+              manaCost: original?.card?.manaCost ?? effect.spell.manaCost,
+            },
+          }
+        : {}),
+    };
+    ctx.state.stack.push(copy);
+    emit(ctx, 'spellCopied', { name: effect.spell.name, targets }, controllerId);
+  }
+}
+
 function* searchLibraryCastFree(
   ctx: GameContext,
   source: EffectSource,

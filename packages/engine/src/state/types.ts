@@ -123,7 +123,7 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   wasKicked?: boolean;
   kicked?: boolean;
   /** Counts of optional additional costs paid while this permanent was cast. */
-  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
   /** X announced for the spell that became this permanent (Ravenous). */
   announcedX?: number;
   /** The `key` chosen for `CardDefinition.entersChoosingOption`, e.g. a color or mode. */
@@ -165,7 +165,7 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 export interface EngineCardObject extends EngineObject {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
-  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
   /** Mana from Treasure permanents spent to cast this card, retained until it enters. */
   treasureManaSpentToCast?: number;
   /** Counters last held while this card was a permanent, for death-triggered effects. */
@@ -221,7 +221,7 @@ export interface EngineStackObject extends StackObject {
   /** Kicker announcement state retained while the spell is on the stack. */
   wasKicked?: boolean;
   kicked?: boolean;
-  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring', number>>;
+  optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
   /** The X announced when this spell was cast (CR 601.2b), for its own effects to read. */
   announcedX?: number;
   /**
@@ -242,6 +242,12 @@ export interface EngineStackObject extends StackObject {
   grantHasteOnResolution?: boolean;
   /** The original hand-cast carried Rebound and should be exiled after resolving. */
   reboundPending?: boolean;
+  /**
+   * A copy of a permanent spell (Replicate on an Aura): it has no card, and becomes a token
+   * permanent as it resolves (CR 608.3f, 707.10f) whose `cardId` is this object's
+   * `sourceCardId` and whose definition is `sourceOracleId`'s.
+   */
+  permanentSpellCopy?: { oracleText: string; manaCost: string | null };
   /** Flashback/Escape-style casts exile the spell after resolution or fizzle. */
   exileOnResolution?: boolean;
   /** This spell was announced for its Escape cost. */

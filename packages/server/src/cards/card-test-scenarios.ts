@@ -7026,6 +7026,71 @@ const koglaYidaroDiscardScenario = (gameId: GameId): CardTestScenario =>
     inHandOnly: true,
   });
 
+function changingLoyaltyScenario(
+  gameId: GameId,
+  spec: {
+    id: string;
+    title: string;
+    instructions: string[];
+    expectedOutcome: string;
+    clauseIds: string[];
+    withDoom: boolean;
+  },
+): CardTestScenario {
+  const loyalty = pinnedFrom(MARCHESA_BATCH1, 'Changing Loyalty');
+  return pr01Scenario(gameId, {
+    id: spec.id,
+    title: spec.title,
+    instructions: spec.instructions,
+    expectedOutcome: spec.expectedOutcome,
+    oracleSha256: loyalty.sha256,
+    clauseIds: spec.clauseIds,
+    decks: {
+      P1: [loyalty.card, LAB_DOOM, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, LAB_GENERIC_BEAR, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: spec.withDoom ? ['Changing Loyalty', 'Lab Doom'] : ['Changing Loyalty'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Generic Bear'] },
+      ],
+    },
+  });
+}
+
+const changingLoyaltyReplicateScenario = (gameId: GameId): CardTestScenario =>
+  changingLoyaltyScenario(gameId, {
+    id: 'changing-loyalty-viewer-replicate',
+    title: "Changing Loyalty: replicate once onto both of P2's creatures",
+    instructions: [
+      "Cast Changing Loyalty with replicate 1 for {3}{B}, targeting P2's Lab Ox.",
+      "Choose P2's Lab Generic Bear as the copy's target.",
+    ],
+    expectedOutcome:
+      'Changing Loyalty enchants Lab Ox, and its copy resolves into a Changing Loyalty token enchanting Lab Generic Bear.',
+    clauseIds: ['changing-loyalty-replicate', 'changing-loyalty-enchant'],
+    withDoom: false,
+  });
+
+const changingLoyaltyStealScenario = (gameId: GameId): CardTestScenario =>
+  changingLoyaltyScenario(gameId, {
+    id: 'changing-loyalty-viewer-steal',
+    title: "Changing Loyalty: enchant P2's Lab Ox, destroy it, and take it",
+    instructions: ["Cast Changing Loyalty for {1}{B} on P2's Lab Ox.", 'Cast Lab Doom on Lab Ox.'],
+    expectedOutcome:
+      'Lab Ox dies and returns to the battlefield under your control; Changing Loyalty goes to your graveyard.',
+    clauseIds: ['changing-loyalty-enchant', 'changing-loyalty-steal'],
+    withDoom: true,
+  });
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -7271,6 +7336,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'convergence-of-dominion-viewer-cheap-unearth',
   'kogla-and-yidaro-viewer-enter-fight',
   'kogla-and-yidaro-viewer-discard',
+  'changing-loyalty-viewer-replicate',
+  'changing-loyalty-viewer-steal',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7436,6 +7503,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'convergence-of-dominion-viewer-cheap-unearth': convergenceOfDominionScenario,
   'kogla-and-yidaro-viewer-enter-fight': koglaYidaroFightScenario,
   'kogla-and-yidaro-viewer-discard': koglaYidaroDiscardScenario,
+  'changing-loyalty-viewer-replicate': changingLoyaltyReplicateScenario,
+  'changing-loyalty-viewer-steal': changingLoyaltyStealScenario,
 };
 
 export function createCardTestScenario(

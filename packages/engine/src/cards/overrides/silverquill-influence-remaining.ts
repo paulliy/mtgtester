@@ -125,12 +125,6 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit silverquill-remaining-batch-1: Replicate claimed without an implementation.
-  unsupportedCard(
-    'cdfa9de4-7d7d-4638-8ac4-793ece6372dd',
-    'Changing Loyalty',
-    'Replicate is claimed without a replicate implementation.',
-  );
   defineCard('dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9', 'Coercive Impetus', [], {
     ...auraBuff(1, 1, [], true),
     triggers: [
