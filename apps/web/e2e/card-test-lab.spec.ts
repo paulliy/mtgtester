@@ -3438,3 +3438,24 @@ test('Their Number Is Legion: cast it from the graveyard with X=2', async ({ pag
   await expect(permanent(page, 'Necron Warrior')).toContainText(/×2/);
   await expect(legion).toHaveCount(0);
 });
+
+test('Anrakyr the Traveller: attack, then cast an artifact for life', async ({ page }) => {
+  await runScenario(page, 'Anrakyr the Traveller: attack, then cast an artifact for life');
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Anrakyr the Traveller' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByRole('button', { name: 'Yes', exact: true }));
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  const golem = page.locator('.panel-group').filter({ hasText: 'Lab Anrakyr Golem' });
+  await expect(golem).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.panel-group').filter({ hasText: 'Lab Anrakyr Relic' })).toBeVisible();
+  await golem.getByRole('button', { name: 'Cast' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Anrakyr Golem')).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+});

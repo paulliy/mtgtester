@@ -1049,6 +1049,13 @@ export type Effect =
     }
   | { op: 'lookAtTopNCastOneFree'; count: number }
   | { op: 'castAnyFromHandFree' }
+  /**
+   * "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
+   * value rather than paying its mana cost" (Anrakyr the Traveller). Cast during resolution, so
+   * timing permissions are ignored (CR 608.2g); the life is a cost, payable only by a player
+   * with at least that much life (CR 119.4).
+   */
+  | { op: 'castForLifeFromZones'; selector: Selector; zones: ('hand' | 'graveyard')[] }
   | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
   | { op: 'setMustBlockThisTurn'; target: EffectRef }
   | { op: 'extraCombatPhase' }

@@ -657,3 +657,24 @@ describe('Their Number Is Legion Card Test Lab scenario', () => {
     replays('their-number-is-legion-viewer-graveyard-x', steps);
   });
 });
+
+describe('Anrakyr the Traveller Card Test Lab scenario', () => {
+  it('anrakyr-the-traveller-viewer-cast-for-life — attack, accept, and cast the Golem from the graveyard for 4 life', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Yes' },
+      { action: 'Cast Lab Anrakyr Golem from your graveyard for 4 life' },
+    ];
+    const { seat, onBattlefield, offered } = run(
+      'anrakyr-the-traveller-viewer-cast-for-life',
+      steps,
+    );
+    expect(offered.flat()).toContain('Cast Lab Anrakyr Relic from your hand for 3 life');
+    expect(onBattlefield('Lab Anrakyr Golem')).toHaveLength(1);
+    expect(seat('P1').graveyard).toEqual([]);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Anrakyr Relic']);
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P2').life).toBe(36);
+    replays('anrakyr-the-traveller-viewer-cast-for-life', steps);
+  });
+});

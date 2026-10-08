@@ -1126,6 +1126,8 @@ function* resolveFreeCard(
   ctx: GameContext,
   card: EngineCardObject,
   controllerId: PlayerId,
+  /** Life paid instead of the mana cost (Anrakyr), paid with the other costs (CR 601.2h). */
+  lifeCost = 0,
 ): GameGen<void> {
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
   const controller = playerById(ctx, controllerId);
@@ -1188,6 +1190,7 @@ function* resolveFreeCard(
     ) ?? [];
   const additionalCosts = [...(def.spellAdditionalCosts ?? []), ...modeCosts];
   const additionalMana = manaPortionOf(additionalCosts);
+  if (lifeCost > 0) loseLife(ctx, controller, lifeCost);
   if (totalPips(additionalMana) > 0) {
     yield* payManaCost(ctx, controller, additionalMana, {
       kind: 'castSpell',
@@ -5246,6 +5249,43 @@ export function* executeAbility(
           const chosen = eligible[outcome.index];
           if (chosen !== undefined) yield* resolveFreeCard(ctx, chosen, controller.id);
         }
+        break;
+      }
+      case 'castForLifeFromZones': {
+        const lifeFor = (card: EngineCardObject): number =>
+          spellManaValue(getDefByOracleId(ctx, card.oracleId, card.name), undefined);
+        const zoneOf = (card: EngineCardObject): string =>
+          controller.hand.includes(card) ? 'hand' : 'graveyard';
+        const eligible = effect.zones
+          .flatMap((zone) => (zone === 'hand' ? controller.hand : controller.graveyard))
+          .filter(
+            (card) =>
+              selectMatches(cardZoneCandidate(ctx, card, controller.id), effect.selector, {
+                cardId: source.cardId,
+                controllerId: controller.id,
+              }) &&
+              controller.life >= lifeFor(card) &&
+              freeCardIsCastable(ctx, card, controller.id),
+          );
+        if (eligible.length === 0) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: you may cast an artifact spell by paying life equal to its mana value.`,
+          options: [
+            ...eligible.map((card) =>
+              cardOption(ctx, card, {
+                type: 'castForLife',
+                description: `Cast ${card.name} from your ${zoneOf(card)} for ${lifeFor(card)} life`,
+                verb: 'Cast',
+              }),
+            ),
+            plainOption({ type: 'decline', description: 'Cast no spell', verb: 'Done' }),
+          ],
+        };
+        const chosen = outcome.index < eligible.length ? eligible[outcome.index] : undefined;
+        if (chosen !== undefined)
+          yield* resolveFreeCard(ctx, chosen, controller.id, lifeFor(chosen));
         break;
       }
       case 'castAnyFromHandFree': {

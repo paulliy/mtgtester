@@ -1461,6 +1461,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Their Number Is Legion: cast it from the graveyard with X=2'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Anrakyr the Traveller: attack, then cast an artifact for life'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -6670,6 +6670,51 @@ function theirNumberIsLegionScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_ANRAKYR_RELIC = card({
+  oracleId: 'lab-anrakyr-relic',
+  name: 'Lab Anrakyr Relic',
+  typeLine: 'Artifact',
+  manaCost: '{3}',
+  cmc: 3,
+});
+const LAB_ANRAKYR_GOLEM = card({
+  oracleId: 'lab-anrakyr-golem',
+  name: 'Lab Anrakyr Golem',
+  typeLine: 'Artifact Creature — Golem',
+  manaCost: '{4}',
+  cmc: 4,
+  power: '3',
+  toughness: '3',
+});
+
+function anrakyrScenario(gameId: GameId): CardTestScenario {
+  const anrakyr = pinnedFrom(MARCHESA_BATCH1, 'Anrakyr the Traveller');
+  return pr01Scenario(gameId, {
+    id: 'anrakyr-the-traveller-viewer-cast-for-life',
+    title: 'Anrakyr the Traveller: attack, then cast an artifact for life',
+    instructions: [
+      'Attack P2 with Anrakyr the Traveller and use its trigger.',
+      'Cast Lab Anrakyr Golem from your graveyard by paying 4 life (Lab Anrakyr Relic in hand would cost 3).',
+    ],
+    expectedOutcome:
+      'You pay 4 life (40 → 36) and spend no mana; Lab Anrakyr Golem enters the battlefield, and Anrakyr deals 4 damage to P2.',
+    oracleSha256: anrakyr.sha256,
+    clauseIds: ['anrakyr-the-traveller-cast-for-life'],
+    decks: {
+      P1: [anrakyr.card, LAB_ANRAKYR_RELIC, LAB_ANRAKYR_GOLEM, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Anrakyr Relic'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Anrakyr the Traveller'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Anrakyr Golem'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function soulGuideLanternScenario(
   gameId: GameId,
   spec: {
@@ -6906,6 +6951,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'dread-return-viewer-flashback',
   'raffines-guidance-viewer-graveyard-recast',
   'their-number-is-legion-viewer-graveyard-x',
+  'anrakyr-the-traveller-viewer-cast-for-life',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7062,6 +7108,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'dread-return-viewer-flashback': dreadReturnScenario,
   'raffines-guidance-viewer-graveyard-recast': raffinesGuidanceScenario,
   'their-number-is-legion-viewer-graveyard-x': theirNumberIsLegionScenario,
+  'anrakyr-the-traveller-viewer-cast-for-life': anrakyrScenario,
 };
 
 export function createCardTestScenario(

@@ -2194,12 +2194,6 @@
     }
   },
   {
-    "oracleId": "32476743-c9d4-49ca-bec2-0669c215841b",
-    "name": "Anrakyr the Traveller",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "33f52df8-4b44-4422-8b0a-37fead9c894b",
     "name": "Vineglimmer Snarl",
     "handledLines": [
@@ -11999,12 +11993,6 @@
   {
     "oracleId": "oracle-animate-dead",
     "name": "Animate Dead",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-anrakyr-the-traveller",
-    "name": "Anrakyr the Traveller",
     "handledLines": [],
     "def": {}
   },

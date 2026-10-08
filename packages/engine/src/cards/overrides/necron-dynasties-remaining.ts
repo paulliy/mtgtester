@@ -10,12 +10,8 @@ import { INSECT_1_1_FLYING, NECRON_WARRIOR_2_2 as NECRON_WARRIOR_TOKEN } from '.
 const NECRON: TokenSpec = NECRON_WARRIOR_TOKEN;
 
 export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
-  // Catalog audit necron-remaining-batch-2: life-from-GY/hand is free hand casts.
-  unsupportedCard(
-    '32476743-c9d4-49ca-bec2-0669c215841b',
-    'Anrakyr the Traveller',
-    'Artifact-from-hand-or-graveyard life cast is implemented as free casts from hand.',
-  );
+  // Anrakyr the Traveller: restored in coverage PR02. The interpreter reads the attack trigger's
+  // pay-life cast from hand or graveyard (castForLifeFromZones), so no override remains.
   // Coverage PR01 (was contained by necron-remaining-batch-2): the resolving Beacon itself is shuffled into its owner's library.
   defineCard(
     'aef874fa-93c0-4f86-8b0d-dc24ec51467d',

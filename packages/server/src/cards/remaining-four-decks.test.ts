@@ -87,7 +87,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Forum of Amity',
       'Plasmancer',
       'Psychomancer',
-      'Anrakyr the Traveller',
       'Beacon of Unrest',
       'Canoptek Wraith',
       'Convergence of Dominion',

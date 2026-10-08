@@ -53,9 +53,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'My Will Be Done — Whenever ~ attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.',
   ]);
 
-  unimplemented('32476743-c9d4-49ca-bec2-0669c215841b', 'Anrakyr the Traveller', [
-    'Lord of the Pyrrhian Legions — Whenever ~ attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.',
-  ]);
+  // Anrakyr the Traveller: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
   unimplemented('aef874fa-93c0-4f86-8b0d-dc24ec51467d', 'Beacon of Unrest', [
     "Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle ~ into its owner's library.",

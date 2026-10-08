@@ -3088,6 +3088,120 @@ describe('Their Number Is Legion', () => {
   });
 });
 
+describe('Anrakyr the Traveller', () => {
+  const anrakyr = pinned('Anrakyr the Traveller');
+  const artifact = (name: string, mv: number, typeLine = 'Artifact') =>
+    oracle({
+      name,
+      typeLine,
+      manaCost: `{${mv}}`,
+      cmc: mv,
+      ...(typeLine.includes('Creature') ? {} : { power: null, toughness: null }),
+    });
+
+  /**
+   * Attack P2 with Anrakyr and answer its trigger: accept it, then pick the cast option matching
+   * `pick` (or cast nothing when `pick` is null). Returns the cast options it was offered.
+   */
+  function attack(ctx: GameContext, self: EnginePermanent, pick: RegExp | null) {
+    const offered: string[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === self.id ? 'P2' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        return { index: 0, targets: new Map() };
+      }
+      const casts = decision.options.filter((option) => /^Cast .* life$/.test(option.description));
+      if (casts.length > 0) {
+        offered.push(...casts.map((option) => option.description));
+        const index =
+          pick === null
+            ? decision.options.findIndex((option) => option.type === 'decline')
+            : decision.options.findIndex((option) => pick.test(option.description));
+        return { index, targets: new Map() };
+      }
+      const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
+      if (accept >= 0) return { index: accept, targets: new Map() };
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return offered;
+  }
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    const self = spawn(ctx, 'P1', anrakyr.card);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    return { ctx, self };
+  }
+
+  const onBattlefield = (ctx: GameContext, cardId: string) =>
+    ctx.state.battlefield.some((perm) => perm.cardId === cardId);
+
+  it('anrakyr-the-traveller-pinned-oracle-supported — an optional attack trigger that casts an artifact for life', () => {
+    expect(anrakyr.sha256).toBe('1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9');
+    expect(anrakyr.card.oracleText).toBe(
+      'Lord of the Pyrrhian Legions — Whenever Anrakyr the Traveller attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.',
+    );
+    expectModeled(anrakyr.card);
+    expect(getOverride(anrakyr.card.oracleId)).toBeUndefined();
+    const [trigger] = interpretCard(anrakyr.card).triggers;
+    expect(trigger?.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    expect(trigger?.optional).toBe(true);
+    expect(trigger?.effects).toEqual([
+      { op: 'castForLifeFromZones', selector: ofType('Artifact'), zones: ['hand', 'graveyard'] },
+    ]);
+  });
+
+  it('anrakyr-the-traveller-cast-from-hand-for-life — pay 3 life to cast a 3-mana-value artifact from hand', () => {
+    const { ctx, self } = ready('anrakyr-hand');
+    const relic = conjure(ctx, 'P1', artifact('Anrakyr Relic', 3), 'hand');
+    attack(ctx, self, /Anrakyr Relic/);
+    expect(playerById(ctx, 'P1').life).toBe(37);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    expect(onBattlefield(ctx, relic.cardId)).toBe(true);
+  });
+
+  it('anrakyr-the-traveller-cast-from-graveyard-for-life — an artifact creature card in the graveyard is castable too', () => {
+    const { ctx, self } = ready('anrakyr-graveyard');
+    const golem = conjure(
+      ctx,
+      'P1',
+      artifact('Anrakyr Golem', 4, 'Artifact Creature — Golem'),
+      'graveyard',
+    );
+    const offered = attack(ctx, self, /Anrakyr Golem/);
+    expect(offered).toEqual(['Cast Anrakyr Golem from your graveyard for 4 life']);
+    expect(playerById(ctx, 'P1').life).toBe(36);
+    expect(onBattlefield(ctx, golem.cardId)).toBe(true);
+  });
+
+  it('anrakyr-the-traveller-only-your-artifacts — nonartifacts and an opponent’s graveyard are not offered', () => {
+    const { ctx, self } = ready('anrakyr-filter');
+    conjure(ctx, 'P1', oracle({ name: 'Anrakyr Bear', typeLine: 'Creature — Bear' }), 'hand');
+    conjure(ctx, 'P2', artifact('Anrakyr Rival Relic', 1), 'graveyard');
+    const relic = conjure(ctx, 'P1', artifact('Anrakyr Own Relic', 1), 'graveyard');
+    const offered = attack(ctx, self, null);
+    expect(offered).toEqual(['Cast Anrakyr Own Relic from your graveyard for 1 life']);
+    // Declining casts nothing and costs nothing.
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(onBattlefield(ctx, relic.cardId)).toBe(false);
+  });
+
+  it('anrakyr-the-traveller-needs-the-life — you cannot pay more life than you have (CR 119.4)', () => {
+    const { ctx, self } = ready('anrakyr-life');
+    playerById(ctx, 'P1').life = 2;
+    conjure(ctx, 'P1', artifact('Anrakyr Big Relic', 3), 'hand');
+    const free = conjure(ctx, 'P1', artifact('Anrakyr Zero Relic', 0), 'hand');
+    const offered = attack(ctx, self, /Anrakyr Zero Relic/);
+    expect(offered).toEqual(['Cast Anrakyr Zero Relic from your hand for 0 life']);
+    expect(playerById(ctx, 'P1').life).toBe(2);
+    expect(onBattlefield(ctx, free.cardId)).toBe(true);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -3100,6 +3214,11 @@ interface RestoredCard {
 
 /** Cards restored in PR02. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Anrakyr the Traveller',
+    sha256: '1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9',
+    clauseCount: 1,
+  },
   {
     name: 'Their Number Is Legion',
     sha256: '41b6712d088b044a1c75a4ef825006b3774b32f673850f48bb207b10e00e24a6',

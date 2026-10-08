@@ -2133,15 +2133,22 @@
     "32476743-c9d4-49ca-bec2-0669c215841b": {
       "name": "Anrakyr the Traveller",
       "oracleSha256": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
+          "id": "anrakyr-the-traveller-cast-for-life",
           "oracleText": "Whenever Anrakyr the Traveller attacks, you may cast an artifact spell from your hand or graveyard by paying life equal to its mana value rather than paying its mana cost.",
           "implementation": [
-            "explicitly unsupported; life-from-hand-or-graveyard is free hand casts"
+            "interpreted optional attacks trigger (self), effect castForLifeFromZones: artifact cards in your hand or graveyard that are castable and whose mana value is at most your life; the chosen one is cast during resolution, paying that much life as its cost, or none is cast"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "anrakyr-the-traveller-pinned-oracle-supported",
+            "anrakyr-the-traveller-cast-from-hand-for-life",
+            "anrakyr-the-traveller-cast-from-graveyard-for-life",
+            "anrakyr-the-traveller-only-your-artifacts",
+            "anrakyr-the-traveller-needs-the-life"
+          ],
+          "viewerScenarioIds": ["anrakyr-the-traveller-viewer-cast-for-life"]
         }
       ],
       "gameplayAiScenarioIds": []

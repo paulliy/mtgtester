@@ -347,8 +347,10 @@ function stripAbilityWord(line: string): string {
  * original line for drift-guarded unmodeled reasons.
  */
 function stripGenericAbilityLabel(line: string): string {
+  // Capitalized words, with lowercase connectors allowed between them ("Lord of the Pyrrhian
+  // Legions"), never first or last.
   const m = line.match(
-    /^([A-Z][A-Za-z0-9'’/-]*(?: [A-Z0-9][A-Za-z0-9'’/-]*){0,7})\s+[—–-]\s+(.+)$/,
+    /^([A-Z][A-Za-z0-9'’/-]*(?: (?:(?:of|the|and|to|in|for|on|a|an) )*[A-Z0-9][A-Za-z0-9'’/-]*){0,7})\s+[—–-]\s+(.+)$/,
   );
   if (m === null) return line;
   if (/^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)$/.test(m[1] as string)) return line;
@@ -778,6 +780,24 @@ function parseEffectSentence(
     }
   }
   if (s === 'exile all graveyards') return [{ op: 'exileAllGraveyards' }];
+  // "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
+  // value rather than paying its mana cost" (Anrakyr the Traveller). Inside a trigger the "you
+  // may" has already become the trigger's optional flag; the effect also offers to cast nothing.
+  {
+    const forLife = s.match(
+      /^(?:you may )?cast an? (.+?) spell from your (hand|graveyard|hand or graveyard) by paying life equal to its mana value rather than paying its mana cost$/,
+    );
+    const selector = forLife === null ? null : parseSubject(forLife[1] as string, card);
+    if (forLife !== null && selector !== null) {
+      const zones: ('hand' | 'graveyard')[] =
+        forLife[2] === 'hand'
+          ? ['hand']
+          : forLife[2] === 'graveyard'
+            ? ['graveyard']
+            : ['hand', 'graveyard'];
+      return [{ op: 'castForLifeFromZones', selector, zones }];
+    }
+  }
   // "Each player sacrifices thirteen creatures of their choice" (Blasphemous Edict).
   {
     const many = s.match(/^each player sacrifices (\w+) creatures(?: of their choice)?$/);
