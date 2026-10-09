@@ -2161,7 +2161,7 @@
           "id": "loran-of-the-third-path-destroy-up-to-one",
           "oracleText": "When Loran enters, destroy up to one target artifact or enchantment.",
           "implementation": [
-            "interpreted enters trigger on self with a 0..1 artifactOrEnchantment count slot (any controller); the coverage-pr01 authored trigger was retired in PR03 once the 'destroy up to one target' grammar read it identically",
+            "enters trigger on self with a 0..1 count slot: permanent that is an artifact or an enchantment, any controller",
             "destroyEachChosen(slot 0): honors indestructible; choosing none or having none to choose destroys nothing"
           ],
           "engineTestIds": [
