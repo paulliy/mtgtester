@@ -1321,6 +1321,13 @@ export type TriggerHead =
        */
       entersFrom?: { zone: 'graveyard'; graveyardOwner?: 'you' };
       /**
+       * "…enter, if none of them were cast or no mana was spent to cast them" (Satoru, the
+       * Infiltrator): every permanent in the firing (the whole group for an aggregate head) was
+       * either not cast or cast with no mana spent, read from its cast record. A fact about the
+       * event, so the resolution recheck (CR 603.4) cannot change it.
+       */
+      entersWithoutManaSpentToCast?: true;
+      /**
        * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
        * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking
        * instead of the attacker's controller.

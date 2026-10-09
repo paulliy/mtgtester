@@ -3100,7 +3100,7 @@ const STEP_TRIGGER_HEAD_RE =
  * selector.
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
-  /^whenever one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
+  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
 /**
  * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
  * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the
@@ -3936,21 +3936,24 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   } else if (aggregate !== null) {
     // The subject is plural here ("Dragons you control"), so it reads through `parseSubject`
     // rather than `parseTriggerSubject`.
-    const selector = parseSubject(aggregate[1] as string, card);
-    if (selector === null) return null;
+    const plural = parseSubject(aggregate[2] as string, card);
+    if (plural === null) return null;
+    // "Whenever Satoru and/or one or more other nontoken creatures you control enter" — the
+    // source itself joins the same aggregate event.
+    const selector = aggregate[1] === undefined ? plural : anyOf(SELF, plural);
     heads = [
       {
         when:
-          aggregate[2] === 'attack'
+          aggregate[3] === 'attack'
             ? 'attacks'
-            : aggregate[2] === 'enter'
+            : aggregate[3] === 'enter'
               ? 'enters'
               : 'dealsCombatDamageToPlayer',
         subject: { kind: 'permanent', selector },
         aggregate: true,
       },
     ];
-    body = aggregate[3] as string;
+    body = aggregate[4] as string;
   } else if (ordinalCast !== null) {
     const filter = parseSpellFilter(ordinalCast[3] as string, card);
     const ordinal = {
@@ -4056,7 +4059,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // Intervening-if (CR 603.4) sits between the head and the effect.
   let condition: Condition | undefined = implicitCondition;
   const iff = body.match(INTERVENING_IF_RE);
-  if (iff !== null) {
+  if (iff !== null && iff[1] === 'none of them were cast or no mana was spent to cast them') {
+    // Satoru: a fact about each entering permanent's cast record, read by the enters dispatcher
+    // over the whole firing rather than as a board condition.
+    if (heads.some((head) => head.when !== 'enters')) return null;
+    heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
+    body = iff[2] as string;
+  } else if (iff !== null) {
     const parsed = parseConditionClause(iff[1] as string, card);
     if (parsed === null) return null;
     condition = parsed;

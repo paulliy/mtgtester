@@ -4684,12 +4684,6 @@
     "def": {}
   },
   {
-    "oracleId": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
-    "name": "Satoru, the Infiltrator",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
     "name": "Cranial Plating",
     "handledLines": [],
@@ -19916,12 +19910,6 @@
   {
     "oracleId": "oracle-sarkhan-the-dragonspeaker",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-satoru-the-infiltrator",
-    "name": "Satoru, the Infiltrator",
     "handledLines": [],
     "def": {}
   },

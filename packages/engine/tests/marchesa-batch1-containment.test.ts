@@ -54,7 +54,6 @@ const REASONS: Record<string, string> = {
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   'Puppeteer Clique': 'Stolen creature is not exiled at the beginning of the next end step.',
   'River Kelpie': 'Graveyard-origin enters and cast triggers fire on any enter or cast.',
-  'Satoru, the Infiltrator': 'Enter trigger omits the not-cast-or-no-mana-spent restriction.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
@@ -305,6 +304,7 @@ describe('Marchesa catalog audit containment', () => {
     'Kambal, Consul of Allocation',
     'Gleeful Arsonist',
     'Shard of the Nightbringer',
+    'Satoru, the Infiltrator',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

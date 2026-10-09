@@ -324,6 +324,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kambal-viewer-opponent-noncreature-spell',
       'gleeful-arsonist-viewer-burn-and-undying',
       'shard-of-the-nightbringer-viewer-cast-drain',
+      'satoru-viewer-free-cast-draws',
     ]);
   });
 

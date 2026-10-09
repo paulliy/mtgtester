@@ -5983,6 +5983,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
+      "name": "Satoru, the Infiltrator",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads 'Satoru and/or one or more other nontoken creatures you control enter' as a self-inclusive aggregate enters head and the not-cast-or-no-mana intervening-if as entersWithoutManaSpentToCast over each entering permanent's cast record; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

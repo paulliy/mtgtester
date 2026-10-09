@@ -111,7 +111,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Twilight Diviner',
       'Pensive Professor',
       'Puppeteer Clique',
-      'Satoru, the Infiltrator',
       'Siren Stormtamer',
       'Smokestack',
       'The Ooze',

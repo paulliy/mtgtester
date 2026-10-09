@@ -227,3 +227,15 @@ describe('Shard of the Nightbringer Card Test Lab scenario', () => {
     replays('shard-of-the-nightbringer-viewer-cast-drain', steps);
   });
 });
+
+describe('Satoru, the Infiltrator Card Test Lab scenario', () => {
+  it('satoru-viewer-free-cast-draws — the free Ornithopter draws a card; the paid Lab Zombie does not', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Ornithopter' }, { action: 'Cast Lab Zombie' }];
+    const { seat, onBattlefield, state } = run('satoru-viewer-free-cast-draws', steps);
+    expect(onBattlefield('Lab Ornithopter')).toHaveLength(1);
+    expect(onBattlefield('Lab Zombie')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(1);
+    replays('satoru-viewer-free-cast-draws', steps);
+  });
+});

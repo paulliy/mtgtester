@@ -960,9 +960,15 @@ export function* moveObjects(
     if (entering && next !== null && next.zone === 'battlefield')
       entered.push(next as EnginePermanent);
   }
-  for (const permanent of entered) {
-    if (ctx.state.battlefield.includes(permanent)) queueTriggersForObject(ctx, 'enters', permanent);
-  }
+  // One enters event for the whole batch: "one or more … enter" triggers once (CR 603.2c), and
+  // an ordinary watcher still fires once for each permanent it matches.
+  queueTriggersForEvent(
+    ctx,
+    'enters',
+    entered
+      .filter((permanent) => ctx.state.battlefield.includes(permanent))
+      .map((permanent) => ({ permanent })),
+  );
   if (leavingGraveyard.length > 0) {
     queueCardZoneTriggers(ctx, 'leavesGraveyard', leavingGraveyard);
   }
@@ -1457,7 +1463,7 @@ export function queueTriggersForEvent(
       // defender (`permanent.attacking`) instead of the attacker.
       const byEventPlayerKey = (s: TriggerEventSubject): PlayerId | undefined =>
         when === 'attacks' ? (s.permanent.attacking ?? undefined) : s.playerId;
-      const firings: TriggerEventSubject[][] =
+      const grouped: TriggerEventSubject[][] =
         spec.aggregate === true
           ? [matched]
           : spec.aggregate === 'byEventPlayer'
@@ -1470,6 +1476,13 @@ export function queueTriggersForEvent(
                 ).values(),
               ]
             : matched.map((s) => [s]);
+      // "if none of them were cast or no mana was spent to cast them" — judged over the firing.
+      const firings =
+        'entersWithoutManaSpentToCast' in spec && spec.entersWithoutManaSpentToCast === true
+          ? grouped.filter((group) =>
+              group.every((subject) => (subject.permanent.manaSpentToCast ?? 0) === 0),
+            )
+          : grouped;
 
       const enteringArtifactOrCreature =
         when === 'enters' &&

@@ -4873,3 +4873,21 @@ test("Shard of the Nightbringer: cast it to drain half of P2's life", async ({ p
   await expect(page.locator('.log .line', { hasText: /loses 20 life$/ })).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /gains 20 life$/ })).toHaveCount(1);
 });
+
+test('Satoru, the Infiltrator: a free creature draws, a paid one does not', async ({ page }) => {
+  await runScenario(page, 'Satoru, the Infiltrator: a free creature draws, a paid one does not');
+  const ornithopter = handCard(page, 'Lab Ornithopter');
+  await expect(ornithopter).toHaveClass(/actionable/);
+  await ornithopter.click();
+  // A {0} spell may still ask to confirm its (empty) payment.
+  const confirmButton = page.getByRole('button', { name: 'Confirm' });
+  await expect(permanent(page, 'Lab Ornithopter').or(confirmButton).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  if (await confirmButton.isVisible()) await confirm(page);
+  await expect(handCard(page, 'Lab Ox')).toBeVisible({ timeout: 15_000 });
+  await castAndResolve(page, 'Lab Zombie');
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Zombie')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});

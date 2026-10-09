@@ -28,6 +28,7 @@ import { createGame } from '../src/state/game';
 import {
   createToken,
   moveObject,
+  moveObjects,
   movePermanentsToGraveyard,
   playerById,
 } from '../src/state/objects';
@@ -1105,6 +1106,104 @@ describe('Shard of the Nightbringer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.07 Satoru, the Infiltrator
+// ---------------------------------------------------------------------------------------------
+
+describe('Satoru, the Infiltrator', () => {
+  const satoru = pinned('Satoru, the Infiltrator');
+  const bear = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{1}' });
+  const thopter = oracle({
+    name: 'Lab Ornithopter',
+    typeLine: 'Artifact Creature — Thopter',
+    manaCost: '{0}',
+  });
+
+  /** P1's library holds named cards so a draw is visible. */
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    for (const name of ['Page Two', 'Page One']) conjure(ctx, 'P1', LAB_CARD(name), 'library');
+    return ctx;
+  }
+  const hand = (ctx: GameContext) => playerById(ctx, 'P1').hand.map((card) => card.name);
+
+  it('satoru-the-infiltrator-pinned-oracle-supported — the interpreter alone models menace and the uncast-or-free enters draw', () => {
+    expect(satoru.sha256).toBe('61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564');
+    expectNoRegistration(satoru.card);
+    expectModeled(satoru.card);
+    const def = interpretCard(satoru.card);
+    expect(def.keywords).toEqual(['menace']);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'enters',
+      aggregate: true,
+      entersWithoutManaSpentToCast: true,
+    });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('satoru-the-infiltrator-cast-with-mana-no-draw — casting Satoru or a creature for mana draws nothing', () => {
+    const ctx = ready('satoru-cast');
+    castFromHand(ctx, 'P1', satoru.card, [...blue(1), ...black(1)]);
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    castFromHand(ctx, 'P1', bear, generic(1));
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx);
+    expect(hand(ctx)).toEqual([]);
+  });
+
+  it('satoru-the-infiltrator-not-cast-draws — Satoru or another nontoken creature put onto the battlefield draws a card', () => {
+    const ctx = ready('satoru-put');
+    enterFrom(ctx, 'P1', satoru.card, 'hand');
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+    enterFrom(ctx, 'P1', bear, 'graveyard');
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One', 'Page Two']);
+  });
+
+  it('satoru-the-infiltrator-free-cast-draws — a creature cast with no mana spent draws a card', () => {
+    const ctx = ready('satoru-free');
+    spawn(ctx, 'P1', satoru.card);
+    castFromHand(ctx, 'P1', thopter, []);
+    expect(ctx.state.stack[0]!.card).toMatchObject({ manaSpentToCast: 0 });
+    resolveTop(ctx);
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
+  it('satoru-the-infiltrator-one-or-more — two creatures entering together draw one card', () => {
+    const ctx = ready('satoru-together');
+    spawn(ctx, 'P1', satoru.card);
+    const first = conjure(ctx, 'P1', bear, 'graveyard');
+    const second = conjure(ctx, 'P1', bear, 'graveyard');
+    pump(moveObjects(ctx, [first, second], { zone: 'battlefield', controllerId: 'P1' }));
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
+  it("satoru-the-infiltrator-tokens-and-opponents — a token or an opponent's creature draws nothing", () => {
+    const ctx = ready('satoru-negative');
+    spawn(ctx, 'P1', satoru.card);
+    createToken(ctx, BEAR_TOKEN, 'P1');
+    enterFrom(ctx, 'P2', bear, 'graveyard');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('enters-without-mana-primitive-contract — the restriction is valid only on an enters head', () => {
+    const issues: AuthoringIssue[] = [];
+    validateTriggerHead(
+      { when: 'dies', subject: { kind: 'self' }, entersWithoutManaSpentToCast: true },
+      'trigger',
+      issues,
+    );
+    expect(issues.map((issue) => issue.path)).toEqual(['trigger.entersWithoutManaSpentToCast']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1116,6 +1215,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Satoru, the Infiltrator',
+    sha256: '61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564',
+    clauseCount: 2,
+  },
   {
     name: 'Shard of the Nightbringer',
     sha256: '4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a',

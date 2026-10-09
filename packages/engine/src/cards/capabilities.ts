@@ -322,6 +322,7 @@ const shapes = {
     aggregate: leaf,
     entersUntapped: leaf,
     entersFrom: { object: { zone: leaf, graveyardOwner: leaf } },
+    entersWithoutManaSpentToCast: leaf,
     defendingPlayerIsEventPlayer: leaf,
     condition: { node: 'Condition' },
     caster: leaf,

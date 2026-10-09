@@ -1737,6 +1737,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Shard of the Nightbringer: cast it to drain half of P2's life"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

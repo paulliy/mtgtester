@@ -74,6 +74,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Return to Nature',
       'Rishkar, Peema Renegade',
       'Sage of Fables',
+      'Satoru, the Infiltrator',
       'Sceptre of Eternal Glory',
       'Shard of the Nightbringer',
       'Smothering Tithe',

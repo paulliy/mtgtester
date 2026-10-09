@@ -117,7 +117,14 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     'when',
     'condition',
     ...(family === 'object'
-      ? ['subject', 'aggregate', 'entersUntapped', 'entersFrom', 'defendingPlayerIsEventPlayer']
+      ? [
+          'subject',
+          'aggregate',
+          'entersUntapped',
+          'entersFrom',
+          'entersWithoutManaSpentToCast',
+          'defendingPlayerIsEventPlayer',
+        ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal']
         : ['player']),
@@ -158,6 +165,14 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({
         path: `${path}.entersUntapped`,
         message: 'untapped entry restriction requires an enters event',
+      });
+    if (
+      head['entersWithoutManaSpentToCast'] !== undefined &&
+      (head['entersWithoutManaSpentToCast'] !== true || head['when'] !== 'enters')
+    )
+      issues.push({
+        path: `${path}.entersWithoutManaSpentToCast`,
+        message: 'uncast or free entry restriction requires an enters event',
       });
     if (head['entersFrom'] !== undefined) {
       const origin = head['entersFrom'];

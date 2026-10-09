@@ -458,12 +458,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a
   // +1/+1 counter from any creature you control, chosen as the cost is paid.
-  // Catalog audit batch 7: uncast/no-mana-spent restriction is omitted.
-  unsupportedCard(
-    '7555c429-5f2d-4171-b6b0-8e3c8da7f314',
-    'Satoru, the Infiltrator',
-    'Enter trigger omits the not-cast-or-no-mana-spent restriction.',
-  );
+  // Satoru, the Infiltrator: restored in coverage PR03. The interpreter reads the self-inclusive
+  // aggregate enters head and the uncast-or-free restriction, so no override remains.
   // Catalog audit batch 7: targeting restriction is omitted.
   unsupportedCard(
     '59c7496b-19a2-478b-b28f-6f153c2458ae',

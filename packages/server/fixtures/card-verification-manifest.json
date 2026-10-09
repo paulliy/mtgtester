@@ -644,13 +644,33 @@
     "7555c429-5f2d-4171-b6b0-8e3c8da7f314": {
       "name": "Satoru, the Infiltrator",
       "oracleSha256": "61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "satoru-menace",
+          "oracleText": "Menace",
+          "implementation": ["keyword menace (interpreted)"],
+          "engineTestIds": ["satoru-the-infiltrator-pinned-oracle-supported"],
+          "viewerScenarioIds": ["satoru-viewer-free-cast-draws"]
+        },
+        {
+          "id": "satoru-uncast-or-free-draw",
           "oracleText": "Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card.",
-          "implementation": ["explicitly unsupported; uncast/no-mana-spent restriction omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted aggregate enters trigger watching anyOf(self, other nontoken creature you control): one firing per simultaneous event (CR 603.2c); moveObjects now queues one enters event per batch",
+            "head entersWithoutManaSpentToCast: every permanent in the firing has a cast record with no mana spent, or none at all (not cast); draw 1"
+          ],
+          "engineTestIds": [
+            "satoru-the-infiltrator-pinned-oracle-supported",
+            "satoru-the-infiltrator-cast-with-mana-no-draw",
+            "satoru-the-infiltrator-not-cast-draws",
+            "satoru-the-infiltrator-free-cast-draws",
+            "satoru-the-infiltrator-one-or-more",
+            "satoru-the-infiltrator-tokens-and-opponents",
+            "enters-without-mana-primitive-contract",
+            "cast-record-primitive"
+          ],
+          "viewerScenarioIds": ["satoru-viewer-free-cast-draws"]
         }
       ],
       "gameplayAiScenarioIds": []

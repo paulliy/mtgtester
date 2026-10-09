@@ -7640,6 +7640,41 @@ function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function satoruScenario(gameId: GameId): CardTestScenario {
+  const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
+  const ornithopter = card({
+    oracleId: 'lab-satoru-ornithopter',
+    name: 'Lab Ornithopter',
+    typeLine: 'Artifact Creature — Thopter',
+    manaCost: '{0}',
+    cmc: 0,
+    power: '0',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'satoru-viewer-free-cast-draws',
+    title: 'Satoru, the Infiltrator: a free creature draws, a paid one does not',
+    instructions: [
+      'Satoru and a Forest are on your battlefield; Lab Ornithopter ({0}) and Lab Zombie ({1}) are in your hand.',
+      'Cast Lab Ornithopter for no mana: Satoru draws a card.',
+      'Cast Lab Zombie with the Forest: mana was spent, so Satoru does not draw.',
+    ],
+    expectedOutcome: 'You draw exactly one card (Lab Ox), from Lab Ornithopter entering.',
+    oracleSha256: satoru.sha256,
+    clauseIds: ['satoru-menace', 'satoru-uncast-or-free-draw'],
+    decks: {
+      P1: [satoru.card, ornithopter, LAB_ZOMBIE, FOREST, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ornithopter', 'Lab Zombie'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Satoru, the Infiltrator', 'Forest'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7827,6 +7862,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kambal-viewer-opponent-noncreature-spell',
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
+  'satoru-viewer-free-cast-draws',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8034,6 +8070,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
+  'satoru-viewer-free-cast-draws': satoruScenario,
 };
 
 export function createCardTestScenario(
