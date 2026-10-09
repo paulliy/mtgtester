@@ -4,12 +4,12 @@ Status: planned. This plan sequences the four limitations recorded in [PR02 mech
 
 ## Scope and affected cards
 
-| Work area | Affected PR02 card(s) | Known limitation |
-| --- | --- | --- |
-| Life-paid casting | Anrakyr the Traveller | X spells are only offered at X=0; the life check omits additional life costs. |
-| Convoke payment | Conclave Tribunal; Hour of Reckoning | A non-convoke Adventure face can inherit convoke; colorless creatures can be assigned to pay {C}. Creature payer selection is automatic. |
-| Target-dependent cost | Killian, Ink Duelist | “Up to N” target choices can show full price and later charge the reduced price; multiple reduced options can be indistinguishable. |
-| Replicate targets | Changing Loyalty | Copies cannot retarget an “up to N” target slot. |
+| Work area             | Affected PR02 card(s)                | Known limitation                                                                                                                         |
+| --------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Life-paid casting     | Anrakyr the Traveller                | X spells are only offered at X=0; the life check omits additional life costs.                                                            |
+| Convoke payment       | Conclave Tribunal; Hour of Reckoning | A non-convoke Adventure face can inherit convoke; colorless creatures can be assigned to pay {C}. Creature payer selection is automatic. |
+| Target-dependent cost | Killian, Ink Duelist                 | “Up to N” target choices can show full price and later charge the reduced price; multiple reduced options can be indistinguishable.      |
+| Replicate targets     | Changing Loyalty                     | Copies cannot retarget an “up to N” target slot.                                                                                         |
 
 This plan is limited to those known PR02 mechanics. Other fail-closed cards remain tracked by the staged card coverage plan.
 
