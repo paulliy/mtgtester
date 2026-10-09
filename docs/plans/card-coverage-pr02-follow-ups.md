@@ -48,6 +48,18 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 - Verify each copy resolves with its own chosen targets and that the original spell's targets remain unchanged.
 - Cover no-target, partial-target, full-target, and targets-becoming-illegal cases in engine tests and a real viewer scenario.
 
+## Copies of transformed double-faced cards
+
+**Known limit:** Copying a transformed double-faced card currently gives the copy the right mana value, but it may retain the front face's other characteristics. Its type, power/toughness, and abilities can therefore be wrong.
+
+**Follow-up:** Make copy creation capture the copied object's current copiable characteristics, including its transformed face, while preserving the existing special mana-value rules. Do not copy unrelated state such as counters or damage.
+
+**Acceptance checks:**
+- A copy of a transformed creature has the characteristics of the transformed face, including name, types, color, abilities, and power/toughness.
+- A copy of an untransformed card retains the expected front-face characteristics.
+- A copy of a transformed double-faced card still has mana value 0 where required by the existing mana-value rules.
+- Add engine regressions for both face states and verify downstream selectors and interactions read the copied characteristics.
+
 ## References
 
 - [PR02 review notes and known limitations](https://github.com/paulliy/mtgtester/pull/15)
