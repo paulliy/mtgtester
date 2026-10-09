@@ -2807,6 +2807,57 @@ function parseHellkiteCourserBlock(
 }
 
 /**
+ * "Double the power of each other creature you control until end of turn. Those creatures gain
+ * vigilance until end of turn." (God-Eternal Rhonas) — matched whole, because "those creatures"
+ * is the set the first sentence doubled; nothing between the two changes which creatures match.
+ */
+function parseDoublePowerThoseGainBlock(body: string): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^double the power of each (other )?creature you control until end of turn\. those creatures gain ([a-z]+) until end of turn$/,
+    );
+  if (m === null) return null;
+  const parsed = parseKeywordLine(m[2] as string);
+  const keyword = parsed?.keywords[0];
+  if (parsed === null || parsed.keywords.length !== 1 || keyword === undefined) return null;
+  if (parsed.ward !== undefined || parsed.protectionFrom !== undefined) return null;
+  const selector = allOf(...(m[1] !== undefined ? [OTHER] : []), ofType('Creature'), YOURS);
+  return [
+    { op: 'doublePower', selector },
+    { op: 'grantKeywordEachUntilEot', selector, keyword },
+  ];
+}
+
+const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
+
+/**
+ * "Put it into its owner's library third from the top" (God-Eternal Rhonas), on a trigger for the
+ * source itself dying or being exiled: "it" is the card the source became (CR 400.7e).
+ */
+function parseDepartedSourceToLibraryBlock(
+  body: string,
+  heads: readonly TriggerHead[],
+): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(/^put (?:it|~) into its owner's library (second|third|fourth|fifth) from the top$/);
+  if (m === null) return null;
+  const sourceLeaves = heads.every(
+    (head) =>
+      (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+      'subject' in head &&
+      head.subject.kind === 'self',
+  );
+  if (!sourceLeaves) return null;
+  return [
+    { op: 'putDepartedSourceIntoLibrary', fromTop: ORDINALS_FROM_TOP[m[1] as string] as number },
+  ];
+}
+
+/**
  * "Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this
  * creature and you gain 1 life." (Scavenging Ooze) — matched whole, because the second sentence
  * asks about the card the first one exiled (its characteristics in the graveyard). The exile is a
@@ -4267,7 +4318,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseLookAtTopBlock(body, card) ??
         parseExileTopPlayableBlock(body) ??
         parseAddManaTriggerBlock(body, card) ??
-        parseHellkiteCourserBlock(body, alloc, card))
+        parseHellkiteCourserBlock(body, alloc, card) ??
+        parseDoublePowerThoseGainBlock(body) ??
+        parseDepartedSourceToLibraryBlock(body, heads))
       : []);
   if (effects === null) {
     effects = [];

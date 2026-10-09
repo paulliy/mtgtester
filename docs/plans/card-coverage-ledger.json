@@ -1216,16 +1216,20 @@
   {
     "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",
     "name": "God-Eternal Rhonas",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.27",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.\"",
       "unrecognized rules text: \"When ~ dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "befb211f-37ca-4083-98d4-9ff1f28be3f2",

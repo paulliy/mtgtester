@@ -75,6 +75,45 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6",
+      "card": {
+        "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",
+        "scryfallId": "0eb444f0-69cc-47c8-8cd6-1f9edad5d903",
+        "name": "God-Eternal Rhonas",
+        "manaCost": "{3}{G}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Zombie God",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie",
+          "God"
+        ],
+        "oracleText": "Deathtouch\nWhen God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.\nWhen God-Eternal Rhonas dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

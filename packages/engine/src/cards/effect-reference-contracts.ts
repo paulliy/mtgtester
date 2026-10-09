@@ -312,6 +312,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   destroyEachNonlandMVFromDamagedControllers: {},
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: {},
+  putDepartedSourceIntoLibrary: {},
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;

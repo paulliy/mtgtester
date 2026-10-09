@@ -2295,6 +2295,133 @@ describe('The Ooze', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.27 God-Eternal Rhonas
+// ---------------------------------------------------------------------------------------------
+
+describe('God-Eternal Rhonas', () => {
+  const rhonas = pinned('God-Eternal Rhonas');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const ox = oracle({ name: 'Lab Ox', typeLine: 'Creature — Ox', power: '3', toughness: '5' });
+  const libraryCard = oracle({ name: 'Lab Library Card', typeLine: 'Artifact', manaCost: '{1}' });
+  const yes = answers([[/use this ability/, /^Yes$/]]);
+  const no = answers([[/use this ability/, /^No$/]]);
+
+  /** P1's library is exactly `n` known cards. */
+  function stackLibrary(ctx: GameContext, n: number) {
+    playerById(ctx, 'P1').library.length = 0;
+    for (let i = 0; i < n; i++) conjure(ctx, 'P1', libraryCard, 'library');
+  }
+  const libraryNames = (ctx: GameContext) => playerById(ctx, 'P1').library.map((card) => card.name);
+
+  it('god-eternal-rhonas-pinned-oracle-supported — the interpreter models deathtouch, the doubling, and the library return', () => {
+    expect(rhonas.sha256).toBe('9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6');
+    expectNoRegistration(rhonas.card);
+    expectModeled(rhonas.card);
+    const def = interpretCard(rhonas.card);
+    expect(def.keywords).toContain('deathtouch');
+    const others = {
+      kind: 'allOf',
+      of: [
+        { kind: 'other' },
+        { kind: 'type', value: 'Creature' },
+        { kind: 'controller', who: 'you' },
+      ],
+    };
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'doublePower', selector: others },
+      { op: 'grantKeywordEachUntilEot', selector: others, keyword: 'vigilance' },
+    ]);
+    expect(def.triggers[1]!.trigger).toEqual({
+      when: 'leavesBattlefield',
+      subject: { kind: 'self' },
+      leavesTo: ['graveyard', 'exile'],
+    });
+    expect(def.triggers[1]!.optional).toBe(true);
+    expect(def.triggers[1]!.effects).toEqual([{ op: 'putDepartedSourceIntoLibrary', fromTop: 3 }]);
+  });
+
+  it('god-eternal-rhonas-enters-doubles-others — each other creature you control has its power doubled and gains vigilance', () => {
+    const ctx = pod('rhonas-enters');
+    const mine = spawn(ctx, 'P1', bear);
+    const big = spawn(ctx, 'P1', ox);
+    const theirs = spawn(ctx, 'P2', bear);
+    const self = enterFrom(ctx, 'P1', rhonas.card, 'hand');
+    settle(ctx);
+    expect(effectivePT(ctx, mine)).toEqual({ power: 4, toughness: 2 });
+    expect(effectivePT(ctx, big)).toEqual({ power: 6, toughness: 5 });
+    expect(computeCharacteristics(ctx, mine).keywords).toContain('vigilance');
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 2, toughness: 2 });
+    expect(computeCharacteristics(ctx, theirs).keywords).not.toContain('vigilance');
+    expect(effectivePT(ctx, self)).toEqual({ power: 5, toughness: 5 });
+    expect(computeCharacteristics(ctx, self).keywords).not.toContain('vigilance');
+  });
+
+  it('god-eternal-rhonas-dies-third-from-top — dying, it may go into its library third from the top', () => {
+    const ctx = pod('rhonas-dies');
+    stackLibrary(ctx, 4);
+    kill(ctx, spawn(ctx, 'P1', rhonas.card));
+    settle(ctx, yes);
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+    expect(libraryNames(ctx)).toEqual([
+      'Lab Library Card',
+      'Lab Library Card',
+      'God-Eternal Rhonas',
+      'Lab Library Card',
+      'Lab Library Card',
+    ]);
+  });
+
+  it('god-eternal-rhonas-exiled-third-from-top — exiled from the battlefield, it may go into its library too', () => {
+    const ctx = pod('rhonas-exiled');
+    stackLibrary(ctx, 3);
+    pump(moveObject(ctx, spawn(ctx, 'P1', rhonas.card), { zone: 'exile' }));
+    settle(ctx, yes);
+    expect(ctx.state.exile).toEqual([]);
+    expect(libraryNames(ctx)[2]).toBe('God-Eternal Rhonas');
+  });
+
+  it('god-eternal-rhonas-decline — declining leaves it in the graveyard', () => {
+    const ctx = pod('rhonas-decline');
+    stackLibrary(ctx, 3);
+    kill(ctx, spawn(ctx, 'P1', rhonas.card));
+    settle(ctx, no);
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'God-Eternal Rhonas',
+    ]);
+    expect(libraryNames(ctx)).not.toContain('God-Eternal Rhonas');
+  });
+
+  it('god-eternal-rhonas-bounce-no-trigger — returning to hand is neither dying nor exile', () => {
+    const ctx = pod('rhonas-bounce');
+    pump(moveObject(ctx, spawn(ctx, 'P1', rhonas.card), { zone: 'hand' }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('god-eternal-rhonas-card-moved-on — if the card left the graveyard first, nothing moves (CR 400.7)', () => {
+    const ctx = pod('rhonas-moved-on');
+    stackLibrary(ctx, 3);
+    kill(ctx, spawn(ctx, 'P1', rhonas.card));
+    pump(moveObject(ctx, playerById(ctx, 'P1').graveyard[0]!, { zone: 'exile' }));
+    settle(ctx, yes);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['God-Eternal Rhonas']);
+    expect(libraryNames(ctx)).not.toContain('God-Eternal Rhonas');
+  });
+
+  it('god-eternal-rhonas-short-library — with fewer than two cards above, it goes on the bottom (CR 401.7)', () => {
+    const ctx = pod('rhonas-short');
+    stackLibrary(ctx, 1);
+    kill(ctx, spawn(ctx, 'P1', rhonas.card));
+    settle(ctx, yes);
+    expect(libraryNames(ctx)).toEqual(['Lab Library Card', 'God-Eternal Rhonas']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2313,6 +2440,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'God-Eternal Rhonas',
+    sha256: '9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6',
+    clauseCount: 3,
   },
   {
     name: 'The Ooze',

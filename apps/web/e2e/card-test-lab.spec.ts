@@ -5097,3 +5097,28 @@ test('The Ooze: Mutagens from a leaving creature and a graveyard exile', async (
   await expect(permanent(page, 'Mutagen')).toContainText('×3');
   await expect(ooze.locator('.tap-badge')).toHaveText('TAP');
 });
+
+test('God-Eternal Rhonas: double your creatures, then go third from the top', async ({ page }) => {
+  await runScenario(page, 'God-Eternal Rhonas: double your creatures, then go third from the top');
+  await castAndResolve(page, 'God-Eternal Rhonas');
+  await expect(permanent(page, 'Lab Ox')).toContainText('8/4', { timeout: 15_000 });
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'God-Eternal Rhonas').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Exiled from the battlefield: choose to put it into the library third from the top.
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  await passUntil(page, yes);
+  await yes.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'God-Eternal Rhonas')).toHaveCount(0);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'God-Eternal Rhonas', exact: true }),
+    }),
+  ).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toContainText('8/4');
+});

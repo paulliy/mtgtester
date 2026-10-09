@@ -4964,6 +4964,21 @@ export function* executeAbility(
         });
         break;
       }
+      case 'putDepartedSourceIntoLibrary': {
+        // Only the card this very permanent became in a graveyard or exile (CR 400.7e).
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = [
+          ...ctx.state.players.flatMap((player) => player.graveyard),
+          ...ctx.state.exile,
+        ].find(
+          (candidate) =>
+            candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+        );
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'library', libraryCardsAbove: effect.fromTop - 1 });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
         // that left the graveyard and came back is a new object.

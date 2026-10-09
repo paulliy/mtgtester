@@ -96,6 +96,11 @@ export interface MoveDestination {
   /** Library only: where to put it. Defaults to 'top'. Index 0 is the top. */
   libraryPosition?: 'top' | 'bottom';
   /**
+   * Library only: this many cards from the top go above it ("third from the top" is 2). A
+   * library with fewer cards takes it on the bottom (CR 401.7). Overrides `libraryPosition`.
+   */
+  libraryCardsAbove?: number;
+  /**
    * Battlefield only: the moving effect says it enters with these counters ("return it … with a
    * -1/-1 counter on it", persist). They are on it as it enters, alongside its own
    * enters-with-counters, and counter replacements apply to them (CR 614.1c).
@@ -838,7 +843,9 @@ export function* moveObject(
         ctx.state.exile.push(next);
         break;
       case 'library':
-        if ((target.libraryPosition ?? 'top') === 'top') owner.library.unshift(next);
+        if (target.libraryCardsAbove !== undefined)
+          owner.library.splice(Math.min(target.libraryCardsAbove, owner.library.length), 0, next);
+        else if ((target.libraryPosition ?? 'top') === 'top') owner.library.unshift(next);
         else owner.library.push(next);
         break;
       case 'stack':

@@ -7953,6 +7953,53 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "fc4f2cdb-966c-4576-8b37-b3d138f5710e": {
+      "name": "God-Eternal Rhonas",
+      "oracleSha256": "9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "god-eternal-rhonas-deathtouch",
+          "oracleText": "Deathtouch",
+          "implementation": ["interpreted keyword line: deathtouch"],
+          "engineTestIds": ["god-eternal-rhonas-pinned-oracle-supported"],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        },
+        {
+          "id": "god-eternal-rhonas-enters",
+          "oracleText": "When God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.",
+          "implementation": [
+            "interpreted self enters trigger, matched as one block because \"those creatures\" is the doubled set",
+            "doublePower on allOf(other, Creature, controller you): each gets +X/+0 where X is its power as the trigger resolves, until end of turn",
+            "grantKeywordEachUntilEot vigilance on the same selector"
+          ],
+          "engineTestIds": [
+            "god-eternal-rhonas-pinned-oracle-supported",
+            "god-eternal-rhonas-enters-doubles-others"
+          ],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        },
+        {
+          "id": "god-eternal-rhonas-leaves",
+          "oracleText": "When God-Eternal Rhonas dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.",
+          "implementation": [
+            "interpreted optional self leavesBattlefield trigger narrowed to graveyard or exile (leavesTo)",
+            "putDepartedSourceIntoLibrary fromTop 3: finds the card the permanent became in a graveyard or exile through leftBattlefieldObjectId (CR 400.7e) and moves it with two cards above it; a shorter library takes it on the bottom (CR 401.7); a card that already left that zone does not move"
+          ],
+          "engineTestIds": [
+            "god-eternal-rhonas-pinned-oracle-supported",
+            "god-eternal-rhonas-dies-third-from-top",
+            "god-eternal-rhonas-exiled-third-from-top",
+            "god-eternal-rhonas-decline",
+            "god-eternal-rhonas-bounce-no-trigger",
+            "god-eternal-rhonas-card-moved-on",
+            "god-eternal-rhonas-short-library"
+          ],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

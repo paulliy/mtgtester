@@ -334,6 +334,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'scavenging-ooze-viewer-exile-creature',
       'imotekh-viewer-phaeron-and-strategist',
       'the-ooze-viewer-leave-and-exile',
+      'god-eternal-rhonas-viewer-double-and-return',
     ]);
   });
 

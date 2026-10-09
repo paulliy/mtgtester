@@ -289,6 +289,7 @@ const shapes = {
       } satisfies Fields<Objects<Property<Effect, 'spell'>>>,
     },
     zones: { array: leaf },
+    fromTop: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -940,6 +941,7 @@ const families = {
       destroyEachNonlandMVFromDamagedControllers: true,
       returnSelfFromGraveyardToHand: true,
       returnDiedSourceToBattlefield: true,
+      putDepartedSourceIntoLibrary: true,
       exileTopNPlayableUntilEot: true,
       noOp: true,
     } satisfies Record<Extract<Effect['op'], string | number>, true>,

@@ -1197,6 +1197,13 @@ export type Effect =
    */
   | { op: 'returnDiedSourceToBattlefield'; counter: string }
   /**
+   * "Put it into its owner's library third from the top" (God-Eternal Rhonas), after the source
+   * died or was exiled: "it" is the card the source became in the graveyard or exile (CR
+   * 400.7e); if that card has left that zone, nothing moves. `fromTop` is 1-based, and a library
+   * too short for that position takes it on the bottom (CR 401.7).
+   */
+  | { op: 'putDepartedSourceIntoLibrary'; fromTop: number }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

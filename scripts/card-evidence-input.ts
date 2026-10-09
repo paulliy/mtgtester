@@ -1777,6 +1777,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['The Ooze: Mutagens from a leaving creature and a graveyard exile'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['God-Eternal Rhonas: double your creatures, then go third from the top'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

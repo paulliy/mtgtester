@@ -8044,6 +8044,61 @@ function theOozeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function godEternalRhonasScenario(gameId: GameId): CardTestScenario {
+  const rhonas = pinnedFrom(COVERAGE_PR03, 'God-Eternal Rhonas');
+  const banish = card({
+    oracleId: 'lab-rhonas-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'god-eternal-rhonas-viewer-double-and-return',
+    title: 'God-Eternal Rhonas: double your creatures, then go third from the top',
+    instructions: [
+      'Lab Ox (4/4) and six Forests are on your battlefield; God-Eternal Rhonas and Lab Banish are in your hand, and your library holds three cards.',
+      'Cast God-Eternal Rhonas: Lab Ox has its power doubled and gains vigilance until end of turn.',
+      'Cast Lab Banish on God-Eternal Rhonas, then choose to put it into your library third from the top.',
+    ],
+    expectedOutcome:
+      'Lab Ox is 8/4 with vigilance, and God-Eternal Rhonas is the third card of your library.',
+    oracleSha256: rhonas.sha256,
+    clauseIds: [
+      'god-eternal-rhonas-deathtouch',
+      'god-eternal-rhonas-enters',
+      'god-eternal-rhonas-leaves',
+    ],
+    decks: {
+      P1: [
+        rhonas.card,
+        banish,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        ...Array.from({ length: 6 }, () => FOREST),
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['God-Eternal Rhonas', 'Lab Banish'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox', 'Lab Ox'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8241,6 +8296,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'scavenging-ooze-viewer-exile-creature',
   'imotekh-viewer-phaeron-and-strategist',
   'the-ooze-viewer-leave-and-exile',
+  'god-eternal-rhonas-viewer-double-and-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8458,6 +8514,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'scavenging-ooze-viewer-exile-creature': scavengingOozeScenario,
   'imotekh-viewer-phaeron-and-strategist': imotekhScenario,
   'the-ooze-viewer-leave-and-exile': theOozeScenario,
+  'god-eternal-rhonas-viewer-double-and-return': godEternalRhonasScenario,
 };
 
 export function createCardTestScenario(

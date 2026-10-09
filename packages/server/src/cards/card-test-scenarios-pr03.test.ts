@@ -372,3 +372,28 @@ describe('The Ooze Card Test Lab scenario', () => {
     replays('the-ooze-viewer-leave-and-exile', steps);
   });
 });
+
+describe('God-Eternal Rhonas Card Test Lab scenario', () => {
+  it('god-eternal-rhonas-viewer-double-and-return — Lab Ox is doubled, then exiled Rhonas goes third from the top', () => {
+    const steps: Step[] = [
+      { action: 'Cast God-Eternal Rhonas' },
+      { action: 'Cast Lab Banish', targets: ['God-Eternal Rhonas'] },
+      { action: 'Yes' },
+    ];
+    const { state, seat, onBattlefield } = run(
+      'god-eternal-rhonas-viewer-double-and-return',
+      steps,
+    );
+    expect(onBattlefield('God-Eternal Rhonas')).toEqual([]);
+    expect(state.exile).toEqual([]);
+    expect(
+      seat('P1')
+        .library.map((card) => card.name)
+        .slice(0, 4),
+    ).toEqual(['Lab Ox', 'Lab Ox', 'God-Eternal Rhonas', 'Lab Ox']);
+    expect(state.effects.some((effect) => effect.description === 'Double power of Lab Ox')).toBe(
+      true,
+    );
+    replays('god-eternal-rhonas-viewer-double-and-return', steps);
+  });
+});
