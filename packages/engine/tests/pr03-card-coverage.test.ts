@@ -1676,6 +1676,33 @@ describe('Watcher for Tomorrow', () => {
     expect(playerById(ctx, 'P1').hand).toEqual([]);
   });
 
+  it('watcher-for-tomorrow-copied-hideaway-returns-both — with Panharmonicon, both cards its two Hideaway triggers exiled go to your hand', () => {
+    // CR 607.2a: each copy of the Hideaway trigger exiles a card linked to this Watcher.
+    const ctx = ready('watcher-panharmonicon');
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Panharmonicon',
+        typeLine: 'Artifact',
+        manaCost: '{4}',
+        oracleText:
+          'If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.',
+      }),
+    );
+    const perm = castWatcher(ctx);
+    expect(ctx.state.exile).toHaveLength(2);
+    const hidden = ctx.state.exile.map((card) => card.cardId).sort();
+    kill(ctx, perm);
+    settle(ctx);
+    expect(
+      playerById(ctx, 'P1')
+        .hand.map((card) => card.cardId)
+        .sort(),
+    ).toEqual(hidden);
+    expect(ctx.state.exile).toEqual([]);
+  });
+
   it('leaves-battlefield-primitive-destinations — the event fires for every destination and a leavesTo head narrows it', () => {
     const listener = oracle({
       name: 'Lab Exile Watcher',

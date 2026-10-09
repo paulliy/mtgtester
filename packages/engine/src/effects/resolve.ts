@@ -3188,19 +3188,20 @@ export function* executeAbility(
         break;
       }
       case 'returnExiledAttachedCard': {
-        // Only the card this very permanent's Hideaway exiled (CR 607.2a).
-        const card = ctx.state.exile.find(
+        // Only cards this very permanent's Hideaway exiled (CR 607.2a). A copied Hideaway
+        // trigger exiles a second linked card, and "the exiled card" means each of them.
+        const cards = ctx.state.exile.filter(
           (candidate) =>
             candidate.attachedToCardId === source.cardId &&
             (candidate.attachedToObjectId === undefined ||
               source.id === undefined ||
               candidate.attachedToObjectId === source.id),
         );
-        if (card !== undefined) {
+        for (const card of cards) {
           delete card.attachedToCardId;
           delete card.attachedToObjectId;
-          yield* moveObject(ctx, card, { zone: 'hand' });
         }
+        if (cards.length > 0) yield* moveObjects(ctx, cards, { zone: 'hand' });
         break;
       }
       case 'sacrificeOneCreatureEachPlayer': {
