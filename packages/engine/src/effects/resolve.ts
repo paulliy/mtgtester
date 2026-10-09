@@ -72,6 +72,7 @@ import {
   moveObject,
   moveObjects,
   movePermanentsToGraveyard,
+  movePermanentsTogether,
   playerById,
   queuePlayerTriggersForEvent,
   queueTriggersForEvent,
@@ -1632,12 +1633,14 @@ export function* executeAbility(
         break;
       }
       case 'exileEachChosen': {
+        const exiled: EnginePermanent[] = [];
         for (const chosen of legalChosenPermanents(effect.targetSlot)) {
           const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'exile', { target: perm.name, source: source.name });
-          yield* moveObject(ctx, perm, { zone: 'exile' });
+          exiled.push(perm);
         }
+        yield* movePermanentsTogether(ctx, exiled, { zone: 'exile' });
         break;
       }
       case 'destroyEachChosen': {
@@ -1872,12 +1875,14 @@ export function* executeAbility(
         // "Return up to two other target nonland permanents to their owners' hands" (Marang
         // River Regent) — the `returnToHand` analog of `dealDamageEachChosen` above: every
         // object chosen in the variable-count slot is returned independently.
+        const returned: EnginePermanent[] = [];
         for (const chosen of legalChosenPermanents(effect.targetSlot)) {
           const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
-          yield* moveObject(ctx, perm, { zone: 'hand' });
+          returned.push(perm);
         }
+        yield* movePermanentsTogether(ctx, returned, { zone: 'hand' });
         break;
       }
       case 'dealDamageDivided': {
@@ -2191,16 +2196,17 @@ export function* executeAbility(
         // The affected set is fixed before anything moves (CR 611.2c): bouncing the first
         // permanent can change what the selector would match (an anthem leaving, a type-changer
         // going away), and a mass bounce must not re-derive its own targets mid-resolution.
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          yield* moveObject(ctx, perm, { zone: 'hand' });
-        }
+        // They leave in one event, so leave triggers see each other leave (CR 603.10a).
+        yield* movePermanentsTogether(ctx, affectedBy(ctx, source, effect.selector), {
+          zone: 'hand',
+        });
         break;
       }
       case 'exileEach': {
         // Same fixed-set rule as `returnToHandEach`/`destroyEach` above it.
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          yield* moveObject(ctx, perm, { zone: 'exile' });
-        }
+        yield* movePermanentsTogether(ctx, affectedBy(ctx, source, effect.selector), {
+          zone: 'exile',
+        });
         break;
       }
       case 'graveyardToBattlefieldEach':

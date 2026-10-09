@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 30,
+      "uniqueOracleIds": 29,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6053,6 +6053,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "restoredIn": "coverage-pr03",
       "note": "Reviewed override retired, not a containment: the generalized interpreter pump line (added for Imotekh the Stormlord) now reads \"Target creature you control gets +2/+2 and gains hexproof until end of turn.\" to the same ability, so the duplicate registration is deleted. The reviewed engine tests and Card Test Lab scenario still cover it."
+    },
+    {
+      "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
+      "name": "The Ooze",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the counter-gated leavesBattlefield trigger (last-known +1/+1 counters, one departure event for mass moves), the {T} graveyard exile, and the Mutagen token with its sorcery-speed counter ability."
+    },
+    {
+      "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+      "name": "Return to Nature",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Coverage PR01 override retired, not a containment: with \"Exile target card from a graveyard\" now an interpreter line (added for The Ooze), the interpreter reads the three single-target modes to the same modal ability, so the duplicate registration is deleted. The PR01 engine tests and Card Test Lab scenarios still cover it."
     }
   ]
 }

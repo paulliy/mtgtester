@@ -3,7 +3,7 @@
  */
 
 import { constant } from '../value';
-import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost, spell } from '../templates';
+import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -388,49 +388,8 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     DEMANDING_DRAGON_DEF,
   );
 
-  // Coverage PR01: each mode announces only its own target, so the spell is castable when any
-  // one mode has a legal target (CR 700.2a; 601.2c).
-  defineCard(
-    '777b8ec4-a783-4297-96b7-4f200d0eb734',
-    'Return to Nature',
-    [
-      'Choose one —',
-      '• Destroy target artifact.',
-      '• Destroy target enchantment.',
-      '• Exile target card from a graveyard.',
-    ],
-    {
-      spellAbility: spell({
-        targets: [
-          { kind: 'artifact' },
-          { kind: 'enchantment' },
-          { kind: 'cardInGraveyard', graveyardOwnerScope: 'any' },
-        ],
-        effects: [],
-        modes: {
-          minChoices: 1,
-          maxChoices: 1,
-          options: [
-            {
-              description: 'Destroy target artifact',
-              effects: [{ op: 'destroy', target: 0 }],
-              targetSlots: [0],
-            },
-            {
-              description: 'Destroy target enchantment',
-              effects: [{ op: 'destroy', target: 1 }],
-              targetSlots: [1],
-            },
-            {
-              description: 'Exile target card from a graveyard',
-              effects: [{ op: 'exileCard', target: 2 }],
-              targetSlots: [2],
-            },
-          ],
-        },
-      }),
-    },
-  );
+  // Return to Nature (coverage PR01) needs no override since coverage PR03: the interpreter reads
+  // the three single-target modes, each announcing only its own target (CR 700.2a; 601.2c).
 
   // Dragonlord's Servant ("Dragon spells you cast cost {1} less to cast.") and Dragonspeaker
   // Shaman (the same line at {2}) no longer need overrides here â€” the line now parses

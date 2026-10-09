@@ -108,11 +108,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "5481cbc6e3263de9d10e9201b7d9ae0b93542d0604d6226fafec5c86f0db96b8",
-      "description": "Return to Nature"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "271c4fa185db23236adf05bc11a28cbf52ab6d5cc13b2e053c3ae194633d562f",
       "description": "Foe-Razer Regent"
     },
@@ -143,7 +138,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "a301a23e7a87e89bdd56c82bef90c4e00efac74af86b4337e265805bffdd6ba5",
+      "sha256": "edd65f9e1e18f0145d473394450b4a73f5f6db9fa19e978e4297071fc08ecef3",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {
@@ -348,7 +343,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "2d5ee1bea055ab1e174613083774638a1b876598cabcfb83639ba8bc14ef9d18",
+      "sha256": "a41cd7e99ca4242d188922519c1a7819bf397de443a8ba226121d3b62911a546",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -523,7 +518,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "cb791d3f7731a3c5de6b9b7e6e1070d7fb5567f7338ad21934582b8ec6e70aa2",
+      "sha256": "9b168d188692476c2b32d59058c8a1f2cc817e1686c161bcce5e5a7e542f4111",
       "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
     },
     {

@@ -109,7 +109,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Puppeteer Clique',
       'Siren Stormtamer',
       'Smokestack',
-      'The Ooze',
       'Dark Confidant',
       'Iron Apprentice',
       'Kardur, Doomscourge',

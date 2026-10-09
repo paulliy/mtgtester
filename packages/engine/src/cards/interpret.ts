@@ -88,7 +88,7 @@ import {
   whenEnters,
   whenPermanent,
 } from './templates';
-import { canonicalizeToken, FOOD, SOLDIER_1_1, TREASURE } from './tokens';
+import { canonicalizeToken, FOOD, MUTAGEN, SOLDIER_1_1, TREASURE } from './tokens';
 // Use the explicit module path so the registry imported by authored override modules and the
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
@@ -1118,6 +1118,11 @@ function parseEffectSentence(
   // card, so the graveyard target carries no filter.
   if (s === 'put target card from your graveyard on the bottom of your library') {
     return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
+  }
+  // "Exile target card from a graveyard" (The Ooze): any card in any graveyard, moved through a
+  // real zone change so leave-graveyard abilities see it.
+  if (s === 'exile target card from a graveyard') {
+    return [{ op: 'exileCard', target: alloc('cardInGraveyard', undefined, undefined, 'any') }];
   }
   if (s === 'exile target attacking or blocking creature') {
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
@@ -3258,6 +3263,14 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     noun = powerMatch[1] as string;
   }
 
+  // "a creature you control with a +1/+1 counter on it" (The Ooze): the named counter kind, read
+  // off the subject as the event saw it — a leaving creature's last-known counters (CR 603.10a).
+  const counterMatch = noun.match(/^(.+) with an? ([+-]\d+\/[+-]\d+) counter on it$/);
+  if (counterMatch !== null) {
+    parts.push(hasCounter(counterMatch[2] as string));
+    noun = counterMatch[1] as string;
+  }
+
   for (const [suffix, who] of [
     [' you control', YOURS],
     [' an opponent controls', OPPONENTS],
@@ -3304,6 +3317,7 @@ const PREDEFINED_TOKENS: Record<string, TokenSpec> = {
   // mana-ability costs happened to match. One token, one spelling.
   treasure: TREASURE,
   food: FOOD,
+  mutagen: MUTAGEN,
 };
 
 /** "1/1 black and green Pest creature token" â†’ a `TokenSpec`, or null if any part is unread. */

@@ -378,8 +378,30 @@ export const ELDRAZI_SPAWN_0_1: TokenSpec = {
   manaAbilities: [{ costs: [{ kind: 'sacrificeSelf' }], units: [['C']] }],
 };
 
-/** "Artifact — Mutagen", a colorless noncreature token with no printed ability. */
-export const MUTAGEN: TokenSpec = artifactToken({ name: 'Mutagen', subtypes: ['Mutagen'] });
+/**
+ * Mutagen — "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only
+ * as a sorcery." The same three load-bearing costs as Food, at sorcery speed.
+ */
+export const MUTAGEN: TokenSpec = {
+  ...artifactToken({ name: 'Mutagen', subtypes: ['Mutagen'] }),
+  activatedAbilities: [
+    {
+      costs: [
+        { kind: 'mana', cost: parseManaCost('{1}' as ManaCostString).cost as ParsedManaCost },
+        { kind: 'tap' },
+        { kind: 'sacrificeSelf' },
+      ],
+      timing: 'sorcery',
+      ability: {
+        kind: 'activated',
+        targets: [{ kind: 'creature' }],
+        effects: [{ op: 'putCounters', target: 0, counter: '+1/+1', count: 1 }],
+        description:
+          '{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.',
+      },
+    },
+  ],
+};
 
 /**
  * "0/0 Vehicle with flying. Crew 2." — single-use (Pia Nalaar, Chief Mechanic), catalogued

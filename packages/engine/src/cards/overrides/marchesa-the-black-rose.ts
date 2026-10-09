@@ -482,12 +482,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       },
     },
   );
-  // Catalog audit batch 7: leaves-the-battlefield is implemented as dies.
-  unsupportedCard(
-    '82a6fa6f-13c2-4ea3-bec2-c51b56b2783b',
-    'The Ooze',
-    'Leaves-the-battlefield is implemented as dies.',
-  );
+  // The Ooze: restored in coverage PR03. The interpreter reads the counter-gated leave trigger
+  // (last-known counters), the graveyard exile, and the Mutagen token, so no override remains.
   // Toxic Deluge: restored in coverage PR02. The interpreter reads the announced pay-X-life
   // additional cost and the -X/-X sweep, so no override remains.
   // Catalog audit batch 6: graveyard-origin and once-each-turn restrictions are omitted.

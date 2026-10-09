@@ -358,3 +358,17 @@ describe('Imotekh the Stormlord Card Test Lab scenario', () => {
     replays('imotekh-viewer-phaeron-and-strategist', steps);
   });
 });
+
+describe('The Ooze Card Test Lab scenario', () => {
+  it('the-ooze-viewer-leave-and-exile — a creature leaving with two counters makes two Mutagens, and the exile makes a third', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Banish', targets: ['Lab Mutant'] },
+      { action: 'Exile target card from a graveyard', targets: ['Lab Ox'] },
+    ];
+    const { state, onBattlefield } = run('the-ooze-viewer-leave-and-exile', steps);
+    expect(onBattlefield('Mutagen')).toHaveLength(3);
+    expect(state.exile.map((card) => card.name).sort()).toEqual(['Lab Mutant', 'Lab Ox']);
+    expect(onBattlefield('The Ooze')[0]?.tapped).toBe(true);
+    replays('the-ooze-viewer-leave-and-exile', steps);
+  });
+});

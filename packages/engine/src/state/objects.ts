@@ -947,7 +947,19 @@ export function* moveObjects(
       : objects.filter((object): object is EngineCardObject => object.zone === 'graveyard');
   const moved: (EngineCardObject | EnginePermanent | null)[] = [];
   const entered: EnginePermanent[] = [];
+  // Permanents leaving the battlefield together are one departure event (CR 603.10a).
+  const departing =
+    destination.zone === 'battlefield'
+      ? []
+      : objects.filter((object): object is EnginePermanent => object.zone === 'battlefield');
+  const departed =
+    departing.length > 0 ? yield* movePermanentsTogether(ctx, departing, destination) : [];
   for (const object of objects) {
+    const departure = departing.indexOf(object as EnginePermanent);
+    if (departure >= 0) {
+      moved.push(departed[departure] ?? null);
+      continue;
+    }
     const entering = destination.zone === 'battlefield' && object.zone !== 'battlefield';
     const next = yield* moveObject(ctx, object, {
       ...destination,
@@ -2011,12 +2023,29 @@ export function* movePermanentsToGraveyard(
   permanents: EnginePermanent[],
   reason?: 'sacrifice',
 ): GameGen<void> {
-  if (permanents.length === 0) return;
+  yield* movePermanentsTogether(ctx, permanents, { zone: 'graveyard' }, reason);
+}
+
+/**
+ * Permanents leaving the battlefield in one event, for any destination ("exile all creatures",
+ * "return all nonland permanents to their owners' hands"). Every leave and dies trigger is
+ * checked against the game as it was before the event (CR 603.10a), so a watcher leaving in the
+ * same event still sees the others leave, and each one is read with its last-known information.
+ */
+export function* movePermanentsTogether(
+  ctx: GameContext,
+  permanents: EnginePermanent[],
+  destination: Pick<MoveDestination, 'zone' | 'libraryPosition'>,
+  reason?: 'sacrifice',
+): GameGen<(EngineCardObject | EnginePermanent | null)[]> {
+  if (permanents.length === 0) return [];
   const departureFacts = new Map(
     permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
   );
   // Only what really reaches the graveyard dies; an unearthed permanent is exiled instead.
-  const dying = permanents.filter((perm) => leavesBattlefieldTo(perm, 'graveyard') === 'graveyard');
+  const dying = permanents.filter(
+    (perm) => leavesBattlefieldTo(perm, destination.zone) === 'graveyard',
+  );
   ctx.state.creaturesDiedThisTurn += dying.filter((perm) =>
     computeCharacteristics(ctx, perm).types.includes('Creature'),
   ).length;
@@ -2032,7 +2061,7 @@ export function* movePermanentsToGraveyard(
     'leavesBattlefield',
     permanents.map((permanent) => ({
       permanent,
-      toZone: leavesBattlefieldTo(permanent, 'graveyard'),
+      toZone: leavesBattlefieldTo(permanent, destination.zone),
     })),
   );
   queueTriggersForEvent(
@@ -2043,12 +2072,14 @@ export function* movePermanentsToGraveyard(
   // Watchers and last-known facts are captured before any member leaves. Destination
   // incarnations become available only during movement; bind them to these exact firings.
   const departureTriggers = ctx.state.pendingTriggers.slice(pendingStart);
+  const moved: (EngineCardObject | EnginePermanent | null)[] = [];
   for (const perm of permanents) {
-    yield* moveObject(ctx, perm, {
-      zone: 'graveyard',
+    const next = yield* moveObject(ctx, perm, {
+      ...destination,
       deferLeaveProcessing: true,
       lastKnownFacts: departureFacts.get(perm.id)!,
     });
+    moved.push(next);
     if (perm.firstDestinationObjectId !== undefined) {
       for (const trigger of departureTriggers) {
         if (trigger.scope?.eventObjectId === perm.id)
@@ -2059,6 +2090,7 @@ export function* movePermanentsToGraveyard(
   // Linked returns happen after every member has left; ETB effects cannot change
   // which other permanents were dying in the same event.
   for (const perm of permanents) yield* returnExiledUntilLeaves(ctx, perm.cardId);
+  return moved;
 }
 
 function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: Zone): void {

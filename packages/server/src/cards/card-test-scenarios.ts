@@ -7992,6 +7992,58 @@ function imotekhScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function theOozeScenario(gameId: GameId): CardTestScenario {
+  const ooze = pinnedFrom(MARCHESA_BATCH1, 'The Ooze');
+  const mutant = card({
+    oracleId: 'lab-the-ooze-mutant',
+    name: 'Lab Mutant',
+    typeLine: 'Creature — Mutant',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  const banish = card({
+    oracleId: 'lab-the-ooze-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'the-ooze-viewer-leave-and-exile',
+    title: 'The Ooze: Mutagens from a leaving creature and a graveyard exile',
+    instructions: [
+      'The Ooze, a Forest, and Lab Mutant with two +1/+1 counters are on your battlefield; Lab Banish is in your hand and Lab Ox is in your graveyard.',
+      'Cast Lab Banish on Lab Mutant: it leaves the battlefield with two +1/+1 counters, so create two Mutagen tokens.',
+      'Tap The Ooze to exile Lab Ox from your graveyard and create a third Mutagen.',
+    ],
+    expectedOutcome:
+      'Lab Mutant and Lab Ox are exiled, The Ooze is tapped, and you control three Mutagen tokens.',
+    oracleSha256: ooze.sha256,
+    clauseIds: ['the-ooze-leave-trigger', 'the-ooze-exile'],
+    decks: {
+      P1: [ooze.card, mutant, banish, LAB_OX, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Banish'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['The Ooze', 'Forest'] },
+        { playerId: 'P1', cardNames: ['Lab Mutant'], counters: { '+1/+1': 2 } },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8188,6 +8240,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'shard-of-the-void-dragon-viewer-attack-edict',
   'scavenging-ooze-viewer-exile-creature',
   'imotekh-viewer-phaeron-and-strategist',
+  'the-ooze-viewer-leave-and-exile',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8404,6 +8457,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
   'scavenging-ooze-viewer-exile-creature': scavengingOozeScenario,
   'imotekh-viewer-phaeron-and-strategist': imotekhScenario,
+  'the-ooze-viewer-leave-and-exile': theOozeScenario,
 };
 
 export function createCardTestScenario(

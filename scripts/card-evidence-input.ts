@@ -1773,6 +1773,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Imotekh the Stormlord: reanimate an artifact, then buff it at combat'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['The Ooze: Mutagens from a leaving creature and a graveyard exile'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

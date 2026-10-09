@@ -56,7 +56,6 @@ const REASONS: Record<string, string> = {
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
-  'The Ooze': 'Leaves-the-battlefield is implemented as dies.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
@@ -302,6 +301,7 @@ describe('Marchesa catalog audit containment', () => {
     'Shard of the Void Dragon',
     'Scavenging Ooze',
     'Imotekh the Stormlord',
+    'The Ooze',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

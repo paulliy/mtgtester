@@ -2795,6 +2795,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
+    "name": "The Ooze",
+    "package": "PR03.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Leaves-the-battlefield is implemented as dies."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "c8de07d4-9bc1-4bfe-b5a4-0a58e05af022",
     "name": "The Thing",
     "package": "W3",

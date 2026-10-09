@@ -741,13 +741,43 @@
     "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b": {
       "name": "The Ooze",
       "oracleSha256": "b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "the-ooze-leave-trigger",
           "oracleText": "Whenever a creature you control with a +1/+1 counter on it leaves the battlefield, create a Mutagen token for each +1/+1 counter on it.",
-          "implementation": ["explicitly unsupported; leaves implemented as dies"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted leavesBattlefield trigger (any destination), subject allOf(hasCounter +1/+1, controller you, type Creature) matched on the leaving object's last-known state (CR 603.10a)",
+            "createToken MUTAGEN, count countersOnTriggerObject(+1/+1) read from the last-known counters",
+            "permanents leaving in one event (mass exile, mass bounce, moveObjects batches) are one departure: watchers and facts are captured before any leaves, so The Ooze leaving alongside the creature still triggers",
+            "Mutagen token: {1}, {T}, Sacrifice this token: put a +1/+1 counter on target creature; sorcery timing"
+          ],
+          "engineTestIds": [
+            "the-ooze-pinned-oracle-supported",
+            "the-ooze-dies-counts-last-known-counters",
+            "the-ooze-leaves-not-only-dies",
+            "the-ooze-negative",
+            "the-ooze-leaves-alongside",
+            "the-ooze-mass-exile",
+            "the-ooze-mass-bounce",
+            "the-ooze-mutagen-token",
+            "the-ooze-mutagen-sorcery-speed"
+          ],
+          "viewerScenarioIds": ["the-ooze-viewer-leave-and-exile"]
+        },
+        {
+          "id": "the-ooze-exile",
+          "oracleText": "{T}: Exile target card from a graveyard. Create a Mutagen token.",
+          "implementation": [
+            "interpreted activated ability: cost {T}, target cardInGraveyard (any graveyard)",
+            "exileCard moves the card through moveObject (a real zone change), then createToken MUTAGEN; with its only target gone the ability does nothing (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "the-ooze-pinned-oracle-supported",
+            "the-ooze-exile-makes-a-mutagen",
+            "the-ooze-exile-target-gone"
+          ],
+          "viewerScenarioIds": ["the-ooze-viewer-leave-and-exile"]
         }
       ],
       "gameplayAiScenarioIds": []

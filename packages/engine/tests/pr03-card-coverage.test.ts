@@ -20,6 +20,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
 import type { TokenSpec } from '../src/cards/ability';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
+import { MUTAGEN } from '../src/cards/tokens';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -2074,6 +2075,226 @@ describe('Imotekh the Stormlord', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.20 The Ooze
+// ---------------------------------------------------------------------------------------------
+
+const THE_OOZE_SHA = 'b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387';
+
+describe('The Ooze', () => {
+  const ooze = pinned('The Ooze');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const mutagens = (ctx: GameContext, controllerId = 'P1') =>
+    ctx.state.battlefield.filter(
+      (perm) => perm.isToken && perm.name === 'Mutagen' && perm.controllerId === controllerId,
+    );
+  function withCounters(perm: EnginePermanent, counters: Record<string, number>) {
+    perm.counters = { ...counters };
+    return perm;
+  }
+
+  it('the-ooze-pinned-oracle-supported — the interpreter alone models the leave trigger, the exile, and the Mutagen token', () => {
+    expect(ooze.sha256).toBe(THE_OOZE_SHA);
+    expectNoRegistration(ooze.card);
+    expectModeled(ooze.card);
+    const def = interpretCard(ooze.card);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'leavesBattlefield',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'hasCounter', counter: '+1/+1' },
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
+      },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      {
+        op: 'createToken',
+        spec: MUTAGEN,
+        count: { kind: 'countersOnTriggerObject', counter: '+1/+1' },
+      },
+    ]);
+    const [exile] = def.activatedAbilities;
+    expect(exile?.costs).toEqual([{ kind: 'tap' }]);
+    expect(exile?.ability.targets).toEqual([
+      { kind: 'cardInGraveyard', graveyardOwnerScope: 'any' },
+    ]);
+    expect(exile?.ability.effects).toEqual([
+      { op: 'exileCard', target: 0 },
+      { op: 'createToken', spec: MUTAGEN, count: { kind: 'const', n: 1 } },
+    ]);
+  });
+
+  it('the-ooze-dies-counts-last-known-counters — a creature dying with two +1/+1 counters makes two Mutagens', () => {
+    const ctx = pod('the-ooze-dies');
+    spawn(ctx, 'P1', ooze.card);
+    const creature = withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 2 });
+    kill(ctx, creature);
+    settle(ctx);
+    expect(mutagens(ctx)).toHaveLength(2);
+  });
+
+  it('the-ooze-leaves-not-only-dies — exile and a return to hand also trigger', () => {
+    const ctx = pod('the-ooze-exile');
+    spawn(ctx, 'P1', ooze.card);
+    const exiled = withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 1 });
+    const bounced = withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 3 });
+    pump(moveObject(ctx, exiled, { zone: 'exile' }));
+    pump(moveObject(ctx, bounced, { zone: 'hand' }));
+    settle(ctx);
+    expect(mutagens(ctx)).toHaveLength(4);
+  });
+
+  it("the-ooze-negative — no +1/+1 counter, only a -1/-1 counter, or an opponent's creature does nothing", () => {
+    const ctx = pod('the-ooze-negative');
+    spawn(ctx, 'P1', ooze.card);
+    kill(ctx, spawn(ctx, 'P1', bear));
+    kill(ctx, withCounters(spawn(ctx, 'P1', bear), { '-1/-1': 1 }));
+    kill(ctx, withCounters(spawn(ctx, 'P2', bear), { '+1/+1': 2 }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('the-ooze-leaves-alongside — leaving at the same time as the creature still triggers (CR 603.10a)', () => {
+    const ctx = pod('the-ooze-together');
+    const self = spawn(ctx, 'P1', ooze.card);
+    const creature = withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 2 });
+    pump(moveObjects(ctx, [self, creature], { zone: 'exile' }));
+    settle(ctx);
+    expect(mutagens(ctx)).toHaveLength(2);
+  });
+
+  it('the-ooze-mass-exile — "exile all nonland permanents" takes The Ooze with the creatures, and it still triggers for each', () => {
+    const ctx = pod('the-ooze-mass-exile');
+    spawn(ctx, 'P1', ooze.card);
+    withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 1 });
+    withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 2 });
+    const sweep = oracle({
+      name: 'Lab Exile Sweep',
+      typeLine: 'Sorcery',
+      manaCost: '{G}',
+      oracleText: 'Exile all nonland permanents.',
+    });
+    castFromHand(ctx, 'P1', sweep, green(1));
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.filter((perm) => perm.name !== 'Forest')).toEqual([]);
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+    settle(ctx);
+    expect(mutagens(ctx)).toHaveLength(3);
+  });
+
+  it('the-ooze-mass-bounce — "return all nonland permanents" to hand is one departure too', () => {
+    const ctx = pod('the-ooze-mass-bounce');
+    spawn(ctx, 'P1', ooze.card);
+    withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 2 });
+    const wave = oracle({
+      name: 'Lab Bounce Wave',
+      typeLine: 'Sorcery',
+      manaCost: '{G}',
+      oracleText: "Return all nonland permanents to their owners' hands.",
+    });
+    castFromHand(ctx, 'P1', wave, green(1));
+    resolveTop(ctx);
+    expect(
+      playerById(ctx, 'P1')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Bear', 'The Ooze']);
+    settle(ctx);
+    expect(mutagens(ctx)).toHaveLength(2);
+  });
+
+  it('the-ooze-exile-makes-a-mutagen — {T} exiles a card from any graveyard and makes a Mutagen', () => {
+    const ctx = pod('the-ooze-tap');
+    const self = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    const option = optionFor(ctx, 'P1', self.id, /Exile target card from a graveyard/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    expect(self.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+    expect(mutagens(ctx)).toHaveLength(1);
+  });
+
+  it('the-ooze-exile-target-gone — with its only target gone the ability does nothing, so no Mutagen', () => {
+    const ctx = pod('the-ooze-tap-gone');
+    const self = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    const option = optionFor(ctx, 'P1', self.id, /Exile target card from a graveyard/);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    pump(moveObject(ctx, playerById(ctx, 'P3').graveyard[0]!, { zone: 'hand' }));
+    resolveTop(ctx);
+    expect(ctx.state.exile).toEqual([]);
+    expect(mutagens(ctx)).toEqual([]);
+  });
+
+  it('the-ooze-mutagen-token — {1}, {T}, sacrifice the Mutagen at sorcery speed for a +1/+1 counter', () => {
+    const ctx = pod('the-ooze-mutagen');
+    spawn(ctx, 'P1', ooze.card);
+    const creature = spawn(ctx, 'P1', bear);
+    kill(ctx, withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 1 }));
+    settle(ctx);
+    const [token] = mutagens(ctx);
+    expect(token).toBeDefined();
+    addMana(playerById(ctx, 'P1'), green(1));
+    const option = optionFor(ctx, 'P1', token!.id, /Put a \+1\/\+1 counter on target creature/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, creature.id]]),
+    );
+    expect(mutagens(ctx)).toEqual([]);
+    resolveTop(ctx);
+    expect(creature.counters).toEqual({ '+1/+1': 1 });
+  });
+
+  it('the-ooze-mutagen-sorcery-speed — the Mutagen cannot be activated with a spell on the stack', () => {
+    const ctx = pod('the-ooze-mutagen-timing');
+    spawn(ctx, 'P1', ooze.card);
+    const self = ctx.state.battlefield.find((perm) => perm.name === 'The Ooze')!;
+    kill(ctx, withCounters(spawn(ctx, 'P1', bear), { '+1/+1': 1 }));
+    settle(ctx);
+    const [token] = mutagens(ctx);
+    addMana(playerById(ctx, 'P1'), green(1));
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    const exile = optionFor(ctx, 'P1', self.id, /Exile target card from a graveyard/);
+    takeAction(
+      ctx,
+      'P1',
+      exile!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, target.id]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(optionFor(ctx, 'P1', token!.id, /Put a \+1\/\+1 counter/)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2084,13 +2305,18 @@ interface RestoredCard {
 }
 
 /** Reviewed overrides deleted in PR03 because the interpreter now reads the same text. */
-const RETIRED_REVIEWED_OVERRIDES = ['Blossoming Defense'];
+const RETIRED_REVIEWED_OVERRIDES = ['Blossoming Defense', 'Return to Nature'];
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
   {
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
+    clauseCount: 2,
+  },
+  {
+    name: 'The Ooze',
+    sha256: THE_OOZE_SHA,
     clauseCount: 2,
   },
   {

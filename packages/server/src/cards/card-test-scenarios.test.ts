@@ -333,6 +333,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'shard-of-the-void-dragon-viewer-attack-edict',
       'scavenging-ooze-viewer-exile-creature',
       'imotekh-viewer-phaeron-and-strategist',
+      'the-ooze-viewer-leave-and-exile',
     ]);
   });
 

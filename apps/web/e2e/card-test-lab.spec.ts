@@ -5068,3 +5068,32 @@ test('Imotekh the Stormlord: reanimate an artifact, then buff it at combat', asy
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(permanent(page, 'Lab Construct')).toContainText('3/3');
 });
+
+test('The Ooze: Mutagens from a leaving creature and a graveyard exile', async ({ page }) => {
+  await runScenario(page, 'The Ooze: Mutagens from a leaving creature and a graveyard exile');
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Mutant').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Lab Mutant left with two +1/+1 counters: two Mutagens.
+  const mutagen = permanent(page, 'Mutagen');
+  await passUntil(page, mutagen);
+  await expect(mutagen).toContainText('×2');
+  const ooze = permanent(page, 'The Ooze');
+  await expect(ooze).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ooze.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const ox = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+  });
+  await expect(ox).toBeVisible();
+  await ox.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Mutagen')).toContainText('×3');
+  await expect(ooze.locator('.tap-badge')).toHaveText('TAP');
+});
