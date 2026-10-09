@@ -256,3 +256,21 @@ describe('Keeper of Secrets Card Test Lab scenario', () => {
     replays('keeper-of-secrets-viewer-flashback', steps);
   });
 });
+
+describe('River Kelpie Card Test Lab scenario', () => {
+  it('river-kelpie-viewer-flashback-and-persist — the flashback draws, then persist returns it and it draws again', () => {
+    const steps: Step[] = [
+      { action: 'Lab Flash Bolt', targets: ['P2'] },
+      { action: 'Cast Lab Doom', targets: ['River Kelpie'] },
+    ];
+    const { seat, onBattlefield } = run('river-kelpie-viewer-flashback-and-persist', steps);
+    expect(
+      seat('P1')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Ox', 'Lab Zombie']);
+    expect(seat('P2').life).toBe(39);
+    expect(onBattlefield('River Kelpie')[0]?.counters).toEqual({ '-1/-1': 1 });
+    replays('river-kelpie-viewer-flashback-and-persist', steps);
+  });
+});

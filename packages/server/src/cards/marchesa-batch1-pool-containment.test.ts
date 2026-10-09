@@ -73,6 +73,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Retrofitter Foundry',
       'Return to Nature',
       'Rishkar, Peema Renegade',
+      'River Kelpie',
       'Sage of Fables',
       'Satoru, the Infiltrator',
       'Sceptre of Eternal Glory',

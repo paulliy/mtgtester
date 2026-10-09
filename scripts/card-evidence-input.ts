@@ -1745,6 +1745,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Keeper of Secrets: flash back a spell to ping P2'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['River Kelpie: draw from a flashback and from persist'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -4913,3 +4913,31 @@ test('Keeper of Secrets: flash back a spell to ping P2', async ({ page }) => {
   await expect(page.getByText(/Keeper of Secrets.* deals 1 to P2/).first()).toBeVisible();
   await expect(page.getByText(/Lab Flash Bolt deals 1 to P3/).first()).toBeVisible();
 });
+
+test('River Kelpie: draw from a flashback and from persist', async ({ page }) => {
+  await runScenario(page, 'River Kelpie: draw from a flashback and from persist');
+  const bolt = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Flash Bolt', exact: true }) });
+  await expect(bolt).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bolt.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // The Kelpie's cast trigger sits above the bolt; pass until both have resolved.
+  await passUntil(page, page.getByText(/Lab Flash Bolt resolves/).first());
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'River Kelpie').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'River Kelpie')).toBeVisible();
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+  await expect(handCard(page, 'Lab Ox')).toBeVisible();
+  await expect(handCard(page, 'Lab Zombie')).toBeVisible();
+});

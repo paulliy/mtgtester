@@ -541,19 +541,48 @@
     "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8": {
       "name": "River Kelpie",
       "oracleSha256": "d37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "river-kelpie-enters-from-graveyard",
           "oracleText": "Whenever this creature or another permanent enters from a graveyard, draw a card.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger watching anyOf(self, other permanent) with entersFrom { zone: graveyard } (any player's graveyard, CR 603.6a); draw 1"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-persist-draws",
+            "river-kelpie-another-permanent",
+            "river-kelpie-other-origins-no-draw"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
         },
         {
+          "id": "river-kelpie-cast-from-graveyard",
           "oracleText": "Whenever a player casts a spell from a graveyard, draw a card.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted castsSpell trigger, caster each, with castFrom graveyard read from the spell card's cast record; draw 1"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-spell-from-graveyard",
+            "river-kelpie-other-origins-no-draw",
+            "cast-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
+        },
+        {
+          "id": "river-kelpie-persist",
+          "oracleText": "Persist",
+          "implementation": [
+            "interpreted as a dies trigger with the intervening-if sourceHasCounters -1/-1 <= 0 on last-known counters, returning only the card it became, under its owner's control with a -1/-1 counter (CR 702.79a)"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-persist-draws",
+            "persist-undying-primitive-new-object"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
         }
       ],
       "gameplayAiScenarioIds": []

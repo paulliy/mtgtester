@@ -450,12 +450,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Puppeteer Clique',
     'Stolen creature is not exiled at the beginning of the next end step.',
   );
-  // Catalog audit batch 6: graveyard origin is omitted from both triggers.
-  unsupportedCard(
-    'ef5c93ae-91e0-4edb-b8a3-1171a3694bb8',
-    'River Kelpie',
-    'Graveyard-origin enters and cast triggers fire on any enter or cast.',
-  );
+  // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers
+  // and Persist, so no override remains.
   // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a
   // +1/+1 counter from any creature you control, chosen as the cost is paid.
   // Satoru, the Infiltrator: restored in coverage PR03. The interpreter reads the self-inclusive

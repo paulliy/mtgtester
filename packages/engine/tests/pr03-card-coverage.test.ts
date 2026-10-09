@@ -1323,6 +1323,95 @@ describe('Keeper of Secrets', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.21 River Kelpie
+// ---------------------------------------------------------------------------------------------
+
+describe('River Kelpie', () => {
+  const kelpie = pinned('River Kelpie');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const flashBolt = oracle({
+    name: 'Lab Flash Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
+  });
+
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    for (const name of ['Page Three', 'Page Two', 'Page One'])
+      conjure(ctx, 'P1', LAB_CARD(name), 'library');
+    return ctx;
+  }
+  const hand = (ctx: GameContext) => playerById(ctx, 'P1').hand.map((card) => card.name);
+
+  it('river-kelpie-pinned-oracle-supported — the interpreter alone models both graveyard triggers and persist', () => {
+    expect(kelpie.sha256).toBe('d37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c');
+    expectNoRegistration(kelpie.card);
+    expectModeled(kelpie.card);
+    const def = interpretCard(kelpie.card);
+    expect(def.triggers.map((trigger) => trigger.trigger)).toEqual([
+      {
+        when: 'enters',
+        subject: {
+          kind: 'permanent',
+          selector: { kind: 'anyOf', of: [{ kind: 'self' }, { kind: 'other' }] },
+        },
+        entersFrom: { zone: 'graveyard' },
+      },
+      { when: 'castsSpell', caster: 'each', castFrom: 'graveyard' },
+      expect.objectContaining({ when: 'dies', subject: { kind: 'self' } }),
+    ]);
+  });
+
+  it('river-kelpie-persist-draws — persist returns it, and its own trigger draws a card', () => {
+    const ctx = ready('kelpie-persist');
+    const perm = spawn(ctx, 'P1', kelpie.card);
+    kill(ctx, perm);
+    settle(ctx);
+    expect(onField(ctx, perm.cardId)?.counters).toEqual({ '-1/-1': 1 });
+    expect(hand(ctx)).toEqual(['Page One']);
+    kill(ctx, onField(ctx, perm.cardId)!);
+    settle(ctx);
+    expect(onField(ctx, perm.cardId)).toBeUndefined();
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
+  it("river-kelpie-another-permanent — any permanent entering from any player's graveyard draws a card", () => {
+    const ctx = ready('kelpie-other');
+    spawn(ctx, 'P1', kelpie.card);
+    enterFrom(ctx, 'P2', relic, 'graveyard');
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
+  it('river-kelpie-spell-from-graveyard — any player casting a spell from a graveyard draws a card', () => {
+    const ctx = ready('kelpie-cast');
+    spawn(ctx, 'P1', kelpie.card);
+    const bolt = conjure(ctx, 'P3', flashBolt, 'graveyard');
+    addMana(playerById(ctx, 'P3'), [...generic(1), ...red(1)]);
+    takeAction(
+      ctx,
+      'P3',
+      optionFor(ctx, 'P3', bolt.id)!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P2']]),
+    );
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.controllerId)).toEqual(['P1']);
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
+  it('river-kelpie-other-origins-no-draw — a spell from hand, or a permanent entering from hand or exile, draws nothing', () => {
+    const ctx = ready('kelpie-negative');
+    spawn(ctx, 'P1', kelpie.card);
+    castFromHand(ctx, 'P2', flashBolt, red(1), new Map([[0, 'P1']]));
+    enterFrom(ctx, 'P1', relic, 'hand');
+    enterFrom(ctx, 'P1', relic, 'exile');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1334,6 +1423,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'River Kelpie',
+    sha256: 'd37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c',
+    clauseCount: 3,
+  },
   {
     name: 'Keeper of Secrets',
     sha256: '4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a',

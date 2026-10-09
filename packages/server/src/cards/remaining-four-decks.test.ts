@@ -107,7 +107,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Body Launderer',
       'Cytoplast Manipulator',
       'Flare of Duplication',
-      'River Kelpie',
       'Twilight Diviner',
       'Pensive Professor',
       'Puppeteer Clique',

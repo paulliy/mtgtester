@@ -2278,6 +2278,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
+    "name": "River Kelpie",
+    "package": "PR03.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard-origin enters and cast triggers fire on any enter or cast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3640c29b-1534-4952-b297-619ade948431",
     "name": "Roaming Throne",
     "package": "W7",

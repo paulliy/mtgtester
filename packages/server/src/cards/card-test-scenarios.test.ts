@@ -326,6 +326,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'shard-of-the-nightbringer-viewer-cast-drain',
       'satoru-viewer-free-cast-draws',
       'keeper-of-secrets-viewer-flashback',
+      'river-kelpie-viewer-flashback-and-persist',
     ]);
   });
 

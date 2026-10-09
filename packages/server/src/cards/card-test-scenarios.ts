@@ -7680,18 +7680,20 @@ function satoruScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A fully interpreted flashback instant: the PR03 graveyard-cast scenarios cast it from there. */
+const LAB_FLASH_BOLT = card({
+  oracleId: 'lab-keeper-flash-bolt',
+  name: 'Lab Flash Bolt',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
+});
+
 function keeperOfSecretsScenario(gameId: GameId): CardTestScenario {
   const keeper = pinnedFrom(COVERAGE_PR03, 'Keeper of Secrets');
-  const flashBolt = card({
-    oracleId: 'lab-keeper-flash-bolt',
-    name: 'Lab Flash Bolt',
-    typeLine: 'Instant',
-    manaCost: '{R}',
-    cmc: 1,
-    colors: ['R'],
-    colorIdentity: ['R'],
-    oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
-  });
   return pr01Scenario(gameId, {
     id: 'keeper-of-secrets-viewer-flashback',
     title: 'Keeper of Secrets: flash back a spell to ping P2',
@@ -7705,7 +7707,7 @@ function keeperOfSecretsScenario(gameId: GameId): CardTestScenario {
     oracleSha256: keeper.sha256,
     clauseIds: ['keeper-of-secrets-keywords', 'keeper-of-secrets-symphony-of-pain'],
     decks: {
-      P1: [keeper.card, flashBolt, MOUNTAIN, MOUNTAIN],
+      P1: [keeper.card, LAB_FLASH_BOLT, MOUNTAIN, MOUNTAIN],
       P2: PR01_FILLER,
       P3: PR01_FILLER,
       P4: PR01_FILLER,
@@ -7713,6 +7715,50 @@ function keeperOfSecretsScenario(gameId: GameId): CardTestScenario {
     prepared: {
       hand: [],
       battlefield: [{ playerId: 'P1', cardNames: ['Keeper of Secrets', 'Mountain', 'Mountain'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Flash Bolt'] }],
+    },
+  });
+}
+
+function riverKelpieScenario(gameId: GameId): CardTestScenario {
+  const kelpie = pinnedFrom(MARCHESA_BATCH1, 'River Kelpie');
+  return pr01Scenario(gameId, {
+    id: 'river-kelpie-viewer-flashback-and-persist',
+    title: 'River Kelpie: draw from a flashback and from persist',
+    instructions: [
+      'River Kelpie, two Mountains and two Swamps are on your battlefield; Lab Flash Bolt is in your graveyard and Lab Doom is in your hand.',
+      'Cast Lab Flash Bolt from your graveyard (flashback), targeting P2: a spell cast from a graveyard draws a card.',
+      'Cast Lab Doom on River Kelpie: persist returns it from your graveyard, and it draws a card again.',
+    ],
+    expectedOutcome:
+      'You draw Lab Ox and Lab Zombie, P2 takes 1 damage, and River Kelpie is back with a -1/-1 counter.',
+    oracleSha256: kelpie.sha256,
+    clauseIds: [
+      'river-kelpie-enters-from-graveyard',
+      'river-kelpie-cast-from-graveyard',
+      'river-kelpie-persist',
+    ],
+    decks: {
+      P1: [
+        kelpie.card,
+        LAB_FLASH_BOLT,
+        LAB_DOOM,
+        MOUNTAIN,
+        MOUNTAIN,
+        SWAMP,
+        SWAMP,
+        LAB_OX,
+        LAB_ZOMBIE,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['River Kelpie', 'Mountain', 'Mountain', 'Swamp', 'Swamp'] },
+      ],
       graveyard: [{ playerId: 'P1', cardNames: ['Lab Flash Bolt'] }],
     },
   });
@@ -7907,6 +7953,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'shard-of-the-nightbringer-viewer-cast-drain',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
+  'river-kelpie-viewer-flashback-and-persist',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8116,6 +8163,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
+  'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
 };
 
 export function createCardTestScenario(

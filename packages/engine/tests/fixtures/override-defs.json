@@ -10279,12 +10279,6 @@
     }
   },
   {
-    "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
-    "name": "River Kelpie",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "f08f7814-4585-41dd-b82e-ed2ef5e24242",
     "name": "Transcendent Envoy",
     "handledLines": [
@@ -19702,12 +19696,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-river-kelpie",
-    "name": "River Kelpie",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-rogue-refiner",
