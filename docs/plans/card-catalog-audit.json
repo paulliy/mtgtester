@@ -5997,6 +5997,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Registration deleted: the interpreter reads the enters-from-a-graveyard trigger (entersFrom), the cast-from-a-graveyard trigger (castFrom over the spell's cast record) and Persist; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
+      "name": "Watcher for Tomorrow",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads Hideaway 4, enters tapped, and 'When this creature leaves the battlefield, put the exiled card into its owner's hand' as a leavesBattlefield trigger returning only the card this permanent's Hideaway exiled; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

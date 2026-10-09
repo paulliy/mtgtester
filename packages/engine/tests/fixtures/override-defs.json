@@ -1712,12 +1712,6 @@
     "def": {}
   },
   {
-    "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
-    "name": "Watcher for Tomorrow",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
     "name": "Cryptek",
     "handledLines": [],
@@ -22368,12 +22362,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-watcher-for-tomorrow",
-    "name": "Watcher for Tomorrow",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-wear-tear",

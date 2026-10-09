@@ -508,10 +508,6 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Vindictive Lich',
     'Modes are choose-one rather than one-or-more targeting different players.',
   );
-  // Catalog audit batch 7: leaves-the-battlefield is implemented as dies.
-  unsupportedCard(
-    '277aafa6-4270-4d24-a888-cf9e8e635d4b',
-    'Watcher for Tomorrow',
-    'Leaves-the-battlefield is implemented as dies.',
-  );
+  // Watcher for Tomorrow: restored in coverage PR03. The interpreter reads Hideaway, the
+  // leaves-the-battlefield trigger and its linked exiled card, so no override remains.
 }

@@ -1753,6 +1753,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Aurora Phoenix: cast a cascade spell to return it'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Watcher for Tomorrow: hide a card, then get it back as it leaves'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

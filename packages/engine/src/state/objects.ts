@@ -1299,6 +1299,8 @@ export interface TriggerEventSubject {
    * the watching permanent's own controller, which nothing else in `TriggerEventSubject` names.
    */
   sourceControllerId?: PlayerId;
+  /** `leavesBattlefield`: the zone this permanent went to. */
+  toZone?: Zone;
 }
 
 /**
@@ -1449,6 +1451,10 @@ export function queueTriggersForEvent(
         if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId)
           return false;
         if (!matchesEntryRestrictions(spec, s.permanent, source.controllerId)) return false;
+        if ('leavesTo' in spec && spec.leavesTo !== undefined) {
+          if (s.toZone !== 'graveyard' && s.toZone !== 'exile') return false;
+          if (!spec.leavesTo.includes(s.toZone)) return false;
+        }
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -1998,6 +2004,14 @@ export function* movePermanentsToGraveyard(
     );
   queueTriggersForEvent(
     ctx,
+    'leavesBattlefield',
+    permanents.map((permanent) => ({
+      permanent,
+      toZone: leavesBattlefieldTo(permanent, 'graveyard'),
+    })),
+  );
+  queueTriggersForEvent(
+    ctx,
     'dies',
     dying.map((permanent) => ({ permanent })),
   );
@@ -2023,11 +2037,13 @@ export function* movePermanentsToGraveyard(
 }
 
 function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: Zone): void {
+  const perm = obj as EnginePermanent;
+  if (perm.controllerId === undefined) return;
+  // "leaves the battlefield" — for any destination, read with last-known information.
+  queueTriggersForEvent(ctx, 'leavesBattlefield', [{ permanent: perm, toZone: to }]);
   // "dies" means battlefield → graveyard (CR 700.4). The pre-move battlefield object
   // carries the controller.
   if (to !== 'graveyard') return;
-  const perm = obj as EnginePermanent;
-  if (perm.controllerId === undefined) return;
   if (computeCharacteristics(ctx, perm).types.includes('Creature')) {
     ctx.state.creaturesDiedThisTurn += 1;
   }

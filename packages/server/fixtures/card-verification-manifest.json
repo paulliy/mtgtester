@@ -755,13 +755,45 @@
     "277aafa6-4270-4d24-a888-cf9e8e635d4b": {
       "name": "Watcher for Tomorrow",
       "oracleSha256": "02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "watcher-for-tomorrow-hideaway",
+          "oracleText": "Hideaway 4",
+          "implementation": [
+            "interpreted enters trigger hideawayExileTop4: look at the top four, exile one face down linked to this card and, new in PR03, to this permanent object (CR 607.2a), and put the rest on the bottom in a random order"
+          ],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
+        },
+        {
+          "id": "watcher-for-tomorrow-enters-tapped",
+          "oracleText": "This creature enters tapped.",
+          "implementation": ["interpreted entersTapped replacement (CR 614.1c)"],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
+        },
+        {
+          "id": "watcher-for-tomorrow-leaves",
           "oracleText": "When this creature leaves the battlefield, put the exiled card into its owner's hand.",
-          "implementation": ["explicitly unsupported; leaves implemented as dies"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted leavesBattlefield trigger on self: queued for every destination from both the single-move and the simultaneous graveyard paths, read with last-known information (CR 603.6c, 603.10a)",
+            "returnExiledAttachedCard: only the card this permanent's Hideaway exiled moves to its owner's hand"
+          ],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies",
+            "watcher-for-tomorrow-leaves-any-way",
+            "watcher-for-tomorrow-linked-card-only",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
         }
       ],
       "gameplayAiScenarioIds": []

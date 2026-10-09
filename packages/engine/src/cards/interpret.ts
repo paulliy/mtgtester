@@ -2083,6 +2083,11 @@ function parseEffectSentence(
       return [{ op: 'eachOpponentLosesLife', amount: { kind: 'xValue' } }];
     }
   }
+  // "put the exiled card into its owner's hand" (Watcher for Tomorrow): the card this permanent's
+  // Hideaway exiled — a linked ability (CR 607.2a), so only a card with Hideaway can say it.
+  if (s === "put the exiled card into its owner's hand" && /^Hideaway \d/m.test(card.oracleText)) {
+    return [{ op: 'returnExiledAttachedCard' }];
+  }
   if (s === 'target opponent loses half their life, rounded up') {
     return [{ op: 'loseHalfLifeTarget', target: alloc('player', undefined, 'opponent') }];
   }
@@ -3101,7 +3106,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -4025,19 +4030,21 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         // into ~" there is no entry event to pair it with.
         event === 'transforms into ~'
         ? ['transformsInto']
-        : event === 'dies'
-          ? ['dies']
-          : event === 'attacks'
-            ? ['attacks']
-            : event === 'becomes tapped'
-              ? // City of Brass. `becomesTapped` is queued from every tap path already, including
-                // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
-                ['becomesTapped']
-              : event === 'becomes crewed'
-                ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
-                  // from another "becomes an artifact creature" effect.
-                  ['becomesCrewed']
-                : ['dealsCombatDamageToPlayer'];
+        : event === 'leaves the battlefield' || event.endsWith('into exile from the battlefield')
+          ? ['leavesBattlefield']
+          : event === 'dies'
+            ? ['dies']
+            : event === 'attacks'
+              ? ['attacks']
+              : event === 'becomes tapped'
+                ? // City of Brass. `becomesTapped` is queued from every tap path already, including
+                  // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
+                  ['becomesTapped']
+                : event === 'becomes crewed'
+                  ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                    // from another "becomes an artifact creature" effect.
+                    ['becomesCrewed']
+                  : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;
@@ -4051,17 +4058,24 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     // "enters from a graveyard" / "enters from your graveyard" (CR 603.6a): the origin zone is
     // part of the enters event, read off the permanent as it arrives.
     const origin = event.match(/^enters from (a|your) graveyard$/);
+    // "is put into a graveyard … or … into exile from the battlefield" / "dies or is put into
+    // exile from the battlefield": a leave event narrowed to those destinations.
+    const leavesTo = event.endsWith('into exile from the battlefield')
+      ? (['graveyard', 'exile'] as ('graveyard' | 'exile')[])
+      : undefined;
     heads = events.map((when) =>
-      origin === null
-        ? { when, subject }
-        : {
-            when,
-            subject,
-            entersFrom: {
-              zone: 'graveyard' as const,
-              ...(origin[1] === 'your' ? { graveyardOwner: 'you' as const } : {}),
+      leavesTo !== undefined
+        ? { when, subject, leavesTo }
+        : origin === null
+          ? { when, subject }
+          : {
+              when,
+              subject,
+              entersFrom: {
+                zone: 'graveyard' as const,
+                ...(origin[1] === 'your' ? { graveyardOwner: 'you' as const } : {}),
+              },
             },
-          },
     );
   }
 

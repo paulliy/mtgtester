@@ -24,6 +24,7 @@ export function triggerEventFamily(
     case 'tokenCreated':
     case 'putIntoGraveyardFromAnywhere':
     case 'leavesGraveyard':
+    case 'leavesBattlefield':
     case 'transformsInto':
       return 'object';
     case 'castsSpell':
@@ -92,6 +93,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'tokenCreated':
     case 'putIntoGraveyardFromAnywhere':
     case 'leavesGraveyard':
+    case 'leavesBattlefield':
     case 'transformsInto':
       return false;
     default:
@@ -123,6 +125,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'entersUntapped',
           'entersFrom',
           'entersWithoutManaSpentToCast',
+          'leavesTo',
           'defendingPlayerIsEventPlayer',
         ]
       : family === 'cast'
@@ -174,6 +177,19 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.entersWithoutManaSpentToCast`,
         message: 'uncast or free entry restriction requires an enters event',
       });
+    if (head['leavesTo'] !== undefined) {
+      const zones = head['leavesTo'];
+      if (
+        head['when'] !== 'leavesBattlefield' ||
+        !Array.isArray(zones) ||
+        zones.length === 0 ||
+        zones.some((zone) => zone !== 'graveyard' && zone !== 'exile')
+      )
+        issues.push({
+          path: `${path}.leavesTo`,
+          message: 'destination restriction requires a leaves-the-battlefield event',
+        });
+    }
     if (head['entersFrom'] !== undefined) {
       const origin = head['entersFrom'];
       const record =

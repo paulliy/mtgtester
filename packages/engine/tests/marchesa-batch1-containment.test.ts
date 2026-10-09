@@ -61,7 +61,6 @@ const REASONS: Record<string, string> = {
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
   'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
-  'Watcher for Tomorrow': 'Leaves-the-battlefield is implemented as dies.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   'Display of Power':
@@ -305,6 +304,7 @@ describe('Marchesa catalog audit containment', () => {
     'Shard of the Nightbringer',
     'Satoru, the Infiltrator',
     'River Kelpie',
+    'Watcher for Tomorrow',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

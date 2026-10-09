@@ -203,6 +203,11 @@ export interface EngineCardObject extends EngineObject, CastRecord {
   commanderSbaPending?: boolean;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
   attachedToCardId?: string;
+  /**
+   * The permanent object whose Hideaway exiled this card (CR 607.2a): a later incarnation of the
+   * same card is a different object, with its own linked card.
+   */
+  attachedToObjectId?: ObjectId;
   /** For Adventure cards in exile (CR 715.3d). */
   onAdventure?: boolean;
   /**

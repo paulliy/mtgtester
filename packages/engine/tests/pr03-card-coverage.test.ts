@@ -1515,6 +1515,116 @@ describe('Aurora Phoenix', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: leaves the battlefield, and 3.13 Watcher for Tomorrow
+// ---------------------------------------------------------------------------------------------
+
+describe('Watcher for Tomorrow', () => {
+  const watcher = pinned('Watcher for Tomorrow');
+
+  /** P1's library holds four named cards for the Hideaway look. */
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    playerById(ctx, 'P1').library = [];
+    for (const name of ['Page Four', 'Page Three', 'Page Two', 'Page One'])
+      conjure(ctx, 'P1', LAB_CARD(name), 'library');
+    return ctx;
+  }
+
+  /** Cast Watcher, resolve it and its Hideaway trigger (exiling the first offered card). */
+  function castWatcher(ctx: GameContext) {
+    const card = castFromHand(ctx, 'P1', watcher.card, [...generic(1), ...blue(1)]);
+    resolveTop(ctx);
+    settle(ctx);
+    return onField(ctx, card.cardId)!;
+  }
+
+  it('watcher-for-tomorrow-pinned-oracle-supported — the interpreter alone models Hideaway, entering tapped and the leaves trigger', () => {
+    expect(watcher.sha256).toBe('02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57');
+    expectNoRegistration(watcher.card);
+    expectModeled(watcher.card);
+    const def = interpretCard(watcher.card);
+    expect(def.entersTapped).toBe(true);
+    expect(def.triggers.map((trigger) => trigger.trigger?.when)).toEqual([
+      'enters',
+      'leavesBattlefield',
+    ]);
+    expect(def.triggers[1]!.effects).toEqual([{ op: 'returnExiledAttachedCard' }]);
+  });
+
+  it('watcher-for-tomorrow-hideaway-then-dies — it enters tapped, hides a card, and dying puts that card into your hand', () => {
+    const ctx = ready('watcher-dies');
+    const perm = castWatcher(ctx);
+    expect(perm.tapped).toBe(true);
+    expect(ctx.state.exile).toHaveLength(1);
+    const hidden = ctx.state.exile[0]!;
+    expect(playerById(ctx, 'P1').library).toHaveLength(3);
+    kill(ctx, perm);
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand.map((card) => card.cardId)).toEqual([hidden.cardId]);
+    expect(ctx.state.exile).toEqual([]);
+  });
+
+  it('watcher-for-tomorrow-leaves-any-way — bounced or exiled, not only dying, it returns the hidden card', () => {
+    for (const zone of ['hand', 'exile'] as const) {
+      const ctx = ready(`watcher-${zone}`);
+      const perm = castWatcher(ctx);
+      const hidden = ctx.state.exile[0]!;
+      pump(moveObject(ctx, perm, { zone }));
+      expect(
+        ctx.state.pendingTriggers.map((trigger) => trigger.sourceName),
+        zone,
+      ).toEqual(['Watcher for Tomorrow']);
+      settle(ctx);
+      expect(
+        playerById(ctx, 'P1').hand.map((card) => card.cardId),
+        zone,
+      ).toContain(hidden.cardId);
+    }
+  });
+
+  it('watcher-for-tomorrow-linked-card-only — a card hidden by an earlier incarnation is not returned', () => {
+    const ctx = ready('watcher-linked');
+    const perm = spawn(ctx, 'P1', watcher.card);
+    const stale = conjure(ctx, 'P1', LAB_CARD('Old Secret'), 'exile');
+    stale.attachedToCardId = perm.cardId;
+    stale.attachedToObjectId = 'an-earlier-incarnation';
+    kill(ctx, perm);
+    settle(ctx);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Old Secret']);
+    expect(playerById(ctx, 'P1').hand).toEqual([]);
+  });
+
+  it('leaves-battlefield-primitive-destinations — the event fires for every destination and a leavesTo head narrows it', () => {
+    const listener = oracle({
+      name: 'Lab Exile Watcher',
+      typeLine: 'Creature — Spirit',
+      oracleText:
+        'Whenever another creature you control is put into a graveyard from the battlefield or is put into exile from the battlefield, draw a card.',
+    });
+    const bear = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear' });
+    const ctx = pod('leaves-destinations');
+    spawn(ctx, 'P1', listener);
+    for (const zone of ['graveyard', 'exile', 'hand', 'library'] as const) {
+      ctx.state.pendingTriggers = [];
+      pump(moveObject(ctx, spawn(ctx, 'P1', bear), { zone }));
+      expect(ctx.state.pendingTriggers.length, zone).toBe(
+        zone === 'graveyard' || zone === 'exile' ? 1 : 0,
+      );
+    }
+    ctx.state.pendingTriggers = [];
+    pump(movePermanentsToGraveyard(ctx, [spawn(ctx, 'P1', bear), spawn(ctx, 'P1', bear)]));
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+    const issues: AuthoringIssue[] = [];
+    validateTriggerHead(
+      { when: 'dies', subject: { kind: 'self' }, leavesTo: ['exile'] },
+      'trigger',
+      issues,
+    );
+    expect(issues.map((issue) => issue.path)).toEqual(['trigger.leavesTo']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1526,6 +1636,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Watcher for Tomorrow',
+    sha256: '02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57',
+    clauseCount: 3,
+  },
   {
     name: 'Aurora Phoenix',
     sha256: '4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db',

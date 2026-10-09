@@ -285,3 +285,25 @@ describe('Aurora Phoenix Card Test Lab scenario', () => {
     replays('aurora-phoenix-viewer-cascade-return', steps);
   });
 });
+
+describe('Watcher for Tomorrow Card Test Lab scenario', () => {
+  it('watcher-for-tomorrow-viewer-hideaway-leaves — the hidden card goes to hand when Watcher dies', () => {
+    // Pass first, so Hideaway resolves before Lab Doom is cast.
+    const steps: Step[] = [
+      { action: 'Cast Watcher for Tomorrow' },
+      { action: 'Pass priority' },
+      { action: 'Exile face down' },
+      { action: 'Cast Lab Doom', targets: ['Watcher for Tomorrow'] },
+    ];
+    const { seat, state } = run('watcher-for-tomorrow-viewer-hideaway-leaves', steps);
+    expect(state.exile).toEqual([]);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(['Lab Ox', 'Lab Zombie', 'Lab Servo', 'Lab Bird']).toContain(seat('P1').hand[0]?.name);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Watcher for Tomorrow']);
+    replays('watcher-for-tomorrow-viewer-hideaway-leaves', steps);
+  });
+});

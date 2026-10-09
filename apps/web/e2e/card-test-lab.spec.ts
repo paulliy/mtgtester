@@ -4957,3 +4957,28 @@ test('Aurora Phoenix: cast a cascade spell to return it', async ({ page }) => {
   await expect(permanent(page, 'Lab Cascader')).toBeVisible();
   await expect(handCard(page, 'Aurora Phoenix')).toBeVisible();
 });
+
+test('Watcher for Tomorrow: hide a card, then get it back as it leaves', async ({ page }) => {
+  await runScenario(page, 'Watcher for Tomorrow: hide a card, then get it back as it leaves');
+  await castAndResolve(page, 'Watcher for Tomorrow');
+  await expect(permanent(page, 'Watcher for Tomorrow').locator('.tap-badge')).toHaveText('TAP');
+  // Let Hideaway resolve: pick a card from the top four to exile face down.
+  const hide = page.getByRole('button', { name: /Exile face down/ }).first();
+  await passUntil(page, hide);
+  await hide.click();
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Watcher for Tomorrow').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Watcher for Tomorrow')).toHaveCount(0);
+  // Whichever card was hidden is now the only card in hand.
+  await expect(
+    page.locator('.hand-card:not(.hand-card-leave-active)', {
+      hasText: /Lab (Ox|Zombie|Servo|Bird)/,
+    }),
+  ).toHaveCount(1);
+});

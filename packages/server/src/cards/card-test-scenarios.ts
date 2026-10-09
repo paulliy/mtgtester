@@ -7803,6 +7803,47 @@ function auroraPhoenixScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function watcherForTomorrowScenario(gameId: GameId): CardTestScenario {
+  const watcher = pinnedFrom(MARCHESA_BATCH1, 'Watcher for Tomorrow');
+  return pr01Scenario(gameId, {
+    id: 'watcher-for-tomorrow-viewer-hideaway-leaves',
+    title: 'Watcher for Tomorrow: hide a card, then get it back as it leaves',
+    instructions: [
+      'Cast Watcher for Tomorrow with two Islands: it enters tapped; hide one of the top four cards.',
+      'Cast Lab Doom on Watcher for Tomorrow with two Swamps.',
+    ],
+    expectedOutcome:
+      'Watcher for Tomorrow dies and its leaves-the-battlefield trigger puts the hidden card into your hand.',
+    oracleSha256: watcher.sha256,
+    clauseIds: [
+      'watcher-for-tomorrow-hideaway',
+      'watcher-for-tomorrow-enters-tapped',
+      'watcher-for-tomorrow-leaves',
+    ],
+    decks: {
+      P1: [
+        watcher.card,
+        LAB_DOOM,
+        ISLAND,
+        ISLAND,
+        SWAMP,
+        SWAMP,
+        LAB_OX,
+        LAB_ZOMBIE,
+        LAB_SERVO,
+        LAB_BIRD,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Watcher for Tomorrow', 'Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Island', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7994,6 +8035,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
   'aurora-phoenix-viewer-cascade-return',
+  'watcher-for-tomorrow-viewer-hideaway-leaves',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8205,6 +8247,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
   'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
+  'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
 };
 
 export function createCardTestScenario(

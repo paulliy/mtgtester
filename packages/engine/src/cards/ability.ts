@@ -1290,6 +1290,11 @@ export type ObjectTriggerWhen =
   | 'tokenCreated'
   | 'putIntoGraveyardFromAnywhere'
   | 'leavesGraveyard'
+  /**
+   * "When this creature leaves the battlefield" (CR 603.6c, 603.10a): a permanent left for any
+   * zone. `leavesTo` narrows it to destinations ("is put into exile from the battlefield").
+   */
+  | 'leavesBattlefield'
   | 'transformsInto';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
@@ -1327,6 +1332,12 @@ export type TriggerHead =
        * event, so the resolution recheck (CR 603.4) cannot change it.
        */
       entersWithoutManaSpentToCast?: true;
+      /**
+       * "is put into a graveyard from the battlefield or is put into exile from the battlefield"
+       * (Psychomancer), "dies or is put into exile from the battlefield" (God-Eternal Rhonas): the
+       * zones a `leavesBattlefield` event must have gone to.
+       */
+      leavesTo?: ('graveyard' | 'exile')[];
       /**
        * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
        * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking

@@ -3160,11 +3160,17 @@ export function* executeAbility(
         break;
       }
       case 'returnExiledAttachedCard': {
+        // Only the card this very permanent's Hideaway exiled (CR 607.2a).
         const card = ctx.state.exile.find(
-          (candidate) => candidate.attachedToCardId === source.cardId,
+          (candidate) =>
+            candidate.attachedToCardId === source.cardId &&
+            (candidate.attachedToObjectId === undefined ||
+              source.id === undefined ||
+              candidate.attachedToObjectId === source.id),
         );
         if (card !== undefined) {
           delete card.attachedToCardId;
+          delete card.attachedToObjectId;
           yield* moveObject(ctx, card, { zone: 'hand' });
         }
         break;
@@ -5443,6 +5449,7 @@ export function* executeAbility(
         })) as EngineCardObject | null;
         if (moved !== null) {
           moved.attachedToCardId = source.cardId;
+          if (source.id !== undefined) moved.attachedToObjectId = source.id;
         }
 
         const rest = top4.filter((c) => c.id !== chosenCard.id);
