@@ -295,12 +295,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Gleeful Arsonist',
     'Undying is claimed without a persist/undying replacement.',
   );
-  // Catalog audit batch 8: Persist is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '5f3f68b5-8c6a-4181-bb8a-9c73967d198a',
-    'Glen Elendra Archmage',
-    'Persist is claimed without a persist/undying replacement.',
-  );
+  // Glen Elendra Archmage: restored in coverage PR03. The interpreter reads Persist as a dies
+  // trigger that returns the card it became, so no override remains.
   defineCard(
     '6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2',
     'Grave Pact',

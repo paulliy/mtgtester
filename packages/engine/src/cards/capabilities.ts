@@ -935,6 +935,7 @@ const families = {
       mayPayXThenDealDamage: true,
       destroyEachNonlandMVFromDamagedControllers: true,
       returnSelfFromGraveyardToHand: true,
+      returnDiedSourceToBattlefield: true,
       exileTopNPlayableUntilEot: true,
       noOp: true,
     } satisfies Record<Extract<Effect['op'], string | number>, true>,

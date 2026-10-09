@@ -509,6 +509,7 @@ const effectExpressions = {
   mayPayXThenDealDamage: {},
   destroyEachNonlandMVFromDamagedControllers: { mv: numberValue },
   returnSelfFromGraveyardToHand: {},
+  returnDiedSourceToBattlefield: { counter: text },
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };

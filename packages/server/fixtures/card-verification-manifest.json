@@ -738,13 +738,46 @@
     "5f3f68b5-8c6a-4181-bb8a-9c73967d198a": {
       "name": "Glen Elendra Archmage",
       "oracleSha256": "13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "glen-elendra-archmage-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["glen-elendra-archmage-pinned-oracle-supported"],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
+        },
+        {
+          "id": "glen-elendra-archmage-counter",
+          "oracleText": "{U}, Sacrifice this creature: Counter target noncreature spell.",
+          "implementation": [
+            "interpreted activated ability: costs {U} and sacrificeSelf; target noncreatureSpell (any controller); effect counter"
+          ],
+          "engineTestIds": [
+            "glen-elendra-archmage-pinned-oracle-supported",
+            "glen-elendra-archmage-counter-and-persist",
+            "glen-elendra-archmage-creature-spells-not-targetable"
+          ],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
+        },
+        {
+          "id": "glen-elendra-archmage-persist",
           "oracleText": "Persist",
-          "implementation": ["explicitly unsupported; Persist is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters -1/-1 <= 0, read from the permanent's last-known counters (CR 702.79a, 603.10a)",
+            "returnDiedSourceToBattlefield -1/-1: finds only the graveyard card this permanent became (leftBattlefieldObjectId, CR 400.7e) and moves it to the battlefield under its owner's control with a -1/-1 counter on it as it enters"
+          ],
+          "engineTestIds": [
+            "glen-elendra-archmage-pinned-oracle-supported",
+            "glen-elendra-archmage-counter-and-persist",
+            "glen-elendra-archmage-persist-once",
+            "glen-elendra-archmage-owner-control",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object",
+            "persist-undying-primitive-token",
+            "persist-undying-primitive-simultaneous"
+          ],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
         }
       ],
       "gameplayAiScenarioIds": []

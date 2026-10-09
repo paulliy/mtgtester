@@ -1146,6 +1146,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
+    "name": "Glen Elendra Archmage",
+    "package": "PR03.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Persist is claimed without a persist/undying replacement."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
     "package": "W6",

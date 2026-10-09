@@ -3769,12 +3769,6 @@
     }
   },
   {
-    "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
-    "name": "Glen Elendra Archmage",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
     "handledLines": [],
@@ -15893,12 +15887,6 @@
   {
     "oracleId": "oracle-gleeful-arsonist",
     "name": "Gleeful Arsonist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-glen-elendra-archmage",
-    "name": "Glen Elendra Archmage",
     "handledLines": [],
     "def": {}
   },

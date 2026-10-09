@@ -48,6 +48,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Forum of Amity',
       'Frontier Siege',
       'Ghost Ark',
+      'Glen Elendra Archmage',
       'Grim Haruspex',
       'Harvest Season',
       'Hour of Reckoning',

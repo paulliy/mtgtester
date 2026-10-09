@@ -4922,6 +4922,26 @@ export function* executeAbility(
         }
         break;
       }
+      case 'returnDiedSourceToBattlefield': {
+        // Only the card this very permanent became (CR 400.7e): a card that left the graveyard
+        // and came back is a new object, and a token never reaches a graveyard at all.
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find(
+            (candidate) =>
+              candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+          );
+        if (card === undefined) break;
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: card.ownerId,
+          withCounters: { [effect.counter]: 1 },
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         const card = controller.graveyard.find((c) => c.cardId === source.cardId);
         if (card === undefined) break;

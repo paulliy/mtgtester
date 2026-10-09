@@ -25,7 +25,13 @@ import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { createGame } from '../src/state/game';
-import { createToken, moveObject, playerById } from '../src/state/objects';
+import {
+  createToken,
+  moveObject,
+  movePermanentsToGraveyard,
+  playerById,
+} from '../src/state/objects';
+import { effectivePT } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -157,6 +163,26 @@ function enterFrom(
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
 const black = (n: number) => Array.from({ length: n }, () => ({ symbol: 'B' as const }));
+const blue = (n: number) => Array.from({ length: n }, () => ({ symbol: 'U' as const }));
+const red = (n: number) => Array.from({ length: n }, () => ({ symbol: 'R' as const }));
+
+/** A fully interpreted instant, so a real spell can sit on the stack. */
+const LAB_BOLT = oracle({
+  name: 'Lab Bolt',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  oracleText: 'Lab Bolt deals 3 damage to any target.',
+});
+
+/** Put `perm` into its owner's graveyard through the normal single-permanent zone change. */
+function kill(ctx: GameContext, perm: EnginePermanent) {
+  return pump(moveObject(ctx, perm, { zone: 'graveyard' }));
+}
+
+/** The permanent on the battlefield that is this card now, if any. */
+function onField(ctx: GameContext, cardId: string) {
+  return ctx.state.battlefield.find((perm) => perm.cardId === cardId);
+}
 
 /** The pinned card is modeled under both ids with no remaining reasons. */
 function expectModeled(card: OracleCard): void {
@@ -493,6 +519,182 @@ describe('Canoptek Tomb Sentinel', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: persist and undying (CR 702.79a, 702.93a)
+// ---------------------------------------------------------------------------------------------
+
+describe('Primitive: persist and undying', () => {
+  const undying = oracle({
+    name: 'Lab Undying Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Undying',
+  });
+
+  it('persist-undying-primitive-undying — undying returns it with a +1/+1 counter, once', () => {
+    const ctx = pod('undying-primitive');
+    const bear = spawn(ctx, 'P1', undying);
+    kill(ctx, bear);
+    settle(ctx);
+    const back = onField(ctx, bear.cardId)!;
+    expect(back.counters).toEqual({ '+1/+1': 1 });
+    expect(back.enteredFromZone).toBe('graveyard');
+    kill(ctx, back);
+    settle(ctx);
+    expect(onField(ctx, bear.cardId)).toBeUndefined();
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual(['Lab Undying Bear']);
+  });
+
+  it('persist-undying-primitive-new-object — a card that left the graveyard and came back is not returned', () => {
+    const ctx = pod('undying-new-object');
+    const bear = spawn(ctx, 'P1', undying);
+    kill(ctx, bear);
+    // In response, the card is exiled and then put back: it is a new object (CR 400.7).
+    const card = playerById(ctx, 'P1').graveyard[0]!;
+    pump(moveObject(ctx, card, { zone: 'exile' }));
+    pump(moveObject(ctx, ctx.state.exile[0]!, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(onField(ctx, bear.cardId)).toBeUndefined();
+  });
+
+  it('persist-undying-primitive-token — a token with undying never returns', () => {
+    const ctx = pod('undying-token');
+    const token = spawn(ctx, 'P1', undying, { isToken: true });
+    kill(ctx, token);
+    settle(ctx);
+    expect(ctx.state.battlefield.filter((perm) => perm.name === 'Lab Undying Bear')).toEqual([]);
+  });
+
+  it('persist-undying-primitive-simultaneous — each of two creatures dying together returns itself', () => {
+    const ctx = pod('undying-together');
+    const first = spawn(ctx, 'P1', undying);
+    const second = spawn(ctx, 'P2', undying);
+    pump(movePermanentsToGraveyard(ctx, [first, second]));
+    settle(ctx);
+    expect(onField(ctx, first.cardId)?.controllerId).toBe('P1');
+    expect(onField(ctx, second.cardId)?.controllerId).toBe('P2');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// 3.03 Glen Elendra Archmage
+// ---------------------------------------------------------------------------------------------
+
+describe('Glen Elendra Archmage', () => {
+  const archmage = pinned('Glen Elendra Archmage');
+
+  /** P2 casts Lab Bolt at P1 through the normal cast path; it waits on the stack. */
+  function boltOnStack(ctx: GameContext) {
+    const bolt = conjure(ctx, 'P2', LAB_BOLT, 'hand');
+    addMana(playerById(ctx, 'P2'), red(1));
+    const option = optionFor(ctx, 'P2', bolt.id);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P2',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P1']]),
+    );
+    expect(ctx.state.stack.map((entry) => entry.description)).toEqual(['Lab Bolt']);
+    return ctx.state.stack[0]!;
+  }
+
+  it('glen-elendra-archmage-pinned-oracle-supported — the interpreter alone models flying, the counter ability and persist', () => {
+    expect(archmage.sha256).toBe(
+      '13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578',
+    );
+    expectNoRegistration(archmage.card);
+    expectModeled(archmage.card);
+    const def = interpretCard(archmage.card);
+    expect(def.keywords).toEqual(['flying']);
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.activatedAbilities[0]!.costs).toEqual([
+      expect.objectContaining({ kind: 'mana' }),
+      { kind: 'sacrificeSelf' },
+    ]);
+    expect(def.activatedAbilities[0]!.ability.targets).toEqual([{ kind: 'noncreatureSpell' }]);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: {
+          when: 'dies',
+          subject: { kind: 'self' },
+          condition: { kind: 'sourceHasCounters', counter: '-1/-1', cmp: '<=', n: 0 },
+        },
+        effects: [{ op: 'returnDiedSourceToBattlefield', counter: '-1/-1' }],
+      }),
+    ]);
+  });
+
+  it('glen-elendra-archmage-counter-and-persist — {U} and a sacrifice counter a noncreature spell, then persist returns it as a 1/1', () => {
+    const ctx = pod('archmage-counter');
+    const mage = spawn(ctx, 'P1', archmage.card);
+    const bolt = boltOnStack(ctx);
+    addMana(playerById(ctx, 'P1'), blue(1));
+    const option = optionFor(ctx, 'P1', mage.id, /Counter target noncreature spell/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, bolt.id]]),
+    );
+    // Sacrificed as a cost: persist triggers above the counter ability.
+    expect(onField(ctx, mage.cardId)).toBeUndefined();
+    settle(ctx);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Lab Bolt']);
+    const back = onField(ctx, mage.cardId)!;
+    expect(back.controllerId).toBe('P1');
+    expect(back.counters).toEqual({ '-1/-1': 1 });
+    expect(effectivePT(ctx, back)).toEqual({ power: 1, toughness: 1 });
+  });
+
+  it('glen-elendra-archmage-persist-once — with a -1/-1 counter it stays in the graveyard', () => {
+    const ctx = pod('archmage-twice');
+    const mage = spawn(ctx, 'P1', archmage.card);
+    kill(ctx, mage);
+    settle(ctx);
+    const back = onField(ctx, mage.cardId)!;
+    expect(back.counters).toEqual({ '-1/-1': 1 });
+    kill(ctx, back);
+    settle(ctx);
+    expect(onField(ctx, mage.cardId)).toBeUndefined();
+    expect(playerById(ctx, 'P1').graveyard.map((card) => card.name)).toEqual([
+      'Glen Elendra Archmage',
+    ]);
+  });
+
+  it("glen-elendra-archmage-owner-control — a stolen Archmage returns under its owner's control", () => {
+    const ctx = pod('archmage-owner');
+    const mage = spawn(ctx, 'P1', archmage.card);
+    mage.controllerId = 'P2';
+    kill(ctx, mage);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.controllerId)).toEqual(['P2']);
+    settle(ctx);
+    expect(onField(ctx, mage.cardId)?.controllerId).toBe('P1');
+  });
+
+  it('glen-elendra-archmage-creature-spells-not-targetable — a creature spell offers no counter target', () => {
+    const ctx = pod('archmage-creature');
+    const mage = spawn(ctx, 'P1', archmage.card);
+    const bear = conjure(
+      ctx,
+      'P2',
+      oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{1}' }),
+      'hand',
+    );
+    addMana(playerById(ctx, 'P2'), generic(1));
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    takeAction(ctx, 'P2', optionFor(ctx, 'P2', bear.id)!.payload as PriorityActionPayload);
+    addMana(playerById(ctx, 'P1'), blue(1));
+    expect(optionFor(ctx, 'P1', mage.id, /Counter target noncreature spell/)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -504,6 +706,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Glen Elendra Archmage',
+    sha256: '13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578',
+    clauseCount: 3,
+  },
   {
     name: 'Canoptek Tomb Sentinel',
     sha256: '8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a',

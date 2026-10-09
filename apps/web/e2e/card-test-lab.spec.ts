@@ -4786,3 +4786,22 @@ test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page })
   await expect(permanent(page, 'Canoptek Tomb Sentinel')).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test("Glen Elendra Archmage: counter P3's spell, then persist", async ({ page }) => {
+  await runScenario(page, "Glen Elendra Archmage: counter P3's spell, then persist");
+  const archmage = permanent(page, 'Glen Elendra Archmage');
+  await expect(archmage).toHaveClass(/actionable/, { timeout: 15_000 });
+  await archmage.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });
+  await expect(pending).toHaveClass(/targetable/);
+  await pending.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Lab Pending Spell is countered/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Glen Elendra Archmage')).toBeVisible();
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+});

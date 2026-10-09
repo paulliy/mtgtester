@@ -310,6 +310,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   mayPayXThenDealDamage: { target: damage },
   destroyEachNonlandMVFromDamagedControllers: {},
   returnSelfFromGraveyardToHand: {},
+  returnDiedSourceToBattlefield: {},
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;

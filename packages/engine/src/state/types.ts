@@ -182,6 +182,12 @@ export interface EngineCardObject extends EngineObject {
   treasureManaSpentToCast?: number;
   /** Counters last held while this card was a permanent, for death-triggered effects. */
   rememberedCounters?: Record<string, number>;
+  /**
+   * The battlefield object this card was until it moved here (CR 400.7e): an ability that
+   * triggered on that permanent leaving can find this new object, and only this one. A later
+   * zone change makes a new object without the link.
+   */
+  leftBattlefieldObjectId?: ObjectId;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */

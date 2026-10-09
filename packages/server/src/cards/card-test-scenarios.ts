@@ -7459,6 +7459,37 @@ function canoptekTombSentinelScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function glenElendraArchmageScenario(gameId: GameId): CardTestScenario {
+  const archmage = pinnedFrom(MARCHESA_BATCH1, 'Glen Elendra Archmage');
+  return pr01Scenario(gameId, {
+    id: 'glen-elendra-archmage-viewer-counter-persist',
+    title: "Glen Elendra Archmage: counter P3's spell, then persist",
+    instructions: [
+      "P3's Lab Pending Spell is on the stack; Glen Elendra Archmage and an Island are on your battlefield.",
+      'Activate the Archmage for {U}, sacrificing it, and target Lab Pending Spell.',
+    ],
+    expectedOutcome:
+      'Lab Pending Spell is countered, and persist returns Glen Elendra Archmage as a 1/1 with a -1/-1 counter.',
+    oracleSha256: archmage.sha256,
+    clauseIds: [
+      'glen-elendra-archmage-flying',
+      'glen-elendra-archmage-counter',
+      'glen-elendra-archmage-persist',
+    ],
+    decks: {
+      P1: [archmage.card, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Glen Elendra Archmage', 'Island'] }],
+      stack: [{ playerId: 'P3', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7641,6 +7672,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'dream-devourer-viewer-foretold-cast',
   'triarch-praetorian-viewer-unearth',
   'canoptek-tomb-sentinel-viewer-unearth-exile',
+  'glen-elendra-archmage-viewer-counter-persist',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7843,6 +7875,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
   'triarch-praetorian-viewer-unearth': triarchPraetorianScenario,
   'canoptek-tomb-sentinel-viewer-unearth-exile': canoptekTombSentinelScenario,
+  'glen-elendra-archmage-viewer-counter-persist': glenElendraArchmageScenario,
 };
 
 export function createCardTestScenario(

@@ -6729,6 +6729,19 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
     }
 
+    // Persist and undying (CR 702.79a, 702.93a): each is a dies trigger with an intervening-if
+    // read from the permanent's last-known counters, returning the card it became.
+    if (lower === 'persist' || lower === 'undying') {
+      const counter = lower === 'persist' ? '-1/-1' : '+1/+1';
+      triggers.push(
+        triggered(onDies(), {
+          condition: { kind: 'sourceHasCounters', counter, cmp: '<=', n: 0 },
+          effects: [{ op: 'returnDiedSourceToBattlefield', counter }],
+          description: lower === 'persist' ? 'Persist' : 'Undying',
+        }),
+      );
+      continue;
+    }
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {
       const parsed = parseKeywordLine(lower.replace(/;/g, ','));

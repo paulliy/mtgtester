@@ -1184,6 +1184,13 @@ export type Effect =
    */
   | { op: 'returnSelfFromGraveyardToHand' }
   /**
+   * Persist and undying (CR 702.79a, 702.93a): "return it to the battlefield under its owner's
+   * control with a `counter` counter on it". "It" is the card the dying source became in the
+   * graveyard (CR 400.7e); if that card has left the graveyard, nothing returns. The counter is
+   * on it as it enters.
+   */
+  | { op: 'returnDiedSourceToBattlefield'; counter: string }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

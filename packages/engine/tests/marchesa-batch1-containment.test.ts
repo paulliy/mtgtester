@@ -49,7 +49,6 @@ const REASONS: Record<string, string> = {
   'Firkraag, Cunning Instigator':
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
   'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
-  'Glen Elendra Archmage': 'Persist is claimed without a persist/undying replacement.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
@@ -307,6 +306,7 @@ describe('Marchesa catalog audit containment', () => {
     'Dream Devourer',
     'Triarch Praetorian',
     'Canoptek Tomb Sentinel',
+    'Glen Elendra Archmage',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

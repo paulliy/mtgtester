@@ -144,3 +144,18 @@ describe('Canoptek Tomb Sentinel Card Test Lab scenario', () => {
     replays('canoptek-tomb-sentinel-viewer-unearth-exile', steps);
   });
 });
+
+describe('Glen Elendra Archmage Card Test Lab scenario', () => {
+  it("glen-elendra-archmage-viewer-counter-persist — sacrificing it counters P3's spell and persist returns it with a -1/-1 counter", () => {
+    const steps: Step[] = [
+      { action: 'Counter target noncreature spell', targets: ['Lab Pending Spell'] },
+    ];
+    const { seat, onBattlefield } = run('glen-elendra-archmage-viewer-counter-persist', steps);
+    expect(seat('P3').graveyard.map((card) => card.name)).toEqual(['Lab Pending Spell']);
+    expect(seat('P3').hand).toEqual([]);
+    const [mage] = onBattlefield('Glen Elendra Archmage');
+    expect(mage?.counters).toEqual({ '-1/-1': 1 });
+    expect(onBattlefield('Island')[0]?.tapped).toBe(true);
+    replays('glen-elendra-archmage-viewer-counter-persist', steps);
+  });
+});

@@ -1717,6 +1717,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Glen Elendra Archmage: counter P3's spell, then persist"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
