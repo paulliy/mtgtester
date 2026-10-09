@@ -8021,6 +8021,7 @@
             "candlekeep-sage-negative",
             "candlekeep-sage-ownership-not-control",
             "candlekeep-sage-leaves-together",
+            "candlekeep-sage-bounced-to-command-zone",
             "candlekeep-sage-gone"
           ],
           "viewerScenarioIds": ["candlekeep-sage-viewer-commander-enters-and-leaves"]

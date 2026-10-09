@@ -2046,8 +2046,8 @@ describe('Imotekh the Stormlord', () => {
     const ctx = pod('imotekh-combat');
     const self = spawn(ctx, 'P1', imotekh.card);
     const ally = spawn(ctx, 'P1', construct);
-    spawn(ctx, 'P1', bear);
-    spawn(ctx, 'P2', construct);
+    const bearPerm = spawn(ctx, 'P1', bear);
+    const theirs = spawn(ctx, 'P2', construct);
     const offered: string[] = [];
     beginCombat(ctx, (decision) => {
       const slot = decision.options[0]?.targets?.[0];
@@ -2059,6 +2059,9 @@ describe('Imotekh the Stormlord', () => {
     });
     // The only legal target (not Imotekh, the Bear, or P2's Construct) is chosen automatically.
     expect(offered.every((id) => id === ally.id)).toBe(true);
+    expect(effectivePT(ctx, bearPerm)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 1, toughness: 1 });
+    expect(computeCharacteristics(ctx, theirs).keywords).not.toContain('menace');
     expect(effectivePT(ctx, ally)).toEqual({ power: 3, toughness: 3 });
     expect(computeCharacteristics(ctx, ally).keywords).toContain('menace');
     expect(effectivePT(ctx, self)).toEqual({ power: 3, toughness: 3 });
@@ -2365,7 +2368,7 @@ describe('Candlekeep Sage', () => {
     const before = handSize(ctx, 'P1');
     kill(ctx, dying);
     pump(moveObject(ctx, exiled, { zone: 'exile' }));
-    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    settle(ctx);
     expect(handSize(ctx, 'P1')).toBe(before + 2);
   });
 
@@ -2388,7 +2391,7 @@ describe('Candlekeep Sage', () => {
     const p2 = handSize(ctx, 'P2');
     pump(moveObject(ctx, yoursStolen, { zone: 'exile' }));
     pump(moveObject(ctx, theirsBorrowed, { zone: 'exile' }));
-    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    settle(ctx);
     expect(handSize(ctx, 'P2')).toBe(p2 + 1);
     expect(handSize(ctx, 'P1')).toBe(p1);
   });
@@ -2399,8 +2402,33 @@ describe('Candlekeep Sage', () => {
     const commander = spawn(ctx, 'P1', general, { isCommander: true });
     const before = handSize(ctx, 'P1');
     pump(moveObjects(ctx, [self, commander], { zone: 'exile' }));
-    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    settle(ctx);
     expect(handSize(ctx, 'P1')).toBe(before + 1);
+  });
+
+  it('candlekeep-sage-bounced-to-command-zone — a mass bounce redirected to the command zone draws once', () => {
+    const wave = oracle({
+      name: 'Lab Bounce Wave',
+      typeLine: 'Sorcery',
+      manaCost: '{G}',
+      oracleText: "Return all nonland permanents to their owners' hands.",
+    });
+    for (const choice of [/^Put /, /^Let /]) {
+      const ctx = pod('sage-bounce');
+      // The commander moves first, while the Sage is still on the battlefield.
+      spawn(ctx, 'P1', general, { isCommander: true });
+      spawn(ctx, 'P1', sage.card);
+      castFromHand(ctx, 'P1', wave, green(1));
+      const before = handSize(ctx, 'P1');
+      resolveTop(ctx, answers([[/command zone instead/, choice]]));
+      // One leave trigger for the commander, whichever zone the owner picks.
+      expect(ctx.state.pendingTriggers.map((trigger) => trigger.ability.description)).toEqual([
+        'When this creature enters or leaves the battlefield, draw a card',
+      ]);
+      settle(ctx);
+      // The Sage returns to hand, plus one draw, plus the commander if it was kept in hand.
+      expect(handSize(ctx, 'P1')).toBe(before + (choice.source === '^Put ' ? 2 : 3));
+    }
   });
 
   it('candlekeep-sage-gone — with the Sage gone, your commander leaving draws nothing', () => {

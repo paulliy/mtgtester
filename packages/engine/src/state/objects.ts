@@ -595,7 +595,19 @@ export function* moveObject(
         { type: 'keepMoving', description: `Let ${obj.name} go to your ${target.zone}` },
       ],
     };
-    if (outcome.index === 0) target = { zone: 'command' };
+    // A batch move keeps owning leave processing and its pre-event facts: the redirect changes
+    // only where the card goes, so its leave triggers are not queued a second time.
+    if (outcome.index === 0)
+      target = {
+        zone: 'command',
+        ...(target.deferLeaveProcessing !== undefined
+          ? { deferLeaveProcessing: target.deferLeaveProcessing }
+          : {}),
+        ...(target.lastKnownFacts !== undefined ? { lastKnownFacts: target.lastKnownFacts } : {}),
+        ...(target.deferCardZoneTriggers !== undefined
+          ? { deferCardZoneTriggers: target.deferCardZoneTriggers }
+          : {}),
+      };
   }
 
   // Last known information (CR 113.7a), read while it is still on the battlefield.
