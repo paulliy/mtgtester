@@ -5233,3 +5233,24 @@ test("Puppeteer Clique: steal P2's Lab Ox, attack, then exile it", async ({ page
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test('Cryptek: your Lab Construct dies and returns tapped', async ({ page }) => {
+  await runScenario(page, 'Cryptek: your Lab Construct dies and returns tapped');
+  const cryptek = permanent(page, 'Cryptek');
+  await expect(cryptek).toHaveClass(/actionable/, { timeout: 15_000 });
+  await cryptek.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  const doom = handCard(page, 'Lab Doom');
+  await passUntil(page, doom.and(page.locator('.actionable')));
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Construct')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Construct').locator('.tap-badge')).toHaveText('TAP');
+});

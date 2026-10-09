@@ -673,6 +673,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+    "name": "Cryptek",
+    "package": "PR03.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: The delayed return omits entering tapped."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "32c14d7f-fdaa-4340-af94-1f10bf064f51",
     "name": "Crystal, Inhuman Princess",
     "package": "W3",

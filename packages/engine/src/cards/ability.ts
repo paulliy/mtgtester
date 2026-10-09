@@ -1227,6 +1227,12 @@ export type Effect =
    */
   | { op: 'reanimateTargetHasteExileAtYourNextEndStep'; target: EffectRef }
   /**
+   * The delayed return of "When that creature dies this turn, return it to the battlefield tapped
+   * under your control" (Cryptek): the card the remembered permanent became in a graveyard
+   * (CR 400.7e), if it is still there.
+   */
+  | { op: 'returnDiedTriggerObjectTapped' }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

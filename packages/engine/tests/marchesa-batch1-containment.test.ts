@@ -162,7 +162,6 @@ const REASONS: Record<string, string> = {
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
-  Cryptek: 'The delayed return omits entering tapped.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
@@ -302,6 +301,7 @@ describe('Marchesa catalog audit containment', () => {
     'Imotekh the Stormlord',
     'The Ooze',
     'Puppeteer Clique',
+    'Cryptek',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

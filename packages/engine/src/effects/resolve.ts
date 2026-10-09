@@ -5061,6 +5061,20 @@ export function* executeAbility(
         });
         break;
       }
+      case 'returnDiedTriggerObjectTapped': {
+        const remembered = extraScope?.triggerObjectId;
+        if (remembered === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.leftBattlefieldObjectId === remembered);
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          entersTapped: true,
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
         // that left the graveyard and came back is a new object.

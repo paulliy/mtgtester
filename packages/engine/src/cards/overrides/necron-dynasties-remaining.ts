@@ -113,12 +113,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Cranial Plating',
     'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   );
-  // Catalog audit necron-remaining-batch-5: delayed return omits tapped.
-  unsupportedCard(
-    '27a4b633-5a62-4d8c-8cc6-44959c311de9',
-    'Cryptek',
-    'The delayed return omits entering tapped.',
-  );
+  // Cryptek: restored in coverage PR03. The interpreter reads the dies-this-turn delayed return,
+  // which enters tapped, so no override remains.
   defineCard(
     '932708ae-9d5c-4561-aa8b-0d2222d37fdc',
     'Darkness',

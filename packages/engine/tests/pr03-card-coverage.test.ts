@@ -2992,6 +2992,150 @@ describe('Puppeteer Clique', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.02 Cryptek
+// ---------------------------------------------------------------------------------------------
+
+const CRYPTEK_SHA = '0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666';
+
+describe('Cryptek', () => {
+  const cryptek = pinned('Cryptek');
+  const construct = oracle({
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    power: '1',
+    toughness: '1',
+  });
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const constructs = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Lab Construct');
+
+  /** Activate Cryptek targeting `targetId` and resolve it. */
+  function protect(ctx: GameContext, self: EnginePermanent, targetId: string) {
+    addMana(playerById(ctx, 'P1'), [...generic(1), ...black(1)]);
+    const option = optionFor(ctx, 'P1', self.id, /Choose another target artifact creature/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, targetId]]),
+    );
+    resolveTop(ctx);
+  }
+
+  it('cryptek-pinned-oracle-supported — the interpreter models the {1}{B}, {T} dies-this-turn return', () => {
+    expect(cryptek.sha256).toBe(CRYPTEK_SHA);
+    expectNoRegistration(cryptek.card);
+    expectModeled(cryptek.card);
+    const [ability] = interpretCard(cryptek.card).activatedAbilities;
+    expect(ability?.costs.map((cost) => cost.kind)).toEqual(['mana', 'tap']);
+    expect(ability?.ability.targets).toEqual([
+      {
+        kind: 'creature',
+        filter: { kind: 'allOf', of: [{ kind: 'other' }, { kind: 'type', value: 'Artifact' }] },
+        controller: 'you',
+      },
+    ]);
+    expect(ability?.ability.effects).toEqual([
+      {
+        op: 'registerDelayedTrigger',
+        when: 'dies',
+        target: 0,
+        sameObject: true,
+        expiry: 'cleanup',
+        ability: {
+          kind: 'triggered',
+          targets: [],
+          effects: [{ op: 'returnDiedTriggerObjectTapped' }],
+          description: 'Return that creature to the battlefield tapped under your control',
+        },
+      },
+    ]);
+  });
+
+  it('cryptek-returns-tapped — when the chosen creature dies this turn, it returns tapped under your control', () => {
+    const ctx = pod('cryptek-return');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const ally = spawn(ctx, 'P1', construct);
+    protect(ctx, self, ally.id);
+    expect(self.tapped).toBe(true);
+    kill(ctx, ally);
+    settle(ctx);
+    const [back] = constructs(ctx);
+    expect(back?.tapped).toBe(true);
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.id).not.toBe(ally.id);
+  });
+
+  it("cryptek-your-control — a creature you control but don't own returns under your control", () => {
+    const ctx = pod('cryptek-stolen');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const borrowed = spawn(ctx, 'P2', construct);
+    borrowed.controllerId = 'P1';
+    protect(ctx, self, borrowed.id);
+    kill(ctx, borrowed);
+    settle(ctx);
+    const [back] = constructs(ctx);
+    expect(back?.ownerId).toBe('P2');
+    expect(back?.controllerId).toBe('P1');
+  });
+
+  it('cryptek-this-turn-only — after cleanup, dying does not return it', () => {
+    const ctx = pod('cryptek-expired');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const ally = spawn(ctx, 'P1', construct);
+    protect(ctx, self, ally.id);
+    // The cleanup step of this turn sweeps cleanup-scoped delayed triggers.
+    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
+      (delayed) => delayed.expiry !== 'cleanup',
+    );
+    kill(ctx, ally);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('cryptek-new-object — a creature that left and came back is a new object it does not watch (CR 400.7)', () => {
+    const ctx = pod('cryptek-new-object');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const ally = spawn(ctx, 'P1', construct);
+    protect(ctx, self, ally.id);
+    pump(moveObject(ctx, ally, { zone: 'exile' }));
+    pump(moveObject(ctx, ctx.state.exile[0]!, { zone: 'battlefield', controllerId: 'P1' }));
+    kill(ctx, constructs(ctx)[0]!);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('cryptek-card-moved-on — if the card left the graveyard before the return, nothing returns', () => {
+    const ctx = pod('cryptek-moved-on');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const ally = spawn(ctx, 'P1', construct);
+    protect(ctx, self, ally.id);
+    kill(ctx, ally);
+    pump(moveObject(ctx, playerById(ctx, 'P1').graveyard[0]!, { zone: 'exile' }));
+    settle(ctx);
+    expect(constructs(ctx)).toEqual([]);
+  });
+
+  it('cryptek-targets — only another artifact creature you control is a legal target', () => {
+    const ctx = pod('cryptek-targets');
+    const self = spawn(ctx, 'P1', cryptek.card);
+    const ally = spawn(ctx, 'P1', construct);
+    const bearPerm = spawn(ctx, 'P1', bear);
+    const theirs = spawn(ctx, 'P2', construct);
+    const spec = interpretCard(cryptek.card).activatedAbilities[0]!.ability.targets[0]!;
+    const legal = computeTargetOptions(ctx, spec, 'P1', [], undefined, undefined, self.cardId);
+    expect(legal).toEqual([ally.id]);
+    expect(legal).not.toContain(bearPerm.id);
+    expect(legal).not.toContain(theirs.id);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3010,6 +3154,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Cryptek',
+    sha256: CRYPTEK_SHA,
+    clauseCount: 1,
   },
   {
     name: 'Puppeteer Clique',

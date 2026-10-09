@@ -8302,6 +8302,54 @@ function puppeteerCliqueScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function cryptekScenario(gameId: GameId): CardTestScenario {
+  const cryptek = pinnedFrom(MARCHESA_BATCH1, 'Cryptek');
+  const construct = card({
+    oracleId: 'lab-cryptek-construct',
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '1',
+    toughness: '1',
+  });
+  const doom = card({
+    oracleId: 'lab-cryptek-doom',
+    name: 'Lab Doom',
+    typeLine: 'Sorcery',
+    manaCost: '{B}',
+    cmc: 1,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    oracleText: 'Destroy target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'cryptek-viewer-dies-and-returns-tapped',
+    title: 'Cryptek: your Lab Construct dies and returns tapped',
+    instructions: [
+      'Cryptek, Lab Construct and three Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Activate Cryptek for {1}{B}, targeting Lab Construct.',
+      'Cast Lab Doom on Lab Construct: it dies and returns to the battlefield tapped under your control.',
+    ],
+    expectedOutcome:
+      'Cryptek is tapped, Lab Construct is destroyed, and it returns to the battlefield tapped under your control.',
+    oracleSha256: cryptek.sha256,
+    clauseIds: ['cryptek-dies-this-turn'],
+    decks: {
+      P1: [cryptek.card, construct, doom, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Cryptek', 'Lab Construct', 'Swamp', 'Swamp', 'Swamp'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8506,6 +8554,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'venser-viewer-minus-one-unblockable',
   'venser-viewer-minus-eight-emblem',
   'puppeteer-clique-viewer-steal-attack-exile',
+  'cryptek-viewer-dies-and-returns-tapped',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8733,6 +8782,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'venser-viewer-minus-eight-emblem': (gameId: GameId) =>
     venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
   'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
+  'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
 };
 
 export function createCardTestScenario(

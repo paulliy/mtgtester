@@ -87,7 +87,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Triarch Stalker',
       'Biotransference',
       'The War in Heaven',
-      'Cryptek',
       'Out of the Tombs',
       'Resurrection Orb',
       'Szarekh, the Silent King',

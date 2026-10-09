@@ -2901,6 +2901,42 @@ function parseReanimateHasteExileAtEndStepBlock(
   return [{ op: 'reanimateTargetHasteExileAtYourNextEndStep', target }];
 }
 
+/**
+ * "Choose another target artifact creature you control. When that creature dies this turn,
+ * return it to the battlefield tapped under your control." (Cryptek) — a delayed trigger that
+ * remembers the chosen permanent itself (CR 400.7) and expires at cleanup; "it" is the card that
+ * permanent became in the graveyard (CR 400.7e).
+ */
+function parseDiesThisTurnReturnTappedBlock(body: string, alloc: SlotAllocator): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^choose (another )?target (artifact )?creature you control\. when that creature dies this turn, return it to the battlefield tapped under your control$/,
+    );
+  if (m === null) return null;
+  const parts: Selector[] = [];
+  if (m[1] !== undefined) parts.push(OTHER);
+  if (m[2] !== undefined) parts.push(ofType('Artifact'));
+  const filter = parts.length === 0 ? undefined : parts.length === 1 ? parts[0] : allOf(...parts);
+  const target = alloc('creature', filter, 'you');
+  return [
+    {
+      op: 'registerDelayedTrigger',
+      when: 'dies',
+      target,
+      sameObject: true,
+      expiry: 'cleanup',
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [{ op: 'returnDiedTriggerObjectTapped' }],
+        description: 'Return that creature to the battlefield tapped under your control',
+      },
+    },
+  ];
+}
+
 const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
 
 /**
@@ -5420,6 +5456,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     parseHerdHeirloomEffect(split.effectText, alloc, card) ??
     parseGraveyardExileCreatureRider(split.effectText, alloc) ??
     parseExileReturnAtNextEndStepBlock(split.effectText, alloc) ??
+    parseDiesThisTurnReturnTappedBlock(split.effectText, alloc) ??
     // Same reason as the spell path: this block's later sentences refer back to the first
     // ("them", "the rest"), so it must be matched whole rather than sentence by sentence.
     // Sensei's Divining Top prints it as an activated ability, not as a spell.

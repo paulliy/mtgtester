@@ -3178,13 +3178,26 @@
     "27a4b633-5a62-4d8c-8cc6-44959c311de9": {
       "name": "Cryptek",
       "oracleSha256": "0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "When that creature dies this turn, return it to the battlefield tapped under your control.",
-          "implementation": ["explicitly unsupported; delayed return omits entering tapped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "cryptek-dies-this-turn",
+          "oracleText": "{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.",
+          "implementation": [
+            "interpreted activated ability, matched as one block: costs {1}{B} and {T}; target creature you control filtered allOf(other, Artifact)",
+            "registerDelayedTrigger when dies, sameObject, expiry cleanup: watches that permanent only (a new object after a blink is not watched, CR 400.7) and only this turn",
+            "returnDiedTriggerObjectTapped: the card that permanent became in a graveyard (leftBattlefieldObjectId, CR 400.7e) enters tapped under the ability's controller; a card that left the graveyard does not return"
+          ],
+          "engineTestIds": [
+            "cryptek-pinned-oracle-supported",
+            "cryptek-returns-tapped",
+            "cryptek-your-control",
+            "cryptek-this-turn-only",
+            "cryptek-new-object",
+            "cryptek-card-moved-on",
+            "cryptek-targets"
+          ],
+          "viewerScenarioIds": ["cryptek-viewer-dies-and-returns-tapped"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -1675,12 +1675,6 @@
     "def": {}
   },
   {
-    "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
-    "name": "Cryptek",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
@@ -13696,12 +13690,6 @@
   {
     "oracleId": "oracle-cranial-plating",
     "name": "Cranial Plating",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-cryptek",
-    "name": "Cryptek",
     "handledLines": [],
     "def": {}
   },

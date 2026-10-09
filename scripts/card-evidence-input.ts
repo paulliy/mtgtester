@@ -1805,6 +1805,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Puppeteer Clique: steal P2's Lab Ox, attack, then exile it"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Cryptek: your Lab Construct dies and returns tapped'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

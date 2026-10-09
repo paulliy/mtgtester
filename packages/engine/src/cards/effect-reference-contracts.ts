@@ -317,6 +317,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   exileTargetReturnAtNextEndStep: { target: permanent },
   returnExiledTriggerObject: {},
   reanimateTargetHasteExileAtYourNextEndStep: { target: graveyard },
+  returnDiedTriggerObjectTapped: {},
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;

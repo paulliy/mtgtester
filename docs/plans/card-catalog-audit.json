@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 30,
+      "uniqueOracleIds": 29,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 41,
+      "uniqueOracleIds": 40,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6074,6 +6074,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Containment removed: the interpreter reads the reanimation from an opponent's graveyard as one block, with a lasting haste grant and a delayed exile at your next end step bound to that object, plus Persist."
+    },
+    {
+      "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+      "name": "Cryptek",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the activation as one block, a dies-this-turn delayed trigger bound to the chosen permanent that returns the card it became tapped under your control."
+    },
+    {
+      "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+      "name": "Cryptek",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
     }
   ]
 }

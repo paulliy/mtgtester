@@ -486,3 +486,19 @@ describe('Puppeteer Clique Card Test Lab scenario', () => {
     replays('puppeteer-clique-viewer-steal-attack-exile', steps);
   });
 });
+
+describe('Cryptek Card Test Lab scenario', () => {
+  it('cryptek-viewer-dies-and-returns-tapped — the protected Lab Construct dies and returns tapped', () => {
+    const steps: Step[] = [
+      { action: 'Choose another target artifact creature', targets: ['Lab Construct'] },
+      { action: 'Cast Lab Doom', targets: ['Lab Construct'] },
+    ];
+    const { seat, onBattlefield } = run('cryptek-viewer-dies-and-returns-tapped', steps);
+    const [construct] = onBattlefield('Lab Construct');
+    expect(construct?.tapped).toBe(true);
+    expect(construct?.controllerId).toBe('P1');
+    expect(onBattlefield('Cryptek')[0]?.tapped).toBe(true);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    replays('cryptek-viewer-dies-and-returns-tapped', steps);
+  });
+});

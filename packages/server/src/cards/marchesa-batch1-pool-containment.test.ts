@@ -37,6 +37,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Conclave Tribunal',
       "Conjurer's Closet",
       'Convergence of Dominion',
+      'Cryptek',
       'Dragonkin Berserker',
       'Dread Return',
       'Dream Devourer',

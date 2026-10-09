@@ -518,6 +518,7 @@ const effectExpressions = {
   exileTargetReturnAtNextEndStep: { returnUnder: oneOf('owner', 'sourceController') },
   returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   reanimateTargetHasteExileAtYourNextEndStep: {},
+  returnDiedTriggerObjectTapped: {},
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };

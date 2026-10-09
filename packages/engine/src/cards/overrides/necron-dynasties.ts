@@ -116,9 +116,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Convergence of Dominion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
-  unimplemented('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
-    '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',
-  ]);
+  // Cryptek: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   defineCard(
     'e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3',
