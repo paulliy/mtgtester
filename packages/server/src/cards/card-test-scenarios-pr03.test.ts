@@ -133,15 +133,20 @@ describe('Triarch Praetorian Card Test Lab scenario', () => {
 });
 
 describe('Canoptek Tomb Sentinel Card Test Lab scenario', () => {
-  it("canoptek-tomb-sentinel-viewer-unearth-exile — unearth returns it and the graveyard-origin trigger exiles P2's Lab Ox", () => {
+  it("canoptek-tomb-sentinel-viewer-unearth-exile — unearth returns it, the graveyard-origin trigger exiles P2's Lab Ox, and it is exiled at the end step", () => {
     const steps: Step[] = [{ action: 'Unearth' }, { action: 'Target Lab Ox' }];
-    const { state, onBattlefield, offered } = run(
+    const { state, seat, onBattlefield, offered } = run(
       'canoptek-tomb-sentinel-viewer-unearth-exile',
       steps,
     );
-    expect(onBattlefield('Canoptek Tomb Sentinel')).toHaveLength(1);
+    // Unearth's delayed trigger exiled the Sentinel at the beginning of the end step.
+    expect(onBattlefield('Canoptek Tomb Sentinel')).toEqual([]);
     expect(onBattlefield('Lab Ox')).toEqual([]);
-    expect(state.exile.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(state.exile.map((card) => card.name).sort()).toEqual([
+      'Canoptek Tomb Sentinel',
+      'Lab Ox',
+    ]);
+    expect(seat('P1').graveyard).toEqual([]);
     expect(offered.some((actions) => actions.includes('Choose no more targets'))).toBe(true);
     replays('canoptek-tomb-sentinel-viewer-unearth-exile', steps);
   });

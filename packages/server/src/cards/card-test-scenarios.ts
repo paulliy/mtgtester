@@ -7470,9 +7470,10 @@ function canoptekTombSentinelScenario(gameId: GameId): CardTestScenario {
     instructions: [
       'Canoptek Tomb Sentinel is in your graveyard and seven Swamps are on the battlefield.',
       'Activate its unearth ability for {7}, then target Lab Ox with its enters-from-a-graveyard trigger.',
+      'Pass to the end step: the unearthed Canoptek Tomb Sentinel is exiled.',
     ],
     expectedOutcome:
-      'Canoptek Tomb Sentinel returns with haste and its trigger exiles Lab Ox; it would exile nothing if you chose no target.',
+      'Canoptek Tomb Sentinel returns with haste and its trigger exiles Lab Ox (it would exile nothing if you chose no target); the Sentinel itself is exiled at the next end step.',
     oracleSha256: sentinel.sha256,
     clauseIds: [
       'canoptek-tomb-sentinel-vigilance',
@@ -7492,6 +7493,7 @@ function canoptekTombSentinelScenario(gameId: GameId): CardTestScenario {
         { playerId: 'P2', cardNames: ['Lab Ox'] },
       ],
       graveyard: [{ playerId: 'P1', cardNames: ['Canoptek Tomb Sentinel'] }],
+      continueToEndStep: true,
     },
   });
 }

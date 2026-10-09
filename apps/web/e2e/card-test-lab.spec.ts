@@ -4791,8 +4791,19 @@ test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page })
   });
   await page.getByRole('button', { name: 'Target Lab Ox' }).click();
   await passUntil(page, page.getByText(/game over/i).first());
-  await expect(permanent(page, 'Canoptek Tomb Sentinel')).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  // Unearth's delayed trigger exiled the Sentinel at the beginning of the end step.
+  await expect(permanent(page, 'Canoptek Tomb Sentinel')).toHaveCount(0);
+  await expect(
+    page
+      .locator('.zones-strip .zone', { hasText: 'Exile' })
+      .getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .zone', { hasText: 'Exile' })
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
 });
 
 test("Glen Elendra Archmage: counter P3's spell, then persist", async ({ page }) => {
