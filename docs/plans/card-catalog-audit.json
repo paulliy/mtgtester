@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6025,6 +6025,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
+      "name": "Scavenging Ooze",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the {G} graveyard exile and its creature-card rider as one block (exileTargetGraveyardAndBuffIfCreature), which moves the card through a real zone change; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

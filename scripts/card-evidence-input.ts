@@ -1765,6 +1765,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Shard of the Void Dragon: attack, and grow from the sacrificed artifact'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Scavenging Ooze: exile a creature card to grow and gain life'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

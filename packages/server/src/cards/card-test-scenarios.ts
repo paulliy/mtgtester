@@ -7918,6 +7918,32 @@ function shardOfTheVoidDragonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function scavengingOozeScenario(gameId: GameId): CardTestScenario {
+  const ooze = pinnedFrom(MARCHESA_BATCH1, 'Scavenging Ooze');
+  return pr01Scenario(gameId, {
+    id: 'scavenging-ooze-viewer-exile-creature',
+    title: 'Scavenging Ooze: exile a creature card to grow and gain life',
+    instructions: [
+      'Scavenging Ooze and a Forest are on your battlefield; Lab Ox is in your graveyard.',
+      'Activate the Ooze for {G}, targeting Lab Ox in your graveyard.',
+    ],
+    expectedOutcome: 'Lab Ox is exiled; the Ooze gets a +1/+1 counter and you gain 1 life.',
+    oracleSha256: ooze.sha256,
+    clauseIds: ['scavenging-ooze-exile'],
+    decks: {
+      P1: [ooze.card, LAB_OX, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Scavenging Ooze', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8112,6 +8138,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'watcher-for-tomorrow-viewer-hideaway-leaves',
   'psychomancer-viewer-artifact-drain',
   'shard-of-the-void-dragon-viewer-attack-edict',
+  'scavenging-ooze-viewer-exile-creature',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8326,6 +8353,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
   'psychomancer-viewer-artifact-drain': psychomancerScenario,
   'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
+  'scavenging-ooze-viewer-exile-creature': scavengingOozeScenario,
 };
 
 export function createCardTestScenario(

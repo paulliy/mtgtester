@@ -332,3 +332,14 @@ describe('Shard of the Void Dragon Card Test Lab scenario', () => {
     replays('shard-of-the-void-dragon-viewer-attack-edict', steps);
   });
 });
+
+describe('Scavenging Ooze Card Test Lab scenario', () => {
+  it('scavenging-ooze-viewer-exile-creature — exiling Lab Ox grows the Ooze and gains 1 life', () => {
+    const steps: Step[] = [{ action: 'Exile target card from a graveyard', targets: ['Lab Ox'] }];
+    const { seat, state, onBattlefield } = run('scavenging-ooze-viewer-exile-creature', steps);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(onBattlefield('Scavenging Ooze')[0]?.counters).toEqual({ '+1/+1': 1 });
+    expect(seat('P1').life).toBe(41);
+    replays('scavenging-ooze-viewer-exile-creature', steps);
+  });
+});

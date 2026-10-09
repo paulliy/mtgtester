@@ -2781,6 +2781,25 @@ function parseHellkiteCourserBlock(
   return null;
 }
 
+/**
+ * "Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this
+ * creature and you gain 1 life." (Scavenging Ooze) — matched whole, because the second sentence
+ * asks about the card the first one exiled (its characteristics in the graveyard). The exile is a
+ * real zone change, so leave-graveyard abilities see it.
+ */
+function parseGraveyardExileCreatureRider(text: string, alloc: SlotAllocator): Effect[] | null {
+  const body = text.toLowerCase().trim().replace(/\.$/, '');
+  if (
+    body !==
+      'exile target card from a graveyard. if it was a creature card, put a +1/+1 counter on ~ and you gain 1 life' &&
+    body !==
+      'exile target card from a graveyard. if it was a creature card, put a +1/+1 counter on this creature and you gain 1 life'
+  )
+    return null;
+  const targetSlot = alloc('cardInGraveyard', undefined, undefined, 'any');
+  return [{ op: 'exileTargetGraveyardAndBuffIfCreature', targetSlot }];
+}
+
 function parseHerdHeirloomEffect(
   effectText: string,
   alloc: SlotAllocator,
@@ -5221,6 +5240,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   };
   const effects: Effect[] =
     parseHerdHeirloomEffect(split.effectText, alloc, card) ??
+    parseGraveyardExileCreatureRider(split.effectText, alloc) ??
     // Same reason as the spell path: this block's later sentences refer back to the first
     // ("them", "the rest"), so it must be matched whole rather than sentence by sentence.
     // Sensei's Divining Top prints it as an activated ability, not as a spell.

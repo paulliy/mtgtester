@@ -175,6 +175,7 @@ function enterFrom(
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
 const black = (n: number) => Array.from({ length: n }, () => ({ symbol: 'B' as const }));
+const green = (n: number) => Array.from({ length: n }, () => ({ symbol: 'G' as const }));
 const blue = (n: number) => Array.from({ length: n }, () => ({ symbol: 'U' as const }));
 const red = (n: number) => Array.from({ length: n }, () => ({ symbol: 'R' as const }));
 
@@ -1829,6 +1830,122 @@ describe('Shard of the Void Dragon', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.08 Scavenging Ooze
+// ---------------------------------------------------------------------------------------------
+
+describe('Scavenging Ooze', () => {
+  const ooze = pinned('Scavenging Ooze');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+
+  /** Activate the Ooze with {G}, targeting `cardId`, and leave the ability on the stack. */
+  function activate(ctx: GameContext, perm: EnginePermanent, targetId: string) {
+    addMana(playerById(ctx, 'P1'), green(1));
+    const option = optionFor(ctx, 'P1', perm.id, /Exile target card from a graveyard/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, targetId]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+  }
+
+  it('scavenging-ooze-pinned-oracle-supported — the interpreter alone models the {G} graveyard exile with its creature rider', () => {
+    expect(ooze.sha256).toBe('5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971');
+    expectNoRegistration(ooze.card);
+    expectModeled(ooze.card);
+    const [ability] = interpretCard(ooze.card).activatedAbilities;
+    expect(ability?.ability.targets).toEqual([
+      { kind: 'cardInGraveyard', graveyardOwnerScope: 'any' },
+    ]);
+    expect(ability?.ability.effects).toEqual([
+      { op: 'exileTargetGraveyardAndBuffIfCreature', targetSlot: 0 },
+    ]);
+  });
+
+  it('scavenging-ooze-creature-card — exiling a creature card from any graveyard grows it and gains 1 life', () => {
+    const ctx = pod('ooze-creature');
+    const perm = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    activate(ctx, perm, target.id);
+    resolveTop(ctx);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+    expect(perm.counters).toEqual({ '+1/+1': 1 });
+    expect(playerById(ctx, 'P1').life).toBe(41);
+  });
+
+  it('scavenging-ooze-noncreature-card — a noncreature card is exiled with no counter and no life', () => {
+    const ctx = pod('ooze-noncreature');
+    const perm = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P2', relic, 'graveyard');
+    activate(ctx, perm, target.id);
+    resolveTop(ctx);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Relic']);
+    expect(perm.counters).toEqual({});
+    expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+
+  it('scavenging-ooze-leaves-graveyard-event — the exile is a real zone change that leave-graveyard abilities see', () => {
+    const ctx = pod('ooze-zone-change');
+    const perm = spawn(ctx, 'P1', ooze.card);
+    const watcherCard = oracle({ name: 'Lab Grave Listener', typeLine: 'Enchantment' });
+    const watcherDef = interpretCard(watcherCard);
+    registerCustomDef(ctx, {
+      ...watcherDef,
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'leavesGraveyard',
+            subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+          description: 'Whenever a creature card leaves a graveyard, draw a card',
+        },
+      ],
+    });
+    spawn(ctx, 'P2', watcherCard);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    activate(ctx, perm, target.id);
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Lab Grave Listener',
+    ]);
+  });
+
+  it('scavenging-ooze-target-gone — a target that left the graveyard first leaves nothing to exile and no life', () => {
+    const ctx = pod('ooze-gone');
+    const perm = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    activate(ctx, perm, target.id);
+    pump(moveObject(ctx, playerById(ctx, 'P3').graveyard[0]!, { zone: 'hand' }));
+    resolveTop(ctx);
+    expect(perm.counters).toEqual({});
+    expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+
+  it('scavenging-ooze-source-gone — with the Ooze gone, a creature card is still exiled and you still gain 1 life', () => {
+    const ctx = pod('ooze-source-gone');
+    const perm = spawn(ctx, 'P1', ooze.card);
+    const target = conjure(ctx, 'P3', bear, 'graveyard');
+    activate(ctx, perm, target.id);
+    kill(ctx, perm);
+    resolveTop(ctx);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+    expect(playerById(ctx, 'P1').life).toBe(41);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1840,6 +1957,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Scavenging Ooze',
+    sha256: '5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971',
+    clauseCount: 1,
+  },
   {
     name: 'Shard of the Void Dragon',
     sha256: 'fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389',

@@ -190,7 +190,8 @@ describe('Batch 2 card overrides', () => {
     expect(def.activatedAbilities).toHaveLength(1);
   });
 
-  it('contains Scavenging Ooze', () => {
+  // Restored in coverage PR03: the exile is a real zone change (pr03-card-coverage.test.ts).
+  it('models Scavenging Ooze', () => {
     const card = oracle({
       oracleId: '1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67',
       name: 'Scavenging Ooze',
@@ -200,10 +201,10 @@ describe('Batch 2 card overrides', () => {
         '{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on Scavenging Ooze and you gain 1 life.',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Exile splices the card without a zone-change, so leave-graveyard events are skipped.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.activatedAbilities[0]?.ability.effects).toEqual([
+      { op: 'exileTargetGraveyardAndBuffIfCreature', targetSlot: 0 },
+    ]);
   });
 
   it('models Felidar Retreat', () => {

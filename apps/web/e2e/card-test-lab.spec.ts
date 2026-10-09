@@ -5023,3 +5023,21 @@ test('Shard of the Void Dragon: attack, and grow from the sacrificed artifact', 
   await expect(page.getByText('+1/+1×2')).toBeVisible();
   await expect(page.getByText(/Shard of the Void Dragon deals 9 to P2/).first()).toBeVisible();
 });
+
+test('Scavenging Ooze: exile a creature card to grow and gain life', async ({ page }) => {
+  await runScenario(page, 'Scavenging Ooze: exile a creature card to grow and gain life');
+  const ooze = permanent(page, 'Scavenging Ooze');
+  await expect(ooze).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ooze.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const ox = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+  });
+  await expect(ox).toBeVisible();
+  await ox.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
+});

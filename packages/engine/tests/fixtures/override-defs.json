@@ -1490,12 +1490,6 @@
     "def": {}
   },
   {
-    "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
-    "name": "Scavenging Ooze",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
     "name": "Dark Confidant",
     "handledLines": [],
@@ -19986,12 +19980,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-scavenging-ooze",
-    "name": "Scavenging Ooze",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-scheming-symmetry",

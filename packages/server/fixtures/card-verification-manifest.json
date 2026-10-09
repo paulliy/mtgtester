@@ -4734,13 +4734,24 @@
     "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67": {
       "name": "Scavenging Ooze",
       "oracleSha256": "5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "scavenging-ooze-exile",
           "oracleText": "{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life.",
-          "implementation": ["explicitly unsupported; exile splices without a zone-change"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability, matched as one block: cost {G}, target cardInGraveyard (any graveyard)",
+            "exileTargetGraveyardAndBuffIfCreature: the card moves to exile through moveObject (a real zone change, so leave-graveyard abilities see it); if its printed types include Creature, a +1/+1 counter on the Ooze (if it is still on the battlefield) and 1 life for its controller; a target that left the graveyard does nothing"
+          ],
+          "engineTestIds": [
+            "scavenging-ooze-pinned-oracle-supported",
+            "scavenging-ooze-creature-card",
+            "scavenging-ooze-noncreature-card",
+            "scavenging-ooze-leaves-graveyard-event",
+            "scavenging-ooze-target-gone",
+            "scavenging-ooze-source-gone"
+          ],
+          "viewerScenarioIds": ["scavenging-ooze-viewer-exile-creature"]
         }
       ],
       "gameplayAiScenarioIds": []

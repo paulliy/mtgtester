@@ -211,8 +211,6 @@ const REASONS: Record<string, string> = {
   'Living Death': 'Battlefield creatures are put into graveyards instead of being sacrificed.',
   'Screams from Within':
     'Return is a required attach target; current Oracle returns this Aura untargeted.',
-  'Scavenging Ooze':
-    'Exile splices the card without a zone-change, so leave-graveyard events are skipped.',
   Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
   Technomancer: 'Zero-mana artifact creatures cannot be returned once remaining mana value hits 0.',
   'Thundermaw Hellkite':
@@ -304,6 +302,7 @@ describe('Marchesa catalog audit containment', () => {
     'Watcher for Tomorrow',
     'Psychomancer',
     'Shard of the Void Dragon',
+    'Scavenging Ooze',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
