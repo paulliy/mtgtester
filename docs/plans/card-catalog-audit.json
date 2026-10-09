@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 39,
+      "uniqueOracleIds": 38,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6099,6 +6099,20 @@
     {
       "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
       "name": "Living Death",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+      "name": "Technomancer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the enters trigger onto mill three plus returnArtifactCreaturesUpToManaValue, which offers picks one at a time against the remaining budget (mana value 0 cards stay offered) and returns the chosen cards together."
+    },
+    {
+      "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+      "name": "Technomancer",
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."

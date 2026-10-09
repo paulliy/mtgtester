@@ -8394,6 +8394,52 @@ function livingDeathScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function technomancerScenario(gameId: GameId): CardTestScenario {
+  const techno = pinnedFrom(MARCHESA_BATCH1, 'Technomancer');
+  const construct = (name: string, cost: '{3}' | '{0}', cmc: number) =>
+    card({
+      oracleId: `lab-technomancer-${cmc}`,
+      name,
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: cost,
+      cmc,
+      power: '1',
+      toughness: '1',
+    });
+  const three = construct('Lab Three Construct', '{3}', 3);
+  const zero = construct('Lab Zero Construct', '{0}', 0);
+  return pr01Scenario(gameId, {
+    id: 'technomancer-viewer-mill-and-return',
+    title: 'Technomancer: mill three, then return artifact creatures worth 6',
+    instructions: [
+      'Technomancer is in your hand and seven Swamps are on your battlefield; two Lab Three Constructs are in your graveyard and Lab Zero Construct is on top of your library.',
+      'Cast Technomancer: mill three cards (Lab Zero Construct among them).',
+      'Return both Lab Three Constructs (total mana value 6), then Lab Zero Construct, which still fits.',
+    ],
+    expectedOutcome:
+      'Technomancer mills three, and both Lab Three Constructs and Lab Zero Construct return to the battlefield together.',
+    oracleSha256: techno.sha256,
+    clauseIds: ['technomancer-enters'],
+    decks: {
+      P1: [techno.card, three, three, zero, ...Array.from({ length: 9 }, () => SWAMP)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Technomancer'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Three Construct', 'Lab Three Construct'] }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Zero Construct', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8600,6 +8646,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'puppeteer-clique-viewer-steal-attack-exile',
   'cryptek-viewer-dies-and-returns-tapped',
   'living-death-viewer-swap',
+  'technomancer-viewer-mill-and-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8829,6 +8876,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
   'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
   'living-death-viewer-swap': livingDeathScenario,
+  'technomancer-viewer-mill-and-return': technomancerScenario,
 };
 
 export function createCardTestScenario(

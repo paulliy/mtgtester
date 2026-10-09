@@ -519,3 +519,20 @@ describe('Living Death Card Test Lab scenario', () => {
     replays('living-death-viewer-swap', steps);
   });
 });
+
+describe('Technomancer Card Test Lab scenario', () => {
+  it('technomancer-viewer-mill-and-return — both threes and the milled zero return together', () => {
+    const steps: Step[] = [
+      { action: 'Cast Technomancer' },
+      { action: 'Return Lab Three Construct' },
+      { action: 'Return Lab Three Construct' },
+      { action: 'Return Lab Zero Construct' },
+    ];
+    const { seat, onBattlefield } = run('technomancer-viewer-mill-and-return', steps);
+    expect(onBattlefield('Lab Three Construct')).toHaveLength(2);
+    expect(onBattlefield('Lab Zero Construct')).toHaveLength(1);
+    expect(onBattlefield('Technomancer')).toHaveLength(1);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Swamp', 'Swamp']);
+    replays('technomancer-viewer-mill-and-return', steps);
+  });
+});

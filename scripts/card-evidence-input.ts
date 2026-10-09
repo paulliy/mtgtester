@@ -1813,6 +1813,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Living Death: swap the battlefield and graveyard creatures'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Technomancer: mill three, then return artifact creatures worth 6'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

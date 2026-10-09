@@ -4782,15 +4782,25 @@
     "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33": {
       "name": "Technomancer",
       "oracleSha256": "19cbe3b23619d09af13644931417b1c3ab40deb1d3663febc590fcae248dd0f7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "technomancer-enters",
           "oracleText": "When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.",
           "implementation": [
-            "explicitly unsupported; 0-mana cards are blocked after remaining hits 0"
+            "interpreted enters trigger: mill three, then returnArtifactCreaturesUpToManaValue with a budget of 6",
+            "the controller picks artifact creature cards one at a time from the graveyard as it stands after the mill; each pick must fit the remaining budget, so a mana value 0 card stays offered once the budget is spent",
+            "a decline option ends the picks at any point (any number, including zero)",
+            "the chosen cards enter together in one moveObjects batch under the controller, so their enters triggers see each other (CR 603.6a)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "technomancer-pinned-oracle-supported",
+            "technomancer-mills-then-returns",
+            "technomancer-budget",
+            "technomancer-only-artifact-creatures",
+            "technomancer-returns-together"
+          ],
+          "viewerScenarioIds": ["technomancer-viewer-mill-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -361,9 +361,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Hyperphase Threshers — Whenever an artifact you control enters, this creature gains first strike until end of turn.',
   ]);
 
-  unimplemented('3f97541e-34f3-4f7f-8ac2-7167b2ec9b33', 'Technomancer', [
-    'When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.',
-  ]);
+  // Technomancer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('5924cbb0-19b5-449c-a7c5-722e744a54f8', 'The War in Heaven', [
     'unsupported layout "saga"',

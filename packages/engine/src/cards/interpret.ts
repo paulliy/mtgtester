@@ -1116,6 +1116,15 @@ function parseEffectSentence(
   }
   // "Put target card from your graveyard on the bottom of your library" (Mistveil Plains): any
   // card, so the graveyard target carries no filter.
+  // "Return any number of artifact creature cards with total mana value 6 or less from your
+  // graveyard to the battlefield" (Technomancer): chosen on resolution, not targeted.
+  {
+    const m = s.match(
+      /^return any number of artifact creature cards with total mana value (\d+) or less from your graveyard to the battlefield$/,
+    );
+    if (m !== null)
+      return [{ op: 'returnArtifactCreaturesUpToManaValue', maxManaValue: Number(m[1]) }];
+  }
   if (s === 'put target card from your graveyard on the bottom of your library') {
     return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
   }

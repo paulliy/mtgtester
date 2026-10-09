@@ -206,7 +206,6 @@ const REASONS: Record<string, string> = {
   'Screams from Within':
     'Return is a required attach target; current Oracle returns this Aura untargeted.',
   Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
-  Technomancer: 'Zero-mana artifact creatures cannot be returned once remaining mana value hits 0.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
@@ -302,6 +301,7 @@ describe('Marchesa catalog audit containment', () => {
     'Puppeteer Clique',
     'Cryptek',
     'Living Death',
+    'Technomancer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

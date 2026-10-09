@@ -2681,12 +2681,6 @@
     "def": {}
   },
   {
-    "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
-    "name": "Technomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
@@ -21013,12 +21007,6 @@
   {
     "oracleId": "oracle-szarekh-the-silent-king",
     "name": "Szarekh, the Silent King",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-technomancer",
-    "name": "Technomancer",
     "handledLines": [],
     "def": {}
   },

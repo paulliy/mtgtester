@@ -2771,6 +2771,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+    "name": "Technomancer",
+    "package": "PR03.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: 0-mana cards are blocked after remaining hits 0"],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
     "name": "Teferi's Protection",
     "package": "W8",

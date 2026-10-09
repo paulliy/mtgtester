@@ -95,7 +95,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Trazyn the Infinite',
       'Cranial Plating',
       'Tomb Blade',
-      'Technomancer',
       // Catalog audit batch 1: retarget authored as copyTargetSpell.
       'Bolt Bend',
       'Deflecting Swat',

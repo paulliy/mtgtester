@@ -5263,3 +5263,20 @@ test('Living Death: swap the battlefield and graveyard creatures', async ({ page
   await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test('Technomancer: mill three, then return artifact creatures worth 6', async ({ page }) => {
+  await runScenario(page, 'Technomancer: mill three, then return artifact creatures worth 6');
+  await castAndResolve(page, 'Technomancer');
+  for (const name of ['Lab Three Construct', 'Lab Three Construct', 'Lab Zero Construct']) {
+    const choice = page
+      .locator('.panel-group')
+      .filter({ hasText: name })
+      .first()
+      .getByRole('button', { name: 'Return', exact: true });
+    await passUntil(page, choice);
+    await choice.click();
+  }
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Three Construct')).toContainText('×2');
+  await expect(permanent(page, 'Lab Zero Construct')).toHaveCount(1);
+});

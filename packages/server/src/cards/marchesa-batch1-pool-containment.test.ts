@@ -89,6 +89,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Solar Transformer',
       'Soul-Guide Lantern',
       'Sylvan Reclamation',
+      'Technomancer',
       'The Ooze',
       'Their Number Is Legion',
       'Thunderfoot Baloth',

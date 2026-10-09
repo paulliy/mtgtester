@@ -3283,9 +3283,14 @@ export function* executeAbility(
         break;
       }
       case 'returnArtifactCreaturesUpToManaValue': {
+        // "Return any number of artifact creature cards with total mana value N or less": choose
+        // the whole set first (a mana value 0 card still fits when nothing is left of the budget),
+        // then return it as one simultaneous move, so each sees the others enter (CR 603.6a).
         let remaining = effect.maxManaValue;
-        while (remaining > 0) {
+        const chosen: EngineCardObject[] = [];
+        for (;;) {
           const choices = controller.graveyard.filter((card) => {
+            if (chosen.includes(card)) return false;
             const def = getDefByOracleId(ctx, card.oracleId, card.name);
             return (
               def.types.includes('Artifact') &&
@@ -3294,7 +3299,7 @@ export function* executeAbility(
             );
           });
           if (choices.length === 0) break;
-          const chosen = yield* chooseCard(ctx, {
+          const pick = yield* chooseCard(ctx, {
             player: controller.id,
             prompt: `${source.name}: return an artifact creature (up to ${remaining} mana value)`,
             cards: choices,
@@ -3302,13 +3307,11 @@ export function* executeAbility(
             verb: 'Return',
             decline: { type: 'decline', description: 'Return no more cards', verb: 'Done' },
           });
-          if (chosen === null) break;
-          remaining -= spellManaValue(
-            getDefByOracleId(ctx, chosen.oracleId, chosen.name),
-            undefined,
-          );
-          yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
+          if (pick === null) break;
+          chosen.push(pick);
+          remaining -= spellManaValue(getDefByOracleId(ctx, pick.oracleId, pick.name), undefined);
         }
+        yield* moveObjects(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
         break;
       }
       case 'halfLifeDrainTargetOpponent': {

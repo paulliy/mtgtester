@@ -343,6 +343,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'puppeteer-clique-viewer-steal-attack-exile',
       'cryptek-viewer-dies-and-returns-tapped',
       'living-death-viewer-swap',
+      'technomancer-viewer-mill-and-return',
     ]);
   });
 

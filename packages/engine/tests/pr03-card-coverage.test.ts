@@ -3278,6 +3278,150 @@ describe('Living Death', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.10 Technomancer
+// ---------------------------------------------------------------------------------------------
+
+const TECHNOMANCER_SHA = '19cbe3b23619d09af13644931417b1c3ab40deb1d3663febc590fcae248dd0f7';
+
+describe('Technomancer', () => {
+  const techno = pinned('Technomancer');
+  const automaton = (name: string, cost: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: cost,
+      power: '1',
+      toughness: '1',
+    });
+  const three = automaton('Lab Three', '{3}');
+  const four = automaton('Lab Four', '{4}');
+  const zero = automaton('Lab Zero', '{0}');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}',
+    power: '2',
+    toughness: '2',
+  });
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{1}' });
+  const filler = oracle({ name: 'Lab Filler', typeLine: 'Land' });
+
+  /** Pick the named cards in order, recording what each prompt offered, then stop. */
+  function picking(names: string[], offered: string[][]): Answer {
+    const queue = [...names];
+    return (decision) => {
+      if (!/return an artifact creature/.test(decision.prompt))
+        return { index: 0, targets: new Map() };
+      offered.push(decision.options.map((option) => option.description));
+      const next = queue.shift();
+      const index = decision.options.findIndex((option) =>
+        next === undefined
+          ? option.description === 'Return no more cards'
+          : option.description === `Return ${next}`,
+      );
+      if (index < 0) throw new Error(`no option for ${next ?? 'decline'}`);
+      return { index, targets: new Map() };
+    };
+  }
+  /** P1's library is exactly these cards, top first. */
+  function stackLibrary(ctx: GameContext, cards: OracleCard[]) {
+    playerById(ctx, 'P1').library.length = 0;
+    for (const card of [...cards].reverse()) conjure(ctx, 'P1', card, 'library');
+  }
+  const onBoard = (ctx: GameContext) =>
+    ctx.state.battlefield
+      .map((perm) => perm.name)
+      .filter((name) => name.startsWith('Lab '))
+      .sort();
+
+  it('technomancer-pinned-oracle-supported — the interpreter models the mill and the capped return', () => {
+    expect(techno.sha256).toBe(TECHNOMANCER_SHA);
+    expectNoRegistration(techno.card);
+    expectModeled(techno.card);
+    expect(interpretCard(techno.card).triggers[0]!.effects).toEqual([
+      { op: 'mill', count: { kind: 'const', n: 3 } },
+      { op: 'returnArtifactCreaturesUpToManaValue', maxManaValue: 6 },
+    ]);
+  });
+
+  it('technomancer-mills-then-returns — milled cards count, and a mana value 0 card still fits with nothing left', () => {
+    const ctx = pod('techno-zero');
+    stackLibrary(ctx, [zero, filler, filler, filler]);
+    conjure(ctx, 'P1', three, 'graveyard');
+    conjure(ctx, 'P1', three, 'graveyard');
+    const offered: string[][] = [];
+    enterFrom(ctx, 'P1', techno.card, 'hand');
+    settle(ctx, picking(['Lab Three', 'Lab Three', 'Lab Zero'], offered));
+    expect(onBoard(ctx)).toEqual(['Lab Three', 'Lab Three', 'Lab Zero']);
+    // After both threes (budget 0), the zero was still offered.
+    expect(offered[2]).toContain('Return Lab Zero');
+    expect(playerById(ctx, 'P1').library.map((card) => card.name)).toEqual(['Lab Filler']);
+  });
+
+  it('technomancer-budget — once the budget is spent, a card that no longer fits is not offered', () => {
+    const ctx = pod('techno-budget');
+    stackLibrary(ctx, [filler, filler, filler]);
+    conjure(ctx, 'P1', four, 'graveyard');
+    conjure(ctx, 'P1', three, 'graveyard');
+    const offered: string[][] = [];
+    enterFrom(ctx, 'P1', techno.card, 'hand');
+    settle(ctx, picking(['Lab Four'], offered));
+    expect(offered[0]).toEqual(['Return Lab Four', 'Return Lab Three', 'Return no more cards']);
+    // With 2 left, Lab Three no longer fits, so nothing more is offered.
+    expect(offered).toHaveLength(1);
+    expect(onBoard(ctx)).toEqual(['Lab Four']);
+  });
+
+  it('technomancer-only-artifact-creatures — a plain creature or a noncreature artifact is never offered', () => {
+    const ctx = pod('techno-types');
+    stackLibrary(ctx, [filler, filler, filler]);
+    conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', relic, 'graveyard');
+    conjure(ctx, 'P1', three, 'graveyard');
+    const offered: string[][] = [];
+    enterFrom(ctx, 'P1', techno.card, 'hand');
+    settle(ctx, picking([], offered));
+    expect(offered).toEqual([['Return Lab Three', 'Return no more cards']]);
+    expect(onBoard(ctx)).toEqual([]);
+  });
+
+  it('technomancer-returns-together — the returned creatures enter simultaneously and see each other (CR 603.6a)', () => {
+    const ctx = pod('techno-together');
+    stackLibrary(ctx, [filler, filler, filler, filler]);
+    const greeter = automaton('Lab Greeter', '{2}');
+    registerCustomDef(ctx, {
+      ...interpretCard(greeter),
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'allOf',
+                of: [{ kind: 'other' }, { kind: 'type', value: 'Artifact' }],
+              },
+            },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+          description: 'Whenever another artifact enters, draw a card',
+        },
+      ],
+    });
+    conjure(ctx, 'P1', three, 'graveyard');
+    conjure(ctx, 'P1', greeter, 'graveyard');
+    enterFrom(ctx, 'P1', techno.card, 'hand');
+    const before = playerById(ctx, 'P1').hand.length;
+    // The Three is chosen first and would enter first; together, the Greeter still sees it.
+    settle(ctx, picking(['Lab Three', 'Lab Greeter'], []));
+    expect(onBoard(ctx)).toEqual(['Lab Greeter', 'Lab Three']);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before + 1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3296,6 +3440,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Technomancer',
+    sha256: TECHNOMANCER_SHA,
+    clauseCount: 1,
   },
   {
     name: 'Living Death',

@@ -315,12 +315,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Szarekh, the Silent King',
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   );
-  // Catalog audit necron-remaining-batch-9: 0-mana cards are blocked after remaining hits 0.
-  unsupportedCard(
-    '3f97541e-34f3-4f7f-8ac2-7167b2ec9b33',
-    'Technomancer',
-    'Zero-mana artifact creatures cannot be returned once remaining mana value hits 0.',
-  );
+  // Technomancer: restored in coverage PR03. The interpreter reads the mill and the capped
+  // simultaneous return, so no override remains.
   // Catalog audit necron-remaining-batch-4: saga chapters are wrong events.
   unsupportedCard(
     '5924cbb0-19b5-449c-a7c5-722e744a54f8',
