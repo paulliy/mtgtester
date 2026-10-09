@@ -29,7 +29,7 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { beginEndStep, runCombatAndExtraCombats } from '../src/turn/turn';
+import { beginEndStep, runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import {
   createToken,
@@ -165,6 +165,18 @@ function settle(ctx: GameContext, answer?: Answer) {
     const pass = decision.options.findIndex((option) => option.type === 'pass');
     if (pass >= 0) return { index: pass, targets: new Map() };
     return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+}
+
+/** Run a whole turn for the current turn player with nobody attacking or blocking. */
+function quietTurn(ctx: GameContext) {
+  return pump(runTurn(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined)
+      return declareAttacks(decision, () => null);
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, () => null);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
   });
 }
 
@@ -2825,6 +2837,22 @@ describe('Venser, the Sojourner', () => {
     expect(playerById(ctx, 'P2').life).toBe(life - 2);
   });
 
+  it('venser-minus-one-ends-with-the-turn — the next untap step clears it, so attackers can be blocked again', () => {
+    const ctx = pod('venser-minus-expires');
+    const self = spawn(ctx, 'P1', venser.card);
+    spawn(ctx, 'P2', bear);
+    activate(ctx, self, /: −1:/);
+    expect(ctx.state.creaturesCantBeBlockedThisTurn).toBe(true);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    quietTurn(ctx);
+    expect(ctx.state.creaturesCantBeBlockedThisTurn).toBe(false);
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    const attacker = spawn(ctx, 'P1', bear);
+    expect(attackP2(ctx)).toContain(attacker.id);
+  });
+
   it('venser-minus-one-control — without it, the same attacker can be blocked', () => {
     const ctx = pod('venser-minus-control');
     spawn(ctx, 'P1', venser.card);
@@ -2965,6 +2993,8 @@ describe('Puppeteer Clique', () => {
     const { ctx, stolen } = steal('clique-new-object');
     pump(moveObject(ctx, stolen, { zone: 'exile' }));
     pump(moveObject(ctx, ctx.state.exile[0]!, { zone: 'battlefield', controllerId: 'P2' }));
+    // The haste grant was bound to the old object, so the new one does not have it either.
+    expect(computeCharacteristics(ctx, bears(ctx)[0]!).keywords).not.toContain('haste');
     beginEndStep(ctx);
     settle(ctx);
     expect(bears(ctx).map((perm) => perm.controllerId)).toEqual(['P2']);
@@ -3091,10 +3121,10 @@ describe('Cryptek', () => {
     const self = spawn(ctx, 'P1', cryptek.card);
     const ally = spawn(ctx, 'P1', construct);
     protect(ctx, self, ally.id);
-    // The cleanup step of this turn sweeps cleanup-scoped delayed triggers.
-    ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
-      (delayed) => delayed.expiry !== 'cleanup',
-    );
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    // A real turn's cleanup step sweeps cleanup-scoped delayed triggers.
+    quietTurn(ctx);
+    expect(ctx.state.delayedTriggers).toEqual([]);
     kill(ctx, ally);
     expect(ctx.state.pendingTriggers).toEqual([]);
   });
