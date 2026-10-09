@@ -7436,6 +7436,7 @@ function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
     instructions: [
       'Triarch Praetorian is in your graveyard and five Swamps are on the battlefield.',
       'Activate its unearth ability from your graveyard for {4}{B}.',
+      'Pass to the end step: the unearthed Triarch Praetorian is exiled.',
     ],
     expectedOutcome:
       'Triarch Praetorian returns with haste, its enters-from-a-graveyard trigger draws Lab Ox and Lab Zombie and costs 2 life, and it is exiled at the next end step.',
@@ -7455,6 +7456,7 @@ function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
       hand: [],
       battlefield: [{ playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) }],
       graveyard: [{ playerId: 'P1', cardNames: ['Triarch Praetorian'] }],
+      continueToEndStep: true,
     },
   });
 }

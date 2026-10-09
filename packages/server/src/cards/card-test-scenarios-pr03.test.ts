@@ -117,14 +117,16 @@ function replays(scenarioId: string, steps: Step[]): void {
 }
 
 describe('Triarch Praetorian Card Test Lab scenario', () => {
-  it('triarch-praetorian-viewer-unearth — unearth returns it and the graveyard-origin trigger draws two', () => {
+  it('triarch-praetorian-viewer-unearth — unearth returns it, the graveyard-origin trigger draws two, and it is exiled at the end step', () => {
     const steps: Step[] = [{ action: 'Unearth' }];
-    const { seat, onBattlefield } = run('triarch-praetorian-viewer-unearth', steps);
+    const { state, seat, onBattlefield } = run('triarch-praetorian-viewer-unearth', steps);
     const p1 = seat('P1');
     expect(p1.hand.map((card) => card.name).sort()).toEqual(['Lab Ox', 'Lab Zombie']);
     expect(p1.life).toBe(38);
+    // Unearth's delayed trigger exiled it at the beginning of the end step, not to the graveyard.
     expect(p1.graveyard).toEqual([]);
-    expect(onBattlefield('Triarch Praetorian')).toHaveLength(1);
+    expect(onBattlefield('Triarch Praetorian')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Triarch Praetorian']);
     expect(onBattlefield('Swamp').every((swamp) => swamp.tapped)).toBe(true);
     replays('triarch-praetorian-viewer-unearth', steps);
   });
