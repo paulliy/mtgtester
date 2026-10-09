@@ -1195,6 +1195,22 @@ describe('Satoru, the Infiltrator', () => {
     expect(hand(ctx)).toEqual(['Page One']);
   });
 
+  it('satoru-the-infiltrator-phyrexian-life-draws — a creature whose Phyrexian pip is paid with life had no mana spent', () => {
+    const ctx = ready('satoru-phyrexian');
+    spawn(ctx, 'P1', satoru.card);
+    const mite = oracle({
+      name: 'Lab Mite',
+      typeLine: 'Artifact Creature — Insect',
+      manaCost: '{B/P}',
+    });
+    castFromHand(ctx, 'P1', mite, []);
+    expect(playerById(ctx, 'P1').life).toBe(38);
+    expect(ctx.state.stack[0]!.card).toMatchObject({ manaSpentToCast: 0 });
+    resolveTop(ctx);
+    settle(ctx);
+    expect(hand(ctx)).toEqual(['Page One']);
+  });
+
   it('satoru-the-infiltrator-one-or-more — two creatures entering together draw one card', () => {
     const ctx = ready('satoru-together');
     spawn(ctx, 'P1', satoru.card);
@@ -3277,6 +3293,25 @@ describe('Living Death', () => {
     resolveTop(ctx);
     const returned = ctx.state.battlefield.find((perm) => perm.name === 'Lab Zombie');
     expect(returned?.counters['+1/+1']).toBe(1);
+  });
+
+  it('move-objects-sacrifice-reason — a batch sacrificed through moveObjects is a sacrifice event', () => {
+    const ctx = pod('move-objects-sacrifice');
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Altar Watcher',
+        typeLine: 'Enchantment',
+        oracleText: 'Whenever you sacrifice a creature, you gain 1 life.',
+      }),
+    );
+    const bears = [spawn(ctx, 'P1', bear), spawn(ctx, 'P1', bear)];
+    pump(moveObjects(ctx, bears, { zone: 'graveyard', reason: 'sacrifice' }));
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Lab Altar Watcher',
+      'Lab Altar Watcher',
+    ]);
   });
 
   it('living-death-swaps — graveyard creature cards return under their owners, battlefield creatures go to graveyards', () => {
