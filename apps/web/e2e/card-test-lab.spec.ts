@@ -4288,7 +4288,9 @@ async function runSelectedFaceViewer(
     await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
     if (await over.isVisible()) break;
     const before = boards.length;
-    await pass.click();
+    // The viewer passes on its own when passing is its only legal action, so the game can end
+    // and the button vanish between the check and the click; never let that click block.
+    await pass.click({ timeout: 1_000 }).catch(() => undefined);
     await expect
       .poll(
         async () =>
