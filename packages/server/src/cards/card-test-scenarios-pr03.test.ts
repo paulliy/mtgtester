@@ -530,6 +530,30 @@ describe('Puppeteer Clique Card Test Lab scenario', () => {
   });
 });
 
+describe('Puppeteer Clique persist Card Test Lab scenario', () => {
+  it('puppeteer-clique-viewer-persist — Lab Doom kills it and persist returns it with a -1/-1 counter', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Doom', targets: ['Puppeteer Clique'] }];
+    const { scenario, seat, state, onBattlefield } = run('puppeteer-clique-viewer-persist', steps);
+    const [clique] = onBattlefield('Puppeteer Clique');
+    expect(onBattlefield('Puppeteer Clique')).toHaveLength(1);
+    expect(clique?.counters).toEqual({ '-1/-1': 1 });
+    expect(clique?.controllerId).toBe('P1');
+    // It died to a normal spell and came back as a 2/1 flier; the Clique card left the graveyard.
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Puppeteer Clique');
+    expect(viewed?.power).toBe(2);
+    expect(viewed?.toughness).toBe(1);
+    expect(viewed?.keywords).toContain('flying');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(state.exile).toEqual([]);
+    // No opponent graveyard holds a creature card, so the new enters trigger took nothing.
+    for (const opponent of ['P2', 'P3', 'P4']) expect(seat(opponent).graveyard).toEqual([]);
+    expect(state.battlefield.filter((perm) => perm.controllerId !== 'P1')).toEqual([]);
+    replays('puppeteer-clique-viewer-persist', steps);
+  });
+});
+
 describe('Cryptek Card Test Lab scenario', () => {
   it('cryptek-viewer-dies-and-returns-tapped — the protected Lab Construct dies and returns tapped', () => {
     const steps: Step[] = [

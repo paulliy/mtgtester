@@ -342,6 +342,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'venser-viewer-minus-one-unblockable',
       'venser-viewer-minus-eight-emblem',
       'puppeteer-clique-viewer-steal-attack-exile',
+      'puppeteer-clique-viewer-persist',
       'cryptek-viewer-dies-and-returns-tapped',
       'living-death-viewer-swap',
       'technomancer-viewer-mill-and-return',

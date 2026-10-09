@@ -1811,6 +1811,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Puppeteer Clique: destroy it and persist returns it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Cryptek: your Lab Construct dies and returns tapped'],
   },
   {

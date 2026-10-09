@@ -8330,7 +8330,7 @@ function puppeteerCliqueScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Lab Ox enters under your control with haste, deals 4 combat damage to P2, and is exiled at the beginning of your end step.',
     oracleSha256: clique.sha256,
-    clauseIds: ['puppeteer-clique-flying', 'puppeteer-clique-enters', 'puppeteer-clique-persist'],
+    clauseIds: ['puppeteer-clique-flying', 'puppeteer-clique-enters'],
     decks: {
       P1: [clique.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
       P2: [LAB_OX, FOREST, FOREST],
@@ -8343,6 +8343,34 @@ function puppeteerCliqueScenario(gameId: GameId): CardTestScenario {
       graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
       continueThroughCombat: true,
       continueToEndStep: true,
+    },
+  });
+}
+
+/** Puppeteer Clique dies to a normal removal spell and persist returns it with a -1/-1 counter. */
+function puppeteerCliquePersistScenario(gameId: GameId): CardTestScenario {
+  const clique = pinnedFrom(MARCHESA_BATCH1, 'Puppeteer Clique');
+  return pr01Scenario(gameId, {
+    id: 'puppeteer-clique-viewer-persist',
+    title: 'Puppeteer Clique: destroy it and persist returns it',
+    instructions: [
+      'Puppeteer Clique and two Swamps are on your battlefield; Lab Doom is in your hand. No opponent has a creature card in a graveyard.',
+      'Cast Lab Doom on Puppeteer Clique: it dies.',
+      "Persist returns it with a -1/-1 counter; its enters trigger finds no creature card in an opponent's graveyard and does nothing.",
+    ],
+    expectedOutcome:
+      'Puppeteer Clique is back on the battlefield as a new 2/1 flier with a -1/-1 counter, and Lab Doom is in your graveyard.',
+    oracleSha256: clique.sha256,
+    clauseIds: ['puppeteer-clique-persist'],
+    decks: {
+      P1: [clique.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Puppeteer Clique', 'Swamp', 'Swamp'] }],
     },
   });
 }
@@ -8801,6 +8829,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'venser-viewer-minus-one-unblockable',
   'venser-viewer-minus-eight-emblem',
   'puppeteer-clique-viewer-steal-attack-exile',
+  'puppeteer-clique-viewer-persist',
   'cryptek-viewer-dies-and-returns-tapped',
   'living-death-viewer-swap',
   'technomancer-viewer-mill-and-return',
@@ -9035,6 +9064,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'venser-viewer-minus-eight-emblem': (gameId: GameId) =>
     venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
   'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
+  'puppeteer-clique-viewer-persist': puppeteerCliquePersistScenario,
   'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
   'living-death-viewer-swap': livingDeathScenario,
   'technomancer-viewer-mill-and-return': technomancerScenario,

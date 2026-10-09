@@ -5277,6 +5277,23 @@ test("Puppeteer Clique: steal P2's Lab Ox, attack, then exile it", async ({ page
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
 
+test('Puppeteer Clique: destroy it and persist returns it', async ({ page }) => {
+  await runScenario(page, 'Puppeteer Clique: destroy it and persist returns it');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Puppeteer Clique').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Persist returned it as a new object with a -1/-1 counter: a 2/1 flier.
+  await expect(permanent(page, 'Puppeteer Clique')).toHaveCount(1);
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+  await expect(permanent(page, 'Puppeteer Clique')).toContainText('2/1');
+  await expect(handCard(page, 'Lab Doom')).toHaveCount(0);
+});
+
 test('Cryptek: your Lab Construct dies and returns tapped', async ({ page }) => {
   await runScenario(page, 'Cryptek: your Lab Construct dies and returns tapped');
   const cryptek = permanent(page, 'Cryptek');

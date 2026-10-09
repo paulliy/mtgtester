@@ -679,7 +679,7 @@
             "interpreted Persist: dies trigger with an intervening-if of no -1/-1 counters (last-known), returnDiedSourceToBattlefield with a -1/-1 counter (CR 702.79a)"
           ],
           "engineTestIds": ["puppeteer-clique-pinned-oracle-supported", "puppeteer-clique-persist"],
-          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
+          "viewerScenarioIds": ["puppeteer-clique-viewer-persist"]
         }
       ],
       "gameplayAiScenarioIds": []
