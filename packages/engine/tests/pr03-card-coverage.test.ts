@@ -1222,6 +1222,36 @@ describe('Satoru, the Infiltrator', () => {
     expect(ctx.state.pendingTriggers).toEqual([]);
   });
 
+  it('enters-without-mana-primitive-other-sources — a graveyard or emblem watcher with the restriction honors it too', () => {
+    const ctx = ready('satoru-other-sources');
+    const def = interpretCard(satoru.card);
+    const ability = {
+      ...def.triggers[0]!,
+      trigger: {
+        when: 'enters' as const,
+        subject: {
+          kind: 'permanent' as const,
+          selector: { kind: 'type' as const, value: 'Creature' },
+        },
+        entersWithoutManaSpentToCast: true as const,
+      },
+      functionsInGraveyard: true as const,
+    };
+    registerCustomDef(ctx, { ...def, triggers: [ability] });
+    conjure(ctx, 'P1', satoru.card, 'graveyard');
+    playerById(ctx, 'P1').emblems.push({
+      id: 'lab-emblem',
+      name: 'Lab Emblem',
+      controllerId: 'P1',
+      abilities: [ability],
+    });
+    castFromHand(ctx, 'P1', bear, generic(1));
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    enterFrom(ctx, 'P1', bear, 'graveyard');
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+  });
+
   it('enters-without-mana-primitive-contract — the restriction is valid only on an enters head', () => {
     const issues: AuthoringIssue[] = [];
     validateTriggerHead(

@@ -1588,6 +1588,7 @@ export function queueTriggersForEvent(
           spec.subject.kind === 'self'
             ? false
             : matchesEntryRestrictions(spec, s.permanent, card.ownerId) &&
+              enteredWithoutManaIfRequired(spec, s.permanent) &&
               matchesSelector(ctx, s.permanent, spec.subject.selector, from),
         );
         for (const s of matched) {
@@ -1626,6 +1627,7 @@ export function queueTriggersForEvent(
           spec.subject.kind === 'self'
             ? false
             : matchesEntryRestrictions(spec, subject.permanent, emblem.controllerId) &&
+              enteredWithoutManaIfRequired(spec, subject.permanent) &&
               matchesSelector(ctx, subject.permanent, spec.subject.selector, from),
         );
         for (const subject of matched) {
@@ -1751,6 +1753,17 @@ function matchesEntryRestrictions(
       return false;
   }
   return true;
+}
+
+/**
+ * `entersWithoutManaSpentToCast` for a watcher that fires once per permanent (graveyard and
+ * emblem sources do not aggregate): that permanent was not cast, or was cast for no mana.
+ * Battlefield sources judge the whole firing group instead.
+ */
+function enteredWithoutManaIfRequired(spec: TriggerSpec, permanent: EnginePermanent): boolean {
+  if (!('entersWithoutManaSpentToCast' in spec) || spec.entersWithoutManaSpentToCast !== true)
+    return true;
+  return (permanent.manaSpentToCast ?? 0) === 0;
 }
 
 export function queueTriggersForObject(
@@ -1900,7 +1913,13 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           sourceOracleId: card.oracleId,
           sourceName: card.name,
           ability,
-          scope: { spellManaValue: manaValue, eventPlayerId: spell.controllerId },
+          scope: {
+            spellManaValue: manaValue,
+            eventPlayerId: spell.controllerId,
+            ...(spell.triggerScope?.manaSpent !== undefined
+              ? { manaSpent: spell.triggerScope.manaSpent }
+              : {}),
+          },
         });
         debug(ctx, 'stack', `graveyard cast trigger queued: ${card.name} — ${spell.description}`);
       }
