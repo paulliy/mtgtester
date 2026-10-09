@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 and PR02 are complete and PR03 is next. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 and PR02 are complete, PR03 is in review and PR04 is next. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
@@ -9,19 +9,31 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR02 by interpreting every card in the committed
+numbers below were measured after PR03 by interpreting every card in the committed
 `packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
 `bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
 same numbers.
 
-| Population            | Before PR01     | After PR01      | After PR02      | Remaining |
-| --------------------- | --------------- | --------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) |       230 |
-| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) |        12 |
-| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) |       240 |
+| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | Remaining |
+| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) |       211 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) |        11 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) |       220 |
 
 PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
-and the remaining count for every deck matches the PR01 and PR02 columns below.
+and the remaining count for every deck matched the PR01 and PR02 columns below.
+
+Main measured 659/906 before PR03, not 666. The card-engine quality merge (`9c7b93d`) landed after
+the PR02 measurement and closed seven cards that had counted as modeled: Black Bolt, Inhuman King
+(FF4) and Dingus Staff (PRA) now fail IR validation (an event-player reference with no event
+scope); Sivitri, Dragon Master and Zurgo and Ojutai reject an executable `noOp`; and Bloomvine
+Regent, Marang River Regent and Monster Manual are contained explicitly. No PR in this plan owns
+them yet, so they stay in the remaining counts: the measured PR02 and PR03 columns below show them
+as one extra card for PRA and FF4 and five for URD. The later columns are still the planned counts
+without them.
+
+PR03 modeled 27 of its 28 cards; Twilight Diviner moved to PR10 (see the PR03 section). No card
+regressed: main plus those 27 cards gives exactly the 686 measured after PR03.
 
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
@@ -92,19 +104,19 @@ PR08 once PR02 and PR03 have landed. All other PRs follow the arrows.
 
 ## PR overview
 
-| PR   | Theme                                            | Cards | Fail-closed | Staples | Combined after |
-| ---- | ------------------------------------------------ | ----: | ----------: | ------: | -------------: |
-| PR01 | Targeting, optional choices, resolution fidelity |    29 |          25 |       1 |        633/906 |
-| PR02 | Activation and casting costs                     |    33 |          32 |       2 |        666/906 |
-| PR03 | Zone-change history, LKI, death and return       |    27 |          20 |       1 |        693/906 |
-| PR04 | Counters and turn history                        |    22 |           5 |       0 |        715/906 |
-| PR05 | Auras, Equipment, attachment lifecycle           |    26 |          24 |       0 |        741/906 |
-| PR06 | Combat and damage events, damage prevention      |    26 |          21 |       0 |        767/906 |
-| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |        793/906 |
-| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |        816/906 |
-| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |        847/906 |
-| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |        878/906 |
-| PR11 | Protection, phasing, layouts, game lifecycle     |    28 |          14 |       7 |        906/906 |
+| PR   | Theme                                            | Cards | Fail-closed | Staples |         Combined after |
+| ---- | ------------------------------------------------ | ----: | ----------: | ------: | ---------------------: |
+| PR01 | Targeting, optional choices, resolution fidelity |    29 |          25 |       1 |                633/906 |
+| PR02 | Activation and casting costs                     |    33 |          32 |       2 |                666/906 |
+| PR03 | Zone-change history, LKI, death and return       |    27 |          20 |       1 | 693/906 (686 measured) |
+| PR04 | Counters and turn history                        |    22 |           5 |       0 |                715/906 |
+| PR05 | Auras, Equipment, attachment lifecycle           |    26 |          24 |       0 |                741/906 |
+| PR06 | Combat and damage events, damage prevention      |    26 |          21 |       0 |                767/906 |
+| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |                793/906 |
+| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                816/906 |
+| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                847/906 |
+| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |                878/906 |
+| PR11 | Protection, phasing, layouts, game lifecycle     |    28 |          14 |       7 |                906/906 |
 
 ### Remaining cards per deck after each PR
 
@@ -120,13 +132,13 @@ several decks counts in each of them.
 | LEN  |    19 |   17 |   11 |   11 |   10 |   10 |    9 |    8 |    7 |    4 |    0 |    0 |
 | MAR  |    31 |   30 |   23 |   14 |   11 |   11 |   11 |   10 |    8 |    7 |    1 |    0 |
 | NEC  |    37 |   31 |   23 |   14 |   13 |   10 |    9 |    7 |    7 |    5 |    3 |    0 |
-| PRA  |    36 |   35 |   35 |   32 |   32 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
+| PRA  |    36 |   35 |   36 |   33 |   32 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
 | QMQ  |    39 |   38 |   35 |   34 |   34 |   33 |   22 |   18 |   11 |    9 |    5 |    0 |
 | RUB  |    21 |   16 |   15 |   13 |   12 |   12 |   11 |   10 |   10 |    1 |    0 |    0 |
 | SIL  |    40 |   38 |   35 |   35 |   35 |   17 |   13 |    9 |    8 |    4 |    4 |    0 |
-| FF4  |    31 |   31 |   31 |   31 |   25 |   25 |   24 |   19 |   16 |    9 |    2 |    0 |
+| FF4  |    31 |   31 |   32 |   32 |   25 |   25 |   24 |   19 |   16 |    9 |    2 |    0 |
 | TOK  |    13 |    8 |    4 |    3 |    3 |    1 |    1 |    0 |    0 |    0 |    0 |    0 |
-| URD  |     3 |    2 |    2 |    2 |    2 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
+| URD  |     3 |    2 |    7 |    7 |    2 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
 | S    |    15 |   14 |   12 |   11 |   11 |   11 |   11 |   11 |   10 |    9 |    7 |    0 |
 
 ## PR sections
