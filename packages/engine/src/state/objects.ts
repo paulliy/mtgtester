@@ -13,7 +13,13 @@ import { spellDefinitionOf } from './queries';
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
-import type { Ability, KeywordAbility, ObjectTriggerWhen, TokenSpec } from '../cards/ability';
+import type {
+  Ability,
+  KeywordAbility,
+  ObjectTriggerWhen,
+  TokenSpec,
+  TriggerSpec,
+} from '../cards/ability';
 import { captureObjectFacts, eventObjectScope } from '../cards/source-identity';
 import type { ObjectFacts } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
@@ -1427,16 +1433,7 @@ export function queueTriggersForEvent(
         // and abilities never qualify, regardless of what the subject selector matches.
         if (when === 'becomesTargeted' && s.sourceControllerId === source.controllerId)
           return false;
-        if ('entersUntapped' in spec && spec.entersUntapped === true && s.permanent.tapped) {
-          return false;
-        }
-        if ('entersFrom' in spec && spec.entersFrom !== undefined) {
-          const origin = spec.entersFrom;
-          if (s.permanent.enteredFromZone !== origin.zone) return false;
-          // A card is only ever in its owner's graveyard (CR 404.2).
-          if (origin.graveyardOwner === 'you' && s.permanent.ownerId !== source.controllerId)
-            return false;
-        }
+        if (!matchesEntryRestrictions(spec, s.permanent, source.controllerId)) return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -1556,7 +1553,8 @@ export function queueTriggersForEvent(
         const matched = subjects.filter((s) =>
           spec.subject.kind === 'self'
             ? false
-            : matchesSelector(ctx, s.permanent, spec.subject.selector, from),
+            : matchesEntryRestrictions(spec, s.permanent, card.ownerId) &&
+              matchesSelector(ctx, s.permanent, spec.subject.selector, from),
         );
         for (const s of matched) {
           if (
@@ -1593,7 +1591,8 @@ export function queueTriggersForEvent(
         const matched = subjects.filter((subject) =>
           spec.subject.kind === 'self'
             ? false
-            : matchesSelector(ctx, subject.permanent, spec.subject.selector, from),
+            : matchesEntryRestrictions(spec, subject.permanent, emblem.controllerId) &&
+              matchesSelector(ctx, subject.permanent, spec.subject.selector, from),
         );
         for (const subject of matched) {
           ctx.state.pendingTriggers.push({
@@ -1697,6 +1696,27 @@ function rememberLeavingSourceTraits(
     if (keywords.length > 0) entry.sourceDamageKeywords = keywords;
     else delete entry.sourceDamageKeywords;
   }
+}
+
+/**
+ * The parts of an enters event a trigger head can require beyond its subject: entering untapped
+ * (Mystic Sanctuary) and entering from a graveyard, or from the watcher controller's own
+ * graveyard (CR 603.6a). Applied the same way wherever the trigger's source lives — on the
+ * battlefield, in a graveyard or on an emblem.
+ */
+function matchesEntryRestrictions(
+  spec: TriggerSpec,
+  permanent: EnginePermanent,
+  watcherControllerId: PlayerId,
+): boolean {
+  if ('entersUntapped' in spec && spec.entersUntapped === true && permanent.tapped) return false;
+  if ('entersFrom' in spec && spec.entersFrom !== undefined) {
+    if (permanent.enteredFromZone !== spec.entersFrom.zone) return false;
+    // A card is only ever in its owner's graveyard (CR 404.2).
+    if (spec.entersFrom.graveyardOwner === 'you' && permanent.ownerId !== watcherControllerId)
+      return false;
+  }
+  return true;
 }
 
 export function queueTriggersForObject(

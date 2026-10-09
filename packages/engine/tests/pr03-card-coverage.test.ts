@@ -33,7 +33,16 @@ import {
 } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  registerCustomDef,
+  spawn,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -264,6 +273,27 @@ describe('Primitive: enters-from-a-graveyard trigger head', () => {
     const token = createToken(ctx, BEAR_TOKEN, 'P1');
     expect(token.enteredFromZone).toBeUndefined();
     expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('enters-from-origin-primitive-graveyard-and-emblem-watchers — a graveyard card or an emblem with the restriction honors it too', () => {
+    const ctx = pod('origin-other-sources');
+    const def = interpretCard(watcher);
+    const ability = { ...def.triggers[0]!, functionsInGraveyard: true as const };
+    registerCustomDef(ctx, { ...def, triggers: [ability] });
+    conjure(ctx, 'P1', watcher, 'graveyard');
+    playerById(ctx, 'P1').emblems.push({
+      id: 'lab-emblem',
+      name: 'Lab Emblem',
+      controllerId: 'P1',
+      abilities: [ability],
+    });
+    enterFrom(ctx, 'P1', bear, 'hand');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    enterFrom(ctx, 'P1', bear, 'graveyard');
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName).sort()).toEqual([
+      'Lab Emblem',
+      'Lab Grave Watcher',
+    ]);
   });
 
   it('enters-from-origin-primitive-contract — the restriction is valid only on an enters head', () => {
