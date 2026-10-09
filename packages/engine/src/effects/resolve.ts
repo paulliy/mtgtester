@@ -5022,6 +5022,45 @@ export function* executeAbility(
         });
         break;
       }
+      case 'reanimateTargetHasteExileAtYourNextEndStep': {
+        const targetId = ref(effect.target);
+        const card = targetId === null ? undefined : findObjectById(ctx, targetId);
+        if (card === undefined || card.zone !== 'graveyard') break;
+        const entered = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+        });
+        if (entered === null || entered.zone !== 'battlefield') break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${entered.name} gains haste`,
+          targetCardIds: [entered.cardId],
+          targetObjectIds: [entered.id],
+          kind: 'grantKeyword',
+          keyword: 'haste',
+          duration: 'permanent',
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: entered.cardId,
+          targetObjectId: entered.id,
+          when: 'endStep',
+          player: 'you',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'exile', target: 'triggerObject' }],
+            description: `Exile ${entered.name}`,
+          },
+          expiry: 'onFire',
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
         // that left the graveyard and came back is a new object.

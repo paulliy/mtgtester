@@ -2876,6 +2876,122 @@ describe('Venser, the Sojourner', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.18 Puppeteer Clique
+// ---------------------------------------------------------------------------------------------
+
+const PUPPETEER_CLIQUE_SHA = '6cc92266c44c063db23abbdaf1b36dd0d9059367a482a19352ffa09749abb939';
+
+describe('Puppeteer Clique', () => {
+  const clique = pinned('Puppeteer Clique');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const aim =
+    (id: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, id]]) };
+      return { index: 0, targets: new Map() };
+    };
+  const bears = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Lab Bear');
+
+  /** Clique enters for P1 and steals P2's Lab Bear from the graveyard. */
+  function steal(seed: string) {
+    const ctx = pod(seed);
+    const card = conjure(ctx, 'P2', bear, 'graveyard');
+    const self = enterFrom(ctx, 'P1', clique.card, 'hand');
+    settle(ctx, aim(card.id));
+    const [stolen] = bears(ctx);
+    return { ctx, self, stolen: stolen! };
+  }
+
+  it('puppeteer-clique-pinned-oracle-supported — the interpreter models flying, the reanimation with its end-step exile, and persist', () => {
+    expect(clique.sha256).toBe(PUPPETEER_CLIQUE_SHA);
+    expectNoRegistration(clique.card);
+    expectModeled(clique.card);
+    const def = interpretCard(clique.card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers[0]!.targets).toEqual([
+      {
+        kind: 'cardInGraveyard',
+        filter: { kind: 'type', value: 'Creature' },
+        graveyardOwnerScope: 'opponent',
+      },
+    ]);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'reanimateTargetHasteExileAtYourNextEndStep', target: 0 },
+    ]);
+    expect(def.triggers[1]!.effects).toEqual([
+      { op: 'returnDiedSourceToBattlefield', counter: '-1/-1' },
+    ]);
+  });
+
+  it("puppeteer-clique-reanimates-with-haste — an opponent's creature card enters under your control with lasting haste", () => {
+    const { ctx, stolen } = steal('clique-steal');
+    expect(stolen.controllerId).toBe('P1');
+    expect(stolen.ownerId).toBe('P2');
+    expect(computeCharacteristics(ctx, stolen).keywords).toContain('haste');
+    const grant = ctx.state.effects.find((effect) => effect.targetObjectIds?.includes(stolen.id));
+    expect(grant?.duration).toBe('permanent');
+  });
+
+  it('puppeteer-clique-exiled-at-your-end-step — it is exiled at the beginning of your next end step', () => {
+    const { ctx } = steal('clique-exile');
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(bears(ctx)).toEqual([]);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+  });
+
+  it("puppeteer-clique-not-their-end-step — another player's end step does not exile it", () => {
+    const { ctx } = steal('clique-their-end');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(bears(ctx)).toHaveLength(1);
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(bears(ctx)).toEqual([]);
+  });
+
+  it('puppeteer-clique-new-object-spared — once it left and came back, the delayed exile skips the new object (CR 400.7)', () => {
+    const { ctx, stolen } = steal('clique-new-object');
+    pump(moveObject(ctx, stolen, { zone: 'exile' }));
+    pump(moveObject(ctx, ctx.state.exile[0]!, { zone: 'battlefield', controllerId: 'P2' }));
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(bears(ctx).map((perm) => perm.controllerId)).toEqual(['P2']);
+  });
+
+  it('puppeteer-clique-opponent-graveyard-only — a creature card in your own graveyard is not a legal target', () => {
+    const ctx = pod('clique-own');
+    const mine = conjure(ctx, 'P1', bear, 'graveyard');
+    const theirs = conjure(ctx, 'P3', bear, 'graveyard');
+    const spec = interpretCard(clique.card).triggers[0]!.targets[0]!;
+    const legal = computeTargetOptions(ctx, spec, 'P1');
+    expect(legal).toContain(theirs.id);
+    expect(legal).not.toContain(mine.id);
+  });
+
+  it('puppeteer-clique-persist — dying without a -1/-1 counter, it returns with one and steals again', () => {
+    const { ctx, self } = steal('clique-persist');
+    const second = conjure(ctx, 'P3', bear, 'graveyard');
+    kill(ctx, self);
+    settle(ctx, aim(second.id));
+    const [back] = ctx.state.battlefield.filter((perm) => perm.name === 'Puppeteer Clique');
+    expect(back?.counters).toEqual({ '-1/-1': 1 });
+    expect(bears(ctx)).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2894,6 +3010,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Puppeteer Clique',
+    sha256: PUPPETEER_CLIQUE_SHA,
+    clauseCount: 3,
   },
   {
     name: 'Venser, the Sojourner',

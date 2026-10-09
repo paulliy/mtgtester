@@ -471,3 +471,18 @@ describe('Venser, the Sojourner Card Test Lab scenarios', () => {
     replays('venser-viewer-minus-eight-emblem', steps);
   });
 });
+
+describe('Puppeteer Clique Card Test Lab scenario', () => {
+  it('puppeteer-clique-viewer-steal-attack-exile — the stolen Lab Ox attacks with haste, then is exiled at your end step', () => {
+    const steps: Step[] = [
+      // Lab Ox is the only legal target, so the enters trigger takes it without asking.
+      { action: 'Cast Puppeteer Clique' },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { state, seat, onBattlefield } = run('puppeteer-clique-viewer-steal-attack-exile', steps);
+    expect(seat('P2').life).toBe(36);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Ox']);
+    replays('puppeteer-clique-viewer-steal-attack-exile', steps);
+  });
+});

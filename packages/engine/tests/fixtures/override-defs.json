@@ -62,12 +62,6 @@
     }
   },
   {
-    "oracleId": "00e0b103-892c-49b3-836d-867fff197bbd",
-    "name": "Puppeteer Clique",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
     "name": "Arcbond",
     "handledLines": [],
@@ -19103,12 +19097,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "oracle-puppeteer-clique",
-    "name": "Puppeteer Clique",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-queen-marchesa",

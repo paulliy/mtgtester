@@ -1801,6 +1801,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Venser, the Sojourner: −8 emblem exiles P2's Lab Ox"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Puppeteer Clique: steal P2's Lab Ox, attack, then exile it"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

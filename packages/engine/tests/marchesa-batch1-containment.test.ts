@@ -52,7 +52,6 @@ const REASONS: Record<string, string> = {
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
   'Pensive Professor':
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
-  'Puppeteer Clique': 'Stolen creature is not exiled at the beginning of the next end step.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
@@ -302,6 +301,7 @@ describe('Marchesa catalog audit containment', () => {
     'Scavenging Ooze',
     'Imotekh the Stormlord',
     'The Ooze',
+    'Puppeteer Clique',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

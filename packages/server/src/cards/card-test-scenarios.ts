@@ -8272,6 +8272,36 @@ function venserScenario(
   });
 }
 
+function puppeteerCliqueScenario(gameId: GameId): CardTestScenario {
+  const clique = pinnedFrom(MARCHESA_BATCH1, 'Puppeteer Clique');
+  return pr01Scenario(gameId, {
+    id: 'puppeteer-clique-viewer-steal-attack-exile',
+    title: "Puppeteer Clique: steal P2's Lab Ox, attack, then exile it",
+    instructions: [
+      "Puppeteer Clique is in your hand and five Swamps are on your battlefield; Lab Ox is in P2's graveyard.",
+      "Cast Puppeteer Clique and put P2's Lab Ox onto the battlefield under your control; it has haste.",
+      'Attack P2 with Lab Ox, then pass to your end step: Lab Ox is exiled.',
+    ],
+    expectedOutcome:
+      'Lab Ox enters under your control with haste, deals 4 combat damage to P2, and is exiled at the beginning of your end step.',
+    oracleSha256: clique.sha256,
+    clauseIds: ['puppeteer-clique-flying', 'puppeteer-clique-enters', 'puppeteer-clique-persist'],
+    decks: {
+      P1: [clique.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Puppeteer Clique'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8475,6 +8505,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'venser-viewer-plus-two-blink',
   'venser-viewer-minus-one-unblockable',
   'venser-viewer-minus-eight-emblem',
+  'puppeteer-clique-viewer-steal-attack-exile',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8701,6 +8732,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     venserScenario(gameId, 'venser-viewer-minus-one-unblockable'),
   'venser-viewer-minus-eight-emblem': (gameId: GameId) =>
     venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
+  'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
 };
 
 export function createCardTestScenario(

@@ -5215,3 +5215,21 @@ test("Venser, the Sojourner: −8 emblem exiles P2's Lab Ox", async ({ page }) =
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test("Puppeteer Clique: steal P2's Lab Ox, attack, then exile it", async ({ page }) => {
+  await runScenario(page, "Puppeteer Clique: steal P2's Lab Ox, attack, then exile it");
+  await castAndResolve(page, 'Puppeteer Clique');
+  // Lab Ox is the only legal target: it enters under your control with haste.
+  const ox = permanent(page, 'Lab Ox');
+  await passUntil(page, ox);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});

@@ -624,13 +624,40 @@
     "00e0b103-892c-49b3-836d-867fff197bbd": {
       "name": "Puppeteer Clique",
       "oracleSha256": "6cc92266c44c063db23abbdaf1b36dd0d9059367a482a19352ffa09749abb939",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "puppeteer-clique-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword line: flying"],
+          "engineTestIds": ["puppeteer-clique-pinned-oracle-supported"],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
+        },
+        {
+          "id": "puppeteer-clique-enters",
           "oracleText": "When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of your next end step, exile it.",
-          "implementation": ["explicitly unsupported; delayed exile omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted self enters trigger, matched as one block: target cardInGraveyard creature, graveyardOwnerScope opponent",
+            "reanimateTargetHasteExileAtYourNextEndStep: the card enters under your control; a permanent-duration haste grant bound to that object; a delayed endStep trigger (player you, expiry onFire) exiles that same object and skips a new one (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "puppeteer-clique-pinned-oracle-supported",
+            "puppeteer-clique-reanimates-with-haste",
+            "puppeteer-clique-exiled-at-your-end-step",
+            "puppeteer-clique-not-their-end-step",
+            "puppeteer-clique-new-object-spared",
+            "puppeteer-clique-opponent-graveyard-only"
+          ],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
+        },
+        {
+          "id": "puppeteer-clique-persist",
+          "oracleText": "Persist",
+          "implementation": [
+            "interpreted Persist: dies trigger with an intervening-if of no -1/-1 counters (last-known), returnDiedSourceToBattlefield with a -1/-1 counter (CR 702.79a)"
+          ],
+          "engineTestIds": ["puppeteer-clique-pinned-oracle-supported", "puppeteer-clique-persist"],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
         }
       ],
       "gameplayAiScenarioIds": []

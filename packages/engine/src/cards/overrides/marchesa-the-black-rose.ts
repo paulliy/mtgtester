@@ -444,12 +444,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Pensive Professor',
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   );
-  // Catalog audit batch 7: delayed end-step exile is omitted.
-  unsupportedCard(
-    '00e0b103-892c-49b3-836d-867fff197bbd',
-    'Puppeteer Clique',
-    'Stolen creature is not exiled at the beginning of the next end step.',
-  );
+  // Puppeteer Clique: restored in coverage PR03. The interpreter reads the reanimation with haste
+  // and its bound end-step exile, and Persist, so no override remains.
   // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers
   // and Persist, so no override remains.
   // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a

@@ -316,6 +316,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   putDepartedSourceIntoLibrary: {},
   exileTargetReturnAtNextEndStep: { target: permanent },
   returnExiledTriggerObject: {},
+  reanimateTargetHasteExileAtYourNextEndStep: { target: graveyard },
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;

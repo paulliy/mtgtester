@@ -1220,6 +1220,13 @@ export type Effect =
   /** The delayed half of `exileTargetReturnAtNextEndStep`: the remembered card, if still exiled. */
   | { op: 'returnExiledTriggerObject'; returnUnder: 'owner' | 'sourceController' }
   /**
+   * "Put target creature card from an opponent's graveyard onto the battlefield under your
+   * control. It gains haste. At the beginning of your next end step, exile it." (Puppeteer
+   * Clique). The haste has no duration, so it lasts as long as that object stays on the
+   * battlefield; the delayed exile remembers that object and skips a new one (CR 400.7).
+   */
+  | { op: 'reanimateTargetHasteExileAtYourNextEndStep'; target: EffectRef }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

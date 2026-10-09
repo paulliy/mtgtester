@@ -6067,6 +6067,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "restoredIn": "coverage-pr03",
       "note": "Coverage PR01 override retired, not a containment: with \"Exile target card from a graveyard\" now an interpreter line (added for The Ooze), the interpreter reads the three single-target modes to the same modal ability, so the duplicate registration is deleted. The PR01 engine tests and Card Test Lab scenarios still cover it."
+    },
+    {
+      "oracleId": "00e0b103-892c-49b3-836d-867fff197bbd",
+      "name": "Puppeteer Clique",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the reanimation from an opponent's graveyard as one block, with a lasting haste grant and a delayed exile at your next end step bound to that object, plus Persist."
     }
   ]
 }

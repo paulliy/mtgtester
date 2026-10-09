@@ -340,6 +340,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'venser-viewer-plus-two-blink',
       'venser-viewer-minus-one-unblockable',
       'venser-viewer-minus-eight-emblem',
+      'puppeteer-clique-viewer-steal-attack-exile',
     ]);
   });
 

@@ -945,6 +945,7 @@ const families = {
       putDepartedSourceIntoLibrary: true,
       exileTargetReturnAtNextEndStep: true,
       returnExiledTriggerObject: true,
+      reanimateTargetHasteExileAtYourNextEndStep: true,
       exileTopNPlayableUntilEot: true,
       noOp: true,
     } satisfies Record<Extract<Effect['op'], string | number>, true>,

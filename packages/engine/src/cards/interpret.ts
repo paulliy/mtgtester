@@ -2882,6 +2882,25 @@ function parseExileReturnAtNextEndStepBlock(body: string, alloc: SlotAllocator):
   ];
 }
 
+/**
+ * "Put target creature card from an opponent's graveyard onto the battlefield under your control.
+ * It gains haste. At the beginning of your next end step, exile it." (Puppeteer Clique) — matched
+ * whole: "it" in the last two sentences is the permanent the first one put onto the battlefield.
+ */
+function parseReanimateHasteExileAtEndStepBlock(
+  body: string,
+  alloc: SlotAllocator,
+): Effect[] | null {
+  const norm = body.trim().replace(/\.$/, '');
+  if (
+    norm !==
+    "put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end step, exile it"
+  )
+    return null;
+  const target = alloc('cardInGraveyard', ofType('Creature'), undefined, 'opponent');
+  return [{ op: 'reanimateTargetHasteExileAtYourNextEndStep', target }];
+}
+
 const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
 
 /**
@@ -4375,7 +4394,8 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseHellkiteCourserBlock(body, alloc, card) ??
         parseDoublePowerThoseGainBlock(body) ??
         parseDepartedSourceToLibraryBlock(body, heads) ??
-        parseExileReturnAtNextEndStepBlock(body, alloc))
+        parseExileReturnAtNextEndStepBlock(body, alloc) ??
+        parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);
   if (effects === null) {
     effects = [];
