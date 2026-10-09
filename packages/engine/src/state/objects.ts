@@ -1492,26 +1492,32 @@ export function queueTriggersForEvent(
             )
           : grouped;
 
-      const enteringArtifactOrCreature =
-        when === 'enters' &&
-        matched.some((s) => {
+      // Panharmonicon-style doubling is decided per firing: in a simultaneous batch, only a
+      // firing for an entering artifact or creature is doubled, not one for a land beside it.
+      const entryDoublers =
+        when === 'enters'
+          ? ctx.state.battlefield.filter((perm) => {
+              if (perm.controllerId !== source.controllerId) return false;
+              const def = ctx.defs.get(perm.oracleId);
+              return (
+                def?.ruleStatics.some(
+                  (rs) => rs.kind === 'triggerAdditionalOnArtifactOrCreatureEntry',
+                ) ?? false
+              );
+            }).length
+          : 0;
+      const typedCopies = additionalTypedTriggerCopies(ctx, source);
+      const additionalCopiesFor = (group: TriggerEventSubject[]): number =>
+        typedCopies +
+        (entryDoublers > 0 &&
+        group.some((s) => {
           const chars = computeCharacteristics(ctx, s.permanent);
           return chars.types.includes('Artifact') || chars.types.includes('Creature');
-        });
-      const entryCopies = enteringArtifactOrCreature
-        ? ctx.state.battlefield.filter((perm) => {
-            if (perm.controllerId !== source.controllerId) return false;
-            const def = ctx.defs.get(perm.oracleId);
-            return (
-              def?.ruleStatics.some(
-                (rs) => rs.kind === 'triggerAdditionalOnArtifactOrCreatureEntry',
-              ) ?? false
-            );
-          }).length
-        : 0;
-      const additionalCopies = entryCopies + additionalTypedTriggerCopies(ctx, source);
-      for (let copy = 0; copy <= additionalCopies; copy++) {
-        for (const group of firings) {
+        })
+          ? entryDoublers
+          : 0);
+      for (const group of firings) {
+        for (let copy = 0; copy <= additionalCopiesFor(group); copy++) {
           const first = group[0] as TriggerEventSubject;
           const eventPlayerId =
             'defendingPlayerIsEventPlayer' in spec &&

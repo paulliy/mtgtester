@@ -1184,6 +1184,36 @@ describe('Satoru, the Infiltrator', () => {
     expect(hand(ctx)).toEqual(['Page One']);
   });
 
+  it('enters-batch-doubling-per-firing — with Panharmonicon, only the creature in a land-and-creature batch is doubled', () => {
+    const ctx = pod('enters-batch-doubling');
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Panharmonicon',
+        typeLine: 'Artifact',
+        manaCost: '{4}',
+        oracleText:
+          'If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.',
+      }),
+    );
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Life Watcher',
+        typeLine: 'Enchantment',
+        oracleText: 'Whenever another permanent you control enters, you gain 1 life.',
+      }),
+    );
+    const land = conjure(ctx, 'P1', oracle({ name: 'Lab Grove', typeLine: 'Land' }), 'graveyard');
+    const creature = conjure(ctx, 'P1', bear, 'graveyard');
+    pump(moveObjects(ctx, [land, creature], { zone: 'battlefield', controllerId: 'P1' }));
+    expect(
+      ctx.state.pendingTriggers.filter((t) => t.sourceName === 'Lab Life Watcher'),
+    ).toHaveLength(3);
+  });
+
   it("satoru-the-infiltrator-tokens-and-opponents — a token or an opponent's creature draws nothing", () => {
     const ctx = ready('satoru-negative');
     spawn(ctx, 'P1', satoru.card);
