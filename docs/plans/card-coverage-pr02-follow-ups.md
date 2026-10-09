@@ -1,5 +1,7 @@
 # PR02 mechanics follow-ups
 
+Implementation sequencing for these four mechanics is in the [PR02 limited mechanics plan](pr02-limited-mechanics-plan.md).
+
 Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy/mtgtester/pull/15). PR02 is complete at its planned scope; this note tracks known limitations and correctness gaps that were left for later work. It does not change card support claims by itself.
 
 ## Anrakyr the Traveller: life-paid casts
