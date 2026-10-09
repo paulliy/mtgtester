@@ -7085,6 +7085,36 @@
     }
   },
   {
+    "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
+    "name": "Aurora Phoenix",
+    "handledLines": [
+      "Whenever you cast a spell with cascade, return this card from your graveyard to your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand",
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "functionsInGraveyard": true,
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "keyword": "cascade",
+              "kind": "hasKeyword"
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
     "name": "Orzhov Basilica",
     "handledLines": [
@@ -12243,6 +12273,36 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-aurora-phoenix",
+    "name": "Aurora Phoenix",
+    "handledLines": [
+      "Whenever you cast a spell with cascade, return this card from your graveyard to your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand",
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "functionsInGraveyard": true,
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "keyword": "cascade",
+              "kind": "hasKeyword"
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
     }
   },
   {

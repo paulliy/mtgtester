@@ -4941,3 +4941,19 @@ test('River Kelpie: draw from a flashback and from persist', async ({ page }) =>
   await expect(handCard(page, 'Lab Ox')).toBeVisible();
   await expect(handCard(page, 'Lab Zombie')).toBeVisible();
 });
+
+test('Aurora Phoenix: cast a cascade spell to return it', async ({ page }) => {
+  await runScenario(page, 'Aurora Phoenix: cast a cascade spell to return it');
+  const cascader = handCard(page, 'Lab Cascader');
+  await expect(cascader).toHaveClass(/actionable/);
+  await cascader.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The Phoenix's graveyard trigger and the cascade trigger fire together: order them.
+  await page
+    .getByRole('button', { name: /Aurora Phoenix: Whenever you cast a spell with cascade/ })
+    .click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Cascader')).toBeVisible();
+  await expect(handCard(page, 'Aurora Phoenix')).toBeVisible();
+});

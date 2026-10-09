@@ -1412,6 +1412,109 @@ describe('River Kelpie', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.23 Aurora Phoenix
+// ---------------------------------------------------------------------------------------------
+
+describe('Aurora Phoenix', () => {
+  const phoenix = pinned('Aurora Phoenix');
+  const cascader = oracle({
+    name: 'Lab Cascader',
+    typeLine: 'Creature — Elemental',
+    manaCost: '{2}{R}',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Cascade',
+    keywords: ['Cascade'],
+  });
+  const bear = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{1}' });
+
+  /** Libraries hold only lands, so a cascade exiles them, finds nothing and bottoms them. */
+  function ready(seed: string) {
+    const ctx = pod(seed);
+    return ctx;
+  }
+  const inHand = (ctx: GameContext, id: string) =>
+    playerById(ctx, id).hand.map((card) => card.name);
+
+  it('aurora-phoenix-pinned-oracle-supported — flying and cascade are interpreted; the cascade-cast return works from the graveyard', () => {
+    expect(phoenix.sha256).toBe('4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db');
+    expectModeled(phoenix.card);
+    const def = interpretCard(phoenix.card);
+    expect(def.keywords).toEqual(['flying', 'cascade']);
+    expect(def.triggers).toEqual([
+      expect.objectContaining({
+        trigger: {
+          when: 'castsSpell',
+          caster: 'you',
+          filter: { kind: 'hasKeyword', keyword: 'cascade' },
+        },
+        functionsInGraveyard: true,
+        effects: [{ op: 'returnSelfFromGraveyardToHand' }],
+      }),
+    ]);
+  });
+
+  it('aurora-phoenix-cascade-returns — casting a spell with cascade returns it from the graveyard to your hand', () => {
+    const ctx = ready('phoenix-return');
+    conjure(ctx, 'P1', phoenix.card, 'graveyard');
+    castFromHand(ctx, 'P1', cascader, [...generic(2), ...red(1)]);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toContain(
+      'Aurora Phoenix',
+    );
+    settle(ctx);
+    expect(inHand(ctx, 'P1')).toEqual(['Aurora Phoenix']);
+    expect(playerById(ctx, 'P1').graveyard).toEqual([]);
+  });
+
+  it('aurora-phoenix-casting-a-phoenix — casting another Aurora Phoenix (it has cascade) returns the one in the graveyard', () => {
+    const ctx = ready('phoenix-phoenix');
+    const buried = conjure(ctx, 'P1', phoenix.card, 'graveyard');
+    castFromHand(ctx, 'P1', phoenix.card, [...generic(4), ...red(2)]);
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand.map((card) => card.cardId)).toEqual([buried.cardId]);
+  });
+
+  it('aurora-phoenix-not-other-spells — a spell without cascade, or an opponent’s cascade spell, returns nothing', () => {
+    const ctx = ready('phoenix-negative');
+    conjure(ctx, 'P1', phoenix.card, 'graveyard');
+    castFromHand(ctx, 'P1', bear, generic(1));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    castFromHand(ctx, 'P2', cascader, [...generic(2), ...red(1)]);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).not.toContain(
+      'Aurora Phoenix',
+    );
+  });
+
+  it('aurora-phoenix-only-from-graveyard — on the battlefield, or after it left the graveyard and came back, it does nothing', () => {
+    const onBattlefield = ready('phoenix-battlefield');
+    spawn(onBattlefield, 'P1', phoenix.card);
+    castFromHand(onBattlefield, 'P1', cascader, [...generic(2), ...red(1)]);
+    expect(onBattlefield.state.pendingTriggers.map((trigger) => trigger.sourceName)).not.toContain(
+      'Aurora Phoenix',
+    );
+
+    const ctx = ready('phoenix-new-object');
+    const card = conjure(ctx, 'P1', phoenix.card, 'graveyard');
+    castFromHand(ctx, 'P1', cascader, [...generic(2), ...red(1)]);
+    // In response the card is exiled and put back: the trigger's object is gone (CR 400.7).
+    pump(moveObject(ctx, playerById(ctx, 'P1').graveyard[0]!, { zone: 'exile' }));
+    pump(
+      moveObject(
+        ctx,
+        ctx.state.exile.find((c) => c.cardId === card.cardId)!,
+        { zone: 'graveyard' },
+      ),
+    );
+    settle(ctx);
+    expect(inHand(ctx, 'P1')).toEqual([]);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toEqual(['Aurora Phoenix']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1423,6 +1526,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Aurora Phoenix',
+    sha256: '4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db',
+    clauseCount: 3,
+  },
   {
     name: 'River Kelpie',
     sha256: 'd37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c',

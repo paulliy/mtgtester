@@ -7773,6 +7773,49 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "a98cc4d0-a322-4142-aee0-83f39b137616": {
+      "name": "Aurora Phoenix",
+      "oracleSha256": "4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "aurora-phoenix-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["aurora-phoenix-pinned-oracle-supported"],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+        },
+        {
+          "id": "aurora-phoenix-cascade",
+          "oracleText": "Cascade",
+          "implementation": [
+            "keyword cascade (interpreted; resolved by the existing cascade cast trigger)"
+          ],
+          "engineTestIds": [
+            "aurora-phoenix-pinned-oracle-supported",
+            "aurora-phoenix-casting-a-phoenix"
+          ],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+        },
+        {
+          "id": "aurora-phoenix-return",
+          "oracleText": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand.",
+          "implementation": [
+            "coverage-pr03 override: castsSpell trigger, caster you, filter hasKeyword cascade, functionsInGraveyard (CR 112.6): queueCastTriggers now scans graveyard cards, and battlefield sources skip graveyard-only abilities",
+            "returnSelfFromGraveyardToHand, now bound to the exact graveyard object (a card that left and came back is not returned)"
+          ],
+          "engineTestIds": [
+            "aurora-phoenix-pinned-oracle-supported",
+            "aurora-phoenix-cascade-returns",
+            "aurora-phoenix-casting-a-phoenix",
+            "aurora-phoenix-not-other-spells",
+            "aurora-phoenix-only-from-graveyard"
+          ],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

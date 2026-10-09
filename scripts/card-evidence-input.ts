@@ -1749,6 +1749,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['River Kelpie: draw from a flashback and from persist'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aurora Phoenix: cast a cascade spell to return it'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

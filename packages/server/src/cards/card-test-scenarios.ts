@@ -7764,6 +7764,45 @@ function riverKelpieScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function auroraPhoenixScenario(gameId: GameId): CardTestScenario {
+  const phoenix = pinnedFrom(COVERAGE_PR03, 'Aurora Phoenix');
+  const cascader = card({
+    oracleId: 'lab-phoenix-cascader',
+    name: 'Lab Cascader',
+    typeLine: 'Creature — Elemental',
+    manaCost: '{2}{R}',
+    cmc: 3,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Cascade',
+  });
+  return pr01Scenario(gameId, {
+    id: 'aurora-phoenix-viewer-cascade-return',
+    title: 'Aurora Phoenix: cast a cascade spell to return it',
+    instructions: [
+      'Aurora Phoenix is in your graveyard; Lab Cascader (cascade) is in your hand with three Mountains.',
+      'Cast Lab Cascader: the Phoenix returns from your graveyard to your hand.',
+    ],
+    expectedOutcome:
+      'Aurora Phoenix returns to your hand; cascade exiles your two lands, finds nothing, and puts them on the bottom.',
+    oracleSha256: phoenix.sha256,
+    clauseIds: ['aurora-phoenix-flying', 'aurora-phoenix-cascade', 'aurora-phoenix-return'],
+    decks: {
+      P1: [phoenix.card, cascader, MOUNTAIN, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Cascader'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Mountain'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Aurora Phoenix'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7954,6 +7993,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
+  'aurora-phoenix-viewer-cascade-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8164,6 +8204,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
+  'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
 };
 
 export function createCardTestScenario(

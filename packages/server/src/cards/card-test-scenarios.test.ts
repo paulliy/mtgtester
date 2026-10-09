@@ -327,6 +327,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'satoru-viewer-free-cast-draws',
       'keeper-of-secrets-viewer-flashback',
       'river-kelpie-viewer-flashback-and-persist',
+      'aurora-phoenix-viewer-cascade-return',
     ]);
   });
 

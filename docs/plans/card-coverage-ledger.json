@@ -156,15 +156,19 @@
   {
     "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
     "name": "Aurora Phoenix",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever you cast a spell with cascade, return this card from your graveyard to your hand.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",

@@ -1428,6 +1428,8 @@ export function queueTriggersForEvent(
     for (const ability of triggersOf(ctx, source)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
+      // A graveyard-only ability does not function on the battlefield (CR 112.6).
+      if (ability.functionsInGraveyard === true) continue;
 
       const from: SelectorSource = {
         cardId: source.cardId,
@@ -1797,6 +1799,8 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
     for (const ability of triggersOf(ctx, source)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== 'castsSpell') continue;
+      // A graveyard-only ability does not function on the battlefield (CR 112.6).
+      if (ability.functionsInGraveyard === true) continue;
 
       const isController = spell.controllerId === source.controllerId;
       if (spec.caster === 'you' && !isController) continue;
@@ -1848,6 +1852,45 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           },
         });
         debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
+      }
+    }
+  }
+
+  // Graveyard-functioning cast triggers (CR 112.6a, Aurora Phoenix): a card whose ability says
+  // it works from the graveyard watches casts from there, under its owner's control.
+  for (const player of ctx.state.players) {
+    for (const card of player.graveyard) {
+      const def = ctx.defs.get(card.oracleId);
+      if (def === undefined) continue;
+      for (const ability of def.triggers) {
+        if (ability.functionsInGraveyard !== true) continue;
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== 'castsSpell') continue;
+        const isController = spell.controllerId === card.ownerId;
+        if (spec.caster === 'you' && !isController) continue;
+        if (spec.caster === 'opponent' && isController) continue;
+        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
+        if (!castFromMatches(spec, spell)) continue;
+        const from: SelectorSource = {
+          cardId: card.cardId,
+          objectId: card.id,
+          controllerId: card.ownerId,
+          eventPlayerId: spell.controllerId,
+        };
+        if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        // No graveyard-functioning card watches a spell's targets; fail closed rather than fire.
+        if (spec.targetFilter !== undefined) continue;
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+        ctx.state.pendingTriggers.push({
+          controllerId: card.ownerId,
+          sourceCardId: card.cardId,
+          sourceObjectId: card.id,
+          sourceOracleId: card.oracleId,
+          sourceName: card.name,
+          ability,
+          scope: { spellManaValue: manaValue, eventPlayerId: spell.controllerId },
+        });
+        debug(ctx, 'stack', `graveyard cast trigger queued: ${card.name} — ${spell.description}`);
       }
     }
   }

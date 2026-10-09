@@ -89,6 +89,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/overrides/counter-intelligence.ts',
   'packages/engine/src/cards/overrides/coverage-pr01.ts',
   'packages/engine/src/cards/overrides/coverage-pr02.ts',
+  'packages/engine/src/cards/overrides/coverage-pr03.ts',
   'packages/engine/src/cards/overrides/draconic-destruction.ts',
   'packages/engine/src/cards/overrides/index.ts',
   'packages/engine/src/cards/overrides/marchesa-the-black-rose.ts',

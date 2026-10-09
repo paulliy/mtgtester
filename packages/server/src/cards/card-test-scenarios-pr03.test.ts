@@ -274,3 +274,14 @@ describe('River Kelpie Card Test Lab scenario', () => {
     replays('river-kelpie-viewer-flashback-and-persist', steps);
   });
 });
+
+describe('Aurora Phoenix Card Test Lab scenario', () => {
+  it('aurora-phoenix-viewer-cascade-return — casting Lab Cascader returns the Phoenix from the graveyard to hand', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Cascader' }];
+    const { seat, onBattlefield } = run('aurora-phoenix-viewer-cascade-return', steps);
+    expect(onBattlefield('Lab Cascader')).toHaveLength(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Aurora Phoenix']);
+    expect(seat('P1').graveyard).toEqual([]);
+    replays('aurora-phoenix-viewer-cascade-return', steps);
+  });
+});

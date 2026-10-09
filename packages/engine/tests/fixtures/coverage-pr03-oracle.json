@@ -39,6 +39,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db",
+      "card": {
+        "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
+        "scryfallId": "f9a9e74f-8090-4314-9361-97777fb7b63a",
+        "name": "Aurora Phoenix",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Phoenix",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phoenix"
+        ],
+        "oracleText": "Flying\nCascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nWhenever you cast a spell with cascade, return this card from your graveyard to your hand.",
+        "power": "5",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Cascade",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -4953,7 +4953,11 @@ export function* executeAbility(
         break;
       }
       case 'returnSelfFromGraveyardToHand': {
-        const card = controller.graveyard.find((c) => c.cardId === source.cardId);
+        // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
+        // that left the graveyard and came back is a new object.
+        const card = controller.graveyard.find(
+          (c) => c.cardId === source.cardId && (source.id === undefined || c.id === source.id),
+        );
         if (card === undefined) break;
         yield* moveObject(ctx, card, { zone: 'hand' });
         break;
