@@ -2059,6 +2059,23 @@ describe('Imotekh the Stormlord', () => {
     expect(ctx.state.pendingTriggers).toEqual([]);
   });
 
+  it('imotekh-the-stormlord-phaeron-looks-back — Imotekh does not see its own return from your graveyard, alone or with another artifact card', () => {
+    // CR 603.10a: a leaves-the-graveyard trigger looks back to before the event, when Imotekh
+    // was in the graveyard rather than on the battlefield.
+    const alone = pod('imotekh-look-back');
+    enterFrom(alone, 'P1', imotekh.card, 'graveyard');
+    expect(alone.state.pendingTriggers).toEqual([]);
+    const together = pod('imotekh-look-back-batch');
+    const cards = [
+      conjure(together, 'P1', imotekh.card, 'graveyard'),
+      conjure(together, 'P1', construct, 'graveyard'),
+    ];
+    pump(moveObjects(together, cards, { zone: 'battlefield', controllerId: 'P1' }));
+    expect(together.state.pendingTriggers).toEqual([]);
+    settle(together);
+    expect(warriors(together)).toEqual([]);
+  });
+
   it('imotekh-the-stormlord-grand-strategist — at your combat, another artifact creature you control gets +2/+2 and menace', () => {
     const ctx = pod('imotekh-combat');
     const self = spawn(ctx, 'P1', imotekh.card);

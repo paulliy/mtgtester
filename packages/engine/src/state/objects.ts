@@ -908,7 +908,12 @@ export function* moveObject(
     target.zone !== 'graveyard' &&
     target.deferCardZoneTriggers !== true
   ) {
-    queueCardZoneTriggers(ctx, 'leavesGraveyard', [obj as EngineCardObject]);
+    queueCardZoneTriggers(
+      ctx,
+      'leavesGraveyard',
+      [obj as EngineCardObject],
+      target.zone === 'battlefield' ? [next.id] : [],
+    );
   }
 
   if (target.reason === 'sacrifice' && from === 'battlefield') {
@@ -1001,7 +1006,12 @@ export function* moveObjects(
       .map((permanent) => ({ permanent })),
   );
   if (leavingGraveyard.length > 0) {
-    queueCardZoneTriggers(ctx, 'leavesGraveyard', leavingGraveyard);
+    queueCardZoneTriggers(
+      ctx,
+      'leavesGraveyard',
+      leavingGraveyard,
+      entered.map((permanent) => permanent.id),
+    );
   }
   return moved;
 }
@@ -1360,17 +1370,22 @@ export function additionalTypedTriggerCopies(ctx: GameContext, source: EnginePer
  * Queue the narrow non-battlefield card-transition events used by Syr Konrad. These are card
  * events rather than permanent events, so they match printed card characteristics directly and
  * intentionally scan only battlefield sources.
+ *
+ * Leaving a graveyard looks back in time (CR 603.10a): a permanent that this same event put onto
+ * the battlefield was not there to see it, so its new object ids are passed in `enteredIds`.
  */
 function queueCardZoneTriggers(
   ctx: GameContext,
   when: 'putIntoGraveyardFromAnywhere' | 'leavesGraveyard',
   cards: EngineCardObject[],
+  enteredIds: readonly string[] = [],
 ): void {
-  const hasWatcher = ctx.state.battlefield.some((source) =>
+  const sources = ctx.state.battlefield.filter((source) => !enteredIds.includes(source.id));
+  const hasWatcher = sources.some((source) =>
     triggersOf(ctx, source).some((ability) => ability.trigger?.when === when),
   );
   if (!hasWatcher) return;
-  for (const source of ctx.state.battlefield) {
+  for (const source of sources) {
     for (const ability of triggersOf(ctx, source)) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
