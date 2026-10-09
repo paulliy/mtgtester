@@ -52,7 +52,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 
 **Known limit:** Copying a transformed double-faced card currently gives the copy the right mana value, but it may retain the front face's other characteristics. Its type, power/toughness, and abilities can therefore be wrong.
 
-**Follow-up:** Make copy creation capture the copied object's current copiable characteristics, including its transformed face, while preserving the existing special mana-value rules. Do not copy unrelated state such as counters or damage.
+**Follow-up:** Make copy creation capture the copied object's current copiable characteristics, including its transformed face, while preserving the existing special mana-value rules. Do not copy unrelated state such as counters or damage. See the [implementation plan](transformed-dfc-copy-characteristics.md) for sequencing and validation.
 
 **Acceptance checks:**
 - A copy of a transformed creature has the characteristics of the transformed face, including name, types, color, abilities, and power/toughness.
