@@ -302,7 +302,12 @@ async function verifyFirstZoneReturn(
       continue;
     }
     const before = boards.length;
-    await pass.click();
+    // The game can move on between seeing the button and clicking it; look again if it went.
+    const clicked = await pass
+      .click({ timeout: 1_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!clicked) continue;
     await expect
       .poll(
         async () =>
