@@ -1,4 +1,5 @@
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
+import type { ObjectFacts } from '../cards/source-identity';
 
 /** Domain/characteristic checks share this context; assignment checks remain separate. */
 export interface TargetContext {
@@ -11,4 +12,9 @@ export interface TargetContext {
   phase?: 'preview' | 'announcement' | 'resolution';
   /** Choices are not targets and ignore shroud, hexproof, and protection. */
   targeting?: boolean;
+  /**
+   * The source's last-known facts once it has left the battlefield (a dies trigger's own
+   * source), for a filter relative to it ("with equal or lesser power", CR 608.2h).
+   */
+  sourceFacts?: ObjectFacts;
 }

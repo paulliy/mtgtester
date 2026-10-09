@@ -560,3 +560,34 @@ describe('Victimize Card Test Lab scenario', () => {
     replays('victimize-viewer-sacrifice-and-return', steps);
   });
 });
+
+describe('Body Launderer Card Test Lab scenarios', () => {
+  it('body-launderer-viewer-connive — Lab Ox dies, Lab Hex is drawn, Lab Servo is discarded, and a counter is added', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Doom', targets: ['Lab Ox'] },
+      { action: 'Discard Lab Servo' },
+    ];
+    const { seat, onBattlefield } = run('body-launderer-viewer-connive', steps);
+    expect(onBattlefield('Body Launderer')[0]?.counters['+1/+1']).toBe(1);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Hex']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Lab Ox', 'Lab Servo']);
+    replays('body-launderer-viewer-connive', steps);
+  });
+
+  it('body-launderer-viewer-return — Body Launderer dies and returns Lab Servo; Lab Ox is too powerful', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Doom', targets: ['Body Launderer'] }];
+    const { seat, onBattlefield } = run('body-launderer-viewer-return', steps);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Body Launderer', 'Lab Doom', 'Lab Ox']);
+    replays('body-launderer-viewer-return', steps);
+  });
+});

@@ -5303,3 +5303,44 @@ test('Victimize: sacrifice Lab Servo, return two creatures tapped', async ({ pag
     await expect(permanent(page, name).locator('.tap-badge')).toHaveText('TAP');
   }
 });
+
+test('Body Launderer: Lab Ox dies and it connives', async ({ page }) => {
+  await runScenario(page, 'Body Launderer: Lab Ox dies and it connives');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Connive: Lab Hex is drawn, then the nonland Lab Servo is discarded.
+  const discard = page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Servo' })
+    .first()
+    .getByRole('button', { name: 'Discard', exact: true });
+  await passUntil(page, discard);
+  await discard.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Body Launderer')).toContainText('4/4');
+  await expect(handCard(page, 'Lab Hex')).toBeVisible();
+});
+
+test('Body Launderer: it dies and returns Lab Servo, not Lab Ox', async ({ page }) => {
+  await runScenario(page, 'Body Launderer: it dies and returns Lab Servo, not Lab Ox');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Body Launderer').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Servo is the only legal target, so the return needs no choice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Body Launderer')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});

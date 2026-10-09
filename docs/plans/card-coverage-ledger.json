@@ -307,6 +307,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
+    "name": "Body Launderer",
+    "package": "PR03.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
     "name": "Boseiju, Who Endures",
     "package": "W4",

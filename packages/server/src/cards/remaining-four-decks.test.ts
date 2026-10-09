@@ -98,7 +98,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Catalog audit batch 1: retarget authored as copyTargetSpell.
       'Bolt Bend',
       'Deflecting Swat',
-      'Body Launderer',
       'Cytoplast Manipulator',
       'Flare of Duplication',
       'Twilight Diviner',

@@ -70,6 +70,7 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
       controllerId: top.controllerId,
       sourceCardId: top.sourceCardId,
       sourceColors,
+      ...(top.sourceFacts === undefined ? {} : { sourceFacts: top.sourceFacts }),
       ...(top.triggerScope?.eventPlayerId === undefined
         ? {}
         : { eventPlayerId: top.triggerScope.eventPlayerId }),

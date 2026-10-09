@@ -6116,6 +6116,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
+      "name": "Body Launderer",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads connive (new connive op, CR 701.50) and the dies return, whose target filter compares against Body Launderer's last-known power through the new powerAtMostSource selector (CR 608.2h)."
     }
   ]
 }

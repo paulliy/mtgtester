@@ -3,7 +3,7 @@ import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
 import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
-import { selectMatches } from '../cards/selector';
+import { selectMatches, selectorReadsSourcePower } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { spellManaValue } from '../state/objects';
 import {
@@ -58,6 +58,21 @@ export function targetDomainCandidates(ctx: GameContext, kind: TargetKind): Obje
   }
 }
 
+/**
+ * The source's power for a filter relative to it: its last-known power once it has left the
+ * battlefield (CR 608.2h), else its current power. Neither known (a source that left without
+ * facts) leaves it unset, so the filter matches nothing.
+ */
+function sourcePowerFor(ctx: GameContext, context: TargetContext): { sourcePower?: number } {
+  if (context.sourceFacts !== undefined) return { sourcePower: context.sourceFacts.power };
+  const permanent = ctx.state.battlefield.find(
+    (candidate) => candidate.cardId === context.sourceCardId,
+  );
+  return permanent === undefined
+    ? {}
+    : { sourcePower: computeCharacteristics(ctx, permanent).power };
+}
+
 /** Authoritative domain/characteristic predicate at preview, announcement, and resolution. */
 export function targetIsLegal(
   ctx: GameContext,
@@ -68,7 +83,13 @@ export function targetIsLegal(
   const spec = typeof target === 'string' ? { kind: target } : target;
   const { kind, filter, controller } = spec;
   const { controllerId, eventPlayerId } = context;
-  const source = { cardId: context.sourceCardId ?? '', controllerId };
+  const source = {
+    cardId: context.sourceCardId ?? '',
+    controllerId,
+    ...(filter !== undefined && selectorReadsSourcePower(filter)
+      ? sourcePowerFor(ctx, context)
+      : {}),
+  };
   const matchesController = (id: PlayerId): boolean => {
     switch (controller) {
       case undefined:

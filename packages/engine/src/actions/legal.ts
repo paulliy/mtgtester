@@ -1,4 +1,5 @@
 import { UnmodeledCardError } from '../errors';
+import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
 import { selectedSpellDefinition } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
@@ -638,11 +639,13 @@ export function computeTargetOptions(
   chosenTargets?: readonly ObjectId[],
   sourceCardId = '',
   targeting = true,
+  sourceFacts?: ObjectFacts,
 ): ObjectId[] {
   return targetCandidates(ctx, spec, {
     controllerId: casterId,
     sourceCardId,
     targeting,
+    ...(sourceFacts === undefined ? {} : { sourceFacts }),
     ...(sourceColors === undefined ? {} : { sourceColors }),
     ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
     ...(chosenTargets === undefined ? {} : { chosenTargets }),

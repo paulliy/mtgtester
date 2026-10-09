@@ -1125,6 +1125,21 @@ function parseEffectSentence(
     if (m !== null)
       return [{ op: 'returnArtifactCreaturesUpToManaValue', maxManaValue: Number(m[1]) }];
   }
+  // "This creature connives" (Body Launderer, CR 701.50).
+  if (s === '~ connives') return [{ op: 'connive' }];
+  // "Return another target non-Rogue creature card with equal or lesser power from your
+  // graveyard to the battlefield" (Body Launderer): the power bound is the source's, last-known
+  // once it has died (CR 608.2h).
+  {
+    const m = s.match(
+      /^return another target (.+?) card with equal or lesser power from your graveyard to the battlefield$/,
+    );
+    const filter = m === null ? null : parseCardFilterPhrase(m[1] as string, card);
+    if (filter !== null) {
+      const target = alloc('cardInGraveyard', allOf(OTHER, filter, { kind: 'powerAtMostSource' }));
+      return [{ op: 'graveyardToBattlefield', target }];
+    }
+  }
   if (s === 'put target card from your graveyard on the bottom of your library') {
     return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
   }
@@ -3272,6 +3287,13 @@ function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | nul
   if (legendary !== null) {
     const rest = parseCardFilterPhrase(legendary[1] as string, card);
     return rest === null ? null : allOf(ofSupertype('Legendary'), rest);
+  }
+  // "non-Rogue creature card" (Body Launderer): a hyphenated negated subtype before the noun.
+  const nonSubtype = noun.match(/^non-([a-z]+) (.+)$/);
+  if (nonSubtype !== null) {
+    const subtype = resolveSubtype(nonSubtype[1] as string, card);
+    const rest = parseCardFilterPhrase(nonSubtype[2] as string, card);
+    return subtype === null || rest === null ? null : allOf(not(ofSubtype(subtype)), rest);
   }
   const anyPermanentType = (): Selector => anyOf(...PERMANENT_CARD_TYPES.map((t) => ofType(t)));
   if (noun === 'permanent' || noun === 'card' || noun === 'cards') return anyPermanentType();

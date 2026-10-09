@@ -9950,12 +9950,6 @@
     }
   },
   {
-    "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
-    "name": "Body Launderer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
     "name": "Atarka Monument",
     "handledLines": [],
@@ -12371,12 +12365,6 @@
   {
     "oracleId": "oracle-bloomvine-regent-claim-territory",
     "name": "Bloomvine Regent // Claim Territory",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-body-launderer",
-    "name": "Body Launderer",
     "handledLines": [],
     "def": {}
   },

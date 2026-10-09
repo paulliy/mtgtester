@@ -693,6 +693,11 @@ export type Effect =
   | { op: 'exileSource' }
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
   | { op: 'discard'; count: number } // controller chooses cards to discard
+  /**
+   * "This creature connives" (CR 701.50): draw a card, then discard a card; a nonland discard
+   * puts a +1/+1 counter on the source, if it is still the same object on the battlefield.
+   */
+  | { op: 'connive' }
   /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
   /** Discard cards using the game PRNG rather than a player choice. */

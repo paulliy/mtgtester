@@ -147,13 +147,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Blasphemous Edict: restored in coverage PR02. The interpreter reads the conditional {B}
   // alternative cost and "each player sacrifices thirteen creatures", so no override remains.
-  // Catalog audit batch 2: connive always puts a counter, and the return trigger omits
-  // the equal-or-lesser-power filter.
-  unsupportedCard(
-    'eaca2576-020b-4af4-b348-6d1b56116c41',
-    'Body Launderer',
-    'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
-  );
+  // Body Launderer: restored in coverage PR03. The interpreter reads connive (CR 701.50) and the
+  // return bounded by its last-known power.
   // Catalog audit batch 1: copyTargetSpell is not "change the target". Contain until a true
   // retarget primitive exists.
   unsupportedCard(

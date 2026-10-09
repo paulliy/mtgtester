@@ -569,7 +569,8 @@ function* discardCards(
   count: number,
   excludeCardId?: string,
   canDiscard?: (card: EngineCardObject, ordinal: number) => boolean,
-): GameGen<void> {
+): GameGen<EngineCardObject[]> {
+  const discarded: EngineCardObject[] = [];
   for (let i = 0; i < count; i++) {
     const cards = player.hand.filter(
       (card) => card.cardId !== excludeCardId && (canDiscard?.(card, i) ?? true),
@@ -591,8 +592,10 @@ function* discardCards(
     if (chosen === null) throw new Error('engine bug: discard choice was not in hand');
     const card = chosen as EngineCardObject;
     emit(ctx, 'discard', { player: player.id, name: card.name, cardId: card.cardId }, player.id);
+    discarded.push(card);
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }
+  return discarded;
 }
 
 /** Put a chosen set of hand cards on top of the library (CR 701.7). */
@@ -1186,6 +1189,7 @@ export function* executeAbility(
       controllerId: source.controllerId,
       sourceCardId: source.cardId,
       sourceColors: sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
+      ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
       ...(scope.eventPlayerId === undefined ? {} : { eventPlayerId: scope.eventPlayerId }),
     });
   source = { ...source, resolutionTargets };
@@ -2424,6 +2428,19 @@ export function* executeAbility(
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;
+      case 'connive': {
+        // CR 701.50a: draw a card, then discard a card; a nonland discard puts a +1/+1 counter
+        // on the conniving permanent. CR 701.50c: if it has left the battlefield, its controller
+        // still draws and discards, and no counter is put on anything.
+        yield* drawCards(ctx, controller, 1);
+        const [discarded] = yield* discardCards(ctx, controller, 1);
+        if (discarded === undefined) break;
+        const def = getDefByOracleId(ctx, discarded.oracleId, discarded.name);
+        const conniver = sourcePermanent();
+        if (!def.types.includes('Land') && conniver !== undefined)
+          addCounters(ctx, source, conniver, '+1/+1', 1);
+        break;
+      }
       case 'putFromHandOnLibraryTop':
         yield* putFromHandOnLibraryTop(
           ctx,

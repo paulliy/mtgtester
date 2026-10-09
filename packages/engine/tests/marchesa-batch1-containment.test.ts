@@ -33,8 +33,6 @@ function canonical(value: unknown): string {
 }
 
 const REASONS: Record<string, string> = {
-  'Body Launderer':
-    'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
@@ -302,6 +300,7 @@ describe('Marchesa catalog audit containment', () => {
     'Cryptek',
     'Living Death',
     'Technomancer',
+    'Body Launderer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

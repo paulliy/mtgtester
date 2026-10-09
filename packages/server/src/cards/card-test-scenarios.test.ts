@@ -345,6 +345,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'living-death-viewer-swap',
       'technomancer-viewer-mill-and-return',
       'victimize-viewer-sacrifice-and-return',
+      'body-launderer-viewer-connive',
+      'body-launderer-viewer-return',
     ]);
   });
 

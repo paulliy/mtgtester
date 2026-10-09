@@ -1821,6 +1821,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Victimize: sacrifice Lab Servo, return two creatures tapped'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Body Launderer: Lab Ox dies and it connives'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Body Launderer: it dies and returns Lab Servo, not Lab Ox'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -101,6 +101,7 @@ const selectorShapes = {
   controller: { who: oneOf('you', 'opponents') },
   powerAtLeast: { n: finite },
   powerAtMost: { n: finite },
+  powerAtMostSource: {},
   toughnessAtLeast: { n: finite },
   manaValueAtMost: { n: finite },
   manaValueAtLeast: { n: finite },
@@ -520,6 +521,7 @@ const effectExpressions = {
   reanimateTargetHasteExileAtYourNextEndStep: {},
   returnDiedTriggerObjectTapped: {},
   reanimateEachChosenTapped: {},
+  connive: {},
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };

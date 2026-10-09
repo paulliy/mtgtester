@@ -3588,6 +3588,177 @@ describe('Victimize', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.14 Body Launderer
+// ---------------------------------------------------------------------------------------------
+
+const BODY_LAUNDERER_SHA = 'f44de0fbad37339ec628a08e13433d825b21fd8bf9721e5cccd3725082d7a92e';
+
+describe('Body Launderer', () => {
+  const launderer = pinned('Body Launderer');
+  const beast = (name: string, power: string, typeLine = 'Creature — Beast') =>
+    oracle({ name, typeLine, manaCost: '{2}', power, toughness: '2' });
+  const bear = beast('Lab Bear', '2');
+  const two = beast('Lab Two', '2');
+  const three = beast('Lab Three', '3');
+  const four = beast('Lab Four', '4');
+  const rogue = beast('Lab Rogue', '1', 'Creature — Human Rogue');
+  const star = beast('Lab Star', '*');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{1}' });
+  const waste = oracle({ name: 'Lab Waste', typeLine: 'Land' });
+  const hand = (ctx: GameContext) =>
+    playerById(ctx, 'P1')
+      .hand.map((card) => card.name)
+      .sort();
+  const graveyard = (ctx: GameContext) =>
+    playerById(ctx, 'P1')
+      .graveyard.map((card) => card.name)
+      .sort();
+  /** P1's library is exactly these cards, top first. */
+  function stackLibrary(ctx: GameContext, cards: OracleCard[]) {
+    playerById(ctx, 'P1').library.length = 0;
+    for (const card of [...cards].reverse()) conjure(ctx, 'P1', card, 'library');
+  }
+  /** Discard `name` when connive asks; record each return trigger's offered targets. */
+  function answering(discard: string, offered: string[][] = []): Answer {
+    return (decision) => {
+      if (/^Discard a card/.test(decision.prompt))
+        return optionMatching(decision, new RegExp(`^Discard ${discard}$`));
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered.push([...slot.options]);
+        return { index: 0, targets: new Map([[slot.slot, slot.options[0]!]]) };
+      }
+      return { index: 0, targets: new Map() };
+    };
+  }
+
+  it('body-launderer-pinned-oracle-supported — the interpreter models deathtouch, connive, and the power-bounded return', () => {
+    expect(launderer.sha256).toBe(BODY_LAUNDERER_SHA);
+    expectNoRegistration(launderer.card);
+    expectModeled(launderer.card);
+    const def = interpretCard(launderer.card);
+    expect(def.keywords).toContain('deathtouch');
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'dies',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'other' },
+            { kind: 'not', of: { kind: 'isToken' } },
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
+      },
+    });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'connive' }]);
+    expect(def.triggers[1]!.trigger).toEqual({ when: 'dies', subject: { kind: 'self' } });
+    expect(def.triggers[1]!.targets).toEqual([
+      {
+        kind: 'cardInGraveyard',
+        filter: {
+          kind: 'allOf',
+          of: [
+            { kind: 'other' },
+            {
+              kind: 'allOf',
+              of: [
+                { kind: 'not', of: { kind: 'subtype', value: 'Rogue' } },
+                { kind: 'type', value: 'Creature' },
+              ],
+            },
+            { kind: 'powerAtMostSource' },
+          ],
+        },
+      },
+    ]);
+    expect(def.triggers[1]!.effects).toEqual([{ op: 'graveyardToBattlefield', target: 0 }]);
+  });
+
+  it('body-launderer-connive-nonland — another nontoken creature dying draws, discards a nonland card, and adds a counter', () => {
+    const ctx = pod('launderer-nonland');
+    stackLibrary(ctx, [waste, waste]);
+    const self = spawn(ctx, 'P1', launderer.card);
+    const victim = spawn(ctx, 'P1', bear);
+    conjure(ctx, 'P1', relic, 'hand');
+    kill(ctx, victim);
+    settle(ctx, answering('Lab Relic'));
+    expect(hand(ctx)).toEqual(['Lab Waste']);
+    expect(graveyard(ctx)).toEqual(['Lab Bear', 'Lab Relic']);
+    expect(self.counters['+1/+1']).toBe(1);
+  });
+
+  it('body-launderer-connive-land — discarding a land adds no counter (CR 701.50a)', () => {
+    const ctx = pod('launderer-land');
+    stackLibrary(ctx, [waste, waste]);
+    const self = spawn(ctx, 'P1', launderer.card);
+    const victim = spawn(ctx, 'P1', bear);
+    conjure(ctx, 'P1', relic, 'hand');
+    kill(ctx, victim);
+    settle(ctx, answering('Lab Waste'));
+    expect(hand(ctx)).toEqual(['Lab Relic']);
+    expect(self.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it("body-launderer-connive-subject — a token, an opponent's creature, or itself dying doesn't connive", () => {
+    const ctx = pod('launderer-subject');
+    stackLibrary(ctx, [waste, waste]);
+    spawn(ctx, 'P1', launderer.card);
+    kill(ctx, spawn(ctx, 'P1', bear, { isToken: true }));
+    kill(ctx, spawn(ctx, 'P2', bear));
+    settle(ctx);
+    expect(hand(ctx)).toEqual([]);
+    expect(playerById(ctx, 'P1').library).toHaveLength(2);
+  });
+
+  it('body-launderer-connive-after-leaving — dying alongside the creature, it still connives but no counter is put on anything (CR 701.50c)', () => {
+    const ctx = pod('launderer-left');
+    stackLibrary(ctx, [waste, waste]);
+    const self = spawn(ctx, 'P1', launderer.card);
+    const victim = spawn(ctx, 'P1', bear);
+    conjure(ctx, 'P1', relic, 'hand');
+    pump(movePermanentsToGraveyard(ctx, [self, victim]));
+    settle(ctx, answering('Lab Relic'));
+    expect(hand(ctx)).toEqual(['Lab Waste']);
+    expect(graveyard(ctx)).toContain('Lab Relic');
+    expect(ctx.state.battlefield.filter((perm) => (perm.counters['+1/+1'] ?? 0) > 0)).toEqual([]);
+  });
+
+  it('body-launderer-return-bound — dying, it offers only non-Rogue creature cards with power at most its own', () => {
+    const ctx = pod('launderer-bound');
+    const self = spawn(ctx, 'P1', launderer.card);
+    // A modeled card whose power the graveyard candidate does not evaluate (a "*" CDA).
+    registerCustomDef(ctx, { ...interpretCard(star), modeled: true, unmodeledReasons: [] });
+    const ids = new Map<string, string>();
+    for (const card of [two, three, four, rogue, star])
+      ids.set(conjure(ctx, 'P1', card, 'graveyard').id, card.name);
+    const offered: string[][] = [];
+    kill(ctx, self);
+    settle(ctx, answering('none', offered));
+    expect(offered).toHaveLength(1);
+    // Lab Star's unknown power is refused rather than read as 0.
+    expect(offered[0]!.map((id) => ids.get(id)).sort()).toEqual(['Lab Three', 'Lab Two']);
+  });
+
+  it('body-launderer-last-known-power — the bound is its power as it last existed, counters included (CR 608.2h)', () => {
+    const returned = (counter: boolean) => {
+      const ctx = pod(`launderer-lki-${counter}`);
+      const self = spawn(ctx, 'P1', launderer.card);
+      if (counter) self.counters['+1/+1'] = 1;
+      conjure(ctx, 'P1', four, 'graveyard');
+      kill(ctx, self);
+      settle(ctx);
+      return ctx.state.battlefield.some((perm) => perm.name === 'Lab Four');
+    };
+    // Power 4 as it died (3 printed plus a counter) reaches Lab Four; printed 3 alone does not.
+    expect(returned(true)).toBe(true);
+    expect(returned(false)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3611,6 +3782,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Technomancer',
     sha256: TECHNOMANCER_SHA,
     clauseCount: 1,
+  },
+  {
+    name: 'Body Launderer',
+    sha256: BODY_LAUNDERER_SHA,
+    clauseCount: 2,
   },
   {
     name: 'Living Death',

@@ -8394,6 +8394,63 @@ function livingDeathScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function bodyLaundererScenario(
+  gameId: GameId,
+  id: 'body-launderer-viewer-connive' | 'body-launderer-viewer-return',
+): CardTestScenario {
+  const launderer = pinnedFrom(MARCHESA_BATCH1, 'Body Launderer');
+  if (id === 'body-launderer-viewer-connive')
+    return pr01Scenario(gameId, {
+      id,
+      title: 'Body Launderer: Lab Ox dies and it connives',
+      instructions: [
+        'Body Launderer, Lab Ox and two Swamps are on your battlefield; Lab Doom and Lab Servo are in your hand, and Lab Hex is on top of your library.',
+        'Cast Lab Doom targeting Lab Ox.',
+        'When Body Launderer connives, draw Lab Hex, then discard Lab Servo.',
+      ],
+      expectedOutcome:
+        'Lab Ox dies; you draw Lab Hex and discard Lab Servo, a nonland card, so Body Launderer gets a +1/+1 counter and is 4/4.',
+      oracleSha256: launderer.sha256,
+      clauseIds: ['body-launderer-connive'],
+      decks: {
+        P1: [launderer.card, LAB_OX, LAB_DOOM, LAB_SERVO, LAB_HEX, SWAMP, SWAMP, SWAMP],
+        P2: PR01_FILLER,
+        P3: PR01_FILLER,
+        P4: PR01_FILLER,
+      },
+      prepared: {
+        hand: [{ playerId: 'P1', cardNames: ['Lab Doom', 'Lab Servo'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Body Launderer', 'Lab Ox', 'Swamp', 'Swamp'] },
+        ],
+        libraryTop: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
+      },
+    });
+  return pr01Scenario(gameId, {
+    id,
+    title: 'Body Launderer: it dies and returns Lab Servo, not Lab Ox',
+    instructions: [
+      'Body Launderer and two Swamps are on your battlefield; Lab Doom is in your hand; Lab Servo (power 1) and Lab Ox (power 4) are in your graveyard.',
+      'Cast Lab Doom targeting Body Launderer.',
+    ],
+    expectedOutcome:
+      "Body Launderer dies, and its trigger returns Lab Servo: Lab Ox's power 4 is greater than Body Launderer's 3, so it can't be chosen.",
+    oracleSha256: launderer.sha256,
+    clauseIds: ['body-launderer-return'],
+    decks: {
+      P1: [launderer.card, LAB_OX, LAB_DOOM, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Body Launderer', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo', 'Lab Ox'] }],
+    },
+  });
+}
+
 function victimizeScenario(gameId: GameId): CardTestScenario {
   const victimize = pinnedFrom(COVERAGE_PR03, 'Victimize');
   const bear = card({
@@ -8687,6 +8744,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'living-death-viewer-swap',
   'technomancer-viewer-mill-and-return',
   'victimize-viewer-sacrifice-and-return',
+  'body-launderer-viewer-connive',
+  'body-launderer-viewer-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8918,6 +8977,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'living-death-viewer-swap': livingDeathScenario,
   'technomancer-viewer-mill-and-return': technomancerScenario,
   'victimize-viewer-sacrifice-and-return': victimizeScenario,
+  'body-launderer-viewer-connive': (gameId: GameId) =>
+    bodyLaundererScenario(gameId, 'body-launderer-viewer-connive'),
+  'body-launderer-viewer-return': (gameId: GameId) =>
+    bodyLaundererScenario(gameId, 'body-launderer-viewer-return'),
 };
 
 export function createCardTestScenario(

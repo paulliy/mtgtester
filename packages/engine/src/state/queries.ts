@@ -206,6 +206,7 @@ export function cardZoneCandidate(
     subtypes: def.subtypes,
     colors: def.colors,
     power: def.power ?? 0,
+    ...(def.power === null ? { powerUnknown: true } : {}),
     keywords: def.keywords,
     manaValue: spellManaValue(def, undefined),
     // A card off the battlefield is never a token: tokens cease to exist on leaving it
