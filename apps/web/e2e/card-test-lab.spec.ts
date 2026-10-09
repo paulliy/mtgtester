@@ -5301,7 +5301,8 @@ test('Victimize: sacrifice Lab Servo, return two creatures tapped', async ({ pag
     .getByRole('button', { name: "Target Lab Ox (P1's graveyard)" })
     .click({ timeout: 15_000 });
   await expect(page.getByRole('button', { name: 'Choose no more targets' })).toHaveCount(0);
-  await page.getByRole('button', { name: "Target Lab Fallen Bear (P1's graveyard)" }).click();
+  // The second target is then forced (one candidate, no stopping), so the viewer may submit it
+  // on its own; the outcome below shows both were chosen.
 
   // Lab Servo is the only creature to sacrifice.
   await passUntil(page, page.getByText(/game over/i).first());

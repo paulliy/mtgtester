@@ -539,11 +539,11 @@ describe('Technomancer Card Test Lab scenario', () => {
 
 describe('Victimize Card Test Lab scenario', () => {
   it('victimize-viewer-sacrifice-and-return — Lab Servo is sacrificed and both targets return tapped', () => {
+    // The second target (one candidate left) and the sacrifice (Lab Servo is the only creature)
+    // are forced, so the engine answers them without asking.
     const steps: Step[] = [
       { action: 'Cast Victimize' },
       { action: "Target Lab Ox (P1's graveyard)" },
-      { action: "Target Lab Fallen Bear (P1's graveyard)" },
-      { action: 'Sacrifice Lab Servo' },
     ];
     const { seat, onBattlefield } = run('victimize-viewer-sacrifice-and-return', steps);
     for (const name of ['Lab Ox', 'Lab Fallen Bear']) {
