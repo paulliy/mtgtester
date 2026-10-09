@@ -3338,6 +3338,31 @@ describe('Living Death', () => {
     ]);
   });
 
+  it('living-death-copy-ignores-fellow-entrants — a returning clone cannot copy a creature returned with it', () => {
+    // CR 614.12, 707.2: the copy is chosen as it enters, from permanents already there.
+    const clone = oracle({ name: 'Lab Clone', typeLine: 'Creature — Shapeshifter' });
+    for (const order of ['bear-first', 'clone-first'] as const) {
+      const ctx = pod(`living-death-clone-${order}`);
+      registerCustomDef(ctx, {
+        ...interpretCard(clone),
+        entersAsCopy: { selector: { kind: 'type', value: 'Creature' } },
+      });
+      for (const card of order === 'bear-first' ? [bear, clone] : [clone, bear])
+        conjure(ctx, 'P1', card, 'graveyard');
+      castFromHand(ctx, 'P1', death.card, black(5));
+      const offered: string[] = [];
+      resolveTop(ctx, (decision) => {
+        offered.push(...decision.options.map((option) => option.description));
+        return { index: 0, targets: new Map() };
+      });
+      expect(
+        offered.filter((text) => text.includes('Lab Bear')),
+        order,
+      ).toEqual([]);
+      expect(names(ctx.state.battlefield), order).toEqual(['Lab Bear', 'Lab Clone']);
+    }
+  });
+
   it('living-death-swaps — graveyard creature cards return under their owners, battlefield creatures go to graveyards', () => {
     const ctx = pod('living-death-swap');
     spawn(ctx, 'P1', bear);

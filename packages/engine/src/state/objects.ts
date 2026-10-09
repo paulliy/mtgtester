@@ -797,10 +797,11 @@ export function* moveObject(
     // identity rather than the entering card's own.
     if (!target.faceDown && def.entersAsCopy !== undefined) {
       const config = def.entersAsCopy;
+      // A permanent entering in the same simultaneous event is not there to copy (CR 614.12).
       const candidates = selectPermanents(ctx, config.selector, {
         cardId: perm.cardId,
         controllerId,
-      }).filter((p) => p.cardId !== perm.cardId);
+      }).filter((p) => p.cardId !== perm.cardId && ctx.enteringTogether?.has(p.cardId) !== true);
       const originalName = perm.name;
       const copyTarget = yield* chooseCard(ctx, {
         player: controllerId,
