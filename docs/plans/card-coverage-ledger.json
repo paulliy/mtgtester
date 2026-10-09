@@ -3176,15 +3176,19 @@
   {
     "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
     "name": "Victimize",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",

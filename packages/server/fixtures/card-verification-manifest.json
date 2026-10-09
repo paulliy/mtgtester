@@ -8173,6 +8173,33 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "240e85d3-e495-4877-8609-4b4056c402f7": {
+      "name": "Victimize",
+      "oracleSha256": "55746d7550543058962aca55449ec7cfc847179fc2192ac2be63ee3ffe053321",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "victimize-spell",
+          "oracleText": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+          "implementation": [
+            "interpreted spell block: one cardInGraveyard slot with count exactly 2 (creature cards in the caster's graveyard), chosen on cast; the spell can't be cast without two legal targets",
+            "sacrificeOneThen over creatures you control: the sacrifice is mandatory when possible, and the return runs only after a completed sacrifice (\"if you do\")",
+            "reanimateEachChosenTapped returns the chosen cards that are still legal targets together, tapped, under the caster (CR 608.2b, 603.6a)",
+            "counted-target prompts now name graveyard and exile cards instead of showing raw ids"
+          ],
+          "engineTestIds": [
+            "victimize-pinned-oracle-supported",
+            "victimize-sacrifice-then-return-tapped",
+            "victimize-targets-your-creature-cards",
+            "victimize-no-sacrifice-no-return",
+            "victimize-one-target-gone",
+            "victimize-returns-together"
+          ],
+          "viewerScenarioIds": ["victimize-viewer-sacrifice-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

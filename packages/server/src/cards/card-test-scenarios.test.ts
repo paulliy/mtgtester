@@ -344,6 +344,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'cryptek-viewer-dies-and-returns-tapped',
       'living-death-viewer-swap',
       'technomancer-viewer-mill-and-return',
+      'victimize-viewer-sacrifice-and-return',
     ]);
   });
 

@@ -3422,6 +3422,172 @@ describe('Technomancer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.22 Victimize
+// ---------------------------------------------------------------------------------------------
+
+const VICTIMIZE_SHA = '55746d7550543058962aca55449ec7cfc847179fc2192ac2be63ee3ffe053321';
+
+describe('Victimize', () => {
+  const victimize = pinned('Victimize');
+  const creature = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Beast', manaCost: '{2}', power: '2', toughness: '2' });
+  const ox = creature('Lab Ox');
+  const bear = creature('Lab Bear');
+  const zombie = creature('Lab Zombie');
+  const wolf = creature('Lab Wolf');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{1}' });
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const graveyardNames = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId)
+      .graveyard.map((card) => card.name)
+      .sort();
+
+  /** Cast Victimize choosing `targets` by name, recording each target prompt's options. */
+  function cast(ctx: GameContext, targets: string[], offered: string[][] = []) {
+    const object = conjure(ctx, 'P1', victimize.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [...black(1), ...generic(2)]);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Victimize').toBeDefined();
+    const queue = [...targets];
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload, (decision) => {
+      if (!/^Choose target/.test(decision.prompt)) return { index: 0, targets: new Map() };
+      offered.push(decision.options.map((o) => o.description));
+      return optionMatching(
+        decision,
+        new RegExp(`^Target ${queue.shift()!} \\(P1's graveyard\\)$`),
+      );
+    });
+    return object;
+  }
+  const sacrificing = (name: string): Answer =>
+    answers([[/choose a permanent to sacrifice/, new RegExp(`^Sacrifice ${name}$`)]]);
+
+  it('victimize-pinned-oracle-supported — the interpreter models two graveyard targets, a sacrifice, and a tapped return', () => {
+    expect(victimize.sha256).toBe(VICTIMIZE_SHA);
+    expectNoRegistration(victimize.card);
+    expectModeled(victimize.card);
+    const spell = interpretCard(victimize.card).spellAbility!;
+    expect(spell.targets).toEqual([
+      {
+        kind: 'cardInGraveyard',
+        filter: { kind: 'type', value: 'Creature' },
+        count: { min: 2, max: 2 },
+      },
+    ]);
+    expect(spell.effects).toEqual([
+      {
+        op: 'sacrificeOneThen',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+        then: [{ op: 'reanimateEachChosenTapped', targetSlot: 0 }],
+      },
+    ]);
+  });
+
+  it('victimize-sacrifice-then-return-tapped — the two chosen cards return tapped under you; the sacrificed creature stays', () => {
+    const ctx = pod('victimize-return');
+    spawn(ctx, 'P1', ox);
+    conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    conjure(ctx, 'P1', wolf, 'graveyard');
+    cast(ctx, ['Lab Bear', 'Lab Zombie']);
+    resolveTop(ctx, sacrificing('Lab Ox'));
+    for (const name of ['Lab Bear', 'Lab Zombie']) {
+      const [perm] = named(ctx, name);
+      expect(perm?.controllerId).toBe('P1');
+      expect(perm?.tapped).toBe(true);
+    }
+    expect(named(ctx, 'Lab Ox')).toEqual([]);
+    expect(graveyardNames(ctx, 'P1')).toEqual(['Lab Ox', 'Lab Wolf', 'Victimize']);
+  });
+
+  it("victimize-targets-your-creature-cards — only creature cards in your own graveyard are offered, and it can't be cast with fewer than two", () => {
+    const ctx = pod('victimize-targets');
+    spawn(ctx, 'P1', ox);
+    conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', relic, 'graveyard');
+    conjure(ctx, 'P2', wolf, 'graveyard');
+    const lone = conjure(ctx, 'P1', victimize.card, 'hand');
+    addMana(playerById(ctx, 'P1'), [...black(1), ...generic(2)]);
+    expect(optionFor(ctx, 'P1', lone.id)).toBeUndefined();
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    const offered: string[][] = [];
+    cast(ctx, ['Lab Bear', 'Lab Zombie'], offered);
+    expect(offered[0]?.slice().sort()).toEqual([
+      "Target Lab Bear (P1's graveyard)",
+      "Target Lab Zombie (P1's graveyard)",
+    ]);
+  });
+
+  it('victimize-no-sacrifice-no-return — with no creature to sacrifice, the chosen cards stay in the graveyard', () => {
+    const ctx = pod('victimize-none');
+    conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    cast(ctx, ['Lab Bear', 'Lab Zombie']);
+    resolveTop(ctx);
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(named(ctx, 'Lab Zombie')).toEqual([]);
+    expect(graveyardNames(ctx, 'P1')).toEqual(['Lab Bear', 'Lab Zombie', 'Victimize']);
+  });
+
+  it('victimize-one-target-gone — with one target gone, you still sacrifice and the other returns (CR 608.2b)', () => {
+    const ctx = pod('victimize-partial');
+    spawn(ctx, 'P1', ox);
+    const gone = conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    cast(ctx, ['Lab Bear', 'Lab Zombie']);
+    pump(moveObject(ctx, gone, { zone: 'exile' }));
+    resolveTop(ctx, sacrificing('Lab Ox'));
+    expect(named(ctx, 'Lab Ox')).toEqual([]);
+    expect(named(ctx, 'Lab Zombie')).toHaveLength(1);
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+  });
+
+  it('victimize-returns-together — the returned creatures enter simultaneously and see each other (CR 603.6a)', () => {
+    const ctx = pod('victimize-together');
+    spawn(ctx, 'P1', ox);
+    const greeter = creature('Lab Greeter');
+    registerCustomDef(ctx, {
+      ...interpretCard(greeter),
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'allOf',
+                of: [{ kind: 'other' }, { kind: 'type', value: 'Creature' }],
+              },
+            },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+          description: 'Whenever another creature enters, draw a card',
+        },
+      ],
+    });
+    conjure(ctx, 'P1', bear, 'graveyard');
+    conjure(ctx, 'P1', greeter, 'graveyard');
+    // The Bear is chosen first and would enter first; together, the Greeter still sees it.
+    cast(ctx, ['Lab Bear', 'Lab Greeter']);
+    resolveTop(ctx, sacrificing('Lab Ox'));
+    const before = playerById(ctx, 'P1').hand.length;
+    settle(ctx);
+    expect(named(ctx, 'Lab Greeter')).toHaveLength(1);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before + 1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 

@@ -221,6 +221,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "55746d7550543058962aca55449ec7cfc847179fc2192ac2be63ee3ffe053321",
+      "card": {
+        "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
+        "scryfallId": "ee008d81-df28-49a8-917d-44f66527e469",
+        "name": "Victimize",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

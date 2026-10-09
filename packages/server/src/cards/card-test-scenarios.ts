@@ -8394,6 +8394,45 @@ function livingDeathScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function victimizeScenario(gameId: GameId): CardTestScenario {
+  const victimize = pinnedFrom(COVERAGE_PR03, 'Victimize');
+  const bear = card({
+    oracleId: 'lab-victimize-bear',
+    name: 'Lab Fallen Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'victimize-viewer-sacrifice-and-return',
+    title: 'Victimize: sacrifice Lab Servo, return two creatures tapped',
+    instructions: [
+      'Victimize is in your hand and three Swamps are on your battlefield with Lab Servo; Lab Ox and Lab Fallen Bear are in your graveyard.',
+      'Cast Victimize targeting Lab Ox and Lab Fallen Bear.',
+      'As it resolves, sacrifice Lab Servo.',
+    ],
+    expectedOutcome:
+      'Lab Servo is sacrificed, and Lab Ox and Lab Fallen Bear return to the battlefield tapped under your control.',
+    oracleSha256: victimize.sha256,
+    clauseIds: ['victimize-spell'],
+    decks: {
+      P1: [victimize.card, LAB_OX, bear, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Victimize'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Servo', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Fallen Bear'] }],
+    },
+  });
+}
+
 function technomancerScenario(gameId: GameId): CardTestScenario {
   const techno = pinnedFrom(MARCHESA_BATCH1, 'Technomancer');
   const construct = (name: string, cost: '{3}' | '{0}', cmc: number) =>
@@ -8647,6 +8686,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'cryptek-viewer-dies-and-returns-tapped',
   'living-death-viewer-swap',
   'technomancer-viewer-mill-and-return',
+  'victimize-viewer-sacrifice-and-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8877,6 +8917,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
   'living-death-viewer-swap': livingDeathScenario,
   'technomancer-viewer-mill-and-return': technomancerScenario,
+  'victimize-viewer-sacrifice-and-return': victimizeScenario,
 };
 
 export function createCardTestScenario(

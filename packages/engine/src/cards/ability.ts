@@ -1233,6 +1233,12 @@ export type Effect =
    */
   | { op: 'returnDiedTriggerObjectTapped' }
   /**
+   * "Return the chosen cards to the battlefield tapped" (Victimize): every graveyard card chosen
+   * in a variable-count slot that is still a legal target enters together, tapped, under the
+   * ability's controller (CR 603.6a).
+   */
+  | { op: 'reanimateEachChosenTapped'; targetSlot: number }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

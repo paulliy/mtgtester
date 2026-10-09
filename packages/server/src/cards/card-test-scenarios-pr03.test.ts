@@ -536,3 +536,27 @@ describe('Technomancer Card Test Lab scenario', () => {
     replays('technomancer-viewer-mill-and-return', steps);
   });
 });
+
+describe('Victimize Card Test Lab scenario', () => {
+  it('victimize-viewer-sacrifice-and-return — Lab Servo is sacrificed and both targets return tapped', () => {
+    const steps: Step[] = [
+      { action: 'Cast Victimize' },
+      { action: "Target Lab Ox (P1's graveyard)" },
+      { action: "Target Lab Fallen Bear (P1's graveyard)" },
+      { action: 'Sacrifice Lab Servo' },
+    ];
+    const { seat, onBattlefield } = run('victimize-viewer-sacrifice-and-return', steps);
+    for (const name of ['Lab Ox', 'Lab Fallen Bear']) {
+      const [perm] = onBattlefield(name);
+      expect(perm?.tapped).toBe(true);
+      expect(perm?.controllerId).toBe('P1');
+    }
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Servo', 'Victimize']);
+    replays('victimize-viewer-sacrifice-and-return', steps);
+  });
+});

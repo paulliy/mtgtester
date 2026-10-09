@@ -5079,6 +5079,21 @@ export function* executeAbility(
         });
         break;
       }
+      case 'reanimateEachChosenTapped': {
+        // The legal chosen cards still in a graveyard (CR 608.2b), entering together (CR 603.6a).
+        const cards = chosenReferents(effect.targetSlot).flatMap((cardId) => {
+          const card = ctx.state.players
+            .flatMap((player) => player.graveyard)
+            .find((candidate) => candidate.id === cardId);
+          return card === undefined ? [] : [card];
+        });
+        yield* moveObjects(ctx, cards, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          entersTapped: true,
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
         // that left the graveyard and came back is a new object.

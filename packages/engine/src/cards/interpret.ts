@@ -3886,6 +3886,41 @@ function parseLivingDeathBlock(text: string): { targets: TargetSpec[]; effects: 
   return { targets: [], effects: [{ op: 'livingDeath' }] };
 }
 
+/**
+ * "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return
+ * the chosen cards to the battlefield tapped." (Victimize): the targets are chosen on cast, the
+ * sacrifice is mandatory when possible, and only a completed sacrifice returns the cards.
+ */
+function parseVictimizeBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const match = text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\.$/, '')
+    .match(
+      /^choose (\w+) target creature cards in your graveyard\. sacrifice a creature\. if you do, return the chosen cards to the battlefield tapped$/,
+    );
+  if (match === null) return null;
+  const count = parseAmount(match[1] as string);
+  if (count === null || count < 2) return null;
+  return {
+    targets: [
+      {
+        kind: 'cardInGraveyard',
+        filter: ofType('Creature'),
+        count: { min: count, max: count },
+      },
+    ],
+    effects: [
+      {
+        op: 'sacrificeOneThen',
+        selector: allOf(ofType('Creature'), YOURS),
+        then: [{ op: 'reanimateEachChosenTapped', targetSlot: 0 }],
+      },
+    ],
+  };
+}
+
 function parseBlinkSpellBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
   const normalized = text.trim().toLowerCase().replace(/\.$/, '');
   if (
@@ -6805,7 +6840,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
             parseDestroyAndCreateTokenBlock(spellBlockText, card) ??
             parseReanimateBlock(spellBlockText, card) ??
             parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
-            parseLivingDeathBlock(spellBlockText);
+            parseLivingDeathBlock(spellBlockText) ??
+            parseVictimizeBlock(spellBlockText);
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);

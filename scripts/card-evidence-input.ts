@@ -1817,6 +1817,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Technomancer: mill three, then return artifact creatures worth 6'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Victimize: sacrifice Lab Servo, return two creatures tapped'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

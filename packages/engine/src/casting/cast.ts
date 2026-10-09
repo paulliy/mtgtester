@@ -213,6 +213,22 @@ export function consumePlayFromZonePermission(
   }
 }
 
+/**
+ * The label a counted-target option shows: a permanent's name, a graveyard card's name and
+ * whose graveyard it is in ("two target creature cards in your graveyard" can face same-named
+ * cards in several graveyards), an exiled card's name, or else the raw id (a player).
+ */
+function countedTargetName(ctx: GameContext, id: ObjectId): string {
+  const permanent = ctx.state.battlefield.find((candidate) => candidate.id === id);
+  if (permanent !== undefined) return permanent.name;
+  for (const player of ctx.state.players) {
+    const card = player.graveyard.find((candidate) => candidate.id === id);
+    if (card !== undefined) return `${card.name} (${player.id}'s graveyard)`;
+  }
+  const exiled = ctx.state.exile.find((candidate) => candidate.id === id);
+  return exiled === undefined ? id : `${exiled.name} (exile)`;
+}
+
 export function* chooseCountTargets(
   ctx: GameContext,
   ability: Ability,
@@ -299,7 +315,8 @@ export function* chooseCountTargets(
         options: [
           ...candidates.map((id) => ({
             type: 'pickTarget',
-            description: `Target ${ctx.state.battlefield.find((p) => p.id === id)?.name ?? id}`,
+            description: `Target ${countedTargetName(ctx, id)}`,
+            data: { objectId: id },
           })),
           ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
         ],

@@ -5280,3 +5280,26 @@ test('Technomancer: mill three, then return artifact creatures worth 6', async (
   await expect(permanent(page, 'Lab Three Construct')).toContainText('×2');
   await expect(permanent(page, 'Lab Zero Construct')).toHaveCount(1);
 });
+
+test('Victimize: sacrifice Lab Servo, return two creatures tapped', async ({ page }) => {
+  await runScenario(page, 'Victimize: sacrifice Lab Servo, return two creatures tapped');
+  const victimize = handCard(page, 'Victimize');
+  await expect(victimize).toHaveClass(/actionable/, { timeout: 15_000 });
+  await victimize.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Exactly two: the graveyard cards are named, and stopping early is never offered.
+  await page
+    .getByRole('button', { name: "Target Lab Ox (P1's graveyard)" })
+    .click({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toHaveCount(0);
+  await page.getByRole('button', { name: "Target Lab Fallen Bear (P1's graveyard)" }).click();
+
+  // Lab Servo is the only creature to sacrifice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  for (const name of ['Lab Ox', 'Lab Fallen Bear']) {
+    await expect(permanent(page, name).locator('.tap-badge')).toHaveText('TAP');
+  }
+});

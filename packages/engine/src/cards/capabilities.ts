@@ -947,6 +947,7 @@ const families = {
       returnExiledTriggerObject: true,
       reanimateTargetHasteExileAtYourNextEndStep: true,
       returnDiedTriggerObjectTapped: true,
+      reanimateEachChosenTapped: true,
       exileTopNPlayableUntilEot: true,
       noOp: true,
     } satisfies Record<Extract<Effect['op'], string | number>, true>,

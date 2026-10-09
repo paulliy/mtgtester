@@ -519,6 +519,7 @@ const effectExpressions = {
   returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   reanimateTargetHasteExileAtYourNextEndStep: {},
   returnDiedTriggerObjectTapped: {},
+  reanimateEachChosenTapped: {},
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };
