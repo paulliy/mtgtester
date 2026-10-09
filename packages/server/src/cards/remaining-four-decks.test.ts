@@ -178,7 +178,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Breena, the Demagogue',
       'Deflecting Palm',
       'Scheming Symmetry',
-      'Kambal, Consul of Allocation',
       'Shadrix Silverquill',
     ]);
     const observedUnmodeled = new Set<string>();

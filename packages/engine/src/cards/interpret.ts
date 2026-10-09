@@ -1024,6 +1024,21 @@ function parseEffectSentence(
   if (s === 'target player gets a poison counter') {
     return [{ op: 'giveTargetPoisonCounters', target: alloc('player'), count: 1 }];
   }
+  // "that player loses 2 life and you gain 2 life" (Kambal, Consul of Allocation): the player
+  // the trigger's event names — the caster of the spell, for a cast trigger.
+  {
+    const m = s.match(/^that player loses (\w+) life(?: and you gain (\w+) life)?$/);
+    if (m) {
+      const loss = parseAmount(m[1] as string);
+      const gain = m[2] === undefined ? null : parseAmount(m[2]);
+      if (loss !== null && (m[2] === undefined || gain !== null)) {
+        return [
+          { op: 'loseLifeTarget', target: 'eventPlayer', amount: constant(loss) },
+          ...(gain === null ? [] : [{ op: 'gainLife' as const, amount: constant(gain) }]),
+        ];
+      }
+    }
+  }
   if (s === 'they get that many poison counters') {
     return [
       {

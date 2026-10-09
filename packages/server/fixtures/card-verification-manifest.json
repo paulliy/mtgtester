@@ -2019,13 +2019,22 @@
     "4987c458-604a-4727-b360-170616e91e67": {
       "name": "Kambal, Consul of Allocation",
       "oracleSha256": "803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "kambal-opponent-noncreature-tax",
           "oracleText": "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
-          "implementation": ["explicitly unsupported; caster each includes you"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted castsSpell trigger with caster opponent and filter not Creature, fired at announcement so it resolves before the spell (CR 603.3b)",
+            "loseLifeTarget eventPlayer 2 (the casting opponent), then gainLife 2 for Kambal's controller"
+          ],
+          "engineTestIds": [
+            "kambal-pinned-oracle-supported",
+            "kambal-opponent-noncreature-spell",
+            "kambal-another-opponent",
+            "kambal-own-and-creature-spells"
+          ],
+          "viewerScenarioIds": ["kambal-viewer-opponent-noncreature-spell"]
         }
       ],
       "gameplayAiScenarioIds": []

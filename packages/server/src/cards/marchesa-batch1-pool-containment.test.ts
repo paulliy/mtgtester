@@ -57,6 +57,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Idol of Oblivion',
       'Illuminor Szeras',
       'Kairi, the Swirling Sky',
+      'Kambal, Consul of Allocation',
       'Killian, Ink Duelist',
       'Land Tax',
       'Loran of the Third Path',

@@ -174,6 +174,25 @@ const LAB_BOLT = oracle({
   oracleText: 'Lab Bolt deals 3 damage to any target.',
 });
 
+/**
+ * `playerId` casts `card` from hand through the normal legality/payment path with `mana`, filling
+ * target slots from `targets`. The spell is left on the stack, with its cast triggers pending.
+ */
+function castFromHand(
+  ctx: GameContext,
+  playerId: string,
+  card: OracleCard,
+  mana: { symbol: 'C' | 'W' | 'U' | 'B' | 'R' | 'G' }[],
+  targets: ReadonlyMap<number, string> = new Map(),
+) {
+  const object = conjure(ctx, playerId, card, 'hand');
+  addMana(playerById(ctx, playerId), mana);
+  const option = optionFor(ctx, playerId, object.id);
+  expect(option, `${playerId} casts ${card.name}`).toBeDefined();
+  takeAction(ctx, playerId, option!.payload as PriorityActionPayload, undefined, targets);
+  return object;
+}
+
 /** Put `perm` into its owner's graveyard through the normal single-permanent zone change. */
 function kill(ctx: GameContext, perm: EnginePermanent) {
   return pump(moveObject(ctx, perm, { zone: 'graveyard' }));
@@ -791,6 +810,70 @@ describe('Flayer of the Hatebound', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.04 Kambal, Consul of Allocation
+// ---------------------------------------------------------------------------------------------
+
+describe('Kambal, Consul of Allocation', () => {
+  const kambal = pinned('Kambal, Consul of Allocation');
+  const bear = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{1}' });
+
+  it('kambal-pinned-oracle-supported — the interpreter alone models an opponent-cast noncreature trigger', () => {
+    expect(kambal.sha256).toBe('803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71');
+    expectNoRegistration(kambal.card);
+    expectModeled(kambal.card);
+    const def = interpretCard(kambal.card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'castsSpell',
+      caster: 'opponent',
+      filter: { kind: 'not', of: { kind: 'type', value: 'Creature' } },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'loseLifeTarget', target: 'eventPlayer', amount: { kind: 'const', n: 2 } },
+      { op: 'gainLife', amount: { kind: 'const', n: 2 } },
+    ]);
+  });
+
+  it('kambal-opponent-noncreature-spell — the casting opponent loses 2 and Kambal’s controller gains 2, before the spell resolves', () => {
+    const ctx = pod('kambal-opponent');
+    spawn(ctx, 'P1', kambal.card);
+    castFromHand(ctx, 'P2', LAB_BOLT, red(1), new Map([[0, 'P1']]));
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.controllerId)).toEqual(['P1']);
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(playerById(ctx, 'P1').life).toBe(40 + 2 - 3);
+    const life = ctx.state.eventLog.filter(
+      (event) => event.type === 'lifeLoss' || event.type === 'lifeGain' || event.type === 'damage',
+    );
+    expect(life.map((event) => event.type)).toEqual(['lifeLoss', 'lifeGain', 'damage']);
+  });
+
+  it('kambal-another-opponent — each opponent who casts is the one who pays', () => {
+    const ctx = pod('kambal-p3');
+    spawn(ctx, 'P1', kambal.card);
+    castFromHand(ctx, 'P3', LAB_BOLT, red(1), new Map([[0, 'P2']]));
+    settle(ctx);
+    expect(playerById(ctx, 'P3').life).toBe(38);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(playerById(ctx, 'P1').life).toBe(42);
+  });
+
+  it('kambal-own-and-creature-spells — your own noncreature spell and an opponent’s creature spell do nothing', () => {
+    const ctx = pod('kambal-negative');
+    spawn(ctx, 'P1', kambal.card);
+    castFromHand(ctx, 'P1', LAB_BOLT, red(1), new Map([[0, 'P2']]));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    castFromHand(ctx, 'P2', bear, generic(1));
+    expect(ctx.state.stack.map((entry) => entry.description)).toEqual(['Lab Bear']);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -802,6 +885,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Kambal, Consul of Allocation',
+    sha256: '803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71',
+    clauseCount: 1,
+  },
   {
     name: 'Flayer of the Hatebound',
     sha256: '83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc',

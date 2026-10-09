@@ -4825,3 +4825,17 @@ test('Flayer of the Hatebound: destroy it, undying, deal 5 to P2', async ({ page
   await expect(page.getByText('+1/+1×1')).toBeVisible();
   await expect(page.getByText(/Flayer of the Hatebound deals 5 to P2/).first()).toBeVisible();
 });
+
+test("Kambal, Consul of Allocation: tax P2's noncreature spell", async ({ page }) => {
+  await runScenario(page, "Kambal, Consul of Allocation: tax P2's noncreature spell");
+  const spell = handCard(page, 'Lab Pending Spell');
+  await expect(spell).toHaveClass(/actionable/);
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // P2's scripted seat casts Lab Shock at you; only that cast triggers Kambal.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.log .line', { hasText: /loses 2 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 2 life$/ })).toHaveCount(1);
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
+});

@@ -148,8 +148,6 @@ const REASONS: Record<string, string> = {
     'Source choice and reflection are implemented as unscoped combat-damage prevention.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
-  'Kambal, Consul of Allocation':
-    'Opponent-casts is implemented as caster each, so your own noncreature spells also trigger.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
@@ -306,6 +304,7 @@ describe('Marchesa catalog audit containment', () => {
     'Canoptek Tomb Sentinel',
     'Glen Elendra Archmage',
     'Flayer of the Hatebound',
+    'Kambal, Consul of Allocation',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

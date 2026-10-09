@@ -174,3 +174,26 @@ describe('Flayer of the Hatebound Card Test Lab scenario', () => {
     replays('flayer-of-the-hatebound-viewer-undying-damage', steps);
   });
 });
+
+describe('Kambal, Consul of Allocation Card Test Lab scenario', () => {
+  it("kambal-viewer-opponent-noncreature-spell — only P2's Lab Shock taxes P2 2 life and gains you 2", () => {
+    // The second step is P2's: in the real viewer its scripted provider casts Lab Shock at P1.
+    const steps: Step[] = [
+      { action: 'Cast Lab Pending Spell' },
+      { action: 'Cast Lab Shock', targets: ['P1'] },
+    ];
+    const { state, seat } = run('kambal-viewer-opponent-noncreature-spell', steps);
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Shock']);
+    const lifeEvents = state.eventLog.filter(
+      (event) => event.type === 'lifeLoss' || event.type === 'lifeGain',
+    );
+    expect(lifeEvents.map((event) => event.payload)).toEqual([
+      expect.objectContaining({ player: 'P2', amount: 2 }),
+      expect.objectContaining({ player: 'P1', amount: 2 }),
+    ]);
+    replays('kambal-viewer-opponent-noncreature-spell', steps);
+  });
+});

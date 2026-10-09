@@ -1725,6 +1725,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Flayer of the Hatebound: destroy it, undying, deal 5 to P2'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kambal, Consul of Allocation: tax P2's noncreature spell"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

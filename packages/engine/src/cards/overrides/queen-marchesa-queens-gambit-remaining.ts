@@ -372,12 +372,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Wishclaw Talisman',
     'Opponent-gains-control is omitted from the search activation.',
   );
-  // Catalog audit queen-batch-5: opponent-casts is implemented as caster each.
-  unsupportedCard(
-    '4987c458-604a-4727-b360-170616e91e67',
-    'Kambal, Consul of Allocation',
-    'Opponent-casts is implemented as caster each, so your own noncreature spells also trigger.',
-  );
+  // Kambal, Consul of Allocation: restored in coverage PR03. The interpreter reads the
+  // opponent-cast trigger and "that player loses 2 life and you gain 2 life", so no override remains.
   // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
   unsupportedCard(
     '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',

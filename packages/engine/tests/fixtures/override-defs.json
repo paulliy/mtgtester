@@ -2889,12 +2889,6 @@
     }
   },
   {
-    "oracleId": "4987c458-604a-4727-b360-170616e91e67",
-    "name": "Kambal, Consul of Allocation",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "49be65fd-3755-410d-b0dc-2e5861ea2552",
     "name": "Thopter Spy Network",
     "handledLines": [
@@ -16681,12 +16675,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-kambal-consul-of-allocation",
-    "name": "Kambal, Consul of Allocation",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-karametra-s-favor",

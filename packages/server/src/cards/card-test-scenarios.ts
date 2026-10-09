@@ -7392,6 +7392,36 @@ function mosswortCastingScenario(
 // information, death and return.
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * An opponent seat that casts `spell` the first time it may, aiming every target slot at P1 when
+ * P1 is a legal choice (otherwise at the slot's first option), and otherwise passes.
+ */
+function castWhenAble(spell: string): DecisionProvider {
+  let cast = false;
+  return {
+    decide(request) {
+      const action = cast
+        ? undefined
+        : request.legalActions.find((candidate) =>
+            candidate.description.startsWith(`Cast ${spell}`),
+          );
+      if (action !== undefined) {
+        cast = true;
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
 function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
   const praetorian = pinnedFrom(MARCHESA_BATCH1, 'Triarch Praetorian');
   const swamps = [SWAMP, SWAMP, SWAMP, SWAMP, SWAMP];
@@ -7514,6 +7544,40 @@ function flayerOfTheHateboundScenario(gameId: GameId): CardTestScenario {
       hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
       battlefield: [{ playerId: 'P1', cardNames: ['Flayer of the Hatebound', 'Swamp', 'Swamp'] }],
     },
+  });
+}
+
+function kambalScenario(gameId: GameId): CardTestScenario {
+  const kambal = pinnedFrom(MARCHESA_BATCH1, 'Kambal, Consul of Allocation');
+  return pr01Scenario(gameId, {
+    id: 'kambal-viewer-opponent-noncreature-spell',
+    title: "Kambal, Consul of Allocation: tax P2's noncreature spell",
+    instructions: [
+      'Kambal is on your battlefield; Lab Pending Spell is in your hand.',
+      'Cast Lab Pending Spell: your own noncreature spell does not trigger Kambal.',
+      'P2 casts Lab Shock at you when it gets priority.',
+    ],
+    expectedOutcome:
+      "Only P2's Lab Shock triggers Kambal: P2 loses 2 life and you gain 2 life, then Lab Shock deals 2 damage to you.",
+    oracleSha256: kambal.sha256,
+    clauseIds: ['kambal-opponent-noncreature-tax'],
+    decks: {
+      P1: [kambal.card, ARCANE_PENDING_SPELL, FOREST, LAB_OX],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Pending Spell'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kambal, Consul of Allocation', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Shock') },
   });
 }
 
@@ -7701,6 +7765,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'canoptek-tomb-sentinel-viewer-unearth-exile',
   'glen-elendra-archmage-viewer-counter-persist',
   'flayer-of-the-hatebound-viewer-undying-damage',
+  'kambal-viewer-opponent-noncreature-spell',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7905,6 +7970,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'canoptek-tomb-sentinel-viewer-unearth-exile': canoptekTombSentinelScenario,
   'glen-elendra-archmage-viewer-counter-persist': glenElendraArchmageScenario,
   'flayer-of-the-hatebound-viewer-undying-damage': flayerOfTheHateboundScenario,
+  'kambal-viewer-opponent-noncreature-spell': kambalScenario,
 };
 
 export function createCardTestScenario(

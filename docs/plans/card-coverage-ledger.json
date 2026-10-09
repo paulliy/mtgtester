@@ -1480,6 +1480,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "4987c458-604a-4727-b360-170616e91e67",
+    "name": "Kambal, Consul of Allocation",
+    "package": "PR03.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Opponent-casts is implemented as caster each, so your own noncreature spells also trigger."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
     "package": "W6",

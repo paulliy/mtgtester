@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 41,
+      "uniqueOracleIds": 40,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5955,6 +5955,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Registration deleted: the interpreter reads Undying (a last-known +1/+1 intervening-if dies trigger returning the card it became) and the enters-from-your-graveyard trigger, whose entering creature deals damage equal to its power; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4987c458-604a-4727-b360-170616e91e67",
+      "name": "Kambal, Consul of Allocation",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads 'Whenever an opponent casts a noncreature spell' with caster opponent and 'that player loses 2 life and you gain 2 life' as loseLifeTarget eventPlayer plus gainLife; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }
