@@ -75,6 +75,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Rishkar, Peema Renegade',
       'Sage of Fables',
       'Sceptre of Eternal Glory',
+      'Shard of the Nightbringer',
       'Smothering Tithe',
       'Solar Transformer',
       'Soul-Guide Lantern',

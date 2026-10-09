@@ -364,9 +364,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You may have this artifact enter as a copy of any artifact on the battlefield.',
   ]);
 
-  unimplemented('eedd5a17-d0fe-4a13-8f2c-f343bfa43f92', 'Shard of the Nightbringer', [
-    'Drain Life — When this creature enters, if you cast it, target opponent loses half their life, rounded up. You gain life equal to the life lost this way.',
-  ]);
+  // Shard of the Nightbringer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('d04d2434-121e-4420-abfc-fa21ad5577c3', 'Shard of the Void Dragon', [
     'Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.',

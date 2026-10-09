@@ -2072,6 +2072,9 @@ function parseEffectSentence(
       return [{ op: 'eachOpponentLosesLife', amount: { kind: 'xValue' } }];
     }
   }
+  if (s === 'target opponent loses half their life, rounded up') {
+    return [{ op: 'loseHalfLifeTarget', target: alloc('player', undefined, 'opponent') }];
+  }
   if (s === 'you gain life equal to the life lost this way') {
     return [{ op: 'gainLifeEqualToLifeLostThisWay' }];
   }
@@ -3548,6 +3551,9 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
   if (clause === 'it was kicked' || clause === 'this spell was kicked') {
     return { kind: 'wasKicked' };
   }
+  // "When this creature enters, if you cast it, …" (Shard of the Nightbringer): read from the
+  // permanent's cast record, so reanimating or flickering it does not count.
+  if (clause === 'you cast it') return { kind: 'sourceWasCast' };
   if (clause === 'it escaped' || clause === '~ escaped') {
     return { kind: 'escaped' };
   }

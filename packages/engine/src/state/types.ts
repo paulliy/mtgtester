@@ -60,7 +60,7 @@ export interface EngineObject extends GameObject {
   escaped?: boolean;
 }
 
-export interface EnginePermanent extends PermanentState, EngineObject {
+export interface EnginePermanent extends PermanentState, EngineObject, CastRecord {
   /** Departure facts belong to this old object only; reincarnation never copies them. */
   lastKnownFacts?: ObjectFacts;
   /** First public destination of this departing incarnation, for CR 400.7e triggers. */
@@ -174,7 +174,18 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
-export interface EngineCardObject extends EngineObject {
+/**
+ * How a spell was cast (CR 601.2): who cast it, the zone it was cast from and the mana spent on
+ * it. Carried by the spell's card and by the permanent that spell becomes, and by nothing after
+ * (CR 400.7): a card put onto the battlefield any other way, or a copy of a spell, was not cast.
+ */
+export interface CastRecord {
+  castByPlayerId?: PlayerId;
+  castFromZone?: Zone;
+  manaSpentToCast?: number;
+}
+
+export interface EngineCardObject extends EngineObject, CastRecord {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
   optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;

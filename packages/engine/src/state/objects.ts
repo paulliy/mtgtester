@@ -209,6 +209,13 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     ...(castFromStack && (obj as EngineCardObject).optionalCostCounts !== undefined
       ? { optionalCostCounts: { ...(obj as EngineCardObject).optionalCostCounts } }
       : {}),
+    ...(castFromStack && (obj as EngineCardObject).castByPlayerId !== undefined
+      ? {
+          castByPlayerId: (obj as EngineCardObject).castByPlayerId,
+          castFromZone: (obj as EngineCardObject).castFromZone,
+          manaSpentToCast: (obj as EngineCardObject).manaSpentToCast ?? 0,
+        }
+      : {}),
   };
 }
 /** Apply a control-changing effect without replacing the permanent's initial controller. */

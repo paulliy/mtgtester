@@ -551,6 +551,12 @@ export type Effect =
   | { op: 'millAndCreateTokensForCreatures'; spec: TokenSpec }
   | { op: 'returnArtifactCreaturesUpToManaValue'; maxManaValue: number }
   | { op: 'halfLifeDrainTargetOpponent' }
+  /**
+   * "target opponent loses half their life, rounded up" (Shard of the Nightbringer): the half is
+   * computed from the target's life as it resolves; the loss is banked for a following "life
+   * lost this way".
+   */
+  | { op: 'loseHalfLifeTarget'; target: EffectRef }
   | { op: 'tombBladeHit'; target: EffectRef }
   | { op: 'emptyLibraryCreatureOrLose' }
   | { op: 'exileResolvingSpell' }

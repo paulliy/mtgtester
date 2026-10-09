@@ -176,7 +176,6 @@ const REASONS: Record<string, string> = {
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
-  'Shard of the Nightbringer': 'The if-you-cast-it intervening if is omitted.',
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
@@ -305,6 +304,7 @@ describe('Marchesa catalog audit containment', () => {
     'Flayer of the Hatebound',
     'Kambal, Consul of Allocation',
     'Gleeful Arsonist',
+    'Shard of the Nightbringer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -1005,6 +1005,106 @@ describe('Gleeful Arsonist', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: the cast record (CR 601.2) and 3.09 Shard of the Nightbringer
+// ---------------------------------------------------------------------------------------------
+
+describe('Shard of the Nightbringer', () => {
+  const shard = pinned('Shard of the Nightbringer');
+  const SHARD_MANA = () => [...generic(5), ...black(3)];
+
+  /** Aim the trigger's target-opponent slot at `player`. */
+  const aimAt =
+    (player: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, player]]) };
+      return { index: 0, targets: new Map() };
+    };
+
+  it('shard-of-the-nightbringer-pinned-oracle-supported — the interpreter alone models flying and the if-you-cast-it drain', () => {
+    expect(shard.sha256).toBe('4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a');
+    expectNoRegistration(shard.card);
+    expectModeled(shard.card);
+    const def = interpretCard(shard.card);
+    expect(def.keywords).toEqual(['flying']);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'enters',
+      subject: { kind: 'self' },
+      condition: { kind: 'sourceWasCast' },
+    });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'loseHalfLifeTarget', target: 0 },
+      { op: 'gainLifeEqualToLifeLostThisWay' },
+    ]);
+  });
+
+  it('cast-record-primitive — a cast permanent records its caster, origin zone and mana spent; nothing else does', () => {
+    const ctx = pod('cast-record');
+    const card = castFromHand(ctx, 'P1', shard.card, SHARD_MANA());
+    expect(ctx.state.stack[0]!.card).toMatchObject({
+      castByPlayerId: 'P1',
+      castFromZone: 'hand',
+      manaSpentToCast: 8,
+    });
+    resolveTop(ctx);
+    expect(onField(ctx, card.cardId)).toMatchObject({
+      castByPlayerId: 'P1',
+      castFromZone: 'hand',
+      manaSpentToCast: 8,
+      enteredFromZone: 'stack',
+    });
+    const reanimated = enterFrom(ctx, 'P1', shard.card, 'graveyard');
+    expect(reanimated.castByPlayerId).toBeUndefined();
+    // Dying and coming back drops the record: the new object was not cast.
+    const cast = onField(ctx, card.cardId)!;
+    kill(ctx, cast);
+    expect(playerById(ctx, 'P1').graveyard.at(-1)?.castByPlayerId).toBeUndefined();
+  });
+
+  it('shard-of-the-nightbringer-cast-drains-half — cast for its cost, target opponent loses half their life and you gain that much', () => {
+    const ctx = pod('shard-cast');
+    castFromHand(ctx, 'P1', shard.card, SHARD_MANA());
+    resolveTop(ctx);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Shard of the Nightbringer',
+    ]);
+    settle(ctx, aimAt('P2'));
+    expect(playerById(ctx, 'P2').life).toBe(20);
+    expect(playerById(ctx, 'P1').life).toBe(60);
+  });
+
+  it('shard-of-the-nightbringer-rounded-up — an odd life total loses the larger half', () => {
+    const ctx = pod('shard-odd');
+    playerById(ctx, 'P3').life = 15;
+    castFromHand(ctx, 'P1', shard.card, SHARD_MANA());
+    resolveTop(ctx);
+    settle(ctx, aimAt('P3'));
+    expect(playerById(ctx, 'P3').life).toBe(7);
+    expect(playerById(ctx, 'P1').life).toBe(48);
+  });
+
+  it('shard-of-the-nightbringer-not-cast-no-trigger — reanimated, or put onto the battlefield from hand, it drains nothing', () => {
+    for (const zone of ['graveyard', 'hand', 'exile'] as const) {
+      const ctx = pod(`shard-${zone}`);
+      enterFrom(ctx, 'P1', shard.card, zone);
+      expect(ctx.state.pendingTriggers, zone).toEqual([]);
+    }
+  });
+
+  it('shard-of-the-nightbringer-opponents-only — only an opponent can be targeted, never you', () => {
+    const ctx = pod('shard-targets');
+    castFromHand(ctx, 'P1', shard.card, SHARD_MANA());
+    resolveTop(ctx);
+    const { decisions } = settle(ctx, aimAt('P4'));
+    const slot = decisions.flatMap((decision) => decision.options[0]?.targets ?? [])[0];
+    expect(slot?.options.sort()).toEqual(['P2', 'P3', 'P4']);
+    expect(playerById(ctx, 'P4').life).toBe(20);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1016,6 +1116,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Shard of the Nightbringer',
+    sha256: '4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a',
+    clauseCount: 2,
+  },
   {
     name: 'Gleeful Arsonist',
     sha256: 'b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143',

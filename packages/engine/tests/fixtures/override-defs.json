@@ -10285,12 +10285,6 @@
     }
   },
   {
-    "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
-    "name": "Shard of the Nightbringer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
     "name": "River Kelpie",
     "handledLines": [],
@@ -20442,12 +20436,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-shard-of-the-nightbringer",
-    "name": "Shard of the Nightbringer",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-shard-of-the-void-dragon",

@@ -323,6 +323,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'flayer-of-the-hatebound-viewer-undying-damage',
       'kambal-viewer-opponent-noncreature-spell',
       'gleeful-arsonist-viewer-burn-and-undying',
+      'shard-of-the-nightbringer-viewer-cast-drain',
     ]);
   });
 

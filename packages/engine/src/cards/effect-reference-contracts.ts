@@ -106,6 +106,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   millAndCreateTokensForCreatures: {},
   returnArtifactCreaturesUpToManaValue: {},
   halfLifeDrainTargetOpponent: {},
+  loseHalfLifeTarget: { target: player },
   tombBladeHit: { target: player },
   emptyLibraryCreatureOrLose: {},
   exileResolvingSpell: {},

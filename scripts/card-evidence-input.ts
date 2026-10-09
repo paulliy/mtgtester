@@ -1733,6 +1733,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Gleeful Arsonist: burn P2 for casting, then undying'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Shard of the Nightbringer: cast it to drain half of P2's life"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

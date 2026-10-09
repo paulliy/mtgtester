@@ -93,7 +93,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Cryptek',
       'Out of the Tombs',
       'Resurrection Orb',
-      'Shard of the Nightbringer',
       'Szarekh, the Silent King',
       'Mask of Memory',
       'Sautekh Immortal',

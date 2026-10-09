@@ -7614,6 +7614,32 @@ function gleefulArsonistScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
+  const shard = pinnedFrom(MARCHESA_BATCH1, 'Shard of the Nightbringer');
+  const swamps = Array.from({ length: 8 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'shard-of-the-nightbringer-viewer-cast-drain',
+    title: "Shard of the Nightbringer: cast it to drain half of P2's life",
+    instructions: [
+      'Shard of the Nightbringer is in your hand and eight Swamps are on the battlefield.',
+      'Cast it, then target P2 with its if-you-cast-it trigger.',
+    ],
+    expectedOutcome: 'P2 loses half their life (20) and you gain 20 life.',
+    oracleSha256: shard.sha256,
+    clauseIds: ['shard-of-the-nightbringer-flying', 'shard-of-the-nightbringer-drain-life'],
+    decks: {
+      P1: [shard.card, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Shard of the Nightbringer'] }],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7800,6 +7826,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'flayer-of-the-hatebound-viewer-undying-damage',
   'kambal-viewer-opponent-noncreature-spell',
   'gleeful-arsonist-viewer-burn-and-undying',
+  'shard-of-the-nightbringer-viewer-cast-drain',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8006,6 +8033,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'flayer-of-the-hatebound-viewer-undying-damage': flayerOfTheHateboundScenario,
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
+  'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
 };
 
 export function createCardTestScenario(

@@ -596,6 +596,8 @@ function* proposeCast(
     id: `o-${s.nextObjectNum++}` as ObjectId,
     zone: 'stack',
     ...(payload.x !== undefined ? { announcedX: payload.x } : {}),
+    castByPlayerId: player.id,
+    castFromZone: obj.zone,
   };
   const spellEntry: EngineStackObject = {
     id: spellCard.id,
@@ -875,6 +877,7 @@ function* proposeCast(
       ? { treasureManaSpentToCast: manaPayment.treasureManaSpent }
       : {}),
     ...(escaped ? { escaped: true } : {}),
+    manaSpentToCast: manaPayment.manaSpent,
   });
   Object.assign(spellEntry, {
     id: spellCard.id,
@@ -979,6 +982,9 @@ function* castFaceDown(
     ...obj,
     id: `o-${ctx.state.nextObjectNum++}` as ObjectId,
     zone: 'stack',
+    castByPlayerId: player.id,
+    castFromZone: obj.zone,
+    manaSpentToCast: manaPayment.manaSpent,
   };
   const spellEntry: EngineStackObject = {
     id: spellCard.id,

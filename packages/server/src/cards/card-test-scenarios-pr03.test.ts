@@ -213,3 +213,17 @@ describe('Gleeful Arsonist Card Test Lab scenario', () => {
     replays('gleeful-arsonist-viewer-burn-and-undying', steps);
   });
 });
+
+describe('Shard of the Nightbringer Card Test Lab scenario', () => {
+  it('shard-of-the-nightbringer-viewer-cast-drain — cast, its trigger drains half of P2’s life', () => {
+    const steps: Step[] = [
+      { action: 'Cast Shard of the Nightbringer' },
+      { action: 'Shard of the Nightbringer', targets: ['P2'] },
+    ];
+    const { seat, onBattlefield } = run('shard-of-the-nightbringer-viewer-cast-drain', steps);
+    expect(onBattlefield('Shard of the Nightbringer')).toHaveLength(1);
+    expect(seat('P2').life).toBe(20);
+    expect(seat('P1').life).toBe(60);
+    replays('shard-of-the-nightbringer-viewer-cast-drain', steps);
+  });
+});

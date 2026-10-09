@@ -3020,13 +3020,31 @@
     "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92": {
       "name": "Shard of the Nightbringer",
       "oracleSha256": "4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "When this creature enters, if you cast it, target opponent loses half their life, rounded up.",
-          "implementation": ["explicitly unsupported; if-you-cast-it intervening if omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "shard-of-the-nightbringer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["shard-of-the-nightbringer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["shard-of-the-nightbringer-viewer-cast-drain"]
+        },
+        {
+          "id": "shard-of-the-nightbringer-drain-life",
+          "oracleText": "When this creature enters, if you cast it, target opponent loses half their life, rounded up. You gain life equal to the life lost this way.",
+          "implementation": [
+            "interpreted enters trigger on self with intervening-if sourceWasCast: the permanent's cast record (castByPlayerId set when the spell is cast and carried onto the permanent it becomes, CR 601.2) names its controller; checked when queued and on resolution (CR 603.4)",
+            "target player (opponent) slot; loseHalfLifeTarget loses ceil(life/2) as it resolves and banks the actual loss; gainLifeEqualToLifeLostThisWay gains that much"
+          ],
+          "engineTestIds": [
+            "shard-of-the-nightbringer-pinned-oracle-supported",
+            "cast-record-primitive",
+            "shard-of-the-nightbringer-cast-drains-half",
+            "shard-of-the-nightbringer-rounded-up",
+            "shard-of-the-nightbringer-not-cast-no-trigger",
+            "shard-of-the-nightbringer-opponents-only"
+          ],
+          "viewerScenarioIds": ["shard-of-the-nightbringer-viewer-cast-drain"]
         }
       ],
       "gameplayAiScenarioIds": []

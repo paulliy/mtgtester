@@ -296,12 +296,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     ['You may have this artifact enter as a copy of any artifact on the battlefield.'],
     { entersAsCopy: { selector: ofType('Artifact') } },
   );
-  // Catalog audit necron-remaining-batch-5: intervening if you-cast-it omitted.
-  unsupportedCard(
-    'eedd5a17-d0fe-4a13-8f2c-f343bfa43f92',
-    'Shard of the Nightbringer',
-    'The if-you-cast-it intervening if is omitted.',
-  );
+  // Shard of the Nightbringer: restored in coverage PR03. The interpreter reads "if you cast it"
+  // from the permanent's cast record and the targeted half-life drain, so no override remains.
   // Catalog audit necron-remaining-batch-4: exile-from-battlefield omitted.
   unsupportedCard(
     'd04d2434-121e-4420-abfc-fa21ad5577c3',

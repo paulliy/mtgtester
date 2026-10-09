@@ -4855,3 +4855,21 @@ test('Gleeful Arsonist: burn P2 for casting, then undying', async ({ page }) => 
   await expect(permanent(page, 'Gleeful Arsonist')).toBeVisible();
   await expect(page.getByText('+1/+1×1')).toBeVisible();
 });
+
+test("Shard of the Nightbringer: cast it to drain half of P2's life", async ({ page }) => {
+  await runScenario(page, "Shard of the Nightbringer: cast it to drain half of P2's life");
+  const shard = handCard(page, 'Shard of the Nightbringer');
+  await expect(shard).toHaveClass(/actionable/);
+  await shard.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Cast, so its enters trigger asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Shard of the Nightbringer')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /loses 20 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 20 life$/ })).toHaveCount(1);
+});

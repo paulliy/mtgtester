@@ -2446,11 +2446,22 @@ export function* executeAbility(
       case 'gainLifeEqualToLifeLostThisWay':
         if (lifeLostThisWay > 0) gainLife(ctx, controller, lifeLostThisWay);
         break;
-      case 'loseLifeTarget': {
+      case 'loseLifeTarget':
+      case 'loseHalfLifeTarget': {
         const targetId = ref(effect.target);
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-        if (target !== undefined) loseLife(ctx, target, amountOf(effect.amount));
+        if (target === undefined) break;
+        const before = target.life;
+        loseLife(
+          ctx,
+          target,
+          effect.op === 'loseLifeTarget'
+            ? amountOf(effect.amount)
+            : Math.ceil(Math.max(0, target.life) / 2),
+        );
+        // What the player actually lost, for a following "life lost this way".
+        lifeLostThisWay += before - target.life;
         break;
       }
       case 'eachOpponentDamage':
