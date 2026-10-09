@@ -3772,6 +3772,51 @@ describe('Body Launderer', () => {
     expect(offered[0]!.map((id) => ids.get(id)).sort()).toEqual(['Lab Three', 'Lab Two']);
   });
 
+  it("body-launderer-graveyard-cda-power — a '*' creature card's power is its characteristic-defining ability in the graveyard (CR 604.3)", () => {
+    // Lab Crowd's power is the number of creatures its owner controls, in every zone.
+    const crowd = beast('Lab Crowd', '*');
+    const crowdDef = (ctx: GameContext) =>
+      registerCustomDef(ctx, {
+        ...interpretCard(crowd),
+        modeled: true,
+        unmodeledReasons: [],
+        staticEffects: [
+          {
+            affects: { kind: 'self' },
+            op: {
+              layer: 7,
+              sublayer: 'a',
+              power: {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    { kind: 'controller', who: 'you' },
+                    { kind: 'type', value: 'Creature' },
+                  ],
+                },
+                scope: 'you',
+              },
+              toughness: { kind: 'const', n: 2 },
+            },
+          },
+        ],
+      });
+    const returned = (others: number) => {
+      const ctx = pod(`launderer-cda-${others}`);
+      crowdDef(ctx);
+      const self = spawn(ctx, 'P1', launderer.card);
+      for (let i = 0; i < others; i++) spawn(ctx, 'P1', bear);
+      conjure(ctx, 'P1', crowd, 'graveyard');
+      kill(ctx, self);
+      settle(ctx);
+      return ctx.state.battlefield.some((perm) => perm.name === 'Lab Crowd');
+    };
+    // Two creatures left after Body Launderer dies: power 2, within its 3. Four: power 4, too much.
+    expect(returned(2)).toBe(true);
+    expect(returned(4)).toBe(false);
+  });
+
   it('body-launderer-last-known-power — the bound is its power as it last existed, counters included (CR 608.2h)', () => {
     const returned = (counter: boolean) => {
       const ctx = pod(`launderer-lki-${counter}`);

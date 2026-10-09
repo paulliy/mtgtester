@@ -278,12 +278,13 @@
           "implementation": [
             "interpreted self dies trigger with a cardInGraveyard target filtered by other, not subtype Rogue, type Creature, and the new event-only powerAtMostSource selector",
             "powerAtMostSource compares against the source's last-known power once it has died (CR 608.2h): the trigger's source facts are passed to target legality at announcement and at resolution",
-            "a graveyard card whose power is not a printed number is refused rather than read as 0",
+            "a graveyard card with \"*\" power uses its characteristic-defining ability evaluated in the graveyard with its owner as \"you\" (CR 604.3, 109.5); one with no such ability is refused rather than read as 0",
             "graveyardToBattlefield returns the target under its owner, the caster"
           ],
           "engineTestIds": [
             "body-launderer-pinned-oracle-supported",
             "body-launderer-return-bound",
+            "body-launderer-graveyard-cda-power",
             "body-launderer-last-known-power"
           ],
           "viewerScenarioIds": ["body-launderer-viewer-return"]
