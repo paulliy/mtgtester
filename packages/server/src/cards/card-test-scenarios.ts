@@ -8367,20 +8367,32 @@ function livingDeathScenario(gameId: GameId): CardTestScenario {
     power: '2',
     toughness: '2',
   });
+  // Living Death acts on every player's graveyard: P2's creature card must come back for P2.
+  const bear = card({
+    oracleId: 'lab-living-death-bear',
+    name: 'Lab Risen Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
   return pr01Scenario(gameId, {
     id: 'living-death-viewer-swap',
     title: 'Living Death: swap the battlefield and graveyard creatures',
     instructions: [
-      "Living Death is in your hand and five Swamps are on your battlefield with Lab Servo; Lab Risen Zombie is in your graveyard and Lab Ox is on P2's battlefield.",
+      "Living Death is in your hand and five Swamps are on your battlefield with Lab Servo; Lab Risen Zombie is in your graveyard. Lab Ox is on P2's battlefield and Lab Risen Bear is in P2's graveyard.",
       'Cast Living Death.',
     ],
     expectedOutcome:
-      "Lab Risen Zombie returns under your control; Lab Servo and P2's Lab Ox are sacrificed into their owners' graveyards.",
+      "Lab Risen Zombie returns under your control and Lab Risen Bear returns under P2's control; Lab Servo and P2's Lab Ox are sacrificed into their owners' graveyards.",
     oracleSha256: death.sha256,
     clauseIds: ['living-death-swap'],
     decks: {
       P1: [death.card, zombie, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
-      P2: [LAB_OX, FOREST, FOREST],
+      P2: [LAB_OX, bear, FOREST, FOREST],
       P3: PR01_FILLER,
       P4: PR01_FILLER,
     },
@@ -8393,7 +8405,10 @@ function livingDeathScenario(gameId: GameId): CardTestScenario {
         },
         { playerId: 'P2', cardNames: ['Lab Ox'] },
       ],
-      graveyard: [{ playerId: 'P1', cardNames: ['Lab Risen Zombie'] }],
+      graveyard: [
+        { playerId: 'P1', cardNames: ['Lab Risen Zombie'] },
+        { playerId: 'P2', cardNames: ['Lab Risen Bear'] },
+      ],
     },
   });
 }

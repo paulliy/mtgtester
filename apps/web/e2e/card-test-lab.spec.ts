@@ -5286,6 +5286,14 @@ test('Living Death: swap the battlefield and graveyard creatures', async ({ page
   await expect(permanent(page, 'Lab Risen Zombie')).toHaveCount(1);
   await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  // P2's graveyard creature returns too, on P2's board, and its Lab Ox went to the graveyard.
+  const p2 = page.locator('.opponent[data-seat="P2"]');
+  await expect(permanent(page, 'Lab Risen Bear')).toHaveCount(1);
+  await expect(
+    p2
+      .locator('.tile')
+      .filter({ has: page.getByRole('img', { name: 'Lab Risen Bear', exact: true }) }),
+  ).toHaveCount(1);
 });
 
 test('Technomancer: mill three, then return artifact creatures worth 6', async ({ page }) => {

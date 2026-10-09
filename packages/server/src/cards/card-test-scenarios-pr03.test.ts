@@ -511,10 +511,12 @@ describe('Cryptek Card Test Lab scenario', () => {
 });
 
 describe('Living Death Card Test Lab scenario', () => {
-  it('living-death-viewer-swap — the graveyard Zombie returns and both battlefield creatures are sacrificed', () => {
+  it("living-death-viewer-swap — each player's graveyard creature returns under its owner's control and both battlefield creatures are sacrificed", () => {
     const steps: Step[] = [{ action: 'Cast Living Death' }];
-    const { seat, onBattlefield } = run('living-death-viewer-swap', steps);
+    const { state, seat, onBattlefield } = run('living-death-viewer-swap', steps);
     expect(onBattlefield('Lab Risen Zombie').map((perm) => perm.controllerId)).toEqual(['P1']);
+    // P2's own graveyard creature returns too, under P2's control, not the caster's.
+    expect(onBattlefield('Lab Risen Bear').map((perm) => perm.controllerId)).toEqual(['P2']);
     expect(onBattlefield('Lab Servo')).toEqual([]);
     expect(onBattlefield('Lab Ox')).toEqual([]);
     expect(
@@ -523,6 +525,7 @@ describe('Living Death Card Test Lab scenario', () => {
         .sort(),
     ).toEqual(['Lab Servo', 'Living Death']);
     expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(state.exile).toEqual([]);
     replays('living-death-viewer-swap', steps);
   });
 });
