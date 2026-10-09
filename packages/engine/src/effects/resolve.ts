@@ -2205,8 +2205,9 @@ export function* executeAbility(
       }
       case 'graveyardToBattlefieldEach':
       case 'graveyardToHandEach': {
-        // "Return all Zombie cards from your graveyard to the battlefield." The set is snapshotted
-        // first: `moveObject` mutates the graveyard array being iterated.
+        // "Return all Zombie cards from your graveyard to the battlefield." One simultaneous move:
+        // every returned creature is on the battlefield before any enters trigger is checked, so
+        // each sees the others enter (CR 603.6a), and leaving the graveyard is one event.
         const owner = playerById(ctx, source.controllerId);
         const matching = owner.graveyard.filter((card) =>
           selectMatches(cardZoneCandidate(ctx, card, owner.id), effect.filter, {
@@ -2214,15 +2215,13 @@ export function* executeAbility(
             controllerId: source.controllerId,
           }),
         );
-        for (const card of [...matching]) {
-          yield* moveObject(
-            ctx,
-            card,
-            effect.op === 'graveyardToBattlefieldEach'
-              ? { zone: 'battlefield', controllerId: source.controllerId }
-              : { zone: 'hand' },
-          );
-        }
+        yield* moveObjects(
+          ctx,
+          matching,
+          effect.op === 'graveyardToBattlefieldEach'
+            ? { zone: 'battlefield', controllerId: source.controllerId }
+            : { zone: 'hand' },
+        );
         break;
       }
       case 'returnOneFromYourGraveyardToBattlefield': {

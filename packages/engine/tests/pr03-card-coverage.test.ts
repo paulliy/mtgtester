@@ -797,6 +797,31 @@ describe('Flayer of the Hatebound', () => {
     expect(damage.at(-1)?.payload).toMatchObject({ source: 'Lab Ogre', amount: 3 });
   });
 
+  it('flayer-of-the-hatebound-mass-return-sees-each — returned together, Flayer triggers for itself and every other creature (CR 603.6a)', () => {
+    const ctx = pod('flayer-mass-return');
+    // The Ogre is first in the graveyard: moved one at a time, it would enter before Flayer.
+    conjure(ctx, 'P1', ogre, 'graveyard');
+    conjure(ctx, 'P1', flayer.card, 'graveyard');
+    const revive = oracle({
+      name: 'Lab Mass Revival',
+      typeLine: 'Sorcery',
+      manaCost: '{1}',
+      oracleText: 'Return all creature cards from your graveyard to the battlefield.',
+    });
+    castFromHand(ctx, 'P1', revive, generic(1));
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.map((perm) => perm.name).sort()).toEqual([
+      'Flayer of the Hatebound',
+      'Lab Ogre',
+    ]);
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Flayer of the Hatebound',
+      'Flayer of the Hatebound',
+    ]);
+    settle(ctx, aimAt('P2'));
+    expect(playerById(ctx, 'P2').life).toBe(40 - 4 - 3);
+  });
+
   it("flayer-of-the-hatebound-not-other-origins — a cast creature, an opponent's graveyard card or a token deals nothing", () => {
     const ctx = pod('flayer-negative');
     spawn(ctx, 'P1', flayer.card);
