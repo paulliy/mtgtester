@@ -3862,6 +3862,21 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
   return countPermanents(selector, 'you', '>=', 1);
 }
 
+/**
+ * "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they
+ * control, then puts all cards they exiled this way onto the battlefield." (Living Death) — three
+ * simultaneous events in order: one exile, one sacrifice, one return.
+ */
+function parseLivingDeathBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const normalized = text.trim().toLowerCase().replace(/\.$/, '');
+  if (
+    normalized !==
+    'each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield'
+  )
+    return null;
+  return { targets: [], effects: [{ op: 'livingDeath' }] };
+}
+
 function parseBlinkSpellBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
   const normalized = text.trim().toLowerCase().replace(/\.$/, '');
   if (
@@ -6780,7 +6795,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
             parseCounterAndCreateTokenBlock(spellBlockText, card) ??
             parseDestroyAndCreateTokenBlock(spellBlockText, card) ??
             parseReanimateBlock(spellBlockText, card) ??
-            parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card);
+            parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
+            parseLivingDeathBlock(spellBlockText);
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);

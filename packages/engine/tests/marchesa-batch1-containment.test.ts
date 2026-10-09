@@ -203,7 +203,6 @@ const REASONS: Record<string, string> = {
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Living Death': 'Battlefield creatures are put into graveyards instead of being sacrificed.',
   'Screams from Within':
     'Return is a required attach target; current Oracle returns this Aura untargeted.',
   Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
@@ -302,6 +301,7 @@ describe('Marchesa catalog audit containment', () => {
     'The Ooze',
     'Puppeteer Clique',
     'Cryptek',
+    'Living Death',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

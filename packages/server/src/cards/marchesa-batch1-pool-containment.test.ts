@@ -63,6 +63,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Kambal, Consul of Allocation',
       'Killian, Ink Duelist',
       'Land Tax',
+      'Living Death',
       'Loran of the Third Path',
       'Mistveil Plains',
       'Mordant Dragon',

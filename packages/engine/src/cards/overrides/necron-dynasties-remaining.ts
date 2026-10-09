@@ -159,12 +159,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Imotekh the Stormlord: restored in coverage PR03. The interpreter reads the leave-graveyard
   // token trigger and the combat buff, so no override remains.
-  // Catalog audit necron-remaining-batch-8: battlefield creatures are not sacrificed.
-  unsupportedCard(
-    '9e6a3df4-67a3-452e-a6ef-f04dbadb21ef',
-    'Living Death',
-    'Battlefield creatures are put into graveyards instead of being sacrificed.',
-  );
+  // Living Death: restored in coverage PR03. The interpreter reads the exile, the simultaneous
+  // sacrifice, and the return, so no override remains.
   defineCard(
     'fd03f20a-d365-48fb-8b2a-ad4b502a0045',
     'Lokhust Heavy Destroyer',

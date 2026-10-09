@@ -6619,12 +6619,6 @@
     "def": {}
   },
   {
-    "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
-    "name": "Living Death",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -16861,12 +16855,6 @@
   {
     "oracleId": "oracle-lightning-runner",
     "name": "Lightning Runner",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-living-death",
-    "name": "Living Death",
     "handledLines": [],
     "def": {}
   },

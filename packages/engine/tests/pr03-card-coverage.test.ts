@@ -22,7 +22,7 @@ import {
 import type { AuthoringIssue } from '../src/cards/authoring-validation';
 import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
-import type { Effect, TokenSpec } from '../src/cards/ability';
+import type { Ability, Effect, TokenSpec } from '../src/cards/ability';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { MUTAGEN } from '../src/cards/tokens';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
@@ -3136,6 +3136,148 @@ describe('Cryptek', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.05 Living Death
+// ---------------------------------------------------------------------------------------------
+
+const LIVING_DEATH_SHA = '9fdd5ecd5f37f4bd7362e93fbe6039b728aff07668f041473a208860ece1a1e5';
+
+describe('Living Death', () => {
+  const death = pinned('Living Death');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const zombie = oracle({
+    name: 'Lab Zombie',
+    typeLine: 'Creature — Zombie',
+    power: '2',
+    toughness: '2',
+  });
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const names = (cards: { name: string }[]) => cards.map((card) => card.name).sort();
+
+  /** A permanent whose only ability is `ability`, so a test can watch one event. */
+  function watcher(ctx: GameContext, controllerId: string, name: string, ability: Ability) {
+    const card = oracle({ name, typeLine: 'Enchantment' });
+    registerCustomDef(ctx, { ...interpretCard(card), triggers: [ability] });
+    return spawn(ctx, controllerId, card);
+  }
+
+  it('living-death-pinned-oracle-supported — the interpreter models the three-step swap', () => {
+    expect(death.sha256).toBe(LIVING_DEATH_SHA);
+    expectNoRegistration(death.card);
+    expectModeled(death.card);
+    expect(interpretCard(death.card).spellAbility?.effects).toEqual([{ op: 'livingDeath' }]);
+  });
+
+  it('living-death-swaps — graveyard creature cards return under their owners, battlefield creatures go to graveyards', () => {
+    const ctx = pod('living-death-swap');
+    spawn(ctx, 'P1', bear);
+    spawn(ctx, 'P2', bear);
+    spawn(ctx, 'P2', relic);
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    conjure(ctx, 'P3', zombie, 'graveyard');
+    conjure(ctx, 'P3', relic, 'graveyard');
+    castFromHand(ctx, 'P1', death.card, black(5));
+    resolveTop(ctx);
+    const zombies = ctx.state.battlefield.filter((perm) => perm.name === 'Lab Zombie');
+    expect(zombies.map((perm) => perm.controllerId).sort()).toEqual(['P1', 'P3']);
+    expect(ctx.state.battlefield.filter((perm) => perm.name === 'Lab Bear')).toEqual([]);
+    expect(ctx.state.battlefield.filter((perm) => perm.name === 'Lab Relic')).toHaveLength(1);
+    expect(names(playerById(ctx, 'P1').graveyard)).toEqual(['Lab Bear', 'Living Death']);
+    expect(names(playerById(ctx, 'P2').graveyard)).toEqual(['Lab Bear']);
+    expect(names(playerById(ctx, 'P3').graveyard)).toEqual(['Lab Relic']);
+    expect(ctx.state.exile).toEqual([]);
+  });
+
+  it('living-death-sacrifices — battlefield creatures are sacrificed, not destroyed', () => {
+    const ctx = pod('living-death-sacrifice');
+    spawn(ctx, 'P1', bear);
+    spawn(ctx, 'P2', bear);
+    watcher(ctx, 'P4', 'Lab Sacrifice Listener', {
+      kind: 'triggered',
+      trigger: {
+        when: 'sacrificed',
+        subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+      },
+      targets: [],
+      effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      description: 'Whenever a creature is sacrificed, draw a card',
+    });
+    castFromHand(ctx, 'P1', death.card, black(5));
+    resolveTop(ctx);
+    expect(
+      ctx.state.pendingTriggers.filter(
+        (trigger) => trigger.sourceName === 'Lab Sacrifice Listener',
+      ),
+    ).toHaveLength(2);
+  });
+
+  it('living-death-returns-together — the returning creatures enter simultaneously and see each other (CR 603.6a)', () => {
+    const ctx = pod('living-death-together');
+    const greeter = oracle({
+      name: 'Lab Greeter',
+      typeLine: 'Creature — Human',
+      power: '1',
+      toughness: '1',
+    });
+    registerCustomDef(ctx, {
+      ...interpretCard(greeter),
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'allOf',
+                of: [{ kind: 'other' }, { kind: 'type', value: 'Creature' }],
+              },
+            },
+          },
+          targets: [],
+          effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+          description: 'Whenever another creature enters, draw a card',
+        },
+      ],
+    });
+    // In seat order the Zombie would come back before the Greeter; together, the Greeter sees it.
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    conjure(ctx, 'P2', greeter, 'graveyard');
+    castFromHand(ctx, 'P1', death.card, black(5));
+    resolveTop(ctx);
+    expect(
+      ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Lab Greeter'),
+    ).toHaveLength(1);
+  });
+
+  it('living-death-leaves-graveyard-once — the exile is one leave-graveyard event (CR 603.2c)', () => {
+    const ctx = pod('living-death-leave-event');
+    watcher(ctx, 'P4', 'Lab Grave Listener', {
+      kind: 'triggered',
+      trigger: {
+        when: 'leavesGraveyard',
+        subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+        aggregate: true,
+      },
+      targets: [],
+      effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      description: 'Whenever one or more creature cards leave a graveyard, draw a card',
+    });
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    conjure(ctx, 'P2', zombie, 'graveyard');
+    castFromHand(ctx, 'P1', death.card, black(5));
+    resolveTop(ctx);
+    expect(
+      ctx.state.pendingTriggers.filter((trigger) => trigger.sourceName === 'Lab Grave Listener'),
+    ).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3154,6 +3296,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Living Death',
+    sha256: LIVING_DEATH_SHA,
+    clauseCount: 1,
   },
   {
     name: 'Cryptek',

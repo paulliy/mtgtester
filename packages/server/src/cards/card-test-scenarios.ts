@@ -8350,6 +8350,50 @@ function cryptekScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function livingDeathScenario(gameId: GameId): CardTestScenario {
+  const death = pinnedFrom(MARCHESA_BATCH1, 'Living Death');
+  const zombie = card({
+    oracleId: 'lab-living-death-zombie',
+    name: 'Lab Risen Zombie',
+    typeLine: 'Creature — Zombie',
+    manaCost: '{1}{B}',
+    cmc: 2,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'living-death-viewer-swap',
+    title: 'Living Death: swap the battlefield and graveyard creatures',
+    instructions: [
+      "Living Death is in your hand and five Swamps are on your battlefield with Lab Servo; Lab Risen Zombie is in your graveyard and Lab Ox is on P2's battlefield.",
+      'Cast Living Death.',
+    ],
+    expectedOutcome:
+      "Lab Risen Zombie returns under your control; Lab Servo and P2's Lab Ox are sacrificed into their owners' graveyards.",
+    oracleSha256: death.sha256,
+    clauseIds: ['living-death-swap'],
+    decks: {
+      P1: [death.card, zombie, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Living Death'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Risen Zombie'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8555,6 +8599,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'venser-viewer-minus-eight-emblem',
   'puppeteer-clique-viewer-steal-attack-exile',
   'cryptek-viewer-dies-and-returns-tapped',
+  'living-death-viewer-swap',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8783,6 +8828,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
   'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
   'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
+  'living-death-viewer-swap': livingDeathScenario,
 };
 
 export function createCardTestScenario(

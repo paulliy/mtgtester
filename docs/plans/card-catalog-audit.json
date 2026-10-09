@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 29,
+      "uniqueOracleIds": 28,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 40,
+      "uniqueOracleIds": 39,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6085,6 +6085,20 @@
     {
       "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
       "name": "Cryptek",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+      "name": "Living Death",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the spell onto livingDeath, now three simultaneous events — one exile batch, one sacrifice batch, one return of the exact exiled cards under their owners."
+    },
+    {
+      "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+      "name": "Living Death",
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr03",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."

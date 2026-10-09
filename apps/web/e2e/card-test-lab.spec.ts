@@ -5254,3 +5254,12 @@ test('Cryptek: your Lab Construct dies and returns tapped', async ({ page }) => 
   await expect(permanent(page, 'Lab Construct')).toHaveCount(1);
   await expect(permanent(page, 'Lab Construct').locator('.tap-badge')).toHaveText('TAP');
 });
+
+test('Living Death: swap the battlefield and graveyard creatures', async ({ page }) => {
+  await runScenario(page, 'Living Death: swap the battlefield and graveyard creatures');
+  await castAndResolve(page, 'Living Death');
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Risen Zombie')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});

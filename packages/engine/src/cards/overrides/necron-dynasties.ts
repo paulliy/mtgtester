@@ -214,9 +214,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Imotekh the Stormlord: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('9e6a3df4-67a3-452e-a6ef-f04dbadb21ef', 'Living Death', [
-    'Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.',
-  ]);
+  // Living Death: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('fd03f20a-d365-48fb-8b2a-ad4b502a0045', 'Lokhust Heavy Destroyer', [
     'Enmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.',

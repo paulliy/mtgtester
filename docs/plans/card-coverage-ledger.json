@@ -1714,6 +1714,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+    "name": "Living Death",
+    "package": "PR03.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Battlefield creatures are put into graveyards instead of being sacrificed."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "5efce07e-24c4-4520-a46f-9954b67c4e6e",
     "name": "Lockjaw, Slobbering Teleporter",
     "package": "W3",

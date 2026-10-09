@@ -3233,26 +3233,27 @@ export function* executeAbility(
         break;
       }
       case 'livingDeath': {
-        const returning: EngineCardObject[] = [];
-        for (const player of ctx.state.players) {
-          const creatures = player.graveyard.filter((card) =>
+        // Each step is one simultaneous event (CR 101.4): every player's graveyard creature cards
+        // are exiled together, every creature is sacrificed together, and every exiled card comes
+        // back together, each under the player who exiled it (its owner).
+        const graveyardCreatures = ctx.state.players.flatMap((player) =>
+          player.graveyard.filter((card) =>
             getDefByOracleId(ctx, card.oracleId, card.name).types.includes('Creature'),
-          );
-          for (const card of creatures) {
-            const moved = yield* moveObject(ctx, card, { zone: 'exile' });
-            if (moved !== null && moved.zone !== 'battlefield')
-              returning.push(moved as EngineCardObject);
-          }
-        }
-        for (const perm of [...ctx.state.battlefield]) {
-          if (computeCharacteristics(ctx, perm).types.includes('Creature'))
-            yield* moveObject(ctx, perm, { zone: 'graveyard' });
-        }
-        for (const card of returning) {
-          const current = ctx.state.exile.find((candidate) => candidate.cardId === card.cardId);
-          if (current !== undefined)
-            yield* moveObject(ctx, current, { zone: 'battlefield', controllerId: current.ownerId });
-        }
+          ),
+        );
+        const exiled = (yield* moveObjects(ctx, graveyardCreatures, { zone: 'exile' })).filter(
+          (card): card is EngineCardObject => card !== null && card.zone === 'exile',
+        );
+        yield* movePermanentsToGraveyard(
+          ctx,
+          ctx.state.battlefield.filter((perm) =>
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+          ),
+          'sacrifice',
+        );
+        // Only the exact cards exiled this way, if they are still in exile (CR 400.7).
+        const stillExiled = exiled.filter((card) => ctx.state.exile.includes(card));
+        yield* moveObjects(ctx, stillExiled, { zone: 'battlefield' });
         break;
       }
       case 'exileGraveyardCreateTokens': {

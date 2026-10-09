@@ -4710,13 +4710,25 @@
     "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef": {
       "name": "Living Death",
       "oracleSha256": "9fdd5ecd5f37f4bd7362e93fbe6039b728aff07668f041473a208860ece1a1e5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "living-death-swap",
           "oracleText": "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.",
-          "implementation": ["explicitly unsupported; battlefield creatures are not sacrificed"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell block onto livingDeath, three simultaneous events in order (CR 101.4)",
+            "every graveyard's creature cards move to exile in one moveObjects batch (one leave-graveyard event)",
+            "every creature is sacrificed in one movePermanentsToGraveyard batch with reason sacrifice (sacrificed and dies triggers, last-known facts)",
+            "the exact cards exiled this way that are still in exile enter together under their owners' control, so enters triggers see each other (CR 603.6a)"
+          ],
+          "engineTestIds": [
+            "living-death-pinned-oracle-supported",
+            "living-death-swaps",
+            "living-death-sacrifices",
+            "living-death-returns-together",
+            "living-death-leaves-graveyard-once"
+          ],
+          "viewerScenarioIds": ["living-death-viewer-swap"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -502,3 +502,20 @@ describe('Cryptek Card Test Lab scenario', () => {
     replays('cryptek-viewer-dies-and-returns-tapped', steps);
   });
 });
+
+describe('Living Death Card Test Lab scenario', () => {
+  it('living-death-viewer-swap — the graveyard Zombie returns and both battlefield creatures are sacrificed', () => {
+    const steps: Step[] = [{ action: 'Cast Living Death' }];
+    const { seat, onBattlefield } = run('living-death-viewer-swap', steps);
+    expect(onBattlefield('Lab Risen Zombie').map((perm) => perm.controllerId)).toEqual(['P1']);
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Servo', 'Living Death']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    replays('living-death-viewer-swap', steps);
+  });
+});

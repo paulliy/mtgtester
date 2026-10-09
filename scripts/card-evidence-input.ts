@@ -1809,6 +1809,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Cryptek: your Lab Construct dies and returns tapped'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Living Death: swap the battlefield and graveyard creatures'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
