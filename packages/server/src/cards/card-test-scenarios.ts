@@ -8151,6 +8151,37 @@ function candlekeepSageScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function flickerwispScenario(gameId: GameId): CardTestScenario {
+  const wisp = pinnedFrom(COVERAGE_PR03, 'Flickerwisp');
+  return pr01Scenario(gameId, {
+    id: 'flickerwisp-viewer-exile-and-return',
+    title: "Flickerwisp: exile P2's creature until the next end step",
+    instructions: [
+      'Flickerwisp is in your hand and three Plains are on your battlefield; P2 controls Lab Ox.',
+      'Cast Flickerwisp, and when it enters exile Lab Ox.',
+      "Pass to the end step: Lab Ox returns to the battlefield under P2's control.",
+    ],
+    expectedOutcome:
+      "Lab Ox is exiled when Flickerwisp enters and returns under P2's control at the beginning of the end step.",
+    oracleSha256: wisp.sha256,
+    clauseIds: ['flickerwisp-flying', 'flickerwisp-enters'],
+    decks: {
+      P1: [wisp.card, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flickerwisp'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8350,6 +8381,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'the-ooze-viewer-leave-and-exile',
   'god-eternal-rhonas-viewer-double-and-return',
   'candlekeep-sage-viewer-commander-enters-and-leaves',
+  'flickerwisp-viewer-exile-and-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8569,6 +8601,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'the-ooze-viewer-leave-and-exile': theOozeScenario,
   'god-eternal-rhonas-viewer-double-and-return': godEternalRhonasScenario,
   'candlekeep-sage-viewer-commander-enters-and-leaves': candlekeepSageScenario,
+  'flickerwisp-viewer-exile-and-return': flickerwispScenario,
 };
 
 export function createCardTestScenario(

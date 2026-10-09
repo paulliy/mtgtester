@@ -17,7 +17,7 @@
         "colorIdentity": [
           "R"
         ],
-        "typeLine": "Creature — Demon",
+        "typeLine": "Creature \u2014 Demon",
         "supertypes": [],
         "types": [
           "Creature"
@@ -25,7 +25,7 @@
         "subtypes": [
           "Demon"
         ],
-        "oracleText": "First strike, haste\nSymphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+        "oracleText": "First strike, haste\nSymphony of Pain \u2014 Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
         "power": "6",
         "toughness": "4",
         "loyalty": null,
@@ -54,7 +54,7 @@
         "colorIdentity": [
           "R"
         ],
-        "typeLine": "Creature — Phoenix",
+        "typeLine": "Creature \u2014 Phoenix",
         "supertypes": [],
         "types": [
           "Creature"
@@ -90,7 +90,7 @@
         "colorIdentity": [
           "G"
         ],
-        "typeLine": "Legendary Creature — Zombie God",
+        "typeLine": "Legendary Creature \u2014 Zombie God",
         "supertypes": [
           "Legendary"
         ],
@@ -129,7 +129,7 @@
         "colorIdentity": [
           "U"
         ],
-        "typeLine": "Legendary Enchantment — Background",
+        "typeLine": "Legendary Enchantment \u2014 Background",
         "supertypes": [
           "Legendary"
         ],
@@ -145,6 +145,41 @@
         "loyalty": null,
         "defense": null,
         "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+      "card": {
+        "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
+        "scryfallId": "f6cccf30-2025-49bb-9b1e-240bbef03f27",
+        "name": "Flickerwisp",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature \u2014 Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+        "power": "3",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
         "layout": "normal",
         "commanderLegality": "legal",
         "isBasicLand": false

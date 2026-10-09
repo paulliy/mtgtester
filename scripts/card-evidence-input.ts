@@ -1785,6 +1785,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Candlekeep Sage: your commander draws as it enters and leaves'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Flickerwisp: exile P2's creature until the next end step"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

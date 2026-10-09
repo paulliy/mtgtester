@@ -955,15 +955,19 @@
   {
     "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
     "name": "Flickerwisp",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.25",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",

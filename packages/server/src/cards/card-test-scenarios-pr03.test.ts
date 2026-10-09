@@ -417,3 +417,18 @@ describe('Candlekeep Sage Card Test Lab scenario', () => {
     replays('candlekeep-sage-viewer-commander-enters-and-leaves', steps);
   });
 });
+
+describe('Flickerwisp Card Test Lab scenario', () => {
+  it("flickerwisp-viewer-exile-and-return — Lab Ox is exiled, then returns under P2's control at the end step", () => {
+    const steps: Step[] = [
+      { action: 'Cast Flickerwisp' },
+      { action: 'Flickerwisp', targets: ['Lab Ox'] },
+    ];
+    const { state, onBattlefield } = run('flickerwisp-viewer-exile-and-return', steps);
+    expect(onBattlefield('Lab Ox').map((perm) => perm.controllerId)).toEqual(['P2']);
+    expect(onBattlefield('Flickerwisp')).toHaveLength(1);
+    expect(state.exile).toEqual([]);
+    expect(state.eventLog.some((event) => event.type === 'exile')).toBe(true);
+    replays('flickerwisp-viewer-exile-and-return', steps);
+  });
+});

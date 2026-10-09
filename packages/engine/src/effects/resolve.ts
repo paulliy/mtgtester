@@ -4979,6 +4979,44 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryCardsAbove: effect.fromTop - 1 });
         break;
       }
+      case 'exileTargetReturnAtNextEndStep': {
+        const targetId = ref(effect.target);
+        const perm = targetId === null ? undefined : findPermanent(ctx, targetId);
+        if (perm === undefined) break;
+        emit(ctx, 'exile', { target: perm.name, source: source.name });
+        const exiled = yield* moveObject(ctx, perm, { zone: 'exile' });
+        // A token ceased to exist; a commander may already have gone to the command zone.
+        if (exiled === null || exiled.zone !== 'exile') break;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: exiled.cardId,
+          targetObjectId: exiled.id,
+          when: 'endStep',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'returnExiledTriggerObject', returnUnder: effect.returnUnder }],
+            description: `Return ${exiled.name} to the battlefield`,
+          },
+          // Survives a cleanup it has not reached yet: an end step that already began (this
+          // resolved during it) is not "the next" one.
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'returnExiledTriggerObject': {
+        const remembered = extraScope?.triggerObjectId;
+        const card = ctx.state.exile.find((candidate) => candidate.id === remembered);
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
         // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
         // that left the graveyard and came back is a new object.

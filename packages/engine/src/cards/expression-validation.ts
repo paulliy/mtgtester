@@ -514,6 +514,8 @@ const effectExpressions = {
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: { counter: text },
   putDepartedSourceIntoLibrary: { fromTop: finite },
+  exileTargetReturnAtNextEndStep: { returnUnder: oneOf('owner', 'sourceController') },
+  returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   exileTopNPlayableUntilEot: { count: numberValue },
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };

@@ -1204,6 +1204,20 @@ export type Effect =
    */
   | { op: 'putDepartedSourceIntoLibrary'; fromTop: number }
   /**
+   * "Exile <target>. Return that card to the battlefield under its owner's control at the
+   * beginning of the next end step" (Flickerwisp; Venser, the Sojourner returns it under "your"
+   * control). The delayed return remembers the exact card in exile (CR 400.7): a token ceases to
+   * exist and nothing returns, and a card that left exile first stays where it is. "The next end
+   * step" is the first one to begin after this resolves, whoever's turn it is (CR 603.7).
+   */
+  | {
+      op: 'exileTargetReturnAtNextEndStep';
+      target: EffectRef;
+      returnUnder: 'owner' | 'sourceController';
+    }
+  /** The delayed half of `exileTargetReturnAtNextEndStep`: the remembered card, if still exiled. */
+  | { op: 'returnExiledTriggerObject'; returnUnder: 'owner' | 'sourceController' }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.

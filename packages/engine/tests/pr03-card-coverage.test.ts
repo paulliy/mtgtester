@@ -14,7 +14,11 @@ import { join, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import {
+  computePriorityOptions,
+  computeTargetOptions,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
 import type { AuthoringIssue } from '../src/cards/authoring-validation';
 import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
@@ -25,7 +29,7 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { runCombatAndExtraCombats } from '../src/turn/turn';
+import { beginEndStep, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import {
   createToken,
@@ -2569,6 +2573,122 @@ describe('God-Eternal Rhonas', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.25 Flickerwisp
+// ---------------------------------------------------------------------------------------------
+
+const FLICKERWISP_SHA = '2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404';
+
+describe('Flickerwisp', () => {
+  const wisp = pinned('Flickerwisp');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const aim =
+    (id: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, id]]) };
+      return { index: 0, targets: new Map() };
+    };
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+
+  it('flickerwisp-pinned-oracle-supported — the interpreter models flying and the exile with a next-end-step return', () => {
+    expect(wisp.sha256).toBe(FLICKERWISP_SHA);
+    expectNoRegistration(wisp.card);
+    expectModeled(wisp.card);
+    const def = interpretCard(wisp.card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'permanent', filter: { kind: 'other' } }]);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'exileTargetReturnAtNextEndStep', target: 0, returnUnder: 'owner' },
+    ]);
+  });
+
+  it("flickerwisp-returns-at-next-end-step — an opponent's creature is exiled, then returns under its owner's control as a new object", () => {
+    const ctx = pod('wisp-return');
+    const theirs = spawn(ctx, 'P2', bear);
+    enterFrom(ctx, 'P1', wisp.card, 'hand');
+    settle(ctx, aim(theirs.id));
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+    beginEndStep(ctx);
+    settle(ctx);
+    const [back] = named(ctx, 'Lab Bear');
+    expect(back?.controllerId).toBe('P2');
+    expect(back?.id).not.toBe(theirs.id);
+    expect(ctx.state.exile).toEqual([]);
+  });
+
+  it("flickerwisp-owner-not-controller — a creature you stole returns under its owner's control", () => {
+    const ctx = pod('wisp-owner');
+    const stolen = spawn(ctx, 'P2', bear);
+    stolen.controllerId = 'P1';
+    enterFrom(ctx, 'P1', wisp.card, 'hand');
+    settle(ctx, aim(stolen.id));
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab Bear')[0]?.controllerId).toBe('P2');
+  });
+
+  it('flickerwisp-token-ceases — an exiled token ceases to exist and nothing returns', () => {
+    const ctx = pod('wisp-token');
+    const token = spawn(ctx, 'P2', bear, { isToken: true });
+    enterFrom(ctx, 'P1', wisp.card, 'hand');
+    settle(ctx, aim(token.id));
+    expect(ctx.state.delayedTriggers).toEqual([]);
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+  });
+
+  it('flickerwisp-card-left-exile — a card that left exile before the end step stays where it went (CR 400.7)', () => {
+    const ctx = pod('wisp-left-exile');
+    const theirs = spawn(ctx, 'P2', bear);
+    enterFrom(ctx, 'P1', wisp.card, 'hand');
+    settle(ctx, aim(theirs.id));
+    pump(moveObject(ctx, ctx.state.exile[0]!, { zone: 'graveyard' }));
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(playerById(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Lab Bear']);
+  });
+
+  it('flickerwisp-during-end-step — exiled during an end step, it waits for the following end step', () => {
+    const ctx = pod('wisp-in-end-step');
+    const theirs = spawn(ctx, 'P2', bear);
+    beginEndStep(ctx);
+    enterFrom(ctx, 'P1', wisp.card, 'hand');
+    settle(ctx, aim(theirs.id));
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+    // The next turn's end step.
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab Bear')).toHaveLength(1);
+  });
+
+  it('flickerwisp-another — it cannot target itself', () => {
+    const ctx = pod('wisp-another');
+    const self = enterFrom(ctx, 'P1', wisp.card, 'hand');
+    expect(
+      computeTargetOptions(
+        ctx,
+        interpretCard(wisp.card).triggers[0]!.targets[0]!,
+        'P1',
+        [],
+        undefined,
+        undefined,
+        self.cardId,
+      ),
+    ).not.toContain(self.id);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2586,6 +2706,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
+    clauseCount: 2,
+  },
+  {
+    name: 'Flickerwisp',
+    sha256: FLICKERWISP_SHA,
     clauseCount: 2,
   },
   {

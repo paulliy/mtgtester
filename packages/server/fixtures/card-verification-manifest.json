@@ -8028,6 +8028,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "b23a3d30-6b8e-4aad-890f-db0c3af43ace": {
+      "name": "Flickerwisp",
+      "oracleSha256": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "flickerwisp-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword line: flying"],
+          "engineTestIds": ["flickerwisp-pinned-oracle-supported"],
+          "viewerScenarioIds": ["flickerwisp-viewer-exile-and-return"]
+        },
+        {
+          "id": "flickerwisp-enters",
+          "oracleText": "When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+          "implementation": [
+            "interpreted self enters trigger, matched as one block: target permanent filtered by other",
+            "exileTargetReturnAtNextEndStep returnUnder owner: the permanent moves to exile, then a delayed endStep trigger (expiry onFire, so one created during an end step waits for the next) remembers the exiled card object",
+            "returnExiledTriggerObject puts that exact card onto the battlefield under its owner's control; a token ceased to exist and a card that left exile does not return (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "flickerwisp-pinned-oracle-supported",
+            "flickerwisp-returns-at-next-end-step",
+            "flickerwisp-owner-not-controller",
+            "flickerwisp-token-ceases",
+            "flickerwisp-card-left-exile",
+            "flickerwisp-during-end-step",
+            "flickerwisp-another"
+          ],
+          "viewerScenarioIds": ["flickerwisp-viewer-exile-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

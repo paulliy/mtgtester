@@ -313,6 +313,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: {},
   putDepartedSourceIntoLibrary: {},
+  exileTargetReturnAtNextEndStep: { target: permanent },
+  returnExiledTriggerObject: {},
   exileTopNPlayableUntilEot: {},
   noOp: {},
 } satisfies EffectContracts;

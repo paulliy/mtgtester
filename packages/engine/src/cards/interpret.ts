@@ -2830,6 +2830,40 @@ function parseDoublePowerThoseGainBlock(body: string): Effect[] | null {
   ];
 }
 
+/**
+ * "Exile another target permanent. Return that card to the battlefield under its owner's control
+ * at the beginning of the next end step." (Flickerwisp) / "Exile target permanent you own. Return
+ * it to the battlefield under your control at the beginning of the next end step." (Venser, the
+ * Sojourner) — matched whole, because the return is a delayed trigger bound to the exiled card.
+ */
+function parseExileReturnAtNextEndStepBlock(body: string, alloc: SlotAllocator): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^exile (another )?target (permanent|creature|nonland permanent)( you own| you control)?\. return (?:that card|it) to the battlefield under (its owner's|your) control at the beginning of the next end step$/,
+    );
+  if (m === null) return null;
+  const parts: Selector[] = [];
+  if (m[1] !== undefined) parts.push(OTHER);
+  if (m[3] === ' you own') parts.push({ kind: 'owner', who: 'you' });
+  const filter = parts.length === 0 ? undefined : parts.length === 1 ? parts[0] : allOf(...parts);
+  const kind: TargetKind =
+    m[2] === 'creature'
+      ? 'creature'
+      : m[2] === 'nonland permanent'
+        ? 'nonlandPermanent'
+        : 'permanent';
+  const target = alloc(kind, filter, m[3] === ' you control' ? 'you' : undefined);
+  return [
+    {
+      op: 'exileTargetReturnAtNextEndStep',
+      target,
+      returnUnder: m[4] === 'your' ? 'sourceController' : 'owner',
+    },
+  ];
+}
+
 const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
 
 /**
@@ -4322,7 +4356,8 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseAddManaTriggerBlock(body, card) ??
         parseHellkiteCourserBlock(body, alloc, card) ??
         parseDoublePowerThoseGainBlock(body) ??
-        parseDepartedSourceToLibraryBlock(body, heads))
+        parseDepartedSourceToLibraryBlock(body, heads) ??
+        parseExileReturnAtNextEndStepBlock(body, alloc))
       : []);
   if (effects === null) {
     effects = [];

@@ -5144,3 +5144,22 @@ test('Candlekeep Sage: your commander draws as it enters and leaves', async ({ p
   await expect(permanent(page, 'Lab General')).toHaveCount(0);
   await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
 });
+
+test("Flickerwisp: exile P2's creature until the next end step", async ({ page }) => {
+  await runScenario(page, "Flickerwisp: exile P2's creature until the next end step");
+  await castAndResolve(page, 'Flickerwisp');
+  // The enters trigger targets another permanent: Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by Flickerwisp/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Returned at the beginning of the end step, under P2's control: on P2's board, not in exile.
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+    }),
+  ).toHaveCount(0);
+});

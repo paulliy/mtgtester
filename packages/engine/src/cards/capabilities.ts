@@ -942,6 +942,8 @@ const families = {
       returnSelfFromGraveyardToHand: true,
       returnDiedSourceToBattlefield: true,
       putDepartedSourceIntoLibrary: true,
+      exileTargetReturnAtNextEndStep: true,
+      returnExiledTriggerObject: true,
       exileTopNPlayableUntilEot: true,
       noOp: true,
     } satisfies Record<Extract<Effect['op'], string | number>, true>,
