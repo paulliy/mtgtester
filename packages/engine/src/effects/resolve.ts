@@ -1148,6 +1148,30 @@ export function* executeAbility(
       : {}),
     ...(extraScope ?? {}),
   };
+  /**
+   * The object an effect names as the source of its damage. "That creature deals damage" still
+   * happens once the creature has left, with its last known characteristics (CR 608.2h, 113.7a).
+   */
+  const damageSourceOf = (r: EffectRef): EffectSource | undefined => {
+    const id = ref(r);
+    const permanent = id === null ? undefined : findPermanent(ctx, id);
+    if (permanent !== undefined) return permanentSource(permanent);
+    if (r !== 'triggerObject') return undefined;
+    const facts = eventObjectFacts(ctx, scope);
+    if (facts === undefined || facts.name === undefined || facts.oracleId === undefined)
+      return undefined;
+    return {
+      id: facts.objectId,
+      cardId: facts.candidate.cardId,
+      name: facts.name,
+      oracleId: facts.oracleId,
+      controllerId: facts.candidate.controllerId as PlayerId,
+      lastKnownColors: facts.candidate.colors,
+      lastKnownDamageKeywords: (['deathtouch', 'lifelink', 'infect'] as const).filter((keyword) =>
+        facts.candidate.keywords.includes(keyword),
+      ),
+    };
+  };
   /** Evaluate an effect's `Value` amount in this ability's scope. */
   const amountOf = (value: Value | number): number => {
     return typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
@@ -1528,17 +1552,9 @@ export function* executeAbility(
       case 'dealDamage': {
         const t = ref(effect.target);
         if (t === null) break;
-        const damageSourceId = effect.source === undefined ? null : ref(effect.source);
-        if (effect.source !== undefined && damageSourceId === null) break;
-        const damageSource =
-          damageSourceId === null ? undefined : findPermanent(ctx, damageSourceId);
-        if (effect.source !== undefined && damageSource === undefined) break;
-        dealDamageToObject(
-          ctx,
-          damageSource === undefined ? source : permanentSource(damageSource),
-          t,
-          amountOf(effect.amount),
-        );
+        const damageSource = effect.source === undefined ? source : damageSourceOf(effect.source);
+        if (damageSource === undefined) break;
+        dealDamageToObject(ctx, damageSource, t, amountOf(effect.amount));
         break;
       }
       case 'dealDamageUnlessSacrifice': {

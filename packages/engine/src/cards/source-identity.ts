@@ -13,6 +13,9 @@ export interface SourceCastState {
 /** Private rules facts for one incarnation; never exposed by player/spectator projections. */
 export interface ObjectFacts extends SourceCastState {
   objectId: string;
+  /** Its name and definition as it last existed: a token that left has no card to ask. */
+  name?: string;
+  oracleId?: string;
   candidate: SelectorCandidate;
   power: number;
   toughness: number;
@@ -34,6 +37,8 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
   const counters = { ...permanent.counters };
   return {
     objectId: permanent.id,
+    name: permanent.name,
+    oracleId: permanent.oracleId,
     candidate: {
       ...candidate,
       types: [...candidate.types],

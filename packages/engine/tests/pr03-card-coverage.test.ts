@@ -27,6 +27,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { MUTAGEN } from '../src/cards/tokens';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { beginEndStep, runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
@@ -848,6 +849,29 @@ describe('Flayer of the Hatebound', () => {
     expect(onField(ctx, victim.cardId)?.damageMarked).toBe(3);
     const damage = ctx.state.eventLog.filter((event) => event.type === 'damage');
     expect(damage.at(-1)?.payload).toMatchObject({ source: 'Lab Ogre', amount: 3 });
+  });
+
+  it('flayer-of-the-hatebound-creature-gone — a creature gone before the trigger resolves still deals damage as it last existed', () => {
+    // CR 608.2h: the damage uses the creature's last known power and abilities.
+    const ctx = pod('flayer-creature-gone');
+    spawn(ctx, 'P1', flayer.card);
+    const leech = oracle({
+      name: 'Lab Leech',
+      typeLine: 'Creature — Leech',
+      power: '3',
+      toughness: '3',
+      oracleText: 'Lifelink',
+    });
+    const entered = enterFrom(ctx, 'P1', leech, 'graveyard');
+    pump(priorityCheckpoint(ctx), aimAt('P2'));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, onField(ctx, entered.cardId)!, { zone: 'exile' }));
+    resolveTop(ctx);
+    expect(onField(ctx, entered.cardId)).toBeUndefined();
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(playerById(ctx, 'P1').life).toBe(43);
+    const damage = ctx.state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage.at(-1)?.payload).toMatchObject({ source: 'Lab Leech', amount: 3 });
   });
 
   it('flayer-of-the-hatebound-mass-return-sees-each — returned together, Flayer triggers for itself and every other creature (CR 603.6a)', () => {
