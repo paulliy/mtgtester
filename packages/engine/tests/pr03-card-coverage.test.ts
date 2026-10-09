@@ -24,6 +24,7 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
+import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import {
   createToken,
@@ -37,6 +38,7 @@ import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
   conjure,
   copies,
+  declareAttacks,
   forest,
   gameConfig,
   oracle,
@@ -1758,6 +1760,75 @@ describe('Psychomancer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.19 Shard of the Void Dragon
+// ---------------------------------------------------------------------------------------------
+
+describe('Shard of the Void Dragon', () => {
+  const shard = pinned('Shard of the Void Dragon');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const grove = oracle({ name: 'Lab Grove', typeLine: 'Land' });
+
+  it('shard-of-the-void-dragon-pinned-oracle-supported — the interpreter alone models flying, the attack edict and Matter Absorption', () => {
+    expect(shard.sha256).toBe('fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389');
+    expectNoRegistration(shard.card);
+    expectModeled(shard.card);
+    const def = interpretCard(shard.card);
+    expect(def.keywords).toEqual(['flying']);
+    expect(def.triggers.map((trigger) => trigger.effects)).toEqual([
+      [{ op: 'sacrificeOneEachOpponent', filter: 'nonland' }],
+      [{ op: 'putCountersEach', selector: { kind: 'self' }, counter: '+1/+1', count: 2 }],
+    ]);
+    expect(def.triggers[1]!.trigger).toEqual({
+      when: 'leavesBattlefield',
+      subject: { kind: 'permanent', selector: { kind: 'type', value: 'Artifact' } },
+      leavesTo: ['graveyard', 'exile'],
+    });
+  });
+
+  it('shard-of-the-void-dragon-attack-edict — attacking, each opponent sacrifices a nonland permanent; a sacrificed artifact grows it', () => {
+    const ctx = pod('void-attack');
+    const self = spawn(ctx, 'P1', shard.card);
+    spawn(ctx, 'P2', relic);
+    spawn(ctx, 'P2', grove);
+    spawn(ctx, 'P3', bear);
+    spawn(ctx, 'P4', grove);
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        return declareAttacks(decision, (subjectId) => (subjectId === self.id ? 'P2' : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined) {
+        return { index: 0, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(ctx.state.battlefield.map((perm) => `${perm.controllerId}:${perm.name}`).sort()).toEqual(
+      ['P1:Shard of the Void Dragon', 'P2:Lab Grove', 'P4:Lab Grove'],
+    );
+    expect(onField(ctx, self.cardId)?.counters).toEqual({ '+1/+1': 2 });
+    expect(playerById(ctx, 'P2').life).toBe(40 - 9);
+  });
+
+  it('shard-of-the-void-dragon-any-artifact — any artifact destroyed or exiled, even a token, adds two counters; a bounce does not', () => {
+    const ctx = pod('void-artifacts');
+    const self = spawn(ctx, 'P1', shard.card);
+    kill(ctx, spawn(ctx, 'P3', relic));
+    pump(moveObject(ctx, spawn(ctx, 'P1', relic), { zone: 'exile' }));
+    kill(ctx, spawn(ctx, 'P2', relic, { isToken: true }));
+    pump(moveObject(ctx, spawn(ctx, 'P2', relic), { zone: 'hand' }));
+    kill(ctx, spawn(ctx, 'P2', bear));
+    settle(ctx);
+    expect(onField(ctx, self.cardId)?.counters).toEqual({ '+1/+1': 6 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1769,6 +1840,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Shard of the Void Dragon',
+    sha256: 'fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389',
+    clauseCount: 3,
+  },
   {
     name: 'Psychomancer',
     sha256: 'a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c',

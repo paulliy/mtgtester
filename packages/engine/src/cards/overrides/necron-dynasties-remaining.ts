@@ -298,12 +298,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Shard of the Nightbringer: restored in coverage PR03. The interpreter reads "if you cast it"
   // from the permanent's cast record and the targeted half-life drain, so no override remains.
-  // Catalog audit necron-remaining-batch-4: exile-from-battlefield omitted.
-  unsupportedCard(
-    'd04d2434-121e-4420-abfc-fa21ad5577c3',
-    'Shard of the Void Dragon',
-    'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
-  );
+  // Shard of the Void Dragon: restored in coverage PR03. The interpreter reads the attack edict
+  // and the artifact graveyard-or-exile counters trigger, so no override remains.
   defineCard(
     'f96fcb37-5f17-4231-b1a2-64f5fe45730b',
     'Skorpekh Destroyer',

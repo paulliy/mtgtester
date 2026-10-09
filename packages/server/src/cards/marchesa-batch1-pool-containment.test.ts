@@ -79,6 +79,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Satoru, the Infiltrator',
       'Sceptre of Eternal Glory',
       'Shard of the Nightbringer',
+      'Shard of the Void Dragon',
       'Smothering Tithe',
       'Solar Transformer',
       'Soul-Guide Lantern',

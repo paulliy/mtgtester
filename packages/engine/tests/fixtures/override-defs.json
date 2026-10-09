@@ -8894,12 +8894,6 @@
     }
   },
   {
-    "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
-    "name": "Shard of the Void Dragon",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
     "name": "Fierce Guardianship",
     "handledLines": [],
@@ -20454,12 +20448,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-shard-of-the-void-dragon",
-    "name": "Shard of the Void Dragon",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-sheltered-by-ghosts",

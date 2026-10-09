@@ -362,10 +362,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Shard of the Nightbringer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('d04d2434-121e-4420-abfc-fa21ad5577c3', 'Shard of the Void Dragon', [
-    'Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.',
-    'Matter Absorption — Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.',
-  ]);
+  // Shard of the Void Dragon: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('f96fcb37-5f17-4231-b1a2-64f5fe45730b', 'Skorpekh Destroyer', [
     'Hyperphase Threshers — Whenever an artifact you control enters, this creature gains first strike until end of turn.',

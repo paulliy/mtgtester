@@ -330,6 +330,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'aurora-phoenix-viewer-cascade-return',
       'watcher-for-tomorrow-viewer-hideaway-leaves',
       'psychomancer-viewer-artifact-drain',
+      'shard-of-the-void-dragon-viewer-attack-edict',
     ]);
   });
 

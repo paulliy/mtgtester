@@ -5002,3 +5002,24 @@ test('Psychomancer: drain P2 when your artifact is destroyed', async ({ page }) 
   await expect(page.locator('.log .line', { hasText: /loses 1 life$/ })).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
 });
+
+test('Shard of the Void Dragon: attack, and grow from the sacrificed artifact', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Shard of the Void Dragon: attack, and grow from the sacrificed artifact',
+  );
+  // Nothing is castable, so precombat priority passes itself and combat begins.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Shard of the Void Dragon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  await expect(page.getByText('+1/+1×2')).toBeVisible();
+  await expect(page.getByText(/Shard of the Void Dragon deals 9 to P2/).first()).toBeVisible();
+});

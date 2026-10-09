@@ -1761,6 +1761,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Psychomancer: drain P2 when your artifact is destroyed'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Shard of the Void Dragon: attack, and grow from the sacrificed artifact'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

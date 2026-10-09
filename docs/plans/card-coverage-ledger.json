@@ -2494,6 +2494,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
+    "name": "Shard of the Void Dragon",
+    "package": "PR03.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exile-from-battlefield is omitted from the artifact-leaves trigger."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
     "name": "Silver Surfer, Galactus's Herald",
     "package": "W6",

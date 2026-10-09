@@ -780,6 +780,10 @@ function parseEffectSentence(
   }
   {
     const sacrifice = s.match(/^each opponent sacrifices an? (.+?)(?: of their choice)?$/);
+    // "each opponent sacrifices a nonland permanent of their choice" (Shard of the Void Dragon).
+    if (sacrifice !== null && sacrifice[1] === 'nonland permanent') {
+      return [{ op: 'sacrificeOneEachOpponent', filter: 'nonland' }];
+    }
     if (sacrifice !== null) {
       const filter = parseMassSubject(sacrifice[1] as string, card);
       if (filter !== null) return [{ op: 'sacrificeOneEachOpponent', filter }];

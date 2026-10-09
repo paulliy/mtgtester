@@ -7884,6 +7884,40 @@ function psychomancerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function shardOfTheVoidDragonScenario(gameId: GameId): CardTestScenario {
+  const shard = pinnedFrom(MARCHESA_BATCH1, 'Shard of the Void Dragon');
+  return pr01Scenario(gameId, {
+    id: 'shard-of-the-void-dragon-viewer-attack-edict',
+    title: 'Shard of the Void Dragon: attack, and grow from the sacrificed artifact',
+    instructions: [
+      'Shard of the Void Dragon is on your battlefield; P2 controls Lab Anrakyr Relic and a Forest.',
+      'Attack P2 with Shard of the Void Dragon.',
+    ],
+    expectedOutcome:
+      'Each opponent sacrifices a nonland permanent: P2 loses Lab Anrakyr Relic, so Matter Absorption puts two +1/+1 counters on the Shard, which deals 9 combat damage to P2.',
+    oracleSha256: shard.sha256,
+    clauseIds: [
+      'shard-of-the-void-dragon-flying',
+      'shard-of-the-void-dragon-spear',
+      'shard-of-the-void-dragon-matter-absorption',
+    ],
+    decks: {
+      P1: [shard.card, SWAMP],
+      P2: [LAB_ANRAKYR_RELIC, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Shard of the Void Dragon'] },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Relic', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8077,6 +8111,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'aurora-phoenix-viewer-cascade-return',
   'watcher-for-tomorrow-viewer-hideaway-leaves',
   'psychomancer-viewer-artifact-drain',
+  'shard-of-the-void-dragon-viewer-attack-edict',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8290,6 +8325,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
   'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
   'psychomancer-viewer-artifact-drain': psychomancerScenario,
+  'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
 };
 
 export function createCardTestScenario(

@@ -165,7 +165,6 @@ const REASONS: Record<string, string> = {
   'Triarch Stalker':
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
-  'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   Cryptek: 'The delayed return omits entering tapped.',
   'Out of the Tombs':
@@ -304,6 +303,7 @@ describe('Marchesa catalog audit containment', () => {
     'River Kelpie',
     'Watcher for Tomorrow',
     'Psychomancer',
+    'Shard of the Void Dragon',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

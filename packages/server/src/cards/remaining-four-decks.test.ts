@@ -87,7 +87,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Mystic Forge',
       'Triarch Stalker',
       'Biotransference',
-      'Shard of the Void Dragon',
       'The War in Heaven',
       'Cryptek',
       'Out of the Tombs',

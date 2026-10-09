@@ -321,3 +321,14 @@ describe('Psychomancer Card Test Lab scenario', () => {
     replays('psychomancer-viewer-artifact-drain', steps);
   });
 });
+
+describe('Shard of the Void Dragon Card Test Lab scenario', () => {
+  it('shard-of-the-void-dragon-viewer-attack-edict — P2 sacrifices its Relic, the Shard grows and hits for 9', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const { seat, onBattlefield } = run('shard-of-the-void-dragon-viewer-attack-edict', steps);
+    expect(onBattlefield('Lab Anrakyr Relic')).toEqual([]);
+    expect(onBattlefield('Shard of the Void Dragon')[0]?.counters).toEqual({ '+1/+1': 2 });
+    expect(seat('P2').life).toBe(31);
+    replays('shard-of-the-void-dragon-viewer-attack-edict', steps);
+  });
+});

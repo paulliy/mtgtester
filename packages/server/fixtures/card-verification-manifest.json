@@ -3008,13 +3008,40 @@
     "d04d2434-121e-4420-abfc-fa21ad5577c3": {
       "name": "Shard of the Void Dragon",
       "oracleSha256": "fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.",
-          "implementation": ["explicitly unsupported; exile-from-battlefield omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "shard-of-the-void-dragon-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["shard-of-the-void-dragon-pinned-oracle-supported"],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
+        },
+        {
+          "id": "shard-of-the-void-dragon-spear",
+          "oracleText": "Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.",
+          "implementation": [
+            "interpreted attacks trigger on self; sacrificeOneEachOpponent nonland: each opponent chooses one of their nonland permanents, then all are sacrificed together"
+          ],
+          "engineTestIds": [
+            "shard-of-the-void-dragon-pinned-oracle-supported",
+            "shard-of-the-void-dragon-attack-edict"
+          ],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
+        },
+        {
+          "id": "shard-of-the-void-dragon-matter-absorption",
+          "oracleText": "Matter Absorption — Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.",
+          "implementation": [
+            "interpreted leavesBattlefield trigger watching any artifact (any controller, tokens included) with leavesTo [graveyard, exile]; putCountersEach self +1/+1 x2"
+          ],
+          "engineTestIds": [
+            "shard-of-the-void-dragon-pinned-oracle-supported",
+            "shard-of-the-void-dragon-attack-edict",
+            "shard-of-the-void-dragon-any-artifact",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
         }
       ],
       "gameplayAiScenarioIds": []
