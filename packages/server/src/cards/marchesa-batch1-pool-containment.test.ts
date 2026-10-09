@@ -57,6 +57,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Hunting Wilds',
       'Idol of Oblivion',
       'Illuminor Szeras',
+      'Imotekh the Stormlord',
       'Kairi, the Swirling Sky',
       'Kambal, Consul of Allocation',
       'Killian, Ink Duelist',

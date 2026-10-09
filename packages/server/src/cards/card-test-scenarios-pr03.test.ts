@@ -343,3 +343,18 @@ describe('Scavenging Ooze Card Test Lab scenario', () => {
     replays('scavenging-ooze-viewer-exile-creature', steps);
   });
 });
+
+describe('Imotekh the Stormlord Card Test Lab scenario', () => {
+  it('imotekh-viewer-phaeron-and-strategist — reanimating the Construct makes two Warriors, then it is buffed at combat', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Reanimate', targets: ['Lab Construct'] },
+      { action: 'Imotekh the Stormlord', targets: ['Lab Construct'] },
+      { action: 'Declare attackers', targets: ['__no_attack__'] },
+    ];
+    const { state, onBattlefield } = run('imotekh-viewer-phaeron-and-strategist', steps);
+    expect(onBattlefield('Necron Warrior')).toHaveLength(2);
+    expect(onBattlefield('Lab Construct')).toHaveLength(1);
+    expect(state.effects.some((effect) => effect.description.includes('Lab Construct'))).toBe(true);
+    replays('imotekh-viewer-phaeron-and-strategist', steps);
+  });
+});

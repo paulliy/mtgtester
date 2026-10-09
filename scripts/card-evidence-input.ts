@@ -1769,6 +1769,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Scavenging Ooze: exile a creature card to grow and gain life'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Imotekh the Stormlord: reanimate an artifact, then buff it at combat'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -1361,8 +1361,10 @@ function parseEffectSentence(
   // "~ gets +1/+0 until end of turn" (firebreathing)
   // "target creature gets +2/+2 and gains flying until end of turn"
   {
+    // Also "another target artifact creature you control gets +2/+2 and gains menace until end
+    // of turn" (Imotekh the Stormlord): the same single slot, narrowed by the target clause.
     const m = s.match(
-      /^(target creature|~) gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ]+))? until end of turn$/,
+      /^(~|(?:another )?target (?:artifact )?creature(?: you control| you don't control| an opponent controls)?) gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ]+))? until end of turn$/,
     );
     if (m) {
       const subject = m[1] as string;
@@ -1383,7 +1385,25 @@ function parseEffectSentence(
         // ONE "target creature", so ONE target slot (CR 601.2c): the pump and the keyword grant
         // both apply to the creature the spell announced. Allocating a second slot here would
         // let the pump and the grant land on different creatures.
-        const target = alloc('creature');
+        const narrowing = [
+          ...(subject.startsWith('another ') ? [OTHER] : []),
+          ...(subject.includes('artifact creature') ? [ofType('Artifact')] : []),
+        ];
+        const controller =
+          subject.endsWith("you don't control") || subject.endsWith('an opponent controls')
+            ? ('opponent' as const)
+            : subject.endsWith('you control')
+              ? ('you' as const)
+              : undefined;
+        const target = alloc(
+          'creature',
+          narrowing.length === 0
+            ? undefined
+            : narrowing.length === 1
+              ? narrowing[0]
+              : allOf(...narrowing),
+          controller,
+        );
         const effects: Effect[] = [
           {
             op: 'pumpUntilEot',
@@ -3788,6 +3808,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
   const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
+  // "Whenever one or more artifact cards leave your graveyard" (Imotekh the Stormlord): one
+  // aggregate event per batch of cards leaving (CR 603.2c); a card is in its owner's graveyard,
+  // so "your" is the card's owner.
+  const leaveGraveyard = firstLine.match(
+    /^whenever (one or more|an?) (artifact|creature|land|enchantment) cards? leaves? your graveyard, (.*)$/,
+  );
   if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
     let subject: TriggerSubject;
@@ -3847,6 +3873,16 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     } else {
       body = match[2] as string;
     }
+  } else if (leaveGraveyard !== null) {
+    const type = CARD_TYPE_SINGULARS[leaveGraveyard[2] as string] as string;
+    heads = [
+      {
+        when: 'leavesGraveyard',
+        subject: { kind: 'permanent', selector: allOf(ofType(type), YOURS) },
+        ...(leaveGraveyard[1] === 'one or more' ? { aggregate: true } : {}),
+      },
+    ];
+    body = leaveGraveyard[3] as string;
   } else if (graveyardCrossing !== null) {
     heads = [
       {

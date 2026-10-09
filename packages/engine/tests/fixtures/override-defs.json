@@ -2724,12 +2724,6 @@
     "def": {}
   },
   {
-    "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
-    "name": "Imotekh the Stormlord",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
@@ -3510,38 +3504,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "5a851367-1c4a-4cc9-a9c3-3d2775986b4c",
-    "name": "Blossoming Defense",
-    "handledLines": [
-      "Target creature you control gets +2/+2 and gains hexproof until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature gets +2/+2 and hexproof until end of turn",
-        "effects": [
-          {
-            "op": "pumpUntilEot",
-            "power": 2,
-            "target": 0,
-            "toughness": 2
-          },
-          {
-            "keyword": "hexproof",
-            "op": "grantKeywordUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     }
   },
   {
@@ -12538,38 +12500,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-blossoming-defense",
-    "name": "Blossoming Defense",
-    "handledLines": [
-      "Target creature you control gets +2/+2 and gains hexproof until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature gets +2/+2 and hexproof until end of turn",
-        "effects": [
-          {
-            "op": "pumpUntilEot",
-            "power": 2,
-            "target": 0,
-            "toughness": 2
-          },
-          {
-            "keyword": "hexproof",
-            "op": "grantKeywordUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-body-launderer",
     "name": "Body Launderer",
     "handledLines": [],
@@ -16405,12 +16335,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-imotekh-the-stormlord",
-    "name": "Imotekh the Stormlord",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-inkshield",

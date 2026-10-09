@@ -5041,3 +5041,30 @@ test('Scavenging Ooze: exile a creature card to grow and gain life', async ({ pa
   await expect(page.getByText('+1/+1×1')).toBeVisible();
   await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
 });
+
+test('Imotekh the Stormlord: reanimate an artifact, then buff it at combat', async ({ page }) => {
+  await runScenario(page, 'Imotekh the Stormlord: reanimate an artifact, then buff it at combat');
+  const reanimate = handCard(page, 'Lab Reanimate');
+  await expect(reanimate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await reanimate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const construct = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Construct', exact: true }),
+  });
+  await expect(construct).toBeVisible();
+  await construct.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // An artifact card left the graveyard: two Necron Warriors, then the combat trigger targets.
+  const target = page.getByText(/Target 1 of 1/);
+  await passUntil(page, target);
+  await expect(permanent(page, 'Necron Warrior')).toContainText('×2');
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Reset declaration' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Construct')).toContainText('3/3');
+});

@@ -2721,15 +2721,36 @@
     "425fea06-76ec-4cd9-bd3b-750504fd7fd2": {
       "name": "Imotekh the Stormlord",
       "oracleSha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.",
+          "id": "imotekh-phaeron",
+          "oracleText": "Phaeron — Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.",
           "implementation": [
-            "explicitly unsupported; leave-graveyard trigger claimed without implementation"
+            "interpreted leavesGraveyard trigger, subject allOf(type Artifact, controller you), aggregate: one trigger per simultaneous batch of cards leaving your graveyard (CR 603.2c)",
+            "createToken: two 2/2 black Necron Warrior artifact creature tokens"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "imotekh-the-stormlord-pinned-oracle-supported",
+            "imotekh-the-stormlord-phaeron-reanimate",
+            "imotekh-the-stormlord-phaeron-one-or-more",
+            "imotekh-the-stormlord-phaeron-negative"
+          ],
+          "viewerScenarioIds": ["imotekh-viewer-phaeron-and-strategist"]
+        },
+        {
+          "id": "imotekh-grand-strategist",
+          "oracleText": "Grand Strategist — At the beginning of combat on your turn, another target artifact creature you control gets +2/+2 and gains menace until end of turn.",
+          "implementation": [
+            "interpreted beginningOfCombat trigger (your turn), target creature you control filtered allOf(other, type Artifact)",
+            "pump +2/+2 and grant menace until end of turn; with no legal target the trigger is removed"
+          ],
+          "engineTestIds": [
+            "imotekh-the-stormlord-pinned-oracle-supported",
+            "imotekh-the-stormlord-grand-strategist",
+            "imotekh-the-stormlord-grand-strategist-needs-another"
+          ],
+          "viewerScenarioIds": ["imotekh-viewer-phaeron-and-strategist"]
         }
       ],
       "gameplayAiScenarioIds": []

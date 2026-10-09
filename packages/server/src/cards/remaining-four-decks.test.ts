@@ -83,7 +83,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Mob Rule',
       'Caged Sun',
       'Hexmark Destroyer',
-      'Imotekh the Stormlord',
       'Mystic Forge',
       'Triarch Stalker',
       'Biotransference',

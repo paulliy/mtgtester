@@ -7944,6 +7944,54 @@ function scavengingOozeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function imotekhScenario(gameId: GameId): CardTestScenario {
+  const imotekh = pinnedFrom(MARCHESA_BATCH1, 'Imotekh the Stormlord');
+  const construct = card({
+    oracleId: 'lab-imotekh-construct',
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '1',
+    toughness: '1',
+  });
+  const reanimate = card({
+    oracleId: 'lab-imotekh-reanimate',
+    name: 'Lab Reanimate',
+    typeLine: 'Sorcery',
+    manaCost: '{1}{B}',
+    cmc: 2,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    oracleText: 'Return target creature card from your graveyard to the battlefield.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'imotekh-viewer-phaeron-and-strategist',
+    title: 'Imotekh the Stormlord: reanimate an artifact, then buff it at combat',
+    instructions: [
+      'Imotekh and two Swamps are on your battlefield; Lab Construct is in your graveyard and Lab Reanimate in your hand.',
+      'Cast Lab Reanimate on Lab Construct: an artifact card left your graveyard, so make two Necron Warriors.',
+      'At the beginning of combat, give Lab Construct +2/+2 and menace.',
+    ],
+    expectedOutcome:
+      'Lab Construct returns, two 2/2 Necron Warrior tokens are created, and Lab Construct is 3/3 with menace this turn.',
+    oracleSha256: imotekh.sha256,
+    clauseIds: ['imotekh-phaeron', 'imotekh-grand-strategist'],
+    decks: {
+      P1: [imotekh.card, construct, reanimate, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Reanimate'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Imotekh the Stormlord', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Construct'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8139,6 +8187,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'psychomancer-viewer-artifact-drain',
   'shard-of-the-void-dragon-viewer-attack-edict',
   'scavenging-ooze-viewer-exile-creature',
+  'imotekh-viewer-phaeron-and-strategist',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8354,6 +8403,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'psychomancer-viewer-artifact-drain': psychomancerScenario,
   'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
   'scavenging-ooze-viewer-exile-creature': scavengingOozeScenario,
+  'imotekh-viewer-phaeron-and-strategist': imotekhScenario,
 };
 
 export function createCardTestScenario(

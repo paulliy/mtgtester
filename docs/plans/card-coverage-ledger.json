@@ -1415,6 +1415,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
+    "name": "Imotekh the Stormlord",
+    "package": "PR03.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: leave-graveyard trigger claimed without implementation"],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
     "name": "Improvisation Capstone",
     "package": "W5",

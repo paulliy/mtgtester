@@ -161,12 +161,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-3: leave-graveyard trigger claimed, not authored.
-  unsupportedCard(
-    '425fea06-76ec-4cd9-bd3b-750504fd7fd2',
-    'Imotekh the Stormlord',
-    'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
-  );
+  // Imotekh the Stormlord: restored in coverage PR03. The interpreter reads the leave-graveyard
+  // token trigger and the combat buff, so no override remains.
   // Catalog audit necron-remaining-batch-8: battlefield creatures are not sacrificed.
   unsupportedCard(
     '9e6a3df4-67a3-452e-a6ef-f04dbadb21ef',

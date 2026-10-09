@@ -343,22 +343,9 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'The animation does not make it red and green.',
   );
 
-  defineCard(
-    '5a851367-1c4a-4cc9-a9c3-3d2775986b4c',
-    'Blossoming Defense',
-    ['Target creature you control gets +2/+2 and gains hexproof until end of turn.'],
-    {
-      spellAbility: {
-        kind: 'spell',
-        targets: [{ kind: 'creature', controller: 'you' }],
-        effects: [
-          { op: 'pumpUntilEot', target: 0, power: 2, toughness: 2 },
-          { op: 'grantKeywordUntilEot', target: 0, keyword: 'hexproof' },
-        ],
-        description: 'Target creature gets +2/+2 and hexproof until end of turn',
-      },
-    },
-  );
+  // Blossoming Defense: since coverage PR03 the interpreter reads "target creature you control
+  // gets +2/+2 and gains hexproof until end of turn" as this same single-slot pump, so the
+  // identical authored definition was deleted (overrides/index.ts rule 5).
 
   defineCard(
     '086b2564-9114-4ba2-94fd-b490f98f38a7',

@@ -332,6 +332,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'psychomancer-viewer-artifact-drain',
       'shard-of-the-void-dragon-viewer-attack-edict',
       'scavenging-ooze-viewer-exile-creature',
+      'imotekh-viewer-phaeron-and-strategist',
     ]);
   });
 

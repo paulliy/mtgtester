@@ -33,6 +33,7 @@ import {
   movePermanentsToGraveyard,
   playerById,
 } from '../src/state/objects';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { effectivePT } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -1946,6 +1947,133 @@ describe('Scavenging Ooze', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.17 Imotekh the Stormlord
+// ---------------------------------------------------------------------------------------------
+
+describe('Imotekh the Stormlord', () => {
+  const imotekh = pinned('Imotekh the Stormlord');
+  const construct = oracle({
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    power: '1',
+    toughness: '1',
+  });
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const warriors = (ctx: GameContext, controllerId = 'P1') =>
+    ctx.state.battlefield.filter(
+      (perm) =>
+        perm.isToken && perm.name === 'Necron Warrior' && perm.controllerId === controllerId,
+    );
+
+  /** Run P1's combat with no attackers, so begin-combat triggers resolve. */
+  function beginCombat(ctx: GameContext, answer?: Answer) {
+    pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    });
+  }
+
+  it('imotekh-the-stormlord-pinned-oracle-supported — the interpreter alone models Phaeron and Grand Strategist', () => {
+    expect(imotekh.sha256).toBe('389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c');
+    expectNoRegistration(imotekh.card);
+    expectModeled(imotekh.card);
+    const def = interpretCard(imotekh.card);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'leavesGraveyard',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Artifact' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+      },
+      aggregate: true,
+    });
+    expect(def.triggers[1]!.trigger).toEqual({ when: 'beginningOfCombat', player: 'you' });
+    expect(def.triggers[1]!.targets).toEqual([
+      {
+        kind: 'creature',
+        filter: { kind: 'allOf', of: [{ kind: 'other' }, { kind: 'type', value: 'Artifact' }] },
+        controller: 'you',
+      },
+    ]);
+  });
+
+  it('imotekh-the-stormlord-phaeron-reanimate — an artifact card leaving your graveyard makes two 2/2 Necron Warriors', () => {
+    const ctx = pod('imotekh-reanimate');
+    spawn(ctx, 'P1', imotekh.card);
+    enterFrom(ctx, 'P1', construct, 'graveyard');
+    settle(ctx);
+    expect(warriors(ctx)).toHaveLength(2);
+    const chars = computeCharacteristics(ctx, warriors(ctx)[0]!);
+    expect(chars.types).toEqual(['Artifact', 'Creature']);
+    expect(chars.colors).toEqual(['B']);
+    expect([chars.power, chars.toughness]).toEqual([2, 2]);
+  });
+
+  it('imotekh-the-stormlord-phaeron-one-or-more — several artifact cards leaving together trigger once', () => {
+    const ctx = pod('imotekh-batch');
+    spawn(ctx, 'P1', imotekh.card);
+    const cards = [conjure(ctx, 'P1', relic, 'graveyard'), conjure(ctx, 'P1', relic, 'graveyard')];
+    pump(moveObjects(ctx, cards, { zone: 'exile' }));
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    settle(ctx);
+    expect(warriors(ctx)).toHaveLength(2);
+  });
+
+  it("imotekh-the-stormlord-phaeron-negative — a nonartifact card or another player's artifact card does nothing", () => {
+    const ctx = pod('imotekh-negative');
+    spawn(ctx, 'P1', imotekh.card);
+    pump(moveObject(ctx, conjure(ctx, 'P1', bear, 'graveyard'), { zone: 'exile' }));
+    pump(moveObject(ctx, conjure(ctx, 'P2', relic, 'graveyard'), { zone: 'exile' }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('imotekh-the-stormlord-grand-strategist — at your combat, another artifact creature you control gets +2/+2 and menace', () => {
+    const ctx = pod('imotekh-combat');
+    const self = spawn(ctx, 'P1', imotekh.card);
+    const ally = spawn(ctx, 'P1', construct);
+    spawn(ctx, 'P1', bear);
+    spawn(ctx, 'P2', construct);
+    const offered: string[] = [];
+    beginCombat(ctx, (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered.push(...slot.options);
+        return { index: 0, targets: new Map([[slot.slot, ally.id]]) };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    // The only legal target (not Imotekh, the Bear, or P2's Construct) is chosen automatically.
+    expect(offered.every((id) => id === ally.id)).toBe(true);
+    expect(effectivePT(ctx, ally)).toEqual({ power: 3, toughness: 3 });
+    expect(computeCharacteristics(ctx, ally).keywords).toContain('menace');
+    expect(effectivePT(ctx, self)).toEqual({ power: 3, toughness: 3 });
+  });
+
+  it('imotekh-the-stormlord-grand-strategist-needs-another — alone, Imotekh has no legal target and is not pumped', () => {
+    const ctx = pod('imotekh-alone');
+    const self = spawn(ctx, 'P1', imotekh.card);
+    spawn(ctx, 'P1', bear);
+    beginCombat(ctx);
+    expect(effectivePT(ctx, self)).toEqual({ power: 3, toughness: 3 });
+    expect(computeCharacteristics(ctx, self).keywords).not.toContain('menace');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1955,8 +2083,16 @@ interface RestoredCard {
   clauseCount: number;
 }
 
+/** Reviewed overrides deleted in PR03 because the interpreter now reads the same text. */
+const RETIRED_REVIEWED_OVERRIDES = ['Blossoming Defense'];
+
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Imotekh the Stormlord',
+    sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
+    clauseCount: 2,
+  },
   {
     name: 'Scavenging Ooze',
     sha256: '5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971',
@@ -2089,11 +2225,14 @@ describe('PR03 restoration gate', () => {
     );
     expect(ours.length).toBeGreaterThan(0);
     for (const entry of ours) {
+      expect(getOverride(entry.oracleId), entry.name).toBeUndefined();
+      // A reviewed override retired because the interpreter now reads its text keeps its earlier
+      // reviewed evidence; it is not a PR03 restoration.
+      if (RETIRED_REVIEWED_OVERRIDES.includes(entry.name)) continue;
       expect(
         RESTORED.map((card) => card.name),
         entry.name,
       ).toContain(entry.name);
-      expect(getOverride(entry.oracleId), entry.name).toBeUndefined();
       expect(getOverride(fixtureOracleId(entry.name)), `${entry.name} alias`).toBeUndefined();
       expect(interpretCard(pinned(entry.name).card).modeled, entry.name).toBe(true);
     }
