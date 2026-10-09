@@ -3402,6 +3402,21 @@ describe('Technomancer', () => {
     expect(onBoard(ctx)).toEqual(['Lab Four']);
   });
 
+  it('technomancer-stop-early — after one pick, choosing to return no more leaves the rest', () => {
+    const ctx = pod('techno-stop');
+    stackLibrary(ctx, [filler, filler, filler, filler]);
+    conjure(ctx, 'P1', three, 'graveyard');
+    conjure(ctx, 'P1', three, 'graveyard');
+    const offered: string[][] = [];
+    enterFrom(ctx, 'P1', techno.card, 'hand');
+    settle(ctx, picking(['Lab Three'], offered));
+    expect(offered[1]).toEqual(['Return Lab Three', 'Return no more cards']);
+    expect(onBoard(ctx)).toEqual(['Lab Three']);
+    expect(
+      playerById(ctx, 'P1').graveyard.filter((card) => card.name === 'Lab Three'),
+    ).toHaveLength(1);
+  });
+
   it('technomancer-only-artifact-creatures — a plain creature or a noncreature artifact is never offered', () => {
     const ctx = pod('techno-types');
     stackLibrary(ctx, [filler, filler, filler]);
@@ -3578,6 +3593,19 @@ describe('Victimize', () => {
     expect(named(ctx, 'Lab Zombie')).toHaveLength(1);
     expect(named(ctx, 'Lab Bear')).toEqual([]);
     expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+  });
+
+  it('victimize-both-targets-gone — with both targets gone, it does not resolve, so nothing is sacrificed (CR 608.2b)', () => {
+    const ctx = pod('victimize-fizzle');
+    spawn(ctx, 'P1', ox);
+    const first = conjure(ctx, 'P1', bear, 'graveyard');
+    const second = conjure(ctx, 'P1', zombie, 'graveyard');
+    cast(ctx, ['Lab Bear', 'Lab Zombie']);
+    pump(moveObjects(ctx, [first, second], { zone: 'exile' }));
+    resolveTop(ctx, sacrificing('Lab Ox'));
+    expect(named(ctx, 'Lab Ox')).toHaveLength(1);
+    expect(ctx.state.eventLog.some((event) => event.type === 'fizzle')).toBe(true);
+    expect(graveyardNames(ctx, 'P1')).toEqual(['Victimize']);
   });
 
   it('victimize-returns-together — the returned creatures enter simultaneously and see each other (CR 603.6a)', () => {
