@@ -222,6 +222,11 @@ const COVERAGE_PR02: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr02-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR03 cards that had no earlier pinned fixture. */
+const COVERAGE_PR03: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr03-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -7675,6 +7680,44 @@ function satoruScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function keeperOfSecretsScenario(gameId: GameId): CardTestScenario {
+  const keeper = pinnedFrom(COVERAGE_PR03, 'Keeper of Secrets');
+  const flashBolt = card({
+    oracleId: 'lab-keeper-flash-bolt',
+    name: 'Lab Flash Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    cmc: 1,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
+  });
+  return pr01Scenario(gameId, {
+    id: 'keeper-of-secrets-viewer-flashback',
+    title: 'Keeper of Secrets: flash back a spell to ping P2',
+    instructions: [
+      'Keeper of Secrets and two Mountains are on your battlefield; Lab Flash Bolt is in your graveyard.',
+      'Cast Lab Flash Bolt from your graveyard for its flashback cost, targeting P3.',
+      "Aim Keeper of Secrets' trigger at P2.",
+    ],
+    expectedOutcome:
+      'Keeper of Secrets deals 1 damage (the spell’s mana value) to P2, then Lab Flash Bolt deals 1 damage to P3 and is exiled.',
+    oracleSha256: keeper.sha256,
+    clauseIds: ['keeper-of-secrets-keywords', 'keeper-of-secrets-symphony-of-pain'],
+    decks: {
+      P1: [keeper.card, flashBolt, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Keeper of Secrets', 'Mountain', 'Mountain'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Flash Bolt'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7863,6 +7906,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
   'satoru-viewer-free-cast-draws',
+  'keeper-of-secrets-viewer-flashback',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8071,6 +8115,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
+  'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
 };
 
 export function createCardTestScenario(

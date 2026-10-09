@@ -329,6 +329,7 @@ const shapes = {
     filter: { node: 'Selector' },
     targetFilter: { node: 'Selector' },
     ordinal: leaf,
+    castFrom: leaf,
     player: leaf,
   } satisfies Fields<Objects<TriggerSpec>>,
   Ability: {

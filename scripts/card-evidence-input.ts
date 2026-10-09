@@ -1741,6 +1741,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Keeper of Secrets: flash back a spell to ping P2'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

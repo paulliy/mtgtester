@@ -325,6 +325,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'gleeful-arsonist-viewer-burn-and-undying',
       'shard-of-the-nightbringer-viewer-cast-drain',
       'satoru-viewer-free-cast-draws',
+      'keeper-of-secrets-viewer-flashback',
     ]);
   });
 

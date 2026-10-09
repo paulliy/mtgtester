@@ -49,7 +49,7 @@ interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
 }
 
-const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json'];
+const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json', 'fixtures/coverage-pr03-oracle.json'];
 const pinnedCards = PINNED_FILES.flatMap(
   (file) =>
     (JSON.parse(readFileSync(join(import.meta.dirname, file), 'utf8')) as PinnedFixture).cards,
@@ -1204,6 +1204,125 @@ describe('Satoru, the Infiltrator', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.26 Keeper of Secrets
+// ---------------------------------------------------------------------------------------------
+
+describe('Keeper of Secrets', () => {
+  const keeper = pinned('Keeper of Secrets');
+  const flashBolt = oracle({
+    name: 'Lab Flash Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
+  });
+  const general = oracle({
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Human',
+    manaCost: '{2}{R}',
+    power: '2',
+    toughness: '2',
+  });
+
+  /** Answer every target prompt: Keeper's trigger aims at `opponent`, spells at `spellTarget`. */
+  const aim =
+    (opponent: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, opponent]]) };
+      return { index: 0, targets: new Map() };
+    };
+
+  it('keeper-of-secrets-pinned-oracle-supported — the interpreter alone models first strike, haste and the not-from-hand cast trigger', () => {
+    expect(keeper.sha256).toBe('4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a');
+    expect(keeper.card.oracleText).toBe(
+      "First strike, haste\nSymphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+    );
+    expectModeled(keeper.card);
+    const def = interpretCard(keeper.card);
+    expect(def.keywords).toEqual(['first strike', 'haste']);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'castsSpell',
+      caster: 'you',
+      castFrom: 'notHand',
+    });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'spellManaValue' } },
+    ]);
+  });
+
+  it('keeper-of-secrets-flashback-from-graveyard — a spell cast from the graveyard deals its mana value to target opponent', () => {
+    const ctx = pod('keeper-flashback');
+    spawn(ctx, 'P1', keeper.card);
+    const bolt = conjure(ctx, 'P1', flashBolt, 'graveyard');
+    addMana(playerById(ctx, 'P1'), [...generic(1), ...red(1)]);
+    const option = optionFor(ctx, 'P1', bolt.id);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P3']]),
+    );
+    expect(ctx.state.stack[0]!.card).toMatchObject({ castFromZone: 'graveyard' });
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Keeper of Secrets',
+    ]);
+    settle(ctx, aim('P2'));
+    // The trigger's 1 (the spell's mana value) at P2, then the bolt's 1 at P3.
+    expect(playerById(ctx, 'P2').life).toBe(39);
+    expect(playerById(ctx, 'P3').life).toBe(39);
+  });
+
+  it('keeper-of-secrets-command-zone — casting a commander deals that spell’s mana value', () => {
+    const ctx = pod('keeper-commander');
+    spawn(ctx, 'P1', keeper.card);
+    const commander = conjure(ctx, 'P1', general, 'command', { isCommander: true });
+    playerById(ctx, 'P1').commanderCardIds.push(commander.cardId);
+    addMana(playerById(ctx, 'P1'), [...generic(2), ...red(1)]);
+    const option = optionFor(ctx, 'P1', commander.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    settle(ctx, aim('P4'));
+    expect(playerById(ctx, 'P4').life).toBe(37);
+  });
+
+  it('keeper-of-secrets-from-hand-no-trigger — a spell cast from your hand does nothing', () => {
+    const ctx = pod('keeper-hand');
+    spawn(ctx, 'P1', keeper.card);
+    castFromHand(ctx, 'P1', flashBolt, red(1), new Map([[0, 'P2']]));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it("keeper-of-secrets-opponents-spells — an opponent's flashback does not trigger it", () => {
+    const ctx = pod('keeper-opponent');
+    spawn(ctx, 'P1', keeper.card);
+    const bolt = conjure(ctx, 'P2', flashBolt, 'graveyard');
+    addMana(playerById(ctx, 'P2'), [...generic(1), ...red(1)]);
+    takeAction(
+      ctx,
+      'P2',
+      optionFor(ctx, 'P2', bolt.id)!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P1']]),
+    );
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('cast-origin-primitive-contract — an unknown origin restriction is rejected', () => {
+    const issues: AuthoringIssue[] = [];
+    validateTriggerHead(
+      { when: 'castsSpell', caster: 'you', castFrom: 'exile' },
+      'trigger',
+      issues,
+    );
+    expect(issues.map((issue) => issue.path)).toEqual(['trigger.castFrom']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1215,6 +1334,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Keeper of Secrets',
+    sha256: '4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a',
+    clauseCount: 2,
+  },
   {
     name: 'Satoru, the Infiltrator',
     sha256: '61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564',

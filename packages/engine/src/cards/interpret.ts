@@ -1498,6 +1498,17 @@ function parseEffectSentence(
       }
       // "this creature deals damage equal to its power to that player" (Gleeful Arsonist): the
       // event's player — the caster, for a cast trigger.
+      // "this creature deals damage equal to that spell's mana value to target opponent" (Keeper of
+      // Secrets): the triggering spell's mana value, kept on the trigger as it is cast.
+      if (s === "~ deals damage equal to that spell's mana value to target opponent") {
+        return [
+          {
+            op: 'dealDamage',
+            target: alloc('player', undefined, 'opponent'),
+            amount: { kind: 'spellManaValue' },
+          },
+        ];
+      }
       if (s === '~ deals damage equal to its power to that player') {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
       }
@@ -3975,13 +3986,26 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     ];
     body = ordinalCast[4] as string;
   } else if (cast !== null) {
-    const filter = parseSpellFilter(cast[2] as string, card);
+    // "… casts a spell from a graveyard" / "from anywhere other than your hand": the origin is a
+    // restriction on the cast event, not part of the spell's characteristics.
+    const origin = (cast[2] as string).match(
+      /^(.+?) from (a graveyard|anywhere other than your hand)$/,
+    );
+    const filter = parseSpellFilter(
+      origin === null ? (cast[2] as string) : (origin[1] as string),
+      card,
+    );
     if (filter === null) return null;
     heads = [
       {
         when: 'castsSpell',
         caster: cast[1] === 'you' ? 'you' : cast[1] === 'an opponent' ? 'opponent' : 'each',
         ...(filter === ANY_SPELL ? {} : { filter }),
+        ...(origin === null
+          ? {}
+          : {
+              castFrom: origin[2] === 'a graveyard' ? ('graveyard' as const) : ('notHand' as const),
+            }),
       },
     ];
     body = cast[3] as string;

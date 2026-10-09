@@ -239,3 +239,20 @@ describe('Satoru, the Infiltrator Card Test Lab scenario', () => {
     replays('satoru-viewer-free-cast-draws', steps);
   });
 });
+
+describe('Keeper of Secrets Card Test Lab scenario', () => {
+  it('keeper-of-secrets-viewer-flashback — a flashback from the graveyard pings P2 for its mana value', () => {
+    const steps: Step[] = [
+      { action: 'Lab Flash Bolt', targets: ['P3'] },
+      { action: 'Keeper of Secrets', targets: ['P2'] },
+    ];
+    const { seat, state, offered } = run('keeper-of-secrets-viewer-flashback', steps);
+    expect(offered.flat().filter((action) => action.includes('Lab Flash Bolt'))).not.toHaveLength(
+      0,
+    );
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P3').life).toBe(39);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Flash Bolt']);
+    replays('keeper-of-secrets-viewer-flashback', steps);
+  });
+});

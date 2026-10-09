@@ -1346,6 +1346,12 @@ export type TriggerHead =
       targetFilter?: Selector;
       /** Fire only for this numbered spell by that caster during the current turn. */
       ordinal?: number;
+      /**
+       * Where the spell was cast from, read from its cast record (CR 601.2a): "casts a spell
+       * from a graveyard" (River Kelpie) or "from anywhere other than your hand" (Keeper of
+       * Secrets — the command zone, exile and the library all count).
+       */
+      castFrom?: 'graveyard' | 'notHand';
     }
   /**
    * "At the beginning of your/each upkeep|end step" — `player` says whose step counts.

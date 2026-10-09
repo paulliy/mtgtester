@@ -126,7 +126,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'defendingPlayerIsEventPlayer',
         ]
       : family === 'cast'
-        ? ['caster', 'filter', 'targetFilter', 'ordinal']
+        ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
         : ['player']),
   ];
   for (const key of Object.keys(head))
@@ -214,6 +214,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       (!Number.isSafeInteger(head['ordinal']) || (head['ordinal'] as number) < 1)
     )
       issues.push({ path: `${path}.ordinal`, message: 'spell ordinal must be a positive integer' });
+    if (
+      head['castFrom'] !== undefined &&
+      !['graveyard', 'notHand'].includes(head['castFrom'] as string)
+    )
+      issues.push({ path: `${path}.castFrom`, message: 'unknown spell origin restriction' });
   } else if (
     !(
       head['when'] === 'drawsCard'

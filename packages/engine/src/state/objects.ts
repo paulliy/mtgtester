@@ -1755,6 +1755,17 @@ export function queueTriggersForObject(
  * Fired at announcement, after the spell is on the stack, so the trigger resolves FIRST
  * (CR 603.3b puts it above the spell that caused it).
  */
+/** "casts a spell from a graveyard" / "from anywhere other than your hand", by the cast record. */
+function castFromMatches(
+  spec: Extract<TriggerSpec, { when: 'castsSpell' }>,
+  spell: EngineStackObject,
+): boolean {
+  if (spec.castFrom === undefined) return true;
+  const origin = spell.card?.castFromZone;
+  if (origin === undefined) return false;
+  return spec.castFrom === 'graveyard' ? origin === 'graveyard' : origin !== 'hand';
+}
+
 export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
   const def = spellDefinitionOf(ctx, spell);
 
@@ -1791,6 +1802,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       if (spec.caster === 'you' && !isController) continue;
       if (spec.caster === 'opponent' && isController) continue;
       if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
+      if (!castFromMatches(spec, spell)) continue;
 
       const from: SelectorSource = {
         cardId: source.cardId,

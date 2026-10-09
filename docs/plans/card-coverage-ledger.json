@@ -1529,15 +1529,19 @@
   {
     "oracleId": "23f86ee2-b1e3-45c2-bfd5-044919033922",
     "name": "Keeper of Secrets",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Symphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",

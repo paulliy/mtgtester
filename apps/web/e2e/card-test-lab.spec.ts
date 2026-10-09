@@ -4891,3 +4891,25 @@ test('Satoru, the Infiltrator: a free creature draws, a paid one does not', asyn
   await expect(permanent(page, 'Lab Zombie')).toBeVisible();
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
+
+test('Keeper of Secrets: flash back a spell to ping P2', async ({ page }) => {
+  await runScenario(page, 'Keeper of Secrets: flash back a spell to ping P2');
+  const bolt = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Flash Bolt', exact: true }) });
+  await expect(bolt).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bolt.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P3' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Cast from the graveyard, so Keeper of Secrets triggers and asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Keeper of Secrets.* deals 1 to P2/).first()).toBeVisible();
+  await expect(page.getByText(/Lab Flash Bolt deals 1 to P3/).first()).toBeVisible();
+});

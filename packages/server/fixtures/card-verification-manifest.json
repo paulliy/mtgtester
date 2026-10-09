@@ -7712,6 +7712,38 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "23f86ee2-b1e3-45c2-bfd5-044919033922": {
+      "name": "Keeper of Secrets",
+      "oracleSha256": "4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "keeper-of-secrets-keywords",
+          "oracleText": "First strike, haste",
+          "implementation": ["keywords first strike and haste (interpreted)"],
+          "engineTestIds": ["keeper-of-secrets-pinned-oracle-supported"],
+          "viewerScenarioIds": ["keeper-of-secrets-viewer-flashback"]
+        },
+        {
+          "id": "keeper-of-secrets-symphony-of-pain",
+          "oracleText": "Symphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+          "implementation": [
+            "interpreted castsSpell trigger, caster you, with castFrom notHand: the spell card's cast record names a zone other than the hand (graveyard, exile, library or command zone)",
+            "dealDamage to a target player (opponent) slot, amount spellManaValue captured as the spell is cast, with Keeper as the source"
+          ],
+          "engineTestIds": [
+            "keeper-of-secrets-pinned-oracle-supported",
+            "keeper-of-secrets-flashback-from-graveyard",
+            "keeper-of-secrets-command-zone",
+            "keeper-of-secrets-from-hand-no-trigger",
+            "keeper-of-secrets-opponents-spells",
+            "cast-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["keeper-of-secrets-viewer-flashback"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
