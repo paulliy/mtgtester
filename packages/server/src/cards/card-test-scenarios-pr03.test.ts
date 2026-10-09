@@ -397,3 +397,23 @@ describe('God-Eternal Rhonas Card Test Lab scenario', () => {
     replays('god-eternal-rhonas-viewer-double-and-return', steps);
   });
 });
+
+describe('Candlekeep Sage Card Test Lab scenario', () => {
+  it('candlekeep-sage-viewer-commander-enters-and-leaves — the commander draws as it enters and again as it is exiled', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab General' },
+      { action: 'Cast Lab Banish', targets: ['Lab General'] },
+    ];
+    const { seat, onBattlefield } = run(
+      'candlekeep-sage-viewer-commander-enters-and-leaves',
+      steps,
+    );
+    expect(onBattlefield('Lab General')).toEqual([]);
+    expect(
+      seat('P1')
+        .hand.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Ox', 'Lab Servo']);
+    replays('candlekeep-sage-viewer-commander-enters-and-leaves', steps);
+  });
+});

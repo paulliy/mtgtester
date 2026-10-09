@@ -1027,6 +1027,7 @@ const families = {
       isToken: true,
       enteredThisTurn: true,
       isCommander: true,
+      owner: true,
       isMonocolored: true,
       isEnchanted: true,
       isEquipped: true,

@@ -8000,6 +8000,33 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "f9516b60-36dd-4f8a-bebb-ac1bc0961f07": {
+      "name": "Candlekeep Sage",
+      "oracleSha256": "0ed0ff30dcf72ddcda8b2faa9628978ea65b1f7de653a344e84259b1890f052e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "candlekeep-sage-grant",
+          "oracleText": "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"",
+          "implementation": [
+            "interpreted static layer-6 addTrigger on allOf(isCommander, Creature, owner you): ownership, not control (CR 108.3), via a new owner selector",
+            "granted trigger \"enters or leaves the battlefield\" is two self heads, enters and leavesBattlefield, each drawing a card for the creature's controller",
+            "leaving is read from the game before the event (CR 603.10a), so the Sage leaving with the commander still grants the draw"
+          ],
+          "engineTestIds": [
+            "candlekeep-sage-pinned-oracle-supported",
+            "candlekeep-sage-commander-enters",
+            "candlekeep-sage-commander-leaves",
+            "candlekeep-sage-negative",
+            "candlekeep-sage-ownership-not-control",
+            "candlekeep-sage-leaves-together",
+            "candlekeep-sage-gone"
+          ],
+          "viewerScenarioIds": ["candlekeep-sage-viewer-commander-enters-and-leaves"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

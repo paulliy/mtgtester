@@ -5122,3 +5122,25 @@ test('God-Eternal Rhonas: double your creatures, then go third from the top', as
   ).toHaveCount(0);
   await expect(permanent(page, 'Lab Ox')).toContainText('8/4');
 });
+
+test('Candlekeep Sage: your commander draws as it enters and leaves', async ({ page }) => {
+  await runScenario(page, 'Candlekeep Sage: your commander draws as it enters and leaves');
+  await page.locator('.command-zone .commander-card').click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Lab General enters: the granted trigger draws Lab Ox.
+  const ox = handCard(page, 'Lab Ox');
+  await passUntil(page, ox);
+  await expect(permanent(page, 'Lab General')).toHaveCount(1);
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab General').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Exiled: the leave trigger draws Lab Servo.
+  await passUntil(page, handCard(page, 'Lab Servo'));
+  await expect(permanent(page, 'Lab General')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+});

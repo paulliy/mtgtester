@@ -335,6 +335,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'imotekh-viewer-phaeron-and-strategist',
       'the-ooze-viewer-leave-and-exile',
       'god-eternal-rhonas-viewer-double-and-return',
+      'candlekeep-sage-viewer-commander-enters-and-leaves',
     ]);
   });
 

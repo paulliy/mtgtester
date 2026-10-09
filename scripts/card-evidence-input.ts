@@ -1781,6 +1781,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['God-Eternal Rhonas: double your creatures, then go third from the top'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Candlekeep Sage: your commander draws as it enters and leaves'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

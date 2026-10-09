@@ -366,15 +366,19 @@
   {
     "oracleId": "f9516b60-36dd-4f8a-bebb-ac1bc0961f07",
     "name": "Candlekeep Sage",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",

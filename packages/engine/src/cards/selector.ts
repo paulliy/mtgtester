@@ -61,6 +61,8 @@ export interface SelectorCandidate {
   enteredThisTurn: boolean;
   /** Is this permanent/card a Commander (CR 903.3)? */
   isCommander?: boolean;
+  /** Its owner (CR 108.3). Absent when a builder does not know it, which never matches `owner`. */
+  ownerId?: string;
   /** Is this permanent enchanted by an Aura? */
   isEnchanted?: boolean;
   /** Is this permanent equipped by an Equipment? */
@@ -163,6 +165,8 @@ export type Selector =
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
   | { kind: 'isCommander' }
+  /** "you own" (Candlekeep Sage): ownership, not control (CR 108.3); a layer cannot change it. */
+  | { kind: 'owner'; who: 'you' }
   | { kind: 'isMonocolored' }
   | { kind: 'isEnchanted' }
   | { kind: 'isEquipped' }
@@ -258,6 +262,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'isToken':
     case 'enteredThisTurn':
     case 'isCommander':
+    case 'owner':
     case 'isMonocolored':
     case 'isEnchanted':
     case 'isEquipped':
@@ -326,6 +331,8 @@ export function selectMatches(
       return candidate.enteredThisTurn;
     case 'isCommander':
       return candidate.isCommander === true;
+    case 'owner':
+      return candidate.ownerId !== undefined && candidate.ownerId === source.controllerId;
     case 'isMonocolored':
       return candidate.colors.length === 1;
     case 'isEnchanted':

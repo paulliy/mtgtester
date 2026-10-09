@@ -311,6 +311,7 @@ export function candidateOf(
     isToken: perm.isToken,
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
+    ownerId: perm.ownerId,
     isEnchanted,
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,

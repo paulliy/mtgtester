@@ -114,6 +114,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "0ed0ff30dcf72ddcda8b2faa9628978ea65b1f7de653a344e84259b1890f052e",
+      "card": {
+        "oracleId": "f9516b60-36dd-4f8a-bebb-ac1bc0961f07",
+        "scryfallId": "6f706ac3-0ad8-44ac-a99e-21c04075951d",
+        "name": "Candlekeep Sage",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Enchantment — Background",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Background"
+        ],
+        "oracleText": "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

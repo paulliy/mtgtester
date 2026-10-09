@@ -2295,6 +2295,125 @@ describe('The Ooze', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.24 Candlekeep Sage
+// ---------------------------------------------------------------------------------------------
+
+const CANDLEKEEP_SAGE_SHA = '0ed0ff30dcf72ddcda8b2faa9628978ea65b1f7de653a344e84259b1890f052e';
+
+describe('Candlekeep Sage', () => {
+  const sage = pinned('Candlekeep Sage');
+  const general = oracle({
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Human',
+    power: '3',
+    toughness: '3',
+  });
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const handSize = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
+
+  it('candlekeep-sage-pinned-oracle-supported — the interpreter grants commander creatures you own an enters-or-leaves draw', () => {
+    expect(sage.sha256).toBe(CANDLEKEEP_SAGE_SHA);
+    expectNoRegistration(sage.card);
+    expectModeled(sage.card);
+    const def = interpretCard(sage.card);
+    const affects = {
+      kind: 'allOf',
+      of: [
+        { kind: 'isCommander' },
+        { kind: 'type', value: 'Creature' },
+        { kind: 'owner', who: 'you' },
+      ],
+    };
+    expect(def.staticEffects.map((effect) => effect.affects)).toEqual([affects, affects]);
+    expect(
+      def.staticEffects.map((effect) => {
+        const op = effect.op as { addTrigger?: { trigger: unknown; effects: unknown } };
+        return [op.addTrigger?.trigger, op.addTrigger?.effects];
+      }),
+    ).toEqual([
+      [
+        { when: 'enters', subject: { kind: 'self' } },
+        [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      ],
+      [
+        { when: 'leavesBattlefield', subject: { kind: 'self' } },
+        [{ op: 'draw', count: { kind: 'const', n: 1 } }],
+      ],
+    ]);
+  });
+
+  it('candlekeep-sage-commander-enters — your commander entering draws a card', () => {
+    const ctx = pod('sage-enters');
+    spawn(ctx, 'P1', sage.card);
+    const before = handSize(ctx, 'P1');
+    const commander = conjure(ctx, 'P1', general, 'command', { isCommander: true });
+    pump(moveObject(ctx, commander, { zone: 'battlefield', controllerId: 'P1' }));
+    settle(ctx);
+    expect(handSize(ctx, 'P1')).toBe(before + 1);
+  });
+
+  it('candlekeep-sage-commander-leaves — your commander dying or being exiled draws a card', () => {
+    const ctx = pod('sage-leaves');
+    spawn(ctx, 'P1', sage.card);
+    const dying = spawn(ctx, 'P1', general, { isCommander: true });
+    const exiled = spawn(ctx, 'P1', general, { isCommander: true });
+    const before = handSize(ctx, 'P1');
+    kill(ctx, dying);
+    pump(moveObject(ctx, exiled, { zone: 'exile' }));
+    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    expect(handSize(ctx, 'P1')).toBe(before + 2);
+  });
+
+  it("candlekeep-sage-negative — a noncommander creature, or another player's commander, draws nothing", () => {
+    const ctx = pod('sage-negative');
+    spawn(ctx, 'P1', sage.card);
+    kill(ctx, spawn(ctx, 'P1', bear));
+    kill(ctx, spawn(ctx, 'P2', general, { isCommander: true }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('candlekeep-sage-ownership-not-control — your commander an opponent controls draws for them; theirs you control does not', () => {
+    const ctx = pod('sage-ownership');
+    spawn(ctx, 'P1', sage.card);
+    const yoursStolen = spawn(ctx, 'P1', general, { isCommander: true });
+    yoursStolen.controllerId = 'P2';
+    const theirsBorrowed = spawn(ctx, 'P2', general, { isCommander: true });
+    theirsBorrowed.controllerId = 'P1';
+    const p1 = handSize(ctx, 'P1');
+    const p2 = handSize(ctx, 'P2');
+    pump(moveObject(ctx, yoursStolen, { zone: 'exile' }));
+    pump(moveObject(ctx, theirsBorrowed, { zone: 'exile' }));
+    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    expect(handSize(ctx, 'P2')).toBe(p2 + 1);
+    expect(handSize(ctx, 'P1')).toBe(p1);
+  });
+
+  it('candlekeep-sage-leaves-together — the Sage leaving with your commander still grants the leave draw (CR 603.10a)', () => {
+    const ctx = pod('sage-together');
+    const self = spawn(ctx, 'P1', sage.card);
+    const commander = spawn(ctx, 'P1', general, { isCommander: true });
+    const before = handSize(ctx, 'P1');
+    pump(moveObjects(ctx, [self, commander], { zone: 'exile' }));
+    settle(ctx, answers([[/command zone/, /Leave|Keep|graveyard|exile/i]]));
+    expect(handSize(ctx, 'P1')).toBe(before + 1);
+  });
+
+  it('candlekeep-sage-gone — with the Sage gone, your commander leaving draws nothing', () => {
+    const ctx = pod('sage-gone');
+    const self = spawn(ctx, 'P1', sage.card);
+    const commander = spawn(ctx, 'P1', general, { isCommander: true });
+    pump(moveObject(ctx, self, { zone: 'exile' }));
+    pump(moveObject(ctx, commander, { zone: 'exile' }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // 3.27 God-Eternal Rhonas
 // ---------------------------------------------------------------------------------------------
 
@@ -2440,6 +2559,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Candlekeep Sage',
+    sha256: CANDLEKEEP_SAGE_SHA,
+    clauseCount: 1,
   },
   {
     name: 'God-Eternal Rhonas',

@@ -8099,6 +8099,58 @@ function godEternalRhonasScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function candlekeepSageScenario(gameId: GameId): CardTestScenario {
+  const sage = pinnedFrom(COVERAGE_PR03, 'Candlekeep Sage');
+  const general = card({
+    oracleId: 'lab-candlekeep-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Human Soldier',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '3',
+    toughness: '3',
+  });
+  const banish = card({
+    oracleId: 'lab-candlekeep-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'candlekeep-sage-viewer-commander-enters-and-leaves',
+    title: 'Candlekeep Sage: your commander draws as it enters and leaves',
+    instructions: [
+      'Candlekeep Sage and four Forests are on your battlefield; your commander, Lab General, is in the command zone and Lab Banish is in your hand.',
+      'Cast Lab General from the command zone: it enters, so draw a card.',
+      'Cast Lab Banish on Lab General: it leaves the battlefield, so draw another card.',
+    ],
+    expectedOutcome:
+      'You draw Lab Ox when Lab General enters and Lab Servo when it is exiled from the battlefield.',
+    oracleSha256: sage.sha256,
+    clauseIds: ['candlekeep-sage-grant'],
+    decks: {
+      P1: [sage.card, banish, LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Banish'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Candlekeep Sage', 'Forest', 'Forest', 'Forest', 'Forest'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8297,6 +8349,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'imotekh-viewer-phaeron-and-strategist',
   'the-ooze-viewer-leave-and-exile',
   'god-eternal-rhonas-viewer-double-and-return',
+  'candlekeep-sage-viewer-commander-enters-and-leaves',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8515,6 +8568,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'imotekh-viewer-phaeron-and-strategist': imotekhScenario,
   'the-ooze-viewer-leave-and-exile': theOozeScenario,
   'god-eternal-rhonas-viewer-double-and-return': godEternalRhonasScenario,
+  'candlekeep-sage-viewer-commander-enters-and-leaves': candlekeepSageScenario,
 };
 
 export function createCardTestScenario(

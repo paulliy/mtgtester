@@ -3206,7 +3206,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -4145,11 +4145,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     const subjectPhrase = m[1] as string;
     const event = m[2] as string;
     const events: ObjectTriggerWhen[] = event.startsWith('enters')
-      ? event.endsWith('or attacks')
-        ? ['enters', 'attacks']
-        : event.includes('transforms into')
-          ? ['enters', 'transformsInto']
-          : ['enters']
+      ? event === 'enters or leaves the battlefield'
+        ? ['enters', 'leavesBattlefield']
+        : event.endsWith('or attacks')
+          ? ['enters', 'attacks']
+          : event.includes('transforms into')
+            ? ['enters', 'transformsInto']
+            : ['enters']
       : // A BACK face prints the bare form ("When this creature transforms into Awoken Horror"):
         // it only ever exists after the flip, so unlike the front face's "enters or transforms
         // into ~" there is no entry event to pair it with.
@@ -5633,6 +5635,24 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       if (tr !== null && tr.length > 0) {
         return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
       }
+    }
+  }
+  // "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw
+  // a card.\"" (Candlekeep Sage): ownership, not control (CR 108.3), so a commander an opponent
+  // controls still has it, and the granted trigger is controlled by the creature's controller.
+  {
+    const m = lower.match(/^commander creatures you own have "(.+)"$/);
+    if (m) {
+      const affects = allOf(IS_COMMANDER, ofType('Creature'), { kind: 'owner', who: 'you' });
+      // The printed casing, so the granted ability reads as printed on the board.
+      const quoted = (m[1] as string).replace(/\.$/, '');
+      const at = card.oracleText.toLowerCase().indexOf(quoted);
+      const tr = parseTriggerLine(
+        at < 0 ? quoted : card.oracleText.slice(at, at + quoted.length),
+        card,
+      );
+      if (tr === null || tr.length === 0) return null;
+      return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
     }
   }
   // Anthems and lords â€” "Creatures you control get +1/+1", "Other Elves you control have haste".

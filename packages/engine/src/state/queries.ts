@@ -214,6 +214,7 @@ export function cardZoneCandidate(
     // Not a permanent at all — "entered this turn" is meaningless here.
     enteredThisTurn: false,
     isCommander: card.isCommander,
+    ownerId: card.ownerId,
   };
 }
 

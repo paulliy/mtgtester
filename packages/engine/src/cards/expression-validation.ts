@@ -110,6 +110,7 @@ const selectorShapes = {
   isToken: {},
   enteredThisTurn: {},
   isCommander: {},
+  owner: { who: oneOf('you') },
   isMonocolored: {},
   isEnchanted: {},
   isEquipped: {},
