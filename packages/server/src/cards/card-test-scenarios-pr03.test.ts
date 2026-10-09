@@ -293,6 +293,42 @@ describe('Aurora Phoenix Card Test Lab scenario', () => {
   });
 });
 
+describe('Aurora Phoenix cast Card Test Lab scenario', () => {
+  it('aurora-phoenix-viewer-cast-cascade-flying — casting the Phoenix cascades into the cheaper Lab Cascade Hit, and it has flying', () => {
+    const steps: Step[] = [
+      { action: 'Cast Aurora Phoenix' },
+      { action: 'Cast Lab Cascade Hit without paying its mana cost' },
+    ];
+    const { scenario, seat, onBattlefield, offered, state } = run(
+      'aurora-phoenix-viewer-cast-cascade-flying',
+      steps,
+    );
+    // Cascade offered the first nonland card that costs less, skipping the exiled Forest.
+    expect(
+      offered.flat().some((action) => action.includes('Cast Lab Cascade Hit without paying')),
+    ).toBe(true);
+    expect(onBattlefield('Lab Cascade Hit').map((perm) => perm.controllerId)).toEqual(['P1']);
+    const [phoenix] = onBattlefield('Aurora Phoenix');
+    expect(onBattlefield('Aurora Phoenix')).toHaveLength(1);
+    expect(phoenix?.controllerId).toBe('P1');
+    // The free spell resolves first: it entered the battlefield before the Phoenix that cascaded.
+    const order = state.battlefield
+      .filter((perm) => perm.name === 'Lab Cascade Hit' || perm.name === 'Aurora Phoenix')
+      .map((perm) => perm.name);
+    expect(order).toEqual(['Lab Cascade Hit', 'Aurora Phoenix']);
+    // Flying shows in the player's real view of the battlefield.
+    const view = scenario.engine.view('P1');
+    const viewed = view.battlefield.find((perm) => perm.name === 'Aurora Phoenix');
+    expect(viewed?.keywords).toContain('flying');
+    expect(seat('P1').hand).toEqual([]);
+    expect(state.exile).toEqual([]);
+    // The exiled Forest went to the bottom of the library; the free spell is not in the library.
+    expect(seat('P1').library.at(-1)?.name).toBe('Forest');
+    expect(seat('P1').library.map((card) => card.name)).not.toContain('Lab Cascade Hit');
+    replays('aurora-phoenix-viewer-cast-cascade-flying', steps);
+  });
+});
+
 describe('Watcher for Tomorrow Card Test Lab scenario', () => {
   it('watcher-for-tomorrow-viewer-hideaway-leaves — the hidden card goes to hand when Watcher dies', () => {
     // Pass first, so Hideaway resolves before Lab Doom is cast.

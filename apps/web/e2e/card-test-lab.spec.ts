@@ -4977,6 +4977,25 @@ test('Aurora Phoenix: cast a cascade spell to return it', async ({ page }) => {
   await expect(handCard(page, 'Aurora Phoenix')).toBeVisible();
 });
 
+test('Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly', async ({ page }) => {
+  await runScenario(page, 'Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly');
+  const phoenix = handCard(page, 'Aurora Phoenix');
+  await expect(phoenix).toHaveClass(/actionable/);
+  await phoenix.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Its own cascade exiles the Forest, then stops at Lab Cascade Hit, the first cheaper nonland card.
+  await page
+    .getByRole('button', { name: 'Cast Lab Cascade Hit without paying its mana cost' })
+    .click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Cascade Hit')).toHaveCount(1);
+  await expect(permanent(page, 'Aurora Phoenix')).toHaveCount(1);
+  await expect(permanent(page, 'Aurora Phoenix')).toContainText('5/3');
+  await expect(permanent(page, 'Aurora Phoenix')).toContainText(/flying/i);
+  await expect(handCard(page, 'Aurora Phoenix')).toHaveCount(0);
+});
+
 test('Watcher for Tomorrow: hide a card, then get it back as it leaves', async ({ page }) => {
   await runScenario(page, 'Watcher for Tomorrow: hide a card, then get it back as it leaves');
   await castAndResolve(page, 'Watcher for Tomorrow');

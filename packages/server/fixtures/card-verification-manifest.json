@@ -8006,7 +8006,7 @@
           "oracleText": "Flying",
           "implementation": ["keyword flying (interpreted)"],
           "engineTestIds": ["aurora-phoenix-pinned-oracle-supported"],
-          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cast-cascade-flying"]
         },
         {
           "id": "aurora-phoenix-cascade",
@@ -8018,7 +8018,7 @@
             "aurora-phoenix-pinned-oracle-supported",
             "aurora-phoenix-casting-a-phoenix"
           ],
-          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cast-cascade-flying"]
         },
         {
           "id": "aurora-phoenix-return",

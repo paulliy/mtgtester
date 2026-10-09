@@ -1755,6 +1755,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Watcher for Tomorrow: hide a card, then get it back as it leaves'],
   },
   {

@@ -7792,7 +7792,7 @@ function auroraPhoenixScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Aurora Phoenix returns to your hand; cascade exiles your two lands, finds nothing, and puts them on the bottom.',
     oracleSha256: phoenix.sha256,
-    clauseIds: ['aurora-phoenix-flying', 'aurora-phoenix-cascade', 'aurora-phoenix-return'],
+    clauseIds: ['aurora-phoenix-return'],
     decks: {
       P1: [phoenix.card, cascader, MOUNTAIN, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
       P2: PR01_FILLER,
@@ -7803,6 +7803,47 @@ function auroraPhoenixScenario(gameId: GameId): CardTestScenario {
       hand: [{ playerId: 'P1', cardNames: ['Lab Cascader'] }],
       battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Mountain'] }],
       graveyard: [{ playerId: 'P1', cardNames: ['Aurora Phoenix'] }],
+    },
+  });
+}
+
+/** Casts Aurora Phoenix itself: its own cascade finds a cheaper spell, and it flies. */
+function auroraPhoenixCastScenario(gameId: GameId): CardTestScenario {
+  const phoenix = pinnedFrom(COVERAGE_PR03, 'Aurora Phoenix');
+  const hit = card({
+    oracleId: 'lab-phoenix-cascade-hit',
+    name: 'Lab Cascade Hit',
+    typeLine: 'Creature — Elemental',
+    manaCost: '{1}{R}',
+    cmc: 2,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    power: '1',
+    toughness: '1',
+  });
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'aurora-phoenix-viewer-cast-cascade-flying',
+    title: 'Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly',
+    instructions: [
+      'Aurora Phoenix is in your hand and six Mountains are on your battlefield; a Forest and then Lab Cascade Hit are on top of your library.',
+      'Cast Aurora Phoenix: its cascade exiles the Forest, then Lab Cascade Hit, the first nonland card that costs less.',
+      'Cast Lab Cascade Hit without paying its mana cost, then let both spells resolve.',
+    ],
+    expectedOutcome:
+      'Lab Cascade Hit resolves first, then Aurora Phoenix enters as a 5/3 with flying; the exiled Forest goes to the bottom of your library.',
+    oracleSha256: phoenix.sha256,
+    clauseIds: ['aurora-phoenix-flying', 'aurora-phoenix-cascade'],
+    decks: {
+      P1: [phoenix.card, hit, ...mountains, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aurora Phoenix'] }],
+      battlefield: [{ playerId: 'P1', cardNames: mountains.map((mountain) => mountain.name) }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Forest', 'Lab Cascade Hit'] }],
     },
   });
 }
@@ -8746,6 +8787,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
   'aurora-phoenix-viewer-cascade-return',
+  'aurora-phoenix-viewer-cast-cascade-flying',
   'watcher-for-tomorrow-viewer-hideaway-leaves',
   'psychomancer-viewer-artifact-drain',
   'shard-of-the-void-dragon-viewer-attack-edict',
@@ -8976,6 +9018,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
   'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
+  'aurora-phoenix-viewer-cast-cascade-flying': auroraPhoenixCastScenario,
   'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
   'psychomancer-viewer-artifact-drain': psychomancerScenario,
   'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
