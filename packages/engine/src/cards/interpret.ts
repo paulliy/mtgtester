@@ -1496,6 +1496,11 @@ function parseEffectSentence(
         const target = alloc('player');
         return [{ op: 'dealDamage', target, amount: { kind: 'cardsInTargetHand', target } }];
       }
+      // "this creature deals damage equal to its power to that player" (Gleeful Arsonist): the
+      // event's player — the caster, for a cast trigger.
+      if (s === '~ deals damage equal to its power to that player') {
+        return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
+      }
       if (s === "~ deals 2 damage to that creature's controller") {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: constant(2) }];
       }

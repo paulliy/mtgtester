@@ -285,12 +285,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 8: Undying is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '9025b3ce-f6ae-431d-9eb5-02d713b8c9b8',
-    'Gleeful Arsonist',
-    'Undying is claimed without a persist/undying replacement.',
-  );
+  // Gleeful Arsonist: restored in coverage PR03. The interpreter reads the opponent-cast damage
+  // trigger and Undying, so no override remains.
   // Glen Elendra Archmage: restored in coverage PR03. The interpreter reads Persist as a dies
   // trigger that returns the card it became, so no override remains.
   defineCard(

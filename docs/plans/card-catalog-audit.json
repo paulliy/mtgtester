@@ -5962,6 +5962,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr03",
       "note": "Registration deleted: the interpreter reads 'Whenever an opponent casts a noncreature spell' with caster opponent and 'that player loses 2 life and you gain 2 life' as loseLifeTarget eventPlayer plus gainLife; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
+      "name": "Gleeful Arsonist",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the opponent-cast trigger with '~ deals damage equal to its power to that player' (dealDamage eventPlayer, powerOfSource) and Undying; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

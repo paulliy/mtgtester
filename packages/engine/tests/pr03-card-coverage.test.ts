@@ -874,6 +874,82 @@ describe('Kambal, Consul of Allocation', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.16 Gleeful Arsonist
+// ---------------------------------------------------------------------------------------------
+
+describe('Gleeful Arsonist', () => {
+  const arsonist = pinned('Gleeful Arsonist');
+  const bear = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{1}' });
+
+  it('gleeful-arsonist-pinned-oracle-supported — the interpreter alone models the opponent-cast damage and undying', () => {
+    expect(arsonist.sha256).toBe(
+      'b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143',
+    );
+    expectNoRegistration(arsonist.card);
+    expectModeled(arsonist.card);
+    const def = interpretCard(arsonist.card);
+    expect(def.triggers.map((trigger) => trigger.trigger?.when)).toEqual(['castsSpell', 'dies']);
+    expect(def.triggers[0]!.trigger).toMatchObject({ caster: 'opponent' });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } },
+    ]);
+    expect(def.triggers[1]!.effects).toEqual([
+      { op: 'returnDiedSourceToBattlefield', counter: '+1/+1' },
+    ]);
+  });
+
+  it('gleeful-arsonist-damages-caster — an opponent’s noncreature spell takes damage equal to its power, from the Arsonist', () => {
+    const ctx = pod('arsonist-damage');
+    spawn(ctx, 'P1', arsonist.card);
+    castFromHand(ctx, 'P3', LAB_BOLT, red(1), new Map([[0, 'P2']]));
+    settle(ctx);
+    expect(playerById(ctx, 'P3').life).toBe(39);
+    const damage = ctx.state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage[0]?.payload).toMatchObject({
+      source: expect.stringMatching(/^Gleeful Arsonist/),
+      amount: 1,
+    });
+  });
+
+  it('gleeful-arsonist-power-on-resolution — its power when the trigger resolves sets the damage', () => {
+    const ctx = pod('arsonist-pumped');
+    const perm = spawn(ctx, 'P1', arsonist.card);
+    castFromHand(ctx, 'P2', LAB_BOLT, red(1), new Map([[0, 'P1']]));
+    perm.counters = { '+1/+1': 2 };
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+  });
+
+  it('gleeful-arsonist-undying-then-two — undying returns it as a 2/3 that deals 2', () => {
+    const ctx = pod('arsonist-undying');
+    const perm = spawn(ctx, 'P1', arsonist.card);
+    kill(ctx, perm);
+    settle(ctx);
+    const back = onField(ctx, perm.cardId)!;
+    expect(back.counters).toEqual({ '+1/+1': 1 });
+    expect(effectivePT(ctx, back)).toEqual({ power: 2, toughness: 3 });
+    castFromHand(ctx, 'P2', LAB_BOLT, red(1), new Map([[0, 'P1']]));
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    kill(ctx, back);
+    settle(ctx);
+    expect(onField(ctx, perm.cardId)).toBeUndefined();
+  });
+
+  it('gleeful-arsonist-own-and-creature-spells — your own noncreature spell and an opponent’s creature spell do nothing', () => {
+    const ctx = pod('arsonist-negative');
+    spawn(ctx, 'P1', arsonist.card);
+    castFromHand(ctx, 'P1', LAB_BOLT, red(1), new Map([[0, 'P2']]));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    castFromHand(ctx, 'P2', bear, generic(1));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -885,6 +961,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Gleeful Arsonist',
+    sha256: 'b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143',
+    clauseCount: 2,
+  },
   {
     name: 'Kambal, Consul of Allocation',
     sha256: '803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71',

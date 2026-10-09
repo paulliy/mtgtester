@@ -46,7 +46,6 @@ const REASONS: Record<string, string> = {
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
   'Firkraag, Cunning Instigator':
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
-  'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
@@ -305,6 +304,7 @@ describe('Marchesa catalog audit containment', () => {
     'Glen Elendra Archmage',
     'Flayer of the Hatebound',
     'Kambal, Consul of Allocation',
+    'Gleeful Arsonist',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

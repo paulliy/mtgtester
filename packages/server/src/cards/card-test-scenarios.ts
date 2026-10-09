@@ -7581,6 +7581,39 @@ function kambalScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function gleefulArsonistScenario(gameId: GameId): CardTestScenario {
+  const arsonist = pinnedFrom(MARCHESA_BATCH1, 'Gleeful Arsonist');
+  return pr01Scenario(gameId, {
+    id: 'gleeful-arsonist-viewer-burn-and-undying',
+    title: 'Gleeful Arsonist: burn P2 for casting, then undying',
+    instructions: [
+      'Gleeful Arsonist and two Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Cast Lab Doom on Gleeful Arsonist. P2 responds by casting Lab Shock at you.',
+    ],
+    expectedOutcome:
+      'Lab Shock triggers the Arsonist, which deals 1 damage to P2; Lab Doom then destroys it and undying returns it as a 2/3 with a +1/+1 counter.',
+    oracleSha256: arsonist.sha256,
+    clauseIds: ['gleeful-arsonist-burn-caster', 'gleeful-arsonist-undying'],
+    decks: {
+      P1: [arsonist.card, LAB_DOOM, SWAMP, SWAMP, LAB_OX],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Doom'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Gleeful Arsonist', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Shock') },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7766,6 +7799,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'glen-elendra-archmage-viewer-counter-persist',
   'flayer-of-the-hatebound-viewer-undying-damage',
   'kambal-viewer-opponent-noncreature-spell',
+  'gleeful-arsonist-viewer-burn-and-undying',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7971,6 +8005,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'glen-elendra-archmage-viewer-counter-persist': glenElendraArchmageScenario,
   'flayer-of-the-hatebound-viewer-undying-damage': flayerOfTheHateboundScenario,
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
+  'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
 };
 
 export function createCardTestScenario(

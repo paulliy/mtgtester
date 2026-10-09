@@ -1729,6 +1729,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Kambal, Consul of Allocation: tax P2's noncreature spell"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Gleeful Arsonist: burn P2 for casting, then undying'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

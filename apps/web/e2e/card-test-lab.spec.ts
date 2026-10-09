@@ -4839,3 +4839,19 @@ test("Kambal, Consul of Allocation: tax P2's noncreature spell", async ({ page }
   await expect(page.locator('.log .line', { hasText: /gains 2 life$/ })).toHaveCount(1);
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
 });
+
+test('Gleeful Arsonist: burn P2 for casting, then undying', async ({ page }) => {
+  await runScenario(page, 'Gleeful Arsonist: burn P2 for casting, then undying');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Gleeful Arsonist').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // P2's scripted seat responds with Lab Shock, which triggers the Arsonist.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Gleeful Arsonist.* deals 1 to P2/).first()).toBeVisible();
+  await expect(permanent(page, 'Gleeful Arsonist')).toBeVisible();
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+});

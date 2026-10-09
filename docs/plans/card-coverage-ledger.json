@@ -1163,6 +1163,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
+    "name": "Gleeful Arsonist",
+    "package": "PR03.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Undying is claimed without a persist/undying replacement."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
     "name": "Glen Elendra Archmage",
     "package": "PR03.03",

@@ -197,3 +197,19 @@ describe('Kambal, Consul of Allocation Card Test Lab scenario', () => {
     replays('kambal-viewer-opponent-noncreature-spell', steps);
   });
 });
+
+describe('Gleeful Arsonist Card Test Lab scenario', () => {
+  it('gleeful-arsonist-viewer-burn-and-undying — P2’s Lab Shock costs P2 1 damage, then undying returns the Arsonist', () => {
+    // The second step is P2's response: in the real viewer its scripted provider casts it.
+    const steps: Step[] = [
+      { action: 'Cast Lab Doom', targets: ['Gleeful Arsonist'] },
+      { action: 'Cast Lab Shock', targets: ['P1'] },
+    ];
+    const { seat, onBattlefield } = run('gleeful-arsonist-viewer-burn-and-undying', steps);
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P1').life).toBe(38);
+    const [arsonist] = onBattlefield('Gleeful Arsonist');
+    expect(arsonist?.counters).toEqual({ '+1/+1': 1 });
+    replays('gleeful-arsonist-viewer-burn-and-undying', steps);
+  });
+});

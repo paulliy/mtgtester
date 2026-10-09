@@ -6001,12 +6001,6 @@
     }
   },
   {
-    "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
-    "name": "Gleeful Arsonist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "9070c98b-fd01-4eeb-a4ec-fc464946c7c0",
     "name": "Stridehangar Automaton",
     "handledLines": [
@@ -15865,12 +15859,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-gleeful-arsonist",
-    "name": "Gleeful Arsonist",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-glimmer-of-genius",

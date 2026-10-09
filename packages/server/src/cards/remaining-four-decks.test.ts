@@ -118,7 +118,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'The Ooze',
       'Watcher for Tomorrow',
       'Dark Confidant',
-      'Gleeful Arsonist',
       'Iron Apprentice',
       'Kardur, Doomscourge',
       'Mana Sculpt',

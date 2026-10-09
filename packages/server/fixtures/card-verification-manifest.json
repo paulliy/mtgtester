@@ -751,13 +751,38 @@
     "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8": {
       "name": "Gleeful Arsonist",
       "oracleSha256": "b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "gleeful-arsonist-burn-caster",
+          "oracleText": "Whenever an opponent casts a noncreature spell, this creature deals damage equal to its power to that player.",
+          "implementation": [
+            "interpreted castsSpell trigger with caster opponent and filter not Creature",
+            "dealDamage to eventPlayer (the caster), amount powerOfSource read as the trigger resolves, with the Arsonist as the source"
+          ],
+          "engineTestIds": [
+            "gleeful-arsonist-pinned-oracle-supported",
+            "gleeful-arsonist-damages-caster",
+            "gleeful-arsonist-power-on-resolution",
+            "gleeful-arsonist-undying-then-two",
+            "gleeful-arsonist-own-and-creature-spells"
+          ],
+          "viewerScenarioIds": ["gleeful-arsonist-viewer-burn-and-undying"]
+        },
+        {
+          "id": "gleeful-arsonist-undying",
           "oracleText": "Undying",
-          "implementation": ["explicitly unsupported; Undying is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters +1/+1 <= 0 on last-known counters (CR 702.93a)",
+            "returnDiedSourceToBattlefield +1/+1: only the graveyard card this permanent became, under its owner's control, entering with a +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "gleeful-arsonist-pinned-oracle-supported",
+            "gleeful-arsonist-undying-then-two",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object"
+          ],
+          "viewerScenarioIds": ["gleeful-arsonist-viewer-burn-and-undying"]
         }
       ],
       "gameplayAiScenarioIds": []

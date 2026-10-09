@@ -322,6 +322,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'glen-elendra-archmage-viewer-counter-persist',
       'flayer-of-the-hatebound-viewer-undying-damage',
       'kambal-viewer-opponent-noncreature-spell',
+      'gleeful-arsonist-viewer-burn-and-undying',
     ]);
   });
 
