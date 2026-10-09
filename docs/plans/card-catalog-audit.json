@@ -5586,7 +5586,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 44,
+      "uniqueOracleIds": 43,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6004,6 +6004,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Registration deleted: the interpreter reads Hideaway 4, enters tapped, and 'When this creature leaves the battlefield, put the exiled card into its owner's hand' as a leavesBattlefield trigger returning only the card this permanent's Hideaway exiled; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
+      "name": "Psychomancer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the graveyard-or-exile leave trigger (leavesBattlefield with leavesTo) and 'target opponent loses 1 life and you gain 1 life'; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

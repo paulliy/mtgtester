@@ -329,6 +329,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'river-kelpie-viewer-flashback-and-persist',
       'aurora-phoenix-viewer-cascade-return',
       'watcher-for-tomorrow-viewer-hideaway-leaves',
+      'psychomancer-viewer-artifact-drain',
     ]);
   });
 

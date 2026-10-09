@@ -7844,6 +7844,46 @@ function watcherForTomorrowScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function psychomancerScenario(gameId: GameId): CardTestScenario {
+  const psycho = pinnedFrom(MARCHESA_BATCH1, 'Psychomancer');
+  const shatter = card({
+    oracleId: 'lab-psycho-shatter',
+    name: 'Lab Shatter',
+    typeLine: 'Instant',
+    manaCost: '{1}{R}',
+    cmc: 2,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    oracleText: 'Destroy target artifact.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'psychomancer-viewer-artifact-drain',
+    title: 'Psychomancer: drain P2 when your artifact is destroyed',
+    instructions: [
+      'Psychomancer, Lab Anrakyr Relic and two Mountains are on your battlefield; Lab Shatter is in your hand.',
+      'Cast Lab Shatter on your own Lab Anrakyr Relic, then aim Psychomancer’s trigger at P2.',
+    ],
+    expectedOutcome: 'Lab Anrakyr Relic is destroyed; P2 loses 1 life and you gain 1 life.',
+    oracleSha256: psycho.sha256,
+    clauseIds: ['psychomancer-flying', 'psychomancer-harbinger-of-despair'],
+    decks: {
+      P1: [psycho.card, LAB_ANRAKYR_RELIC, shatter, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Shatter'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Psychomancer', 'Lab Anrakyr Relic', 'Mountain', 'Mountain'],
+        },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8036,6 +8076,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'river-kelpie-viewer-flashback-and-persist',
   'aurora-phoenix-viewer-cascade-return',
   'watcher-for-tomorrow-viewer-hideaway-leaves',
+  'psychomancer-viewer-artifact-drain',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8248,6 +8289,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
   'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
   'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
+  'psychomancer-viewer-artifact-drain': psychomancerScenario,
 };
 
 export function createCardTestScenario(

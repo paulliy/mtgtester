@@ -2368,15 +2368,31 @@
     "589b742c-fee5-413a-a56c-4d4ffaf0f73d": {
       "name": "Psychomancer",
       "oracleSha256": "a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life.",
+          "id": "psychomancer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["psychomancer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["psychomancer-viewer-artifact-drain"]
+        },
+        {
+          "id": "psychomancer-harbinger-of-despair",
+          "oracleText": "Harbinger of Despair — Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life.",
           "implementation": [
-            "explicitly unsupported; exile origin omitted; loseLife hits controller"
+            "interpreted leavesBattlefield trigger watching anyOf(self, other nontoken artifact you control) with leavesTo [graveyard, exile], read with last-known information",
+            "target player (opponent) slot; loseLifeTarget 1, then gainLife 1"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "psychomancer-pinned-oracle-supported",
+            "psychomancer-dies-drains",
+            "psychomancer-artifact-graveyard-or-exile",
+            "psychomancer-not-other-departures",
+            "psychomancer-dies-together",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["psychomancer-viewer-artifact-drain"]
         }
       ],
       "gameplayAiScenarioIds": []

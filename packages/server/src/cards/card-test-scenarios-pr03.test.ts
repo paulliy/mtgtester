@@ -307,3 +307,17 @@ describe('Watcher for Tomorrow Card Test Lab scenario', () => {
     replays('watcher-for-tomorrow-viewer-hideaway-leaves', steps);
   });
 });
+
+describe('Psychomancer Card Test Lab scenario', () => {
+  it('psychomancer-viewer-artifact-drain — destroying your own artifact drains P2 for 1', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Shatter', targets: ['Lab Anrakyr Relic'] },
+      { action: 'Psychomancer', targets: ['P2'] },
+    ];
+    const { seat, onBattlefield } = run('psychomancer-viewer-artifact-drain', steps);
+    expect(onBattlefield('Lab Anrakyr Relic')).toEqual([]);
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P1').life).toBe(41);
+    replays('psychomancer-viewer-artifact-drain', steps);
+  });
+});

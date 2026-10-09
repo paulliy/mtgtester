@@ -1685,6 +1685,79 @@ describe('Watcher for Tomorrow', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.06 Psychomancer
+// ---------------------------------------------------------------------------------------------
+
+describe('Psychomancer', () => {
+  const psycho = pinned('Psychomancer');
+  const relic = oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{2}' });
+
+  const aimAt =
+    (player: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, player]]) };
+      return { index: 0, targets: new Map() };
+    };
+
+  it('psychomancer-pinned-oracle-supported — the interpreter alone models flying and the graveyard-or-exile drain', () => {
+    expect(psycho.sha256).toBe('a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c');
+    expectNoRegistration(psycho.card);
+    expectModeled(psycho.card);
+    const def = interpretCard(psycho.card);
+    expect(def.keywords).toEqual(['flying']);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'leavesBattlefield',
+      leavesTo: ['graveyard', 'exile'],
+    });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+  });
+
+  it('psychomancer-dies-drains — dying, it drains target opponent for 1', () => {
+    const ctx = pod('psycho-dies');
+    const perm = spawn(ctx, 'P1', psycho.card);
+    kill(ctx, perm);
+    settle(ctx, aimAt('P2'));
+    expect(playerById(ctx, 'P2').life).toBe(39);
+    expect(playerById(ctx, 'P1').life).toBe(41);
+  });
+
+  it('psychomancer-artifact-graveyard-or-exile — another nontoken artifact you control destroyed or exiled drains', () => {
+    for (const zone of ['graveyard', 'exile'] as const) {
+      const ctx = pod(`psycho-${zone}`);
+      spawn(ctx, 'P1', psycho.card);
+      pump(moveObject(ctx, spawn(ctx, 'P1', relic), { zone }));
+      settle(ctx, aimAt('P3'));
+      expect(playerById(ctx, 'P3').life, zone).toBe(39);
+      expect(playerById(ctx, 'P1').life, zone).toBe(41);
+    }
+  });
+
+  it('psychomancer-not-other-departures — a bounce, a token, or an opponent’s artifact drains nothing', () => {
+    const ctx = pod('psycho-negative');
+    spawn(ctx, 'P1', psycho.card);
+    pump(moveObject(ctx, spawn(ctx, 'P1', relic), { zone: 'hand' }));
+    kill(ctx, spawn(ctx, 'P1', relic, { isToken: true }));
+    kill(ctx, spawn(ctx, 'P2', relic));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('psychomancer-dies-together — dying with an artifact you control, it sees both (last-known information)', () => {
+    const ctx = pod('psycho-together');
+    const perm = spawn(ctx, 'P1', psycho.card);
+    const other = spawn(ctx, 'P1', relic);
+    pump(movePermanentsToGraveyard(ctx, [perm, other]));
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Psychomancer',
+      'Psychomancer',
+    ]);
+    settle(ctx, aimAt('P2'));
+    expect(playerById(ctx, 'P2').life).toBe(38);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1696,6 +1769,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Psychomancer',
+    sha256: 'a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c',
+    clauseCount: 2,
+  },
   {
     name: 'Watcher for Tomorrow',
     sha256: '02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57',

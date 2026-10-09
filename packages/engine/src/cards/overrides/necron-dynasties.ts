@@ -337,12 +337,8 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  // Catalog audit necron-main-batch-1: exile origin omitted; loseLife hits you.
-  unsupportedCard(
-    '589b742c-fee5-413a-a56c-4d4ffaf0f73d',
-    'Psychomancer',
-    'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
-  );
+  // Psychomancer: restored in coverage PR03. The interpreter reads the graveyard-or-exile leave
+  // trigger and the targeted drain, so no override remains.
 
   unimplemented('c23e5b80-08d2-4e24-9908-fe2aa4f30f6f', 'Reliquary Tower', [
     'You have no maximum hand size.',

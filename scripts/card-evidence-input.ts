@@ -1757,6 +1757,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Watcher for Tomorrow: hide a card, then get it back as it leaves'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Psychomancer: drain P2 when your artifact is destroyed'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -3388,12 +3388,6 @@
     }
   },
   {
-    "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
-    "name": "Psychomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "58d7b8b3-ac47-4805-8259-4ba8e70d7dc3",
     "name": "Primal Might",
     "handledLines": [
@@ -19298,12 +19292,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "oracle-psychomancer",
-    "name": "Psychomancer",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-puppeteer-clique",

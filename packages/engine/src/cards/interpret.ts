@@ -2109,15 +2109,16 @@ function parseEffectSentence(
     }
   }
   {
-    const m = s.match(/^target player loses (\w+) life(?: and you gain (\w+) life)?$/);
+    // "target opponent loses 1 life and you gain 1 life" (Psychomancer) is the same drain with an
+    // opponent-only slot.
+    const m = s.match(/^target (player|opponent) loses (\w+) life(?: and you gain (\w+) life)?$/);
     if (m) {
-      const amount = parseAmount(m[1] as string);
+      const amount = parseAmount(m[2] as string);
       if (amount === null) return null;
-      const effects: Effect[] = [
-        { op: 'loseLifeTarget', target: alloc('player'), amount: constant(amount) },
-      ];
-      if (m[2] !== undefined) {
-        const gain = parseAmount(m[2] as string);
+      const target = m[1] === 'opponent' ? alloc('player', undefined, 'opponent') : alloc('player');
+      const effects: Effect[] = [{ op: 'loseLifeTarget', target, amount: constant(amount) }];
+      if (m[3] !== undefined) {
+        const gain = parseAmount(m[3] as string);
         if (gain === null) return null;
         effects.push({ op: 'gainLife', amount: constant(gain) });
       }

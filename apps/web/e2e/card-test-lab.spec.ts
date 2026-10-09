@@ -4982,3 +4982,23 @@ test('Watcher for Tomorrow: hide a card, then get it back as it leaves', async (
     }),
   ).toHaveCount(1);
 });
+
+test('Psychomancer: drain P2 when your artifact is destroyed', async ({ page }) => {
+  await runScenario(page, 'Psychomancer: drain P2 when your artifact is destroyed');
+  const shatter = handCard(page, 'Lab Shatter');
+  await expect(shatter).toHaveClass(/actionable/);
+  await shatter.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Anrakyr Relic').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // The Relic is destroyed: Psychomancer's trigger asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  await expect(page.locator('.log .line', { hasText: /loses 1 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
+});

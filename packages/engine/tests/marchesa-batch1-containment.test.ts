@@ -157,8 +157,6 @@ const REASONS: Record<string, string> = {
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
-  Psychomancer:
-    'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Imotekh the Stormlord':
     'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
@@ -305,6 +303,7 @@ describe('Marchesa catalog audit containment', () => {
     'Satoru, the Infiltrator',
     'River Kelpie',
     'Watcher for Tomorrow',
+    'Psychomancer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
