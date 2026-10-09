@@ -432,3 +432,42 @@ describe('Flickerwisp Card Test Lab scenario', () => {
     replays('flickerwisp-viewer-exile-and-return', steps);
   });
 });
+
+describe('Venser, the Sojourner Card Test Lab scenarios', () => {
+  it('venser-viewer-plus-two-blink — Lab Ox is exiled and returns under your control at the end step', () => {
+    const steps: Step[] = [{ action: ': +2:', targets: ['Lab Ox'] }];
+    const { state, onBattlefield } = run('venser-viewer-plus-two-blink', steps);
+    expect(onBattlefield('Lab Ox').map((perm) => perm.controllerId)).toEqual(['P1']);
+    expect(onBattlefield('Venser, the Sojourner')[0]?.counters['loyalty']).toBe(5);
+    expect(state.exile).toEqual([]);
+    replays('venser-viewer-plus-two-blink', steps);
+  });
+
+  it("venser-viewer-minus-one-unblockable — P2's Lab Ox cannot block, so P2 takes 4", () => {
+    const steps: Step[] = [{ action: ': −1:' }, { action: 'Declare attackers', targets: ['P2'] }];
+    const { seat, onBattlefield } = run('venser-viewer-minus-one-unblockable', steps);
+    expect(onBattlefield('Venser, the Sojourner')[0]?.counters['loyalty']).toBe(2);
+    expect(seat('P2').life).toBe(36);
+    replays('venser-viewer-minus-one-unblockable', steps);
+  });
+
+  it("venser-viewer-minus-eight-emblem — the emblem exiles P2's Lab Ox when Lab Divination is cast", () => {
+    const steps: Step[] = [
+      { action: ': −8:' },
+      { action: 'Cast Lab Divination' },
+      { action: 'Venser, the Sojourner emblem', targets: ['Lab Ox'] },
+    ];
+    const { state, seat, onBattlefield } = run('venser-viewer-minus-eight-emblem', steps);
+    expect(
+      state.eventLog.filter((event) => event.type === 'createEmblem').map((event) => event.payload),
+    ).toEqual([{ player: 'P1', name: 'Venser, the Sojourner emblem' }]);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Divination', 'Venser, the Sojourner']);
+    replays('venser-viewer-minus-eight-emblem', steps);
+  });
+});

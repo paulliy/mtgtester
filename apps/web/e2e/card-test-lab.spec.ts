@@ -5163,3 +5163,55 @@ test("Flickerwisp: exile P2's creature until the next end step", async ({ page }
     }),
   ).toHaveCount(0);
 });
+
+test('Venser, the Sojourner: +2 blinks your Lab Ox at the end step', async ({ page }) => {
+  await runScenario(page, 'Venser, the Sojourner: +2 blinks your Lab Ox at the end step');
+  const venser = permanent(page, 'Venser, the Sojourner');
+  await expect(venser).toHaveClass(/actionable/, { timeout: 15_000 });
+  await venser.click();
+  await page.getByRole('button', { name: /\+2: Exile target permanent you own/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by Venser/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+    }),
+  ).toHaveCount(0);
+});
+
+test('Venser, the Sojourner: −1 makes creatures unblockable', async ({ page }) => {
+  await runScenario(page, 'Venser, the Sojourner: −1 makes creatures unblockable');
+  await activate(page, 'Venser, the Sojourner', /−1: Creatures can't be blocked/);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
+});
+
+test("Venser, the Sojourner: −8 emblem exiles P2's Lab Ox", async ({ page }) => {
+  await runScenario(page, "Venser, the Sojourner: −8 emblem exiles P2's Lab Ox");
+  await activate(page, 'Venser, the Sojourner', /−8: You get an emblem/);
+  const divination = handCard(page, 'Lab Divination');
+  await expect(divination).toHaveClass(/actionable/, { timeout: 15_000 });
+  await divination.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The emblem triggers on the cast: choose its target, P2's Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});

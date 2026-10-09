@@ -1956,6 +1956,46 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       }
     }
   }
+
+  // Emblem cast triggers (CR 114.4): "You get an emblem with 'Whenever you cast a spell, …'"
+  // (Venser, the Sojourner). An emblem has no characteristics of its own to filter on.
+  for (const player of ctx.state.players) {
+    for (const emblem of player.emblems) {
+      for (const ability of emblem.abilities) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== 'castsSpell') continue;
+        const isController = spell.controllerId === emblem.controllerId;
+        if (spec.caster === 'you' && !isController) continue;
+        if (spec.caster === 'opponent' && isController) continue;
+        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
+        if (!castFromMatches(spec, spell)) continue;
+        const from: SelectorSource = {
+          cardId: emblem.id,
+          controllerId: emblem.controllerId,
+          eventPlayerId: spell.controllerId,
+        };
+        if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        // No emblem watches a spell's targets; fail closed rather than fire.
+        if (spec.targetFilter !== undefined) continue;
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+        ctx.state.pendingTriggers.push({
+          controllerId: emblem.controllerId,
+          sourceCardId: emblem.id,
+          sourceOracleId: '' as never,
+          sourceName: emblem.name,
+          ability,
+          scope: {
+            spellManaValue: manaValue,
+            eventPlayerId: spell.controllerId,
+            ...(spell.triggerScope?.manaSpent !== undefined
+              ? { manaSpent: spell.triggerScope.manaSpent }
+              : {}),
+          },
+        });
+        debug(ctx, 'stack', `emblem cast trigger queued: ${emblem.name} — ${spell.description}`);
+      }
+    }
+  }
 }
 
 /**

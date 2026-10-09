@@ -714,6 +714,7 @@ const families = {
       pumpUntilEot: true,
       grantKeywordUntilEot: true,
       cantBeBlockedUntilEot: true,
+      creaturesCantBeBlockedThisTurn: true,
       chooseOne: true,
       fight: true,
       pumpEachUntilEot: true,

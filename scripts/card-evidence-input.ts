@@ -1789,6 +1789,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Flickerwisp: exile P2's creature until the next end step"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Venser, the Sojourner: +2 blinks your Lab Ox at the end step'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Venser, the Sojourner: −1 makes creatures unblockable'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Venser, the Sojourner: −8 emblem exiles P2's Lab Ox"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -22,7 +22,7 @@ import {
 import type { AuthoringIssue } from '../src/cards/authoring-validation';
 import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
-import type { TokenSpec } from '../src/cards/ability';
+import type { Effect, TokenSpec } from '../src/cards/ability';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { MUTAGEN } from '../src/cards/tokens';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
@@ -45,6 +45,7 @@ import {
   conjure,
   copies,
   declareAttacks,
+  declareBlocks,
   forest,
   gameConfig,
   oracle,
@@ -2689,6 +2690,192 @@ describe('Flickerwisp', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.28 Venser, the Sojourner
+// ---------------------------------------------------------------------------------------------
+
+const VENSER_SHA = '2160ba7e8a5046951166879c01d937fbd7fdcc60d7b4a001a89876806249536b';
+
+describe('Venser, the Sojourner', () => {
+  const venser = pinned('Venser, the Sojourner');
+  const bear = oracle({
+    name: 'Lab Bear',
+    typeLine: 'Creature — Bear',
+    power: '2',
+    toughness: '2',
+  });
+  const divination = oracle({
+    name: 'Lab Divination',
+    typeLine: 'Sorcery',
+    manaCost: '{U}',
+    oracleText: 'Draw a card.',
+  });
+  const aim =
+    (id: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, id]]) };
+      return { index: 0, targets: new Map() };
+    };
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+
+  function activate(ctx: GameContext, self: EnginePermanent, cost: RegExp, targetId?: string) {
+    const option = optionFor(ctx, 'P1', self.id, cost);
+    expect(option, String(cost)).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      targetId === undefined ? new Map() : new Map([[0, targetId]]),
+    );
+    resolveTop(ctx);
+  }
+
+  /** P1's creatures attack P2; returns the attackers P2's creatures were offered to block. */
+  function attackP2(ctx: GameContext): string[] {
+    const offered: string[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => 'P2');
+      if (decision.presentationBlockDeclaration !== undefined) {
+        for (const subject of decision.presentationBlockDeclaration.subjects)
+          offered.push(...subject.attackers.map((attacker) => attacker.attackerId));
+        return declareBlocks(decision, () => null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return offered;
+  }
+
+  it('venser-the-sojourner-pinned-oracle-supported — the interpreter models all three loyalty abilities', () => {
+    expect(venser.sha256).toBe(VENSER_SHA);
+    expectNoRegistration(venser.card);
+    expectModeled(venser.card);
+    const [plus, minus, ultimate] = interpretCard(venser.card).activatedAbilities;
+    expect(plus?.costs).toEqual([{ kind: 'loyalty', delta: 2 }]);
+    expect(plus?.ability.targets).toEqual([
+      { kind: 'permanent', filter: { kind: 'owner', who: 'you' } },
+    ]);
+    expect(plus?.ability.effects).toEqual([
+      { op: 'exileTargetReturnAtNextEndStep', target: 0, returnUnder: 'sourceController' },
+    ]);
+    expect(minus?.costs).toEqual([{ kind: 'loyalty', delta: -1 }]);
+    expect(minus?.ability.effects).toEqual([{ op: 'creaturesCantBeBlockedThisTurn' }]);
+    expect(ultimate?.costs).toEqual([{ kind: 'loyalty', delta: -8 }]);
+    const emblem = ultimate?.ability.effects[0] as Extract<Effect, { op: 'createEmblem' }>;
+    expect(emblem.op).toBe('createEmblem');
+    expect(
+      emblem.abilities.map((ability) => [ability.trigger, ability.targets, ability.effects]),
+    ).toEqual([
+      [
+        { when: 'castsSpell', caster: 'you' },
+        [{ kind: 'permanent' }],
+        [{ op: 'exile', target: 0 }],
+      ],
+    ]);
+  });
+
+  it('venser-plus-two-blink — +2 exiles a permanent you own and returns it under your control at the next end step', () => {
+    const ctx = pod('venser-plus');
+    const self = spawn(ctx, 'P1', venser.card);
+    const mine = spawn(ctx, 'P1', bear);
+    activate(ctx, self, /: \+2:/, mine.id);
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(self.counters['loyalty']).toBe(5);
+    beginEndStep(ctx);
+    settle(ctx);
+    const [back] = named(ctx, 'Lab Bear');
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.id).not.toBe(mine.id);
+  });
+
+  it('venser-plus-two-ownership — it targets what you own, even under an opponent, and brings it back under your control', () => {
+    const ctx = pod('venser-own');
+    const self = spawn(ctx, 'P1', venser.card);
+    const yoursStolen = spawn(ctx, 'P1', bear);
+    yoursStolen.controllerId = 'P2';
+    const theirsBorrowed = spawn(ctx, 'P2', bear);
+    theirsBorrowed.controllerId = 'P1';
+    const spec = interpretCard(venser.card).activatedAbilities[0]!.ability.targets[0]!;
+    const legal = computeTargetOptions(ctx, spec, 'P1', [], undefined, undefined, self.cardId);
+    expect(legal).toContain(yoursStolen.id);
+    expect(legal).not.toContain(theirsBorrowed.id);
+    activate(ctx, self, /: \+2:/, yoursStolen.id);
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(
+      named(ctx, 'Lab Bear')
+        .filter((perm) => perm.ownerId === 'P1')
+        .map((perm) => perm.controllerId),
+    ).toEqual(['P1']);
+  });
+
+  it("venser-minus-one-unblockable — creatures can't be blocked this turn, including one that arrives afterwards (CR 611.2c)", () => {
+    const ctx = pod('venser-minus');
+    const self = spawn(ctx, 'P1', venser.card);
+    spawn(ctx, 'P2', bear);
+    activate(ctx, self, /: −1:/);
+    expect(ctx.state.creaturesCantBeBlockedThisTurn).toBe(true);
+    const late = spawn(ctx, 'P1', bear);
+    const life = playerById(ctx, 'P2').life;
+    const offered = attackP2(ctx);
+    expect(offered).not.toContain(late.id);
+    expect(playerById(ctx, 'P2').life).toBe(life - 2);
+  });
+
+  it('venser-minus-one-control — without it, the same attacker can be blocked', () => {
+    const ctx = pod('venser-minus-control');
+    spawn(ctx, 'P1', venser.card);
+    spawn(ctx, 'P2', bear);
+    const attacker = spawn(ctx, 'P1', bear);
+    expect(attackP2(ctx)).toContain(attacker.id);
+  });
+
+  it('venser-minus-eight-emblem — the emblem exiles target permanent whenever you cast a spell', () => {
+    const ctx = pod('venser-emblem');
+    const self = spawn(ctx, 'P1', venser.card);
+    self.counters['loyalty'] = 8;
+    const theirs = spawn(ctx, 'P2', bear);
+    activate(ctx, self, /: −8:/);
+    expect(playerById(ctx, 'P1').emblems.map((emblem) => emblem.name)).toEqual([
+      'Venser, the Sojourner emblem',
+    ]);
+    castFromHand(ctx, 'P1', divination, blue(1));
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.sourceName)).toEqual([
+      'Venser, the Sojourner emblem',
+    ]);
+    settle(ctx, aim(theirs.id));
+    expect(named(ctx, 'Lab Bear')).toEqual([]);
+    expect(ctx.state.exile.map((card) => card.name)).toEqual(['Lab Bear']);
+  });
+
+  it("venser-emblem-opponent-casts — an opponent's spell does not trigger your emblem", () => {
+    const ctx = pod('venser-emblem-opponent');
+    const self = spawn(ctx, 'P1', venser.card);
+    self.counters['loyalty'] = 8;
+    activate(ctx, self, /: −8:/);
+    const spell = conjure(ctx, 'P2', LAB_BOLT, 'hand');
+    expect(spell).toBeDefined();
+    // Put P2's cast through the same cast-trigger scan as a cast from hand would.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    addMana(playerById(ctx, 'P2'), red(1));
+    const option = optionFor(ctx, 'P2', spell.id);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P2',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[0, 'P1']]),
+    );
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2707,6 +2894,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Imotekh the Stormlord',
     sha256: '389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c',
     clauseCount: 2,
+  },
+  {
+    name: 'Venser, the Sojourner',
+    sha256: VENSER_SHA,
+    clauseCount: 3,
   },
   {
     name: 'Flickerwisp',

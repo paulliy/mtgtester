@@ -8062,6 +8062,55 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a": {
+      "name": "Venser, the Sojourner",
+      "oracleSha256": "2160ba7e8a5046951166879c01d937fbd7fdcc60d7b4a001a89876806249536b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "venser-plus-two",
+          "oracleText": "+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.",
+          "implementation": [
+            "interpreted loyalty ability, matched as one block: target permanent filtered by owner you (CR 108.3), so one you own under an opponent is legal and one you control but do not own is not",
+            "exileTargetReturnAtNextEndStep returnUnder sourceController: exile, then a delayed end-step return of that exact card under Venser's controller"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-plus-two-blink",
+            "venser-plus-two-ownership"
+          ],
+          "viewerScenarioIds": ["venser-viewer-plus-two-blink"]
+        },
+        {
+          "id": "venser-minus-one",
+          "oracleText": "−1: Creatures can't be blocked this turn.",
+          "implementation": [
+            "creaturesCantBeBlockedThisTurn sets a turn-scoped rule flag read by block legality; it changes no characteristics, so creatures that arrive later this turn are covered too (CR 611.2c); reset at the next untap step"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-minus-one-unblockable",
+            "venser-minus-one-control"
+          ],
+          "viewerScenarioIds": ["venser-viewer-minus-one-unblockable"]
+        },
+        {
+          "id": "venser-minus-eight",
+          "oracleText": "−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"",
+          "implementation": [
+            "createEmblem with the quoted ability parsed as a trigger line: castsSpell caster you, target permanent, exile",
+            "emblem cast triggers are scanned by queueCastTriggers (CR 114.4), controlled by the emblem's owner; an opponent's spell does not trigger it"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-minus-eight-emblem",
+            "venser-emblem-opponent-casts"
+          ],
+          "viewerScenarioIds": ["venser-viewer-minus-eight-emblem"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -505,6 +505,8 @@ export type Effect =
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   /** Target creature cannot be blocked this turn. */
   | { op: 'cantBeBlockedUntilEot'; target: EffectRef }
+  /** "Creatures can't be blocked this turn" — every creature, including later arrivals. */
+  | { op: 'creaturesCantBeBlockedThisTurn' }
   /** A resolution-time choice between effects (for example Pemmin's Aura's two stat modes). */
   | { op: 'chooseOne'; options: { effects: Effect[]; description: string }[] }
   /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */

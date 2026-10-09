@@ -3067,17 +3067,21 @@
   {
     "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",
     "name": "Venser, the Sojourner",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.\"",
       "unrecognized rules text: \"−1: Creatures can't be blocked this turn.\"",
       "unrecognized rules text: \"−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "d7315b3b-6e5d-4d28-a503-bfae1daf6c43",

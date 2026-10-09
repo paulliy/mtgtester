@@ -1295,6 +1295,24 @@ function parseEffectSentence(
       ];
     }
   }
+  // "You get an emblem with \"Whenever you cast a spell, exile target permanent.\"" (Venser, the
+  // Sojourner): the quoted ability is parsed as a trigger line, in its printed casing.
+  {
+    const emblem = s.match(/^you get an emblem with "(.+)"$/);
+    if (emblem !== null) {
+      const quoted = (emblem[1] as string).replace(/\.$/, '');
+      const at = card.oracleText.toLowerCase().indexOf(quoted);
+      const abilities = parseTriggerLine(
+        at < 0 ? quoted : card.oracleText.slice(at, at + quoted.length),
+        card,
+      );
+      if (abilities === null || abilities.length === 0) return null;
+      return [{ op: 'createEmblem', name: `${card.name} emblem`, abilities }];
+    }
+  }
+  if (s === "creatures can't be blocked this turn") {
+    return [{ op: 'creaturesCantBeBlockedThisTurn' }];
+  }
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
   }
@@ -5381,6 +5399,7 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   const effects: Effect[] =
     parseHerdHeirloomEffect(split.effectText, alloc, card) ??
     parseGraveyardExileCreatureRider(split.effectText, alloc) ??
+    parseExileReturnAtNextEndStepBlock(split.effectText, alloc) ??
     // Same reason as the spell path: this block's later sentences refer back to the first
     // ("them", "the rest"), so it must be matched whole rather than sentence by sentence.
     // Sensei's Divining Top prints it as an activated ability, not as a spell.

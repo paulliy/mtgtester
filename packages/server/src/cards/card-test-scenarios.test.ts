@@ -337,6 +337,9 @@ describe('deterministic Card Test Lab scenarios', () => {
       'god-eternal-rhonas-viewer-double-and-return',
       'candlekeep-sage-viewer-commander-enters-and-leaves',
       'flickerwisp-viewer-exile-and-return',
+      'venser-viewer-plus-two-blink',
+      'venser-viewer-minus-one-unblockable',
+      'venser-viewer-minus-eight-emblem',
     ]);
   });
 

@@ -80,6 +80,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   pumpUntilEot: { target: permanent },
   grantKeywordUntilEot: { target: permanent },
   cantBeBlockedUntilEot: { target: permanent },
+  creaturesCantBeBlockedThisTurn: {},
   chooseOne: {},
   fight: { first: permanent, second: permanent },
   pumpEachUntilEot: {},

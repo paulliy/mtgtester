@@ -541,6 +541,11 @@ export interface EngineState extends GameState {
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   /**
+   * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,
+   * so it covers creatures that arrive after it resolved too (CR 611.2c). Reset each turn.
+   */
+  creaturesCantBeBlockedThisTurn: boolean;
+  /**
    * Cards exiled "until SOURCE leaves the battlefield" (Conclave Tribunal), keyed by the
    * source's card id, so `moveObject` can find and return them all when the source itself
    * leaves (CR 610.3c — they return under their owners' control). The exiled

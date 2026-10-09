@@ -1415,6 +1415,11 @@ export function* executeAbility(
         });
         break;
       }
+      case 'creaturesCantBeBlockedThisTurn': {
+        ctx.state.creaturesCantBeBlockedThisTurn = true;
+        emit(ctx, 'creaturesCantBeBlocked', { source: source.name });
+        break;
+      }
       case 'cantBeBlockedUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;

@@ -274,6 +274,7 @@ const effectExpressions = {
   pumpUntilEot: { power: numericExpression, toughness: numericExpression },
   grantKeywordUntilEot: {},
   cantBeBlockedUntilEot: {},
+  creaturesCantBeBlockedThisTurn: {},
   chooseOne: {},
   fight: {},
   pumpEachUntilEot: { selector: selector, power: numericExpression, toughness: numericExpression },

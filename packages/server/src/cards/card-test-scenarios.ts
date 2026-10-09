@@ -8182,6 +8182,96 @@ function flickerwispScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function venserScenario(
+  gameId: GameId,
+  id:
+    | 'venser-viewer-plus-two-blink'
+    | 'venser-viewer-minus-one-unblockable'
+    | 'venser-viewer-minus-eight-emblem',
+): CardTestScenario {
+  const venser = pinnedFrom(COVERAGE_PR03, 'Venser, the Sojourner');
+  const divination = card({
+    oracleId: 'lab-venser-divination',
+    name: 'Lab Divination',
+    typeLine: 'Sorcery',
+    manaCost: '{U}',
+    cmc: 1,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    oracleText: 'Draw a card.',
+  });
+  const base = {
+    oracleSha256: venser.sha256,
+    decks: {
+      P1: [venser.card, divination, LAB_OX, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+  };
+  if (id === 'venser-viewer-plus-two-blink')
+    return pr01Scenario(gameId, {
+      ...base,
+      id,
+      title: 'Venser, the Sojourner: +2 blinks your Lab Ox at the end step',
+      instructions: [
+        'Venser (loyalty 3) and Lab Ox are on your battlefield.',
+        'Activate +2 targeting your Lab Ox: it is exiled.',
+        'Pass to the end step: Lab Ox returns to the battlefield under your control.',
+      ],
+      expectedOutcome:
+        'Venser has 5 loyalty; Lab Ox is exiled, then returns under your control at the beginning of the end step.',
+      clauseIds: ['venser-plus-two'],
+      prepared: {
+        hand: [],
+        battlefield: [{ playerId: 'P1', cardNames: ['Venser, the Sojourner', 'Lab Ox'] }],
+        continueToEndStep: true,
+      },
+    });
+  if (id === 'venser-viewer-minus-one-unblockable')
+    return pr01Scenario(gameId, {
+      ...base,
+      id,
+      title: 'Venser, the Sojourner: −1 makes creatures unblockable',
+      instructions: [
+        'Venser (loyalty 3) and Lab Ox are on your battlefield; P2 has an untapped Lab Ox.',
+        "Activate −1: creatures can't be blocked this turn.",
+        "Attack P2 with your Lab Ox: P2's Lab Ox cannot block it.",
+      ],
+      expectedOutcome: 'Venser has 2 loyalty, and your unblocked Lab Ox deals 4 damage to P2.',
+      clauseIds: ['venser-minus-one'],
+      prepared: {
+        hand: [],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Venser, the Sojourner', 'Lab Ox'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+        continueThroughCombat: true,
+      },
+    });
+  return pr01Scenario(gameId, {
+    ...base,
+    id,
+    title: "Venser, the Sojourner: −8 emblem exiles P2's Lab Ox",
+    instructions: [
+      'Venser has 8 loyalty and an Island is on your battlefield; Lab Divination is in your hand and P2 has Lab Ox.',
+      'Activate −8 for the emblem, then cast Lab Divination.',
+      "The emblem triggers: exile P2's Lab Ox.",
+    ],
+    expectedOutcome:
+      "You have Venser's emblem, Venser is put into your graveyard with 0 loyalty, and casting Lab Divination exiles P2's Lab Ox.",
+    clauseIds: ['venser-minus-eight'],
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Divination'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Venser, the Sojourner'], counters: { loyalty: 8 } },
+        { playerId: 'P1', cardNames: ['Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -8382,6 +8472,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'god-eternal-rhonas-viewer-double-and-return',
   'candlekeep-sage-viewer-commander-enters-and-leaves',
   'flickerwisp-viewer-exile-and-return',
+  'venser-viewer-plus-two-blink',
+  'venser-viewer-minus-one-unblockable',
+  'venser-viewer-minus-eight-emblem',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -8602,6 +8695,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'god-eternal-rhonas-viewer-double-and-return': godEternalRhonasScenario,
   'candlekeep-sage-viewer-commander-enters-and-leaves': candlekeepSageScenario,
   'flickerwisp-viewer-exile-and-return': flickerwispScenario,
+  'venser-viewer-plus-two-blink': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-plus-two-blink'),
+  'venser-viewer-minus-one-unblockable': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-minus-one-unblockable'),
+  'venser-viewer-minus-eight-emblem': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
 };
 
 export function createCardTestScenario(

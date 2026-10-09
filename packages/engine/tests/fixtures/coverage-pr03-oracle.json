@@ -17,7 +17,7 @@
         "colorIdentity": [
           "R"
         ],
-        "typeLine": "Creature \u2014 Demon",
+        "typeLine": "Creature — Demon",
         "supertypes": [],
         "types": [
           "Creature"
@@ -25,7 +25,7 @@
         "subtypes": [
           "Demon"
         ],
-        "oracleText": "First strike, haste\nSymphony of Pain \u2014 Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+        "oracleText": "First strike, haste\nSymphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
         "power": "6",
         "toughness": "4",
         "loyalty": null,
@@ -54,7 +54,7 @@
         "colorIdentity": [
           "R"
         ],
-        "typeLine": "Creature \u2014 Phoenix",
+        "typeLine": "Creature — Phoenix",
         "supertypes": [],
         "types": [
           "Creature"
@@ -90,7 +90,7 @@
         "colorIdentity": [
           "G"
         ],
-        "typeLine": "Legendary Creature \u2014 Zombie God",
+        "typeLine": "Legendary Creature — Zombie God",
         "supertypes": [
           "Legendary"
         ],
@@ -129,7 +129,7 @@
         "colorIdentity": [
           "U"
         ],
-        "typeLine": "Legendary Enchantment \u2014 Background",
+        "typeLine": "Legendary Enchantment — Background",
         "supertypes": [
           "Legendary"
         ],
@@ -164,7 +164,7 @@
         "colorIdentity": [
           "W"
         ],
-        "typeLine": "Creature \u2014 Elemental",
+        "typeLine": "Creature — Elemental",
         "supertypes": [],
         "types": [
           "Creature"
@@ -180,6 +180,43 @@
         "keywords": [
           "Flying"
         ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2160ba7e8a5046951166879c01d937fbd7fdcc60d7b4a001a89876806249536b",
+      "card": {
+        "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",
+        "scryfallId": "8f61a0ea-c2e8-4571-9669-19abd8bbc874",
+        "name": "Venser, the Sojourner",
+        "manaCost": "{3}{W}{U}",
+        "cmc": 5,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Planeswalker — Venser",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Venser"
+        ],
+        "oracleText": "+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.\n−1: Creatures can't be blocked this turn.\n−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": "3",
+        "defense": null,
+        "keywords": [],
         "layout": "normal",
         "commanderLegality": "legal",
         "isBasicLand": false
