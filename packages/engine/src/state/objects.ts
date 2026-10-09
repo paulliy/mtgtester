@@ -304,7 +304,7 @@ export function makePermanent(
       manaValue: 0,
     });
   for (const source of ctx.state.battlefield) {
-    if (source.faceDown) continue;
+    if (source.faceDown || ctx.enteringTogether?.has(source.cardId) === true) continue;
     const sourceDef = getDefByOracleId(ctx, source.oracleId, source.name);
     for (const replacement of sourceDef.additionalCountersOnEntry ?? []) {
       if (
@@ -985,13 +985,22 @@ export function* moveObjects(
       continue;
     }
     const entering = destination.zone === 'battlefield' && object.zone !== 'battlefield';
-    const next = yield* moveObject(ctx, object, {
-      ...destination,
-      ...(leavingGraveyard.includes(object as EngineCardObject)
-        ? { deferCardZoneTriggers: true }
-        : {}),
-      ...(entering ? { deferEntersTriggers: true } : {}),
-    });
+    const outer = ctx.enteringTogether;
+    // Fellow entrants placed so far were not on the battlefield before this event (CR 614.12).
+    if (entering) ctx.enteringTogether = new Set(entered.map((permanent) => permanent.cardId));
+    let next: EngineCardObject | EnginePermanent | null;
+    try {
+      next = yield* moveObject(ctx, object, {
+        ...destination,
+        ...(leavingGraveyard.includes(object as EngineCardObject)
+          ? { deferCardZoneTriggers: true }
+          : {}),
+        ...(entering ? { deferEntersTriggers: true } : {}),
+      });
+    } finally {
+      if (outer === undefined) delete ctx.enteringTogether;
+      else ctx.enteringTogether = outer;
+    }
     moved.push(next);
     if (entering && next !== null && next.zone === 'battlefield')
       entered.push(next as EnginePermanent);

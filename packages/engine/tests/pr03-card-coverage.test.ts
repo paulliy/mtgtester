@@ -3246,6 +3246,39 @@ describe('Living Death', () => {
     expect(interpretCard(death.card).spellAbility?.effects).toEqual([{ op: 'livingDeath' }]);
   });
 
+  it('living-death-entrants-do-not-replace-each-other — a returning creature that adds counters on entry does not add them to a fellow entrant', () => {
+    // CR 614.12: only an effect already on the battlefield modifies how a permanent enters.
+    const sage = oracle({
+      name: 'Lab Sage',
+      typeLine: 'Creature — Wizard',
+      power: '2',
+      toughness: '2',
+      oracleText: 'Each other creature you control enters with an additional +1/+1 counter on it.',
+    });
+    expect(interpretCard(sage).additionalCountersOnEntry).toHaveLength(1);
+    for (const order of ['sage-first', 'zombie-first'] as const) {
+      const ctx = pod(`living-death-entrants-${order}`);
+      for (const card of order === 'sage-first' ? [sage, zombie] : [zombie, sage])
+        conjure(ctx, 'P1', card, 'graveyard');
+      castFromHand(ctx, 'P1', death.card, black(5));
+      resolveTop(ctx);
+      const returned = ctx.state.battlefield.find((perm) => perm.name === 'Lab Zombie');
+      expect(returned?.counters['+1/+1'] ?? 0, order).toBe(0);
+    }
+    // Control: the same replacement from a permanent already on the battlefield applies.
+    const ctx = pod('living-death-entrants-control');
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Lab Shrine', typeLine: 'Enchantment', oracleText: sage.oracleText }),
+    );
+    conjure(ctx, 'P1', zombie, 'graveyard');
+    castFromHand(ctx, 'P1', death.card, black(5));
+    resolveTop(ctx);
+    const returned = ctx.state.battlefield.find((perm) => perm.name === 'Lab Zombie');
+    expect(returned?.counters['+1/+1']).toBe(1);
+  });
+
   it('living-death-swaps — graveyard creature cards return under their owners, battlefield creatures go to graveyards', () => {
     const ctx = pod('living-death-swap');
     spawn(ctx, 'P1', bear);

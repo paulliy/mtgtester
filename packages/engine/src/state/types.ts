@@ -582,6 +582,12 @@ export interface GameContext {
   resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
   /** CR 608.2h departure information for objects moved by the resolving effect. */
   resolutionObjectFacts?: Map<ObjectId, ObjectFacts>;
+  /**
+   * Card ids of permanents already placed by the simultaneous entry being built. They were not
+   * on the battlefield before that event, so their entry replacements do not apply to fellow
+   * entrants (CR 614.12).
+   */
+  enteringTogether?: ReadonlySet<CardId>;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

@@ -1402,11 +1402,13 @@ function applyCounterReplacements(
   counter: string,
   amount: number,
   matches: (filter: Selector, source: SelectorSource) => boolean,
+  excludedSources?: ReadonlySet<string>,
 ): number {
   if (amount <= 0) return amount;
   let adjusted = amount;
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'counterPlacementReplacement') continue;
+    if (excludedSources?.has(entry.sourceCardId) === true) continue;
     if (entry.static.counter !== undefined && entry.static.counter !== counter) continue;
     const source: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
     if (!matches(entry.static.filter, source)) continue;
@@ -1427,14 +1429,21 @@ export function counterAmountAfterReplacements(
   );
 }
 
-/** Apply active counter replacements to a permanent while it is still entering. */
+/**
+ * Apply active counter replacements to a permanent while it is still entering. A fellow entrant
+ * of the same simultaneous event was not on the battlefield before it (CR 614.12).
+ */
 export function counterAmountAfterReplacementsForCandidate(
   ctx: GameContext,
   candidate: SelectorCandidate,
   counter: string,
   amount: number,
 ): number {
-  return applyCounterReplacements(ctx, counter, amount, (filter, source) =>
-    selectMatches(candidate, filter, source),
+  return applyCounterReplacements(
+    ctx,
+    counter,
+    amount,
+    (filter, source) => selectMatches(candidate, filter, source),
+    ctx.enteringTogether,
   );
 }
