@@ -5130,9 +5130,13 @@ test('Candlekeep Sage: your commander draws as it enters and leaves', async ({ p
   await page.locator('.command-zone .commander-card').click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
-  // Lab General enters: the granted trigger draws Lab Ox.
+  // Lab General enters: the granted trigger draws Lab Ox. Waiting on the trigger's resolution
+  // (passing only while the stack is non-empty) never passes the empty-stack priority that
+  // would end the scenario.
+  const granted = 'Lab General — When this creature enters or leaves the battlefield, draw a card';
+  await awaitResolution(page, granted, 0);
   const ox = handCard(page, 'Lab Ox');
-  await passUntil(page, ox);
+  await expect(ox).toBeVisible();
   await expect(permanent(page, 'Lab General')).toHaveCount(1);
   const banish = handCard(page, 'Lab Banish');
   await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
@@ -5142,7 +5146,8 @@ test('Candlekeep Sage: your commander draws as it enters and leaves', async ({ p
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
   // Exiled: the leave trigger draws Lab Servo.
-  await passUntil(page, handCard(page, 'Lab Servo'));
+  await awaitResolution(page, granted, 1);
+  await expect(handCard(page, 'Lab Servo')).toBeVisible();
   await expect(permanent(page, 'Lab General')).toHaveCount(0);
   await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
 });
