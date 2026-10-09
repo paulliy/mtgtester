@@ -44,6 +44,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Fabled Passage',
       'Flare of Denial',
       'Flare of Malice',
+      'Flayer of the Hatebound',
       'Foe-Razer Regent',
       'Forum of Amity',
       'Frontier Siege',

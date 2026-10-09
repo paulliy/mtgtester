@@ -4805,3 +4805,23 @@ test("Glen Elendra Archmage: counter P3's spell, then persist", async ({ page })
   await expect(permanent(page, 'Glen Elendra Archmage')).toBeVisible();
   await expect(page.getByText('-1/-1×1')).toBeVisible();
 });
+
+test('Flayer of the Hatebound: destroy it, undying, deal 5 to P2', async ({ page }) => {
+  await runScenario(page, 'Flayer of the Hatebound: destroy it, undying, deal 5 to P2');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Flayer of the Hatebound').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Undying returns it; its enters-from-your-graveyard trigger asks for any target.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Flayer of the Hatebound')).toBeVisible();
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+  await expect(page.getByText(/Flayer of the Hatebound deals 5 to P2/).first()).toBeVisible();
+});

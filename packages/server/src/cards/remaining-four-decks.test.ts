@@ -107,7 +107,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Deflecting Swat',
       'Body Launderer',
       'Cytoplast Manipulator',
-      'Flayer of the Hatebound',
       'Flare of Duplication',
       'River Kelpie',
       'Twilight Diviner',

@@ -928,6 +928,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
+    "name": "Flayer of the Hatebound",
+    "package": "PR03.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Enters-from-graveyard is implemented as any creature you control entering."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
     "name": "Flickerwisp",
     "package": "W4",

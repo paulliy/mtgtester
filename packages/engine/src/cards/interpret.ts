@@ -1459,7 +1459,11 @@ function parseEffectSentence(
   }
   // "~ deals 3 damage to any target" / "â€¦ to target creature" / "â€¦ to each opponent"
   {
-    if (opts.triggerObject === true && s === 'it deals damage equal to its power to any target') {
+    if (
+      opts.triggerObject === true &&
+      (s === 'it deals damage equal to its power to any target' ||
+        s === 'that creature deals damage equal to its power to any target')
+    ) {
       return [
         {
           op: 'dealDamage',

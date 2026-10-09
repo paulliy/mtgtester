@@ -44,8 +44,6 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Flayer of the Hatebound':
-    'Enters-from-graveyard is implemented as any creature you control entering.',
   'Firkraag, Cunning Instigator':
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
   'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
@@ -307,6 +305,7 @@ describe('Marchesa catalog audit containment', () => {
     'Triarch Praetorian',
     'Canoptek Tomb Sentinel',
     'Glen Elendra Archmage',
+    'Flayer of the Hatebound',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

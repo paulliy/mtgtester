@@ -340,13 +340,40 @@
     "ba9f3c5d-556f-48d1-8d87-723f7893cfcd": {
       "name": "Flayer of the Hatebound",
       "oracleSha256": "83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "flayer-of-the-hatebound-undying",
+          "oracleText": "Undying",
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters +1/+1 <= 0 on last-known counters (CR 702.93a)",
+            "returnDiedSourceToBattlefield +1/+1: only the graveyard card this permanent became, under its owner's control, entering with a +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "flayer-of-the-hatebound-pinned-oracle-supported",
+            "flayer-of-the-hatebound-undying-deals-five",
+            "flayer-of-the-hatebound-undying-once",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object",
+            "persist-undying-primitive-token"
+          ],
+          "viewerScenarioIds": ["flayer-of-the-hatebound-viewer-undying-damage"]
+        },
+        {
+          "id": "flayer-of-the-hatebound-graveyard-damage",
           "oracleText": "Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger watching this or another creature (anyOf self, other creature) with entersFrom { zone: graveyard, graveyardOwner: you }: the card came from the trigger controller's own graveyard, whoever now controls it",
+            "dealDamage to an anyTarget slot, amount powerOfTriggerObject, with the entering creature as the damage source"
+          ],
+          "engineTestIds": [
+            "flayer-of-the-hatebound-pinned-oracle-supported",
+            "flayer-of-the-hatebound-undying-deals-five",
+            "flayer-of-the-hatebound-other-creature",
+            "flayer-of-the-hatebound-not-other-origins",
+            "enters-from-origin-primitive-your-graveyard"
+          ],
+          "viewerScenarioIds": ["flayer-of-the-hatebound-viewer-undying-damage"]
         }
       ],
       "gameplayAiScenarioIds": []

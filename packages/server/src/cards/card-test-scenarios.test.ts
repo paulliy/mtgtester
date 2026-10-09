@@ -320,6 +320,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'triarch-praetorian-viewer-unearth',
       'canoptek-tomb-sentinel-viewer-unearth-exile',
       'glen-elendra-archmage-viewer-counter-persist',
+      'flayer-of-the-hatebound-viewer-undying-damage',
     ]);
   });
 

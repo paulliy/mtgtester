@@ -7490,6 +7490,33 @@ function glenElendraArchmageScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function flayerOfTheHateboundScenario(gameId: GameId): CardTestScenario {
+  const flayer = pinnedFrom(MARCHESA_BATCH1, 'Flayer of the Hatebound');
+  return pr01Scenario(gameId, {
+    id: 'flayer-of-the-hatebound-viewer-undying-damage',
+    title: 'Flayer of the Hatebound: destroy it, undying, deal 5 to P2',
+    instructions: [
+      'Flayer of the Hatebound and two Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Cast Lab Doom on Flayer of the Hatebound.',
+      'Undying returns it; aim its enters-from-your-graveyard trigger at P2.',
+    ],
+    expectedOutcome:
+      'Flayer of the Hatebound returns with a +1/+1 counter as a 5/3, and deals 5 damage to P2.',
+    oracleSha256: flayer.sha256,
+    clauseIds: ['flayer-of-the-hatebound-undying', 'flayer-of-the-hatebound-graveyard-damage'],
+    decks: {
+      P1: [flayer.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Flayer of the Hatebound', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7673,6 +7700,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'triarch-praetorian-viewer-unearth',
   'canoptek-tomb-sentinel-viewer-unearth-exile',
   'glen-elendra-archmage-viewer-counter-persist',
+  'flayer-of-the-hatebound-viewer-undying-damage',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7876,6 +7904,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'triarch-praetorian-viewer-unearth': triarchPraetorianScenario,
   'canoptek-tomb-sentinel-viewer-unearth-exile': canoptekTombSentinelScenario,
   'glen-elendra-archmage-viewer-counter-persist': glenElendraArchmageScenario,
+  'flayer-of-the-hatebound-viewer-undying-damage': flayerOfTheHateboundScenario,
 };
 
 export function createCardTestScenario(

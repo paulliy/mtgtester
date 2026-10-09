@@ -5948,6 +5948,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Registration deleted: the interpreter reads Persist as a dies trigger with a last-known -1/-1 counter intervening-if and returnDiedSourceToBattlefield, which returns only the card the permanent became, under its owner's control with a -1/-1 counter; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
+      "name": "Flayer of the Hatebound",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads Undying (a last-known +1/+1 intervening-if dies trigger returning the card it became) and the enters-from-your-graveyard trigger, whose entering creature deals damage equal to its power; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
     }
   ]
 }

@@ -695,6 +695,102 @@ describe('Glen Elendra Archmage', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 3.15 Flayer of the Hatebound
+// ---------------------------------------------------------------------------------------------
+
+describe('Flayer of the Hatebound', () => {
+  const flayer = pinned('Flayer of the Hatebound');
+  const ogre = oracle({
+    name: 'Lab Ogre',
+    typeLine: 'Creature — Ogre',
+    power: '3',
+    toughness: '3',
+  });
+
+  /** Aim every damage trigger at `target` (a player id or a permanent's name). */
+  const aimAt =
+    (target: string): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) return { index: 0, targets: new Map([[slot.slot, target]]) };
+      return { index: 0, targets: new Map() };
+    };
+
+  it('flayer-of-the-hatebound-pinned-oracle-supported — the interpreter alone models undying and the graveyard-origin damage trigger', () => {
+    expect(flayer.sha256).toBe('83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc');
+    expectNoRegistration(flayer.card);
+    expectModeled(flayer.card);
+    const def = interpretCard(flayer.card);
+    expect(def.triggers.map((trigger) => trigger.description)).toEqual([
+      'Undying',
+      'Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target.',
+    ]);
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'enters',
+      entersFrom: { zone: 'graveyard', graveyardOwner: 'you' },
+    });
+    expect(def.triggers[1]!.effects).toEqual([
+      {
+        op: 'dealDamage',
+        target: 0,
+        amount: { kind: 'powerOfTriggerObject' },
+        source: 'triggerObject',
+      },
+    ]);
+  });
+
+  it('flayer-of-the-hatebound-undying-deals-five — dying without a counter, it returns as a 5/3 and deals 5 damage', () => {
+    const ctx = pod('flayer-undying');
+    const perm = spawn(ctx, 'P1', flayer.card);
+    kill(ctx, perm);
+    settle(ctx, aimAt('P2'));
+    const back = onField(ctx, perm.cardId)!;
+    expect(back.counters).toEqual({ '+1/+1': 1 });
+    expect(effectivePT(ctx, back)).toEqual({ power: 5, toughness: 3 });
+    expect(playerById(ctx, 'P2').life).toBe(35);
+    const damage = ctx.state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage.at(-1)?.payload).toMatchObject({ source: 'Flayer of the Hatebound', amount: 5 });
+  });
+
+  it('flayer-of-the-hatebound-undying-once — with a +1/+1 counter it stays dead', () => {
+    const ctx = pod('flayer-once');
+    const perm = spawn(ctx, 'P1', flayer.card);
+    kill(ctx, perm);
+    settle(ctx, aimAt('P2'));
+    kill(ctx, onField(ctx, perm.cardId)!);
+    settle(ctx, aimAt('P2'));
+    expect(onField(ctx, perm.cardId)).toBeUndefined();
+    expect(playerById(ctx, 'P2').life).toBe(35);
+  });
+
+  it('flayer-of-the-hatebound-other-creature — another creature from your graveyard deals damage equal to its own power, as the source', () => {
+    const ctx = pod('flayer-other');
+    spawn(ctx, 'P1', flayer.card);
+    const victim = spawn(
+      ctx,
+      'P3',
+      oracle({ name: 'Lab Wall', typeLine: 'Creature — Wall', power: '0', toughness: '5' }),
+    );
+    enterFrom(ctx, 'P1', ogre, 'graveyard');
+    settle(ctx, aimAt(victim.id));
+    expect(onField(ctx, victim.cardId)?.damageMarked).toBe(3);
+    const damage = ctx.state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage.at(-1)?.payload).toMatchObject({ source: 'Lab Ogre', amount: 3 });
+  });
+
+  it("flayer-of-the-hatebound-not-other-origins — a cast creature, an opponent's graveyard card or a token deals nothing", () => {
+    const ctx = pod('flayer-negative');
+    spawn(ctx, 'P1', flayer.card);
+    enterFrom(ctx, 'P1', ogre, 'hand');
+    enterFrom(ctx, 'P1', ogre, 'exile');
+    const stolen = conjure(ctx, 'P2', ogre, 'graveyard');
+    pump(moveObject(ctx, stolen, { zone: 'battlefield', controllerId: 'P1' }));
+    createToken(ctx, BEAR_TOKEN, 'P1');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -706,6 +802,11 @@ interface RestoredCard {
 
 /** Cards restored in PR03. A card enters this table in the same commit that restores it. */
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Flayer of the Hatebound',
+    sha256: '83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc',
+    clauseCount: 2,
+  },
   {
     name: 'Glen Elendra Archmage',
     sha256: '13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578',

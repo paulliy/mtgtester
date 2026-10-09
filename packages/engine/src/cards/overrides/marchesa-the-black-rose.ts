@@ -249,12 +249,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Flare of Malice: restored in coverage PR02. The interpreter reads the sacrifice alternative
   // cost and the greatest-mana-value sacrifice, so no override remains.
-  // Catalog audit batch 4: any of your creatures entering fires this, not only graveyard origin.
-  unsupportedCard(
-    'ba9f3c5d-556f-48d1-8d87-723f7893cfcd',
-    'Flayer of the Hatebound',
-    'Enters-from-graveyard is implemented as any creature you control entering.',
-  );
+  // Flayer of the Hatebound: restored in coverage PR03. The interpreter reads Undying and the
+  // enters-from-your-graveyard damage trigger, so no override remains.
   defineCard(
     '77807103-bcd5-479f-bedd-f5d97aa6d3d2',
     'Forge of Heroes',

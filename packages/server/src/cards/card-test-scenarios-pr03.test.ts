@@ -159,3 +159,18 @@ describe('Glen Elendra Archmage Card Test Lab scenario', () => {
     replays('glen-elendra-archmage-viewer-counter-persist', steps);
   });
 });
+
+describe('Flayer of the Hatebound Card Test Lab scenario', () => {
+  it('flayer-of-the-hatebound-viewer-undying-damage — Lab Doom kills it, undying returns it as a 5/3, and it deals 5 to P2', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Doom', targets: ['Flayer of the Hatebound'] },
+      { action: 'Flayer of the Hatebound', targets: ['P2'] },
+    ];
+    const { seat, onBattlefield } = run('flayer-of-the-hatebound-viewer-undying-damage', steps);
+    const [flayer] = onBattlefield('Flayer of the Hatebound');
+    expect(flayer?.counters).toEqual({ '+1/+1': 1 });
+    expect(seat('P2').life).toBe(35);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    replays('flayer-of-the-hatebound-viewer-undying-damage', steps);
+  });
+});

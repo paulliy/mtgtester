@@ -7879,12 +7879,6 @@
     }
   },
   {
-    "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
-    "name": "Flayer of the Hatebound",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
     "name": "Thunderbreak Regent",
     "handledLines": [],
@@ -15147,12 +15141,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-flayer-of-the-hatebound",
-    "name": "Flayer of the Hatebound",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-flickering-ward",
