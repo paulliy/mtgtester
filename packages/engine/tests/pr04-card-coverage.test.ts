@@ -2084,6 +2084,50 @@ describe('Crystal, Inhuman Princess', () => {
     ]);
     expect(ctx.state.pendingTriggers).toHaveLength(0);
   });
+
+  /** Crystal gains `keyword` until end of turn, as from an Equipment or a pump. */
+  function grant(ctx: GameContext, crystal: EnginePermanent, keyword: 'lifelink' | 'infect') {
+    ctx.state.effects.push({
+      id: `eff-test-${keyword}`,
+      sourceId: crystal.cardId,
+      description: `Crystal gains ${keyword}`,
+      targetCardIds: [crystal.cardId],
+      kind: 'grantKeyword',
+      keyword,
+      timestamp: ctx.state.nextTimestamp++,
+    });
+  }
+
+  it('crystal-inhuman-princess-colors-of-spell — with lifelink, her damage to each opponent gains you that much life', () => {
+    const ctx = pod('crystal-lifelink');
+    const crystal = spawn(ctx, 'P1', card);
+    grant(ctx, crystal, 'lifelink');
+    const me = playerById(ctx, 'P1');
+    const start = me.life;
+    const opponents = lives(ctx);
+    castFromHand(ctx, 'P1', spell('Lab Gruul', 'Instant', '{R}{G}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+    ]);
+    settle(ctx);
+    expect(lives(ctx)).toEqual(opponents.map((life) => life - 2));
+    // 2 damage to each of three opponents (CR 702.15b), plus the instant's own 1 life.
+    expect(me.life).toBe(start + 6 + 1);
+  });
+
+  it('crystal-inhuman-princess-colors-of-spell — with infect, her damage gives poison counters instead of life loss', () => {
+    const ctx = pod('crystal-infect');
+    const crystal = spawn(ctx, 'P1', card);
+    grant(ctx, crystal, 'infect');
+    const opponents = lives(ctx);
+    castFromHand(ctx, 'P1', spell('Lab Gruul', 'Instant', '{R}{G}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+    ]);
+    settle(ctx);
+    expect(lives(ctx)).toEqual(opponents);
+    expect(['P2', 'P3', 'P4'].map((id) => playerById(ctx, id).poisonCounters)).toEqual([2, 2, 2]);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------

@@ -2550,14 +2550,11 @@ export function* executeAbility(
         break;
       }
       case 'eachOpponentDamage': {
+        // The source's own lifelink and infect apply, last-known if it has left (CR 702.15b,
+        // 702.90b): the shared object path reads them, as for any other noncombat damage.
         const amount = amountOf(effect.amount);
-        for (const opp of opponentsOf(ctx, controller.id)) {
-          dealDamageToPlayer(ctx, source, opp, amount, {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
-        }
+        for (const opp of opponentsOf(ctx, controller.id))
+          dealDamageToObject(ctx, source, opp.id, amount);
         break;
       }
       case 'damageEachCreatureController': {
