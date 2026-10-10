@@ -7545,12 +7545,6 @@
     }
   },
   {
-    "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
-    "name": "Resurrection Orb",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
     "name": "Armored Skyhunter",
     "handledLines": [],
@@ -19266,12 +19260,6 @@
     "handledLines": [
       "You have no maximum hand size."
     ],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-resurrection-orb",
-    "name": "Resurrection Orb",
-    "handledLines": [],
     "def": {}
   },
   {

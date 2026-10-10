@@ -3306,15 +3306,49 @@
     "b410f294-cbb6-4016-981f-808fd9b7bbae": {
       "name": "Resurrection Orb",
       "oracleSha256": "ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "resurrection-orb-lifelink",
+          "oracleText": "Equipped creature has lifelink.",
+          "implementation": [
+            "interpreted layer 6 keyword grant of lifelink to the creature this Equipment is attached to (attachedToSource) only: that creature's damage gains its controller that much life, no other creature gains it, a creature carrying a different Equipment does not, an unattached Orb grants it to nobody, and moving the Orb moves the keyword"
+          ],
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-lifelink-equipped-only"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
+        },
+        {
+          "id": "resurrection-orb-trigger",
           "oracleText": "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
           "implementation": [
-            "explicitly unsupported; return is under equipment controller not owner"
+            "interpreted non-optional trigger on dies whose subject is the creature this Equipment is attached to (attachedToSource), not any creature and not one carrying a different Equipment; resolving it remembers the exact graveyard card the creature became (CR 400.7e) in a delayed beginning-of-end-step trigger that lasts until it fires, so the card stays in the graveyard until the next end step to begin, whoever's turn it is (CR 603.7), and an end step that already began is not the next one; at that end step it returns under its OWNER's control (not the Equipment controller's) as a new object that the Orb is not attached to, and nothing returns if the card left the graveyard first or came back as a new object, if it was a token that ceased to exist, or if the creature was exiled or bounced instead of dying"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-dies-trigger-equipped-only",
+            "resurrection-orb-next-end-step",
+            "resurrection-orb-next-end-step-any-turn",
+            "resurrection-orb-returns-under-owner",
+            "resurrection-orb-card-left-graveyard"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
+        },
+        {
+          "id": "resurrection-orb-equip",
+          "oracleText": "Equip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+          "implementation": [
+            "interpreted Equip {4} (CR 702.6a) as a sorcery-speed activated ability whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it; it is offered only in your main phase with an empty stack and four mana available, never targets an opponent's creature, and moving the Orb moves which creature it affects"
+          ],
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-equip-sorcery",
+            "resurrection-orb-lifelink-equipped-only",
+            "resurrection-orb-returns-under-owner"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []

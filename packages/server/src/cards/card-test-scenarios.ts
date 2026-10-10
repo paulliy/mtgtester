@@ -7918,6 +7918,42 @@ function maskOfMemoryScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function resurrectionOrbScenario(gameId: GameId): CardTestScenario {
+  const orb = pinnedFrom(COVERAGE_PR05, 'Resurrection Orb');
+  const swamps = Array.from({ length: 6 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'resurrection-orb-viewer-lifelink-and-return',
+    title: 'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+    instructions: [
+      'Resurrection Orb, six Swamps and Lab Green Bear (2/2) are on your battlefield, and Lab Doom is in your hand. P2 owns Lab Green Bear but you control it. The Orb is not attached to anything.',
+      'Activate Equip {4} targeting Lab Green Bear and let it resolve.',
+      'Attack P2 with Lab Green Bear. It is unblocked and has lifelink from the Orb, so P2 takes 2 and you gain 2.',
+      'In your second main phase cast Lab Doom on Lab Green Bear. It dies into P2\u2019s graveyard and the Orb sets up its return.',
+      'Pass to the end step: Lab Green Bear returns to the battlefield under P2\u2019s control, its owner, not yours.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is on the battlefield under P2\u2019s control and is not attached to the Orb, which is unattached. P2 took 2 combat damage and is at 38 life; you gained 2 and are at 42. Lab Doom is in your graveyard and P2\u2019s graveyard is empty.',
+    oracleSha256: orb.sha256,
+    clauseIds: ['resurrection-orb-lifelink', 'resurrection-orb-trigger', 'resurrection-orb-equip'],
+    decks: {
+      P1: [orb.card, ...swamps, LAB_DOOM],
+      P2: [LAB_GREEN_BEAR, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Resurrection Orb', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], controllerId: 'P1' },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9748,6 +9784,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'aetheric-amplifier-viewer-double-counters',
   'cranial-plating-viewer-instant-attach',
   'mask-of-memory-viewer-draw-discard',
+  'resurrection-orb-viewer-lifelink-and-return',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10015,6 +10052,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
   'cranial-plating-viewer-instant-attach': cranialPlatingScenario,
   'mask-of-memory-viewer-draw-discard': maskOfMemoryScenario,
+  'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

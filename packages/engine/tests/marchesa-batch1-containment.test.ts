@@ -159,7 +159,6 @@ const REASONS: Record<string, string> = {
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
-  'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Aetheric Amplifier',
     'Cranial Plating',
     'Mask of Memory',
+    'Resurrection Orb',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

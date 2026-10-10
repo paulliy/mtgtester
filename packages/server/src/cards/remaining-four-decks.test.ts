@@ -88,7 +88,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Biotransference',
       'The War in Heaven',
       'Out of the Tombs',
-      'Resurrection Orb',
       'Szarekh, the Silent King',
       'Trazyn the Infinite',
       'Tomb Blade',

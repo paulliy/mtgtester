@@ -333,10 +333,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You have no maximum hand size.',
   ]);
 
-  unimplemented('b410f294-cbb6-4016-981f-808fd9b7bbae', 'Resurrection Orb', [
-    "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
-  ]);
-
   unimplemented('0192ba05-6144-4fec-a803-462ecdf64195', 'Royal Warden', [
     'Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens.',
   ]);

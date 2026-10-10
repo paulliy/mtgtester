@@ -327,6 +327,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   returnExiledTriggerObject: {},
   reanimateTargetHasteExileAtYourNextEndStep: { target: graveyard },
   returnDiedTriggerObjectTapped: {},
+  returnDiedTriggerObjectAtNextEndStep: {},
+  returnRememberedGraveyardCard: {},
   reanimateEachChosenTapped: { targetSlot: many(graveyard) },
   connive: {},
   exileTopNPlayableUntilEot: {},

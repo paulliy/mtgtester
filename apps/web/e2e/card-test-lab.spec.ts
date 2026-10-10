@@ -6247,3 +6247,78 @@ test('Mask of Memory: equip it, connect, then draw two and discard a card', asyn
   ).toHaveText('38');
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(2);
 });
+
+test('Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  // P1 controls the Bear but P2 owns it; the Orb starts unattached and grants nothing yet.
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.controller).toBe('P1');
+  expect(boards.at(-1)!.find((p) => p.name === 'Resurrection Orb')?.attachedTo ?? null).toBeNull();
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.keywords ?? []).not.toContain(
+    'lifelink',
+  );
+
+  const orb = permanent(page, 'Resurrection Orb');
+  await expect(orb).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Equip {4} is the Orb's only activated ability, so clicking it goes straight to a target.
+  await orb.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves, then the turn moves on to attackers; the Bear now has lifelink.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Resurrection Orb')?.attachedTo)
+    .toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('lifelink');
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The unblocked Bear connects: P2 takes 2 and the lifelink gains you 2.
+  await passUntil(page, page.locator('.human-zone .life-badge', { hasText: '42' }));
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('38');
+
+  // In your second main phase, destroy your own Bear: it dies into its owner P2's graveyard.
+  await passUntil(page, page.getByText(/Main phase\s*2/).first());
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The Orb's trigger waits for the end step; the Bear returns then, under P2's control.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  const back = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear');
+  expect(back?.controller).toBe('P2');
+  expect(back?.id).not.toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.name === 'Resurrection Orb')?.attachedTo ?? null).toBeNull();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});

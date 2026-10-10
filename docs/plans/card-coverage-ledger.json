@@ -2454,6 +2454,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+    "name": "Resurrection Orb",
+    "package": "PR05.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Return is under the equipment controller, not the card's owner."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
     "name": "Retrofitter Foundry",
     "package": "PR02.03",

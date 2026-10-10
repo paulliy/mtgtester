@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 24,
+      "uniqueOracleIds": 23,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 36,
+      "uniqueOracleIds": 35,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6186,6 +6186,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Whenever equipped creature deals combat damage to a player as a dealsCombatDamageToPlayer trigger on the creature this Equipment is attached to (attachedToSource), not any equipped creature, and reads the optional body draw two cards. If you do, discard a card as one optional trigger whose single yes draws two cards and then discards one, plus the sorcery-speed Equip {1} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "name": "Resurrection Orb",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that returned the card under the equipment controller): the interpreter reads Equipped creature has lifelink as a layer 6 keyword grant to the creature this Equipment is attached to (attachedToSource), reads Whenever equipped creature dies as a dies trigger on that creature only, and returns the exact graveyard card the creature became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7) and puts it onto the battlefield under its OWNER's control, returning nothing if the card left the graveyard first, plus the sorcery-speed Equip {4} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "name": "Resurrection Orb",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Equipped creature has lifelink as a layer 6 keyword grant to the creature this Equipment is attached to (attachedToSource), reads Whenever equipped creature dies as a dies trigger on that creature only, and returns the exact graveyard card the creature became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7) and puts it onto the battlefield under its OWNER's control, returning nothing if the card left the graveyard first, plus the sorcery-speed Equip {4} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

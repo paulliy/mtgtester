@@ -19,10 +19,11 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
-import { runCombatAndExtraCombats } from '../src/turn/turn';
+import { runPrioritySequence } from '../src/turn/priority';
+import { beginEndStep, runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
-import { effectivePT } from '../src/state/queries';
+import { effectivePT, hasKeyword } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
   conjure,
@@ -117,6 +118,18 @@ function takeAction(
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
   return pump(resolveTopOfStack(ctx), answer);
+}
+
+/**
+ * Run the normal priority loop with every player passing: pending triggers go on the stack and
+ * resolve in order. Non-priority decisions go to `answer` (default: first option).
+ */
+function settle(ctx: GameContext, answer?: Answer) {
+  return pump(runPrioritySequence(ctx), (decision, count) => {
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
 }
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
@@ -744,6 +757,462 @@ describe('Mask of Memory', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.11 Resurrection Orb
+// ---------------------------------------------------------------------------------------------
+
+describe('Resurrection Orb', () => {
+  const { card } = pinned('Resurrection Orb');
+  const EQUIP = /: Equip \{4\}$/;
+  const CREATURE = (name: string, power = '2', toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Secret', power, toughness });
+  const SWORD = oracle({
+    name: 'Lab Sword',
+    typeLine: 'Artifact — Equipment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Equipped creature gets +1/+1.\nEquip {1}',
+  });
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /**
+   * P1 controls the Orb (unattached), two 2/2 creatures and a Lab Sword; P2 controls a 2/2 and a
+   * 3/3. Everything is already on the battlefield, so nothing here is summoning sick.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const orb = spawn(ctx, 'P1', card);
+    const first = spawn(ctx, 'P1', CREATURE('Lab First'));
+    const second = spawn(ctx, 'P1', CREATURE('Lab Second'));
+    const sword = spawn(ctx, 'P1', SWORD);
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const brute = spawn(ctx, 'P2', CREATURE('Lab Brute', '3', '3'));
+    return { ctx, orb, first, second, sword, enemy, brute };
+  }
+
+  /** Run P1's combat with `attackers` attacking P2; `blocks` maps a P2 blocker to its attacker. */
+  function combat(ctx: GameContext, attackers: string[], blocks = new Map<string, string>()) {
+    return pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P2' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks.get(subjectId) ?? null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** Run a whole turn for the current turn player with nobody attacking or blocking. */
+  function quietTurn(ctx: GameContext) {
+    return pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const graveyardOf = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+  const life = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).life;
+
+  /** Put the Orb on `target` through Equip {4} on the real priority path. */
+  function equip(ctx: GameContext, orb: EnginePermanent, target: EnginePermanent) {
+    addMana(playerById(ctx, 'P1'), generic(4));
+    const option = optionFor(ctx, 'P1', orb.id, EQUIP);
+    expect(option, `Equip {4} onto ${target.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, target.id]]),
+    );
+    resolveTop(ctx);
+    expect(orb.attachedTo).toBe(target.id);
+  }
+
+  /** The card `name` currently in `playerId`'s graveyard. */
+  function inGraveyard(ctx: GameContext, playerId: string, name: string) {
+    const found = playerById(ctx, playerId).graveyard.find((c) => c.name === name);
+    expect(found, `${name} in ${playerId}'s graveyard`).toBeDefined();
+    return found!;
+  }
+
+  it('resurrection-orb-pinned-oracle-supported — the interpreter alone models the lifelink grant, the dies return and Equip {4}', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Equipped creature has lifelink: a layer 6 keyword grant to the attached creature only.
+    expect(def.staticEffects).toEqual([
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'lifelink' } },
+    ]);
+    // Whenever equipped creature dies, return that card ... at the beginning of the next end step.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'dies',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'returnDiedTriggerObjectAtNextEndStep', returnUnder: 'owner' },
+    ]);
+    // Equip {4}: sorcery speed (CR 702.6a), a creature you control, and nothing else.
+    expect(def.activatedAbilities).toHaveLength(1);
+    const [equipAbility] = def.activatedAbilities;
+    expect(equipAbility!.timing).toBe('sorcery');
+    expect(equipAbility!.costs).toEqual([
+      {
+        kind: 'mana',
+        cost: { generic: 4, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+      },
+    ]);
+    expect(equipAbility!.ability.targets).toEqual([{ kind: 'creature', controller: 'you' }]);
+    expect(equipAbility!.ability.effects).toEqual([{ op: 'attachSelfTo', target: 0 }]);
+  });
+
+  it('resurrection-orb-lifelink-equipped-only — the equipped creature has lifelink and gains you life; no other creature does', () => {
+    // Attached to First: First has lifelink, Second does not, and only First's damage gains life.
+    const both = board('orb-lifelink');
+    both.orb.attachedTo = both.first.id;
+    expect(hasKeyword(both.ctx, both.first, 'lifelink')).toBe(true);
+    expect(hasKeyword(both.ctx, both.second, 'lifelink')).toBe(false);
+    expect(hasKeyword(both.ctx, both.enemy, 'lifelink')).toBe(false);
+    combat(both.ctx, [both.first.id, both.second.id]);
+    expect(life(both.ctx, 'P2')).toBe(36);
+    expect(life(both.ctx, 'P1')).toBe(42);
+
+    // The unequipped creature alone connects: no life is gained.
+    const alone = board('orb-lifelink-alone');
+    alone.orb.attachedTo = alone.first.id;
+    combat(alone.ctx, [alone.second.id]);
+    expect(life(alone.ctx, 'P2')).toBe(38);
+    expect(life(alone.ctx, 'P1')).toBe(40);
+
+    // Unattached, the Orb grants lifelink to nobody.
+    const bare = board('orb-lifelink-bare');
+    expect(hasKeyword(bare.ctx, bare.first, 'lifelink')).toBe(false);
+    combat(bare.ctx, [bare.first.id, bare.second.id]);
+    expect(life(bare.ctx, 'P1')).toBe(40);
+
+    // A creature carrying a different Equipment does not get it from this Orb.
+    const other = board('orb-lifelink-other-equipment');
+    other.orb.attachedTo = other.first.id;
+    other.sword.attachedTo = other.second.id;
+    expect(hasKeyword(other.ctx, other.second, 'lifelink')).toBe(false);
+
+    // Moving the Orb (Equip {4}) moves the keyword: Second gains it and First loses it.
+    const moved = board('orb-lifelink-moved');
+    moved.orb.attachedTo = moved.first.id;
+    equip(moved.ctx, moved.orb, moved.second);
+    expect(hasKeyword(moved.ctx, moved.second, 'lifelink')).toBe(true);
+    expect(hasKeyword(moved.ctx, moved.first, 'lifelink')).toBe(false);
+    combat(moved.ctx, [moved.first.id]);
+    expect(life(moved.ctx, 'P1')).toBe(40);
+  });
+
+  it('resurrection-orb-dies-trigger-equipped-only — only the creature this Orb is attached to dying sets up the return', () => {
+    // The equipped creature dies: exactly one delayed return is set up.
+    const hit = board('orb-dies');
+    hit.orb.attachedTo = hit.first.id;
+    pump(moveObject(hit.ctx, hit.first, { zone: 'graveyard' }));
+    settle(hit.ctx);
+    expect(hit.ctx.state.delayedTriggers).toHaveLength(1);
+    expect(hit.ctx.state.delayedTriggers[0]!.when).toBe('endStep');
+    expect(graveyardOf(hit.ctx, 'P1')).toEqual(['Lab First']);
+
+    // An unequipped creature of yours dying beside it sets up nothing.
+    const beside = board('orb-dies-other');
+    beside.orb.attachedTo = beside.first.id;
+    pump(moveObject(beside.ctx, beside.second, { zone: 'graveyard' }));
+    settle(beside.ctx);
+    expect(beside.ctx.state.delayedTriggers).toEqual([]);
+    beginEndStep(beside.ctx);
+    settle(beside.ctx);
+    expect(named(beside.ctx, 'Lab Second')).toEqual([]);
+    expect(graveyardOf(beside.ctx, 'P1')).toEqual(['Lab Second']);
+
+    // Unattached, the Orb returns nothing when a creature dies.
+    const bare = board('orb-dies-bare');
+    pump(moveObject(bare.ctx, bare.first, { zone: 'graveyard' }));
+    settle(bare.ctx);
+    expect(bare.ctx.state.delayedTriggers).toEqual([]);
+
+    // A creature carrying a different Equipment dying is not "equipped creature" for this Orb.
+    const sword = board('orb-dies-other-equipment');
+    sword.orb.attachedTo = sword.first.id;
+    sword.sword.attachedTo = sword.second.id;
+    pump(moveObject(sword.ctx, sword.second, { zone: 'graveyard' }));
+    settle(sword.ctx);
+    expect(sword.ctx.state.delayedTriggers).toEqual([]);
+
+    // Once the Orb moves, the creature it left no longer sets anything up; the new one does.
+    const moved = board('orb-dies-moved');
+    moved.orb.attachedTo = moved.first.id;
+    equip(moved.ctx, moved.orb, moved.second);
+    pump(moveObject(moved.ctx, moved.first, { zone: 'graveyard' }));
+    settle(moved.ctx);
+    expect(moved.ctx.state.delayedTriggers).toEqual([]);
+    pump(moveObject(moved.ctx, moved.second, { zone: 'graveyard' }));
+    settle(moved.ctx);
+    expect(moved.ctx.state.delayedTriggers).toHaveLength(1);
+
+    // Leaving the battlefield any way but dying (exile, bounce) sets up nothing.
+    const exiled = board('orb-exiled');
+    exiled.orb.attachedTo = exiled.first.id;
+    pump(moveObject(exiled.ctx, exiled.first, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(exiled.ctx.state.delayedTriggers).toEqual([]);
+    const bounced = board('orb-bounced');
+    bounced.orb.attachedTo = bounced.first.id;
+    pump(moveObject(bounced.ctx, bounced.first, { zone: 'hand' }));
+    settle(bounced.ctx);
+    expect(bounced.ctx.state.delayedTriggers).toEqual([]);
+  });
+
+  it('resurrection-orb-next-end-step — dying in combat returns it at the end step, not before; the delayed trigger is spent once it fires', () => {
+    const { ctx, orb, first, second, brute } = board('orb-combat');
+    orb.attachedTo = first.id;
+    // The 3/3 blocks and kills the equipped 2/2 in real combat.
+    combat(ctx, [first.id, second.id], new Map([[brute.id, first.id]]));
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab First']);
+    expect(named(ctx, 'Lab First')).toEqual([]);
+    // Lifelink was real: First dealt 2 damage to the blocker before dying, Second hit the player.
+    expect(life(ctx, 'P1')).toBe(42);
+    expect(life(ctx, 'P2')).toBe(38);
+    // The Orb is no longer attached to anything.
+    expect(orb.attachedTo ?? null).toBeNull();
+
+    // The return waits: one delayed trigger that lasts until it fires (past cleanup), no more.
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]!.when).toBe('endStep');
+    expect(ctx.state.delayedTriggers[0]!.expiry).toBe('onFire');
+    // Not immediately: further priority passes and non-end steps return nothing.
+    settle(ctx);
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    settle(ctx);
+    expect(named(ctx, 'Lab First')).toEqual([]);
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab First']);
+
+    // The beginning of the end step: the trigger goes on the stack, and it returns when it resolves.
+    beginEndStep(ctx);
+    expect(named(ctx, 'Lab First')).toEqual([]);
+    settle(ctx);
+    const [back] = named(ctx, 'Lab First');
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.id).not.toBe(first.id);
+    expect(graveyardOf(ctx, 'P1')).toEqual([]);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+    // It comes back as a new object: the Orb is not attached to it and it has no lifelink.
+    expect(orb.attachedTo ?? null).toBeNull();
+    expect(hasKeyword(ctx, back!, 'lifelink')).toBe(false);
+
+    // Spent: dying again (no longer equipped) and a later end step bring nothing back.
+    pump(moveObject(ctx, back!, { zone: 'graveyard' }));
+    settle(ctx);
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab First')).toEqual([]);
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab First']);
+  });
+
+  it("resurrection-orb-next-end-step-any-turn — an end step that already began is not the next one; the return waits through cleanup for the following end step, whoever's turn it is", () => {
+    // Dying during this turn's end step: that end step has begun, so it does not return then.
+    const ctx = pod('orb-in-end-step');
+    const orb = spawn(ctx, 'P1', card);
+    const first = spawn(ctx, 'P1', CREATURE('Lab First'));
+    orb.attachedTo = first.id;
+    beginEndStep(ctx);
+    settle(ctx);
+    pump(moveObject(ctx, first, { zone: 'graveyard' }));
+    settle(ctx);
+    expect(named(ctx, 'Lab First')).toEqual([]);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]!.expiry).toBe('onFire');
+
+    // P2's whole turn runs: cleanup of this turn does not sweep it, and it returns at P2's end step
+    // (the next end step to begin, though it is not P1's), under P1's control as P1 owns it.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    quietTurn(ctx);
+    const [back] = named(ctx, 'Lab First');
+    expect(back?.controllerId).toBe('P1');
+    expect(ctx.state.delayedTriggers).toEqual([]);
+
+    // Dying during an opponent's turn returns it at the end of that same turn.
+    const theirs = board('orb-opponents-turn');
+    theirs.ctx.state.currentTurnPlayer = 'P2';
+    theirs.ctx.state.activePlayerIndex = 1;
+    theirs.orb.attachedTo = theirs.first.id;
+    pump(moveObject(theirs.ctx, theirs.first, { zone: 'graveyard' }));
+    settle(theirs.ctx);
+    expect(named(theirs.ctx, 'Lab First')).toEqual([]);
+    beginEndStep(theirs.ctx);
+    settle(theirs.ctx);
+    expect(named(theirs.ctx, 'Lab First')).toHaveLength(1);
+  });
+
+  it("resurrection-orb-returns-under-owner — a creature you control but an opponent owns returns under its owner's control, not yours", () => {
+    const { ctx, orb, first } = board('orb-owner');
+    // P1 controls a creature P2 owns, and equips it through Equip {4}.
+    const stolen = spawn(ctx, 'P2', CREATURE('Lab Stolen'));
+    stolen.controllerId = 'P1';
+    equip(ctx, orb, stolen);
+    pump(moveObject(ctx, stolen, { zone: 'graveyard' }));
+    settle(ctx);
+    // It died into its owner's graveyard, and waits there.
+    expect(graveyardOf(ctx, 'P2')).toEqual(['Lab Stolen']);
+    expect(graveyardOf(ctx, 'P1')).toEqual([]);
+    beginEndStep(ctx);
+    settle(ctx);
+    const [back] = named(ctx, 'Lab Stolen');
+    expect(back?.ownerId).toBe('P2');
+    expect(back?.controllerId).toBe('P2');
+    expect(graveyardOf(ctx, 'P2')).toEqual([]);
+    expect(
+      ctx.state.battlefield.filter((p) => p.controllerId === 'P1' && p.name === 'Lab Stolen'),
+    ).toEqual([]);
+
+    // A creature you own and control returns under your control.
+    orb.attachedTo = first.id;
+    pump(moveObject(ctx, first, { zone: 'graveyard' }));
+    settle(ctx);
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab First')[0]?.controllerId).toBe('P1');
+  });
+
+  it('resurrection-orb-card-left-graveyard — a card that left the graveyard before the end step stays where it went (CR 400.7)', () => {
+    const died = (seed: string) => {
+      const b = board(seed);
+      b.orb.attachedTo = b.first.id;
+      pump(moveObject(b.ctx, b.first, { zone: 'graveyard' }));
+      settle(b.ctx);
+      expect(b.ctx.state.delayedTriggers).toHaveLength(1);
+      return b;
+    };
+
+    // Control: untouched in the graveyard, it returns.
+    const control = died('orb-left-control');
+    beginEndStep(control.ctx);
+    settle(control.ctx);
+    expect(named(control.ctx, 'Lab First')).toHaveLength(1);
+
+    // Exiled from the graveyard first: it stays in exile.
+    const exiled = died('orb-left-exile');
+    pump(moveObject(exiled.ctx, inGraveyard(exiled.ctx, 'P1', 'Lab First'), { zone: 'exile' }));
+    beginEndStep(exiled.ctx);
+    settle(exiled.ctx);
+    expect(named(exiled.ctx, 'Lab First')).toEqual([]);
+    expect(exiled.ctx.state.exile.map((c) => c.name)).toEqual(['Lab First']);
+    expect(exiled.ctx.state.delayedTriggers).toEqual([]);
+
+    // Returned to its owner's hand first: it stays in hand.
+    const hand = died('orb-left-hand');
+    pump(moveObject(hand.ctx, inGraveyard(hand.ctx, 'P1', 'Lab First'), { zone: 'hand' }));
+    beginEndStep(hand.ctx);
+    settle(hand.ctx);
+    expect(named(hand.ctx, 'Lab First')).toEqual([]);
+    expect(playerById(hand.ctx, 'P1').hand.map((c) => c.name)).toEqual(['Lab First']);
+
+    // Left and came back as a new object: that is not the card the trigger remembers.
+    const again = died('orb-left-and-back');
+    pump(moveObject(again.ctx, inGraveyard(again.ctx, 'P1', 'Lab First'), { zone: 'hand' }));
+    pump(moveObject(again.ctx, playerById(again.ctx, 'P1').hand[0]!, { zone: 'graveyard' }));
+    expect(graveyardOf(again.ctx, 'P1')).toEqual(['Lab First']);
+    beginEndStep(again.ctx);
+    settle(again.ctx);
+    expect(named(again.ctx, 'Lab First')).toEqual([]);
+    expect(graveyardOf(again.ctx, 'P1')).toEqual(['Lab First']);
+
+    // A token that dies ceases to exist, so there is no card to return.
+    const token = board('orb-left-token');
+    const dying = spawn(token.ctx, 'P1', CREATURE('Lab Token'), { isToken: true });
+    token.orb.attachedTo = dying.id;
+    pump(moveObject(token.ctx, dying, { zone: 'graveyard' }));
+    settle(token.ctx);
+    beginEndStep(token.ctx);
+    settle(token.ctx);
+    expect(named(token.ctx, 'Lab Token')).toEqual([]);
+    expect(token.ctx.state.delayedTriggers).toEqual([]);
+  });
+
+  it('resurrection-orb-equip-sorcery — Equip {4} is offered only at sorcery speed, only onto a creature you control', () => {
+    const { ctx, orb, first, second, enemy } = board('orb-equip');
+    const targetNames = (option: NonNullable<ReturnType<typeof optionFor>>) => {
+      const nameOf = (id: string) =>
+        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? id;
+      return option.targets!.flatMap((slot) => slot.options.map(nameOf)).sort();
+    };
+
+    // Without {4} (three mana) it cannot be activated.
+    addMana(playerById(ctx, 'P1'), generic(3));
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeUndefined();
+
+    // Your main phase, empty stack, {4} available: offered, and only your creatures are legal.
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const main = optionFor(ctx, 'P1', orb.id, EQUIP);
+    expect(main).toBeDefined();
+    expect(targetNames(main!)).toEqual(['Lab First', 'Lab Second']);
+    expect(targetNames(main!)).not.toContain(enemy.name);
+
+    // A spell on the stack: not offered, though the mana is there.
+    castFromHand(ctx, 'P1', QUICK, []);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeUndefined();
+    resolveTop(ctx);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeDefined();
+
+    // An opponent's turn, and a non-main phase of your own turn: not offered.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeUndefined();
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeUndefined();
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeDefined();
+
+    // Activating it puts it on the stack; resolving attaches the Orb to the chosen creature and
+    // spends all four mana.
+    const option = optionFor(ctx, 'P1', orb.id, EQUIP)!;
+    takeAction(
+      ctx,
+      'P1',
+      option.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option.targets![0]!.slot, second.id]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(orb.attachedTo ?? null).toBeNull();
+    resolveTop(ctx);
+    expect(orb.attachedTo).toBe(second.id);
+    expect(orb.attachedTo).not.toBe(first.id);
+    expect(optionFor(ctx, 'P1', orb.id, EQUIP)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -763,6 +1232,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Mask of Memory',
     sha256: 'cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310',
     clauseCount: 2,
+  },
+  {
+    name: 'Resurrection Orb',
+    sha256: 'ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734',
+    clauseCount: 3,
   },
 ];
 

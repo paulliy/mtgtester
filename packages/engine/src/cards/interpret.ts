@@ -1352,6 +1352,15 @@ function parseEffectSentence(
   if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
     return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
   }
+  // "... return that card to the battlefield under its owner's control at the beginning of the
+  // next end step" (Resurrection Orb). Only the owner's form: Marchesa's "under your control"
+  // twin carries a +1/+1-counter subject her reviewed override models.
+  if (
+    opts.triggerObject === true &&
+    s ===
+      "return that card to the battlefield under its owner's control at the beginning of the next end step"
+  )
+    return [{ op: 'returnDiedTriggerObjectAtNextEndStep', returnUnder: 'owner' }];
   // "it gains double strike until end of turn" â€” the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
     const m = s.match(/^it gains ([a-z ]+) until end of turn$/);

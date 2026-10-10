@@ -5314,6 +5314,47 @@ export function* executeAbility(
         });
         break;
       }
+      case 'returnDiedTriggerObjectAtNextEndStep': {
+        // The card the dying subject became in a graveyard (CR 400.7e); a card already gone from
+        // there, or a token that ceased to exist, returns nothing.
+        const remembered = extraScope?.triggerObjectId ?? extraScope?.eventObjectId;
+        if (remembered === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.leftBattlefieldObjectId === remembered);
+        if (card === undefined) break;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: card.cardId,
+          targetObjectId: card.id,
+          when: 'endStep',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'returnRememberedGraveyardCard', returnUnder: effect.returnUnder }],
+            description: `Return ${card.name} to the battlefield`,
+          },
+          // An end step that already began (this resolved during it) is not "the next" one.
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'returnRememberedGraveyardCard': {
+        const remembered = extraScope?.triggerObjectId;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.id === remembered);
+        if (card === undefined) break;
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
+        });
+        break;
+      }
       case 'reanimateEachChosenTapped': {
         // The legal chosen cards still in a graveyard (CR 608.2b), entering together (CR 603.6a).
         const cards = chosenReferents(effect.targetSlot).flatMap((cardId) => {

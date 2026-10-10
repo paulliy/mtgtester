@@ -353,6 +353,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'aetheric-amplifier-viewer-double-counters',
       'cranial-plating-viewer-instant-attach',
       'mask-of-memory-viewer-draw-discard',
+      'resurrection-orb-viewer-lifelink-and-return',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

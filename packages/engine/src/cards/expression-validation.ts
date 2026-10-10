@@ -541,6 +541,8 @@ const effectExpressions = {
   returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   reanimateTargetHasteExileAtYourNextEndStep: {},
   returnDiedTriggerObjectTapped: {},
+  returnDiedTriggerObjectAtNextEndStep: {},
+  returnRememberedGraveyardCard: {},
   reanimateEachChosenTapped: {},
   connive: {},
   exileTopNPlayableUntilEot: { count: numberValue },

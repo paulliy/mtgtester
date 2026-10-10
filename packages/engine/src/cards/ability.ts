@@ -1301,6 +1301,16 @@ export type Effect =
    */
   | { op: 'returnDiedTriggerObjectTapped' }
   /**
+   * "Whenever equipped creature dies, return that card to the battlefield under its owner's
+   * control at the beginning of the next end step" (Resurrection Orb). "That card" is the card
+   * the trigger's subject became in a graveyard (CR 400.7e). The delayed trigger remembers that
+   * exact card, so a card that has left the graveyard by then stays where it is. "The next end
+   * step" is the first to begin after this resolves, whoever's turn it is (CR 603.7).
+   */
+  | { op: 'returnDiedTriggerObjectAtNextEndStep'; returnUnder: 'owner' }
+  /** The delayed half of `returnDiedTriggerObjectAtNextEndStep`: the remembered graveyard card. */
+  | { op: 'returnRememberedGraveyardCard'; returnUnder: 'owner' | 'sourceController' }
+  /**
    * "Return the chosen cards to the battlefield tapped" (Victimize): every graveyard card chosen
    * in a variable-count slot that is still a legal target enters together, tapped, under the
    * ability's controller (CR 603.6a).

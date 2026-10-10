@@ -254,12 +254,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Out of the Tombs',
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   );
-  // Catalog audit necron-remaining-batch-5: return is not under the owner's control.
-  unsupportedCard(
-    'b410f294-cbb6-4016-981f-808fd9b7bbae',
-    'Resurrection Orb',
-    "Return is under the equipment controller, not the card's owner.",
-  );
+  // Resurrection Orb: restored in coverage PR05. The interpreter reads the equipped-creature dies
+  // trigger and its next-end-step return under the card's owner, so no override remains.
   // Sautekh Immortal: restored in coverage PR04. The interpreter reads the enters-with
   // replacement counted from the creatures that died this turn, so no override remains.
   // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana

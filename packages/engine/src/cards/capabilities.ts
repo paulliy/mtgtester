@@ -978,6 +978,8 @@ const families = {
       returnExiledTriggerObject: true,
       reanimateTargetHasteExileAtYourNextEndStep: true,
       returnDiedTriggerObjectTapped: true,
+      returnDiedTriggerObjectAtNextEndStep: true,
+      returnRememberedGraveyardCard: true,
       reanimateEachChosenTapped: true,
       connive: true,
       exileTopNPlayableUntilEot: true,

@@ -18,6 +18,8 @@ interface Step {
   action: string;
   /** Fill target slots, in order, with the objects or players of these names. */
   targets?: string[];
+  /** Only take this step while the game is in this phase (an action offered earlier is skipped). */
+  phase?: string;
 }
 
 function objectNames(scenario: CardTestScenario): Map<string, string> {
@@ -43,6 +45,7 @@ function scripted(steps: Step[]) {
   const remaining = [...steps];
   return (request: DecisionRequest, scenario: CardTestScenario): Choice => {
     for (const [index, step] of remaining.slice(0, 1).entries()) {
+      if (step.phase !== undefined && scenario.engine.getState().phase !== step.phase) continue;
       const action = request.legalActions.find((candidate) =>
         candidate.description.includes(step.action),
       );
@@ -181,5 +184,39 @@ describe('Mask of Memory Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('mask-of-memory-viewer-draw-discard', steps);
+  });
+});
+
+describe('Resurrection Orb Card Test Lab scenario', () => {
+  it('resurrection-orb-viewer-lifelink-and-return — Equip {4} onto the stolen Bear, lifelink on the hit, then it returns under P2 at the end step', () => {
+    const steps: Step[] = [
+      { action: 'Equip {4}', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'], phase: 'postcombatMain' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'resurrection-orb-viewer-lifelink-and-return',
+      steps,
+    );
+    // The Bear is back, under its owner P2 (not P1, who controlled it when it died), and the
+    // Orb it died with is not attached to the new object.
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(onBattlefield('Lab Green Bear')).toHaveLength(1);
+    expect(bear?.ownerId).toBe('P2');
+    expect(bear?.controllerId).toBe('P2');
+    const [orb] = onBattlefield('Resurrection Orb');
+    expect(orb?.attachedTo ?? null).toBeNull();
+    // Lifelink from the Orb: 2 combat damage to P2, 2 life to P1.
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P1').life).toBe(42);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(6);
+    expect(state.eventLog.filter((event) => event.type === 'graveyardToBattlefield')).toHaveLength(
+      1,
+    );
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('resurrection-orb-viewer-lifelink-and-return', steps);
   });
 });
