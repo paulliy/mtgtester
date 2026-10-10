@@ -1025,6 +1025,12 @@ function parseEffectSentence(
   if (s === "~ fights target creature you don't control") {
     return [{ op: 'fight', first: 'source', second: alloc('creature', undefined, 'opponent') }];
   }
+  // "bolster 2" (CR 701.39a): a choice made on resolution among the least-toughness creatures.
+  {
+    const m = s.match(/^bolster (\w+)$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null && n > 0) return [{ op: 'bolster', count: n }];
+  }
   if (s === 'double the number of each kind of counter on target permanent') {
     return [{ op: 'doubleCountersTarget', target: alloc('permanent') }];
   }
@@ -1269,6 +1275,9 @@ function parseEffectSentence(
   }
   if (s === 'tap enchanted creature' || s === 'tap equipped creature') {
     return [{ op: 'tapTarget', target: 'attachedToSource' }];
+  }
+  if (s === 'tap target creature that player controls') {
+    return [{ op: 'tapTarget', target: alloc('creature', undefined, 'eventPlayer') }];
   }
   {
     const m = s.match(/^(enchanted|equipped) creature gains ([a-z ]+) until end of turn$/);
@@ -4464,6 +4473,20 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (parsed === null) return null;
     condition = parsed;
     body = iff[2] as string;
+  }
+  // "Whenever a creature you control with a +1/+1 counter on it attacks, tap target creature
+  // defending player controls" (Elite Scaleguard): for an attacks head the event player is the
+  // player that creature is attacking (CR 506.3d), so the target clause reads as "that player".
+  // Only the watched-creature head: self heads with this clause (Kogla) are still owned by their
+  // reviewed overrides.
+  if (
+    / defending player controls\b/.test(body) &&
+    heads.every(
+      (head) => head.when === 'attacks' && 'subject' in head && head.subject.kind === 'permanent',
+    )
+  ) {
+    heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
+    body = body.replace(/ defending player controls\b/g, ' that player controls');
   }
   let paidTransform: Effect[] | null = null;
   const paidTransformMatch = body.match(

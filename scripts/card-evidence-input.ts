@@ -1751,6 +1751,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {

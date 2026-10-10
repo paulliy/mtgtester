@@ -295,6 +295,7 @@ const effectExpressions = {
   transferCountersFromTriggerObject: {},
   transferCountersFromSource: {},
   moveCounters: { counter: text, count: finite },
+  bolster: { count: finite },
   mayPayLifeForTriggerPowerAndCounter: {},
   vindictiveLichModes: {},
   returnExiledAttachedCard: {},

@@ -24,7 +24,7 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { runTurn } from '../src/turn/turn';
+import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
@@ -45,7 +45,7 @@ interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
 }
 
-const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json'];
+const PINNED_FILES = ['fixtures/marchesa-batch1-oracle.json', 'fixtures/coverage-pr04-oracle.json'];
 const pinnedCards = PINNED_FILES.flatMap(
   (file) =>
     (JSON.parse(readFileSync(join(import.meta.dirname, file), 'utf8')) as PinnedFixture).cards,
@@ -180,6 +180,7 @@ function enterFrom(
 }
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
+const white = (n: number) => Array.from({ length: n }, () => ({ symbol: 'W' as const }));
 const blue = (n: number) => Array.from({ length: n }, () => ({ symbol: 'U' as const }));
 const black = (n: number) => Array.from({ length: n }, () => ({ symbol: 'B' as const }));
 
@@ -603,6 +604,178 @@ describe('Vigean Graftmage', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.20 Elite Scaleguard
+// ---------------------------------------------------------------------------------------------
+
+describe('Elite Scaleguard', () => {
+  const { card } = pinned('Elite Scaleguard');
+  const SMALL = oracle({
+    name: 'Lab Small',
+    typeLine: 'Creature — Secret',
+    power: '1',
+    toughness: '1',
+  });
+  const BIG = oracle({
+    name: 'Lab Big',
+    typeLine: 'Creature — Secret',
+    power: '4',
+    toughness: '4',
+  });
+  const TWIN_A = oracle({
+    name: 'Lab Twin A',
+    typeLine: 'Creature — Secret',
+    power: '2',
+    toughness: '2',
+  });
+  const TWIN_B = oracle({
+    name: 'Lab Twin B',
+    typeLine: 'Creature — Secret',
+    power: '2',
+    toughness: '2',
+  });
+  const GUARD = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Secret', power: '1', toughness: '4' });
+
+  /** Cast it from hand and resolve it and its bolster, answering a tie with `pick`. */
+  function castScaleguard(ctx: GameContext, pick?: string) {
+    const object = castFromHand(ctx, 'P1', card, [...generic(4), ...white(1)]);
+    resolveTop(ctx);
+    const offered: string[] = [];
+    settle(ctx, (decision) => {
+      if (!/bolster/.test(decision.prompt)) return { index: 0, targets: new Map() };
+      offered.push(...decision.options.map((option) => option.description));
+      return optionMatching(decision, new RegExp(`^Bolster ${pick ?? ''}`));
+    });
+    return { scaleguard: onField(ctx, object.cardId)!, offered };
+  }
+
+  /**
+   * Run combat with `attackers` (permanent id → defending player) attacking, nobody blocking.
+   * Each trigger in turn targets the next creature named in `picks`; returns every name offered.
+   */
+  function attack(ctx: GameContext, attackers: Map<string, string>, picks: string[] = []) {
+    const offered: string[][] = [];
+    const nameOf = (id: string) => ctx.state.battlefield.find((perm) => perm.id === id)?.name;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      if (decision.decisionType === 'chooseTargets') {
+        const slot = decision.options[0]!.targets![0]!;
+        offered.push(slot.options.map((id) => nameOf(id) ?? id));
+        const pick = picks[offered.length - 1];
+        const chosen = slot.options.find((id) => nameOf(id) === pick) ?? slot.options[0]!;
+        return { index: 0, targets: new Map([[slot.slot, chosen]]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return offered;
+  }
+
+  it('elite-scaleguard-pinned-oracle-supported — the interpreter models bolster 2 and the defending-player tap trigger', () => {
+    expect(getOverride(card.oracleId)).toBeUndefined();
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.targets).toEqual([]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'bolster', count: 2 }]);
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'attacks',
+      subject: { kind: 'permanent' },
+      defendingPlayerIsEventPlayer: true,
+    });
+    expect(def.triggers[1]!.targets).toEqual([{ kind: 'creature', controller: 'eventPlayer' }]);
+    expect(def.triggers[1]!.effects).toEqual([{ op: 'tapTarget', target: 0 }]);
+  });
+
+  it('elite-scaleguard-bolster-least-toughness — the counters go on the creature with the least toughness, without a choice', () => {
+    const ctx = pod('scaleguard-least');
+    const small = spawn(ctx, 'P1', SMALL);
+    const big = spawn(ctx, 'P1', BIG);
+    // An opponent's smaller creature is never a candidate: "creatures you control".
+    spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Lab Tiny', typeLine: 'Creature — Secret', power: '0', toughness: '1' }),
+    );
+    const { scaleguard, offered } = castScaleguard(ctx);
+    expect(offered).toEqual([]);
+    expect(onField(ctx, small.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, big.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(scaleguard.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('elite-scaleguard-bolster-tie-is-a-choice — tied least toughness lets its controller choose, and it is not targeted', () => {
+    const ctx = pod('scaleguard-tie');
+    const a = spawn(ctx, 'P1', TWIN_A);
+    const b = spawn(ctx, 'P1', TWIN_B);
+    spawn(ctx, 'P1', BIG);
+    const { offered } = castScaleguard(ctx, 'Lab Twin B');
+    expect(offered).toEqual(['Bolster Lab Twin A', 'Bolster Lab Twin B']);
+    expect(onField(ctx, b.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, a.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('elite-scaleguard-bolster-itself — alone, or the least tough itself, it bolsters itself', () => {
+    const ctx = pod('scaleguard-self');
+    spawn(ctx, 'P1', BIG);
+    const { scaleguard } = castScaleguard(ctx);
+    expect(scaleguard.counters['+1/+1']).toBe(2);
+    expect(effectivePT(ctx, scaleguard)).toEqual({ power: 4, toughness: 5 });
+  });
+
+  it('elite-scaleguard-attack-taps-defenders-creature — a creature with a counter attacking P3 taps a creature P3 controls, never P2’s', () => {
+    const ctx = pod('scaleguard-attack');
+    spawn(ctx, 'P1', card);
+    const attacker = spawn(ctx, 'P1', SMALL);
+    attacker.counters['+1/+1'] = 1;
+    const p2Guard = spawn(ctx, 'P2', GUARD('Lab P2 Guard'));
+    const p3Guard = spawn(ctx, 'P3', GUARD('Lab P3 Guard'));
+    const p3Other = spawn(ctx, 'P3', GUARD('Lab P3 Other'));
+    const offered = attack(ctx, new Map([[attacker.id, 'P3']]), ['Lab P3 Guard']);
+    expect(offered).toEqual([['Lab P3 Guard', 'Lab P3 Other']]);
+    expect(onField(ctx, p3Guard.cardId)!.tapped).toBe(true);
+    expect(onField(ctx, p3Other.cardId)!.tapped).toBe(false);
+    expect(onField(ctx, p2Guard.cardId)!.tapped).toBe(false);
+  });
+
+  it('elite-scaleguard-attack-needs-a-counter — an attacker without a +1/+1 counter, or an opponent’s, triggers nothing', () => {
+    const ctx = pod('scaleguard-no-counter');
+    spawn(ctx, 'P1', card);
+    const bare = spawn(ctx, 'P1', SMALL);
+    const guard = spawn(ctx, 'P2', GUARD('Lab P2 Guard'));
+    const offered = attack(ctx, new Map([[bare.id, 'P2']]));
+    expect(offered).toEqual([]);
+    expect(onField(ctx, guard.cardId)!.tapped).toBe(false);
+  });
+
+  it('elite-scaleguard-attack-each-attacker — two attackers with counters each trigger it, one tap per attacker', () => {
+    const ctx = pod('scaleguard-two');
+    spawn(ctx, 'P1', card);
+    const first = spawn(ctx, 'P1', TWIN_A);
+    const second = spawn(ctx, 'P1', TWIN_B);
+    first.counters['+1/+1'] = 1;
+    second.counters['+1/+1'] = 2;
+    const one = spawn(ctx, 'P2', GUARD('Lab Guard One'));
+    const two = spawn(ctx, 'P2', GUARD('Lab Guard Two'));
+    const offered = attack(
+      ctx,
+      new Map([
+        [first.id, 'P2'],
+        [second.id, 'P2'],
+      ]),
+      ['Lab Guard One', 'Lab Guard Two'],
+    );
+    expect(offered).toHaveLength(2);
+    expect(onField(ctx, one.cardId)!.tapped).toBe(true);
+    expect(onField(ctx, two.cardId)!.tapped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -613,6 +786,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Elite Scaleguard',
+    sha256: 'f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96',
+    clauseCount: 2,
+  },
   {
     name: 'Vigean Graftmage',
     sha256: 'dd42fa4af6fe68996fc19d54535d43d6ef28cc4915fe353b5d36a6451a592e9b',

@@ -137,6 +137,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/coverage-pr01-oracle.json',
   'packages/engine/tests/fixtures/coverage-pr02-oracle.json',
   'packages/engine/tests/fixtures/coverage-pr03-oracle.json',
+  'packages/engine/tests/fixtures/coverage-pr04-oracle.json',
   'packages/engine/tests/fixtures/marchesa-batch1-oracle.json',
   'packages/engine/tests/fixtures/necron-main-engine-batch1-oracle.json',
   'packages/engine/tests/fixtures/necron-main-engine-batch2-oracle.json',

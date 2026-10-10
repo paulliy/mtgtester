@@ -3139,6 +3139,30 @@ export function* executeAbility(
         }
         break;
       }
+      case 'bolster': {
+        const creatures = ctx.state.battlefield.filter(
+          (perm) =>
+            perm.controllerId === controller.id &&
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+        );
+        if (creatures.length === 0) break;
+        const toughness = (perm: EnginePermanent) => effectivePT(ctx, perm).toughness;
+        const least = Math.min(...creatures.map(toughness));
+        const tied = creatures.filter((perm) => toughness(perm) === least);
+        const chosen =
+          tied.length === 1
+            ? tied[0]
+            : yield* chooseCard(ctx, {
+                player: controller.id,
+                prompt: `${source.name}: bolster ${effect.count} — choose a creature with the least toughness`,
+                cards: tied,
+                type: 'bolster',
+                verb: 'Bolster',
+              });
+        if (chosen !== null && chosen !== undefined)
+          addCounters(ctx, source, chosen, '+1/+1', effect.count);
+        break;
+      }
       case 'moveCounters': {
         const fromId = ref(effect.from);
         const toId = ref(effect.to);

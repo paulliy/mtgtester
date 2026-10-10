@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-10",
+  "cards": [
+    {
+      "sha256": "f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96",
+      "card": {
+        "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
+        "scryfallId": "d0ca5bcc-f49f-4370-9f95-031836bb771b",
+        "name": "Elite Scaleguard",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "When this creature enters, bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.)\nWhenever a creature you control with a +1/+1 counter on it attacks, tap target creature defending player controls.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Bolster"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

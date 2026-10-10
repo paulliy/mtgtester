@@ -227,6 +227,11 @@ const COVERAGE_PR03: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr03-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR04 cards that had no earlier pinned fixture. */
+const COVERAGE_PR04: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr04-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -7743,6 +7748,41 @@ function vigeanGraftmageScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function eliteScaleguardScenario(gameId: GameId): CardTestScenario {
+  const scaleguard = pinnedFrom(COVERAGE_PR04, 'Elite Scaleguard');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'elite-scaleguard-viewer-bolster-and-tap',
+    title: 'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    instructions: [
+      'Elite Scaleguard is in your hand; Lab Servo (a 1/1) and five lands are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Elite Scaleguard. When it enters, bolster 2 puts two +1/+1 counters on Lab Servo, the creature with the least toughness among your creatures.',
+      'Attack P2 with Lab Servo (Elite Scaleguard is summoning sick). Because Lab Servo has +1/+1 counters, its attack trigger taps target creature defending player controls: target Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lab Servo is a 3/3 with two +1/+1 counters and Elite Scaleguard has none. Lab Ox is tapped by the attack trigger.',
+    oracleSha256: scaleguard.sha256,
+    clauseIds: ['elite-scaleguard-bolster', 'elite-scaleguard-attack-tap'],
+    decks: {
+      P1: [scaleguard.card, LAB_SERVO, PLAINS, ...forests],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Elite Scaleguard'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo', 'Plains', ...forests.map((forest) => forest.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8908,6 +8948,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sautekh-immortal-viewer-flash-counters',
   'iron-apprentice-viewer-dies-moves-counters',
   'vigean-graftmage-viewer-graft-and-untap',
+  'elite-scaleguard-viewer-bolster-and-tap',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9143,6 +9184,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
   'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
   'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
+  'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

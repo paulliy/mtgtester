@@ -194,3 +194,30 @@ describe('Vigean Graftmage Card Test Lab scenario', () => {
     replays('vigean-graftmage-viewer-graft-and-untap', steps);
   });
 });
+
+describe('Elite Scaleguard Card Test Lab scenario', () => {
+  it('elite-scaleguard-viewer-bolster-and-tap — bolster counters the smallest creature, and its attack taps a defending creature', () => {
+    const steps: Step[] = [
+      { action: 'Cast Elite Scaleguard' },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'elite-scaleguard-viewer-bolster-and-tap',
+      steps,
+    );
+    // Bolster 2 went on Lab Servo, the creature with the least toughness; Elite Scaleguard is 2/3.
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters).toEqual({ '+1/+1': 2 });
+    expect(servo?.tapped).toBe(true);
+    const [scaleguard] = onBattlefield('Elite Scaleguard');
+    expect(scaleguard?.counters ?? {}).toEqual({});
+    // The countered attacker's trigger tapped the only creature the defending player controls.
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.tapped).toBe(true);
+    // Lab Ox was tapped before blockers, so Lab Servo (1/1 plus two counters) connected for 3.
+    expect(seat('P2').life).toBe(37);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('elite-scaleguard-viewer-bolster-and-tap', steps);
+  });
+});

@@ -735,6 +735,7 @@ const families = {
       transferCountersFromTriggerObject: true,
       transferCountersFromSource: true,
       moveCounters: true,
+      bolster: true,
       mayPayLifeForTriggerPowerAndCounter: true,
       vindictiveLichModes: true,
       returnExiledAttachedCard: true,

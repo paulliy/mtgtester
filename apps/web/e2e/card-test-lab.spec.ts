@@ -5518,3 +5518,36 @@ test('Vigean Graftmage: graft a counter, then untap a creature that has one', as
   await passUntil(page, untapped.first());
   await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
 });
+
+test('Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+  );
+  const scaleguard = handCard(page, 'Elite Scaleguard');
+  await expect(scaleguard).toHaveClass(/actionable/, { timeout: 15_000 });
+  await scaleguard.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Elite Scaleguard'));
+  // Bolster 2 is not targeted: Lab Servo (toughness 1) is the only least-toughness creature.
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×2'));
+  await expect(permanent(page, 'Lab Servo').getByText('3/3')).toBeVisible();
+  await expect(permanent(page, 'Elite Scaleguard').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+
+  // Nothing is castable now, so priority passes and combat begins. Only Lab Servo can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Servo' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // The countered attacker's trigger taps Lab Ox (P2's only creature), so nothing blocks.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Lab Servo deals 3 to P2/).first()).toBeVisible();
+});

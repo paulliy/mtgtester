@@ -555,6 +555,11 @@ export type Effect =
    * replacements apply to the second half. If either object is gone, nothing moves.
    */
   | { op: 'moveCounters'; from: EffectRef; to: EffectRef; counter: string; count: number }
+  /**
+   * "Bolster N" (CR 701.39a): as it resolves, the controller chooses a creature with the least
+   * toughness among creatures they control and puts N +1/+1 counters on it. Not a target.
+   */
+  | { op: 'bolster'; count: number }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
   | { op: 'returnExiledAttachedCard' }
