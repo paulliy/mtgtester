@@ -1448,21 +1448,26 @@ describe('Aetheric Amplifier', () => {
     expect(bystander.counters['+1/+1']).toBe(1);
   });
 
-  it('aetheric-amplifier-doubles-your-counters — your energy and poison double, an opponent’s do not', () => {
+  it('aetheric-amplifier-doubles-your-counters — your energy, poison and named counters double, an opponent’s do not', () => {
     const { ctx, amplifier } = board('amplifier-player');
     const me = playerById(ctx, 'P1');
     const them = playerById(ctx, 'P2');
     me.energy = 3;
     me.poisonCounters = 2;
+    me.counters = { experience: 2, rad: 1 };
     them.energy = 5;
     them.poisonCounters = 1;
+    them.counters = { experience: 4 };
     const option = activations(ctx, amplifier.id).find((o) => (o.targets?.length ?? 0) === 0)!;
     takeAction(ctx, 'P1', option.payload as PriorityActionPayload);
     resolveTop(ctx);
     expect(me.energy).toBe(6);
     expect(me.poisonCounters).toBe(4);
+    // "Each kind of counter you have" includes named player counters (CR 122.1).
+    expect(me.counters).toEqual({ experience: 4, rad: 2 });
     expect(them.energy).toBe(5);
     expect(them.poisonCounters).toBe(1);
+    expect(them.counters).toEqual({ experience: 4 });
   });
 
   it('aetheric-amplifier-sorcery-speed — not offered with a spell on the stack, on another turn, or tapped', () => {

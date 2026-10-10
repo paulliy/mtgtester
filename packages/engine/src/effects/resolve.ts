@@ -897,6 +897,19 @@ const signed = (n: number): string => `${n >= 0 ? '+' : ''}${n}`;
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
  */
+/**
+ * "Double the number of each kind of counter you have": every player counter kind, energy and
+ * poison as well as the named ones such as experience (CR 122.1, 122.8).
+ */
+function doubleEachPlayerCounter(ctx: GameContext, player: EnginePlayerState): void {
+  player.energy *= 2;
+  player.poisonCounters *= 2;
+  const named = player.counters;
+  if (named !== undefined)
+    for (const kind of Object.keys(named)) named[kind] = (named[kind] ?? 0) * 2;
+  emit(ctx, 'energy', { amount: player.energy, total: player.energy }, player.id);
+}
+
 function addCounters(
   ctx: GameContext,
   source: EffectSource,
@@ -4211,9 +4224,7 @@ export function* executeAbility(
         const player =
           t === null ? undefined : ctx.state.players.find((candidate) => candidate.id === t);
         if (player === undefined) break;
-        player.energy *= 2;
-        player.poisonCounters *= 2;
-        emit(ctx, 'energy', { amount: player.energy, total: player.energy }, player.id);
+        doubleEachPlayerCounter(ctx, player);
         break;
       }
       case 'becomeCopyOf': {
@@ -4661,12 +4672,9 @@ export function* executeAbility(
         }
         break;
       }
-      case 'doublePlayerCounters': {
-        controller.energy *= 2;
-        controller.poisonCounters *= 2;
-        emit(ctx, 'energy', { amount: controller.energy, total: controller.energy }, controller.id);
+      case 'doublePlayerCounters':
+        doubleEachPlayerCounter(ctx, controller);
         break;
-      }
       case 'shuffleHandGraveyardIntoLibrary': {
         const cards = [...controller.hand, ...controller.graveyard];
         controller.hand = [];
