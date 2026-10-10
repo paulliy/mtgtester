@@ -7904,7 +7904,7 @@ function pensiveProfessorScenario(gameId: GameId): CardTestScenario {
     id: 'pensive-professor-viewer-increment-draw',
     title: 'Pensive Professor: Increment grows it, then the counter draws a card',
     instructions: [
-      'Pensive Professor (a 0/3) and an Island are on your battlefield; Lab Ripple is in your hand.',
+      'Pensive Professor (a 0/2) and an Island are on your battlefield; Lab Ripple is in your hand.',
       'Cast Lab Ripple for {U}. One mana is more than the Professor’s power of 0, so Increment triggers.',
       'Let Increment resolve to put a +1/+1 counter on the Professor, then let the draw trigger resolve.',
     ],

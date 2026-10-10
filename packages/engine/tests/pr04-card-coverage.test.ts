@@ -1491,7 +1491,20 @@ describe('Aetheric Amplifier', () => {
     them.counters = { experience: 4 };
     const option = activations(ctx, amplifier.id).find((o) => (o.targets?.length ?? 0) === 0)!;
     takeAction(ctx, 'P1', option.payload as PriorityActionPayload);
+    const logged = ctx.state.eventLog.length;
     resolveTop(ctx);
+    // Each kind that doubled is logged with what was added, as proliferate logs it.
+    const changes = ctx.state.eventLog
+      .slice(logged)
+      .filter((event) => event.type === 'energy' || event.type === 'counters')
+      .map((event) => event.payload);
+    const source = expect.stringMatching(/^Aetheric Amplifier/) as string;
+    expect(changes).toEqual([
+      { player: 'P1', amount: 3, total: 6 },
+      { source, target: 'P1', counter: 'poison', added: 2, total: 4 },
+      { source, target: 'P1', counter: 'experience', added: 2, total: 4 },
+      { source, target: 'P1', counter: 'rad', added: 1, total: 2 },
+    ]);
     expect(me.energy).toBe(6);
     expect(me.poisonCounters).toBe(4);
     // "Each kind of counter you have" includes named player counters (CR 122.1).

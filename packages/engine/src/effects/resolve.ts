@@ -894,22 +894,45 @@ function protectedFromCounter(ctx: GameContext, entry: EngineStackObject): boole
 const signed = (n: number): string => `${n >= 0 ? '+' : ''}${n}`;
 
 /**
+ * "Double the number of each kind of counter you have": every player counter kind, energy and
+ * poison as well as the named ones such as experience (CR 122.1, 122.8). Each kind that grows is
+ * logged as proliferate logs it.
+ */
+function doubleEachPlayerCounter(
+  ctx: GameContext,
+  source: EffectSource,
+  player: EnginePlayerState,
+  actorId: PlayerId,
+): void {
+  const logCounter = (counter: string, added: number, total: number) =>
+    emit(
+      ctx,
+      'counters',
+      { source: source.name, target: player.id, counter, added, total },
+      actorId,
+    );
+  const energy = player.energy;
+  if (energy > 0) {
+    player.energy = energy * 2;
+    emit(ctx, 'energy', { player: player.id, amount: energy, total: player.energy }, actorId);
+  }
+  const poison = player.poisonCounters;
+  if (poison > 0) {
+    player.poisonCounters = poison * 2;
+    logCounter('poison', poison, player.poisonCounters);
+  }
+  const named = player.counters ?? {};
+  for (const [kind, have] of Object.entries(named)) {
+    if (have <= 0) continue;
+    named[kind] = have * 2;
+    logCounter(kind, have, have * 2);
+  }
+}
+
+/**
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
  */
-/**
- * "Double the number of each kind of counter you have": every player counter kind, energy and
- * poison as well as the named ones such as experience (CR 122.1, 122.8).
- */
-function doubleEachPlayerCounter(ctx: GameContext, player: EnginePlayerState): void {
-  player.energy *= 2;
-  player.poisonCounters *= 2;
-  const named = player.counters;
-  if (named !== undefined)
-    for (const kind of Object.keys(named)) named[kind] = (named[kind] ?? 0) * 2;
-  emit(ctx, 'energy', { amount: player.energy, total: player.energy }, player.id);
-}
-
 function addCounters(
   ctx: GameContext,
   source: EffectSource,
@@ -4221,7 +4244,7 @@ export function* executeAbility(
         const player =
           t === null ? undefined : ctx.state.players.find((candidate) => candidate.id === t);
         if (player === undefined) break;
-        doubleEachPlayerCounter(ctx, player);
+        doubleEachPlayerCounter(ctx, source, player, controller.id);
         break;
       }
       case 'becomeCopyOf': {
@@ -4670,7 +4693,7 @@ export function* executeAbility(
         break;
       }
       case 'doublePlayerCounters':
-        doubleEachPlayerCounter(ctx, controller);
+        doubleEachPlayerCounter(ctx, source, controller, controller.id);
         break;
       case 'shuffleHandGraveyardIntoLibrary': {
         const cards = [...controller.hand, ...controller.graveyard];
