@@ -5702,9 +5702,9 @@ test('Aetheric Amplifier: double the counters on a target permanent', async ({ p
   await permanentMode.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Servo').click();
-  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
-  await confirm(page);
+  // The tray auto-pays the {4} as it confirms: one Confirm puts the ability on the stack.
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
   await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×4'));
