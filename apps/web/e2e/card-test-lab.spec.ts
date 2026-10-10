@@ -5794,3 +5794,48 @@ test('Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two
     0,
   );
 });
+
+test('Belladonna Took: three tokens give life, then a card, then a counter on each creature', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(3);
+
+  const castForge = async (servos: number) => {
+    const forge = handCard(page, 'Lab Token Forge').first();
+    await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+    await forge.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+    // Identical tokens share one tile with a count.
+    await passUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  };
+
+  // First resolution: gain 1 life.
+  await castForge(1);
+  await passUntil(page, page.locator('.log .line', { hasText: /gains 1 life/ }).first());
+  await expect(hand).toHaveCount(2);
+
+  // Second resolution: draw a card (two Forges left, then one drawn card).
+  await castForge(2);
+  await passUntil(page, page.locator('.log .line', { hasText: /draws/ }).first());
+  await expect(hand).toHaveCount(2);
+
+  // Third resolution: a +1/+1 counter on each creature you control.
+  await castForge(3);
+  await passUntil(page, permanent(page, 'Belladonna Took').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Servo')).toContainText('×3');
+  await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});

@@ -8036,6 +8036,63 @@ function lockjawScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A one-mana instant that makes one token: each cast is one "token you control enters" event. */
+const LAB_TOKEN_FORGE = card({
+  oracleId: 'lab-token-forge',
+  name: 'Lab Token Forge',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Create a 1/1 colorless Servo artifact creature token.',
+});
+
+function belladonnaTookScenario(gameId: GameId): CardTestScenario {
+  const belladonna = pinnedFrom(COVERAGE_PR04, 'Belladonna Took');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'belladonna-took-viewer-three-tokens',
+    title: 'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+    instructions: [
+      'Belladonna Took, Lab Ox and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge and let the Servo token and then Belladonna’s trigger resolve: the first resolution gains you 1 life.',
+      'Cast a second Lab Token Forge: the second resolution draws a card.',
+      'Cast the third: the third resolution puts a +1/+1 counter on each creature you control, including the three Servo tokens.',
+    ],
+    expectedOutcome:
+      'You gained 1 life (41) and drew 1 card, and Belladonna Took, Lab Ox and all three Servo tokens each have one +1/+1 counter.',
+    oracleSha256: belladonna.sha256,
+    clauseIds: ['belladonna-took-token-resolutions'],
+    decks: {
+      P1: [
+        belladonna.card,
+        LAB_OX,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_HEX,
+        LAB_SERVO,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Belladonna Took', 'Lab Ox', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9204,6 +9261,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'belladonna-took-viewer-three-tokens',
   'lockjaw-viewer-counter-and-unblockable',
   'the-thing-viewer-counters-and-double',
   'aetheric-amplifier-viewer-double-counters',
@@ -9447,6 +9505,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'belladonna-took-viewer-three-tokens': belladonnaTookScenario,
   'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
   'the-thing-viewer-counters-and-double': theThingScenario,
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,

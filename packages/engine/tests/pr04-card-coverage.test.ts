@@ -1759,6 +1759,124 @@ describe('Lockjaw, Slobbering Teleporter', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.06 Belladonna Took
+// ---------------------------------------------------------------------------------------------
+
+describe('Belladonna Took', () => {
+  const { card } = pinned('Belladonna Took');
+  const FOOD: TokenSpec = {
+    name: 'Lab Token',
+    typeLine: 'Token Artifact — Clue',
+    types: ['Artifact'],
+    subtypes: ['Clue'],
+    colors: [],
+    power: null,
+    toughness: null,
+  };
+
+  /** Create one token for `playerId` and let every trigger resolve. */
+  function token(ctx: GameContext, playerId = 'P1') {
+    createTokens(ctx, FOOD, 1, playerId);
+    settle(ctx);
+  }
+
+  function snapshot(ctx: GameContext, belladonna: EnginePermanent) {
+    const me = playerById(ctx, 'P1');
+    return {
+      life: me.life,
+      hand: me.hand.length,
+      counters: onField(ctx, belladonna.cardId)?.counters['+1/+1'] ?? 0,
+    };
+  }
+
+  it('belladonna-took-pinned-oracle-supported — one token trigger whose first, second and third resolutions differ', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'enters',
+      subject: { kind: 'permanent' },
+    });
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'byResolutionCountThisTurn',
+        cases: [
+          { n: 1, effects: [{ op: 'gainLife' }] },
+          { n: 2, effects: [{ op: 'draw' }] },
+          { n: 3, effects: [{ op: 'putCountersEach', counter: '+1/+1', count: 1 }] },
+        ],
+        otherwise: [],
+      },
+    ]);
+  });
+
+  it('belladonna-took-first-second-third — life, then a card, then a counter on each creature you control, then nothing', () => {
+    const ctx = pod('belladonna-sequence');
+    const belladonna = spawn(ctx, 'P1', card);
+    const ally = spawn(ctx, 'P1', LAB_CARD('Lab Ally'));
+    const rival = spawn(ctx, 'P2', LAB_CARD('Lab Rival'));
+    const start = snapshot(ctx, belladonna);
+    token(ctx);
+    expect(snapshot(ctx, belladonna)).toEqual({ ...start, life: start.life + 1 });
+    token(ctx);
+    expect(snapshot(ctx, belladonna)).toEqual({
+      ...start,
+      life: start.life + 1,
+      hand: start.hand + 1,
+    });
+    token(ctx);
+    expect(snapshot(ctx, belladonna)).toEqual({
+      life: start.life + 1,
+      hand: start.hand + 1,
+      counters: 1,
+    });
+    expect(ally.counters['+1/+1']).toBe(1);
+    expect(rival.counters['+1/+1'] ?? 0).toBe(0);
+    // A fourth resolution matches no case.
+    token(ctx);
+    expect(snapshot(ctx, belladonna)).toEqual({
+      life: start.life + 1,
+      hand: start.hand + 1,
+      counters: 1,
+    });
+  });
+
+  it('belladonna-took-your-tokens-only — an opponent’s token does not trigger it or use up the first resolution', () => {
+    const ctx = pod('belladonna-theirs');
+    const belladonna = spawn(ctx, 'P1', card);
+    const start = snapshot(ctx, belladonna);
+    token(ctx, 'P2');
+    expect(snapshot(ctx, belladonna)).toEqual(start);
+    token(ctx);
+    expect(snapshot(ctx, belladonna).life).toBe(start.life + 1);
+  });
+
+  it('belladonna-took-count-resets — the count starts over next turn, and for a new Belladonna object', () => {
+    const ctx = pod('belladonna-reset');
+    const belladonna = spawn(ctx, 'P1', card);
+    token(ctx);
+    token(ctx);
+    const afterTwo = snapshot(ctx, belladonna);
+    quietTurn(ctx);
+    // The next turn's first resolution gains life again rather than counting a third.
+    token(ctx);
+    expect(snapshot(ctx, belladonna).life).toBe(afterTwo.life + 1);
+    expect(snapshot(ctx, belladonna).counters).toBe(0);
+
+    // A Belladonna that left and came back is a new object (CR 400.7) with a fresh count.
+    const fresh = pod('belladonna-new-object');
+    const first = spawn(fresh, 'P1', card);
+    token(fresh);
+    const before = playerById(fresh, 'P1').life;
+    kill(fresh, first);
+    const again = enterFrom(fresh, 'P1', card, 'graveyard');
+    token(fresh);
+    expect(playerById(fresh, 'P1').life).toBe(before + 1);
+    expect(again.counters['+1/+1'] ?? 0).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1769,6 +1887,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Belladonna Took',
+    sha256: '65b2c91a9085899dbe7b631298e7cc2893a867f894c885688c34f3a4d2c5525d',
+    clauseCount: 1,
+  },
   {
     name: 'Lockjaw, Slobbering Teleporter',
     sha256: 'c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a',

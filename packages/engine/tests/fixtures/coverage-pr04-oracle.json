@@ -229,6 +229,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "65b2c91a9085899dbe7b631298e7cc2893a867f894c885688c34f3a4d2c5525d",
+      "card": {
+        "oracleId": "011da9c5-aa8a-4fa0-b1f2-62b9f3760476",
+        "scryfallId": "88f0c189-c9ed-4ea3-ae62-3d8ac6c7fecf",
+        "name": "Belladonna Took",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Halfling Citizen",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Citizen"
+        ],
+        "oracleText": "Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a card. If it's the third time, put a +1/+1 counter on each creature you control.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

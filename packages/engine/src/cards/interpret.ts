@@ -2517,6 +2517,63 @@ function parseSpreeSpellBlock(
   }
   return { targets, modes: { minChoices: 1, maxChoices: options.length, options } };
 }
+const ORDINAL_TIMES: Record<string, number> = {
+  first: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+};
+
+/**
+ * "You gain 1 life if this is the first time this ability has resolved this turn. If it's the
+ * second time, draw a card. If it's the third time, …" (Belladonna Took) and "scry 1. If this is
+ * the second time this ability has resolved this turn, draw a card instead." (Rumor Gatherer):
+ * branches on how many times this ability has resolved this turn, counting this resolution.
+ */
+function parseResolutionCountBlock(
+  body: string,
+  key: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+  opts: Parameters<typeof parseEffectSentence>[3],
+): Effect[] | null {
+  if (!body.includes(' time this ability has resolved this turn')) return null;
+  const sentences = splitSentences(body);
+  const cases: { n: number; effects: Effect[] }[] = [];
+  const otherwise: Effect[] = [];
+  const parse = (text: string): Effect[] | null => {
+    const parsed = parseEffectSentence(text, alloc, card, opts);
+    if (parsed === null) return null;
+    const effects: Effect[] = [];
+    appendSentenceEffects(effects, text, parsed);
+    return effects;
+  };
+  const addCase = (ordinal: string, text: string): boolean => {
+    const n = ORDINAL_TIMES[ordinal];
+    const effects = parse(text);
+    if (n === undefined || effects === null || cases.some((entry) => entry.n === n)) return false;
+    cases.push({ n, effects });
+    return true;
+  };
+  const [first, ...rest] = sentences.map((sentence) => sentence.replace(/\.$/, ''));
+  if (first === undefined) return null;
+  const leading = first.match(
+    /^(.+) if this is the (\w+) time this ability has resolved this turn$/,
+  );
+  if (leading !== null) {
+    // Belladonna: each sentence is one count's effect; any other count does nothing.
+    if (!addCase(leading[2] as string, leading[1] as string)) return null;
+    for (const sentence of rest) {
+      const m = sentence.match(/^if it's the (\w+) time, (.+)$/);
+      if (m === null || !addCase(m[1] as string, m[2] as string)) return null;
+    }
+  } else {
+    return null;
+  }
+  return [{ op: 'byResolutionCountThisTurn', key, cases, otherwise }];
+}
+
 /**
  * The ability a "When you do, …" reflexive trigger puts on the stack (CR 603.12). It declares
  * its own targets, chosen as it goes on the stack (CR 603.3d), so it gets its own slot list —
@@ -4780,6 +4837,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseHellkiteCourserBlock(body, alloc, card) ??
         parseDoublePowerThoseGainBlock(body) ??
         parseDepartedSourceToLibraryBlock(body, heads) ??
+        parseResolutionCountBlock(body, line, alloc, card, opts) ??
         parseExileReturnAtNextEndStepBlock(body, alloc) ??
         parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);

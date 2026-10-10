@@ -1030,6 +1030,18 @@ export type Effect =
    * must be current then, not at announcement).
    */
   | {
+      /**
+       * "You gain 1 life if this is the first time this ability has resolved this turn. If it's
+       * the second time, draw a card." (Belladonna Took) / "scry 1. If this is the second time
+       * …, draw a card instead." (Rumor Gatherer): counts this resolution, then runs the case
+       * for that count, or `otherwise`. `key` names the ability within its card.
+       */
+      op: 'byResolutionCountThisTurn';
+      key: string;
+      cases: { n: number; effects: Effect[] }[];
+      otherwise: Effect[];
+    }
+  | {
       op: 'conditionalEffect';
       condition: Condition;
       then: Effect[];

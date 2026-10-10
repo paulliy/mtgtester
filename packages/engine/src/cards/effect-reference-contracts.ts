@@ -260,6 +260,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   untapAttackingPlayerNonlandPermanents: {},
   dealDamageDivided: { targetSlot: many(damage) },
   conditionalEffect: { checkTarget: optionalRef(anyReference) },
+  byResolutionCountThisTurn: {},
   counterUnlessControllerPays: { target: spell },
   unlessPays: {},
   addMana: {},

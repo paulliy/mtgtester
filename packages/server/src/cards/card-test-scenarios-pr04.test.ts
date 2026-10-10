@@ -406,3 +406,34 @@ describe('Lockjaw, Slobbering Teleporter Card Test Lab scenario', () => {
     replays('lockjaw-viewer-counter-and-unblockable', steps);
   });
 });
+
+describe('Belladonna Took Card Test Lab scenario', () => {
+  it('belladonna-took-viewer-three-tokens — the first token gains life, the second draws, the third counters every creature', () => {
+    const forge = { action: 'Cast Lab Token Forge' };
+    // Each token spell resolves, and then Belladonna’s trigger resolves, before the next cast.
+    const pass = { action: 'Pass priority' };
+    const steps: Step[] = [forge, pass, pass, forge, pass, pass, forge];
+    const { scenario, state, seat, onBattlefield } = run(
+      'belladonna-took-viewer-three-tokens',
+      steps,
+    );
+    const p1 = seat('P1');
+    expect(p1.life).toBe(41);
+    // Three Forges left the hand; exactly one card was drawn (the second resolution).
+    expect(p1.hand).toHaveLength(1);
+    expect(p1.graveyard.map((card) => card.name)).toEqual([
+      'Lab Token Forge',
+      'Lab Token Forge',
+      'Lab Token Forge',
+    ]);
+    // The third resolution put a counter on each creature P1 controls, tokens included.
+    expect(onBattlefield('Belladonna Took')[0]?.counters).toEqual({ '+1/+1': 1 });
+    expect(onBattlefield('Lab Ox')[0]?.counters).toEqual({ '+1/+1': 1 });
+    const servos = onBattlefield('Servo');
+    expect(servos).toHaveLength(3);
+    for (const servo of servos) expect(servo.counters).toEqual({ '+1/+1': 1 });
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('belladonna-took-viewer-three-tokens', steps);
+  });
+});

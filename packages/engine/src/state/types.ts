@@ -537,6 +537,13 @@ export interface EngineState extends GameState {
   createdTokenThisTurn: Record<PlayerId, boolean>;
   /** Number of creatures put into graveyards this turn. */
   creaturesDiedThisTurn: number;
+  /**
+   * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
+   * times each counted ability has resolved this turn, keyed by the source's battlefield object
+   * id and the ability's key. A source that changes zones is a new object with a fresh count
+   * (CR 400.7). Cleared at the start of each turn.
+   */
+  abilityResolutionsThisTurn?: Record<string, number>;
   /** Combat-damage replacement shields used by Darkness-style effects this turn. */
   combatDamagePrevention: {
     all: boolean;

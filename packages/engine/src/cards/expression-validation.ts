@@ -474,6 +474,7 @@ const effectExpressions = {
   untapAttackingPlayerNonlandPermanents: {},
   dealDamageDivided: { total: numberValue },
   conditionalEffect: { condition: condition },
+  byResolutionCountThisTurn: { key: text },
   counterUnlessControllerPays: {},
   unlessPays: { genericValue: optional(numberValue) },
   addMana: { amount: numberValue },

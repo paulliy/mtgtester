@@ -4880,6 +4880,26 @@ export function* executeAbility(
         }
         break;
       }
+      case 'byResolutionCountThisTurn': {
+        const counts = (ctx.state.abilityResolutionsThisTurn ??= {});
+        const id = `${source.id ?? source.cardId}:${effect.key}`;
+        const count = (counts[id] ?? 0) + 1;
+        counts[id] = count;
+        const chosen = effect.cases.find((entry) => entry.n === count)?.effects ?? effect.otherwise;
+        if (chosen.length > 0) {
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: chosen },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
+        }
+        break;
+      }
       case 'conditionalEffect': {
         // "Ferocious — if you control a creature with power 4 or greater, counter that spell
         // instead" (Stubborn Denial) — checked at RESOLUTION, when the board is current, not at
