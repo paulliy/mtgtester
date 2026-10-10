@@ -5682,3 +5682,36 @@ test('Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the
   await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
   await expect(page.getByText(/Bess, Soul Nourisher deals 2 to P2/).first()).toBeVisible();
 });
+
+test('Aetheric Amplifier: double the counters on a target permanent', async ({ page }) => {
+  await runScenario(page, 'Aetheric Amplifier: double the counters on a target permanent');
+  // Lab Servo carries two +1/+1 counters and one charge counter; you have three energy.
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('3/3')).toBeVisible();
+  await expect(page.getByLabel('Global counters')).toContainText('3');
+
+  const amplifier = permanent(page, 'Aetheric Amplifier');
+  await expect(amplifier).toHaveClass(/actionable/, { timeout: 15_000 });
+  await amplifier.click();
+  // The choose-one is offered as one action per mode.
+  const permanentMode = page.getByRole('button', {
+    name: /double the number of each kind of counter on target permanent/i,
+  });
+  await expect(permanentMode).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /double the number of each kind of counter you have/i }),
+  ).toBeVisible();
+  await permanentMode.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Servo').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×4'));
+  await expect(permanent(page, 'Lab Servo').getByText('5/5')).toBeVisible();
+  await expect(permanent(page, 'Aetheric Amplifier').locator('.tap-badge')).toHaveText('TAP');
+  // The mode only doubles the target's counters: your energy is unchanged.
+  await expect(page.getByLabel('Global counters')).toContainText('3');
+});

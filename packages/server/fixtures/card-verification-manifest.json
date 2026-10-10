@@ -3514,15 +3514,30 @@
     "295cd8e1-0830-46c1-9957-556afd4bcee6": {
       "name": "Aetheric Amplifier",
       "oracleSha256": "22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{4}, {T}: Choose one. Activate only as a sorcery.",
+          "id": "aetheric-amplifier-mana",
+          "oracleText": "{T}: Add one mana of any color.",
+          "implementation": ["interpreted tap mana ability producing one mana of any color"],
+          "engineTestIds": ["aetheric-amplifier-pinned-oracle-supported"],
+          "viewerScenarioIds": ["aetheric-amplifier-viewer-double-counters"]
+        },
+        {
+          "id": "aetheric-amplifier-modal-double",
+          "oracleText": "{4}, {T}: Choose one. Activate only as a sorcery.\n• Double the number of each kind of counter on target permanent.\n• Double the number of each kind of counter you have.",
           "implementation": [
-            "explicitly unsupported; choose-one authored as two independent activations"
+            "interpreted as one sorcery-speed activated ability with a choose-one mode block (CR 700.2) costing {4} and tapping it, offered once per mode, so the mode is chosen as the ability is activated",
+            "the permanent mode takes one permanent target and its doubleCountersTarget effect adds as many counters of each kind as are already there; the player mode has no target and its doublePlayerCounters effect doubles only your own counters (energy, poison and so on), never an opponent's"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "aetheric-amplifier-pinned-oracle-supported",
+            "aetheric-amplifier-one-activation-per-mode",
+            "aetheric-amplifier-doubles-permanent-counters",
+            "aetheric-amplifier-doubles-your-counters",
+            "aetheric-amplifier-sorcery-speed"
+          ],
+          "viewerScenarioIds": ["aetheric-amplifier-viewer-double-counters"]
         }
       ],
       "gameplayAiScenarioIds": []

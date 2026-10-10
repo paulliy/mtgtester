@@ -1373,6 +1373,123 @@ describe('Bess, Soul Nourisher', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.05 Aetheric Amplifier
+// ---------------------------------------------------------------------------------------------
+
+describe('Aetheric Amplifier', () => {
+  const { card } = pinned('Aetheric Amplifier');
+
+  /** The Amplifier's activations offered to P1 now, one per mode (CR 700.2a). */
+  function activations(ctx: GameContext, amplifierId: string) {
+    return priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === amplifierId;
+    });
+  }
+
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const amplifier = spawn(ctx, 'P1', card);
+    addMana(playerById(ctx, 'P1'), generic(4));
+    return { ctx, amplifier };
+  }
+
+  it('aetheric-amplifier-pinned-oracle-supported — one modal sorcery-speed activation, plus the mana ability', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.activatedAbilities).toHaveLength(1);
+    const [ability] = def.activatedAbilities;
+    expect(ability!.timing).toBe('sorcery');
+    expect(ability!.costs.map((cost) => cost.kind)).toEqual(['mana', 'tap']);
+    expect(ability!.ability.modes).toMatchObject({ minChoices: 1, maxChoices: 1 });
+    expect(ability!.ability.modes!.options.map((option) => option.effects)).toEqual([
+      [{ op: 'doubleCountersTarget', target: 0 }],
+      [{ op: 'doublePlayerCounters' }],
+    ]);
+    expect(ability!.ability.modes!.options.map((option) => option.targetSlots)).toEqual([[0], []]);
+  });
+
+  it('aetheric-amplifier-one-activation-per-mode — only the permanent mode carries a target', () => {
+    const { ctx, amplifier } = board('amplifier-modes');
+    const offered = activations(ctx, amplifier.id);
+    expect(offered.map((option) => option.data?.['modeLabel'])).toEqual([
+      'double the number of each kind of counter on target permanent',
+      'double the number of each kind of counter you have',
+    ]);
+    expect(offered.map((option) => option.targets?.length ?? 0)).toEqual([1, 0]);
+  });
+
+  it('aetheric-amplifier-doubles-permanent-counters — each kind on the target doubles, others are untouched', () => {
+    const { ctx, amplifier } = board('amplifier-permanent');
+    const target = spawn(ctx, 'P2', LAB_CARD('Lab Target'));
+    target.counters['+1/+1'] = 2;
+    target.counters['charge'] = 3;
+    const bystander = spawn(ctx, 'P2', LAB_CARD('Lab Bystander'));
+    bystander.counters['+1/+1'] = 1;
+    const option = activations(ctx, amplifier.id).find((o) => o.targets?.length === 1)!;
+    takeAction(
+      ctx,
+      'P1',
+      option.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option.targets![0]!.slot, target.id]]),
+    );
+    expect(amplifier.tapped).toBe(true);
+    resolveTop(ctx);
+    expect(target.counters['+1/+1']).toBe(4);
+    expect(target.counters['charge']).toBe(6);
+    expect(bystander.counters['+1/+1']).toBe(1);
+  });
+
+  it('aetheric-amplifier-doubles-your-counters — your energy and poison double, an opponent’s do not', () => {
+    const { ctx, amplifier } = board('amplifier-player');
+    const me = playerById(ctx, 'P1');
+    const them = playerById(ctx, 'P2');
+    me.energy = 3;
+    me.poisonCounters = 2;
+    them.energy = 5;
+    them.poisonCounters = 1;
+    const option = activations(ctx, amplifier.id).find((o) => (o.targets?.length ?? 0) === 0)!;
+    takeAction(ctx, 'P1', option.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(me.energy).toBe(6);
+    expect(me.poisonCounters).toBe(4);
+    expect(them.energy).toBe(5);
+    expect(them.poisonCounters).toBe(1);
+  });
+
+  it('aetheric-amplifier-sorcery-speed — not offered with a spell on the stack, on another turn, or tapped', () => {
+    const { ctx, amplifier } = board('amplifier-timing');
+    expect(activations(ctx, amplifier.id)).toHaveLength(2);
+
+    const quick = oracle({
+      name: 'Lab Quick',
+      typeLine: 'Instant',
+      manaCost: '{0}',
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 1 life.',
+    });
+    castFromHand(ctx, 'P1', quick, []);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(activations(ctx, amplifier.id)).toHaveLength(0);
+    resolveTop(ctx);
+    expect(activations(ctx, amplifier.id)).toHaveLength(2);
+
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(activations(ctx, amplifier.id)).toHaveLength(0);
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+
+    amplifier.tapped = true;
+    expect(activations(ctx, amplifier.id)).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1383,6 +1500,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Aetheric Amplifier',
+    sha256: '22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6',
+    clauseCount: 2,
+  },
   {
     name: 'Bess, Soul Nourisher',
     sha256: '00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9',

@@ -1070,6 +1070,10 @@ function parseEffectSentence(
   if (s === 'double the number of each kind of counter on target permanent') {
     return [{ op: 'doubleCountersTarget', target: alloc('permanent') }];
   }
+  // CR 122.1: energy and poison are the player counters the engine tracks.
+  if (s === 'double the number of each kind of counter you have') {
+    return [{ op: 'doublePlayerCounters' }];
+  }
   if (s === 'double the number of each kind of counter on ~') {
     return [{ op: 'doubleCountersTarget', target: 'source' }];
   }
@@ -5622,7 +5626,12 @@ function parseManaAbilityLines(lower: string, card: OracleCard): ManaAbilitySpec
  * be an ability the engine charges the wrong price for.
  */
 function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | null {
-  let lower = line.toLowerCase().replace(/\.$/, '');
+  // A modal activation arrives as its header line plus the bullet lines. Its "Activate only …"
+  // restrictions trail the header ("{4}, {T}: Choose one. Activate only as a sorcery." —
+  // Aetheric Amplifier), so they are stripped from that first line; the bullets rejoin after.
+  const newline = line.indexOf('\n');
+  const modeLines = newline < 0 ? '' : line.slice(newline).toLowerCase();
+  let lower = (newline < 0 ? line : line.slice(0, newline)).toLowerCase().replace(/\.$/, '');
   let timing: 'any' | 'sorcery' = 'any';
   let oncePerTurn = false;
   // The two "Activate only â€¦" restrictions are independent and can both appear, so they are
@@ -5646,6 +5655,8 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     condition = parsed;
     lower = onlyIf[1] as string;
   }
+  // The header keeps its own punctuation: "choose one —" as printed, "choose one." restored.
+  if (modeLines !== '') lower = `${lower}${/[\u2014-]$/.test(lower) ? '' : '.'}${modeLines}`;
 
   const split = splitActivation(lower);
   if (split === null) return null;

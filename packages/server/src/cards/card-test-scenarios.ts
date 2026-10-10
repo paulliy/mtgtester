@@ -7811,6 +7811,42 @@ function bessScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function aethericAmplifierScenario(gameId: GameId): CardTestScenario {
+  const amplifier = pinnedFrom(MARCHESA_BATCH1, 'Aetheric Amplifier');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'aetheric-amplifier-viewer-double-counters',
+    title: 'Aetheric Amplifier: double the counters on a target permanent',
+    instructions: [
+      'Aetheric Amplifier, four Forests and Lab Servo (carrying two +1/+1 counters and one charge counter) are on your battlefield, and you have three energy.',
+      'Activate Aetheric Amplifier with the mode that doubles the counters on a target permanent, and target Lab Servo. The other mode, which doubles the counters you have, is offered as its own action.',
+      'Let the ability resolve. The energy is not doubled, because this mode only affects the target.',
+    ],
+    expectedOutcome:
+      'Lab Servo ends with four +1/+1 counters (a 5/5) and two charge counters. You still have three energy.',
+    oracleSha256: amplifier.sha256,
+    clauseIds: ['aetheric-amplifier-mana', 'aetheric-amplifier-modal-double'],
+    decks: {
+      P1: [amplifier.card, LAB_SERVO, ...forests],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Aetheric Amplifier', ...forests.map((f) => f.name)] },
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo'],
+          counters: { '+1/+1': 2, charge: 1 },
+        },
+      ],
+      hand: [],
+      energy: [{ playerId: 'P1', amount: 3 }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9099,6 +9135,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'aetheric-amplifier-viewer-double-counters',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -9339,6 +9376,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

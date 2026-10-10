@@ -166,7 +166,6 @@ const REASONS: Record<string, string> = {
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
-  'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Iron Apprentice',
     'Vigean Graftmage',
     'Pensive Professor',
+    'Aetheric Amplifier',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

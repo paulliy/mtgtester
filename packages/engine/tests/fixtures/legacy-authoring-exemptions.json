@@ -268,11 +268,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "6cc7877342be5b7a3c5ed17130e8dd1c300738a5099142d4c2a00c2aa0717ab1",
-      "description": "AETHERIC_AMPLIFIER_DEF"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "db3cb89779d2b5454459f093ad3d551a6759e280e47e7530fcd5f7ddbb932270",
       "description": "AETHERFLUX_CONDUIT_DEF"
     },
@@ -343,7 +338,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "a41cd7e99ca4242d188922519c1a7819bf397de443a8ba226121d3b62911a546",
+      "sha256": "c0877dd40ce8c0c27cea6ef24cdc6eeb267456b2a879df12feb139de52070a28",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -380,11 +375,6 @@
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
       "sha256": "80b3fb7c738286fcd0ac7036c661922085922e365d4179d597d6e3ebf4043da7",
       "description": "Arcane Denial"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "9823b9cc6f4ab60e989b7806b09aee827ebc64220f7b8eb467d1dad4f71effb7",
-      "description": "Aetheric Amplifier"
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",

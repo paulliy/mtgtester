@@ -330,6 +330,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pensive-professor-viewer-increment-draw',
       'elite-scaleguard-viewer-bolster-and-tap',
       'forgotten-ancient-viewer-cast-and-move',
+      'aetheric-amplifier-viewer-double-counters',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

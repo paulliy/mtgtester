@@ -2217,6 +2217,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
+    "name": "Aetheric Amplifier",
+    "package": "PR04.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: choose-one is implemented as two independent activated abilities."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/marchesa-batch1-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9af4a832-d634-47aa-91ed-79d44fe08864",
     "name": "Pick Your Poison",
     "package": "W1",

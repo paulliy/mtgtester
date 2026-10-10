@@ -324,3 +324,27 @@ describe('Bess, Soul Nourisher Card Test Lab scenario', () => {
     replays('bess-soul-nourisher-viewer-counter-and-pump', steps);
   });
 });
+
+describe('Aetheric Amplifier Card Test Lab scenario', () => {
+  it('aetheric-amplifier-viewer-double-counters — the target mode doubles every kind of counter on Lab Servo and leaves your energy alone', () => {
+    const steps: Step[] = [
+      { action: 'target permanent', targets: ['Lab Servo'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'aetheric-amplifier-viewer-double-counters',
+      steps,
+    );
+    // Both modes are offered as separate activations (CR 700.2a).
+    const first = offered[0] ?? [];
+    expect(first.filter((action) => /Aetheric Amplifier/.test(action))).toHaveLength(2);
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters).toEqual({ '+1/+1': 4, charge: 2 });
+    const [amplifier] = onBattlefield('Aetheric Amplifier');
+    expect(amplifier?.tapped).toBe(true);
+    expect(seat('P1').energy).toBe(3);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('aetheric-amplifier-viewer-double-counters', steps);
+  });
+});

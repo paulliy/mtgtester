@@ -5572,7 +5572,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 53,
+      "uniqueOracleIds": 52,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6158,6 +6158,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr04",
       "note": "Registration deleted: the interpreter reads Increment (a castsSpell trigger with an intervening-if that the mana spent is greater than this creature's power or toughness, rechecked on resolution, CR 603.4) and a countersPut trigger on this creature that draws a card once per batch of +1/+1 counters."
+    },
+    {
+      "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
+      "name": "Aetheric Amplifier",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the any-color mana ability and the choose-one activation as one modal sorcery-speed ability (CR 700.2), offered once per mode, whose permanent mode targets a permanent and whose player mode has no target; the doubleCountersTarget and doublePlayerCounters effects double every counter kind through the counter-adding path. Engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
     }
   ]
 }
