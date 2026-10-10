@@ -143,7 +143,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Cut a Deal',
-      'Sunforger',
       'Chaos Warp',
       'Delirium',
       "Duelist's Heritage",

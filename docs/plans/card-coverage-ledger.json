@@ -2911,6 +2911,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+    "name": "Sunforger",
+    "package": "PR05.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Equip {2} is authored; current Oracle is Equip {3}."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",
     "name": "Sweet-Gum Recluse",
     "package": "PR01.28",

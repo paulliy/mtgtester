@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 40,
+      "uniqueOracleIds": 39,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6200,6 +6200,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Equipped creature has lifelink as a layer 6 keyword grant to the creature this Equipment is attached to (attachedToSource), reads Whenever equipped creature dies as a dies trigger on that creature only, and returns the exact graveyard card the creature became (CR 400.7e) through a delayed beginning-of-end-step trigger that lasts until the next end step to begin (CR 603.7) and puts it onto the battlefield under its OWNER's control, returning nothing if the card left the graveyard first, plus the sorcery-speed Equip {4} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+      "name": "Sunforger",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard for the stale Equip {2}): the interpreter reads Equipped creature gets +4/+0 as a layer 7d power modification of the creature this Equipment is attached to (attachedToSource), reads {R}{W}, Unattach this Equipment as an instant-speed activation whose unattachSelf cost is payable only while attached and unattaches as a cost, searches the library for a red or white instant card with mana value 4 or less and casts the found card without paying its mana cost (searchLibraryCastFree, so it is cast and cast triggers fire), then shuffles through the generic then-shuffle sentence, plus the sorcery-speed Equip {3} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

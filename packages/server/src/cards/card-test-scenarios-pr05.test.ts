@@ -220,3 +220,53 @@ describe('Resurrection Orb Card Test Lab scenario', () => {
     replays('resurrection-orb-viewer-lifelink-and-return', steps);
   });
 });
+
+describe('Sunforger Card Test Lab scenario', () => {
+  it('sunforger-viewer-unattach-search-and-cast — Equip {3} onto Lab Green Bear, then {R}{W} unattaches it to cast Lab Quick Gain for free', () => {
+    const steps: Step[] = [
+      { action: 'Equip {3}', targets: ['Lab Green Bear'] },
+      { action: '{R}{W}, Unattach this Equipment' },
+      { action: 'Cast Lab Quick Gain without paying' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'sunforger-viewer-unattach-search-and-cast',
+      steps,
+    );
+    // Unattached, Sunforger offers only Equip {3}; once attached it offers only the search (the
+    // three Forests that paid for Equip leave no mana for another Equip).
+    const sunforgerActions = (options: string[]) =>
+      options.filter((action) => /Sunforger/.test(action));
+    expect(sunforgerActions(offered[0] ?? [])).toHaveLength(1);
+    expect(sunforgerActions(offered[0] ?? [])[0]).toMatch(/Equip \{3\}/);
+    expect(sunforgerActions(offered[0] ?? [])[0]).not.toMatch(/Unattach/);
+    expect(sunforgerActions(offered[1] ?? [])).toHaveLength(1);
+    expect(sunforgerActions(offered[1] ?? [])[0]).toMatch(/\{R\}\{W\}, Unattach this Equipment/);
+    // The search offered only the red instant (and finding nothing).
+    const search = offered.find((options) =>
+      options.some((option) => /^Cast .* without paying its mana cost$/.test(option)),
+    );
+    expect(search).toEqual(['Cast Lab Quick Gain without paying its mana cost', 'Find nothing']);
+    // Equip attached it to the Bear, and the cost then took it off again.
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Sunforger', to: 'Lab Green Bear' }]);
+    const [sunforger] = onBattlefield('Sunforger');
+    expect(sunforger).toBeDefined();
+    expect(sunforger?.attachedTo ?? null).toBeNull();
+    // The found instant was cast for free, resolved, and the rest of the library was shuffled.
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Quick Gain']);
+    expect(seat('P1').life).toBe(41);
+    expect(
+      seat('P1')
+        .library.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Sun Blue Instant', 'Lab Sun Red Sorcery']);
+    expect(state.eventLog.filter((event) => event.type === 'shuffle')).toHaveLength(1);
+    const lands = state.battlefield.filter((perm) => /Basic Land/.test(perm.typeLine));
+    expect(lands).toHaveLength(5);
+    expect(lands.filter((land) => land.tapped)).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('sunforger-viewer-unattach-search-and-cast', steps);
+  });
+});

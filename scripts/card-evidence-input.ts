@@ -1849,6 +1849,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

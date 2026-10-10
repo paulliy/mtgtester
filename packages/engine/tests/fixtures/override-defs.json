@@ -8718,12 +8718,6 @@
     "def": {}
   },
   {
-    "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
-    "name": "Sunforger",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
     "name": "Shamanic Revelation",
     "handledLines": [
@@ -20790,12 +20784,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-sunforger",
-    "name": "Sunforger",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-sweet-gum-recluse",

@@ -7954,6 +7954,77 @@ function resurrectionOrbScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_SUN_BLUE_INSTANT = card({
+  oracleId: 'lab-sun-blue-instant',
+  name: 'Lab Sun Blue Instant',
+  typeLine: 'Instant',
+  manaCost: '{1}{U}',
+  cmc: 2,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  oracleText: 'You gain 2 life.',
+});
+const LAB_SUN_RED_SORCERY = card({
+  oracleId: 'lab-sun-red-sorcery',
+  name: 'Lab Sun Red Sorcery',
+  typeLine: 'Sorcery',
+  manaCost: '{1}{R}',
+  cmc: 2,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 3 life.',
+});
+
+function sunforgerScenario(gameId: GameId): CardTestScenario {
+  const sunforger = pinnedFrom(COVERAGE_PR05, 'Sunforger');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'sunforger-viewer-unattach-search-and-cast',
+    title: 'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+    instructions: [
+      'Sunforger, Lab Green Bear (2/2), three Forests, a Mountain and a Plains are on your battlefield. Your library holds Lab Quick Gain (a red instant), Lab Sun Blue Instant (a blue instant) and Lab Sun Red Sorcery (a red sorcery). Sunforger is not attached to anything, so its {R}{W} ability is not offered yet.',
+      'Activate Equip {3} targeting Lab Green Bear, paying with the Forests, and let it resolve: Lab Green Bear becomes a 6/2.',
+      'Activate {R}{W}, Unattach this Equipment, paying with the Mountain and the Plains. Sunforger comes off Lab Green Bear as a cost, which is a 2/2 again before the ability resolves.',
+      'Let the ability resolve and choose Lab Quick Gain. Only the red instant is offered, not the blue instant or the red sorcery, and no mana is paid for it.',
+      'Let Lab Quick Gain resolve.',
+    ],
+    expectedOutcome:
+      'Sunforger is on the battlefield, unattached, and Lab Green Bear is a 2/2. Lab Quick Gain was cast without paying for it and is in your graveyard, so you gained 1 life and are at 41. Your library still holds Lab Sun Blue Instant and Lab Sun Red Sorcery, reshuffled. All five lands are tapped.',
+    oracleSha256: sunforger.sha256,
+    clauseIds: ['sunforger-pump', 'sunforger-search', 'sunforger-equip'],
+    decks: {
+      P1: [
+        sunforger.card,
+        LAB_GREEN_BEAR,
+        ...forests,
+        MOUNTAIN,
+        PLAINS,
+        LAB_QUICK_GAIN,
+        LAB_SUN_BLUE_INSTANT,
+        LAB_SUN_RED_SORCERY,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Sunforger',
+            'Lab Green Bear',
+            ...forests.map((forest) => forest.name),
+            'Mountain',
+            'Plains',
+          ],
+        },
+      ],
+      hand: [],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9785,6 +9856,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'cranial-plating-viewer-instant-attach',
   'mask-of-memory-viewer-draw-discard',
   'resurrection-orb-viewer-lifelink-and-return',
+  'sunforger-viewer-unattach-search-and-cast',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10053,6 +10125,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'cranial-plating-viewer-instant-attach': cranialPlatingScenario,
   'mask-of-memory-viewer-draw-discard': maskOfMemoryScenario,
   'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
+  'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

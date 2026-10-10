@@ -1213,6 +1213,461 @@ describe('Resurrection Orb', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.15 Sunforger
+// ---------------------------------------------------------------------------------------------
+
+describe('Sunforger', () => {
+  const { card } = pinned('Sunforger');
+  const EQUIP = /: Equip \{3\}$/;
+  const SEARCH = /Unattach this Equipment/;
+  const R = { symbol: 'R' as const };
+  const W = { symbol: 'W' as const };
+  const CREATURE = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+  const SWORD = oracle({
+    name: 'Lab Sword',
+    typeLine: 'Artifact — Equipment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Equipped creature gets +1/+1.\nEquip {1}',
+  });
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+  /** An observer: every spell you cast gains you 1 life, so a cast (not a move) is visible. */
+  const WATCHER = oracle({
+    name: 'Lab Watcher',
+    typeLine: 'Enchantment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Whenever you cast a spell, you gain 1 life.',
+  });
+  /** A library spell that gains `life` life, so which one resolved is visible. */
+  const SPELL = (
+    name: string,
+    typeLine: 'Instant' | 'Sorcery',
+    colors: ('W' | 'U' | 'B' | 'R' | 'G')[],
+    cmc: number,
+    life: number,
+  ) =>
+    oracle({
+      name,
+      typeLine,
+      colors,
+      cmc,
+      manaCost: `{${cmc}}`,
+      power: null,
+      toughness: null,
+      oracleText: `You gain ${life} life.`,
+    });
+  // Offered: red, white, red-and-blue, and the mana value 4 boundary. Not offered: blue, a red
+  // sorcery, a red instant with mana value 5, and a colorless instant.
+  const BOLT = SPELL('Lab Red Instant', 'Instant', ['R'], 2, 3);
+  const WARD = SPELL('Lab White Instant Four', 'Instant', ['W'], 4, 5);
+  const PRISM = SPELL('Lab Red Blue Instant', 'Instant', ['U', 'R'], 3, 7);
+  const BLUE = SPELL('Lab Blue Instant', 'Instant', ['U'], 2, 11);
+  const BURN = SPELL('Lab Red Sorcery', 'Sorcery', ['R'], 2, 13);
+  const BIG = SPELL('Lab Red Instant Five', 'Instant', ['R'], 5, 17);
+  const CLEAR = SPELL('Lab Colorless Instant', 'Instant', [], 1, 19);
+  const MATCHING = [BOLT, WARD, PRISM];
+  const NON_MATCHING = [BLUE, BURN, BIG, CLEAR];
+
+  /** P1 controls Sunforger (unattached) and two 2/2 creatures; an opponent controls a third. */
+  function board(seed: string, library: OracleCard[] = [...MATCHING, ...NON_MATCHING]) {
+    const ctx = pod(seed);
+    const sunforger = spawn(ctx, 'P1', card);
+    const first = spawn(ctx, 'P1', CREATURE('Lab First'));
+    const second = spawn(ctx, 'P1', CREATURE('Lab Second'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    for (const entry of library) conjure(ctx, 'P1', entry, 'library');
+    return { ctx, sunforger, first, second, enemy };
+  }
+
+  const life = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).life;
+  const libraryNames = (ctx: GameContext) => playerById(ctx, 'P1').library.map((c) => c.name);
+  const shuffles = (ctx: GameContext) =>
+    ctx.state.eventLog.filter((event) => event.type === 'shuffle').length;
+  const stackNames = (ctx: GameContext) => ctx.state.stack.map((entry) => entry.description);
+
+  /** Pay {R}{W} and activate the search ability on the real priority path; it stays on the stack. */
+  function activate(ctx: GameContext, sunforger: EnginePermanent, extra = 0) {
+    addMana(playerById(ctx, 'P1'), [R, W, ...generic(extra)]);
+    const option = optionFor(ctx, 'P1', sunforger.id, SEARCH);
+    expect(option, 'Sunforger search activation').toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+  }
+
+  /**
+   * Resolve the top of the stack, answering the search with the card named `pick` (or "find
+   * nothing" for `null`); returns the options the search offered, if it asked at all.
+   */
+  function resolveSearch(ctx: GameContext, pick: string | null) {
+    let offered: string[] | null = null;
+    resolveTop(ctx, (decision) => {
+      offered = decision.options.map((option) => option.description);
+      const index =
+        pick === null
+          ? decision.options.findIndex((option) => option.type === 'findNothing')
+          : decision.options.findIndex((option) => option.description.includes(pick));
+      expect(index, `search option for ${pick}`).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    });
+    return offered as string[] | null;
+  }
+
+  /** Put Sunforger on `target` through Equip {3} on the real priority path. */
+  function equip(ctx: GameContext, sunforger: EnginePermanent, target: EnginePermanent) {
+    addMana(playerById(ctx, 'P1'), generic(3));
+    const option = optionFor(ctx, 'P1', sunforger.id, EQUIP);
+    expect(option, `Equip {3} onto ${target.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, target.id]]),
+    );
+    resolveTop(ctx);
+  }
+
+  it('sunforger-pinned-oracle-supported — the interpreter alone models the +4/+0 static, the unattach search activation and Equip {3}', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Equipped creature gets +4/+0: a layer 7d power modification of the attached creature only.
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 7, sublayer: 'd', power: 4, toughness: 0 },
+      },
+    ]);
+    expect(def.triggers).toEqual([]);
+    expect(def.activatedAbilities).toHaveLength(2);
+    const [search, equipAbility] = def.activatedAbilities;
+    // {R}{W}, Unattach this Equipment: instant speed, two costs, no targets.
+    expect(search!.timing).toBe('any');
+    expect(search!.costs).toEqual([
+      {
+        kind: 'mana',
+        cost: { generic: 0, colored: { W: 1, U: 0, B: 0, R: 1, G: 0 }, colorless: 0 },
+      },
+      { kind: 'unattachSelf' },
+    ]);
+    expect(search!.ability.targets).toEqual([]);
+    // Search for a red or white instant with mana value 4 or less and cast it free, then shuffle.
+    expect(search!.ability.effects).toEqual([
+      {
+        op: 'searchLibraryCastFree',
+        filter: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Instant' },
+            {
+              kind: 'anyOf',
+              of: [
+                { kind: 'color', value: 'R' },
+                { kind: 'color', value: 'W' },
+              ],
+            },
+            { kind: 'manaValueAtMost', n: 4 },
+          ],
+        },
+      },
+      { op: 'shuffle' },
+    ]);
+    // Equip {3}: sorcery speed (CR 702.6a), a creature you control.
+    expect(equipAbility!.timing).toBe('sorcery');
+    expect(equipAbility!.costs).toEqual([
+      {
+        kind: 'mana',
+        cost: { generic: 3, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+      },
+    ]);
+    expect(equipAbility!.ability.targets).toEqual([{ kind: 'creature', controller: 'you' }]);
+    expect(equipAbility!.ability.effects).toEqual([{ op: 'attachSelfTo', target: 0 }]);
+  });
+
+  it('sunforger-pump-equipped-only — the equipped creature gets +4/+0, no other creature does, and toughness is untouched', () => {
+    const { ctx, sunforger, first, second, enemy } = board('sunforger-pump');
+    // Unattached, Sunforger pumps nothing.
+    expect(effectivePT(ctx, first)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 2, toughness: 2 });
+
+    sunforger.attachedTo = first.id;
+    expect(effectivePT(ctx, first)).toEqual({ power: 6, toughness: 2 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+
+    // It stacks with another Equipment on the same creature, and a different Equipment on the
+    // other creature does not move Sunforger's bonus.
+    const sword = spawn(ctx, 'P1', SWORD);
+    sword.attachedTo = first.id;
+    expect(effectivePT(ctx, first)).toEqual({ power: 7, toughness: 3 });
+    sword.attachedTo = second.id;
+    expect(effectivePT(ctx, first)).toEqual({ power: 6, toughness: 2 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 3, toughness: 3 });
+
+    // Moving it (Equip {3}) moves the bonus: Second gains it and First loses it.
+    equip(ctx, sunforger, second);
+    expect(sunforger.attachedTo).toBe(second.id);
+    expect(effectivePT(ctx, first)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 7, toughness: 3 });
+  });
+
+  it('sunforger-activation-requires-attached — the {R}{W} ability is offered only while attached, and only with both colors', () => {
+    const { ctx, sunforger, first } = board('sunforger-attached');
+    // Unattached with {R}{W} ready: not offered (it cannot unattach), though Equip {3} is not
+    // affordable either.
+    addMana(playerById(ctx, 'P1'), [R, W, ...generic(3)]);
+    expect(optionFor(ctx, 'P1', sunforger.id, SEARCH)).toBeUndefined();
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeDefined();
+
+    // Attached with {R}{W}: offered.
+    sunforger.attachedTo = first.id;
+    const offered = optionFor(ctx, 'P1', sunforger.id, SEARCH);
+    expect(offered).toBeDefined();
+    expect(offered!.targets ?? []).toEqual([]);
+
+    // Missing either color: not offered, and nothing is paid or unattached.
+    for (const [label, mana] of [
+      ['only R', [R, ...generic(4)]],
+      ['only W', [W, ...generic(4)]],
+      ['only generic', generic(5)],
+    ] as const) {
+      const lacking = board(`sunforger-lacking-${label}`);
+      lacking.sunforger.attachedTo = lacking.first.id;
+      addMana(playerById(lacking.ctx, 'P1'), [...mana]);
+      expect(optionFor(lacking.ctx, 'P1', lacking.sunforger.id, SEARCH), label).toBeUndefined();
+      expect(lacking.sunforger.attachedTo, label).toBe(lacking.first.id);
+    }
+
+    // Instant speed: still offered on an opponent's turn and with a spell on the stack.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P1', sunforger.id, SEARCH)).toBeDefined();
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    castFromHand(ctx, 'P1', QUICK, []);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(optionFor(ctx, 'P1', sunforger.id, SEARCH)).toBeDefined();
+  });
+
+  it('sunforger-unattach-is-a-cost — paying {R}{W} unattaches it up front; Sunforger stays on the battlefield and the creature loses +4/+0', () => {
+    const { ctx, sunforger, first, second } = board('sunforger-unattach');
+    sunforger.attachedTo = first.id;
+    expect(effectivePT(ctx, first)).toEqual({ power: 6, toughness: 2 });
+
+    activate(ctx, sunforger, 1);
+    // The cost is paid on activation, before the ability resolves: exactly {R}{W} left the pool
+    // (the spare generic mana is still there), Sunforger is unattached but on the battlefield,
+    // and the ability waits on the stack.
+    expect(playerById(ctx, 'P1').manaEntries.map((mana) => mana.symbol)).toEqual(['C']);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(sunforger.attachedTo ?? null).toBeNull();
+    expect(ctx.state.battlefield.map((perm) => perm.id)).toContain(sunforger.id);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toEqual([]);
+    expect(effectivePT(ctx, first)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 2, toughness: 2 });
+
+    // Unattached it cannot be activated again, even with more mana, and it stays unattached after
+    // the ability resolves.
+    addMana(playerById(ctx, 'P1'), [R, W]);
+    expect(optionFor(ctx, 'P1', sunforger.id, SEARCH)).toBeUndefined();
+    resolveSearch(ctx, null);
+    expect(sunforger.attachedTo ?? null).toBeNull();
+    expect(ctx.state.battlefield.map((perm) => perm.id)).toContain(sunforger.id);
+    expect(effectivePT(ctx, first)).toEqual({ power: 2, toughness: 2 });
+    expect(optionFor(ctx, 'P1', sunforger.id, SEARCH)).toBeUndefined();
+
+    // It can be equipped again afterwards and the bonus comes back.
+    equip(ctx, sunforger, second);
+    expect(effectivePT(ctx, second)).toEqual({ power: 6, toughness: 2 });
+  });
+
+  it('sunforger-search-filter — only red or white instants with mana value 4 or less are offered', () => {
+    const { ctx, sunforger, first } = board('sunforger-filter');
+    sunforger.attachedTo = first.id;
+    activate(ctx, sunforger);
+    const offered = resolveSearch(ctx, null);
+    expect(offered).not.toBeNull();
+    const found = offered!.filter((description) => /^Cast /.test(description));
+    // Offered: a red instant, a white instant at mana value 4, and a red-and-blue instant.
+    expect(found).toHaveLength(MATCHING.length);
+    for (const spell of MATCHING)
+      expect(
+        found.some((description) => description.includes(spell.name)),
+        spell.name,
+      ).toBe(true);
+    // Not offered: a blue instant, a red sorcery, a red instant at mana value 5, a colorless instant.
+    for (const spell of NON_MATCHING)
+      expect(
+        offered!.some((description) => description.includes(spell.name)),
+        spell.name,
+      ).toBe(false);
+    // The search may always find nothing.
+    expect(offered).toContain('Find nothing');
+    // Finding nothing leaves every card in the library: nothing was cast or moved.
+    expect(ctx.state.stack).toEqual([]);
+    expect([...libraryNames(ctx)].sort()).toEqual(
+      [...MATCHING, ...NON_MATCHING, ...Array.from({ length: 8 }, () => ({ name: 'Forest' }))]
+        .map((entry) => entry.name)
+        .sort(),
+    );
+  });
+
+  it('sunforger-free-cast — the found card is cast without paying its mana cost, so cast triggers fire; finding nothing casts nothing', () => {
+    // Positive: the mana value 4 white instant is cast with nothing in the mana pool.
+    const cast = board('sunforger-cast');
+    spawn(cast.ctx, 'P1', WATCHER);
+    cast.sunforger.attachedTo = cast.first.id;
+    activate(cast.ctx, cast.sunforger);
+    expect(life(cast.ctx, 'P1')).toBe(40);
+    resolveSearch(cast.ctx, WARD.name);
+    // It is on the stack as a spell (a cast, not a move or a resolution), paid for with nothing.
+    expect(stackNames(cast.ctx)).toEqual([WARD.name]);
+    expect(cast.ctx.state.stack[0]!.kind).toBe('spell');
+    expect(playerById(cast.ctx, 'P1').manaEntries).toEqual([]);
+    expect(libraryNames(cast.ctx)).not.toContain(WARD.name);
+    // Not resolved yet: the life gain is only the cast trigger so far, once it resolves.
+    expect(life(cast.ctx, 'P1')).toBe(40);
+    settle(cast.ctx);
+    // The Watcher's cast trigger (+1) and the instant itself (+5) both happened.
+    expect(life(cast.ctx, 'P1')).toBe(46);
+    expect(cast.ctx.state.stack).toEqual([]);
+    expect(playerById(cast.ctx, 'P1').graveyard.map((c) => c.name)).toEqual([WARD.name]);
+
+    // The red-and-blue instant is castable as a red instant, and only the chosen card is cast.
+    const prism = board('sunforger-cast-prism');
+    prism.sunforger.attachedTo = prism.first.id;
+    activate(prism.ctx, prism.sunforger);
+    resolveSearch(prism.ctx, PRISM.name);
+    expect(stackNames(prism.ctx)).toEqual([PRISM.name]);
+    settle(prism.ctx);
+    expect(life(prism.ctx, 'P1')).toBe(47);
+    expect(libraryNames(prism.ctx)).toContain(BOLT.name);
+    expect(libraryNames(prism.ctx)).toContain(WARD.name);
+
+    // Negative: finding nothing casts nothing, so no cast trigger and no life.
+    const none = board('sunforger-cast-none');
+    spawn(none.ctx, 'P1', WATCHER);
+    none.sunforger.attachedTo = none.first.id;
+    activate(none.ctx, none.sunforger);
+    resolveSearch(none.ctx, null);
+    expect(none.ctx.state.stack).toEqual([]);
+    settle(none.ctx);
+    expect(life(none.ctx, 'P1')).toBe(40);
+    expect(playerById(none.ctx, 'P1').graveyard).toEqual([]);
+  });
+
+  it('sunforger-then-shuffle — the library is shuffled after the search, whether a card was cast, nothing was found, or nothing matched', () => {
+    // A card was cast: one shuffle, after the cast, and the library keeps every other card.
+    const cast = board('sunforger-shuffle-cast');
+    cast.sunforger.attachedTo = cast.first.id;
+    const before = libraryNames(cast.ctx);
+    activate(cast.ctx, cast.sunforger);
+    expect(shuffles(cast.ctx)).toBe(0);
+    resolveSearch(cast.ctx, BOLT.name);
+    expect(shuffles(cast.ctx)).toBe(1);
+    expect([...libraryNames(cast.ctx)].sort()).toEqual(
+      before.filter((name) => name !== BOLT.name).sort(),
+    );
+    // The seeded shuffle really reorders the remaining cards.
+    expect(libraryNames(cast.ctx)).not.toEqual(before.filter((name) => name !== BOLT.name));
+
+    // The player finds nothing although cards matched: still shuffled.
+    const declined = board('sunforger-shuffle-declined');
+    declined.sunforger.attachedTo = declined.first.id;
+    activate(declined.ctx, declined.sunforger);
+    resolveSearch(declined.ctx, null);
+    expect(shuffles(declined.ctx)).toBe(1);
+
+    // No card matches: no choice is offered, nothing is cast, and the library is still shuffled.
+    const empty = board('sunforger-shuffle-nomatch', NON_MATCHING);
+    empty.sunforger.attachedTo = empty.first.id;
+    const nomatchBefore = libraryNames(empty.ctx);
+    activate(empty.ctx, empty.sunforger);
+    expect(shuffles(empty.ctx)).toBe(0);
+    expect(resolveSearch(empty.ctx, null)).toBeNull();
+    expect(empty.ctx.state.stack).toEqual([]);
+    expect(shuffles(empty.ctx)).toBe(1);
+    expect([...libraryNames(empty.ctx)].sort()).toEqual([...nomatchBefore].sort());
+    expect(empty.sunforger.attachedTo ?? null).toBeNull();
+
+    // Negative: before the ability resolves and without activating, no shuffle happens.
+    const idle = board('sunforger-shuffle-idle');
+    idle.sunforger.attachedTo = idle.first.id;
+    settle(idle.ctx);
+    expect(shuffles(idle.ctx)).toBe(0);
+  });
+
+  it('sunforger-equip-sorcery — Equip {3} is offered only at sorcery speed, only onto a creature you control', () => {
+    const { ctx, sunforger, first, second, enemy } = board('sunforger-equip');
+    const targetNames = (option: NonNullable<ReturnType<typeof optionFor>>) => {
+      const nameOf = (id: string) =>
+        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? id;
+      return option.targets!.flatMap((slot) => slot.options.map(nameOf)).sort();
+    };
+
+    // Without {3} (two mana) it cannot be activated; {2} was the old, wrong price.
+    addMana(playerById(ctx, 'P1'), generic(2));
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+
+    // Your main phase, empty stack, {3} available: offered, and only your creatures are legal.
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const main = optionFor(ctx, 'P1', sunforger.id, EQUIP);
+    expect(main).toBeDefined();
+    expect(targetNames(main!)).toEqual(['Lab First', 'Lab Second']);
+    expect(targetNames(main!)).not.toContain(enemy.name);
+
+    // A spell on the stack: not offered, though the mana is there.
+    castFromHand(ctx, 'P1', QUICK, []);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+    resolveTop(ctx);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeDefined();
+
+    // An opponent's turn, and a non-main phase of your own turn: not offered.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeDefined();
+
+    // Activating it puts it on the stack; resolving attaches Sunforger to the chosen creature and
+    // spends all three mana.
+    const option = optionFor(ctx, 'P1', sunforger.id, EQUIP)!;
+    takeAction(
+      ctx,
+      'P1',
+      option.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option.targets![0]!.slot, second.id]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(sunforger.attachedTo ?? null).toBeNull();
+    resolveTop(ctx);
+    expect(sunforger.attachedTo).toBe(second.id);
+    expect(sunforger.attachedTo).not.toBe(first.id);
+    expect(effectivePT(ctx, second)).toEqual({ power: 6, toughness: 2 });
+    expect(optionFor(ctx, 'P1', sunforger.id, EQUIP)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1236,6 +1691,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Resurrection Orb',
     sha256: 'ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734',
+    clauseCount: 3,
+  },
+  {
+    name: 'Sunforger',
+    sha256: '0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e',
     clauseCount: 3,
   },
 ];

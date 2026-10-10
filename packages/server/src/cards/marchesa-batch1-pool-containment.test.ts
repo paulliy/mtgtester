@@ -96,6 +96,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Smothering Tithe',
       'Solar Transformer',
       'Soul-Guide Lantern',
+      'Sunforger',
       'Sylvan Reclamation',
       'Technomancer',
       'The Ooze',

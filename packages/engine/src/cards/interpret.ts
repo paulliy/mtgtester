@@ -1001,6 +1001,29 @@ function parseEffectSentence(
   if (s === 'each creature attacks this turn if able') {
     return [{ op: 'forceAttackEach', selector: { kind: 'type', value: 'Creature' } }];
   }
+  // "Search your library for a red or white instant card with mana value 4 or less and cast that
+  // card without paying its mana cost" (Sunforger): the found card is cast, not moved (CR 608.2g).
+  {
+    const m = s.match(
+      /^search your library for an? ((?:white|blue|black|red|green)(?: or (?:white|blue|black|red|green))*) (instant|sorcery) card with mana value (\d+) or less and cast that card without paying its mana cost$/,
+    );
+    if (m !== null) {
+      const colors = (m[1] as string)
+        .split(' or ')
+        .map((word) => ofColor(COLOR_WORDS[word] as Color));
+      return [
+        {
+          op: 'searchLibraryCastFree',
+          filter: allOf(
+            ofType(m[2] === 'instant' ? 'Instant' : 'Sorcery'),
+            colors.length === 1 ? (colors[0] as Selector) : anyOf(...colors),
+            manaValueAtMost(Number(m[3])),
+          ),
+        },
+      ];
+    }
+  }
+  if (s === 'then shuffle') return [{ op: 'shuffle' }];
   {
     const m = s.match(
       /^attach (?:this equipment|~) to target creature (you control|an opponent controls)$/,
@@ -5517,6 +5540,10 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
     }
     if (part === '{t}') {
       costs.push({ kind: 'tap' });
+      continue;
+    }
+    if (part === 'unattach this equipment') {
+      costs.push({ kind: 'unattachSelf' });
       continue;
     }
     const sacrifice = part.match(/^sacrifice (.+)$/);

@@ -6322,3 +6322,66 @@ test('Resurrection Orb: equip a stolen creature, gain life, lose it, and it retu
   await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
+
+test('Sunforger: equip it, then unattach it to cast a red instant from your library for free', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Sunforger')?.attachedTo ?? null).toBeNull();
+
+  const sunforger = permanent(page, 'Sunforger');
+  await expect(sunforger).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Unattached, Equip {3} is its only legal action, so clicking it goes straight to a target.
+  await sunforger.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves on its own (passing is the only legal action) and the Bear becomes a 6/2.
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/2', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo)
+    .toBe(bearId);
+
+  // Attached, the {R}{W} ability is its only legal action now: pay it and unattach as a cost.
+  await expect(sunforger).toHaveClass(/actionable/, { timeout: 15_000 });
+  await sunforger.click();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo ?? null)
+    .toBeNull();
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Only the red instant is offered from the library, not the blue instant or the red sorcery.
+  const castForFree = page.getByRole('button', { name: 'Cast for free' });
+  await expect(castForFree).toHaveCount(1, { timeout: 15_000 });
+  await expect(page.getByRole('img', { name: 'Lab Quick Gain' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Lab Sun Blue Instant' })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: 'Lab Sun Red Sorcery' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  await castForFree.click();
+
+  // The free spell resolves: 1 life gained, and Sunforger stays on the battlefield unattached.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Sunforger')?.attachedTo ?? null).toBeNull();
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+});

@@ -195,7 +195,6 @@ const REASONS: Record<string, string> = {
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Screams from Within':
     'Return is a required attach target; current Oracle returns this Aura untargeted.',
-  Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Cranial Plating',
     'Mask of Memory',
     'Resurrection Orb',
+    'Sunforger',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

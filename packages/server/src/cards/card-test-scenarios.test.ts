@@ -354,6 +354,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'cranial-plating-viewer-instant-attach',
       'mask-of-memory-viewer-draw-discard',
       'resurrection-orb-viewer-lifelink-and-return',
+      'sunforger-viewer-unattach-search-and-cast',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',
