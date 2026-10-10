@@ -2516,15 +2516,19 @@
   {
     "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
     "name": "Rumor Gatherer",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.16",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",

@@ -437,3 +437,30 @@ describe('Belladonna Took Card Test Lab scenario', () => {
     replays('belladonna-took-viewer-three-tokens', steps);
   });
 });
+
+describe('Rumor Gatherer Card Test Lab scenario', () => {
+  it('rumor-gatherer-viewer-scry-then-draw — the first and third creatures scry, the second draws instead', () => {
+    const forge = { action: 'Cast Lab Token Forge' };
+    // Each token spell resolves, and then Rumor Gatherer’s trigger resolves, before the next cast.
+    const pass = { action: 'Pass priority' };
+    const steps: Step[] = [forge, pass, pass, forge, pass, pass, forge];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'rumor-gatherer-viewer-scry-then-draw',
+      steps,
+    );
+    // Exactly two scry prompts: the second resolution drew instead.
+    expect(prompts.filter((prompt) => /: scry — /.test(prompt))).toHaveLength(2);
+    const p1 = seat('P1');
+    expect(p1.graveyard.map((card) => card.name)).toEqual([
+      'Lab Token Forge',
+      'Lab Token Forge',
+      'Lab Token Forge',
+    ]);
+    // Three Forges left the hand and exactly one card was drawn.
+    expect(p1.hand).toHaveLength(1);
+    expect(onBattlefield('Servo')).toHaveLength(3);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('rumor-gatherer-viewer-scry-then-draw', steps);
+  });
+});

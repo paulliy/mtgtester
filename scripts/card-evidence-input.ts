@@ -1781,6 +1781,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
   },
   {

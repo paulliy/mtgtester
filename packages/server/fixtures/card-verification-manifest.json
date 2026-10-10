@@ -8552,6 +8552,28 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3ceca713-38de-4428-a4f1-2146f6e98393": {
+      "name": "Rumor Gatherer",
+      "oracleSha256": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "rumor-gatherer-alliance",
+          "oracleText": "Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.",
+          "implementation": [
+            "interpreted enters trigger for another creature its controller controls (Rumor Gatherer entering itself, or an opponent's creature, never triggers it); one effect branches on how many times this ability has resolved this turn, counting the current resolution",
+            "the second resolution draws a card instead of scrying (no scry prompt is shown for it); every other resolution scries 1, so the first and third each scry"
+          ],
+          "engineTestIds": [
+            "rumor-gatherer-pinned-oracle-supported",
+            "rumor-gatherer-second-draws-instead",
+            "rumor-gatherer-another-creature"
+          ],
+          "viewerScenarioIds": ["rumor-gatherer-viewer-scry-then-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

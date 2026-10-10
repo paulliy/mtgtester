@@ -1877,6 +1877,64 @@ describe('Belladonna Took', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.16 Rumor Gatherer
+// ---------------------------------------------------------------------------------------------
+
+describe('Rumor Gatherer', () => {
+  const { card } = pinned('Rumor Gatherer');
+
+  /** Put a creature onto P1's battlefield and resolve the triggers, counting scry prompts. */
+  function enter(ctx: GameContext, name: string) {
+    let scries = 0;
+    enterFrom(ctx, 'P1', LAB_CARD(name), 'hand');
+    settle(ctx, (decision) => {
+      if (/: scry — /.test(decision.prompt)) scries += 1;
+      return { index: 0, targets: new Map() };
+    });
+    return scries;
+  }
+
+  it('rumor-gatherer-pinned-oracle-supported — scry 1, replaced by a draw on the second resolution', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'byResolutionCountThisTurn',
+        cases: [{ n: 2, effects: [{ op: 'draw' }] }],
+        otherwise: [{ op: 'scry', count: 1 }],
+      },
+    ]);
+  });
+
+  it('rumor-gatherer-second-draws-instead — first scry, second draw without scrying, third scry again', () => {
+    const ctx = pod('rumor-sequence');
+    spawn(ctx, 'P1', card);
+    const hand = () => playerById(ctx, 'P1').hand.length;
+    const start = hand();
+    expect(enter(ctx, 'Lab One')).toBe(1);
+    expect(hand()).toBe(start);
+    expect(enter(ctx, 'Lab Two')).toBe(0);
+    expect(hand()).toBe(start + 1);
+    expect(enter(ctx, 'Lab Three')).toBe(1);
+    expect(hand()).toBe(start + 1);
+  });
+
+  it('rumor-gatherer-another-creature — Rumor Gatherer entering, or an opponent’s creature, does not trigger it', () => {
+    const ctx = pod('rumor-self');
+    let scries = 0;
+    enterFrom(ctx, 'P1', card, 'hand');
+    enterFrom(ctx, 'P2', LAB_CARD('Lab Rival'), 'hand');
+    settle(ctx, (decision) => {
+      if (/: scry — /.test(decision.prompt)) scries += 1;
+      return { index: 0, targets: new Map() };
+    });
+    expect(scries).toBe(0);
+    expect(ctx.state.abilityResolutionsThisTurn ?? {}).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1887,6 +1945,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Rumor Gatherer',
+    sha256: 'd5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c',
+    clauseCount: 1,
+  },
   {
     name: 'Belladonna Took',
     sha256: '65b2c91a9085899dbe7b631298e7cc2893a867f894c885688c34f3a4d2c5525d',

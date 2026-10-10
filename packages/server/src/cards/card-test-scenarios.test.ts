@@ -330,6 +330,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pensive-professor-viewer-increment-draw',
       'elite-scaleguard-viewer-bolster-and-tap',
       'forgotten-ancient-viewer-cast-and-move',
+      'rumor-gatherer-viewer-scry-then-draw',
       'belladonna-took-viewer-three-tokens',
       'lockjaw-viewer-counter-and-unblockable',
       'the-thing-viewer-counters-and-double',

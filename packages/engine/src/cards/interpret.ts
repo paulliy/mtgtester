@@ -2541,7 +2541,7 @@ function parseResolutionCountBlock(
   if (!body.includes(' time this ability has resolved this turn')) return null;
   const sentences = splitSentences(body);
   const cases: { n: number; effects: Effect[] }[] = [];
-  const otherwise: Effect[] = [];
+  let otherwise: Effect[] = [];
   const parse = (text: string): Effect[] | null => {
     const parsed = parseEffectSentence(text, alloc, card, opts);
     if (parsed === null) return null;
@@ -2569,7 +2569,17 @@ function parseResolutionCountBlock(
       if (m === null || !addCase(m[1] as string, m[2] as string)) return null;
     }
   } else {
-    return null;
+    // Rumor Gatherer: the first sentence is the usual effect, which the count replaces.
+    const instead =
+      rest.length === 1
+        ? (rest[0] as string).match(
+            /^if this is the (\w+) time this ability has resolved this turn, (.+) instead$/,
+          )
+        : null;
+    const usual = parse(first);
+    if (instead === null || usual === null) return null;
+    if (!addCase(instead[1] as string, instead[2] as string)) return null;
+    otherwise = usual;
   }
   return [{ op: 'byResolutionCountThisTurn', key, cases, otherwise }];
 }

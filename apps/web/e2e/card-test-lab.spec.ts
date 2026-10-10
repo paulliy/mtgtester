@@ -5839,3 +5839,50 @@ test('Belladonna Took: three tokens give life, then a card, then a counter on ea
   await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
+
+test('Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(3);
+  const keep = page.getByRole('button', { name: /^Keep .+ on top$/ });
+
+  const castForge = async (servos: number) => {
+    const forge = handCard(page, 'Lab Token Forge').first();
+    await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+    await forge.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+    // Identical tokens share one tile with a count.
+    await passUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  };
+
+  // First creature: scry 1.
+  await castForge(1);
+  await passUntil(page, keep);
+  await keep.click();
+  await expect(hand).toHaveCount(2);
+
+  // Second creature: draw a card instead, with no scry prompt.
+  await castForge(2);
+  await passUntil(page, page.locator('.log .line', { hasText: /draws/ }).first());
+  await expect(keep).toHaveCount(0);
+  await expect(hand).toHaveCount(2);
+
+  // Third creature: scry 1 again.
+  await castForge(3);
+  await passUntil(page, keep);
+  await keep.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});

@@ -265,6 +265,43 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
+      "card": {
+        "oracleId": "3ceca713-38de-4428-a4f1-2146f6e98393",
+        "scryfallId": "a7782044-616e-4d4f-b38f-93320ba19797",
+        "name": "Rumor Gatherer",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Elf Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Wizard"
+        ],
+        "oracleText": "Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Alliance",
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

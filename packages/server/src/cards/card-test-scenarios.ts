@@ -8093,6 +8093,52 @@ function belladonnaTookScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function rumorGathererScenario(gameId: GameId): CardTestScenario {
+  const gatherer = pinnedFrom(COVERAGE_PR04, 'Rumor Gatherer');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'rumor-gatherer-viewer-scry-then-draw',
+    title: 'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    instructions: [
+      'Rumor Gatherer and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge. The Servo token entering is another creature you control, so the first resolution scries 1: keep the card on top.',
+      'Cast a second Lab Token Forge. This is the second resolution this turn, so you draw a card instead of scrying.',
+      'Cast the third. The third resolution scries 1 again.',
+    ],
+    expectedOutcome:
+      'You scried twice (first and third tokens) and drew exactly one card (second token), with three Servo tokens on the battlefield.',
+    oracleSha256: gatherer.sha256,
+    clauseIds: ['rumor-gatherer-alliance'],
+    decks: {
+      P1: [
+        gatherer.card,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Rumor Gatherer', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9261,6 +9307,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'rumor-gatherer-viewer-scry-then-draw',
   'belladonna-took-viewer-three-tokens',
   'lockjaw-viewer-counter-and-unblockable',
   'the-thing-viewer-counters-and-double',
@@ -9505,6 +9552,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,
   'belladonna-took-viewer-three-tokens': belladonnaTookScenario,
   'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
   'the-thing-viewer-counters-and-double': theThingScenario,
