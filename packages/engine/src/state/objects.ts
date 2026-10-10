@@ -1893,6 +1893,12 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 
   const caster = playerById(ctx, spell.controllerId);
   caster.spellsCastThisTurn += 1;
+  // Addendum: "if you cast this spell during your main phase" is a fact of the cast itself.
+  if (
+    ctx.state.currentTurnPlayer === caster.id &&
+    (ctx.state.phase === 'precombatMain' || ctx.state.phase === 'postcombatMain')
+  )
+    spell.castDuringOwnMainPhase = true;
   // A spell's type is read off its printed characteristics — it is on the stack, not the
   // battlefield, so the layer engine has produced nothing for it (CR 608.2 has not run yet).
   if (!def.types.includes('Creature')) caster.noncreatureSpellsCastThisTurn += 1;

@@ -1144,6 +1144,7 @@ export function* executeAbility(
               source.resolvingStackObject.kicked === true,
             announcedX: source.resolvingStackObject.announcedX ?? 0,
             escaped: source.resolvingStackObject.escaped === true,
+            castDuringOwnMainPhase: source.resolvingStackObject.castDuringOwnMainPhase === true,
           },
         }),
     ...(targets !== undefined ? { targets } : {}),

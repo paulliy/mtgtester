@@ -8670,6 +8670,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "97435e03-2fff-4fe0-8fa9-69ab0a046a33": {
+      "name": "Unbreakable Formation",
+      "oracleSha256": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "unbreakable-formation-indestructible",
+          "oracleText": "Creatures you control gain indestructible until end of turn.",
+          "implementation": [
+            "interpreted spell effect granting indestructible until end of turn to each creature its controller controls as it resolves; creatures that enter later and an opponent's creatures do not get it"
+          ],
+          "engineTestIds": [
+            "unbreakable-formation-pinned-oracle-supported",
+            "unbreakable-formation-main-phase",
+            "unbreakable-formation-not-main-phase"
+          ],
+          "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
+        },
+        {
+          "id": "unbreakable-formation-addendum",
+          "oracleText": "Addendum — If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.",
+          "implementation": [
+            "interpreted conditional on the spell having been cast during its controller's own main phase (recorded when it is cast, so a copy, a cast on an opponent's turn and a cast in combat do not qualify); when it holds, the same creatures get a +1/+1 counter each and vigilance until end of turn"
+          ],
+          "engineTestIds": [
+            "unbreakable-formation-pinned-oracle-supported",
+            "unbreakable-formation-main-phase",
+            "unbreakable-formation-not-main-phase"
+          ],
+          "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

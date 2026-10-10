@@ -243,6 +243,8 @@ export interface EngineCardObject extends EngineObject, CastRecord {
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  /** Addendum (Unbreakable Formation): cast during a main phase of its caster's own turn. */
+  castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
   sourceFacts?: ObjectFacts;
   /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */

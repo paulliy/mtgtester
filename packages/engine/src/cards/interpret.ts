@@ -2625,6 +2625,48 @@ function parseResolutionCountBlock(
 }
 
 /**
+ * "Creatures you control gain indestructible until end of turn.\nAddendum — If you cast this
+ * spell during your main phase, put a +1/+1 counter on each of those creatures and they gain
+ * vigilance until end of turn." (Unbreakable Formation). Read as one block because "those
+ * creatures" is the first line's set: fixed as the spell resolves (CR 611.2c), the same
+ * creatures you control when the Addendum half applies a moment later.
+ */
+function parseAddendumMassBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const lines = text
+    .toLowerCase()
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (lines.length !== 2) return null;
+  const first = (lines[0] as string).match(
+    /^creatures you control gain (\w+) until end of turn\.?$/,
+  );
+  const second = (lines[1] as string).match(
+    /^(?:addendum \u2014 )?if you cast this spell during your main phase, put a \+1\/\+1 counter on each of those creatures and they gain (\w+) until end of turn\.?$/,
+  );
+  if (first === null || second === null) return null;
+  const keywordA = first[1] as KeywordAbility;
+  const keywordB = second[1] as KeywordAbility;
+  if (!KEYWORD_SET.has(keywordA) || !KEYWORD_SET.has(keywordB)) return null;
+  const creatures = allOf(YOURS, ofType('Creature'));
+  return {
+    targets: [],
+    effects: [
+      { op: 'grantKeywordEachUntilEot', selector: creatures, keyword: keywordA },
+      {
+        op: 'conditionalEffect',
+        condition: { kind: 'castDuringYourMainPhase' },
+        then: [
+          { op: 'putCountersEach', selector: creatures, counter: '+1/+1', count: 1 },
+          { op: 'grantKeywordEachUntilEot', selector: creatures, keyword: keywordB },
+        ],
+        else: [],
+      },
+    ],
+  };
+}
+
+/**
  * The ability a "When you do, …" reflexive trigger puts on the stack (CR 603.12). It declares
  * its own targets, chosen as it goes on the stack (CR 603.3d), so it gets its own slot list —
  * ordinary slots first, then variable-count ones, as `pushTriggerOnStack` requires.
@@ -7247,7 +7289,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
             parseReanimateBlock(spellBlockText, card) ??
             parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
             parseLivingDeathBlock(spellBlockText) ??
-            parseVictimizeBlock(spellBlockText);
+            parseVictimizeBlock(spellBlockText) ??
+            parseAddendumMassBlock(spellBlockText);
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);

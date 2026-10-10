@@ -8299,6 +8299,40 @@ function firstFamilyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function unbreakableFormationScenario(gameId: GameId): CardTestScenario {
+  const formation = pinnedFrom(COVERAGE_PR04, 'Unbreakable Formation');
+  return pr01Scenario(gameId, {
+    id: 'unbreakable-formation-viewer-addendum-main-phase',
+    title:
+      'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+    instructions: [
+      'Lab Red Bear (a 2/2), Lab Servo (a 1/1) and three Plains are on your battlefield; P2 controls Lab Ox. Unbreakable Formation is in your hand.',
+      'Cast Unbreakable Formation for {2}{W} during your main phase, then pass priority to resolve it.',
+      'Your creatures gain indestructible until end of turn, and because you cast it in your main phase each also gets a +1/+1 counter and vigilance. Lab Ox gets nothing.',
+    ],
+    expectedOutcome:
+      'Lab Red Bear is a 3/3 and Lab Servo a 2/2, each with a +1/+1 counter, indestructible and vigilance. Lab Ox is unchanged.',
+    oracleSha256: formation.sha256,
+    clauseIds: ['unbreakable-formation-indestructible', 'unbreakable-formation-addendum'],
+    decks: {
+      P1: [formation.card, LAB_RED_BEAR, LAB_SERVO, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Unbreakable Formation'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Red Bear', 'Lab Servo', 'Plains', 'Plains', 'Plains'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9467,6 +9501,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'unbreakable-formation-viewer-addendum-main-phase',
   'first-family-viewer-colors-draw-gain',
   'call-forth-the-tempest-viewer-other-spells-damage',
   'crystal-inhuman-princess-viewer-colors-damage',
@@ -9715,6 +9750,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,
   'first-family-viewer-colors-draw-gain': firstFamilyScenario,
   'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,
   'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,

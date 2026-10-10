@@ -1145,6 +1145,7 @@ const families = {
       sourceWasCast: true,
       announcedXAtLeast: true,
       escaped: true,
+      castDuringYourMainPhase: true,
       hasCounters: true,
       enteredThisTurn: true,
       createdTokenThisTurn: true,

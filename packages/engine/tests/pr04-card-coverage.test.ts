@@ -24,8 +24,10 @@ import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
+import { queueSpellCopy } from '../src/stack/copy';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
@@ -2221,6 +2223,93 @@ describe('First Family', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.18 Unbreakable Formation
+// ---------------------------------------------------------------------------------------------
+
+describe('Unbreakable Formation', () => {
+  const { card } = pinned('Unbreakable Formation');
+  const FORMATION_MANA = [...generic(2), ...white(1)];
+
+  function state(ctx: GameContext, perm: EnginePermanent) {
+    const live = onField(ctx, perm.cardId)!;
+    const keywords = computeCharacteristics(ctx, live).keywords;
+    return {
+      indestructible: keywords.includes('indestructible'),
+      vigilance: keywords.includes('vigilance'),
+      counters: live.counters['+1/+1'] ?? 0,
+    };
+  }
+
+  it('unbreakable-formation-pinned-oracle-supported — indestructible, then the Addendum counters and vigilance', () => {
+    expectModeled(card);
+    const effects = interpretCard(card).spellAbility!.effects;
+    expect(effects[0]).toMatchObject({ op: 'grantKeywordEachUntilEot', keyword: 'indestructible' });
+    expect(effects[1]).toMatchObject({
+      op: 'conditionalEffect',
+      condition: { kind: 'castDuringYourMainPhase' },
+      then: [
+        { op: 'putCountersEach', counter: '+1/+1', count: 1 },
+        { op: 'grantKeywordEachUntilEot', keyword: 'vigilance' },
+      ],
+      else: [],
+    });
+  });
+
+  it('unbreakable-formation-main-phase — cast in your main phase, your creatures also get a counter and vigilance; an opponent’s get nothing', () => {
+    const ctx = pod('formation-main');
+    const ally = spawn(ctx, 'P1', LAB_CARD('Lab Ally'));
+    const rival = spawn(ctx, 'P2', LAB_CARD('Lab Rival'));
+    castFromHand(ctx, 'P1', card, FORMATION_MANA);
+    settle(ctx);
+    expect(state(ctx, ally)).toEqual({ indestructible: true, vigilance: true, counters: 1 });
+    expect(state(ctx, rival)).toEqual({ indestructible: false, vigilance: false, counters: 0 });
+  });
+
+  it('unbreakable-formation-not-main-phase — cast on an opponent’s turn or in your combat, only indestructible', () => {
+    const theirs = pod('formation-their-turn');
+    const ally = spawn(theirs, 'P1', LAB_CARD('Lab Ally'));
+    theirs.state.currentTurnPlayer = 'P2';
+    theirs.state.activePlayerIndex = 1;
+    castFromHand(theirs, 'P1', card, FORMATION_MANA);
+    settle(theirs);
+    expect(state(theirs, ally)).toEqual({ indestructible: true, vigilance: false, counters: 0 });
+
+    const combat = pod('formation-combat');
+    const fighter = spawn(combat, 'P1', LAB_CARD('Lab Fighter'));
+    combat.state.phase = 'combat';
+    combat.state.step = 'beginCombat';
+    castFromHand(combat, 'P1', card, FORMATION_MANA);
+    settle(combat);
+    expect(state(combat, fighter)).toEqual({ indestructible: true, vigilance: false, counters: 0 });
+  });
+
+  it('unbreakable-formation-main-phase — a copy was never cast, so it gets no Addendum even in your main phase', () => {
+    const ctx = pod('formation-copy');
+    const ally = spawn(ctx, 'P1', LAB_CARD('Lab Ally'));
+    castFromHand(ctx, 'P1', card, FORMATION_MANA);
+    const copy = queueSpellCopy(ctx, ctx.state.stack.at(-1)!, 'P1');
+    expect(copy.castDuringOwnMainPhase).toBeUndefined();
+    // The copy resolves first: indestructible only.
+    resolveTop(ctx);
+    expect(state(ctx, ally)).toEqual({ indestructible: true, vigilance: false, counters: 0 });
+    // Then the cast original adds the counter and vigilance.
+    resolveTop(ctx);
+    expect(state(ctx, ally)).toEqual({ indestructible: true, vigilance: true, counters: 1 });
+  });
+
+  it('unbreakable-formation-main-phase — the cast phase is what counts, not the phase it resolves in', () => {
+    const ctx = pod('formation-cast-phase');
+    const ally = spawn(ctx, 'P1', LAB_CARD('Lab Ally'));
+    castFromHand(ctx, 'P1', card, FORMATION_MANA);
+    // Still on the stack when the game moves on: the Addendum looks at when it was cast.
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    resolveTop(ctx);
+    expect(state(ctx, ally)).toEqual({ indestructible: true, vigilance: true, counters: 1 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2231,6 +2320,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Unbreakable Formation',
+    sha256: 'c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22',
+    clauseCount: 2,
+  },
   {
     name: 'First Family',
     sha256: 'e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64',

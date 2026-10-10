@@ -206,6 +206,7 @@ const conditionShapes = {
   sourceWasCast: {},
   announcedXAtLeast: { n: finite },
   escaped: {},
+  castDuringYourMainPhase: {},
   hasCounters: { selector: selector, counter: text, cmp: oneOf('>=', '<='), n: finite },
   enteredThisTurn: {},
   createdTokenThisTurn: {},

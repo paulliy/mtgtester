@@ -535,3 +535,29 @@ describe('First Family Card Test Lab scenario', () => {
     replays('first-family-viewer-colors-draw-gain', steps);
   });
 });
+
+describe('Unbreakable Formation Card Test Lab scenario', () => {
+  it('unbreakable-formation-viewer-addendum-main-phase — cast in your main phase, your creatures get a counter, indestructible and vigilance', () => {
+    const steps: Step[] = [{ action: 'Cast Unbreakable Formation' }, { action: 'Pass priority' }];
+    const { scenario, state, onBattlefield } = run(
+      'unbreakable-formation-viewer-addendum-main-phase',
+      steps,
+    );
+    const [bear] = onBattlefield('Lab Red Bear');
+    const [servo] = onBattlefield('Lab Servo');
+    const [ox] = onBattlefield('Lab Ox');
+    expect(bear?.counters).toEqual({ '+1/+1': 1 });
+    expect(servo?.counters).toEqual({ '+1/+1': 1 });
+    expect(ox?.counters ?? {}).toEqual({});
+    // Both of your creatures, and only them, were granted indestructible and vigilance.
+    const descriptions = state.effects.map((effect) => effect.description);
+    for (const keyword of ['indestructible', 'vigilance']) {
+      expect(
+        descriptions.filter((text) => text.includes(` gain ${keyword} until end of turn`)),
+      ).toEqual([`Lab Red Bear, Lab Servo gain ${keyword} until end of turn`]);
+    }
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('unbreakable-formation-viewer-addendum-main-phase', steps);
+  });
+});

@@ -3186,15 +3186,19 @@
   {
     "oracleId": "97435e03-2fff-4fe0-8fa9-69ab0a046a33",
     "name": "Unbreakable Formation",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.18",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "3d50266f-5a2f-4a48-ab15-87e733624fd4",

@@ -111,6 +111,8 @@ export type Condition =
   | { kind: 'sourceWasCast' }
   | { kind: 'announcedXAtLeast'; n: number }
   | { kind: 'escaped' }
+  /** Addendum: "if you cast this spell during your main phase" (Unbreakable Formation). */
+  | { kind: 'castDuringYourMainPhase' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'createdTokenThisTurn' }
@@ -223,6 +225,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'sourceWasCast':
     case 'announcedXAtLeast':
     case 'escaped':
+    case 'castDuringYourMainPhase':
     case 'hasCounters':
     case 'enteredThisTurn':
     case 'createdTokenThisTurn':
@@ -510,6 +513,13 @@ export function evaluateCondition(
       );
       return (stackObject?.announcedX ?? 0) >= condition.n;
     }
+    case 'castDuringYourMainPhase':
+      if (source.sourceCastState !== undefined)
+        return source.sourceCastState.castDuringOwnMainPhase === true;
+      return ctx.state.stack.some(
+        (candidate) =>
+          candidate.id === source.objectId && candidate.castDuringOwnMainPhase === true,
+      );
     case 'escaped': {
       if (source.cardId === undefined) return false;
       const permanent = sourceState();

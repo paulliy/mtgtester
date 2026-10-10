@@ -5955,3 +5955,31 @@ test('First Family: draw and gain life for each color among your permanents and 
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(3);
   await expect(page.locator('.log .line', { hasText: /gains 3 life/ })).toHaveCount(1);
 });
+
+test('Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+  );
+  await expect(permanent(page, 'Lab Red Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('1/1')).toBeVisible();
+  await castAndResolve(page, 'Unbreakable Formation');
+  await passUntil(page, page.getByText(/game over/i).first());
+
+  // Cast in your main phase: each of your creatures gets a counter (and so grows by one).
+  await expect(permanent(page, 'Lab Red Bear').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  // Indestructible and vigilance until end of turn are granted to those two creatures only.
+  for (const name of ['Lab Red Bear', 'Lab Servo']) {
+    await expect(permanent(page, name)).toContainText(/indestructible/i);
+    await expect(permanent(page, name)).toContainText(/vigilance/i);
+  }
+  // The opponent's creature gets nothing.
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/indestructible|vigilance/i);
+});
