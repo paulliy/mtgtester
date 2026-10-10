@@ -6098,3 +6098,33 @@ test('Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total po
   await expect(hand).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
+
+test('Captain America, Skybound: battalion grows each attacker and makes them indestructible', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+  );
+  // Captain America and two others attack; Lab Servo stays home.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const name of ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear']) {
+    await expect(permanent(page, name).getByText('+1/+1×1')).toBeVisible();
+    await expect(permanent(page, name)).toContainText(/indestructible/i);
+  }
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).not.toContainText(/indestructible/i);
+  // Lab Ox 4/4 -> 5/5, Lab Red Bear 2/2 -> 3/3.
+  await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
+  await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
+});

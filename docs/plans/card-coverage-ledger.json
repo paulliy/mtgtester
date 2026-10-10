@@ -465,15 +465,19 @@
   {
     "oracleId": "e9566303-15cf-4444-a044-fc19540f21b6",
     "name": "Captain America, Skybound",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.08",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever ~ and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",

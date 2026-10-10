@@ -129,6 +129,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'entersWithoutManaSpentToCast',
           'leavesTo',
           'defendingPlayerIsEventPlayer',
+          'withOtherAttackers',
           'counter',
           'byYou',
           'oncePerTurn',
@@ -173,6 +174,17 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({
         path: `${path}.entersUntapped`,
         message: 'untapped entry restriction requires an enters event',
+      });
+    if (
+      head['withOtherAttackers'] !== undefined &&
+      (head['when'] !== 'attacks' ||
+        typeof head['withOtherAttackers'] !== 'number' ||
+        !Number.isInteger(head['withOtherAttackers']) ||
+        head['withOtherAttackers'] < 1)
+    )
+      issues.push({
+        path: `${path}.withOtherAttackers`,
+        message: 'an attacker-count requirement needs an attacks event and a positive count',
       });
     if (
       head['entersWithoutManaSpentToCast'] !== undefined &&

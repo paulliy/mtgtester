@@ -1448,6 +1448,11 @@ export type TriggerHead =
        * instead of the attacker's controller.
        */
       defendingPlayerIsEventPlayer?: true;
+      /**
+       * Battalion: "whenever ~ and at least two other creatures attack" — part of the attack
+       * event, counted among the attackers declared with it, not an intervening-if (CR 603.4).
+       */
+      withOtherAttackers?: number;
       /** `countersPut`: only a placement that includes this counter kind. */
       counter?: string;
       /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */

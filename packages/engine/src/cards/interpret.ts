@@ -2628,6 +2628,24 @@ function parseSacrificeSelfIfYouDoBlock(
   return [{ op: 'sacrificeOneThen', selector: SELF, then }];
 }
 
+/**
+ * "Put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn."
+ * (Captain America, Skybound): "they" is the set the first sentence counted, fixed as the
+ * ability resolves (CR 608.2c) — the same creatures a moment later.
+ */
+function parseCountersThenTheyGainBlock(body: string, card: OracleCard): Effect[] | null {
+  const m = body.match(
+    /^put a \+1\/\+1 counter on each (.+?)\. they gain (\w+) until end of turn\.?$/,
+  );
+  const selector = m === null ? null : parseSubject(m[1] as string, card);
+  const keyword = m?.[2] as KeywordAbility | undefined;
+  if (selector === null || keyword === undefined || !KEYWORD_SET.has(keyword)) return null;
+  return [
+    { op: 'putCountersEach', selector, counter: '+1/+1', count: 1 },
+    { op: 'grantKeywordEachUntilEot', selector, keyword },
+  ];
+}
+
 const ORDINAL_TIMES: Record<string, number> = {
   first: 1,
   second: 2,
@@ -4411,7 +4429,15 @@ function parseBlinkChosenBlock(body: string, allocCount: CountSlotAllocator): Ef
  * and modeling it as one would make it fire once when it should fire twice.
  */
 function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
-  const lower = line.toLowerCase();
+  let lower = line.toLowerCase();
+  // Battalion: "Whenever ~ and at least two other creatures attack" is ~'s own attack trigger
+  // with an attacker count on the event; the count is put back on the head below.
+  const battalion = lower.match(/^whenever ~ and at least (\w+) other creatures attack, /);
+  const otherAttackers = battalion === null ? null : parseAmount(battalion[1] as string);
+  if (battalion !== null) {
+    if (otherAttackers === null || otherAttackers < 1) return null;
+    lower = `whenever ~ attacks, ${lower.slice(battalion[0].length)}`;
+  }
   const firstLine = lower.split('\n')[0] as string;
   const continuation = lower.split('\n').slice(1).join('\n');
 
@@ -4857,6 +4883,10 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       body = once[1] as string;
     }
   }
+  if (otherAttackers !== null) {
+    if (!heads.every((head) => head.when === 'attacks')) return null;
+    heads = heads.map((head) => ({ ...head, withOtherAttackers: otherAttackers }));
+  }
   // "Whenever a creature you control with a +1/+1 counter on it attacks, tap target creature
   // defending player controls" (Elite Scaleguard): for an attacks head the event player is the
   // player that creature is attacking (CR 506.3d), so the target clause reads as "that player".
@@ -5004,6 +5034,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseDepartedSourceToLibraryBlock(body, heads) ??
         parseResolutionCountBlock(body, line, alloc, card, opts) ??
         parseSacrificeSelfIfYouDoBlock(body, alloc, card, opts) ??
+        parseCountersThenTheyGainBlock(body, card) ??
         parseExileReturnAtNextEndStepBlock(body, alloc) ??
         parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);

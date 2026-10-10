@@ -1550,6 +1550,14 @@ export function queueTriggersForEvent(
                 ).values(),
               ]
             : matched.map((s) => [s]);
+      // Battalion: the other creatures declared as attackers alongside this one (CR 508.1).
+      if (
+        'withOtherAttackers' in spec &&
+        spec.withOtherAttackers !== undefined &&
+        subjects.filter((subject) => subject.permanent.id !== source.id).length <
+          spec.withOtherAttackers
+      )
+        continue;
       // "if none of them were cast or no mana was spent to cast them" — judged over the firing.
       const firings =
         'entersWithoutManaSpentToCast' in spec && spec.entersWithoutManaSpentToCast === true

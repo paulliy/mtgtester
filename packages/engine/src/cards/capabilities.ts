@@ -331,6 +331,7 @@ const shapes = {
     entersWithoutManaSpentToCast: leaf,
     leavesTo: { array: leaf },
     defendingPlayerIsEventPlayer: leaf,
+    withOtherAttackers: leaf,
     counter: leaf,
     byYou: leaf,
     oncePerTurn: leaf,

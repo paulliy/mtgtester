@@ -650,3 +650,30 @@ describe('Finneas, Ace Archer Card Test Lab scenario', () => {
     replays('finneas-ace-archer-viewer-counters-then-draw', steps);
   });
 });
+
+describe('Captain America, Skybound Card Test Lab scenario', () => {
+  it('captain-america-skybound-viewer-battalion — Captain and two others attack, so each attacker grows and is indestructible', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2', 'P2', 'P2', '__no_attack__'] },
+    ];
+    const { scenario, state, onBattlefield } = run(
+      'captain-america-skybound-viewer-battalion',
+      steps,
+    );
+    for (const name of ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear']) {
+      expect(onBattlefield(name)[0]?.counters, name).toEqual({ '+1/+1': 1 });
+    }
+    expect(onBattlefield('Lab Servo')[0]?.counters ?? {}).toEqual({});
+    // Vigilance: Captain America attacked without tapping; the others tapped, Lab Servo stayed home.
+    expect(onBattlefield('Captain America, Skybound')[0]?.tapped).toBe(false);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Servo')[0]?.tapped).toBe(false);
+    // Indestructible went to the three attackers only.
+    expect(state.effects.map((effect) => effect.description)).toEqual([
+      'Captain America, Skybound, Lab Ox, Lab Red Bear gain indestructible until end of turn',
+    ]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('captain-america-skybound-viewer-battalion', steps);
+  });
+});

@@ -2669,6 +2669,77 @@ describe('Finneas, Ace Archer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.08 Captain America, Skybound
+// ---------------------------------------------------------------------------------------------
+
+describe('Captain America, Skybound', () => {
+  const { card } = pinned('Captain America, Skybound');
+
+  /** Run combat with `attackers` attacking P2, nobody blocking. */
+  function attack(ctx: GameContext, attackers: EnginePermanent[]) {
+    const ids = new Set(attackers.map((perm) => perm.id));
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (ids.has(subjectId) ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+  function state(ctx: GameContext, perm: EnginePermanent) {
+    const live = onField(ctx, perm.cardId)!;
+    return {
+      counters: live.counters['+1/+1'] ?? 0,
+      indestructible: computeCharacteristics(ctx, live).keywords.includes('indestructible'),
+    };
+  }
+
+  it('captain-america-skybound-pinned-oracle-supported — battalion is its attack trigger with two other attackers', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'vigilance']));
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'attacks',
+      subject: { kind: 'self' },
+      withOtherAttackers: 2,
+    });
+    expect(def.triggers[0]!.effects).toMatchObject([
+      { op: 'putCountersEach', counter: '+1/+1', count: 1 },
+      { op: 'grantKeywordEachUntilEot', keyword: 'indestructible' },
+    ]);
+  });
+
+  it('captain-america-skybound-battalion — with two others attacking, each attacker gets a counter and indestructible; a creature at home does not', () => {
+    const ctx = pod('captain-three');
+    const cap = spawn(ctx, 'P1', card);
+    const a = spawn(ctx, 'P1', LAB_CARD('Lab A'));
+    const b = spawn(ctx, 'P1', LAB_CARD('Lab B'));
+    const home = spawn(ctx, 'P1', LAB_CARD('Lab Home'));
+    attack(ctx, [cap, a, b]);
+    for (const perm of [cap, a, b])
+      expect(state(ctx, perm)).toEqual({ counters: 1, indestructible: true });
+    expect(state(ctx, home)).toEqual({ counters: 0, indestructible: false });
+  });
+
+  it('captain-america-skybound-needs-two-others — one other attacker is not enough, and others attacking without it do not trigger it', () => {
+    const ctx = pod('captain-two');
+    const cap = spawn(ctx, 'P1', card);
+    const a = spawn(ctx, 'P1', LAB_CARD('Lab A'));
+    attack(ctx, [cap, a]);
+    expect(state(ctx, cap)).toEqual({ counters: 0, indestructible: false });
+
+    const without = pod('captain-stays');
+    const captain = spawn(without, 'P1', card);
+    const others = ['Lab A', 'Lab B', 'Lab C'].map((name) => spawn(without, 'P1', LAB_CARD(name)));
+    attack(without, others);
+    expect(state(without, captain)).toEqual({ counters: 0, indestructible: false });
+    for (const perm of others) expect(state(without, perm).counters).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2679,6 +2750,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Captain America, Skybound',
+    sha256: 'e0fd42e6696204ae8cdbd23b1b5a9576da3ee8573327710106c2726512fa023b',
+    clauseCount: 2,
+  },
   {
     name: 'Finneas, Ace Archer',
     sha256: '00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028',

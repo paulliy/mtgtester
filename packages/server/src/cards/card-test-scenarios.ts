@@ -8459,6 +8459,39 @@ function finneasScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function captainAmericaScenario(gameId: GameId): CardTestScenario {
+  const captain = pinnedFrom(COVERAGE_PR04, 'Captain America, Skybound');
+  return pr01Scenario(gameId, {
+    id: 'captain-america-skybound-viewer-battalion',
+    title: 'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+    instructions: [
+      'Captain America, Lab Ox, Lab Red Bear and Lab Servo are on your battlefield, none summoning sick.',
+      'Attack P2 with Captain America, Lab Ox and Lab Red Bear, and keep Lab Servo at home. Captain America and two other creatures attack, so battalion triggers.',
+      'Each of the three attackers gets a +1/+1 counter and gains indestructible until end of turn. Lab Servo, which stayed home, gets neither.',
+    ],
+    expectedOutcome:
+      'Captain America, Lab Ox and Lab Red Bear each have one +1/+1 counter and are indestructible. Lab Servo has no counter.',
+    oracleSha256: captain.sha256,
+    clauseIds: ['captain-america-skybound-keywords', 'captain-america-skybound-battalion'],
+    decks: {
+      P1: [captain.card, LAB_OX, LAB_RED_BEAR, LAB_SERVO, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear', 'Lab Servo'],
+        },
+      ],
+      hand: [],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9627,6 +9660,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'captain-america-skybound-viewer-battalion',
   'finneas-ace-archer-viewer-counters-then-draw',
   'kutzil-malamet-exemplar-viewer-above-base-draw',
   'the-fantasticar-viewer-fourth-noncreature',
@@ -9879,6 +9913,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'captain-america-skybound-viewer-battalion': captainAmericaScenario,
   'finneas-ace-archer-viewer-counters-then-draw': finneasScenario,
   'kutzil-malamet-exemplar-viewer-above-base-draw': kutzilScenario,
   'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,

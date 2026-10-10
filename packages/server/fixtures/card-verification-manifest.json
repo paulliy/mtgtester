@@ -8805,6 +8805,35 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "e9566303-15cf-4444-a044-fc19540f21b6": {
+      "name": "Captain America, Skybound",
+      "oracleSha256": "e0fd42e6696204ae8cdbd23b1b5a9576da3ee8573327710106c2726512fa023b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "captain-america-skybound-keywords",
+          "oracleText": "Flying, vigilance",
+          "implementation": ["keywords flying and vigilance (interpreted)"],
+          "engineTestIds": ["captain-america-skybound-pinned-oracle-supported"],
+          "viewerScenarioIds": ["captain-america-skybound-viewer-battalion"]
+        },
+        {
+          "id": "captain-america-skybound-battalion",
+          "oracleText": "Battalion — Whenever Captain America and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn.",
+          "implementation": [
+            "interpreted attacks trigger on Captain America that fires only when at least two other creatures are attacking with it (withOtherAttackers 2), so it does not fire with one other attacker, nor when others attack without it",
+            "the effect puts one +1/+1 counter on each attacking creature and grants those same creatures indestructible until end of turn; a creature that stayed home gets neither"
+          ],
+          "engineTestIds": [
+            "captain-america-skybound-pinned-oracle-supported",
+            "captain-america-skybound-battalion",
+            "captain-america-skybound-needs-two-others"
+          ],
+          "viewerScenarioIds": ["captain-america-skybound-viewer-battalion"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
