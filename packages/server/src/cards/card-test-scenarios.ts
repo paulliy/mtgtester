@@ -8114,6 +8114,46 @@ function ghoulishImpetusScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function giftOfImmortalityScenario(gameId: GameId): CardTestScenario {
+  const gift = pinnedFrom(COVERAGE_PR05, 'Gift of Immortality');
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'gift-of-immortality-viewer-owner-return-then-aura',
+    title: 'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+    instructions: [
+      'Gift of Immortality and Lab Doom are in your hand. A Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield. P2 owns Lab Green Bear but you control it.',
+      'Cast Gift of Immortality targeting Lab Green Bear and let it resolve.',
+      'Cast Lab Doom on Lab Green Bear. It dies into P2\u2019s graveyard and Gift of Immortality goes to your graveyard with it. Its trigger puts Lab Green Bear straight back onto the battlefield, under P2\u2019s control as its owner. The Aura does not return yet.',
+      'Pass priority to the beginning of the end step: Gift of Immortality returns to the battlefield attached to that Lab Green Bear, under your control.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is on the battlefield under P2\u2019s control, a new object, and Gift of Immortality is on the battlefield under your control attached to it. Lab Doom is your only graveyard card and P2\u2019s graveyard is empty. All five lands are tapped.',
+    oracleSha256: gift.sha256,
+    clauseIds: [
+      'gift-of-immortality-enchant',
+      'gift-of-immortality-creature-return',
+      'gift-of-immortality-aura-return',
+    ],
+    decks: {
+      P1: [gift.card, LAB_DOOM, PLAINS, ...swamps],
+      P2: [LAB_GREEN_BEAR, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Gift of Immortality', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', ...swamps.map((swamp) => swamp.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], controllerId: 'P1' },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9948,6 +9988,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sunforger-viewer-unattach-search-and-cast',
   'screams-from-within-viewer-return-and-enchant',
   'ghoulish-impetus-viewer-return-at-end-step',
+  'gift-of-immortality-viewer-owner-return-then-aura',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10219,6 +10260,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
   'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
   'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
+  'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

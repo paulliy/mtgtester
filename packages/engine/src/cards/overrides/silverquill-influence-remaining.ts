@@ -222,12 +222,10 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // Ghoulish Impetus: restored in coverage PR05. The interpreter reads the +1/+1, deathtouch and
   // goad on the enchanted creature, and its dies trigger as returning this card to the battlefield
   // at the beginning of the next end step, choosing a creature to enchant as it enters.
-  // Catalog audit silverquill-remaining-batch-2: delayed Aura return omitted.
-  unsupportedCard(
-    '2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b',
-    'Gift of Immortality',
-    'Delayed Aura return attached to the creature is omitted.',
-  );
+  // Gift of Immortality: restored in coverage PR05. The interpreter reads the dies trigger as
+  // returning that creature card under its owner's control, then returning this Aura card at the
+  // beginning of the next end step attached to that creature, staying put if the creature is gone
+  // or it can't be attached.
   // Catalog audit silverquill-remaining-batch-1: draws one instead of one per attached Aura.
   unsupportedCard(
     'a3b39590-34b7-4fd0-877f-748e6df30e88',

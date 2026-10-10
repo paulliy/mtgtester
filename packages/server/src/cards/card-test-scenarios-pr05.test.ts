@@ -362,3 +362,57 @@ describe('Ghoulish Impetus Card Test Lab scenario', () => {
     replays('ghoulish-impetus-viewer-return-at-end-step', steps);
   });
 });
+
+describe('Gift of Immortality Card Test Lab scenario', () => {
+  it('gift-of-immortality-viewer-owner-return-then-aura — the stolen Bear returns to its owner at once, then the Aura returns attached to it at the end step', () => {
+    const steps: Step[] = [
+      { action: 'Cast Gift of Immortality', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'gift-of-immortality-viewer-owner-return-then-aura',
+      steps,
+    );
+    // No host was ever chosen: the Aura returns attached to that creature.
+    expect(prompts.filter((prompt) => /choose a permanent to enchant/.test(prompt))).toEqual([]);
+    // The Bear came back first, under its owner P2 (not P1, who controlled it when it died).
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(onBattlefield('Lab Green Bear')).toHaveLength(1);
+    expect(bear?.ownerId).toBe('P2');
+    expect(bear?.controllerId).toBe('P2');
+    // The Aura came back at the end step, under P1, attached to the new Bear.
+    const [gift] = onBattlefield('Gift of Immortality');
+    expect(onBattlefield('Gift of Immortality')).toHaveLength(1);
+    expect(gift?.controllerId).toBe('P1');
+    expect(gift?.attachedTo).toBe(bear?.id);
+    const returns = state.eventLog.filter((event) => event.type === 'graveyardToBattlefield');
+    expect(returns.map((event) => (event.payload as { target?: string }).target)).toEqual([
+      'Lab Green Bear',
+      'Gift of Immortality',
+    ]);
+    const bearBack = state.eventLog.findIndex(
+      (event) =>
+        event.type === 'graveyardToBattlefield' &&
+        (event.payload as { target?: string }).target === 'Lab Green Bear',
+    );
+    const endStepBegan = state.eventLog.findIndex(
+      (event) => event.type === 'phaseBegin' && (event.payload as { step?: string }).step === 'end',
+    );
+    const auraBack = state.eventLog.findIndex(
+      (event) =>
+        event.type === 'graveyardToBattlefield' &&
+        (event.payload as { target?: string }).target === 'Gift of Immortality',
+    );
+    expect(bearBack).toBeLessThan(endStepBegan);
+    expect(auraBack).toBeGreaterThan(endStepBegan);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(
+      state.battlefield.filter((perm) => /Basic Land/.test(perm.typeLine) && perm.tapped),
+    ).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('gift-of-immortality-viewer-owner-return-then-aura', steps);
+  });
+});

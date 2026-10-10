@@ -145,9 +145,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
   ]);
 
-  unimplemented('2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b', 'Gift of Immortality', [
-    "When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at the beginning of the next end step.",
-  ]);
+  // Gift of Immortality: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('79085dea-8daa-41c0-a975-61e3e6da2e26', 'Shielded by Faith', [
     'Whenever a creature enters, you may attach this Aura to that creature.',

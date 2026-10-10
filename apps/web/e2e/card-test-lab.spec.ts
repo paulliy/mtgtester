@@ -6532,3 +6532,63 @@ test('Ghoulish Impetus: its creature dies and it returns at the next end step', 
   await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+test('Gift of Immortality: the creature returns to its owner, then the Aura returns onto it', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.controller).toBe('P1');
+
+  // Cast the Aura on the Bear you control but P2 owns.
+  const gift = handCard(page, 'Gift of Immortality');
+  await expect(gift).toHaveClass(/actionable/, { timeout: 15_000 });
+  await gift.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Gift of Immortality')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the enchanted Bear. It dies into P2's graveyard and its trigger returns it at once,
+  // under P2's control (the Aura follows at the end step; the headless scenario pins that order).
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.controller)
+    .toBe('P2');
+  const returnedBear = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!;
+  expect(returnedBear.id).not.toBe(bearId);
+
+  // At the beginning of the end step the Aura returns attached to that Bear, under your control.
+  await passUntil(page, page.getByText(/game over/i).first());
+  const back = boards.at(-1)!.find((p) => p.name === 'Gift of Immortality');
+  expect(back?.attachedTo).toBe(returnedBear.id);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Gift of Immortality')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.controller).toBe('P2');
+  // Lab Doom is your only graveyard card.
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});

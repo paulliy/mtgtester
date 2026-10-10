@@ -1277,6 +1277,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
+    "name": "Gift of Immortality",
+    "package": "PR05.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Delayed Aura return attached to the creature is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
     "name": "Gleeful Arsonist",
     "package": "PR03.16",

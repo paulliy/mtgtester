@@ -357,6 +357,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sunforger-viewer-unattach-search-and-cast',
       'screams-from-within-viewer-return-and-enchant',
       'ghoulish-impetus-viewer-return-at-end-step',
+      'gift-of-immortality-viewer-owner-return-then-aura',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

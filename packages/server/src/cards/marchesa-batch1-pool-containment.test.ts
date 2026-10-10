@@ -54,6 +54,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Frontier Siege',
       'Ghost Ark',
       'Ghoulish Impetus',
+      'Gift of Immortality',
       'Gleeful Arsonist',
       'Glen Elendra Archmage',
       'Grim Haruspex',

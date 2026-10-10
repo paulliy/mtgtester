@@ -1534,13 +1534,53 @@
     "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b": {
       "name": "Gift of Immortality",
       "oracleSha256": "668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "gift-of-immortality-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent), attaches on resolution; the Aura has no static effect, so it changes nothing about the creature it enchants"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-enchant-creature"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
+        },
+        {
+          "id": "gift-of-immortality-creature-return",
+          "oracleText": "When enchanted creature dies, return that card to the battlefield under its owner's control.",
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose first effect puts the exact graveyard card the creature became (the trigger object, CR 400.7e) onto the battlefield at once, as a new object, under its OWNER's control rather than the trigger controller's: a creature you control but an opponent owns returns under that opponent",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying return nothing; a creature card that left the graveyard before the trigger resolves, or left and came back as a new object, returns nothing, and a token that dies ceases to exist"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-creature-returns-now",
+            "gift-of-immortality-creature-under-owner",
+            "gift-of-immortality-left-graveyard",
+            "gift-of-immortality-enchanted-dies-only"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
+        },
+        {
+          "id": "gift-of-immortality-aura-return",
           "oracleText": "Return this card to the battlefield attached to that creature at the beginning of the next end step.",
-          "implementation": ["explicitly unsupported; delayed Aura return omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted second effect of the same trigger (returnDepartedSourceToBattlefield with delay nextEndStep and attachTo triggerObject): it remembers the exact graveyard card this Aura became (CR 400.7e) and the creature as it is on the battlefield after the first effect, and sets up one delayed trigger for the beginning of the next end step to begin (CR 603.7), which lasts through cleanup until it fires; an end step that already began is not the next one, and it is the next end step whoever's turn it is",
+            "at that end step the Aura enters under the control of the player whose ability returns it (its controller), attached to that returned creature with no choice of host (CR 303.4f), even when an opponent controls the creature",
+            "if that creature left the battlefield (dying again, exile, bounce) or became a new object before the end step, or never returned because its card left the graveyard first, or the Aura card itself left the graveyard, the Aura stays where it is"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-aura-returns-attached",
+            "gift-of-immortality-next-end-step-any-turn",
+            "gift-of-immortality-creature-gone",
+            "gift-of-immortality-left-graveyard",
+            "gift-of-immortality-creature-under-owner"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
         }
       ],
       "gameplayAiScenarioIds": []

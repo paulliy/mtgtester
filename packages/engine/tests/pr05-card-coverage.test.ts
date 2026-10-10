@@ -826,6 +826,399 @@ describe('Ghoulish Impetus', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.05 Gift of Immortality
+// ---------------------------------------------------------------------------------------------
+
+describe('Gift of Immortality', () => {
+  const { card } = pinned('Gift of Immortality');
+  const CREATURE = (name: string, power = '2', toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Secret', power, toughness });
+  const RESPONSE = oracle({
+    name: 'Lab Response',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+  const GIFT_MANA = [{ symbol: 'W' as const }, ...generic(2)];
+
+  /**
+   * P1 controls Gift of Immortality enchanting Lab Bear, plus Lab Ally; P2 controls Lab Enemy.
+   * Everything is already on the battlefield.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const gift = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const ally = spawn(ctx, 'P1', CREATURE('Lab Ally'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    gift.attachedTo = bear.id;
+    return { ctx, gift, bear, ally, enemy };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const graveyardOf = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+  const inYard = (ctx: GameContext, playerId: string, name: string) => {
+    const found = playerById(ctx, playerId).graveyard.find((c) => c.name === name);
+    expect(found, `${name} in ${playerId}'s graveyard`).toBeDefined();
+    return found!;
+  };
+
+  /** Kill `perm` and let its dies trigger resolve. */
+  function die(ctx: GameContext, perm: EnginePermanent) {
+    kill(ctx, perm);
+    return settle(ctx);
+  }
+
+  /**
+   * Kill `perm`, then run the priority loop; the first time a player holds priority with the
+   * trigger on the stack, `meanwhile` runs (state changes made in response to it).
+   */
+  function dieThenRespond(ctx: GameContext, perm: EnginePermanent, meanwhile: () => void) {
+    kill(ctx, perm);
+    // A free instant in hand makes priority a real choice (not a forced pass) with the trigger up.
+    conjure(ctx, 'P1', RESPONSE, 'hand');
+    let responded = false;
+    pump(runPrioritySequence(ctx), (decision) => {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0 && !responded && ctx.state.stack.length > 0) {
+        responded = true;
+        meanwhile();
+      }
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(responded, 'a player held priority with the trigger on the stack').toBe(true);
+  }
+
+  /** A whole turn for the current turn player with nobody attacking or blocking. */
+  function quietTurn(ctx: GameContext) {
+    return pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('gift-of-immortality-pinned-oracle-supported — the interpreter alone models the owner-controlled creature return and the attached Aura return', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    // The Aura has no static effect: it changes nothing about the creature it enchants.
+    expect(def.staticEffects).toEqual([]);
+    // One dies trigger on the enchanted creature only, with no target and two ordered effects.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'dies',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'graveyardToBattlefield', target: 'triggerObject', under: 'owner' },
+      { op: 'returnDepartedSourceToBattlefield', delay: 'nextEndStep', attachTo: 'triggerObject' },
+    ]);
+  });
+
+  it('gift-of-immortality-enchant-creature — it is cast targeting a creature, never a player or a noncreature permanent, attaches on resolution, and changes nothing about its creature', () => {
+    const ctx = pod('gift-cast');
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const relic = spawn(ctx, 'P1', LAB_ARTIFACT('Lab Relic'));
+    const inHand = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), GIFT_MANA);
+    const option = optionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    const legal = option!.targets!.flatMap((slot) => slot.options).sort();
+    expect(legal).toEqual([bear.id, enemy.id].sort());
+    expect(legal).not.toContain(relic.id);
+    expect(legal).not.toContain('P2');
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, bear.id]]),
+    );
+    resolveTop(ctx);
+    const [aura] = named(ctx, 'Gift of Immortality');
+    expect(aura?.attachedTo).toBe(bear.id);
+    expect(aura?.controllerId).toBe('P1');
+    // It grants no bonus or keyword: the creature is exactly what it was.
+    expect(effectivePT(ctx, bear)).toEqual({ power: 2, toughness: 2 });
+    expect(hasKeyword(ctx, bear, 'deathtouch')).toBe(false);
+  });
+
+  it('gift-of-immortality-creature-returns-now — when the enchanted creature dies it returns to the battlefield at once, as a new object', () => {
+    const { ctx, gift, bear, ally } = board('gift-now');
+    die(ctx, bear);
+    // The creature card is back already, with no waiting for an end step.
+    const [back] = named(ctx, 'Lab Bear');
+    expect(back).toBeDefined();
+    expect(back?.id).not.toBe(bear.id);
+    expect(back?.controllerId).toBe('P1');
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Gift of Immortality']);
+    expect(ctx.state.stack).toEqual([]);
+    // The Aura is not back yet: it waits for the next end step, attached to nothing meanwhile.
+    expect(named(ctx, 'Gift of Immortality')).toEqual([]);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]!.when).toBe('endStep');
+    expect(ctx.state.delayedTriggers[0]!.expiry).toBe('onFire');
+    expect(gift.attachedTo).toBe(bear.id);
+    expect(ally.attachedTo ?? null).toBeNull();
+    // Another creature dying is not "enchanted creature": nothing returns for it.
+    const beside = board('gift-now-other');
+    die(beside.ctx, beside.ally);
+    expect(named(beside.ctx, 'Lab Ally')).toEqual([]);
+    expect(graveyardOf(beside.ctx, 'P1')).toEqual(['Lab Ally']);
+    expect(beside.ctx.state.delayedTriggers).toEqual([]);
+    expect(beside.gift.attachedTo).toBe(beside.bear.id);
+  });
+
+  it('gift-of-immortality-creature-under-owner — a creature you control but an opponent owns returns under its owner, not you; one you own returns under you', () => {
+    const { ctx, gift, enemy } = board('gift-owner');
+    // P1 controls a creature P2 owns, and enchants it with the Gift.
+    const stolen = spawn(ctx, 'P2', CREATURE('Lab Stolen'));
+    stolen.controllerId = 'P1';
+    gift.attachedTo = stolen.id;
+    die(ctx, stolen);
+    // It died into its owner's graveyard and came straight back under that owner's control.
+    expect(graveyardOf(ctx, 'P2')).toEqual([]);
+    const [back] = named(ctx, 'Lab Stolen');
+    expect(back?.ownerId).toBe('P2');
+    expect(back?.controllerId).toBe('P2');
+    expect(
+      ctx.state.battlefield.filter((p) => p.controllerId === 'P1' && p.name === 'Lab Stolen'),
+    ).toEqual([]);
+    // At the end step the Aura comes back under ITS controller P1, attached to the P2 creature.
+    beginEndStep(ctx);
+    settle(ctx);
+    const [aura] = named(ctx, 'Gift of Immortality');
+    expect(aura?.controllerId).toBe('P1');
+    expect(aura?.attachedTo).toBe(back?.id);
+    expect(enemy.attachedTo ?? null).toBeNull();
+
+    // A creature you own and control returns under your control.
+    const mine = board('gift-owner-mine');
+    die(mine.ctx, mine.bear);
+    expect(named(mine.ctx, 'Lab Bear')[0]?.controllerId).toBe('P1');
+  });
+
+  it('gift-of-immortality-aura-returns-attached — at the beginning of the next end step the Aura returns attached to that creature, not before and with no choice of host', () => {
+    const { ctx, gift, bear, ally, enemy } = board('gift-end-step');
+    die(ctx, bear);
+    const [back] = named(ctx, 'Lab Bear');
+    // Not before the end step: other steps and priority passes return nothing.
+    settle(ctx);
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    settle(ctx);
+    expect(named(ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Gift of Immortality']);
+
+    // The end step begins: the trigger goes on the stack, and the Aura returns when it resolves,
+    // attached to the creature that came back, with no host decision offered.
+    const decisions: string[] = [];
+    beginEndStep(ctx);
+    expect(named(ctx, 'Gift of Immortality')).toEqual([]);
+    settle(ctx, (decision) => {
+      decisions.push(decision.prompt);
+      return { index: 0, targets: new Map() };
+    });
+    expect(decisions.filter((prompt) => /choose a permanent to enchant/.test(prompt))).toEqual([]);
+    const [aura] = named(ctx, 'Gift of Immortality');
+    expect(aura).toBeDefined();
+    expect(aura?.id).not.toBe(gift.id);
+    expect(aura?.controllerId).toBe('P1');
+    expect(aura?.attachedTo).toBe(back?.id);
+    expect(aura?.attachedTo).not.toBe(ally.id);
+    expect(aura?.attachedTo).not.toBe(enemy.id);
+    expect(graveyardOf(ctx, 'P1')).toEqual([]);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+
+    // The returned Aura works again: its creature dying brings both back once more.
+    die(ctx, back!);
+    expect(named(ctx, 'Lab Bear')).toHaveLength(1);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Gift of Immortality')[0]?.attachedTo).toBe(named(ctx, 'Lab Bear')[0]?.id);
+    // Spent: a later end step returns nothing more.
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Gift of Immortality')).toHaveLength(1);
+  });
+
+  it("gift-of-immortality-next-end-step-any-turn — an end step that already began is not the next one; the Aura waits through cleanup for the following end step, whoever's turn it is", () => {
+    // Dying during this turn's end step: that end step has begun, so the Aura does not return then.
+    const late = board('gift-in-end-step');
+    beginEndStep(late.ctx);
+    settle(late.ctx);
+    die(late.ctx, late.bear);
+    expect(named(late.ctx, 'Lab Bear')).toHaveLength(1);
+    expect(named(late.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(late.ctx.state.delayedTriggers).toHaveLength(1);
+    // P2's whole turn runs: the Aura returns at P2's end step, attached to the returned creature.
+    late.ctx.state.currentTurnPlayer = 'P2';
+    late.ctx.state.activePlayerIndex = 1;
+    quietTurn(late.ctx);
+    const [aura] = named(late.ctx, 'Gift of Immortality');
+    expect(aura?.attachedTo).toBe(named(late.ctx, 'Lab Bear')[0]?.id);
+    expect(late.ctx.state.delayedTriggers).toEqual([]);
+
+    // Dying during an opponent's turn returns the Aura at the end of that same turn.
+    const theirs = board('gift-opponents-turn');
+    theirs.ctx.state.currentTurnPlayer = 'P2';
+    theirs.ctx.state.activePlayerIndex = 1;
+    die(theirs.ctx, theirs.bear);
+    expect(named(theirs.ctx, 'Lab Bear')).toHaveLength(1);
+    expect(named(theirs.ctx, 'Gift of Immortality')).toEqual([]);
+    beginEndStep(theirs.ctx);
+    settle(theirs.ctx);
+    expect(named(theirs.ctx, 'Gift of Immortality')).toHaveLength(1);
+  });
+
+  it('gift-of-immortality-creature-gone — if that creature left the battlefield or became a new object before the end step, the Aura stays in the graveyard', () => {
+    const returned = (seed: string) => {
+      const b = board(seed);
+      die(b.ctx, b.bear);
+      const back = named(b.ctx, 'Lab Bear')[0]!;
+      expect(back).toBeDefined();
+      expect(b.ctx.state.delayedTriggers).toHaveLength(1);
+      return { ...b, back };
+    };
+    const finish = (ctx: GameContext) => {
+      beginEndStep(ctx);
+      settle(ctx);
+    };
+
+    // Control: the creature is still there, so the Aura returns onto it.
+    const control = returned('gift-gone-control');
+    finish(control.ctx);
+    expect(named(control.ctx, 'Gift of Immortality')[0]?.attachedTo).toBe(control.back.id);
+
+    // It died again: the Aura stays in the graveyard (the delayed trigger is spent).
+    const died = returned('gift-gone-died');
+    die(died.ctx, died.back);
+    finish(died.ctx);
+    expect(named(died.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(died.ctx, 'P1')).toContain('Gift of Immortality');
+    expect(died.ctx.state.delayedTriggers).toEqual([]);
+
+    // It was exiled.
+    const exiled = returned('gift-gone-exiled');
+    pump(moveObject(exiled.ctx, exiled.back, { zone: 'exile' }));
+    finish(exiled.ctx);
+    expect(named(exiled.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(exiled.ctx, 'P1')).toEqual(['Gift of Immortality']);
+
+    // It was bounced and came back as a new object: not "that creature" any more.
+    const blinked = returned('gift-gone-blinked');
+    pump(moveObject(blinked.ctx, blinked.back, { zone: 'hand' }));
+    const card = playerById(blinked.ctx, 'P1').hand.find((c) => c.name === 'Lab Bear');
+    pump(moveObject(blinked.ctx, card!, { zone: 'battlefield', controllerId: 'P1' }));
+    const [again] = named(blinked.ctx, 'Lab Bear');
+    expect(again?.id).not.toBe(blinked.back.id);
+    finish(blinked.ctx);
+    expect(named(blinked.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(blinked.ctx, 'P1')).toEqual(['Gift of Immortality']);
+    expect(again?.attachedTo ?? null).toBeNull();
+  });
+
+  it('gift-of-immortality-left-graveyard — a creature card that left the graveyard before the trigger resolves returns nothing, and an Aura card that left first stays where it went', () => {
+    // The creature card is exiled in response: nothing returns, and there is no creature to attach to.
+    const creature = board('gift-card-exiled');
+    dieThenRespond(creature.ctx, creature.bear, () => {
+      pump(moveObject(creature.ctx, inYard(creature.ctx, 'P1', 'Lab Bear'), { zone: 'exile' }));
+    });
+    expect(named(creature.ctx, 'Lab Bear')).toEqual([]);
+    expect(creature.ctx.state.exile.map((c) => c.name)).toEqual(['Lab Bear']);
+    expect(creature.ctx.state.delayedTriggers).toEqual([]);
+    beginEndStep(creature.ctx);
+    settle(creature.ctx);
+    expect(named(creature.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(creature.ctx, 'P1')).toContain('Gift of Immortality');
+
+    // The creature card left and came back as a new object: that is not the card it remembers.
+    const again = board('gift-card-new-object');
+    dieThenRespond(again.ctx, again.bear, () => {
+      pump(moveObject(again.ctx, inYard(again.ctx, 'P1', 'Lab Bear'), { zone: 'hand' }));
+      const inHand = playerById(again.ctx, 'P1').hand.find((c) => c.name === 'Lab Bear');
+      pump(moveObject(again.ctx, inHand!, { zone: 'graveyard' }));
+    });
+    expect(named(again.ctx, 'Lab Bear')).toEqual([]);
+    expect(graveyardOf(again.ctx, 'P1')).toContain('Lab Bear');
+
+    // The Aura card is exiled in response: the creature still returns, but the Aura never does.
+    const aura = board('gift-aura-exiled');
+    dieThenRespond(aura.ctx, aura.bear, () => {
+      pump(moveObject(aura.ctx, inYard(aura.ctx, 'P1', 'Gift of Immortality'), { zone: 'exile' }));
+    });
+    expect(named(aura.ctx, 'Lab Bear')).toHaveLength(1);
+    expect(aura.ctx.state.delayedTriggers).toEqual([]);
+    beginEndStep(aura.ctx);
+    settle(aura.ctx);
+    expect(named(aura.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(aura.ctx.state.exile.map((c) => c.name)).toEqual(['Gift of Immortality']);
+
+    // The Aura card leaves the graveyard after the trigger, before the end step: it stays there.
+    const later = board('gift-aura-exiled-later');
+    die(later.ctx, later.bear);
+    pump(moveObject(later.ctx, inYard(later.ctx, 'P1', 'Gift of Immortality'), { zone: 'hand' }));
+    beginEndStep(later.ctx);
+    settle(later.ctx);
+    expect(named(later.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(playerById(later.ctx, 'P1').hand.map((c) => c.name)).toEqual(['Gift of Immortality']);
+
+    // A token that dies ceases to exist: no card returns and the Aura has nothing to attach to.
+    const token = board('gift-token');
+    const dying = spawn(token.ctx, 'P1', CREATURE('Lab Token'), { isToken: true });
+    token.gift.attachedTo = dying.id;
+    die(token.ctx, dying);
+    beginEndStep(token.ctx);
+    settle(token.ctx);
+    expect(named(token.ctx, 'Lab Token')).toEqual([]);
+    expect(named(token.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(graveyardOf(token.ctx, 'P1')).toEqual(['Gift of Immortality']);
+  });
+
+  it('gift-of-immortality-enchanted-dies-only — the Aura leaving alone, or its creature leaving without dying, returns nothing', () => {
+    // The Aura itself destroyed while its creature lives: not the creature dying.
+    const destroyed = board('gift-aura-dies');
+    die(destroyed.ctx, destroyed.gift);
+    expect(destroyed.ctx.state.delayedTriggers).toEqual([]);
+    beginEndStep(destroyed.ctx);
+    settle(destroyed.ctx);
+    expect(named(destroyed.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(named(destroyed.ctx, 'Lab Bear')).toEqual([destroyed.bear]);
+
+    // The enchanted creature exiled or bounced does not die, so nothing comes back.
+    const exiled = board('gift-creature-exiled');
+    pump(moveObject(exiled.ctx, exiled.bear, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(exiled.ctx.state.delayedTriggers).toEqual([]);
+    expect(named(exiled.ctx, 'Lab Bear')).toEqual([]);
+    const bounced = board('gift-creature-bounced');
+    pump(moveObject(bounced.ctx, bounced.bear, { zone: 'hand' }));
+    settle(bounced.ctx);
+    beginEndStep(bounced.ctx);
+    settle(bounced.ctx);
+    expect(bounced.ctx.state.delayedTriggers).toEqual([]);
+    expect(named(bounced.ctx, 'Gift of Immortality')).toEqual([]);
+    expect(named(bounced.ctx, 'Lab Bear')).toEqual([]);
+    expect(playerById(bounced.ctx, 'P1').hand.map((c) => c.name)).toEqual(['Lab Bear']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.09 Mask of Memory
 // ---------------------------------------------------------------------------------------------
 
@@ -2474,6 +2867,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Ghoulish Impetus',
     sha256: 'b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd',
+    clauseCount: 3,
+  },
+  {
+    name: 'Gift of Immortality',
+    sha256: '668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781',
     clauseCount: 3,
   },
   {
