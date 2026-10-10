@@ -6,7 +6,7 @@ import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
-import { permanentManaValue, targetCandidates, targetIsLegal } from '../targets/legality';
+import { permanentManaValue, targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
