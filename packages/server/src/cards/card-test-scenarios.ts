@@ -8139,6 +8139,51 @@ function rumorGathererScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A two-color instant with a trivial effect: Crystal counts its colors, not its mana value. */
+const LAB_GRUUL_CHARM = card({
+  oracleId: 'lab-gruul-charm',
+  name: 'Lab Gruul Charm',
+  typeLine: 'Instant',
+  manaCost: '{R}{G}',
+  cmc: 2,
+  colors: ['R', 'G'],
+  colorIdentity: ['R', 'G'],
+  oracleText: 'You gain 1 life.',
+});
+
+function crystalScenario(gameId: GameId): CardTestScenario {
+  const crystal = pinnedFrom(COVERAGE_PR04, 'Crystal, Inhuman Princess');
+  return pr01Scenario(gameId, {
+    id: 'crystal-inhuman-princess-viewer-colors-damage',
+    title: 'Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent',
+    instructions: [
+      'Crystal, a Mountain and a Forest are on your battlefield; Lab Gruul Charm (a red-green instant) is in your hand.',
+      'Cast Lab Gruul Charm. You cast a noncreature spell that is two colors, so Crystal deals 2 damage to each opponent.',
+      'Pass priority to resolve Crystal’s trigger, then the spell.',
+    ],
+    expectedOutcome:
+      'Each of P2, P3 and P4 lost exactly 2 life (38), and you gained 1 life from Lab Gruul Charm (41).',
+    oracleSha256: crystal.sha256,
+    clauseIds: [
+      'crystal-inhuman-princess-flying',
+      'crystal-inhuman-princess-colors-damage',
+      'crystal-inhuman-princess-mana',
+    ],
+    decks: {
+      P1: [crystal.card, LAB_GRUUL_CHARM, MOUNTAIN, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Gruul Charm'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Crystal, Inhuman Princess', 'Mountain', 'Forest'] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9307,6 +9352,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'crystal-inhuman-princess-viewer-colors-damage',
   'rumor-gatherer-viewer-scry-then-draw',
   'belladonna-took-viewer-three-tokens',
   'lockjaw-viewer-counter-and-unblockable',
@@ -9552,6 +9598,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,
   'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,
   'belladonna-took-viewer-three-tokens': belladonnaTookScenario,
   'lockjaw-viewer-counter-and-unblockable': lockjawScenario,

@@ -1683,6 +1683,13 @@ function parseEffectSentence(
           },
         ];
       }
+      // "Crystal deals X damage to each opponent, where X is the number of colors that spell is"
+      // (Crystal, Inhuman Princess): the triggering spell's colors, kept on the trigger as cast.
+      if (
+        s === '~ deals x damage to each opponent, where x is the number of colors that spell is'
+      ) {
+        return [{ op: 'eachOpponentDamage', amount: { kind: 'spellColorCount' } }];
+      }
       if (s === '~ deals damage equal to its power to that player') {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
       }

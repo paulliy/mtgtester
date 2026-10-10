@@ -1981,6 +1981,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }
@@ -2026,6 +2027,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }
@@ -2066,6 +2068,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }

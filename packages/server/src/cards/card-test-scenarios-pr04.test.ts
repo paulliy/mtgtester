@@ -464,3 +464,28 @@ describe('Rumor Gatherer Card Test Lab scenario', () => {
     replays('rumor-gatherer-viewer-scry-then-draw', steps);
   });
 });
+
+describe('Crystal, Inhuman Princess Card Test Lab scenario', () => {
+  it('crystal-inhuman-princess-viewer-colors-damage — a two-color noncreature spell deals 2 to each opponent', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Gruul Charm' }, { action: 'Pass priority' }];
+    const { scenario, state, seat } = run('crystal-inhuman-princess-viewer-colors-damage', steps);
+    // Exactly two damage (the spell’s color count), to each opponent and only to them.
+    expect(['P2', 'P3', 'P4'].map((id) => seat(id).life)).toEqual([38, 38, 38]);
+    const damage = state.eventLog.filter(
+      (event) =>
+        event.type === 'damage' &&
+        String(event.payload['source']).startsWith('Crystal, Inhuman Princess'),
+    );
+    expect(damage.map((event) => [event.payload['target'], event.payload['amount']])).toEqual([
+      ['P2', 2],
+      ['P3', 2],
+      ['P4', 2],
+    ]);
+    // Lab Gruul Charm resolved afterwards.
+    expect(seat('P1').life).toBe(41);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Gruul Charm']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('crystal-inhuman-princess-viewer-colors-damage', steps);
+  });
+});

@@ -1998,6 +1998,88 @@ describe('Primitive: cast ordinals count matching spells', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.09 Crystal, Inhuman Princess
+// ---------------------------------------------------------------------------------------------
+
+describe('Crystal, Inhuman Princess', () => {
+  const { card } = pinned('Crystal, Inhuman Princess');
+  /** The fixture does not derive colors from the cost; a real card's colors come from it (CR 202.2). */
+  const spell = (name: string, typeLine: string, manaCost: string) =>
+    oracle({
+      name,
+      typeLine,
+      manaCost,
+      colors: (['W', 'U', 'B', 'R', 'G'] as const).filter((color) =>
+        manaCost.includes(`{${color}}`),
+      ),
+      power: typeLine.startsWith('Creature') ? '1' : null,
+      toughness: typeLine.startsWith('Creature') ? '1' : null,
+      oracleText: typeLine.startsWith('Creature') ? 'Flash' : 'You gain 1 life.',
+    });
+  const lives = (ctx: GameContext) => ['P2', 'P3', 'P4'].map((id) => playerById(ctx, id).life);
+
+  it('crystal-inhuman-princess-pinned-oracle-supported — flying, the four-color mana ability and the colors-of-that-spell damage trigger', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.manaAbilities).toHaveLength(1);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'not', of: { kind: 'type', value: 'Creature' } },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'eachOpponentDamage', amount: { kind: 'spellColorCount' } },
+    ]);
+  });
+
+  it('crystal-inhuman-princess-colors-of-spell — a two-color instant deals 2 to each opponent, a three-color one 3', () => {
+    const ctx = pod('crystal-colors');
+    spawn(ctx, 'P1', card);
+    const start = lives(ctx);
+    castFromHand(ctx, 'P1', spell('Lab Gruul', 'Instant', '{R}{G}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+    ]);
+    settle(ctx);
+    expect(lives(ctx)).toEqual(start.map((life) => life - 2));
+    castFromHand(ctx, 'P1', spell('Lab Naya', 'Instant', '{R}{G}{W}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+      ...white(1),
+    ]);
+    settle(ctx);
+    expect(lives(ctx)).toEqual(start.map((life) => life - 5));
+  });
+
+  it('crystal-inhuman-princess-colorless — a colorless noncreature spell is zero colors, so no damage', () => {
+    const ctx = pod('crystal-colorless');
+    spawn(ctx, 'P1', card);
+    const start = lives(ctx);
+    castFromHand(ctx, 'P1', spell('Lab Gray', 'Instant', '{1}'), generic(1));
+    settle(ctx);
+    expect(lives(ctx)).toEqual(start);
+  });
+
+  it('crystal-inhuman-princess-noncreature-yours — your creature spells and an opponent’s spells do not trigger it', () => {
+    const ctx = pod('crystal-filter');
+    spawn(ctx, 'P1', card);
+    castFromHand(ctx, 'P1', spell('Lab Flash Ox', 'Creature — Ox', '{R}{G}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+    ]);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    settle(ctx);
+    castFromHand(ctx, 'P2', spell('Lab Theirs', 'Instant', '{R}{G}'), [
+      { symbol: 'R' },
+      { symbol: 'G' },
+    ]);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2008,6 +2090,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Crystal, Inhuman Princess',
+    sha256: '8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385',
+    clauseCount: 3,
+  },
   {
     name: 'Rumor Gatherer',
     sha256: 'd5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c',

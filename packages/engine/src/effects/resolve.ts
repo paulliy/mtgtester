@@ -2534,15 +2534,17 @@ export function* executeAbility(
         lifeLostThisWay += before - target.life;
         break;
       }
-      case 'eachOpponentDamage':
+      case 'eachOpponentDamage': {
+        const amount = amountOf(effect.amount);
         for (const opp of opponentsOf(ctx, controller.id)) {
-          dealDamageToPlayer(ctx, source, opp, effect.amount, {
+          dealDamageToPlayer(ctx, source, opp, amount, {
             combat: false,
             sourceIsCommander: false,
             sourceHasLifelink: false,
           });
         }
         break;
+      }
       case 'damageEachCreatureController': {
         // This is intentionally one resolving effect. It deals one damage per creature, but
         // never creates one player decision/trigger per creature.

@@ -8574,6 +8574,45 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "32c14d7f-fdaa-4340-af94-1f10bf064f51": {
+      "name": "Crystal, Inhuman Princess",
+      "oracleSha256": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "crystal-inhuman-princess-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["crystal-inhuman-princess-pinned-oracle-supported"],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        },
+        {
+          "id": "crystal-inhuman-princess-colors-damage",
+          "oracleText": "Whenever you cast a noncreature spell, Crystal deals X damage to each opponent, where X is the number of colors that spell is.",
+          "implementation": [
+            "interpreted castsSpell trigger for its controller's noncreature spells (their creature spells and an opponent's spells never trigger it)",
+            "the eachOpponentDamage effect deals X to each opponent, with X the number of colors of the spell that was cast (spellColorCount), so a colorless spell deals none and a two-color spell deals 2 whatever its mana value"
+          ],
+          "engineTestIds": [
+            "crystal-inhuman-princess-pinned-oracle-supported",
+            "crystal-inhuman-princess-colors-of-spell",
+            "crystal-inhuman-princess-colorless",
+            "crystal-inhuman-princess-noncreature-yours"
+          ],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        },
+        {
+          "id": "crystal-inhuman-princess-mana",
+          "oracleText": "{T}: Add {R}, {G}, {W}, or {U}.",
+          "implementation": [
+            "interpreted tap mana ability producing one mana of red, green, white or blue"
+          ],
+          "engineTestIds": ["crystal-inhuman-princess-pinned-oracle-supported"],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

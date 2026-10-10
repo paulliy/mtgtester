@@ -759,7 +759,7 @@ export type Effect =
    * `executeAbility` call and is 0 if nothing in this ability lost anyone life.
    */
   | { op: 'gainLifeEqualToLifeLostThisWay' }
-  | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
+  | { op: 'eachOpponentDamage'; amount: number | Value } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
   | { op: 'damageController'; amount: number }
   /** "It deals 5 damage to each creature without flying" — the untargeted mass form. */

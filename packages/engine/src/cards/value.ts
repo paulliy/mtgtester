@@ -67,6 +67,8 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  /** How many colors the spell that fired a `castsSpell` trigger is (Crystal, Inhuman Princess). */
+  spellColorCount?: number;
   /** Mana actually spent to cast the spell that fired a trigger (Aetherflux Conduit). */
   manaSpent?: number;
   /** Mana produced by Treasure permanents that was spent to cast the entering spell. */
@@ -117,6 +119,7 @@ export type TriggerScope = Pick<
   | 'damageDealt'
   | 'triggerCount'
   | 'spellManaValue'
+  | 'spellColorCount'
   | 'manaSpent'
   | 'treasureManaSpent'
   | 'eventPlayerId'
@@ -185,6 +188,8 @@ export type Value =
   | { kind: 'triggerCount' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
+  /** "X is the number of colors that spell is" — read from the trigger's cast event. */
+  | { kind: 'spellColorCount' }
   | { kind: 'manaSpent' }
   | { kind: 'treasureManaSpent' }
   | { kind: 'energyPaid' }
@@ -260,6 +265,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -318,6 +324,7 @@ export function needsScope(value: Value): boolean {
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -457,6 +464,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':

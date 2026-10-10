@@ -302,6 +302,49 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
+      "card": {
+        "oracleId": "32c14d7f-fdaa-4340-af94-1f10bf064f51",
+        "scryfallId": "1e9aec49-08d7-4fc8-87dd-69ab8910688a",
+        "name": "Crystal, Inhuman Princess",
+        "manaCost": "{1}{R}{G}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Inhuman Noble Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inhuman",
+          "Noble",
+          "Hero"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, Crystal deals X damage to each opponent, where X is the number of colors that spell is.\n{T}: Add {R}, {G}, {W}, or {U}.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

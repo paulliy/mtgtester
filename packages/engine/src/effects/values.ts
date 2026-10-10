@@ -155,6 +155,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
       return scope.spellManaValue ?? 0;
+    case 'spellColorCount':
+      return scope.spellColorCount ?? 0;
     case 'manaSpent':
       return scope.manaSpent ?? 0;
     case 'treasureManaSpent':

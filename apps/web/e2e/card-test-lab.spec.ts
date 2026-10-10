@@ -5886,3 +5886,21 @@ test('Rumor Gatherer: scry 1, then draw instead on the second creature, then scr
   await expect(hand).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
+
+test('Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent', async ({ page }) => {
+  await runScenario(page, 'Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent');
+  await castAndResolve(page, 'Lab Gruul Charm');
+  await passUntil(page, page.getByText(/game over/i).first());
+  // The spell is two colors, so Crystal dealt 2 to each of the three opponents, and no more.
+  for (const opponent of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.log .line', {
+        hasText: new RegExp(`Crystal, Inhuman Princess.*deals 2 to ${opponent}`),
+      }),
+    ).toHaveCount(1);
+  }
+  await expect(
+    page.locator('.log .line', { hasText: /Crystal, Inhuman Princess.*deals \d+ to/ }),
+  ).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
+});

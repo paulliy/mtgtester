@@ -1097,6 +1097,7 @@ const families = {
       damageDealt: true,
       triggerCount: true,
       spellManaValue: true,
+      spellColorCount: true,
       manaSpent: true,
       treasureManaSpent: true,
       energyPaid: true,
