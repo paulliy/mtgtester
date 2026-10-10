@@ -40,7 +40,10 @@ import {
   declareBlocks,
   forest,
   gameConfig,
+  island,
+  mountain,
   oracle,
+  plains,
   pump,
   spawn,
 } from './fixtures';
@@ -1490,6 +1493,168 @@ describe('Aetheric Amplifier', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// G3 reflexive triggers: shared helpers
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Run combat with `attackers` attacking P2 and nobody blocking. `pay` answers a "may pay" prompt;
+ * each count-target prompt picks the next name in `picks` ("stop" or running out stops). Returns
+ * every prompt seen and the names offered at each count-target prompt.
+ */
+function reflexiveCombat(
+  ctx: GameContext,
+  attackers: string[],
+  pay: boolean,
+  picks: string[] = [],
+) {
+  const prompts: string[] = [];
+  const offered: string[][] = [];
+  const queue = [...picks];
+  pump(runCombatAndExtraCombats(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined)
+      return declareAttacks(decision, (subjectId) => (attackers.includes(subjectId) ? 'P2' : null));
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, () => null);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    prompts.push(decision.prompt);
+    if (/Pay it\?/.test(decision.prompt))
+      return optionMatching(decision, pay ? /^Pay / : /^Don't pay$/);
+    if (/choose (a|another) target/.test(decision.prompt)) {
+      offered.push(
+        decision.options
+          .filter((option) => option.type === 'pickTarget')
+          .map((option) => option.description),
+      );
+      const next = queue.shift();
+      return next === undefined || next === 'stop'
+        ? optionMatching(decision, /^Choose no more targets$/)
+        : optionMatching(decision, new RegExp(`^Target ${next}\\b`));
+    }
+    return { index: 0, targets: new Map() };
+  });
+  return { prompts, offered };
+}
+
+// ---------------------------------------------------------------------------------------------
+// PR04.17 The Thing
+// ---------------------------------------------------------------------------------------------
+
+describe('The Thing', () => {
+  const { card } = pinned('The Thing');
+  const RELIC = oracle({
+    name: 'Lab Relic',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+  });
+
+  /** The Thing plus one each of the four basic lands its payment needs. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const thing = spawn(ctx, 'P1', card);
+    for (const land of [mountain(), forest(), plains(), island()]) spawn(ctx, 'P1', land);
+    return { ctx, thing };
+  }
+
+  it('the-thing-pinned-oracle-supported — the combat counters and the paid reflexive double are modeled', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('trample');
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'beginningOfCombat',
+      player: 'you',
+      condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'putCountersEach', selector: { kind: 'self' }, counter: '+1/+1', count: 4 },
+    ]);
+    expect(def.triggers[1]!.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    expect(def.triggers[1]!.optional).toBe(false);
+    expect(def.triggers[1]!.targets).toEqual([]);
+    const [reflexive] = def.triggers[1]!.effects;
+    expect(reflexive).toMatchObject({
+      op: 'mayPayManaThenReflexive',
+      then: {
+        targets: [{ kind: 'permanent', controller: 'you', count: { min: 0, max: Infinity } }],
+        effects: [{ op: 'doubleCountersEachChosen', targetSlot: 0 }],
+      },
+    });
+  });
+
+  it('the-thing-pinned-oracle-supported — a "when you do" followed by another sentence stays unmodeled rather than guessing which ability owns it', () => {
+    const def = interpretCard(
+      oracle({
+        name: 'Lab Two Sentences',
+        typeLine: 'Creature — Secret',
+        oracleText:
+          'Whenever this creature attacks, you may pay {1}. When you do, this creature deals 1 damage to target creature. Scry 2.',
+      }),
+    );
+    expect(def.modeled).toBe(false);
+  });
+
+  it('the-thing-combat-counters — four counters at your beginning of combat only after a noncreature spell', () => {
+    const quiet = pod('thing-no-spell');
+    const idle = spawn(quiet, 'P1', card);
+    reflexiveCombat(quiet, [], false);
+    expect(onField(quiet, idle.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+
+    const ctx = pod('thing-spell');
+    const thing = spawn(ctx, 'P1', card);
+    playerById(ctx, 'P1').noncreatureSpellsCastThisTurn = 1;
+    reflexiveCombat(ctx, [], false);
+    expect(onField(ctx, thing.cardId)!.counters['+1/+1']).toBe(4);
+  });
+
+  it('the-thing-pay-then-double — paying fires the reflexive trigger, which doubles every kind on each chosen permanent', () => {
+    const { ctx, thing } = board('thing-pay');
+    thing.counters['+1/+1'] = 2;
+    const relic = spawn(ctx, 'P1', RELIC);
+    relic.counters['charge'] = 3;
+    relic.counters['+1/+1'] = 1;
+    const skipped = spawn(ctx, 'P1', LAB_CARD('Lab Skipped'));
+    skipped.counters['+1/+1'] = 1;
+    const rival = spawn(ctx, 'P2', LAB_CARD('Lab Rival'));
+    rival.counters['+1/+1'] = 1;
+    const { prompts, offered } = reflexiveCombat(ctx, [thing.id], true, ['The Thing', 'Lab Relic']);
+    // The pay choice comes first; the targets are announced only by the reflexive trigger.
+    expect(prompts.findIndex((p) => /Pay it\?/.test(p))).toBeLessThan(
+      prompts.findIndex((p) => /choose a target/.test(p)),
+    );
+    // "Permanents you control": the opponent's creature is never offered.
+    expect(offered.flat().some((name) => name.includes('Lab Rival'))).toBe(false);
+    expect(onField(ctx, thing.cardId)!.counters['+1/+1']).toBe(4);
+    expect(relic.counters['charge']).toBe(6);
+    expect(relic.counters['+1/+1']).toBe(2);
+    expect(skipped.counters['+1/+1']).toBe(1);
+    expect(rival.counters['+1/+1']).toBe(1);
+    // The four basic lands paid {R}{G}{W}{U}.
+    expect(ctx.state.battlefield.filter((p) => p.tapped && p.name !== 'The Thing')).toHaveLength(4);
+  });
+
+  it('the-thing-decline-no-trigger — declining to pay fires nothing and asks for no targets', () => {
+    const { ctx, thing } = board('thing-decline');
+    thing.counters['+1/+1'] = 2;
+    const { prompts } = reflexiveCombat(ctx, [thing.id], false, ['The Thing']);
+    expect(prompts.some((p) => /choose a target/.test(p))).toBe(false);
+    expect(onField(ctx, thing.cardId)!.counters['+1/+1']).toBe(2);
+  });
+
+  it('the-thing-cannot-pay — without the four colors there is no payment prompt and no trigger', () => {
+    const ctx = pod('thing-broke');
+    const thing = spawn(ctx, 'P1', card);
+    thing.counters['+1/+1'] = 2;
+    for (const land of [mountain(), forest(), plains()]) spawn(ctx, 'P1', land);
+    const { prompts } = reflexiveCombat(ctx, [thing.id], true, ['The Thing']);
+    expect(prompts).toEqual([]);
+    expect(onField(ctx, thing.cardId)!.counters['+1/+1']).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1500,6 +1665,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'The Thing',
+    sha256: 'dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792',
+    clauseCount: 3,
+  },
   {
     name: 'Aetheric Amplifier',
     sha256: '22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6',

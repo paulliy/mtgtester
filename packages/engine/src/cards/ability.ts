@@ -657,6 +657,17 @@ export type Effect =
    * priority window in between; if it could not be sacrificed, nothing triggers.
    */
   | { op: 'sacrificeSourceThenReflexive'; then: Ability }
+  /**
+   * "You may pay {R}{G}{W}{U}. When you do, …" (The Thing) — a reflexive trigger (CR 603.12) on a
+   * payment made while this ability resolves. Paying fires `then`, which goes on the stack as its
+   * own ability and announces its own targets then (CR 603.3d); declining fires nothing.
+   */
+  | { op: 'mayPayManaThenReflexive'; cost: ParsedManaCost; then: Ability }
+  /**
+   * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
+   * counters were actually put on the source — not if it left the battlefield first.
+   */
+  | { op: 'putCountersOnSourceThenReflexive'; counter: string; count: number; then: Ability }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
@@ -968,6 +979,10 @@ export type Effect =
   | { op: 'selfToLibraryTop' }
   | { op: 'putCountersEachChosen'; targetSlot: number; counter: string; count: Value | number }
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
+  /** "Double the number of each kind of counter on any number of target permanents" (The Thing). */
+  | { op: 'doubleCountersEachChosen'; targetSlot: number }
+  /** "… and up to one other target creature you control can't be blocked this turn" (Lockjaw). */
+  | { op: 'cantBeBlockedEachChosen'; targetSlot: number }
   | { op: 'untapUpTo'; selector: Selector; max: number }
   | { op: 'exileEachChosen'; targetSlot: number }
   /**

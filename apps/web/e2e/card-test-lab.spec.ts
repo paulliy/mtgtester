@@ -5715,3 +5715,43 @@ test('Aetheric Amplifier: double the counters on a target permanent', async ({ p
   // The mode only doubles the target's counters: your energy is unchanged.
   await expect(page.getByLabel('Global counters')).toContainText('3');
 });
+
+test('The Thing: four counters after a noncreature spell, then pay to double counters', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'The Thing: four counters after a noncreature spell, then pay to double counters',
+  );
+  await expect(permanent(page, 'The Thing').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex').getByText('charge×1')).toBeVisible();
+
+  // A noncreature spell this turn: at the beginning of combat The Thing gets four counters.
+  await castAndResolve(page, 'Lab Ripple');
+  await passUntil(page, permanent(page, 'The Thing').getByText('+1/+1×4'));
+  await expect(permanent(page, 'The Thing').getByText('9/9')).toBeVisible();
+
+  // Only The Thing can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'The Thing' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Pay {R}{G}{W}{U} with the other four lands, then choose the permanents to double.
+  const pay = page.getByRole('button', { name: /^Pay / });
+  await passUntil(page, pay);
+  await pay.click();
+  await passUntil(page, page.getByRole('button', { name: 'Choose no more targets' }));
+  await page.getByRole('button', { name: 'Target The Thing' }).click();
+  await page.getByRole('button', { name: 'Target Lab Hex' }).click();
+  await page.getByRole('button', { name: 'Choose no more targets' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'The Thing').getByText('+1/+1×8')).toBeVisible();
+  await expect(permanent(page, 'The Thing').getByText('13/13')).toBeVisible();
+  await expect(permanent(page, 'Lab Hex').getByText('charge×2')).toBeVisible();
+  await expect(page.getByText(/The Thing deals 13 to P2/).first()).toBeVisible();
+});

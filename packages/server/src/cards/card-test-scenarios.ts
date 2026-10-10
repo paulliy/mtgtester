@@ -7967,6 +7967,40 @@ function mikeyAndLeoScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function theThingScenario(gameId: GameId): CardTestScenario {
+  const thing = pinnedFrom(COVERAGE_PR04, 'The Thing');
+  return pr01Scenario(gameId, {
+    id: 'the-thing-viewer-counters-and-double',
+    title: 'The Thing: four counters after a noncreature spell, then pay to double counters',
+    instructions: [
+      'The Thing, Lab Hex (an enchantment with one charge counter), a Mountain, a Forest, a Plains and two Islands are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple with one Island, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat The Thing gets four +1/+1 counters.',
+      'Attack P2 with The Thing. When it attacks, pay {R}{G}{W}{U} with the other four lands, then choose The Thing and Lab Hex as targets of the reflexive trigger.',
+    ],
+    expectedOutcome:
+      'The Thing has eight +1/+1 counters (a 13/13) and Lab Hex has two charge counters. P2 takes 13 combat damage.',
+    oracleSha256: thing.sha256,
+    clauseIds: ['the-thing-trample', 'the-thing-combat-counters', 'the-thing-paid-double'],
+    decks: {
+      P1: [thing.card, LAB_HEX, LAB_RIPPLE, MOUNTAIN, FOREST, PLAINS, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['The Thing', 'Mountain', 'Forest', 'Plains', 'Island', 'Island'],
+        },
+        { playerId: 'P1', cardNames: ['Lab Hex'], counters: { charge: 1 } },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9135,6 +9169,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'the-thing-viewer-counters-and-double',
   'aetheric-amplifier-viewer-double-counters',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
@@ -9376,6 +9411,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'the-thing-viewer-counters-and-double': theThingScenario,
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,

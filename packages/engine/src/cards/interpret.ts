@@ -1074,6 +1074,21 @@ function parseEffectSentence(
   if (s === 'double the number of each kind of counter you have') {
     return [{ op: 'doublePlayerCounters' }];
   }
+  // "double the number of each kind of counter on any number of target permanents you control"
+  // (The Thing): a variable-count slot, so only where a trigger can announce one.
+  {
+    const m = s.match(
+      /^double the number of each kind of counter on any number of target (permanents|creatures)( you control)?$/,
+    );
+    if (m !== null && opts.allocCount !== undefined) {
+      const slot = opts.allocCount(
+        m[1] === 'permanents' ? 'permanent' : 'creature',
+        { min: 0, max: Infinity },
+        m[2] === undefined ? undefined : 'you',
+      );
+      return [{ op: 'doubleCountersEachChosen', targetSlot: slot }];
+    }
+  }
   if (s === 'double the number of each kind of counter on ~') {
     return [{ op: 'doubleCountersTarget', target: 'source' }];
   }
@@ -2484,6 +2499,54 @@ function parseSpreeSpellBlock(
   }
   return { targets, modes: { minChoices: 1, maxChoices: options.length, options } };
 }
+/**
+ * The ability a "When you do, …" reflexive trigger puts on the stack (CR 603.12). It declares
+ * its own targets, chosen as it goes on the stack (CR 603.3d), so it gets its own slot list —
+ * ordinary slots first, then variable-count ones, as `pushTriggerOnStack` requires.
+ */
+function parseReflexiveAbility(text: string, card: OracleCard): Ability | null {
+  const targets: TargetSpec[] = [];
+  let countSlotSeen = false;
+  let ordinaryAfterCount = false;
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    if (countSlotSeen) ordinaryAfterCount = true;
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
+    return targets.length - 1;
+  };
+  const allocCount: CountSlotAllocator = (kind, count, controller, filter) => {
+    countSlotSeen = true;
+    targets.push({
+      kind,
+      count,
+      ...(controller !== undefined ? { controller } : {}),
+      ...(filter !== undefined ? { filter } : {}),
+    });
+    return targets.length - 1;
+  };
+  // One sentence only: where a later sentence stops belonging to the reflexive ability and
+  // goes back to the triggering one is not knowable from the text alone, so fail closed.
+  const sentences = splitSentences(text);
+  if (sentences.length !== 1) return null;
+  const sentence = sentences[0] as string;
+  const parsed = parseEffectSentence(sentence, alloc, card, { allocCount });
+  if (parsed === null) return null;
+  const effects: Effect[] = [];
+  appendSentenceEffects(effects, sentence, parsed);
+  if (effects.length === 0 || ordinaryAfterCount) return null;
+  return { kind: 'triggered', targets, effects, description: `When you do, ${text}` };
+}
+
 function parseModalSpellBlock(
   text: string,
   card: OracleCard,
@@ -4573,6 +4636,32 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
     body = body.replace(/ defending player controls\b/g, ' that player controls');
   }
+  // "You may pay {R}{G}{W}{U}. When you do, …" (The Thing) / "Put a +1/+1 counter on ~. When you
+  // do, …" (Lockjaw): a reflexive trigger (CR 603.12) whose ability announces its own targets
+  // when it goes on the stack, after this one has resolved.
+  let reflexive: Effect[] | null = null;
+  {
+    const m = body.match(/^(.+?)\. when you do, (.+?)\.?$/);
+    const then = m === null ? null : parseReflexiveAbility(m[2] as string, card);
+    if (m !== null && then !== null) {
+      const action = m[1] as string;
+      const pay = action.match(/^you may pay ((?:\{[^}]+\})+)$/);
+      const put = action.match(
+        /^put (a|an|one|two|three|four|five) ([+-]\d+\/[+-]\d+) counters? on ~$/,
+      );
+      if (pay !== null) {
+        const parsed = parseManaCost((pay[1] as string).toUpperCase() as never);
+        if (parsed.cost !== null && parsed.unsupportedSymbols.length === 0)
+          reflexive = [{ op: 'mayPayManaThenReflexive', cost: parsed.cost, then }];
+      } else if (put !== null) {
+        const count = parseAmount(put[1] as string);
+        if (count !== null)
+          reflexive = [
+            { op: 'putCountersOnSourceThenReflexive', counter: put[2] as string, count, then },
+          ];
+      }
+    }
+  }
   let paidTransform: Effect[] | null = null;
   const paidTransformMatch = body.match(
     /^you may pay ((?:\{[^}]+\})+)\. if you do, transform ~\.?$/,
@@ -4593,6 +4682,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // division is the decline, so it is not also a "use this ability?" prompt.
   let optional =
     paidTransform === null &&
+    reflexive === null &&
     body.startsWith('you may ') &&
     !body.startsWith('you may move any number of ');
   if (body.startsWith('you may have ')) {
@@ -4662,6 +4752,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // together ("look at the top eight â€¦ put the rest â€¦", Klauth's mana-then-restriction-then-
   // persistence).
   let effects: Effect[] | null =
+    reflexive ??
     paidTransform ??
     (modalBlock === null
       ? (parseBlinkChosenBlock(body, allocCount) ??

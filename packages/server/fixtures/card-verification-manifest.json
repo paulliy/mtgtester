@@ -8459,6 +8459,45 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "c8de07d4-9bc1-4bfe-b5a4-0a58e05af022": {
+      "name": "The Thing",
+      "oracleSha256": "dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "the-thing-trample",
+          "oracleText": "Trample",
+          "implementation": ["keyword trample (interpreted)"],
+          "engineTestIds": ["the-thing-pinned-oracle-supported"],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        },
+        {
+          "id": "the-thing-combat-counters",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put four +1/+1 counters on The Thing.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on its controller's turn with an intervening-if that its controller has cast at least one noncreature spell this turn (checked on trigger and on resolution, CR 603.4); the effect puts four +1/+1 counters on The Thing, and nothing happens on a turn with only creature spells or none"
+          ],
+          "engineTestIds": ["the-thing-pinned-oracle-supported", "the-thing-combat-counters"],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        },
+        {
+          "id": "the-thing-paid-double",
+          "oracleText": "Whenever The Thing attacks, you may pay {R}{G}{W}{U}. When you do, double the number of each kind of counter on any number of target permanents you control.",
+          "implementation": [
+            "interpreted attacks trigger whose effect lets its controller pay {R}{G}{W}{U} as it resolves; only paying creates the reflexive trigger, so declining or being unable to pay asks for no targets",
+            "the reflexive trigger lets its controller choose any number (including none) of permanents they control one at a time, never an opponent's, then doubles every kind of counter on each chosen permanent through the counter-adding path so replacements apply"
+          ],
+          "engineTestIds": [
+            "the-thing-pinned-oracle-supported",
+            "the-thing-pay-then-double",
+            "the-thing-decline-no-trigger",
+            "the-thing-cannot-pay"
+          ],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

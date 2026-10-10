@@ -1765,6 +1765,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['The Thing: four counters after a noncreature spell, then pay to double counters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
   },
   {

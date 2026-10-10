@@ -348,3 +348,34 @@ describe('Aetheric Amplifier Card Test Lab scenario', () => {
     replays('aetheric-amplifier-viewer-double-counters', steps);
   });
 });
+
+describe('The Thing Card Test Lab scenario', () => {
+  it('the-thing-viewer-counters-and-double — a noncreature spell earns four counters, and paying on attack doubles them', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Ripple' },
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Pay' },
+      { action: 'Target The Thing' },
+      { action: 'Target Lab Hex' },
+      { action: 'Choose no more targets' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'the-thing-viewer-counters-and-double',
+      steps,
+    );
+    const [thing] = onBattlefield('The Thing');
+    expect(thing?.counters).toEqual({ '+1/+1': 8 });
+    const [hex] = onBattlefield('Lab Hex');
+    expect(hex?.counters).toEqual({ charge: 2 });
+    // The Thing connected as a 13/13 (5/5 plus eight counters).
+    expect(seat('P2').life).toBe(27);
+    expect(prompts.some((prompt) => /Pay it\?/.test(prompt))).toBe(true);
+    // All five lands were tapped: one for Lab Ripple and four for {R}{G}{W}{U}.
+    expect(
+      state.battlefield.filter((permanent) => /Land/.test(permanent.typeLine) && permanent.tapped),
+    ).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('the-thing-viewer-counters-and-double', steps);
+  });
+});

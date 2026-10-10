@@ -902,8 +902,8 @@ function addCounters(
   perm: EnginePermanent,
   counter: string,
   count: number,
-): void {
-  if (count <= 0) return;
+): number {
+  if (count <= 0) return 0;
   const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
   const before = counterCount(perm.counters, counter);
   setCounterCount(perm.counters, counter, counterCount(perm.counters, counter) + adjustedCount);
@@ -939,6 +939,7 @@ function addCounters(
       });
     }
   }
+  return adjustedCount;
 }
 
 /**
@@ -1465,6 +1466,20 @@ export function* executeAbility(
           kind: 'cantBeBlocked',
           timestamp: ctx.state.nextTimestamp++,
         });
+        break;
+      }
+      case 'cantBeBlockedEachChosen': {
+        const chosen = legalChosenPermanents(effect.targetSlot);
+        if (chosen.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${chosen.map((permanent) => permanent.name).join(', ')} can't be blocked this turn`,
+            targetCardIds: chosen.map((permanent) => permanent.cardId),
+            kind: 'cantBeBlocked',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
         break;
       }
       case 'grantKeywordUntilEot': {
@@ -2369,6 +2384,13 @@ export function* executeAbility(
         }
         break;
       }
+      case 'doubleCountersEachChosen':
+        for (const perm of legalChosenPermanents(effect.targetSlot)) {
+          for (const [counter, count] of Object.entries(perm.counters)) {
+            if (count > 0) addCounters(ctx, source, perm, counter, count);
+          }
+        }
+        break;
       case 'doubleCountersEach':
         for (const perm of affectedBy(ctx, source, effect.selector)) {
           for (const [counter, count] of Object.entries(perm.counters)) {
@@ -2983,6 +3005,38 @@ export function* executeAbility(
         }
         // Choices are made in APNAP order, then all selected permanents leave together.
         yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
+        break;
+      }
+      case 'mayPayManaThenReflexive':
+      case 'putCountersOnSourceThenReflexive': {
+        // CR 603.12: the reflexive ability triggers only on the action actually happening.
+        let done = false;
+        if (effect.op === 'mayPayManaThenReflexive') {
+          done = yield* resolveCondition(
+            ctx,
+            { kind: 'mayPayMana', cost: effect.cost },
+            {
+              ...scope,
+              cardId: source.cardId,
+              controllerId: source.controllerId,
+              ...(source.id === undefined ? {} : { objectId: source.id }),
+            },
+            source.name,
+          );
+        } else {
+          const perm = sourcePermanent();
+          done =
+            perm !== undefined && addCounters(ctx, source, perm, effect.counter, effect.count) > 0;
+        }
+        if (!done) break;
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability: effect.then,
+        });
         break;
       }
       case 'sacrificeSourceThenReflexive': {
