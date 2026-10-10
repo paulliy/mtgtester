@@ -1797,6 +1797,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['First Family: draw and gain life for each color among your permanents and spells'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
   },
   {

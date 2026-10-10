@@ -519,3 +519,19 @@ describe('Call Forth the Tempest Card Test Lab scenario', () => {
     replays('call-forth-the-tempest-viewer-other-spells-damage', steps);
   });
 });
+
+describe('First Family Card Test Lab scenario', () => {
+  it('first-family-viewer-colors-draw-gain — a red permanent plus the green-blue spell make X = 3', () => {
+    const steps: Step[] = [{ action: 'Cast First Family' }];
+    const { scenario, state, seat } = run('first-family-viewer-colors-draw-gain', steps);
+    const p1 = seat('P1');
+    // First Family left the hand; exactly three cards were drawn and three life gained.
+    expect(p1.hand).toHaveLength(3);
+    expect(p1.life).toBe(43);
+    expect(p1.graveyard.map((card) => card.name)).toEqual(['First Family']);
+    expect(p1.library).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('first-family-viewer-colors-draw-gain', steps);
+  });
+});

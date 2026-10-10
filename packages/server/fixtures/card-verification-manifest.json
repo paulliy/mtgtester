@@ -8647,6 +8647,29 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "e119c709-bf9d-451e-827b-9787d455029a": {
+      "name": "First Family",
+      "oracleSha256": "e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "first-family-draw-gain-colors",
+          "oracleText": "You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.",
+          "implementation": [
+            "interpreted spell effect that draws X cards and gains X life with one shared X: the number of distinct colors among the permanents its controller controls and the spells they have cast this turn, each color counted once however many sources share it",
+            "First Family is itself a spell cast this turn (green and blue), so X is at least 2 even with nothing else; an opponent's permanents and spells add nothing"
+          ],
+          "engineTestIds": [
+            "first-family-pinned-oracle-supported",
+            "first-family-counts-itself",
+            "first-family-permanents-and-spells",
+            "first-family-yours-only"
+          ],
+          "viewerScenarioIds": ["first-family-viewer-colors-draw-gain"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

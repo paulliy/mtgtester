@@ -5938,3 +5938,20 @@ test('Call Forth the Tempest: damage equals the mana value of your other spells 
   await expect(permanent(page, 'Lab Servo')).toBeVisible();
   await expect(page.getByText(/Call Forth the Tempest deals \d+ to Lab Servo/)).toHaveCount(0);
 });
+
+test('First Family: draw and gain life for each color among your permanents and spells', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'First Family: draw and gain life for each color among your permanents and spells',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await castAndResolve(page, 'First Family');
+  // Red from Lab Red Bear, green and blue from First Family itself: X = 3.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /gains 3 life/ })).toHaveCount(1);
+});

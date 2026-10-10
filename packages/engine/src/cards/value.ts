@@ -165,6 +165,11 @@ export type Value =
     }
   /** Number of distinct colors among permanents controlled by the resolving player. */
   | { kind: 'colorsAmongPermanents' }
+  /**
+   * "The number of colors among permanents you control and spells you've cast this turn" (First
+   * Family): one set of colors over both, the resolving spell included — it was cast this turn.
+   */
+  | { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' }
   /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
   | { kind: 'devotionTo'; color: import('@mtg/shared').Color }
   /** Number of opponents of the resolving controller. */
@@ -258,6 +263,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'aurasYouControlAttachedToCreatures':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -318,6 +324,7 @@ export function needsScope(value: Value): boolean {
     case 'aurasYouControlAttachedToCreatures':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -460,6 +467,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'countPermanentsControlledByTarget':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'countOpponents':
     case 'greatestToughnessAmong':
     case 'greatestPowerAmong':

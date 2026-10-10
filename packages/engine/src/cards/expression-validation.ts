@@ -140,6 +140,7 @@ const valueShapes = {
     owner: oneOf('you', 'opponents', 'all'),
   },
   colorsAmongPermanents: {},
+  colorsAmongPermanentsAndSpellsCastThisTurn: {},
   devotionTo: { color: color },
   countOpponents: {},
   greatestToughnessAmong: { selector: selector, scope: oneOf('you', 'opponents', 'all') },

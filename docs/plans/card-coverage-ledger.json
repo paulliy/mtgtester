@@ -929,15 +929,19 @@
   {
     "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
     "name": "First Family",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.11",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "e715d33e-3d60-4623-b843-db0b906ae98b",

@@ -8260,6 +8260,45 @@ function callForthTheTempestScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function firstFamilyScenario(gameId: GameId): CardTestScenario {
+  const family = pinnedFrom(COVERAGE_PR04, 'First Family');
+  return pr01Scenario(gameId, {
+    id: 'first-family-viewer-colors-draw-gain',
+    title: 'First Family: draw and gain life for each color among your permanents and spells',
+    instructions: [
+      'Lab Red Bear (red), two Forests, an Island and a Mountain are on your battlefield; First Family is in your hand.',
+      'Cast First Family for {2}{G}{U}. It is green and blue and you control a red permanent, so X is 3.',
+      'Pass priority to resolve it: you draw three cards and gain three life.',
+    ],
+    expectedOutcome: 'You drew exactly three cards and gained 3 life (43).',
+    oracleSha256: family.sha256,
+    clauseIds: ['first-family-draw-gain-colors'],
+    decks: {
+      P1: [
+        family.card,
+        LAB_RED_BEAR,
+        FOREST,
+        FOREST,
+        ISLAND,
+        MOUNTAIN,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['First Family'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Red Bear', 'Forest', 'Forest', 'Island', 'Mountain'] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9428,6 +9467,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'first-family-viewer-colors-draw-gain',
   'call-forth-the-tempest-viewer-other-spells-damage',
   'crystal-inhuman-princess-viewer-colors-damage',
   'rumor-gatherer-viewer-scry-then-draw',
@@ -9675,6 +9715,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'first-family-viewer-colors-draw-gain': firstFamilyScenario,
   'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,
   'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,
   'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,

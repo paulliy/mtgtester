@@ -205,6 +205,13 @@ function parseDynamicCountValue(
   if (/^the number of colou?rs? among permanents you control$/.test(text)) {
     return { kind: 'colorsAmongPermanents' };
   }
+  if (
+    /^the number of colors among permanents you control and spells you've cast this turn$/.test(
+      text,
+    )
+  ) {
+    return { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' };
+  }
   const opponents = text.match(/^(?:the )?number of opponents$/);
   if (opponents !== null) return { kind: 'countOpponents' };
   const cardsInYourZone = text.match(
@@ -2321,6 +2328,16 @@ function parseEffectSentence(
       }
       return effects;
     }
+  }
+  // "You draw X cards and gain X life, where X is …" (First Family).
+  {
+    const m = s.match(/^you draw x cards and gain x life, where x is (.+)$/);
+    const amount = m === null ? null : parseDynamicCountValue(m[1] as string, card);
+    if (amount !== null)
+      return [
+        { op: 'draw', count: amount },
+        { op: 'gainLife', amount },
+      ];
   }
   // "~ deals damage to each creature your opponents control equal to the total mana value of
   // other spells you've cast this turn" (Call Forth the Tempest).

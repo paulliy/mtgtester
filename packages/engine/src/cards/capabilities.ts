@@ -1085,6 +1085,7 @@ const families = {
       aurasYouControlAttachedToCreatures: true,
       countCardsInZone: true,
       colorsAmongPermanents: true,
+      colorsAmongPermanentsAndSpellsCastThisTurn: true,
       devotionTo: true,
       countOpponents: true,
       greatestToughnessAmong: true,

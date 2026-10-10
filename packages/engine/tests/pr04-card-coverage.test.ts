@@ -2161,6 +2161,66 @@ describe('Call Forth the Tempest', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.11 First Family
+// ---------------------------------------------------------------------------------------------
+
+describe('First Family', () => {
+  const { card } = pinned('First Family');
+  const FAMILY_MANA = [...generic(2), { symbol: 'G' as const }, { symbol: 'U' as const }];
+  const colored = (name: string, typeLine: string, colors: ('W' | 'U' | 'B' | 'R' | 'G')[]) =>
+    oracle({
+      name,
+      typeLine,
+      manaCost: '{0}',
+      colors,
+      power: typeLine.startsWith('Creature') ? '1' : null,
+      toughness: typeLine.startsWith('Creature') ? '1' : null,
+      oracleText: typeLine.startsWith('Creature') ? '' : 'You gain 1 life.',
+    });
+
+  /** Cast First Family; returns how many cards P1 drew and how much life P1 gained from it. */
+  function cast(ctx: GameContext) {
+    const me = playerById(ctx, 'P1');
+    castFromHand(ctx, 'P1', card, FAMILY_MANA);
+    const hand = me.hand.length;
+    const life = me.life;
+    settle(ctx);
+    return { drew: me.hand.length - hand, gained: me.life - life };
+  }
+
+  it('first-family-pinned-oracle-supported — draw X and gain X, X over permanents and spells cast this turn', () => {
+    expectModeled(card);
+    const value = { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' };
+    expect(interpretCard(card).spellAbility!.effects).toEqual([
+      { op: 'draw', count: value },
+      { op: 'gainLife', amount: value },
+    ]);
+  });
+
+  it('first-family-counts-itself — alone it is a green and blue spell you cast this turn, so X is 2', () => {
+    const ctx = pod('family-alone');
+    expect(cast(ctx)).toEqual({ drew: 2, gained: 2 });
+  });
+
+  it('first-family-permanents-and-spells — a red permanent and an earlier white spell add two more colors; repeats count once', () => {
+    const ctx = pod('family-union');
+    spawn(ctx, 'P1', colored('Lab Red', 'Creature — Secret', ['R']));
+    spawn(ctx, 'P1', colored('Lab Green', 'Creature — Secret', ['G']));
+    castFromHand(ctx, 'P1', colored('Lab White', 'Instant', ['W']), []);
+    settle(ctx);
+    expect(cast(ctx)).toEqual({ drew: 4, gained: 4 });
+  });
+
+  it('first-family-yours-only — an opponent’s permanents and spells add nothing', () => {
+    const ctx = pod('family-theirs');
+    spawn(ctx, 'P2', colored('Lab Their Red', 'Creature — Secret', ['R']));
+    castFromHand(ctx, 'P2', colored('Lab Their Black', 'Instant', ['B']), []);
+    settle(ctx);
+    expect(cast(ctx)).toEqual({ drew: 2, gained: 2 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2171,6 +2231,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'First Family',
+    sha256: 'e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64',
+    clauseCount: 1,
+  },
   {
     name: 'Call Forth the Tempest',
     sha256: 'c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6',

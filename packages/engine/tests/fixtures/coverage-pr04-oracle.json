@@ -378,6 +378,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64",
+      "card": {
+        "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
+        "scryfallId": "96679821-f850-4de1-b5f9-21e0681647ee",
+        "name": "First Family",
+        "manaCost": "{2}{G}{U}",
+        "cmc": 4,
+        "colors": [
+          "G",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

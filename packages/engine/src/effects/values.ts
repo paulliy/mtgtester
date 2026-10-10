@@ -88,11 +88,17 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       }
       return count;
     }
-    case 'colorsAmongPermanents': {
+    case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn': {
       const colors = new Set<string>();
       for (const perm of ctx.state.battlefield) {
         if (perm.controllerId !== scope.controllerId) continue;
         for (const color of computeCharacteristics(ctx, perm).colors) colors.add(color);
+      }
+      if (value.kind === 'colorsAmongPermanentsAndSpellsCastThisTurn') {
+        const caster = ctx.state.players.find((player) => player.id === scope.controllerId);
+        for (const record of caster?.spellsCastThisTurnRecords ?? [])
+          for (const color of record.candidate.colors) colors.add(color);
       }
       return colors.size;
     }
