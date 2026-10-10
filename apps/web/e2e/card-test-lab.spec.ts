@@ -6064,3 +6064,37 @@ test('Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and 
   // P2 never cast Lab Shock on our turn.
   await expect(page.locator('.log .line', { hasText: /P2 casts/ })).toHaveCount(0);
 });
+
+test('Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await castAndResolve(page, 'Lab Token Forge');
+  await passUntil(page, permanent(page, 'Servo'));
+  await expect(hand).toHaveCount(0);
+
+  // Finneas, Lab Rabbit and Lab Ox can attack; the Servo token is summoning sick.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Finneas, Ace Archer', 'Lab Rabbit', 'Lab Ox']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The token and the Rabbit grow (total power 9 -> 11), and that draws one card.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Rabbit').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Finneas, Ace Archer').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1')).toHaveCount(0);
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});

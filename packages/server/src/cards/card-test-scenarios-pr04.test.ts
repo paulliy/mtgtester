@@ -628,3 +628,25 @@ describe('Kutzil, Malamet Exemplar Card Test Lab scenario', () => {
     replays('kutzil-malamet-exemplar-viewer-above-base-draw', steps);
   });
 });
+
+describe('Finneas, Ace Archer Card Test Lab scenario', () => {
+  it('finneas-ace-archer-viewer-counters-then-draw — the token and the Rabbit grow, and total power 11 draws a card', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Token Forge' },
+      { action: 'Declare attackers', targets: ['P2', 'P2', 'P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'finneas-ace-archer-viewer-counters-then-draw',
+      steps,
+    );
+    expect(onBattlefield('Servo')[0]?.counters).toEqual({ '+1/+1': 1 });
+    expect(onBattlefield('Lab Rabbit')[0]?.counters).toEqual({ '+1/+1': 1 });
+    expect(onBattlefield('Finneas, Ace Archer')[0]?.counters ?? {}).toEqual({});
+    expect(onBattlefield('Lab Ox')[0]?.counters ?? {}).toEqual({});
+    // Total power went 9 -> 11, so Finneas’s trigger drew exactly one card (the cast emptied the hand).
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('finneas-ace-archer-viewer-counters-then-draw', steps);
+  });
+});

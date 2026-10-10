@@ -8776,6 +8776,35 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "69924636-138e-4baa-a378-0fd7df5b847d": {
+      "name": "Finneas, Ace Archer",
+      "oracleSha256": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "finneas-ace-archer-keywords",
+          "oracleText": "Reach, vigilance",
+          "implementation": ["keywords reach and vigilance (interpreted)"],
+          "engineTestIds": ["finneas-ace-archer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["finneas-ace-archer-viewer-counters-then-draw"]
+        },
+        {
+          "id": "finneas-ace-archer-attack-counters-draw",
+          "oracleText": "Whenever Finneas attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power 10 or greater, draw a card.",
+          "implementation": [
+            "interpreted attacks trigger on Finneas whose first effect puts one +1/+1 counter on each other creature its controller controls that is a token or has the Rabbit subtype (never Finneas itself, other creatures, or an opponent's creatures)",
+            "then, checked after the counters are on, a conditional draws a card if the total power of creatures its controller controls is 10 or greater, so the counters can themselves reach the threshold"
+          ],
+          "engineTestIds": [
+            "finneas-ace-archer-pinned-oracle-supported",
+            "finneas-ace-archer-tokens-and-rabbits",
+            "finneas-ace-archer-total-power-draw"
+          ],
+          "viewerScenarioIds": ["finneas-ace-archer-viewer-counters-then-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

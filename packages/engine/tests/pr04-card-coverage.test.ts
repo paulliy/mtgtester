@@ -2586,6 +2586,89 @@ describe('Kutzil, Malamet Exemplar', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.10 Finneas, Ace Archer
+// ---------------------------------------------------------------------------------------------
+
+describe('Finneas, Ace Archer', () => {
+  const { card } = pinned('Finneas, Ace Archer');
+  const creature = (name: string, typeLine: string, power: number) =>
+    oracle({ name, typeLine, power: String(power), toughness: String(power) });
+  const TOKEN: TokenSpec = {
+    name: 'Lab Token',
+    typeLine: 'Token Creature — Soldier',
+    types: ['Creature'],
+    subtypes: ['Soldier'],
+    colors: [],
+    power: 4,
+    toughness: 4,
+  };
+
+  /** Finneas attacks P2 alone, nobody blocks; returns how many cards P1 drew. */
+  function attack(ctx: GameContext, finneas: EnginePermanent) {
+    const hand = playerById(ctx, 'P1').hand.length;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === finneas.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return playerById(ctx, 'P1').hand.length - hand;
+  }
+  const counters = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)?.counters['+1/+1'] ?? 0;
+
+  it('finneas-ace-archer-pinned-oracle-supported — counters on other tokens and Rabbits, then the total-power draw', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['reach', 'vigilance']));
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.effects).toMatchObject([
+      { op: 'putCountersEach', counter: '+1/+1', count: 1 },
+      {
+        op: 'conditionalEffect',
+        condition: { kind: 'totalCreaturePower', scope: 'you', cmp: '>=', n: 10 },
+        then: [{ op: 'draw' }],
+        else: [],
+      },
+    ]);
+  });
+
+  it('finneas-ace-archer-tokens-and-rabbits — other tokens and Rabbits you control get a counter; Finneas, other creatures and opponents’ do not', () => {
+    const ctx = pod('finneas-counters');
+    const finneas = spawn(ctx, 'P1', card);
+    const rabbit = spawn(ctx, 'P1', creature('Lab Rabbit', 'Creature — Rabbit', 1));
+    createTokens(ctx, TOKEN, 1, 'P1');
+    const token = ctx.state.battlefield.find((perm) => perm.name === 'Lab Token')!;
+    const plain = spawn(ctx, 'P1', creature('Lab Plain', 'Creature — Secret', 1));
+    const theirs = spawn(ctx, 'P2', creature('Lab Their Rabbit', 'Creature — Rabbit', 1));
+    attack(ctx, finneas);
+    expect(counters(ctx, rabbit)).toBe(1);
+    expect(counters(ctx, token)).toBe(1);
+    expect(counters(ctx, plain)).toBe(0);
+    expect(counters(ctx, theirs)).toBe(0);
+    expect(counters(ctx, finneas)).toBe(0);
+  });
+
+  it('finneas-ace-archer-total-power-draw — the counters can bring total power to 10, which draws; below 10 does not', () => {
+    // Finneas 2 + Rabbit 2 + token 4 = 8 before the counters, 10 after: it draws.
+    const ctx = pod('finneas-ten');
+    const finneas = spawn(ctx, 'P1', card);
+    spawn(ctx, 'P1', creature('Lab Rabbit', 'Creature — Rabbit', 2));
+    createTokens(ctx, TOKEN, 1, 'P1');
+    expect(attack(ctx, finneas)).toBe(1);
+
+    // Finneas 2 + a plain 7 = 9, and nothing gets a counter: no draw.
+    const short = pod('finneas-nine');
+    const archer = spawn(short, 'P1', card);
+    spawn(short, 'P1', creature('Lab Big', 'Creature — Secret', 7));
+    expect(attack(short, archer)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2596,6 +2679,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Finneas, Ace Archer',
+    sha256: '00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028',
+    clauseCount: 2,
+  },
   {
     name: 'Kutzil, Malamet Exemplar',
     sha256: '57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242',

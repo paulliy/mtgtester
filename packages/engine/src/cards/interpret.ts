@@ -603,6 +603,13 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     noun = powerClause[1] as string;
   }
 
+  // "each other creature you control that's a token or a Rabbit" (Finneas, Ace Archer).
+  const tokenOrType = noun.match(/^(.+?) that's a token or an? ([a-z]+)$/);
+  if (tokenOrType !== null) {
+    parts.push(anyOf(IS_TOKEN, ofSubtype(titleCase(tokenOrType[2] as string))));
+    noun = tokenOrType[1] as string;
+  }
+
   // "Creatures you control OF THE CHOSEN TYPE get +1/+1" (Patchwork Banner) - the type was named
   // as the source entered (`entersChoosingOption`). Stripped before the "you control" suffix
   // below, because it is printed AFTER it.
@@ -2355,6 +2362,23 @@ function parseEffectSentence(
       }
       return effects;
     }
+  }
+  // "Then if creatures you control have total power 10 or greater, draw a card." (Finneas): read
+  // as the ability resolves, after the counters before it were put (CR 608.2c).
+  {
+    const m = s.match(
+      /^(?:then )?if creatures you control have total power (\d+) or greater, (.+)$/,
+    );
+    const rest = m === null ? null : parseEffectSentence(m[2] as string, alloc, card, opts);
+    if (m !== null && rest !== null)
+      return [
+        {
+          op: 'conditionalEffect',
+          condition: { kind: 'totalCreaturePower', scope: 'you', cmp: '>=', n: Number(m[1]) },
+          then: rest,
+          else: [],
+        },
+      ];
   }
   // "You draw X cards and gain X life, where X is …" (First Family).
   {

@@ -8418,6 +8418,47 @@ function kutzilScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_RABBIT = card({
+  oracleId: 'lab-rabbit',
+  name: 'Lab Rabbit',
+  typeLine: 'Creature — Rabbit',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '2',
+  toughness: '2',
+});
+
+function finneasScenario(gameId: GameId): CardTestScenario {
+  const finneas = pinnedFrom(COVERAGE_PR04, 'Finneas, Ace Archer');
+  return pr01Scenario(gameId, {
+    id: 'finneas-ace-archer-viewer-counters-then-draw',
+    title:
+      'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+    instructions: [
+      'Finneas (2/2), Lab Rabbit (a 2/2 Rabbit), Lab Ox (a 4/4 that is neither a token nor a Rabbit) and a Forest are on your battlefield; Lab Token Forge is in your hand.',
+      'Cast Lab Token Forge to create a 1/1 Servo token. Your creatures have total power 2 + 2 + 4 + 1 = 9.',
+      'Attack P2 with Finneas (Lab Rabbit and Lab Ox attack too). Its trigger puts a +1/+1 counter on the Servo token and on Lab Rabbit, bringing total power to 11, so you draw a card.',
+    ],
+    expectedOutcome:
+      'The Servo token and Lab Rabbit each have one +1/+1 counter; Finneas and Lab Ox have none. You drew exactly one card.',
+    oracleSha256: finneas.sha256,
+    clauseIds: ['finneas-ace-archer-keywords', 'finneas-ace-archer-attack-counters-draw'],
+    decks: {
+      P1: [finneas.card, LAB_RABBIT, LAB_OX, LAB_TOKEN_FORGE, FOREST, LAB_HEX, LAB_SHOCK],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Token Forge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Finneas, Ace Archer', 'Lab Rabbit', 'Lab Ox', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9586,6 +9627,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'finneas-ace-archer-viewer-counters-then-draw',
   'kutzil-malamet-exemplar-viewer-above-base-draw',
   'the-fantasticar-viewer-fourth-noncreature',
   'unbreakable-formation-viewer-addendum-main-phase',
@@ -9837,6 +9879,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'finneas-ace-archer-viewer-counters-then-draw': finneasScenario,
   'kutzil-malamet-exemplar-viewer-above-base-draw': kutzilScenario,
   'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,
   'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,

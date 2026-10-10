@@ -515,6 +515,47 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
+      "card": {
+        "oracleId": "69924636-138e-4baa-a378-0fd7df5b847d",
+        "scryfallId": "0dee197d-c313-4364-b52c-f83d5f579bc3",
+        "name": "Finneas, Ace Archer",
+        "manaCost": "{G}{W}",
+        "cmc": 2,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Rabbit Archer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rabbit",
+          "Archer"
+        ],
+        "oracleText": "Reach, vigilance\nWhenever Finneas attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power 10 or greater, draw a card.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }
