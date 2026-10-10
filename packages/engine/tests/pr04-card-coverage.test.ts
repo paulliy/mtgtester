@@ -1935,6 +1935,69 @@ describe('Rumor Gatherer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: cast ordinals number the spells that match the trigger's filter
+// ---------------------------------------------------------------------------------------------
+
+describe('Primitive: cast ordinals count matching spells', () => {
+  const WATCHER = oracle({
+    name: 'Lab Watcher',
+    typeLine: 'Creature — Secret',
+    power: '1',
+    toughness: '1',
+    oracleText:
+      'Whenever an opponent casts their first noncreature spell each turn, you gain 3 life.',
+  });
+  const FLASH_BEAR = oracle({
+    name: 'Lab Flash Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{0}',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flash',
+  });
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  it('cast-ordinal-matching-spells — a creature spell first does not use up “first noncreature spell”; the second noncreature does not trigger', () => {
+    const ctx = pod('ordinal-noncreature');
+    spawn(ctx, 'P1', WATCHER);
+    const me = playerById(ctx, 'P1');
+    const start = me.life;
+    castFromHand(ctx, 'P2', FLASH_BEAR, []);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    settle(ctx);
+    castFromHand(ctx, 'P2', QUICK, []);
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    settle(ctx);
+    expect(me.life).toBe(start + 3);
+    castFromHand(ctx, 'P2', QUICK, []);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    settle(ctx);
+    expect(me.life).toBe(start + 3);
+    expect(playerById(ctx, 'P2').spellsCastThisTurnRecords?.map((r) => r.candidate.types)).toEqual([
+      ['Creature'],
+      ['Instant'],
+      ['Instant'],
+    ]);
+  });
+
+  it('cast-ordinal-matching-spells — the record clears at the start of each turn', () => {
+    const ctx = pod('ordinal-reset');
+    castFromHand(ctx, 'P1', QUICK, []);
+    settle(ctx);
+    expect(playerById(ctx, 'P1').spellsCastThisTurnRecords).toHaveLength(1);
+    quietTurn(ctx);
+    expect(playerById(ctx, 'P1').spellsCastThisTurnRecords ?? []).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 

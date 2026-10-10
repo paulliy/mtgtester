@@ -35,6 +35,7 @@ import type {
   KeywordAbility,
 } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
+import type { SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -179,6 +180,12 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
+/** One spell a player cast this turn (see `EnginePlayerState.spellsCastThisTurnRecords`). */
+export interface CastSpellRecord {
+  candidate: SelectorCandidate;
+  manaValue: number;
+}
+
 /**
  * How a spell was cast (CR 601.2): who cast it, the zone it was cast from and the mana spent on
  * it. Carried by the spell's card and by the permanent that spell becomes, and by nothing after
@@ -362,6 +369,13 @@ export interface EnginePlayerState extends PlayerState {
   spellsCastThisTurn: number;
   /** Of those, the ones that were not creature spells ("you've cast a noncreature spell"). */
   noncreatureSpellsCastThisTurn: number;
+  /**
+   * Those spells in cast order, by their characteristics as cast: "your fourth noncreature spell
+   * each turn" (The Fantasticar), "the total mana value of other spells you've cast this turn"
+   * (Call Forth the Tempest), "colors among … spells you've cast this turn" (First Family).
+   * Cleared at the start of each turn.
+   */
+  spellsCastThisTurnRecords?: CastSpellRecord[];
   /** Muldrotha-style graveyard play uses, keyed by the permanent type spent. */
   playFromZoneTypeUsesThisTurn: Record<string, number>;
   mulligansTaken: number;

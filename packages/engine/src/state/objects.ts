@@ -1914,6 +1914,18 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
     enteredThisTurn: false,
   };
   const manaValue = spellManaValue(def, spell.announcedX);
+  const castThisTurn = (caster.spellsCastThisTurnRecords ??= []);
+  castThisTurn.push({ candidate, manaValue });
+  // "Your fourth NONCREATURE spell each turn" numbers the spells that match the filter, not
+  // every spell cast: a creature spell cast first does not use up "first noncreature".
+  const ordinalMatches = (
+    spec: Extract<TriggerSpec, { when: 'castsSpell' }>,
+    from: SelectorSource,
+  ): boolean =>
+    spec.ordinal === undefined ||
+    castThisTurn.filter(
+      (record) => spec.filter === undefined || selectMatches(record.candidate, spec.filter, from),
+    ).length === spec.ordinal;
 
   for (const source of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, source)) {
@@ -1925,7 +1937,6 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       const isController = spell.controllerId === source.controllerId;
       if (spec.caster === 'you' && !isController) continue;
       if (spec.caster === 'opponent' && isController) continue;
-      if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
       if (!castFromMatches(spec, spell)) continue;
 
       const from: SelectorSource = {
@@ -1944,6 +1955,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
       // layered characteristics to compute — the candidate above is already the whole answer.
       if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+      if (!ordinalMatches(spec, from)) continue;
       if (spec.targetFilter !== undefined) {
         const hasMatchingTarget = spell.targets.some((targetId) => {
           const target = ctx.state.battlefield.find(
@@ -1993,7 +2005,6 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         const isController = spell.controllerId === card.ownerId;
         if (spec.caster === 'you' && !isController) continue;
         if (spec.caster === 'opponent' && isController) continue;
-        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
         if (!castFromMatches(spec, spell)) continue;
         const from: SelectorSource = {
           cardId: card.cardId,
@@ -2002,6 +2013,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           eventPlayerId: spell.controllerId,
         };
         if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        if (!ordinalMatches(spec, from)) continue;
         // No graveyard-functioning card watches a spell's targets; fail closed rather than fire.
         if (spec.targetFilter !== undefined) continue;
         if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
@@ -2035,7 +2047,6 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         const isController = spell.controllerId === emblem.controllerId;
         if (spec.caster === 'you' && !isController) continue;
         if (spec.caster === 'opponent' && isController) continue;
-        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
         if (!castFromMatches(spec, spell)) continue;
         const from: SelectorSource = {
           cardId: emblem.id,
@@ -2043,6 +2054,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           eventPlayerId: spell.controllerId,
         };
         if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        if (!ordinalMatches(spec, from)) continue;
         // No emblem watches a spell's targets; fail closed rather than fire.
         if (spec.targetFilter !== undefined) continue;
         if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;

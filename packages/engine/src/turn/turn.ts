@@ -45,6 +45,7 @@ function untapStep(ctx: GameContext): void {
     player.cardsDrawnThisDrawStep = 0;
     player.spellsCastThisTurn = 0;
     player.noncreatureSpellsCastThisTurn = 0;
+    delete player.spellsCastThisTurnRecords;
     player.playFromZoneTypeUsesThisTurn = {};
   }
   ctx.state.excessDamageControllerIds = [];
