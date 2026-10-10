@@ -6184,3 +6184,66 @@ test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
   await passUntil(page, permanent(page, 'Lab Ox').getByText('5/4'));
   await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
 });
+
+test('Mask of Memory: equip it, connect, then draw two and discard a card', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Mask of Memory: equip it, connect, then draw two and discard a card');
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Mask of Memory')?.attachedTo ?? null).toBeNull();
+
+  const mask = permanent(page, 'Mask of Memory');
+  await expect(mask).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Equip {1} is the Mask's only ability, so clicking it goes straight to choosing a target.
+  await mask.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Only your own creatures can be chosen, and the Bear is the only one.
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves, then the turn moves on to attackers.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Mask of Memory')?.attachedTo)
+    .toBe(bearId);
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The unblocked Bear deals combat damage to P2: accept the optional draw.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  // The hand is Lab Hex plus the two drawn Forests; discarding is the player's choice.
+  await expect(page.getByText(/Discard a card \(1 of 1\)/i)).toBeVisible({ timeout: 15_000 });
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Hex' })
+    .first()
+    .getByRole('button', { name: 'Discard', exact: true })
+    .click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(hand).toHaveCount(2);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('38');
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(2);
+});

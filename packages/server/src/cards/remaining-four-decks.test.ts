@@ -90,7 +90,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Out of the Tombs',
       'Resurrection Orb',
       'Szarekh, the Silent King',
-      'Mask of Memory',
       'Trazyn the Infinite',
       'Tomb Blade',
       // Catalog audit batch 1: retarget authored as copyTargetSpell.

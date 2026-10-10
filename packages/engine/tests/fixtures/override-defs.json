@@ -9003,12 +9003,6 @@
     }
   },
   {
-    "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
-    "name": "Mask of Memory",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "d7315b3b-6e5d-4d28-a503-bfae1daf6c43",
     "name": "Verix Bladewing",
     "handledLines": [
@@ -17341,12 +17335,6 @@
   {
     "oracleId": "oracle-martial-impetus",
     "name": "Martial Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-mask-of-memory",
-    "name": "Mask of Memory",
     "handledLines": [],
     "def": {}
   },

@@ -4970,6 +4970,10 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       .replace(/^~ deal\b/, '~ deals');
   } else if (optional) {
     body = body.slice('you may '.length);
+    // "You may draw two cards. If you do, discard a card." (Mask of Memory): accepting the
+    // optional draw is what "if you do" asks about, so the follow-up rides on the same yes.
+    const drawThen = body.match(/^(draw (?:a card|\w+ cards))\. if you do, (.+)$/);
+    if (drawThen !== null) body = `${drawThen[1]}. ${drawThen[2]}`;
   }
   const modalBlock = parseModalSpellBlock(body, card);
 

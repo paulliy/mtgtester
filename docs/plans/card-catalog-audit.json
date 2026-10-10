@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 25,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 37,
+      "uniqueOracleIds": 36,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6172,6 +6172,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted: the interpreter reads {B}{B}: Attach this Equipment to target creature you control as an instant-speed activated ability beside the sorcery-speed Equip {1}, both with a creature-you-control target and an attachSelfTo effect, plus the layer 7d +1/+0 per artifact you control on the equipped creature. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+      "name": "Mask of Memory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard and the shadowed unimplemented placeholder in necron-dynasties.ts): the interpreter reads Whenever equipped creature deals combat damage to a player as a dealsCombatDamageToPlayer trigger on the creature this Equipment is attached to (attachedToSource), not any equipped creature, and reads the optional body draw two cards. If you do, discard a card as one optional trigger whose single yes draws two cards and then discards one, plus the sorcery-speed Equip {1} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+      "name": "Mask of Memory",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in necron-dynasties-remaining.ts is also gone): the interpreter reads Whenever equipped creature deals combat damage to a player as a dealsCombatDamageToPlayer trigger on the creature this Equipment is attached to (attachedToSource), not any equipped creature, and reads the optional body draw two cards. If you do, discard a card as one optional trigger whose single yes draws two cards and then discards one, plus the sorcery-speed Equip {1} onto a creature you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

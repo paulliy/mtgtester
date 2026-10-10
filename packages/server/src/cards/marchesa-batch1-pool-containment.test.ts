@@ -69,6 +69,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Land Tax',
       'Living Death',
       'Loran of the Third Path',
+      'Mask of Memory',
       'Mistveil Plains',
       'Mordant Dragon',
       'Myriad Landscape',

@@ -162,7 +162,6 @@ const REASONS: Record<string, string> = {
   'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
-  'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Pensive Professor',
     'Aetheric Amplifier',
     'Cranial Plating',
+    'Mask of Memory',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

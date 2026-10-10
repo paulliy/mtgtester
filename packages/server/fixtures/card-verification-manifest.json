@@ -3408,15 +3408,36 @@
     "d6b2c998-a226-426c-a40d-6e6007041bfe": {
       "name": "Mask of Memory",
       "oracleSha256": "cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mask-of-memory-trigger",
           "oracleText": "Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.",
           "implementation": [
-            "explicitly unsupported; any equipped creature, not this Equipment's creature"
+            "interpreted optional trigger on dealsCombatDamageToPlayer whose subject is the creature this Equipment is attached to (attachedToSource), not any equipped creature and not a creature carrying a different Equipment; accepting the single yes draws two cards and then discards one card of the player's choice from the enlarged hand (the 'if you do' rides on that yes), declining draws and discards nothing; it fires only for combat damage dealt to a player, so damage to a blocking creature and noncombat damage to a player never trigger it, while trample damage assigned to the player does"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mask-of-memory-pinned-oracle-supported",
+            "mask-of-memory-draws-then-discards",
+            "mask-of-memory-decline",
+            "mask-of-memory-only-this-equipments-creature",
+            "mask-of-memory-not-to-creatures",
+            "mask-of-memory-not-noncombat"
+          ],
+          "viewerScenarioIds": ["mask-of-memory-viewer-draw-discard"]
+        },
+        {
+          "id": "mask-of-memory-equip",
+          "oracleText": "Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+          "implementation": [
+            "interpreted Equip {1} (CR 702.6a) as a sorcery-speed activated ability whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it; it is offered only in your main phase with an empty stack, never targets an opponent's creature, and moving the Mask moves which creature triggers it"
+          ],
+          "engineTestIds": [
+            "mask-of-memory-pinned-oracle-supported",
+            "mask-of-memory-equip-sorcery",
+            "mask-of-memory-only-this-equipments-creature"
+          ],
+          "viewerScenarioIds": ["mask-of-memory-viewer-draw-discard"]
         }
       ],
       "gameplayAiScenarioIds": []

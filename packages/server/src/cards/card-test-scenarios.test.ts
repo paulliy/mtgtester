@@ -352,6 +352,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'the-thing-viewer-counters-and-double',
       'aetheric-amplifier-viewer-double-counters',
       'cranial-plating-viewer-instant-attach',
+      'mask-of-memory-viewer-draw-discard',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

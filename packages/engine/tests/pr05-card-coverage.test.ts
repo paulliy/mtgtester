@@ -19,11 +19,23 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  declareAttacks,
+  declareBlocks,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  spawn,
+  splitDamage,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -364,6 +376,374 @@ describe('Cranial Plating', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.09 Mask of Memory
+// ---------------------------------------------------------------------------------------------
+
+describe('Mask of Memory', () => {
+  const { card } = pinned('Mask of Memory');
+  const EQUIP = /: Equip \{1\}$/;
+  const CREATURE = (name: string, power = '2', toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Secret', power, toughness });
+  const SWORD = oracle({
+    name: 'Lab Sword',
+    typeLine: 'Artifact — Equipment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Equipped creature gets +1/+1.\nEquip {1}',
+  });
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /**
+   * P1 controls the Mask (unattached), two 2/2 creatures and a Lab Sword; P2 controls a 2/2 and a
+   * 0/4 wall. P1's hand holds one distinguishable card, so a discard has something to choose.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mask = spawn(ctx, 'P1', card);
+    const first = spawn(ctx, 'P1', CREATURE('Lab First'));
+    const second = spawn(ctx, 'P1', CREATURE('Lab Second'));
+    const sword = spawn(ctx, 'P1', SWORD);
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const wall = spawn(ctx, 'P2', CREATURE('Lab Wall', '0', '4'));
+    const keeper = conjure(ctx, 'P1', LAB_CARD('Lab Keeper'), 'hand');
+    return { ctx, mask, first, second, sword, enemy, wall, keeper };
+  }
+
+  interface Run {
+    /** Every "use this ability?" prompt the Mask put to P1. */
+    asked: string[];
+    /** The option descriptions of each discard prompt. */
+    discards: string[][];
+  }
+
+  /**
+   * Run P1's combat with `attackers` attacking P2. `blocks` maps a P2 blocker to the attacker it
+   * blocks. The Mask's "may" is answered `accept`; its discard takes the card named `discard`.
+   */
+  function combat(
+    ctx: GameContext,
+    attackers: string[],
+    opts: {
+      accept?: boolean;
+      discard?: string;
+      blocks?: Map<string, string>;
+      split?: Record<string, number>;
+    } = {},
+  ): Run {
+    const run: Run = { asked: [], discards: [] };
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P2' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => opts.blocks?.get(subjectId) ?? null);
+      if (decision.decisionType === 'assignCombatDamage' && opts.split !== undefined)
+        return splitDamage(opts.split);
+      if (/use this ability/.test(decision.prompt)) {
+        run.asked.push(decision.prompt);
+        const wanted = opts.accept === false ? 'declineTrigger' : 'acceptTrigger';
+        return {
+          index: decision.options.findIndex((option) => option.type === wanted),
+          targets: new Map(),
+        };
+      }
+      if (/^Discard a card/.test(decision.prompt)) {
+        run.discards.push(decision.options.map((option) => option.description));
+        const index = decision.options.findIndex(
+          (option) => option.description === `Discard ${opts.discard ?? ''}`,
+        );
+        return { index: Math.max(index, 0), targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return run;
+  }
+
+  const names = (cards: { name: string }[]) => cards.map((c) => c.name).sort();
+  const zones = (ctx: GameContext) => {
+    const me = playerById(ctx, 'P1');
+    return { hand: names(me.hand), graveyard: names(me.graveyard), library: me.library.length };
+  };
+
+  /** Put `ctx`'s Mask on `target` through Equip {1} on the real priority path. */
+  function equip(ctx: GameContext, mask: EnginePermanent, target: EnginePermanent) {
+    addMana(playerById(ctx, 'P1'), generic(1));
+    const option = optionFor(ctx, 'P1', mask.id, EQUIP);
+    expect(option, `Equip {1} onto ${target.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, target.id]]),
+    );
+    resolveTop(ctx);
+  }
+
+  it('mask-of-memory-pinned-oracle-supported — the interpreter alone models the equipped-creature trigger and Equip {1}', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // Whenever equipped creature deals combat damage to a player, you may draw two cards.
+    // If you do, discard a card: one optional trigger, the follow-up riding on the same yes.
+    expect(trigger!.trigger).toEqual({
+      when: 'dealsCombatDamageToPlayer',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(true);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 2 } },
+      { op: 'discard', count: 1 },
+    ]);
+    // Equip {1}: sorcery speed (CR 702.6a), a creature you control, and nothing else.
+    expect(def.activatedAbilities).toHaveLength(1);
+    const [equipAbility] = def.activatedAbilities;
+    expect(equipAbility!.timing).toBe('sorcery');
+    expect(equipAbility!.costs).toEqual([
+      {
+        kind: 'mana',
+        cost: { generic: 1, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+      },
+    ]);
+    expect(equipAbility!.ability.targets).toEqual([{ kind: 'creature', controller: 'you' }]);
+    expect(equipAbility!.ability.effects).toEqual([{ op: 'attachSelfTo', target: 0 }]);
+    expect(def.staticEffects).toEqual([]);
+  });
+
+  it('mask-of-memory-draws-then-discards — accepting draws two, then you discard a card of your choice', () => {
+    // Discard the card that was already in hand: both drawn Forests stay.
+    const keep = board('mask-draw-keeper');
+    keep.mask.attachedTo = keep.first.id;
+    expect(zones(keep.ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+    const kept = combat(keep.ctx, [keep.first.id], { discard: 'Lab Keeper' });
+    expect(kept.asked).toHaveLength(1);
+    // The draw comes first: the hand offered for the discard already holds both new cards.
+    expect(kept.discards.map((options) => [...options].sort())).toEqual([
+      ['Discard Forest', 'Discard Forest', 'Discard Lab Keeper'],
+    ]);
+    // Hand +1 (one card in, two drawn, one discarded), graveyard +1, library -2.
+    expect(zones(keep.ctx)).toEqual({
+      hand: ['Forest', 'Forest'],
+      graveyard: ['Lab Keeper'],
+      library: 6,
+    });
+    expect(playerById(keep.ctx, 'P2').life).toBe(38);
+
+    // The discard is the player's choice: discarding a drawn Forest keeps Lab Keeper in hand.
+    const swap = board('mask-draw-forest');
+    swap.mask.attachedTo = swap.first.id;
+    combat(swap.ctx, [swap.first.id], { discard: 'Forest' });
+    expect(zones(swap.ctx)).toEqual({
+      hand: ['Forest', 'Lab Keeper'],
+      graveyard: ['Forest'],
+      library: 6,
+    });
+  });
+
+  it('mask-of-memory-decline — declining the optional trigger draws and discards nothing', () => {
+    const { ctx, mask, first } = board('mask-decline');
+    mask.attachedTo = first.id;
+    const run = combat(ctx, [first.id], { accept: false });
+    // It was offered, the creature still connected, and nothing moved between zones.
+    expect(run.asked).toHaveLength(1);
+    expect(run.discards).toEqual([]);
+    expect(zones(ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+    expect(playerById(ctx, 'P2').life).toBe(38);
+  });
+
+  it('mask-of-memory-only-this-equipments-creature — only the creature this Mask is attached to triggers it, and moving the Mask moves that', () => {
+    // Unattached: nothing triggers it.
+    const bare = board('mask-bare');
+    expect(combat(bare.ctx, [bare.first.id, bare.second.id]).asked).toEqual([]);
+    expect(zones(bare.ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+
+    // Attached to First: an unequipped creature dealing combat damage beside it adds no prompt,
+    // and attacking with only the unequipped creature asks nothing.
+    const both = board('mask-both');
+    both.mask.attachedTo = both.first.id;
+    expect(combat(both.ctx, [both.first.id, both.second.id]).asked).toHaveLength(1);
+    const alone = board('mask-alone');
+    alone.mask.attachedTo = alone.first.id;
+    expect(combat(alone.ctx, [alone.second.id]).asked).toEqual([]);
+    expect(zones(alone.ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+
+    // A creature carrying a different Equipment is not "equipped creature" for this Mask.
+    const other = board('mask-other-equipment');
+    other.mask.attachedTo = other.first.id;
+    other.sword.attachedTo = other.second.id;
+    expect(combat(other.ctx, [other.second.id]).asked).toEqual([]);
+    expect(zones(other.ctx).library).toBe(8);
+
+    // Moving the Mask (Equip {1}) moves which creature triggers it: it follows to Second ...
+    const moved = board('mask-moved');
+    moved.mask.attachedTo = moved.first.id;
+    equip(moved.ctx, moved.mask, moved.second);
+    expect(moved.mask.attachedTo).toBe(moved.second.id);
+    const afterMove = combat(moved.ctx, [moved.first.id, moved.second.id]);
+    expect(afterMove.asked).toHaveLength(1);
+    expect(zones(moved.ctx).library).toBe(6);
+    // ... and First, which no longer carries it, does not trigger it on its own.
+    const left = board('mask-left');
+    left.mask.attachedTo = left.first.id;
+    equip(left.ctx, left.mask, left.second);
+    expect(combat(left.ctx, [left.first.id]).asked).toEqual([]);
+    expect(zones(left.ctx).library).toBe(8);
+  });
+
+  it('mask-of-memory-not-to-creatures — combat damage dealt only to a blocking creature does not trigger it', () => {
+    // Blocked by the wall: all the damage goes to the creature, none to a player.
+    const blocked = board('mask-blocked');
+    blocked.mask.attachedTo = blocked.first.id;
+    const run = combat(blocked.ctx, [blocked.first.id], {
+      blocks: new Map([[blocked.wall.id, blocked.first.id]]),
+    });
+    expect(run.asked).toEqual([]);
+    expect(zones(blocked.ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+    expect(playerById(blocked.ctx, 'P2').life).toBe(40);
+
+    // The same attack unblocked does connect and does trigger it.
+    const open = board('mask-unblocked');
+    open.mask.attachedTo = open.first.id;
+    expect(combat(open.ctx, [open.first.id]).asked).toHaveLength(1);
+
+    // A blocker on a different attacker leaves the equipped creature unblocked: it triggers.
+    const elsewhere = board('mask-block-other');
+    elsewhere.mask.attachedTo = elsewhere.first.id;
+    const beside = combat(elsewhere.ctx, [elsewhere.first.id, elsewhere.second.id], {
+      blocks: new Map([[elsewhere.wall.id, elsewhere.second.id]]),
+    });
+    expect(beside.asked).toHaveLength(1);
+    expect(playerById(elsewhere.ctx, 'P2').life).toBe(38);
+
+    // Trample is combat damage to a player too: the part assigned past the blocker triggers it.
+    const trample = board('mask-trample');
+    const trampler = spawn(
+      trample.ctx,
+      'P1',
+      oracle({
+        name: 'Lab Trampler',
+        typeLine: 'Creature — Secret',
+        power: '4',
+        toughness: '4',
+        oracleText: 'Trample',
+      }),
+    );
+    trample.mask.attachedTo = trampler.id;
+    const through = combat(trample.ctx, [trampler.id], {
+      blocks: new Map([[trample.enemy.id, trampler.id]]),
+      split: { [trample.enemy.id]: 2, P2: 2 },
+    });
+    expect(through.asked).toHaveLength(1);
+    expect(playerById(trample.ctx, 'P2').life).toBe(38);
+  });
+
+  it('mask-of-memory-not-noncombat — damage to a player outside combat does not trigger it', () => {
+    const PINGER = oracle({
+      name: 'Lab Pinger',
+      typeLine: 'Creature — Secret',
+      power: '1',
+      toughness: '1',
+      oracleText: '{T}: Lab Pinger deals 1 damage to any target.',
+    });
+    const { ctx, mask } = board('mask-noncombat');
+    const pinger = spawn(ctx, 'P1', PINGER);
+    mask.attachedTo = pinger.id;
+    const ping = optionFor(ctx, 'P1', pinger.id);
+    expect(ping, 'the equipped creature pings').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      ping!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[ping!.targets![0]!.slot, 'P2']]),
+    );
+    resolveTop(ctx, (decision) => {
+      if (/use this ability/.test(decision.prompt))
+        throw new Error(`noncombat damage triggered the Mask: ${decision.prompt}`);
+      return { index: 0, targets: new Map() };
+    });
+    // The equipped creature did deal damage to a player — just not combat damage.
+    expect(playerById(ctx, 'P2').life).toBe(39);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(zones(ctx)).toEqual({ hand: ['Lab Keeper'], graveyard: [], library: 8 });
+
+    // Combat damage from the same creature still triggers it.
+    const fight = board('mask-noncombat-combat');
+    const hitter = spawn(fight.ctx, 'P1', PINGER);
+    fight.mask.attachedTo = hitter.id;
+    expect(combat(fight.ctx, [hitter.id]).asked).toHaveLength(1);
+  });
+
+  it('mask-of-memory-equip-sorcery — Equip {1} is offered only at sorcery speed, only onto a creature you control', () => {
+    const { ctx, mask, first, second, enemy } = board('mask-equip');
+    const targetNames = (option: NonNullable<ReturnType<typeof optionFor>>) => {
+      const nameOf = (id: string) =>
+        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? id;
+      return option.targets!.flatMap((slot) => slot.options.map(nameOf)).sort();
+    };
+
+    // Without {1} it cannot be activated.
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeUndefined();
+
+    // Your main phase, empty stack: offered, and only your creatures are legal targets.
+    addMana(playerById(ctx, 'P1'), generic(2));
+    const main = optionFor(ctx, 'P1', mask.id, EQUIP);
+    expect(main).toBeDefined();
+    expect(targetNames(main!)).toEqual(['Lab First', 'Lab Second']);
+    expect(targetNames(main!)).not.toContain(enemy.name);
+
+    // A spell on the stack: not offered, though the mana is there.
+    castFromHand(ctx, 'P1', QUICK, []);
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeUndefined();
+    resolveTop(ctx);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeDefined();
+
+    // An opponent's turn, and a non-main phase of your own turn: not offered.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeUndefined();
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeUndefined();
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    expect(optionFor(ctx, 'P1', mask.id, EQUIP)).toBeDefined();
+
+    // Activating it puts it on the stack; resolving attaches the Mask to the chosen creature.
+    const option = optionFor(ctx, 'P1', mask.id, EQUIP)!;
+    takeAction(
+      ctx,
+      'P1',
+      option.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option.targets![0]!.slot, second.id]]),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(mask.attachedTo ?? null).toBeNull();
+    resolveTop(ctx);
+    expect(mask.attachedTo).toBe(second.id);
+    expect(mask.attachedTo).not.toBe(first.id);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -378,6 +758,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
     clauseCount: 3,
+  },
+  {
+    name: 'Mask of Memory',
+    sha256: 'cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310',
+    clauseCount: 2,
   },
 ];
 

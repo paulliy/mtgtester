@@ -173,12 +173,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-6: any equipped creature, not this equipment's creature.
-  unsupportedCard(
-    'd6b2c998-a226-426c-a40d-6e6007041bfe',
-    'Mask of Memory',
-    'Equipped-creature combat damage is implemented as any equipped creature.',
-  );
+  // Mask of Memory: restored in coverage PR05. The interpreter reads the equipped-creature combat
+  // damage trigger and its optional draw-then-discard, so no override remains.
   // Catalog audit necron-remaining-batch-3: colorless omitted; exile-top is mill.
   unsupportedCard(
     '994bc16d-fdc6-475c-96df-beeb4d5aa03e',

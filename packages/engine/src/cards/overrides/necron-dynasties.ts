@@ -220,10 +220,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Enmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.',
   ]);
 
-  unimplemented('d6b2c998-a226-426c-a40d-6e6007041bfe', 'Mask of Memory', [
-    'Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.',
-  ]);
-
   defineCard(
     '698e79ec-c2bc-4973-a095-f3c57b50e39c',
     'Mutilate',

@@ -147,3 +147,39 @@ describe('Cranial Plating Card Test Lab scenario', () => {
     replays('cranial-plating-viewer-instant-attach', steps);
   });
 });
+
+describe('Mask of Memory Card Test Lab scenario', () => {
+  it('mask-of-memory-viewer-draw-discard — Equip {1} onto Lab Green Bear, then its unblocked hit draws two and discards Lab Hex', () => {
+    const steps: Step[] = [
+      { action: 'Equip {1}', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Yes' },
+      { action: 'Discard Lab Hex' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts, offered } = run(
+      'mask-of-memory-viewer-draw-discard',
+      steps,
+    );
+    const [mask] = onBattlefield('Mask of Memory');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(mask?.attachedTo).toBe(bear?.id);
+    // The Mask asked once, and the discard was offered from the enlarged hand: Lab Hex and the
+    // two drawn Forests.
+    expect(prompts.filter((prompt) => /use this ability/.test(prompt))).toHaveLength(1);
+    const discard = offered.find((options) => options.some((option) => /^Discard /.test(option)));
+    expect([...(discard ?? [])].sort()).toEqual([
+      'Discard Forest',
+      'Discard Forest',
+      'Discard Lab Hex',
+    ]);
+    // Hand +1 over the start, graveyard +1: two Forests held, Lab Hex discarded by choice.
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Forest', 'Forest']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Hex']);
+    expect(seat('P1').library).toHaveLength(2);
+    expect(seat('P2').life).toBe(38);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('mask-of-memory-viewer-draw-discard', steps);
+  });
+});
