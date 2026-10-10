@@ -1086,13 +1086,39 @@
     "4c209165-a159-4cd7-8e99-1e533d3a22a6": {
       "name": "Vigean Graftmage",
       "oracleSha256": "dd42fa4af6fe68996fc19d54535d43d6ef28cc4915fe353b5d36a6451a592e9b",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "vigean-graftmage-graft",
           "oracleText": "Graft 2",
-          "implementation": ["explicitly unsupported; Graft is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters-with replacement effect (CR 614.1c, CR 702.58a): the permanent enters already carrying two +1/+1 counters (entersWithCounters), so it is a 2/2 and does not trigger its own Graft",
+            "optional trigger on another creature entering under any player's control, with the keyword's intervening-if that this creature has a +1/+1 counter (sourceHasCounters); moveCounters removes one +1/+1 counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and nothing moves if either object has left the battlefield"
+          ],
+          "engineTestIds": [
+            "vigean-graftmage-pinned-oracle-supported",
+            "vigean-graftmage-enters-with-two",
+            "vigean-graftmage-graft-moves-a-counter",
+            "vigean-graftmage-graft-any-creature",
+            "vigean-graftmage-graft-may-decline",
+            "vigean-graftmage-graft-needs-a-counter",
+            "vigean-graftmage-graft-creature-gone",
+            "vigean-graftmage-graft-last-counter-spent",
+            "vigean-graftmage-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["vigean-graftmage-viewer-graft-and-untap"]
+        },
+        {
+          "id": "vigean-graftmage-untap",
+          "oracleText": "{1}{U}: Untap target creature with a +1/+1 counter on it.",
+          "implementation": [
+            "activated ability costing {1}{U} whose creature target is filtered to creatures with a +1/+1 counter on them (hasCounter), so a creature with no counter is never offered; the effect untaps the target"
+          ],
+          "engineTestIds": [
+            "vigean-graftmage-pinned-oracle-supported",
+            "vigean-graftmage-untap-needs-a-counter"
+          ],
+          "viewerScenarioIds": ["vigean-graftmage-viewer-graft-and-untap"]
         }
       ],
       "gameplayAiScenarioIds": []

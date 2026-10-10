@@ -1747,6 +1747,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Vigean Graftmage: graft a counter, then untap a creature that has one'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {

@@ -165,3 +165,32 @@ describe('Iron Apprentice Card Test Lab scenario', () => {
     replays('iron-apprentice-viewer-dies-moves-counters', steps);
   });
 });
+
+describe('Vigean Graftmage Card Test Lab scenario', () => {
+  it('vigean-graftmage-viewer-graft-and-untap — Graft moves a counter onto the next creature, then the untap ability targets a creature with a counter', () => {
+    const steps: Step[] = [
+      { action: 'Cast Vigean Graftmage' },
+      { action: 'Cast Lab Servo' },
+      { action: 'Yes' },
+      { action: 'Untap target creature', targets: ['Lab Ox'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, onBattlefield, prompts } = run(
+      'vigean-graftmage-viewer-graft-and-untap',
+      steps,
+    );
+    // Graft asked, and a real answer moved one of Graftmage's two counters onto Lab Servo.
+    expect(prompts.some((prompt) => /use this ability/.test(prompt))).toBe(true);
+    const [graftmage] = onBattlefield('Vigean Graftmage');
+    expect(graftmage?.counters).toEqual({ '+1/+1': 1 });
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters).toEqual({ '+1/+1': 1 });
+    // The untap ability resolved on the prepared tapped Lab Ox, which carries a counter.
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.counters).toEqual({ '+1/+1': 1 });
+    expect(ox?.tapped).toBe(false);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('vigean-graftmage-viewer-graft-and-untap', steps);
+  });
+});

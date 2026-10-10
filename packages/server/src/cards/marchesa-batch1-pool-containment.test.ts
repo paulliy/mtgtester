@@ -100,6 +100,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Toxic Deluge',
       'Triarch Praetorian',
       'Vastwood Surge',
+      'Vigean Graftmage',
       'Voice of Many',
       'War Room',
       'Watcher for Tomorrow',

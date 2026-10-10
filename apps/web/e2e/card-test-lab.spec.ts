@@ -5475,3 +5475,46 @@ test('Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird', async (
   await expect(permanent(page, 'Lab Bird').getByText('+1/+1×1')).toBeVisible();
   await expect(permanent(page, 'Lab Bird').getByText('2/2')).toBeVisible();
 });
+
+test('Vigean Graftmage: graft a counter, then untap a creature that has one', async ({ page }) => {
+  await runScenario(page, 'Vigean Graftmage: graft a counter, then untap a creature that has one');
+  const graftmage = handCard(page, 'Vigean Graftmage');
+  await expect(graftmage).toHaveClass(/actionable/, { timeout: 15_000 });
+  await graftmage.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Vigean Graftmage'));
+  // It enters with both counters already on it: a 2/2, and its own entry grafts nothing.
+  await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Vigean Graftmage').getByText('2/2')).toBeVisible();
+  // The prepared Lab Ox starts tapped with one counter.
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toBeVisible();
+
+  const servo = handCard(page, 'Lab Servo');
+  await expect(servo).toHaveClass(/actionable/);
+  await servo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Another creature entered, so Graft asks whether to move a counter onto it.
+  const use = page.getByText(/use this ability/i).first();
+  await passUntil(page, use);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Vigean Graftmage').getByText('1/1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+
+  // Untap Lab Ox, which has a +1/+1 counter on it.
+  const untapped = page.getByText(/Untap target creature with a \+1\/\+1 counter on it\. resolves/);
+  await expect(permanent(page, 'Vigean Graftmage')).toHaveClass(/actionable/);
+  await permanent(page, 'Vigean Graftmage').click();
+  const ability = page.getByRole('button', { name: /Untap target creature/ });
+  if (await ability.isVisible()) await ability.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, untapped.first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+});

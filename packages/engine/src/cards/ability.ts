@@ -549,6 +549,12 @@ export type Effect =
    * number, through counter-placement replacements.
    */
   | { op: 'transferCountersFromSource'; target: EffectRef }
+  /**
+   * "Move a +1/+1 counter from this creature onto it" (Graft, CR 702.58a): remove up to `count`
+   * counters of the kind from `from` and put that many on `to` (CR 122.5), so counter-placement
+   * replacements apply to the second half. If either object is gone, nothing moves.
+   */
+  | { op: 'moveCounters'; from: EffectRef; to: EffectRef; counter: string; count: number }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
   | { op: 'returnExiledAttachedCard' }

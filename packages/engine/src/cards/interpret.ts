@@ -1097,6 +1097,11 @@ function parseEffectSentence(
   if (s === 'untap target creature') {
     return [{ op: 'untapTarget', target: alloc('creature') }];
   }
+  // Vigean Graftmage: the counter is part of the target's legality, checked again on
+  // resolution (CR 608.2b).
+  if (s === 'untap target creature with a +1/+1 counter on it') {
+    return [{ op: 'untapTarget', target: alloc('creature', hasCounter('+1/+1')) }];
+  }
   if (s === 'untap target permanent') {
     return [{ op: 'untapTarget', target: alloc('permanent') }];
   }
@@ -7202,6 +7207,35 @@ export function interpretCard(card: OracleCard): CardDefinition {
         }),
       );
       continue;
+    }
+    // Graft N (CR 702.58a): "This permanent enters with N +1/+1 counters on it" and "Whenever
+    // another creature enters, if this permanent has a +1/+1 counter on it, you may move a +1/+1
+    // counter from this permanent onto that creature." The intervening-if is the rule's, not the
+    // reminder text's.
+    {
+      const graft = lower.match(/^graft (\w+)$/);
+      const n = graft === null ? null : parseAmount(graft[1] as string);
+      const previous = entersWithCounters['+1/+1'];
+      if (n !== null && n > 0 && (previous === undefined || typeof previous === 'number')) {
+        entersWithCounters['+1/+1'] = (previous ?? 0) + n;
+        triggers.push(
+          triggered(whenEnters(allOf(OTHER, ofType('Creature'))), {
+            condition: { kind: 'sourceHasCounters', counter: '+1/+1', cmp: '>=', n: 1 },
+            optional: true,
+            effects: [
+              {
+                op: 'moveCounters',
+                from: 'source',
+                to: 'triggerObject',
+                counter: '+1/+1',
+                count: 1,
+              },
+            ],
+            description: `Graft ${n}`,
+          }),
+        );
+        continue;
+      }
     }
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {

@@ -294,6 +294,7 @@ const effectExpressions = {
   sacrificeGreatestEachOpponent: {},
   transferCountersFromTriggerObject: {},
   transferCountersFromSource: {},
+  moveCounters: { counter: text, count: finite },
   mayPayLifeForTriggerPowerAndCounter: {},
   vindictiveLichModes: {},
   returnExiledAttachedCard: {},

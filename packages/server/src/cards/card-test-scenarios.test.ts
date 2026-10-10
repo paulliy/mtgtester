@@ -326,6 +326,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'shard-of-the-nightbringer-viewer-cast-drain',
       'sautekh-immortal-viewer-flash-counters',
       'iron-apprentice-viewer-dies-moves-counters',
+      'vigean-graftmage-viewer-graft-and-untap',
       'satoru-viewer-free-cast-draws',
       'keeper-of-secrets-viewer-flashback',
       'river-kelpie-viewer-flashback-and-persist',

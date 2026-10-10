@@ -55,7 +55,6 @@ const REASONS: Record<string, string> = {
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
-  'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
   'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
@@ -300,6 +299,7 @@ describe('Marchesa catalog audit containment', () => {
     'Body Launderer',
     'Sautekh Immortal',
     'Iron Apprentice',
+    'Vigean Graftmage',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -479,12 +479,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Twilight Diviner',
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   );
-  // Catalog audit batch 8: Graft is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '4c209165-a159-4cd7-8e99-1e533d3a22a6',
-    'Vigean Graftmage',
-    'Graft is claimed without enters-with-counters or move-counter behavior.',
-  );
+  // Vigean Graftmage: restored in coverage PR04. The interpreter reads Graft 2 as its
+  // enters-with counters and its move-a-counter trigger, so no override remains.
   // Catalog audit batch 8: one mode and one opponent, not one-or-more different players.
   unsupportedCard(
     '6dc7f837-158f-4ccf-86a5-a07a20891ec5',

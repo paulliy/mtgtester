@@ -2958,12 +2958,6 @@
     "def": {}
   },
   {
-    "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
-    "name": "Vigean Graftmage",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
     "handledLines": [
@@ -21845,12 +21839,6 @@
   {
     "oracleId": "oracle-verrak-warped-sengir",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-vigean-graftmage",
-    "name": "Vigean Graftmage",
     "handledLines": [],
     "def": {}
   },

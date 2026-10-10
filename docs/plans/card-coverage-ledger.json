@@ -3242,6 +3242,23 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
+    "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
+    "name": "Vigean Graftmage",
+    "package": "PR04.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graft is claimed without enters-with-counters or move-counter behavior."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
     "name": "Voice of Many",
     "package": "PR01.15",

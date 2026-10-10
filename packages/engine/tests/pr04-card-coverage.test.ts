@@ -13,7 +13,11 @@ import { join, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import {
+  computePriorityOptions,
+  computeTargetOptions,
+  type PriorityActionPayload,
+} from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
@@ -84,6 +88,26 @@ function pod(seed: string): GameContext {
 }
 
 type Answer = (decision: PendingDecision, count: number) => DecisionOutcome;
+
+function optionMatching(decision: PendingDecision, pattern: RegExp): DecisionOutcome {
+  const index = decision.options.findIndex((option) => pattern.test(option.description));
+  if (index < 0) {
+    throw new Error(
+      `no option matching ${String(pattern)} in: ${decision.options.map((o) => o.description).join(' | ')}`,
+    );
+  }
+  return { index, targets: new Map() };
+}
+
+/** Answer each decision whose prompt matches with the option matching the paired pattern. */
+function answers(rules: [prompt: RegExp, option: RegExp][]): Answer {
+  return (decision) => {
+    for (const [prompt, option] of rules) {
+      if (prompt.test(decision.prompt)) return optionMatching(decision, option);
+    }
+    return { index: 0, targets: new Map() };
+  };
+}
 
 function priorityOptions(ctx: GameContext, playerId: string) {
   return computePriorityOptions(ctx, playerById(ctx, playerId));
@@ -156,6 +180,7 @@ function enterFrom(
 }
 
 const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
+const blue = (n: number) => Array.from({ length: n }, () => ({ symbol: 'U' as const }));
 const black = (n: number) => Array.from({ length: n }, () => ({ symbol: 'B' as const }));
 
 /**
@@ -418,6 +443,166 @@ describe('Iron Apprentice', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.04 Vigean Graftmage
+// ---------------------------------------------------------------------------------------------
+
+describe('Vigean Graftmage', () => {
+  const { card } = pinned('Vigean Graftmage');
+  const NEWCOMER = LAB_CARD('Lab Newcomer');
+  const yes = answers([[/use this ability/, /^Yes$/]]);
+  const no = answers([[/use this ability/, /^No$/]]);
+  const HARDENED_SCALES = oracle({
+    name: 'Hardened Scales',
+    typeLine: 'Enchantment',
+    manaCost: '{G}',
+    power: null,
+    toughness: null,
+    oracleText:
+      'If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.',
+  });
+
+  /** Cast it from hand so it enters through the real replacement, then return the permanent. */
+  function castGraftmage(ctx: GameContext): EnginePermanent {
+    const object = castFromHand(ctx, 'P1', card, [...generic(2), ...blue(1)]);
+    resolveTop(ctx);
+    return onField(ctx, object.cardId)!;
+  }
+
+  /** `controllerId`'s creature enters from hand through the normal zone change. */
+  function newcomerEnters(ctx: GameContext, controllerId: string): EnginePermanent {
+    return enterFrom(ctx, controllerId, NEWCOMER, 'hand');
+  }
+
+  it('vigean-graftmage-pinned-oracle-supported — the interpreter alone models Graft 2 and the counter-gated untap', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.entersWithCounters).toEqual({ '+1/+1': 2 });
+    expect(def.triggers).toHaveLength(1);
+    const graft = def.triggers[0]!;
+    expect(graft.optional).toBe(true);
+    expect(graft.trigger).toMatchObject({
+      when: 'enters',
+      subject: { kind: 'permanent', selector: { kind: 'allOf' } },
+      // CR 702.58a's intervening-if, which the reminder text leaves out.
+      condition: { kind: 'sourceHasCounters', counter: '+1/+1', cmp: '>=', n: 1 },
+    });
+    expect(graft.effects).toEqual([
+      { op: 'moveCounters', from: 'source', to: 'triggerObject', counter: '+1/+1', count: 1 },
+    ]);
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.activatedAbilities[0]!.ability.targets).toEqual([
+      { kind: 'creature', filter: { kind: 'hasCounter', counter: '+1/+1' } },
+    ]);
+  });
+
+  it('vigean-graftmage-enters-with-two — cast for {2}{U}, it enters as a 2/2 with two +1/+1 counters and grafts nothing onto itself', () => {
+    const ctx = pod('graftmage-enters');
+    const graftmage = castGraftmage(ctx);
+    expect(graftmage.counters['+1/+1']).toBe(2);
+    expect(effectivePT(ctx, graftmage)).toEqual({ power: 2, toughness: 2 });
+    // "another creature": its own entry does not trigger Graft.
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+
+  it('vigean-graftmage-graft-moves-a-counter — another creature you control enters, and you move one counter onto it', () => {
+    const ctx = pod('graftmage-move');
+    const graftmage = castGraftmage(ctx);
+    const newcomer = newcomerEnters(ctx, 'P1');
+    settle(ctx, yes);
+    expect(onField(ctx, graftmage.cardId)!.counters['+1/+1']).toBe(1);
+    expect(onField(ctx, newcomer.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('vigean-graftmage-graft-any-creature — an opponent’s creature entering triggers it too, and the counter moves onto that creature', () => {
+    const ctx = pod('graftmage-opponent');
+    const graftmage = castGraftmage(ctx);
+    const newcomer = newcomerEnters(ctx, 'P2');
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.controllerId)).toEqual(['P1']);
+    settle(ctx, yes);
+    expect(onField(ctx, graftmage.cardId)!.counters['+1/+1']).toBe(1);
+    expect(onField(ctx, newcomer.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('vigean-graftmage-graft-may-decline — declining the move leaves both counters where they are', () => {
+    const ctx = pod('graftmage-decline');
+    const graftmage = castGraftmage(ctx);
+    const newcomer = newcomerEnters(ctx, 'P1');
+    settle(ctx, no);
+    expect(onField(ctx, graftmage.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, newcomer.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('vigean-graftmage-graft-needs-a-counter — with no +1/+1 counter left on it, another creature entering triggers nothing', () => {
+    const ctx = pod('graftmage-empty');
+    const graftmage = castGraftmage(ctx);
+    graftmage.counters['+1/+1'] = 0;
+    newcomerEnters(ctx, 'P1');
+    // CR 603.4: the intervening-if is false as the creature enters.
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+
+  it('vigean-graftmage-graft-creature-gone — if the entering creature leaves before resolution, no counter moves', () => {
+    const ctx = pod('graftmage-gone');
+    const graftmage = castGraftmage(ctx);
+    const newcomer = newcomerEnters(ctx, 'P1');
+    kill(ctx, newcomer);
+    settle(ctx, yes);
+    expect(onField(ctx, graftmage.cardId)!.counters['+1/+1']).toBe(2);
+  });
+
+  it('vigean-graftmage-graft-last-counter-spent — two creatures entering with one counter left move only one counter, and the 0/0 Graftmage dies', () => {
+    const ctx = pod('graftmage-last');
+    const graftmage = castGraftmage(ctx);
+    graftmage.counters['+1/+1'] = 1;
+    const first = newcomerEnters(ctx, 'P1');
+    const second = enterFrom(ctx, 'P1', LAB_CARD('Lab Second'), 'hand');
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+    settle(ctx, yes);
+    const moved =
+      (onField(ctx, first.cardId)!.counters['+1/+1'] ?? 0) +
+      (onField(ctx, second.cardId)!.counters['+1/+1'] ?? 0);
+    expect(moved).toBe(1);
+    // Its last counter gone, the 0/0 Graftmage dies to state-based actions.
+    expect(onField(ctx, graftmage.cardId)).toBeUndefined();
+  });
+
+  it('vigean-graftmage-counter-replacements-apply — Hardened Scales adds one to the entry counters and to the moved counter', () => {
+    const ctx = pod('graftmage-scales');
+    spawn(ctx, 'P1', HARDENED_SCALES);
+    const graftmage = castGraftmage(ctx);
+    expect(graftmage.counters['+1/+1']).toBe(3);
+    const newcomer = newcomerEnters(ctx, 'P1');
+    settle(ctx, yes);
+    // CR 122.5: moving a counter puts it on the creature, so the replacement applies.
+    expect(onField(ctx, graftmage.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, newcomer.cardId)!.counters['+1/+1']).toBe(2);
+  });
+
+  it('vigean-graftmage-untap-needs-a-counter — {1}{U} untaps a tapped creature with a +1/+1 counter, and one without is never offered', () => {
+    const ctx = pod('graftmage-untap');
+    const graftmage = castGraftmage(ctx);
+    const bare = spawn(ctx, 'P1', LAB_CARD('Lab Bare'), { tapped: true });
+    const marked = spawn(ctx, 'P1', LAB_CARD('Lab Marked'), { tapped: true });
+    marked.counters['+1/+1'] = 1;
+    addMana(playerById(ctx, 'P1'), [...generic(1), ...blue(1)]);
+    const option = optionFor(ctx, 'P1', graftmage.id, /Untap/);
+    expect(option).toBeDefined();
+    const payload = option!.payload as PriorityActionPayload;
+    const spec = interpretCard(card).activatedAbilities[0]!.ability.targets[0]!;
+    const offered = computeTargetOptions(ctx, spec, 'P1').map(
+      (id) => ctx.state.battlefield.find((perm) => perm.id === id)?.name,
+    );
+    expect(offered).toContain('Lab Marked');
+    expect(offered).not.toContain('Lab Bare');
+    takeAction(ctx, 'P1', payload, undefined, new Map([[0, marked.id]]));
+    resolveTop(ctx);
+    expect(onField(ctx, marked.cardId)!.tapped).toBe(false);
+    expect(onField(ctx, bare.cardId)!.tapped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -428,6 +613,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Vigean Graftmage',
+    sha256: 'dd42fa4af6fe68996fc19d54535d43d6ef28cc4915fe353b5d36a6451a592e9b',
+    clauseCount: 2,
+  },
   {
     name: 'Iron Apprentice',
     sha256: '46fcccb41b003c4e811243f737759ceade7e071cb7fc8852b48df71a94e0d680',

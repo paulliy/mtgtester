@@ -7711,6 +7711,38 @@ function ironApprenticeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function vigeanGraftmageScenario(gameId: GameId): CardTestScenario {
+  const graftmage = pinnedFrom(MARCHESA_BATCH1, 'Vigean Graftmage');
+  const islands = Array.from({ length: 6 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: 'vigean-graftmage-viewer-graft-and-untap',
+    title: 'Vigean Graftmage: graft a counter, then untap a creature that has one',
+    instructions: [
+      'Vigean Graftmage and Lab Servo are in your hand; six Islands and a tapped Lab Ox carrying a +1/+1 counter are on your battlefield.',
+      'Cast Vigean Graftmage: it enters as a 2/2 with two +1/+1 counters on it.',
+      'Cast Lab Servo. When another creature enters, Graft asks whether to use this ability: say Yes to move one +1/+1 counter from Vigean Graftmage onto Lab Servo.',
+      'Activate Vigean Graftmage ({1}{U}) and target the tapped Lab Ox, which has a +1/+1 counter on it.',
+    ],
+    expectedOutcome:
+      'Vigean Graftmage is a 1/1 with one +1/+1 counter, Lab Servo is a 2/2 with one, and Lab Ox is untapped.',
+    oracleSha256: graftmage.sha256,
+    clauseIds: ['vigean-graftmage-graft', 'vigean-graftmage-untap'],
+    decks: {
+      P1: [graftmage.card, LAB_SERVO, LAB_OX, ...islands],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Vigean Graftmage', 'Lab Servo'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((island) => island.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true, counters: { '+1/+1': 1 } },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8875,6 +8907,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'shard-of-the-nightbringer-viewer-cast-drain',
   'sautekh-immortal-viewer-flash-counters',
   'iron-apprentice-viewer-dies-moves-counters',
+  'vigean-graftmage-viewer-graft-and-untap',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9109,6 +9142,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
   'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
   'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
+  'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

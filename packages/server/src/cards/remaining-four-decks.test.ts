@@ -107,7 +107,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Kardur, Doomscourge',
       'Mana Sculpt',
       'Vindictive Lich',
-      'Vigean Graftmage',
       "Angel's Grace",
       'Display of Power',
       'Nighthawk Scavenger',

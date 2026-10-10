@@ -6144,6 +6144,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr04",
       "note": "Registration deleted: the interpreter reads the dies trigger with an intervening-if on the creature's last-known counters (CR 603.10a, sourceMatches hasAnyCounter) and the transferCountersFromSource effect, which puts every kind and number of those counters on the target creature through addCounters so counter replacements apply; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
+      "name": "Vigean Graftmage",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Graft 2 (CR 702.58a) as an enters-with +1/+1 replacement plus an optional trigger on another creature entering, with the intervening-if that this creature has a +1/+1 counter, whose moveCounters effect removes the counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and reads the untap ability's hasCounter target filter; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
     }
   ]
 }

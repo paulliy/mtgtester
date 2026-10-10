@@ -3139,6 +3139,21 @@ export function* executeAbility(
         }
         break;
       }
+      case 'moveCounters': {
+        const fromId = ref(effect.from);
+        const toId = ref(effect.to);
+        const from = fromId === null ? undefined : findPermanent(ctx, fromId);
+        const to = toId === null ? undefined : findPermanent(ctx, toId);
+        if (from === undefined || to === undefined || from.id === to.id) break;
+        const present = counterCount(from.counters, effect.counter);
+        const moved = Math.min(present, effect.count);
+        if (moved <= 0) break;
+        if (moved === present) delete from.counters[effect.counter];
+        else setCounterCount(from.counters, effect.counter, present - moved);
+        emit(ctx, 'removeCounter', { target: from.name, counter: effect.counter, count: moved });
+        addCounters(ctx, source, to, effect.counter, moved);
+        break;
+      }
       case 'mayPayLifeForTriggerPowerAndCounter': {
         const facts = eventObjectFacts(ctx, scope);
         if (facts === undefined) break;
