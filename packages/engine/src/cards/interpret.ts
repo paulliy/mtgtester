@@ -4123,7 +4123,17 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const countersPutOnSelf = firstLine.match(
     /^whenever one or more ([+-]\d+\/[+-]\d+|[a-z]+) counters are put on (?:~|this creature), (.*)$/,
   );
-  if (countersPutOnSelf !== null) {
+  // "Whenever you put a counter on a creature you control" (Mikey & Leo): any kind, placed by
+  // you (CR 122.6a: an entering permanent's counters are put on it by its controller).
+  const countersPutByYou = firstLine.match(
+    /^whenever you put (?:a|one or more) counters? on (.+?), (.*)$/,
+  );
+  if (countersPutByYou !== null) {
+    const selector = parseTriggerSubject(countersPutByYou[1] as string, card);
+    if (selector === null) return null;
+    heads = [{ when: 'countersPut', subject: { kind: 'permanent', selector }, byYou: true }];
+    body = countersPutByYou[2] as string;
+  } else if (countersPutOnSelf !== null) {
     heads = [
       { when: 'countersPut', subject: SELF_SUBJECT, counter: countersPutOnSelf[1] as string },
     ];
@@ -4498,6 +4508,16 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (parsed === null) return null;
     condition = parsed;
     body = iff[2] as string;
+  }
+  // "This ability triggers only once each turn." (Mikey & Leo) — a limit on the object's
+  // ability, kept on the head so every dispatcher of that event can honor it.
+  {
+    const once = body.match(/^([\s\S]+?)\.? this ability triggers only once each turn\.?$/);
+    if (once !== null) {
+      if (!heads.every((head) => 'subject' in head)) return null;
+      heads = heads.map((head) => ({ ...head, oncePerTurn: true as const }));
+      body = once[1] as string;
+    }
   }
   // "Whenever a creature you control with a +1/+1 counter on it attacks, tap target creature
   // defending player controls" (Elite Scaleguard): for an attacks head the event player is the

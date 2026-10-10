@@ -7859,6 +7859,50 @@ function pensiveProfessorScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A one-mana instant that puts a +1/+1 counter on a target creature: Mikey & Leo's trigger source. */
+const LAB_GRAFT = card({
+  oracleId: 'lab-graft',
+  name: 'Lab Graft',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Put a +1/+1 counter on target creature.',
+});
+
+function mikeyAndLeoScenario(gameId: GameId): CardTestScenario {
+  const mikey = pinnedFrom(COVERAGE_PR04, 'Mikey & Leo, Chaos & Order');
+  return pr01Scenario(gameId, {
+    id: 'mikey-and-leo-viewer-counter-draw',
+    title: 'Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card',
+    instructions: [
+      'Mikey & Leo and Lab Servo are on your battlefield with two Forests; two Lab Grafts are in your hand.',
+      'Cast Lab Graft targeting Lab Servo. You put a counter on a creature you control, so Mikey & Leo draws you a card.',
+      'Cast the second Lab Graft on Lab Servo. The ability triggers only once each turn, so you draw nothing more.',
+    ],
+    expectedOutcome:
+      'Lab Servo has two +1/+1 counters and you drew exactly one card, from the first Lab Graft.',
+    oracleSha256: mikey.sha256,
+    clauseIds: ['mikey-and-leo-counter-draw'],
+    decks: {
+      P1: [mikey.card, LAB_GRAFT, LAB_GRAFT, LAB_SERVO, FOREST, FOREST, LAB_OX, LAB_HEX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Graft', 'Lab Graft'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Mikey & Leo, Chaos & Order', 'Lab Servo', 'Forest', 'Forest'],
+        },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9027,6 +9071,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9265,6 +9310,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

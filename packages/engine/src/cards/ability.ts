@@ -1423,6 +1423,10 @@ export type TriggerHead =
       defendingPlayerIsEventPlayer?: true;
       /** `countersPut`: only a placement that includes this counter kind. */
       counter?: string;
+      /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
+      byYou?: true;
+      /** "This ability triggers only once each turn." */
+      oncePerTurn?: true;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

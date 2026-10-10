@@ -329,6 +329,8 @@ const shapes = {
     leavesTo: { array: leaf },
     defendingPlayerIsEventPlayer: leaf,
     counter: leaf,
+    byYou: leaf,
+    oncePerTurn: leaf,
     condition: { node: 'Condition' },
     caster: leaf,
     filter: { node: 'Selector' },

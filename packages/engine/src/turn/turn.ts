@@ -62,6 +62,7 @@ function untapStep(ctx: GameContext): void {
   // this clears for every permanent on the battlefield — not just the active player's.
   for (const perm of ctx.state.battlefield) {
     perm.activationsThisTurn = [];
+    if (perm.triggeredOnceThisTurn !== undefined) delete perm.triggeredOnceThisTurn;
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
     perm.mustBlockThisTurn = false;
     // CR 701.15a: a goad requirement lasts until the next turn of the player who caused it.

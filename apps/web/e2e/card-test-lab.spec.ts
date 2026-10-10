@@ -5612,3 +5612,40 @@ test('Pensive Professor: Increment grows it, then the counter draws a card', asy
   await expect(handCard(page, 'Island')).toHaveCount(1);
   await expect(handCard(page, 'Lab Ripple')).toHaveCount(0);
 });
+
+test('Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card',
+  );
+  // Nothing has been drawn yet: the hand is the two Lab Grafts.
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(2);
+  await expect(handCard(page, 'Lab Ox').or(handCard(page, 'Lab Hex'))).toHaveCount(0);
+  const castOnServo = async () => {
+    const graft = handCard(page, 'Lab Graft').first();
+    await expect(graft).toHaveClass(/actionable/, { timeout: 15_000 });
+    await graft.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Lab Servo').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+  };
+
+  // The first counter you put on a creature you control draws a card.
+  await castOnServo();
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×1'));
+  const drawn = handCard(page, 'Lab Ox').or(handCard(page, 'Lab Hex'));
+  await passUntil(page, drawn);
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(1);
+  await expect(drawn).toHaveCount(1);
+
+  // The second counter the same turn does not: the ability triggers only once each turn.
+  await castOnServo();
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×2'));
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(0);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(drawn).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});

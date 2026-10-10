@@ -119,6 +119,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * activation, and a permanent that leaves and returns is a new object with a clean slate.
    */
   activationsThisTurn: number[];
+  /**
+   * Indexes (into its triggered abilities) of "This ability triggers only once each turn"
+   * abilities that have triggered this turn. Cleared every turn; a new object starts empty.
+   */
+  triggeredOnceThisTurn?: number[];
   /** Exhaust abilities (by index) this object has already activated (CR 702.177). */
   exhaustedAbilities?: number[];
   /**

@@ -1139,6 +1139,129 @@ describe('Pensive Professor', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.15 Mikey & Leo, Chaos & Order
+// ---------------------------------------------------------------------------------------------
+
+describe('Mikey & Leo, Chaos & Order', () => {
+  const { card } = pinned('Mikey & Leo, Chaos & Order');
+  const ALLY = LAB_CARD('Lab Ally');
+  const RIVAL = LAB_CARD('Lab Rival');
+  const ARRIVAL = oracle({
+    name: 'Lab Arrival',
+    typeLine: 'Creature — Secret',
+    manaCost: '{G}',
+    power: '0',
+    toughness: '1',
+    oracleText: 'This creature enters with a +1/+1 counter on it.',
+  });
+
+  /** `from`'s controller puts `count` `counter` counters on `target` with an effect of `from`. */
+  function putCounter(
+    ctx: GameContext,
+    from: EnginePermanent,
+    target: EnginePermanent,
+    counter = '+1/+1',
+  ) {
+    pump(
+      executeAbility(
+        ctx,
+        {
+          id: from.id,
+          cardId: from.cardId,
+          name: from.name,
+          oracleId: from.oracleId,
+          controllerId: from.controllerId,
+        },
+        {
+          kind: 'activated',
+          targets: [{ kind: 'creature' }],
+          effects: [{ op: 'putCounters', target: 0, counter, count: 1 }],
+        },
+        [target.id],
+      ),
+    );
+    settle(ctx);
+  }
+
+  const hand = (ctx: GameContext) => playerById(ctx, 'P1').hand.length;
+
+  it('mikey-and-leo-pinned-oracle-supported — the interpreter models a you-put counters trigger limited to once each turn', () => {
+    expect(getOverride(card.oracleId)).toBeUndefined();
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'countersPut',
+      subject: { kind: 'permanent' },
+      byYou: true,
+      oncePerTurn: true,
+    });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('mikey-and-leo-you-put-a-counter-draws — your effect putting a counter on your creature draws a card', () => {
+    const ctx = pod('mikey-draws');
+    const mikey = spawn(ctx, 'P1', card);
+    const ally = spawn(ctx, 'P1', ALLY);
+    const before = hand(ctx);
+    putCounter(ctx, mikey, ally);
+    expect(hand(ctx)).toBe(before + 1);
+  });
+
+  it('mikey-and-leo-once-each-turn — a second counter that turn draws nothing; the next turn it draws again', () => {
+    const ctx = pod('mikey-once');
+    const mikey = spawn(ctx, 'P1', card);
+    const ally = spawn(ctx, 'P1', ALLY);
+    const before = hand(ctx);
+    putCounter(ctx, mikey, ally);
+    putCounter(ctx, mikey, mikey);
+    expect(hand(ctx)).toBe(before + 1);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    quietTurn(ctx);
+    const next = hand(ctx);
+    putCounter(ctx, mikey, ally);
+    expect(hand(ctx)).toBe(next + 1);
+  });
+
+  it('mikey-and-leo-any-counter-kind — a -1/-1 counter you put on your creature counts too', () => {
+    const ctx = pod('mikey-kind');
+    const mikey = spawn(ctx, 'P1', card);
+    const ally = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Lab Sturdy', typeLine: 'Creature — Secret', power: '2', toughness: '3' }),
+    );
+    const before = hand(ctx);
+    putCounter(ctx, mikey, ally, '-1/-1');
+    expect(hand(ctx)).toBe(before + 1);
+  });
+
+  it('mikey-and-leo-entering-with-counters — your creature entering with a counter is a counter you put on it (CR 122.6a)', () => {
+    const ctx = pod('mikey-entry');
+    spawn(ctx, 'P1', card);
+    const before = hand(ctx);
+    enterFrom(ctx, 'P1', ARRIVAL, 'hand');
+    settle(ctx);
+    expect(hand(ctx)).toBe(before + 1);
+  });
+
+  it('mikey-and-leo-not-theirs — an opponent putting a counter on your creature, or you on theirs, draws nothing', () => {
+    const ctx = pod('mikey-not-theirs');
+    const mikey = spawn(ctx, 'P1', card);
+    const ally = spawn(ctx, 'P1', ALLY);
+    const rival = spawn(ctx, 'P2', RIVAL);
+    const before = hand(ctx);
+    putCounter(ctx, rival, ally);
+    putCounter(ctx, mikey, rival);
+    expect(hand(ctx)).toBe(before);
+    // Neither used up the once-each-turn trigger.
+    putCounter(ctx, mikey, ally);
+    expect(hand(ctx)).toBe(before + 1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1149,6 +1272,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Mikey & Leo, Chaos & Order',
+    sha256: '0c68ed59f882ea595ee50cbc36912ca70b5b4d5ef1a56bc503e3c532d2bd3b5a',
+    clauseCount: 1,
+  },
   {
     name: 'Pensive Professor',
     sha256: 'd1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8',

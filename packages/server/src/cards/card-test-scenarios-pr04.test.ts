@@ -272,3 +272,28 @@ describe('Pensive Professor Card Test Lab scenario', () => {
     replays('pensive-professor-viewer-increment-draw', steps);
   });
 });
+
+describe('Mikey & Leo, Chaos & Order Card Test Lab scenario', () => {
+  it('mikey-and-leo-viewer-counter-draw — the first counter you put each turn draws a card, the second does not', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Graft', targets: ['Lab Servo'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Graft', targets: ['Lab Servo'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'mikey-and-leo-viewer-counter-draw',
+      steps,
+    );
+    // Both Lab Grafts resolved onto Lab Servo.
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters).toEqual({ '+1/+1': 2 });
+    // Only the first counter drew: both Lab Grafts left the hand and exactly one new card arrived.
+    const p1 = seat('P1');
+    expect(p1.hand).toHaveLength(1);
+    expect(p1.library).toHaveLength(1);
+    expect(p1.graveyard.map((card) => card.name)).toEqual(['Lab Graft', 'Lab Graft']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('mikey-and-leo-viewer-counter-draw', steps);
+  });
+});

@@ -1485,7 +1485,7 @@ export function queueTriggersForEvent(
   const sources = [...ctx.state.battlefield, ...missing];
 
   for (const source of sources) {
-    for (const ability of triggersOf(ctx, source)) {
+    for (const [abilityIndex, ability] of triggersOf(ctx, source).entries()) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       // A graveyard-only ability does not function on the battlefield (CR 112.6).
@@ -1518,6 +1518,8 @@ export function queueTriggersForEvent(
           spec.counter !== undefined &&
           !(s.counterKinds ?? []).includes(spec.counter)
         )
+          return false;
+        if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
@@ -1606,6 +1608,13 @@ export function queueTriggersForEvent(
           ) {
             debug(ctx, 'stack', `trigger not queued: ${source.name} � intervening-if false`);
             continue;
+          }
+          // "This ability triggers only once each turn": the object's first firing this turn is
+          // the only one, even within one simultaneous event. An effect that makes that firing
+          // trigger additional times still adds its copies.
+          if ('oncePerTurn' in spec && spec.oncePerTurn === true && copy === 0) {
+            if (source.triggeredOnceThisTurn?.includes(abilityIndex) === true) break;
+            source.triggeredOnceThisTurn = [...(source.triggeredOnceThisTurn ?? []), abilityIndex];
           }
           const amounts = group.filter((s) => s.amount !== undefined);
           const scope: TriggerScope = {

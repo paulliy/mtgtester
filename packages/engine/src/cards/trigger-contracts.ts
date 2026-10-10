@@ -130,6 +130,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'leavesTo',
           'defendingPlayerIsEventPlayer',
           'counter',
+          'byYou',
+          'oncePerTurn',
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
@@ -227,6 +229,13 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.counter`,
         message: 'a counter kind requires a countersPut event',
       });
+    if (head['byYou'] !== undefined && (head['byYou'] !== true || head['when'] !== 'countersPut'))
+      issues.push({
+        path: `${path}.byYou`,
+        message: 'a placing player requires a countersPut event',
+      });
+    if (head['oncePerTurn'] !== undefined && head['oncePerTurn'] !== true)
+      issues.push({ path: `${path}.oncePerTurn`, message: 'once each turn is a flag' });
   } else if (family === 'cast') {
     if (!['you', 'opponent', 'each'].includes(head['caster'] as string))
       issues.push({

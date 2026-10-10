@@ -8383,6 +8383,31 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "a86117c1-b83d-4350-9a10-a23b7e67e1bd": {
+      "name": "Mikey & Leo, Chaos & Order",
+      "oracleSha256": "0c68ed59f882ea595ee50cbc36912ca70b5b4d5ef1a56bc503e3c532d2bd3b5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "mikey-and-leo-counter-draw",
+          "oracleText": "Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.",
+          "implementation": [
+            "interpreted countersPut trigger whose byYou filter matches only counters its controller puts, on a creature that controller controls (an effect of theirs, or a creature of theirs entering with counters, CR 122.6a), of any counter kind",
+            "the trigger's oncePerTurn limit lets it trigger a single time each turn; a counter an opponent puts on your creature, or that you put on theirs, neither triggers it nor uses up the limit"
+          ],
+          "engineTestIds": [
+            "mikey-and-leo-pinned-oracle-supported",
+            "mikey-and-leo-you-put-a-counter-draws",
+            "mikey-and-leo-once-each-turn",
+            "mikey-and-leo-any-counter-kind",
+            "mikey-and-leo-entering-with-counters",
+            "mikey-and-leo-not-theirs"
+          ],
+          "viewerScenarioIds": ["mikey-and-leo-viewer-counter-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
