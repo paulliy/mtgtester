@@ -2421,6 +2421,67 @@ describe('The Fantasticar', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: "one or more … deal combat damage to a player" fires once per damaged player
+// ---------------------------------------------------------------------------------------------
+
+describe('Primitive: combat damage aggregate per player', () => {
+  const WATCHER = oracle({
+    name: 'Lab Damage Watcher',
+    typeLine: 'Creature — Secret',
+    power: '0',
+    toughness: '1',
+    oracleText:
+      'Whenever one or more creatures you control deal combat damage to a player, you gain 1 life.',
+  });
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Secret', power: '2', toughness: '2' });
+
+  /** Run combat with `attackers` (permanent id → defending player), nobody blocking. */
+  function attackWith(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('combat-damage-aggregate-per-player — creatures hitting two players trigger once for each player', () => {
+    const ctx = pod('aggregate-two-players');
+    spawn(ctx, 'P1', WATCHER);
+    const a = spawn(ctx, 'P1', BEAR('Lab A'));
+    const b = spawn(ctx, 'P1', BEAR('Lab B'));
+    const start = playerById(ctx, 'P1').life;
+    attackWith(
+      ctx,
+      new Map([
+        [a.id, 'P2'],
+        [b.id, 'P3'],
+      ]),
+    );
+    expect(playerById(ctx, 'P1').life).toBe(start + 2);
+  });
+
+  it('combat-damage-aggregate-per-player — two creatures hitting the same player trigger once', () => {
+    const ctx = pod('aggregate-one-player');
+    spawn(ctx, 'P1', WATCHER);
+    const a = spawn(ctx, 'P1', BEAR('Lab A'));
+    const b = spawn(ctx, 'P1', BEAR('Lab B'));
+    const start = playerById(ctx, 'P1').life;
+    attackWith(
+      ctx,
+      new Map([
+        [a.id, 'P2'],
+        [b.id, 'P2'],
+      ]),
+    );
+    expect(playerById(ctx, 'P1').life).toBe(start + 1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 

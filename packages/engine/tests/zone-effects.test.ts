@@ -239,7 +239,10 @@ describe('Broodcaller Scourge — bounded hand-to-battlefield', () => {
 
     expect(def.modeled).toBe(true);
     const trigger = def.triggers[0];
-    expect(trigger?.trigger).toMatchObject({ when: 'dealsCombatDamageToPlayer', aggregate: true });
+    expect(trigger?.trigger).toMatchObject({
+      when: 'dealsCombatDamageToPlayer',
+      aggregate: 'byEventPlayer',
+    });
     expect(trigger?.optional).toBe(true);
     expect(trigger?.effects).toEqual([
       {

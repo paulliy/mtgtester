@@ -4643,7 +4643,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
               ? 'enters'
               : 'dealsCombatDamageToPlayer',
         subject: { kind: 'permanent', selector },
-        aggregate: true,
+        // "… deal combat damage to a player" fires once for EACH player dealt damage, "that
+        // damage" being the damage to that player — the same grouping as Pia Nalaar's override.
+        aggregate: (aggregate[3] as string).startsWith('deal') ? 'byEventPlayer' : true,
       },
     ];
     body = aggregate[4] as string;
