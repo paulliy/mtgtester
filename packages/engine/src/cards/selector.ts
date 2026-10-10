@@ -157,6 +157,11 @@ export type Selector =
    */
   | { kind: 'basePowerToughness'; power: number; toughness: number }
   /**
+   * EVENT-ONLY: "with power greater than its base power" (Kutzil, Malamet Exemplar) — current
+   * power above the layer 7b value (CR 613.4b), so counters or a pump raised it.
+   */
+  | { kind: 'powerGreaterThanBase' }
+  /**
    * EVENT-ONLY: "with equal or lesser power" than the ability's source (Body Launderer) — its
    * current power, or its last-known power once it has left the battlefield (CR 608.2h). An
    * unknown source power matches nothing.
@@ -258,6 +263,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'powerAtMostSource':
     case 'toughnessAtLeast':
     case 'basePowerToughness':
+    case 'powerGreaterThanBase':
     case 'hasKeyword':
     case 'inCombat':
     case 'attackingEventPlayer':
@@ -356,6 +362,8 @@ export function selectMatches(
       return (
         candidate.basePower === selector.power && candidate.baseToughness === selector.toughness
       );
+    case 'powerGreaterThanBase':
+      return candidate.basePower !== undefined && candidate.power > candidate.basePower;
     case 'manaValueAtMost':
       return candidate.manaValue !== undefined && candidate.manaValue <= selector.n;
     case 'manaValueAtLeast':

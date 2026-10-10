@@ -8385,6 +8385,39 @@ function theFantasticarScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function kutzilScenario(gameId: GameId): CardTestScenario {
+  const kutzil = pinnedFrom(COVERAGE_PR04, 'Kutzil, Malamet Exemplar');
+  return pr01Scenario(gameId, {
+    id: 'kutzil-malamet-exemplar-viewer-above-base-draw',
+    title:
+      'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+    instructions: [
+      'Kutzil, Lab Servo (carrying a +1/+1 counter, so its power is above its base power) and Lab Red Bear (no counters) are on your battlefield. P2 has a Mountain and a Lab Shock in hand but controls no creatures.',
+      'Attack P2 with all three creatures. Kutzil’s first ability stops P2 from casting Lab Shock during your turn.',
+      'Combat damage is dealt: only Lab Servo has power greater than its base power, so Kutzil’s trigger draws you exactly one card.',
+    ],
+    expectedOutcome:
+      'P2 takes 7 combat damage (33) and cannot cast Lab Shock, and you drew exactly one card, from the single trigger.',
+    oracleSha256: kutzil.sha256,
+    clauseIds: ['kutzil-malamet-exemplar-cast-lock', 'kutzil-malamet-exemplar-above-base-draw'],
+    decks: {
+      P1: [kutzil.card, LAB_SERVO, LAB_RED_BEAR, FOREST, FOREST, FOREST],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kutzil, Malamet Exemplar', 'Lab Red Bear'] },
+        { playerId: 'P1', cardNames: ['Lab Servo'], counters: { '+1/+1': 1 } },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+      hand: [{ playerId: 'P2', cardNames: ['Lab Shock'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9553,6 +9586,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'kutzil-malamet-exemplar-viewer-above-base-draw',
   'the-fantasticar-viewer-fourth-noncreature',
   'unbreakable-formation-viewer-addendum-main-phase',
   'first-family-viewer-colors-draw-gain',
@@ -9803,6 +9837,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'kutzil-malamet-exemplar-viewer-above-base-draw': kutzilScenario,
   'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,
   'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,
   'first-family-viewer-colors-draw-gain': firstFamilyScenario,

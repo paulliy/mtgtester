@@ -477,6 +477,44 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242",
+      "card": {
+        "oracleId": "3233af43-7826-4895-b67e-03c6102c2cd5",
+        "scryfallId": "c9f88a40-a6ed-4c1f-a309-011aca1acddd",
+        "name": "Kutzil, Malamet Exemplar",
+        "manaCost": "{1}{G}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Cat Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Warrior"
+        ],
+        "oracleText": "Your opponents can't cast spells during your turn.\nWhenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

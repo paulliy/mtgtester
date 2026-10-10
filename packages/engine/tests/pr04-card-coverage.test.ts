@@ -2482,6 +2482,110 @@ describe('Primitive: combat damage aggregate per player', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.13 Kutzil, Malamet Exemplar
+// ---------------------------------------------------------------------------------------------
+
+describe('Kutzil, Malamet Exemplar', () => {
+  const { card } = pinned('Kutzil, Malamet Exemplar');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Secret', power: '2', toughness: '2' });
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /** Run combat with `attackers` (permanent id → defending player); returns P1's cards drawn. */
+  function combat(ctx: GameContext, attackers: Map<string, string>) {
+    const hand = playerById(ctx, 'P1').hand.length;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return playerById(ctx, 'P1').hand.length - hand;
+  }
+
+  it('kutzil-malamet-exemplar-pinned-oracle-supported — the cast lock and the per-player above-base damage draw', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'dealsCombatDamageToPlayer',
+      aggregate: 'byEventPlayer',
+      subject: {
+        kind: 'permanent',
+        selector: { kind: 'allOf', of: expect.arrayContaining([{ kind: 'powerGreaterThanBase' }]) },
+      },
+    });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('kutzil-malamet-exemplar-above-base-draws — a creature with a +1/+1 counter connects and you draw; one at base power does not', () => {
+    const ctx = pod('kutzil-above');
+    spawn(ctx, 'P1', card);
+    const grown = spawn(ctx, 'P1', BEAR('Lab Grown'));
+    grown.counters['+1/+1'] = 1;
+    expect(combat(ctx, new Map([[grown.id, 'P2']]))).toBe(1);
+
+    const plain = pod('kutzil-base');
+    spawn(plain, 'P1', card);
+    const bear = spawn(plain, 'P1', BEAR('Lab Plain'));
+    expect(combat(plain, new Map([[bear.id, 'P2']]))).toBe(0);
+  });
+
+  it('kutzil-malamet-exemplar-once-per-player — two grown creatures hitting one player draw one card; hitting two players draw two', () => {
+    const ctx = pod('kutzil-one-player');
+    spawn(ctx, 'P1', card);
+    const a = spawn(ctx, 'P1', BEAR('Lab A'));
+    const b = spawn(ctx, 'P1', BEAR('Lab B'));
+    a.counters['+1/+1'] = 1;
+    b.counters['+1/+1'] = 1;
+    expect(
+      combat(
+        ctx,
+        new Map([
+          [a.id, 'P2'],
+          [b.id, 'P2'],
+        ]),
+      ),
+    ).toBe(1);
+
+    const split = pod('kutzil-two-players');
+    spawn(split, 'P1', card);
+    const c = spawn(split, 'P1', BEAR('Lab C'));
+    const d = spawn(split, 'P1', BEAR('Lab D'));
+    c.counters['+1/+1'] = 1;
+    d.counters['+1/+1'] = 1;
+    expect(
+      combat(
+        split,
+        new Map([
+          [c.id, 'P2'],
+          [d.id, 'P3'],
+        ]),
+      ),
+    ).toBe(2);
+  });
+
+  it('kutzil-malamet-exemplar-cast-lock — opponents cannot cast spells during your turn, but can on theirs', () => {
+    const ctx = pod('kutzil-lock');
+    spawn(ctx, 'P1', card);
+    const quick = conjure(ctx, 'P2', QUICK, 'hand');
+    expect(optionFor(ctx, 'P2', quick.id)).toBeUndefined();
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P2', quick.id)).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2492,6 +2596,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Kutzil, Malamet Exemplar',
+    sha256: '57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242',
+    clauseCount: 2,
+  },
   {
     name: 'The Fantasticar',
     sha256: '182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606',

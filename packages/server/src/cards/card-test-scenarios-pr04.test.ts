@@ -606,3 +606,25 @@ describe('The Fantasticar Card Test Lab scenario', () => {
     replays('the-fantasticar-viewer-fourth-noncreature', steps);
   });
 });
+
+describe('Kutzil, Malamet Exemplar Card Test Lab scenario', () => {
+  it('kutzil-malamet-exemplar-viewer-above-base-draw — only the grown creature qualifies, so one card is drawn, and P2 cannot cast', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2', 'P2', 'P2'] }];
+    const { scenario, state, seat, offered } = run(
+      'kutzil-malamet-exemplar-viewer-above-base-draw',
+      steps,
+    );
+    // Kutzil 3 + Lab Servo (1 + counter) 2 + Lab Red Bear 2 = 7.
+    expect(seat('P2').life).toBe(33);
+    // One trigger, one card.
+    expect(seat('P1').hand).toHaveLength(1);
+    // P2 held Lab Shock and an untapped Mountain all turn, but was never offered the cast.
+    expect(offered.flat().some((action) => /Cast Lab Shock/.test(action))).toBe(false);
+    // Without a legal cast, P2 is never even asked for priority: the only decision is the attack.
+    expect(offered).toHaveLength(1);
+    expect(seat('P2').hand.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('kutzil-malamet-exemplar-viewer-above-base-draw', steps);
+  });
+});

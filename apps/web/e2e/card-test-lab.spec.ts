@@ -6034,3 +6034,33 @@ test('The Fantasticar: become a creature, then sacrifice it on your fourth noncr
   await expect(permanent(page, 'Construct')).toContainText(/flying/i);
   await expect(permanent(page, 'Construct')).toContainText(/haste/i);
 });
+
+test('Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+
+  // All three creatures attack P2, who controls no creatures.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Kutzil, Malamet Exemplar', 'Lab Servo', 'Lab Red Bear']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Only the grown Lab Servo is above its base power: a single trigger, a single card.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+  // P2 never cast Lab Shock on our turn.
+  await expect(page.locator('.log .line', { hasText: /P2 casts/ })).toHaveCount(0);
+});

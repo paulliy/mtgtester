@@ -1050,6 +1050,7 @@ const families = {
       powerAtMostSource: true,
       toughnessAtLeast: true,
       basePowerToughness: true,
+      powerGreaterThanBase: true,
       manaValueAtMost: true,
       manaValueAtLeast: true,
       hasAnyCounter: true,

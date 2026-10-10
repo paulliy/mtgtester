@@ -659,6 +659,25 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     }
   }
 
+  // "creatures you control each with power greater than its base power" (Kutzil).
+  const aboveBase = noun.match(
+    /^(.+?) (?:each )?with power greater than (?:its|their) base power$/,
+  );
+  if (aboveBase !== null) {
+    parts.push({ kind: 'powerGreaterThanBase' });
+    noun = aboveBase[1] as string;
+    for (const [suffix, who] of [
+      [' you control', YOURS],
+      [' your opponents control', OPPONENTS],
+    ] as const) {
+      if (noun.endsWith(suffix)) {
+        parts.push(who);
+        noun = noun.slice(0, -suffix.length);
+        break;
+      }
+    }
+  }
+
   const counterClause = noun.match(/^(.+) with (?:a )?\+1\/\+1 counter on it$/);
   if (counterClause !== null) {
     // The printed subject names the counter KIND. "Any counter" would pull in -1/-1, stun and
@@ -3698,7 +3717,7 @@ const STEP_TRIGGER_HEAD_RE =
  * selector.
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
-  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
+  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deals? combat damage to a player), (.*)$/;
 /**
  * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
  * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the

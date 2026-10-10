@@ -8742,6 +8742,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3233af43-7826-4895-b67e-03c6102c2cd5": {
+      "name": "Kutzil, Malamet Exemplar",
+      "oracleSha256": "57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kutzil-malamet-exemplar-cast-lock",
+          "oracleText": "Your opponents can't cast spells during your turn.",
+          "implementation": [
+            "interpreted static restriction from the Oracle sentence: while Kutzil is on the battlefield, no opponent of its controller is offered a spell to cast during its controller's turn, but they may still cast spells on their own turn and activate abilities"
+          ],
+          "engineTestIds": [
+            "kutzil-malamet-exemplar-pinned-oracle-supported",
+            "kutzil-malamet-exemplar-cast-lock"
+          ],
+          "viewerScenarioIds": ["kutzil-malamet-exemplar-viewer-above-base-draw"]
+        },
+        {
+          "id": "kutzil-malamet-exemplar-above-base-draw",
+          "oracleText": "Whenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.",
+          "implementation": [
+            "interpreted dealsCombatDamageToPlayer trigger over creatures its controller controls whose current power is greater than their base power (so a +1/+1 counter qualifies and a creature at base power does not), aggregated per damaged player",
+            "creatures dealing damage together to one player draw one card; damage to two different players triggers it once for each player"
+          ],
+          "engineTestIds": [
+            "kutzil-malamet-exemplar-pinned-oracle-supported",
+            "kutzil-malamet-exemplar-above-base-draws",
+            "kutzil-malamet-exemplar-once-per-player"
+          ],
+          "viewerScenarioIds": ["kutzil-malamet-exemplar-viewer-above-base-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
