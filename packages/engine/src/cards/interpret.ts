@@ -1025,6 +1025,21 @@ function parseEffectSentence(
   if (s === "~ fights target creature you don't control") {
     return [{ op: 'fight', first: 'source', second: alloc('creature', undefined, 'opponent') }];
   }
+  // "you may move any number of +1/+1 counters from this creature onto other creatures"
+  // (Forgotten Ancient): a division chosen on resolution, zero included, so the "may" is part of it.
+  {
+    const m = s.match(
+      /^(?:you may )?move any number of ([+-]\d+\/[+-]\d+) counters from (?:~|this creature) onto other creatures$/,
+    );
+    if (m !== null)
+      return [
+        {
+          op: 'distributeCountersFromSource',
+          counter: m[1] as string,
+          selector: allOf(OTHER, ofType('Creature')),
+        },
+      ];
+  }
   // "bolster 2" (CR 701.39a): a choice made on resolution among the least-toughness creatures.
   {
     const m = s.match(/^bolster (\w+)$/);

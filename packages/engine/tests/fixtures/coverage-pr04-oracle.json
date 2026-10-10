@@ -38,6 +38,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86",
+      "card": {
+        "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
+        "scryfallId": "f8c9d744-8294-4747-ae7e-99be2b6e7479",
+        "name": "Forgotten Ancient",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental"
+        ],
+        "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.\nAt the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+        "power": "0",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

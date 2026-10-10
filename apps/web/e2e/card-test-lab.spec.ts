@@ -5551,3 +5551,49 @@ test('Elite Scaleguard: bolster the smallest creature, then tap a blocker as it 
   await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
   await expect(page.getByText(/Lab Servo deals 3 to P2/).first()).toBeVisible();
 });
+
+test('Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep',
+  );
+  // Forgotten Ancient starts with two +1/+1 counters; it is a 2/5 with them.
+  await expect(permanent(page, 'Forgotten Ancient').getByText('+1/+1×2')).toBeVisible();
+  const shock = handCard(page, 'Lab Shock');
+  await expect(shock).toHaveClass(/actionable/, { timeout: 15_000 });
+  await shock.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Your own cast triggers it too: accept the optional counter.
+  const use = page.getByText(/use this ability/i).first();
+  await passUntil(page, use);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await passUntil(page, permanent(page, 'Forgotten Ancient').getByText('+1/+1×3'));
+
+  // At your upkeep, accept the move, then put one counter on each of two other creatures (either
+  // player's) and stop.
+  await passUntil(page, page.getByText(/move any number of \+1\/\+1 counters/i).first());
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  // Each recipient is a card in the prompt with its own Move button; Forgotten Ancient is not one.
+  const moveOnto = (name: string) =>
+    page.locator('.panel-group').filter({ hasText: name }).getByRole('button', { name: 'Move' });
+  await passUntil(page, moveOnto('Lab Servo'));
+  await expect(page.locator('.panel-group').getByRole('button', { name: 'Move' })).toHaveCount(2);
+  await moveOnto('Lab Servo').click();
+  await passUntil(page, page.getByText(/\(2 left\)/).first());
+  await moveOnto('Lab Ox').click();
+  await passUntil(page, page.getByText(/\(1 left\)/).first());
+  await passUntil(page, page.getByRole('button', { name: 'Move no more counters' }));
+  await page.getByRole('button', { name: 'Move no more counters' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Forgotten Ancient').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
+});

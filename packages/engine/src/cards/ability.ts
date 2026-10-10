@@ -560,6 +560,13 @@ export type Effect =
    * toughness among creatures they control and puts N +1/+1 counters on it. Not a target.
    */
   | { op: 'bolster'; count: number }
+  /**
+   * "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten
+   * Ancient): the controller divides as many of the source's counters as they like among
+   * permanents matching `selector`, then they all move at once — one placement per recipient, so
+   * a counter-placement replacement applies once to each creature, not once per counter.
+   */
+  | { op: 'distributeCountersFromSource'; counter: string; selector: Selector }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
   | { op: 'returnExiledAttachedCard' }

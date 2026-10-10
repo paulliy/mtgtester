@@ -328,6 +328,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'iron-apprentice-viewer-dies-moves-counters',
       'vigean-graftmage-viewer-graft-and-untap',
       'elite-scaleguard-viewer-bolster-and-tap',
+      'forgotten-ancient-viewer-cast-and-move',
       'satoru-viewer-free-cast-draws',
       'keeper-of-secrets-viewer-flashback',
       'river-kelpie-viewer-flashback-and-persist',

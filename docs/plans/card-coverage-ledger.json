@@ -1027,15 +1027,19 @@
   {
     "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
     "name": "Forgotten Ancient",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR04.12",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",

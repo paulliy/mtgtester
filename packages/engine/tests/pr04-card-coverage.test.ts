@@ -776,6 +776,153 @@ describe('Elite Scaleguard', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.12 Forgotten Ancient
+// ---------------------------------------------------------------------------------------------
+
+describe('Forgotten Ancient', () => {
+  const { card } = pinned('Forgotten Ancient');
+  const ALLY = LAB_CARD('Lab Ally');
+  const RIVAL = LAB_CARD('Lab Rival');
+  const RELIC = oracle({ name: 'Lab Relic', typeLine: 'Artifact', power: null, toughness: null });
+  const HARDENED_SCALES = oracle({
+    name: 'Hardened Scales',
+    typeLine: 'Enchantment',
+    manaCost: '{G}',
+    power: null,
+    toughness: null,
+    oracleText:
+      'If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.',
+  });
+
+  /**
+   * Run P1's whole turn. The upkeep trigger is accepted, then each move prompt is answered with the
+   * next creature named in `moves` ("stop" or running out declines). Returns every move prompt's
+   * option descriptions.
+   */
+  function upkeep(ctx: GameContext, moves: string[]) {
+    const seen: string[][] = [];
+    const queue = [...moves];
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      if (/use this ability/.test(decision.prompt)) return optionMatching(decision, /^Yes$/);
+      if (/move a \+1\/\+1 counter onto another creature/.test(decision.prompt)) {
+        seen.push(decision.options.map((option) => option.description));
+        const next = queue.shift();
+        return next === undefined || next === 'stop'
+          ? optionMatching(decision, /^Move no more counters$/)
+          : optionMatching(decision, new RegExp(`onto ${next} \\(`));
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return seen;
+  }
+
+  it('forgotten-ancient-pinned-oracle-supported — the interpreter models the cast counter and the upkeep division', () => {
+    expect(getOverride(card.oracleId)).toBeUndefined();
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'castsSpell', caster: 'each' });
+    expect(def.triggers[0]!.optional).toBe(true);
+    expect(def.triggers[1]!.trigger).toEqual({ when: 'upkeep', player: 'you' });
+    expect(def.triggers[1]!.effects).toEqual([
+      {
+        op: 'distributeCountersFromSource',
+        counter: '+1/+1',
+        selector: { kind: 'allOf', of: [{ kind: 'other' }, { kind: 'type', value: 'Creature' }] },
+      },
+    ]);
+  });
+
+  it('forgotten-ancient-any-player-casts — an opponent casting a spell lets you put a counter on it, or decline', () => {
+    const ctx = pod('ancient-cast');
+    const ancient = spawn(ctx, 'P1', card);
+    const bolt = oracle({
+      name: 'Lab Shock',
+      typeLine: 'Instant',
+      manaCost: '{R}',
+      oracleText: 'Lab Shock deals 2 damage to any target.',
+    });
+    castFromHand(ctx, 'P2', bolt, [{ symbol: 'R' }], new Map([[0, 'P3']]));
+    expect(ctx.state.pendingTriggers.map((trigger) => trigger.controllerId)).toEqual(['P1']);
+    settle(ctx, answers([[/use this ability/, /^Yes$/]]));
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1']).toBe(1);
+    castFromHand(ctx, 'P2', bolt, [{ symbol: 'R' }], new Map([[0, 'P3']]));
+    settle(ctx, answers([[/use this ability/, /^No$/]]));
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('forgotten-ancient-upkeep-divides — three counters are divided two to your creature and one to an opponent’s', () => {
+    const ctx = pod('ancient-divide');
+    const ancient = spawn(ctx, 'P1', card);
+    ancient.counters['+1/+1'] = 3;
+    const ally = spawn(ctx, 'P1', ALLY);
+    const rival = spawn(ctx, 'P2', RIVAL);
+    const seen = upkeep(ctx, ['Lab Ally', 'Lab Ally', 'Lab Rival']);
+    // Three counters, three picks, then nothing is left to move.
+    expect(seen).toHaveLength(3);
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(onField(ctx, ally.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, rival.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('forgotten-ancient-may-move-none — stopping at once moves nothing, and stopping early keeps the rest', () => {
+    const ctx = pod('ancient-none');
+    const ancient = spawn(ctx, 'P1', card);
+    ancient.counters['+1/+1'] = 2;
+    const ally = spawn(ctx, 'P1', ALLY);
+    upkeep(ctx, ['stop']);
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1']).toBe(2);
+    expect(onField(ctx, ally.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+
+    const later = pod('ancient-early');
+    const keeper = spawn(later, 'P1', card);
+    keeper.counters['+1/+1'] = 2;
+    const friend = spawn(later, 'P1', ALLY);
+    upkeep(later, ['Lab Ally', 'stop']);
+    expect(onField(later, keeper.cardId)!.counters['+1/+1']).toBe(1);
+    expect(onField(later, friend.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('forgotten-ancient-other-creatures-only — only other creatures are offered, never itself or a noncreature', () => {
+    const ctx = pod('ancient-offered');
+    const ancient = spawn(ctx, 'P1', card);
+    ancient.counters['+1/+1'] = 1;
+    spawn(ctx, 'P1', ALLY);
+    spawn(ctx, 'P1', RELIC);
+    const seen = upkeep(ctx, ['stop']);
+    expect(seen).toEqual([['Move a +1/+1 counter onto Lab Ally (1)', 'Move no more counters']]);
+  });
+
+  it('forgotten-ancient-moves-together — under Hardened Scales two counters moved onto one creature become three, not four', () => {
+    const ctx = pod('ancient-scales');
+    spawn(ctx, 'P1', HARDENED_SCALES);
+    const ancient = spawn(ctx, 'P1', card);
+    ancient.counters['+1/+1'] = 2;
+    const ally = spawn(ctx, 'P1', ALLY);
+    upkeep(ctx, ['Lab Ally', 'Lab Ally']);
+    // CR 122.5: the moved counters are put on it in one event, so the replacement applies once.
+    expect(onField(ctx, ally.cardId)!.counters['+1/+1']).toBe(3);
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('forgotten-ancient-your-upkeep-only — another player’s upkeep does not trigger it', () => {
+    const ctx = pod('ancient-their-turn');
+    const ancient = spawn(ctx, 'P1', card);
+    ancient.counters['+1/+1'] = 2;
+    spawn(ctx, 'P1', ALLY);
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(upkeep(ctx, ['Lab Ally'])).toEqual([]);
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1']).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -786,6 +933,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Forgotten Ancient',
+    sha256: '4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86',
+    clauseCount: 2,
+  },
   {
     name: 'Elite Scaleguard',
     sha256: 'f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96',

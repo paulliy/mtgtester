@@ -8329,6 +8329,43 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "2ef75cf3-30dc-4852-a6d1-1d6391fad022": {
+      "name": "Forgotten Ancient",
+      "oracleSha256": "4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "forgotten-ancient-cast-counter",
+          "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.",
+          "implementation": [
+            "interpreted castsSpell trigger for every caster (caster each), so a spell cast by any player, including its controller, triggers it",
+            "the trigger is optional: its controller is asked whether to use the ability and the counter is put on Forgotten Ancient only on yes"
+          ],
+          "engineTestIds": [
+            "forgotten-ancient-pinned-oracle-supported",
+            "forgotten-ancient-any-player-casts"
+          ],
+          "viewerScenarioIds": ["forgotten-ancient-viewer-cast-and-move"]
+        },
+        {
+          "id": "forgotten-ancient-upkeep-move",
+          "oracleText": "At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+          "implementation": [
+            "interpreted upkeep trigger for its controller only whose distributeCountersFromSource effect has the controller assign +1/+1 counters one at a time to other creatures (any controller, never itself or a noncreature) or stop with Move no more counters, so any number from none to all may move",
+            "the assigned counters then move together, one placement per recipient (CR 122.5), so a counter-doubling replacement such as Hardened Scales applies once to each creature rather than once per counter"
+          ],
+          "engineTestIds": [
+            "forgotten-ancient-upkeep-divides",
+            "forgotten-ancient-may-move-none",
+            "forgotten-ancient-other-creatures-only",
+            "forgotten-ancient-moves-together",
+            "forgotten-ancient-your-upkeep-only"
+          ],
+          "viewerScenarioIds": ["forgotten-ancient-viewer-cast-and-move"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -736,6 +736,7 @@ const families = {
       transferCountersFromSource: true,
       moveCounters: true,
       bolster: true,
+      distributeCountersFromSource: true,
       mayPayLifeForTriggerPowerAndCounter: true,
       vindictiveLichModes: true,
       returnExiledAttachedCard: true,

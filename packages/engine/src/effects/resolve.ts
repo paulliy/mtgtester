@@ -3163,6 +3163,48 @@ export function* executeAbility(
           addCounters(ctx, source, chosen, '+1/+1', effect.count);
         break;
       }
+      case 'distributeCountersFromSource': {
+        const selfId = ref('source');
+        const self = selfId === null ? undefined : findPermanent(ctx, selfId);
+        if (self === undefined) break;
+        const available = counterCount(self.counters, effect.counter);
+        const recipients = ctx.state.battlefield.filter(
+          (perm) =>
+            perm.id !== self.id &&
+            matchesSelector(ctx, perm, effect.selector, {
+              cardId: self.cardId,
+              objectId: self.id,
+              controllerId: self.controllerId,
+            }),
+        );
+        // Choose the whole division first (CR 122.5: the counters move together).
+        const assigned = new Map<string, number>();
+        let total = 0;
+        while (total < available && recipients.length > 0) {
+          const chosen = yield* chooseCard(ctx, {
+            player: controller.id,
+            prompt: `${source.name}: move a ${effect.counter} counter onto another creature (${available - total} left)`,
+            cards: recipients,
+            type: 'moveCounter',
+            verb: 'Move',
+            describe: (perm) =>
+              `Move a ${effect.counter} counter onto ${perm.name} (${(assigned.get(perm.id) ?? 0) + 1})`,
+            decline: { type: 'decline', description: 'Move no more counters', verb: 'Stop' },
+          });
+          if (chosen === null) break;
+          assigned.set(chosen.id, (assigned.get(chosen.id) ?? 0) + 1);
+          total++;
+        }
+        if (total === 0) break;
+        if (total === available) delete self.counters[effect.counter];
+        else setCounterCount(self.counters, effect.counter, available - total);
+        emit(ctx, 'removeCounter', { target: self.name, counter: effect.counter, count: total });
+        for (const [id, count] of assigned) {
+          const recipient = findPermanent(ctx, id);
+          if (recipient !== undefined) addCounters(ctx, source, recipient, effect.counter, count);
+        }
+        break;
+      }
       case 'moveCounters': {
         const fromId = ref(effect.from);
         const toId = ref(effect.to);

@@ -7783,6 +7783,43 @@ function eliteScaleguardScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function forgottenAncientScenario(gameId: GameId): CardTestScenario {
+  const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
+  return pr01Scenario(gameId, {
+    id: 'forgotten-ancient-viewer-cast-and-move',
+    title: 'Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep',
+    instructions: [
+      "During P4's turn, Forgotten Ancient (already carrying two +1/+1 counters) is on your battlefield with Lab Servo; P2 controls Lab Ox. Cast Lab Shock at P2.",
+      'Forgotten Ancient triggers on the cast; choose Yes to put a third +1/+1 counter on it.',
+      'At the beginning of your upkeep, choose Yes, then move one counter onto Lab Servo, one onto Lab Ox (any player controls it), then choose Move no more counters.',
+    ],
+    expectedOutcome:
+      'Forgotten Ancient ends with one +1/+1 counter, and Lab Servo and Lab Ox each have one.',
+    oracleSha256: ancient.sha256,
+    clauseIds: ['forgotten-ancient-cast-counter', 'forgotten-ancient-upkeep-move'],
+    decks: {
+      P1: [ancient.card, LAB_SERVO, LAB_SHOCK, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Shock'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forgotten Ancient'],
+          counters: { '+1/+1': 2 },
+        },
+        { playerId: 'P1', cardNames: ['Lab Servo', 'Mountain'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8949,6 +8986,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'iron-apprentice-viewer-dies-moves-counters',
   'vigean-graftmage-viewer-graft-and-untap',
   'elite-scaleguard-viewer-bolster-and-tap',
+  'forgotten-ancient-viewer-cast-and-move',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9185,6 +9223,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
   'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
+  'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

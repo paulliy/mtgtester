@@ -1757,6 +1757,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {

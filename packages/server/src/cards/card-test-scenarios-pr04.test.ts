@@ -221,3 +221,34 @@ describe('Elite Scaleguard Card Test Lab scenario', () => {
     replays('elite-scaleguard-viewer-bolster-and-tap', steps);
   });
 });
+
+describe('Forgotten Ancient Card Test Lab scenario', () => {
+  it('forgotten-ancient-viewer-cast-and-move — a cast grows it, and its upkeep trigger moves counters onto other creatures', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Shock', targets: ['P2'] },
+      { action: 'Yes' },
+      { action: 'Yes' },
+      { action: 'Move a +1/+1 counter onto Lab Servo' },
+      { action: 'Move a +1/+1 counter onto Lab Ox' },
+      { action: 'Move no more counters' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'forgotten-ancient-viewer-cast-and-move',
+      steps,
+    );
+    // The cast counter made three; two were moved (one to each other creature) and one stayed.
+    const [ancient] = onBattlefield('Forgotten Ancient');
+    expect(ancient?.counters).toEqual({ '+1/+1': 1 });
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters).toEqual({ '+1/+1': 1 });
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.counters).toEqual({ '+1/+1': 1 });
+    expect(seat('P2').life).toBe(38);
+    expect(prompts.some((prompt) => /use this ability/.test(prompt))).toBe(true);
+    expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
+    expect(state.step).toBe('upkeep');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('forgotten-ancient-viewer-cast-and-move', steps);
+  });
+});

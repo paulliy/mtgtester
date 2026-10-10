@@ -100,6 +100,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   transferCountersFromSource: { target: permanent },
   moveCounters: { from: permanent, to: permanent },
   bolster: {},
+  distributeCountersFromSource: {},
   mayPayLifeForTriggerPowerAndCounter: {},
   vindictiveLichModes: {},
   returnExiledAttachedCard: {},
