@@ -7791,7 +7791,7 @@ function forgottenAncientScenario(gameId: GameId): CardTestScenario {
     instructions: [
       "During P4's turn, Forgotten Ancient (already carrying two +1/+1 counters) is on your battlefield with Lab Servo; P2 controls Lab Ox. Cast Lab Shock at P2.",
       'Forgotten Ancient triggers on the cast; choose Yes to put a third +1/+1 counter on it.',
-      'At the beginning of your upkeep, choose Yes, then move one counter onto Lab Servo, one onto Lab Ox (any player controls it), then choose Move no more counters.',
+      'At the beginning of your upkeep, move one counter onto Lab Servo, one onto Lab Ox (any player controls it), then choose Move no more counters.',
     ],
     expectedOutcome:
       'Forgotten Ancient ends with one +1/+1 counter, and Lab Servo and Lab Ox each have one.',

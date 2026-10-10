@@ -691,6 +691,19 @@ describe('Elite Scaleguard', () => {
     expect(def.triggers[1]!.effects).toEqual([{ op: 'tapTarget', target: 0 }]);
   });
 
+  it('elite-scaleguard-pinned-oracle-supported — "one or more creatures attack" has no single defending player, so it is not read', () => {
+    const group = interpretCard(
+      oracle({
+        name: 'Lab Group Tapper',
+        typeLine: 'Creature — Secret',
+        oracleText:
+          'Whenever one or more creatures you control attack, tap target creature defending player controls.',
+      }),
+    );
+    expect(group.modeled).toBe(false);
+    expect(JSON.stringify(group.triggers)).not.toContain('defendingPlayerIsEventPlayer');
+  });
+
   it('elite-scaleguard-bolster-least-toughness — the counters go on the creature with the least toughness, without a choice', () => {
     const ctx = pod('scaleguard-least');
     const small = spawn(ctx, 'P1', SMALL);
@@ -795,9 +808,9 @@ describe('Forgotten Ancient', () => {
   });
 
   /**
-   * Run P1's whole turn. The upkeep trigger is accepted, then each move prompt is answered with the
-   * next creature named in `moves` ("stop" or running out declines). Returns every move prompt's
-   * option descriptions.
+   * Run P1's whole turn. Each move prompt is answered with the next creature named in `moves`
+   * ("stop" or running out declines). Returns every move prompt's option descriptions. The upkeep
+   * trigger is not optional — moving none is the decline — so a "use this ability?" prompt fails.
    */
   function upkeep(ctx: GameContext, moves: string[]) {
     const seen: string[][] = [];
@@ -807,7 +820,8 @@ describe('Forgotten Ancient', () => {
         return declareAttacks(decision, () => null);
       if (decision.presentationBlockDeclaration !== undefined)
         return declareBlocks(decision, () => null);
-      if (/use this ability/.test(decision.prompt)) return optionMatching(decision, /^Yes$/);
+      if (/use this ability/.test(decision.prompt))
+        throw new Error(`unexpected optional prompt: ${decision.prompt}`);
       if (/move a \+1\/\+1 counter onto another creature/.test(decision.prompt)) {
         seen.push(decision.options.map((option) => option.description));
         const next = queue.shift();
@@ -829,6 +843,7 @@ describe('Forgotten Ancient', () => {
     expect(def.triggers[0]!.trigger).toEqual({ when: 'castsSpell', caster: 'each' });
     expect(def.triggers[0]!.optional).toBe(true);
     expect(def.triggers[1]!.trigger).toEqual({ when: 'upkeep', player: 'you' });
+    expect(def.triggers[1]!.optional).toBeFalsy();
     expect(def.triggers[1]!.effects).toEqual([
       {
         op: 'distributeCountersFromSource',
@@ -886,6 +901,24 @@ describe('Forgotten Ancient', () => {
     upkeep(later, ['Lab Ally', 'stop']);
     expect(onField(later, keeper.cardId)!.counters['+1/+1']).toBe(1);
     expect(onField(later, friend.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('forgotten-ancient-may-move-none — with no counters, the upkeep asks nothing at all', () => {
+    const ctx = pod('ancient-empty');
+    const ancient = spawn(ctx, 'P1', card);
+    spawn(ctx, 'P1', ALLY);
+    const prompts: string[] = [];
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass < 0) prompts.push(decision.prompt);
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(prompts).toEqual([]);
+    expect(onField(ctx, ancient.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
   });
 
   it('forgotten-ancient-other-creatures-only — only other creatures are offered, never itself or a noncreature', () => {

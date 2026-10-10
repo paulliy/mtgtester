@@ -5576,10 +5576,8 @@ test('Forgotten Ancient: grow when a spell is cast, then move counters at your u
   await page.getByRole('button', { name: 'Yes', exact: true }).click();
   await passUntil(page, permanent(page, 'Forgotten Ancient').getByText('+1/+1×3'));
 
-  // At your upkeep, accept the move, then put one counter on each of two other creatures (either
-  // player's) and stop.
-  await passUntil(page, page.getByText(/move any number of \+1\/\+1 counters/i).first());
-  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  // At your upkeep, put one counter on each of two other creatures (either player's) and stop.
+  // Moving none is the decline, so there is no "use this ability?" prompt first.
   // Each recipient is a card in the prompt with its own Move button; Forgotten Ancient is not one.
   const moveOnto = (name: string) =>
     page.locator('.panel-group').filter({ hasText: name }).getByRole('button', { name: 'Move' });

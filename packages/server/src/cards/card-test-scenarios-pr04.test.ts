@@ -227,7 +227,6 @@ describe('Forgotten Ancient Card Test Lab scenario', () => {
     const steps: Step[] = [
       { action: 'Cast Lab Shock', targets: ['P2'] },
       { action: 'Yes' },
-      { action: 'Yes' },
       { action: 'Move a +1/+1 counter onto Lab Servo' },
       { action: 'Move a +1/+1 counter onto Lab Ox' },
       { action: 'Move no more counters' },
@@ -244,7 +243,8 @@ describe('Forgotten Ancient Card Test Lab scenario', () => {
     const [ox] = onBattlefield('Lab Ox');
     expect(ox?.counters).toEqual({ '+1/+1': 1 });
     expect(seat('P2').life).toBe(38);
-    expect(prompts.some((prompt) => /use this ability/.test(prompt))).toBe(true);
+    // Only the cast counter asks "use this ability?": moving none is the upkeep trigger's decline.
+    expect(prompts.filter((prompt) => /use this ability/.test(prompt))).toHaveLength(1);
     expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
     expect(state.step).toBe('upkeep');
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();

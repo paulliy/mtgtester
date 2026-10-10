@@ -4493,11 +4493,16 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // defending player controls" (Elite Scaleguard): for an attacks head the event player is the
   // player that creature is attacking (CR 506.3d), so the target clause reads as "that player".
   // Only the watched-creature head: self heads with this clause (Kogla) are still owned by their
-  // reviewed overrides.
+  // reviewed overrides. Not an aggregate head either: "one or more creatures attack" can attack
+  // several players at once, so it has no single defending player.
   if (
     / defending player controls\b/.test(body) &&
     heads.every(
-      (head) => head.when === 'attacks' && 'subject' in head && head.subject.kind === 'permanent',
+      (head) =>
+        head.when === 'attacks' &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
     )
   ) {
     heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
@@ -4519,7 +4524,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
   }
-  let optional = paidTransform === null && body.startsWith('you may ');
+  // "you may move any number of … counters" (Forgotten Ancient) is one choice, zero included: the
+  // division is the decline, so it is not also a "use this ability?" prompt.
+  let optional =
+    paidTransform === null &&
+    body.startsWith('you may ') &&
+    !body.startsWith('you may move any number of ');
   if (body.startsWith('you may have ')) {
     optional = true;
     body = body
