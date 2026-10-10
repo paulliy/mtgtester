@@ -1669,12 +1669,6 @@
     }
   },
   {
-    "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
-    "name": "Ghoulish Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
@@ -15562,12 +15556,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-ghoulish-impetus",
-    "name": "Ghoulish Impetus",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-gift-of-immortality",

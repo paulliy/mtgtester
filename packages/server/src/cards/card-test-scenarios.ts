@@ -8078,6 +8078,42 @@ function screamsFromWithinScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function ghoulishImpetusScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  const swamps = Array.from({ length: 5 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-return-at-end-step',
+    title: 'Ghoulish Impetus: its creature dies and it returns at the next end step',
+    instructions: [
+      'Ghoulish Impetus and Lab Doom are in your hand. Five Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and P2 controls Lab Hexproof Elf (2/2, hexproof).',
+      'Cast Ghoulish Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 3/3 with deathtouch and is goaded.',
+      'Cast Lab Doom on Lab Green Bear. It dies and Ghoulish Impetus goes to your graveyard with it. Nothing returns yet.',
+      'Pass priority until the beginning of the end step. Ghoulish Impetus returns then, and you choose Lab Ox as the creature to enchant.',
+    ],
+    expectedOutcome:
+      'Ghoulish Impetus is on the battlefield under your control enchanting Lab Ox, which is a 5/5 with deathtouch. Lab Green Bear and Lab Doom are in your graveyard and Ghoulish Impetus is not. All five Swamps are tapped.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-enchant', 'ghoulish-impetus-statics', 'ghoulish-impetus-return'],
+    decks: {
+      P1: [impetus.card, LAB_DOOM, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: [LAB_HEXPROOF_ELF, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Ghoulish Impetus', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hexproof Elf'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9911,6 +9947,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'resurrection-orb-viewer-lifelink-and-return',
   'sunforger-viewer-unattach-search-and-cast',
   'screams-from-within-viewer-return-and-enchant',
+  'ghoulish-impetus-viewer-return-at-end-step',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10181,6 +10218,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
   'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
   'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
+  'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

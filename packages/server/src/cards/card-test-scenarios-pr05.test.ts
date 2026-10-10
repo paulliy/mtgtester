@@ -312,3 +312,53 @@ describe('Screams from Within Card Test Lab scenario', () => {
     replays('screams-from-within-viewer-return-and-enchant', steps);
   });
 });
+
+describe('Ghoulish Impetus Card Test Lab scenario', () => {
+  it('ghoulish-impetus-viewer-return-at-end-step — cast it on Lab Green Bear, destroy the Bear, and the Aura returns at the end step onto Lab Ox', () => {
+    const steps: Step[] = [
+      { action: 'Cast Ghoulish Impetus', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Enchant Lab Ox' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts, offered } = run(
+      'ghoulish-impetus-viewer-return-at-end-step',
+      steps,
+    );
+    // The host was chosen once, as it entered, among the other creatures (not the dead Bear).
+    expect(prompts.filter((prompt) => /choose a permanent to enchant/.test(prompt))).toHaveLength(
+      1,
+    );
+    const hosts = offered.find((options) => options.some((option) => /^Enchant /.test(option)));
+    expect([...(hosts ?? [])].sort()).toEqual(['Enchant Lab Hexproof Elf', 'Enchant Lab Ox']);
+    // It returned at the beginning of the end step, not when the Bear died.
+    const returned = state.eventLog.findIndex((event) => event.type === 'graveyardToBattlefield');
+    const destroyed = state.eventLog.findIndex((event) => event.type === 'destroy');
+    const endStepBegan = state.eventLog.findIndex(
+      (event) => event.type === 'phaseBegin' && (event.payload as { step?: string }).step === 'end',
+    );
+    expect(destroyed).toBeGreaterThanOrEqual(0);
+    expect(endStepBegan).toBeGreaterThan(destroyed);
+    expect(returned).toBeGreaterThan(endStepBegan);
+    expect(state.eventLog.filter((event) => event.type === 'graveyardToBattlefield')).toHaveLength(
+      1,
+    );
+    // It came back as a new object under P1, enchanting Lab Ox.
+    const [impetus] = onBattlefield('Ghoulish Impetus');
+    const [ox] = onBattlefield('Lab Ox');
+    expect(onBattlefield('Ghoulish Impetus')).toHaveLength(1);
+    expect(impetus?.attachedTo).toBe(ox?.id);
+    expect(impetus?.controllerId).toBe('P1');
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Lab Green Bear']);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ghoulish-impetus-viewer-return-at-end-step', steps);
+  });
+});

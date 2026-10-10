@@ -219,12 +219,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Forum Filibuster',
     'Reflexive Aura/Equipment return attached to the token is omitted.',
   );
-  // Catalog audit silverquill-remaining-batch-5: delayed Aura return does not attach.
-  unsupportedCard(
-    '276eccd6-4a76-46e8-b604-94472e618115',
-    'Ghoulish Impetus',
-    'Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.',
-  );
+  // Ghoulish Impetus: restored in coverage PR05. The interpreter reads the +1/+1, deathtouch and
+  // goad on the enchanted creature, and its dies trigger as returning this card to the battlefield
+  // at the beginning of the next end step, choosing a creature to enchant as it enters.
   // Catalog audit silverquill-remaining-batch-2: delayed Aura return omitted.
   unsupportedCard(
     '2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b',

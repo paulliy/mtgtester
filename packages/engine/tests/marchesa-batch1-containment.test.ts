@@ -90,8 +90,6 @@ const REASONS: Record<string, string> = {
   'Eriette of the Charmed Apple': 'Cannot-attack-you static is claimed without an implementation.',
   'Forum Filibuster': 'Reflexive Aura/Equipment return attached to the token is omitted.',
   'Gift of Immortality': 'Delayed Aura return attached to the creature is omitted.',
-  'Ghoulish Impetus':
-    'Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.',
   'Herald of Amity':
     'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
   'Intermediate Chirography':
@@ -298,6 +296,7 @@ describe('Marchesa catalog audit containment', () => {
     'Resurrection Orb',
     'Sunforger',
     'Screams from Within',
+    'Ghoulish Impetus',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

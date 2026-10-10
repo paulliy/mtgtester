@@ -80,9 +80,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     '{1}{W}: Exile enchanted creature.',
   ]);
 
-  unimplemented('276eccd6-4a76-46e8-b604-94472e618115', 'Ghoulish Impetus', [
-    'When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.',
-  ]);
+  // Ghoulish Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Screams from Within: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 

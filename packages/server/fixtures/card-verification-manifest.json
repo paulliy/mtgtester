@@ -5197,13 +5197,54 @@
     "276eccd6-4a76-46e8-b604-94472e618115": {
       "name": "Ghoulish Impetus",
       "oracleSha256": "b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "ghoulish-impetus-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent, and not a hexproof opponent's creature), attaches on resolution"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-enchant-creature"
+          ],
+          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
+        },
+        {
+          "id": "ghoulish-impetus-statics",
+          "oracleText": "Enchanted creature gets +1/+1, has deathtouch, and is goaded.",
+          "implementation": [
+            "interpreted layer 7d +1/+1, layer 6 deathtouch keyword and layer 6 goad, all applied to the creature this Aura is attached to (attachedToSource) only: no other creature gets any of them, an unattached Aura grants nothing, and moving the Aura moves all three",
+            "deathtouch is real in combat: the enchanted creature kills a blocker it deals any damage to, and an unenchanted creature does not",
+            "the goad is the Aura controller's static goad: the enchanted creature must attack each combat and attacks a player other than the Aura's controller when it can, while the opponent's other creatures are unrestricted"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-buff-enchanted-only",
+            "ghoulish-impetus-deathtouch-combat",
+            "ghoulish-impetus-goaded"
+          ],
+          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
+        },
+        {
+          "id": "ghoulish-impetus-return",
           "oracleText": "When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.",
-          "implementation": ["explicitly unsupported; delayed Aura return does not attach"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose returnDepartedSourceToBattlefield effect (delay nextEndStep) remembers the exact graveyard card this Aura became (CR 400.7e) and sets up one delayed trigger for the beginning of the next end step to begin (CR 603.7), which lasts through cleanup until it fires; an end step that already began is not the next one, and it is the next end step whoever's turn it is",
+            "when the delayed trigger resolves the Aura enters under the control of the player whose ability returns it (CR 110.2a), who chooses a creature to enchant as it enters (CR 303.4f) without targeting it, and it stays in the graveyard when there is no creature to enchant (CR 303.4i)",
+            "a card that left the graveyard before the end step (exiled, returned to hand, or left and came back as a new object) stays where it went",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying set up no return"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-dies-trigger-enchanted-only",
+            "ghoulish-impetus-next-end-step",
+            "ghoulish-impetus-next-end-step-any-turn",
+            "ghoulish-impetus-stays-put",
+            "ghoulish-impetus-returns-under-controller"
+          ],
+          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
         }
       ],
       "gameplayAiScenarioIds": []

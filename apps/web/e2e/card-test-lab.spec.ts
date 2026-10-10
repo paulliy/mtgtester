@@ -6460,3 +6460,75 @@ test('Screams from Within: its creature dies and it returns onto a hexproof oppo
   // Lab Green Bear and Lab Doom are in your graveyard; the Aura is not.
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+test('Ghoulish Impetus: its creature dies and it returns at the next end step', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: its creature dies and it returns at the next end step',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on the Bear: the hexproof Elf is not a legal target.
+  const impetus = handCard(page, 'Ghoulish Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Hexproof Elf')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Let it resolve: the Bear is a 3/3 with deathtouch, goaded by you.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Destroy the enchanted Bear. The Aura goes to the graveyard with it, and nothing returns yet.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The return waits for the beginning of the end step, where the Aura chooses what to enchant.
+  await passUntil(page, page.getByText('Ghoulish Impetus: choose a permanent to enchant.'));
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hexproof Elf')).toHaveClass(/actionable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText('Enchant Lab Ox')).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(oxId);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const back = boards.at(-1)!.find((p) => p.name === 'Ghoulish Impetus');
+  expect(back?.attachedTo).toBe(oxId);
+  expect(back?.controller).toBe('P1');
+  expect(boards.at(-1)!.find((p) => p.id === oxId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

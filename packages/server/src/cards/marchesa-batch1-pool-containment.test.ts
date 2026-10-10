@@ -53,6 +53,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Forum of Amity',
       'Frontier Siege',
       'Ghost Ark',
+      'Ghoulish Impetus',
       'Gleeful Arsonist',
       'Glen Elendra Archmage',
       'Grim Haruspex',

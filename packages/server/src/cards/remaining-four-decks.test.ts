@@ -124,7 +124,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Eriette of the Charmed Apple',
       'Forum Filibuster',
       'Gift of Immortality',
-      'Ghoulish Impetus',
       'Herald of Amity',
       'Intermediate Chirography',
       'Keen Duelist',

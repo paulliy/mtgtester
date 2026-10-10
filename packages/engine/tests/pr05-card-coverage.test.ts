@@ -17,6 +17,7 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -385,6 +386,442 @@ describe('Cranial Plating', () => {
     kill(other.ctx, other.first);
     resolveTop(other.ctx);
     expect(other.plating.attachedTo ?? null).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// PR05.04 Ghoulish Impetus
+// ---------------------------------------------------------------------------------------------
+
+describe('Ghoulish Impetus', () => {
+  const { card } = pinned('Ghoulish Impetus');
+  const CREATURE = (name: string, power = '2', toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Secret', power, toughness });
+  const HEXPROOF = oracle({
+    name: 'Lab Hexproof',
+    typeLine: 'Creature — Secret',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Hexproof',
+    keywords: ['Hexproof'],
+  });
+  const IMPETUS_MANA = [{ symbol: 'B' as const }, ...generic(2)];
+
+  /**
+   * P1 controls Ghoulish Impetus enchanting Lab Bear, plus Lab Ally and a 0/6 Lab Wall; P2
+   * controls Lab Enemy and a hexproof creature. Everything is already on the battlefield.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const impetus = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const ally = spawn(ctx, 'P1', CREATURE('Lab Ally'));
+    const wall = spawn(ctx, 'P2', CREATURE('Lab Wall', '0', '6'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const hexproof = spawn(ctx, 'P2', HEXPROOF);
+    impetus.attachedTo = bear.id;
+    return { ctx, impetus, bear, ally, wall, enemy, hexproof };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const graveyardOf = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  /** An answer that picks the Aura host by name and records every host choice offered. */
+  function chooseHost(name: string | null, offered: string[][] = []): Answer {
+    return (decision) => {
+      const hosts = decision.options.filter((option) => option.type === 'attachAura');
+      if (hosts.length === 0) return { index: 0, targets: new Map() };
+      offered.push(hosts.map((option) => option.description.replace(/^Enchant /, '')));
+      const index = hosts.findIndex((option) => option.description === `Enchant ${name}`);
+      return { index: decision.options.indexOf(hosts[Math.max(index, 0)]!), targets: new Map() };
+    };
+  }
+
+  /** Kill `perm` and let its dies trigger resolve; the card then waits for the next end step. */
+  function die(ctx: GameContext, perm: EnginePermanent) {
+    kill(ctx, perm);
+    return settle(ctx);
+  }
+
+  /** Begin the end step and let the delayed trigger resolve, choosing the host by `name`. */
+  function endStep(ctx: GameContext, name: string | null = null, offered: string[][] = []) {
+    beginEndStep(ctx);
+    return settle(ctx, chooseHost(name, offered));
+  }
+
+  /** P1's combat; `blocks` maps a blocker to its attacker. Everything in `attackers` attacks P2. */
+  function combat(ctx: GameContext, attackers: string[], blocks = new Map<string, string>()) {
+    return pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P2' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks.get(subjectId) ?? null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** A whole turn for the current turn player with nobody attacking or blocking. */
+  function quietTurn(ctx: GameContext) {
+    return pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** The attack declaration `P2` is offered on its own turn, as the engine presents it. */
+  function p2AttackSubjects(ctx: GameContext) {
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const seen: { name: string; mustAttack: boolean; defenders: string[] }[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          seen.push({
+            name: subject.name,
+            mustAttack: subject.mustAttack,
+            defenders: subject.defenders.map((defender) => defender.playerId),
+          });
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return seen;
+  }
+
+  it('ghoulish-impetus-pinned-oracle-supported — the interpreter alone models the +1/+1, deathtouch and goad and the next-end-step return', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    // Enchanted creature gets +1/+1, has deathtouch, and is goaded: three statics on the host only.
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+      },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'deathtouch' } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
+    ]);
+    // When enchanted creature dies, return this card ... at the beginning of the next end step.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'dies',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'returnDepartedSourceToBattlefield', delay: 'nextEndStep' },
+    ]);
+  });
+
+  it('ghoulish-impetus-enchant-creature — it is cast targeting a creature, never a player or a noncreature permanent, and attaches on resolution', () => {
+    const ctx = pod('impetus-cast');
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const hexproof = spawn(ctx, 'P2', HEXPROOF);
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const relic = spawn(ctx, 'P1', LAB_ARTIFACT('Lab Relic'));
+    const inHand = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), IMPETUS_MANA);
+    const option = optionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    const legal = option!.targets!.flatMap((slot) => slot.options).sort();
+    expect(legal).toEqual([bear.id, enemy.id].sort());
+    expect(legal).not.toContain(hexproof.id);
+    expect(legal).not.toContain(relic.id);
+    expect(legal).not.toContain('P2');
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, enemy.id]]),
+    );
+    resolveTop(ctx);
+    const [aura] = named(ctx, 'Ghoulish Impetus');
+    expect(aura?.attachedTo).toBe(enemy.id);
+    expect(aura?.controllerId).toBe('P1');
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 3, toughness: 3 });
+    expect(effectivePT(ctx, bear)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('ghoulish-impetus-buff-enchanted-only — the enchanted creature gets +1/+1 and deathtouch and is goaded; nothing else is', () => {
+    const { ctx, impetus, bear, ally, enemy } = board('impetus-buff');
+    const goaded = (perm: EnginePermanent) =>
+      computeCharacteristics(ctx, perm).staticGoadedBy ?? [];
+    expect(effectivePT(ctx, bear)).toEqual({ power: 3, toughness: 3 });
+    expect(hasKeyword(ctx, bear, 'deathtouch')).toBe(true);
+    expect(goaded(bear)).toEqual(['P1']);
+    for (const other of [ally, enemy]) {
+      expect(effectivePT(ctx, other)).toEqual({ power: 2, toughness: 2 });
+      expect(hasKeyword(ctx, other, 'deathtouch')).toBe(false);
+      expect(goaded(other)).toEqual([]);
+    }
+    // Moved onto another creature, all three move with it.
+    impetus.attachedTo = enemy.id;
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 3, toughness: 3 });
+    expect(hasKeyword(ctx, enemy, 'deathtouch')).toBe(true);
+    expect(goaded(enemy)).toEqual(['P1']);
+    expect(effectivePT(ctx, bear)).toEqual({ power: 2, toughness: 2 });
+    expect(hasKeyword(ctx, bear, 'deathtouch')).toBe(false);
+    expect(goaded(bear)).toEqual([]);
+    // Unattached it grants nothing to anybody.
+    impetus.attachedTo = null;
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    expect(hasKeyword(ctx, enemy, 'deathtouch')).toBe(false);
+    expect(goaded(enemy)).toEqual([]);
+  });
+
+  it('ghoulish-impetus-deathtouch-combat — in real combat the enchanted creature kills any blocker it damages; an unenchanted creature of the same power does not', () => {
+    // Enchanted Bear (3/3 deathtouch) blocked by the 0/6 Wall deals 3 damage: the Wall dies.
+    const hit = board('impetus-deathtouch');
+    combat(hit.ctx, [hit.bear.id], new Map([[hit.wall.id, hit.bear.id]]));
+    expect(named(hit.ctx, 'Lab Wall')).toEqual([]);
+    expect(graveyardOf(hit.ctx, 'P2')).toEqual(['Lab Wall']);
+    expect(named(hit.ctx, 'Lab Bear')).toHaveLength(1);
+
+    // Control: the unenchanted Ally has power 2 against toughness 6 and no deathtouch.
+    const miss = board('impetus-no-deathtouch');
+    combat(miss.ctx, [miss.bear.id, miss.ally.id], new Map([[miss.wall.id, miss.ally.id]]));
+    expect(named(miss.ctx, 'Lab Wall')).toHaveLength(1);
+    expect(named(miss.ctx, 'Lab Ally')).toHaveLength(1);
+    // The unblocked enchanted Bear connected for 3.
+    expect(playerById(miss.ctx, 'P2').life).toBe(37);
+  });
+
+  it("ghoulish-impetus-goaded — the enchanted creature must attack each combat and attacks a player other than the Aura's controller; unenchanted creatures are free", () => {
+    // P2's creature enchanted by P1's Aura: it must attack, and never P1 while P3 or P4 can be.
+    const hit = board('impetus-goad');
+    hit.impetus.attachedTo = hit.enemy.id;
+    const seen = p2AttackSubjects(hit.ctx);
+    const goaded = seen.find((subject) => subject.name === 'Lab Enemy');
+    expect(goaded?.mustAttack).toBe(true);
+    expect(goaded?.defenders.sort()).toEqual(['P3', 'P4']);
+    // P2's other creatures have no requirement and may attack P1 or decline.
+    const free = seen.find((subject) => subject.name === 'Lab Wall');
+    expect(free?.mustAttack).toBe(false);
+    expect(free?.defenders.sort()).toEqual(['P1', 'P3', 'P4']);
+    // It really attacked: one of P3 or P4 took damage, P1 did not.
+    const lifeOf = (id: string) => playerById(hit.ctx, id).life;
+    expect(lifeOf('P1')).toBe(40);
+    expect(lifeOf('P3') + lifeOf('P4')).toBe(77);
+
+    // Unattached, the Aura goads nobody.
+    const bare = board('impetus-goad-bare');
+    bare.impetus.attachedTo = null;
+    const none = p2AttackSubjects(bare.ctx);
+    expect(none.every((subject) => !subject.mustAttack)).toBe(true);
+  });
+
+  it('ghoulish-impetus-dies-trigger-enchanted-only — only the creature this Aura enchants dying sets up the return', () => {
+    // The enchanted creature dies: exactly one delayed return is set up.
+    const hit = board('impetus-dies');
+    die(hit.ctx, hit.bear);
+    expect(hit.ctx.state.delayedTriggers).toHaveLength(1);
+    expect(hit.ctx.state.delayedTriggers[0]!.when).toBe('endStep');
+    expect(graveyardOf(hit.ctx, 'P1').sort()).toEqual(['Ghoulish Impetus', 'Lab Bear']);
+
+    // Another creature, yours or an opponent's, dying sets up nothing; the Aura stays on its host.
+    const beside = board('impetus-dies-other');
+    die(beside.ctx, beside.ally);
+    die(beside.ctx, beside.enemy);
+    expect(beside.ctx.state.delayedTriggers).toEqual([]);
+    expect(beside.impetus.attachedTo).toBe(beside.bear.id);
+    endStep(beside.ctx);
+    expect(named(beside.ctx, 'Ghoulish Impetus')).toEqual([beside.impetus]);
+
+    // The Aura itself leaving (destroyed) while the creature lives is not the creature dying.
+    const destroyed = board('impetus-aura-dies');
+    die(destroyed.ctx, destroyed.impetus);
+    expect(destroyed.ctx.state.delayedTriggers).toEqual([]);
+    endStep(destroyed.ctx);
+    expect(named(destroyed.ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(graveyardOf(destroyed.ctx, 'P1')).toEqual(['Ghoulish Impetus']);
+
+    // The enchanted creature leaving without dying (exile, bounce) sets up nothing.
+    const exiled = board('impetus-creature-exiled');
+    pump(moveObject(exiled.ctx, exiled.bear, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(exiled.ctx.state.delayedTriggers).toEqual([]);
+    const bounced = board('impetus-creature-bounced');
+    pump(moveObject(bounced.ctx, bounced.bear, { zone: 'hand' }));
+    settle(bounced.ctx);
+    expect(bounced.ctx.state.delayedTriggers).toEqual([]);
+    endStep(bounced.ctx);
+    expect(named(bounced.ctx, 'Ghoulish Impetus')).toEqual([]);
+  });
+
+  it('ghoulish-impetus-next-end-step — the card returns at the beginning of the next end step, not immediately, and its controller chooses a creature to enchant as it enters', () => {
+    const { ctx, impetus, bear, ally, enemy, hexproof } = board('impetus-return');
+    die(ctx, bear);
+    // The return waits: one delayed trigger that lasts until it fires (past cleanup).
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    expect(ctx.state.delayedTriggers[0]!.expiry).toBe('onFire');
+    // Not immediately: further priority passes and other steps return nothing.
+    settle(ctx);
+    ctx.state.phase = 'postcombatMain';
+    ctx.state.step = null;
+    settle(ctx);
+    expect(named(ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(graveyardOf(ctx, 'P1')).toContain('Ghoulish Impetus');
+
+    // The beginning of the end step: the trigger goes on the stack, and the Aura returns when it
+    // resolves, choosing among every creature (the hexproof one included) but not the dead Bear.
+    const offered: string[][] = [];
+    beginEndStep(ctx);
+    expect(named(ctx, 'Ghoulish Impetus')).toEqual([]);
+    settle(ctx, chooseHost('Lab Ally', offered));
+    const [back] = named(ctx, 'Ghoulish Impetus');
+    expect(back).toBeDefined();
+    expect(back?.id).not.toBe(impetus.id);
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.attachedTo).toBe(ally.id);
+    expect(offered).toHaveLength(1);
+    expect([...offered[0]!].sort()).toEqual(
+      ['Lab Ally', 'Lab Enemy', 'Lab Hexproof', 'Lab Wall'].sort(),
+    );
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab Bear']);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+    // The returned Aura is a new object that works again: its host is 3/3 deathtouch.
+    expect(effectivePT(ctx, ally)).toEqual({ power: 3, toughness: 3 });
+    expect(hasKeyword(ctx, ally, 'deathtouch')).toBe(true);
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    expect(hexproof.attachedTo ?? null).toBeNull();
+
+    // Spent: the new Aura's host dying sets up a fresh return, and no stale one fires.
+    die(ctx, ally);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    endStep(ctx, 'Lab Enemy');
+    expect(named(ctx, 'Ghoulish Impetus')[0]?.attachedTo).toBe(enemy.id);
+    endStep(ctx);
+    expect(named(ctx, 'Ghoulish Impetus')).toHaveLength(1);
+  });
+
+  it("ghoulish-impetus-next-end-step-any-turn — an end step that already began is not the next one; the return waits through cleanup for the following end step, whoever's turn it is", () => {
+    // Dying during this turn's end step: that end step has begun, so it does not return then.
+    const late = board('impetus-in-end-step');
+    beginEndStep(late.ctx);
+    settle(late.ctx);
+    die(late.ctx, late.bear);
+    expect(named(late.ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(late.ctx.state.delayedTriggers).toHaveLength(1);
+    // P2's whole turn runs: it returns at P2's end step (the next to begin), under P1's control.
+    late.ctx.state.currentTurnPlayer = 'P2';
+    late.ctx.state.activePlayerIndex = 1;
+    quietTurn(late.ctx);
+    expect(named(late.ctx, 'Ghoulish Impetus')).toHaveLength(1);
+    expect(named(late.ctx, 'Ghoulish Impetus')[0]?.controllerId).toBe('P1');
+    expect(late.ctx.state.delayedTriggers).toEqual([]);
+
+    // Dying during an opponent's turn returns it at the end of that same turn.
+    const theirs = board('impetus-opponents-turn');
+    theirs.ctx.state.currentTurnPlayer = 'P2';
+    theirs.ctx.state.activePlayerIndex = 1;
+    die(theirs.ctx, theirs.bear);
+    expect(named(theirs.ctx, 'Ghoulish Impetus')).toEqual([]);
+    endStep(theirs.ctx);
+    expect(named(theirs.ctx, 'Ghoulish Impetus')).toHaveLength(1);
+  });
+
+  it('ghoulish-impetus-stays-put — with no creature to enchant it stays in the graveyard (CR 303.4i), and a card that left the graveyard first stays where it went (CR 400.7)', () => {
+    // No creature anywhere at the end step: nothing to enchant, so it stays in the graveyard.
+    const lonely = pod('impetus-lonely');
+    const aura = spawn(lonely, 'P1', card);
+    const dying = spawn(lonely, 'P1', CREATURE('Lab Bear'));
+    aura.attachedTo = dying.id;
+    die(lonely, dying);
+    const offered: string[][] = [];
+    endStep(lonely, null, offered);
+    expect(offered).toEqual([]);
+    expect(named(lonely, 'Ghoulish Impetus')).toEqual([]);
+    expect(graveyardOf(lonely, 'P1').sort()).toEqual(['Ghoulish Impetus', 'Lab Bear']);
+
+    // A creature that appears before the end step gives it a host after all.
+    const late = pod('impetus-late-creature');
+    const lateAura = spawn(late, 'P1', card);
+    const lateDying = spawn(late, 'P1', CREATURE('Lab Bear'));
+    lateAura.attachedTo = lateDying.id;
+    die(late, lateDying);
+    const newcomer = spawn(late, 'P2', CREATURE('Lab Newcomer'));
+    endStep(late, 'Lab Newcomer');
+    expect(named(late, 'Ghoulish Impetus')[0]?.attachedTo).toBe(newcomer.id);
+
+    const died = (seed: string) => {
+      const b = board(seed);
+      die(b.ctx, b.bear);
+      expect(b.ctx.state.delayedTriggers).toHaveLength(1);
+      return b;
+    };
+    const auraCard = (ctx: GameContext) => {
+      const found = playerById(ctx, 'P1').graveyard.find((c) => c.name === 'Ghoulish Impetus');
+      expect(found).toBeDefined();
+      return found!;
+    };
+
+    // Exiled from the graveyard first: it stays in exile.
+    const exiled = died('impetus-left-exile');
+    pump(moveObject(exiled.ctx, auraCard(exiled.ctx), { zone: 'exile' }));
+    endStep(exiled.ctx, 'Lab Ally');
+    expect(named(exiled.ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(exiled.ctx.state.exile.map((c) => c.name)).toEqual(['Ghoulish Impetus']);
+    expect(exiled.ctx.state.delayedTriggers).toEqual([]);
+
+    // Returned to hand first: it stays in hand.
+    const hand = died('impetus-left-hand');
+    pump(moveObject(hand.ctx, auraCard(hand.ctx), { zone: 'hand' }));
+    endStep(hand.ctx, 'Lab Ally');
+    expect(named(hand.ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(playerById(hand.ctx, 'P1').hand.map((c) => c.name)).toEqual(['Ghoulish Impetus']);
+
+    // Left and came back as a new object: that is not the card the trigger remembers.
+    const again = died('impetus-left-and-back');
+    pump(moveObject(again.ctx, auraCard(again.ctx), { zone: 'hand' }));
+    const inHand = playerById(again.ctx, 'P1').hand.find((c) => c.name === 'Ghoulish Impetus');
+    pump(moveObject(again.ctx, inHand!, { zone: 'graveyard' }));
+    endStep(again.ctx, 'Lab Ally');
+    expect(named(again.ctx, 'Ghoulish Impetus')).toEqual([]);
+    expect(graveyardOf(again.ctx, 'P1')).toContain('Ghoulish Impetus');
+
+    // Control: untouched in the graveyard, it returns.
+    const control = died('impetus-left-control');
+    endStep(control.ctx, 'Lab Ally');
+    expect(named(control.ctx, 'Ghoulish Impetus')).toHaveLength(1);
+  });
+
+  it("ghoulish-impetus-returns-under-controller — an Aura you control but an opponent owns returns from the owner's graveyard under the control of the player whose ability returns it", () => {
+    const { ctx, impetus, bear, ally } = board('impetus-owner');
+    impetus.ownerId = 'P2';
+    die(ctx, bear);
+    // It went to its owner's graveyard, and waits there.
+    expect(graveyardOf(ctx, 'P2')).toEqual(['Ghoulish Impetus']);
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab Bear']);
+    const offered: string[][] = [];
+    endStep(ctx, 'Lab Ally', offered);
+    // P1's delayed trigger returns it (CR 110.2a), and P1 chooses what it enchants.
+    const [back] = named(ctx, 'Ghoulish Impetus');
+    expect(back?.ownerId).toBe('P2');
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.attachedTo).toBe(ally.id);
+    expect(graveyardOf(ctx, 'P2')).toEqual([]);
+    expect(offered).toHaveLength(1);
   });
 });
 
@@ -2032,6 +2469,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
+    clauseCount: 3,
+  },
+  {
+    name: 'Ghoulish Impetus',
+    sha256: 'b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd',
     clauseCount: 3,
   },
   {

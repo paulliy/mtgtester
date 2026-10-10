@@ -1260,6 +1260,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
+    "name": "Ghoulish Impetus",
+    "package": "PR05.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Delayed Aura return does not attach, so SBA immediately puts it into the graveyard."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
     "name": "Gleeful Arsonist",
     "package": "PR03.16",
