@@ -1779,15 +1779,19 @@
   {
     "oracleId": "5efce07e-24c4-4520-a46f-9954b67c4e6e",
     "name": "Lockjaw, Slobbering Teleporter",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.14",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on ~. When you do, ~ and up to one other target creature you control can't be blocked this turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",

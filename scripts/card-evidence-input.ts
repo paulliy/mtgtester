@@ -1769,6 +1769,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
   },
   {

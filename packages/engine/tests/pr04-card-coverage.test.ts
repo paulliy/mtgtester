@@ -1496,6 +1496,13 @@ describe('Aetheric Amplifier', () => {
 // G3 reflexive triggers: shared helpers
 // ---------------------------------------------------------------------------------------------
 
+/** "Can't be blocked this turn" effects that name `perm`. */
+function unblockable(ctx: GameContext, perm: EnginePermanent): boolean {
+  return ctx.state.effects.some(
+    (effect) => effect.kind === 'cantBeBlocked' && effect.targetCardIds.includes(perm.cardId),
+  );
+}
+
 /**
  * Run combat with `attackers` attacking P2 and nobody blocking. `pay` answers a "may pay" prompt;
  * each count-target prompt picks the next name in `picks` ("stop" or running out stops). Returns
@@ -1655,6 +1662,103 @@ describe('The Thing', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.14 Lockjaw, Slobbering Teleporter
+// ---------------------------------------------------------------------------------------------
+
+describe('Lockjaw, Slobbering Teleporter', () => {
+  const { card } = pinned('Lockjaw, Slobbering Teleporter');
+
+  it('lockjaw-pinned-oracle-supported — the counter and the reflexive unblockability are modeled', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('vigilance');
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'beginningOfCombat',
+      player: 'you',
+      condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+    });
+    expect(def.triggers[0]!.targets).toEqual([]);
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'putCountersOnSourceThenReflexive',
+        counter: '+1/+1',
+        count: 1,
+        then: {
+          targets: [
+            {
+              kind: 'creature',
+              controller: 'you',
+              filter: { kind: 'other' },
+              count: { min: 0, max: 1 },
+            },
+          ],
+          effects: [
+            { op: 'cantBeBlockedUntilEot', target: 'source' },
+            { op: 'cantBeBlockedEachChosen', targetSlot: 0 },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it('lockjaw-counter-then-unblockable — after a noncreature spell it grows, then it and one other creature you control can’t be blocked', () => {
+    const ctx = pod('lockjaw-go');
+    const lockjaw = spawn(ctx, 'P1', card);
+    const friend = spawn(ctx, 'P1', LAB_CARD('Lab Friend'));
+    const left = spawn(ctx, 'P1', LAB_CARD('Lab Left'));
+    const rival = spawn(ctx, 'P2', LAB_CARD('Lab Rival'));
+    playerById(ctx, 'P1').noncreatureSpellsCastThisTurn = 1;
+    const { offered } = reflexiveCombat(ctx, [], false, ['Lab Friend']);
+    expect(onField(ctx, lockjaw.cardId)!.counters['+1/+1']).toBe(1);
+    // "Other target creature you control": neither Lockjaw nor the opponent's creature.
+    expect(offered).toHaveLength(1);
+    expect(offered[0]!.some((name) => /Lockjaw|Lab Rival/.test(name))).toBe(false);
+    expect(unblockable(ctx, onField(ctx, lockjaw.cardId)!)).toBe(true);
+    expect(unblockable(ctx, friend)).toBe(true);
+    expect(unblockable(ctx, left)).toBe(false);
+    expect(unblockable(ctx, rival)).toBe(false);
+  });
+
+  it('lockjaw-up-to-one — choosing no other creature still makes Lockjaw unblockable', () => {
+    const ctx = pod('lockjaw-alone');
+    const lockjaw = spawn(ctx, 'P1', card);
+    const friend = spawn(ctx, 'P1', LAB_CARD('Lab Friend'));
+    playerById(ctx, 'P1').noncreatureSpellsCastThisTurn = 1;
+    reflexiveCombat(ctx, [], false, ['stop']);
+    expect(unblockable(ctx, onField(ctx, lockjaw.cardId)!)).toBe(true);
+    expect(unblockable(ctx, friend)).toBe(false);
+  });
+
+  it('lockjaw-needs-noncreature-spell — without one there is no counter and no reflexive trigger', () => {
+    const ctx = pod('lockjaw-quiet');
+    const lockjaw = spawn(ctx, 'P1', card);
+    playerById(ctx, 'P1').spellsCastThisTurn = 1;
+    reflexiveCombat(ctx, [], false);
+    expect(onField(ctx, lockjaw.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(unblockable(ctx, onField(ctx, lockjaw.cardId)!)).toBe(false);
+  });
+
+  it('lockjaw-no-counter-no-trigger — if Lockjaw is gone when the trigger resolves, no counter is put and “when you do” never triggers', () => {
+    const ctx = pod('lockjaw-gone');
+    const lockjaw = spawn(ctx, 'P1', card);
+    const effects = interpretCard(card).triggers[0]!.effects;
+    kill(ctx, lockjaw);
+    resolveEffects(ctx, lockjaw, effects);
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(ctx.state.effects.some((effect) => effect.kind === 'cantBeBlocked')).toBe(false);
+
+    // The same effects with Lockjaw still there do trigger it.
+    const live = pod('lockjaw-here');
+    const here = spawn(live, 'P1', card);
+    resolveEffects(live, here, effects);
+    expect(here.counters['+1/+1']).toBe(1);
+    expect(unblockable(live, here)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1665,6 +1769,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Lockjaw, Slobbering Teleporter',
+    sha256: 'c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a',
+    clauseCount: 2,
+  },
   {
     name: 'The Thing',
     sha256: 'dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792',

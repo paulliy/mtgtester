@@ -379,3 +379,30 @@ describe('The Thing Card Test Lab scenario', () => {
     replays('the-thing-viewer-counters-and-double', steps);
   });
 });
+
+describe('Lockjaw, Slobbering Teleporter Card Test Lab scenario', () => {
+  it('lockjaw-viewer-counter-and-unblockable — a noncreature spell grows Lockjaw, and it and one other creature get past a blocker', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Ripple' },
+      { action: 'Declare attackers', targets: ['P2', 'P2'] },
+      { action: 'Target Lab Servo' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered, prompts } = run(
+      'lockjaw-viewer-counter-and-unblockable',
+      steps,
+    );
+    const [jaw] = onBattlefield('Lockjaw, Slobbering Teleporter');
+    expect(jaw?.counters).toEqual({ '+1/+1': 1 });
+    // Vigilance: attacking did not tap it. Lab Servo, which has no vigilance, did tap.
+    expect(jaw?.tapped).toBe(false);
+    expect(onBattlefield('Lab Servo')[0]?.tapped).toBe(true);
+    // Lockjaw (2) and Lab Servo (1) both connected, and Lab Ox was never asked to block.
+    expect(seat('P2').life).toBe(37);
+    expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(0);
+    expect(prompts.some((prompt) => /choose a target/.test(prompt))).toBe(true);
+    expect(offered.flat().some((action) => /block/i.test(action))).toBe(false);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('lockjaw-viewer-counter-and-unblockable', steps);
+  });
+});

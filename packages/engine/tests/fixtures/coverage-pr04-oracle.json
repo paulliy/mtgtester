@@ -17,7 +17,7 @@
         "colorIdentity": [
           "W"
         ],
-        "typeLine": "Creature \u2014 Human Soldier",
+        "typeLine": "Creature — Human Soldier",
         "supertypes": [],
         "types": [
           "Creature"
@@ -53,7 +53,7 @@
         "colorIdentity": [
           "G"
         ],
-        "typeLine": "Creature \u2014 Elemental",
+        "typeLine": "Creature — Elemental",
         "supertypes": [],
         "types": [
           "Creature"
@@ -88,7 +88,7 @@
           "G",
           "W"
         ],
-        "typeLine": "Legendary Creature \u2014 Mutant Ninja Turtle",
+        "typeLine": "Legendary Creature — Mutant Ninja Turtle",
         "supertypes": [
           "Legendary"
         ],
@@ -127,7 +127,7 @@
           "G",
           "W"
         ],
-        "typeLine": "Legendary Creature \u2014 Human Citizen",
+        "typeLine": "Legendary Creature — Human Citizen",
         "supertypes": [
           "Legendary"
         ],
@@ -166,7 +166,7 @@
           "U",
           "W"
         ],
-        "typeLine": "Legendary Creature \u2014 Human Hero",
+        "typeLine": "Legendary Creature — Human Hero",
         "supertypes": [
           "Legendary"
         ],
@@ -185,6 +185,45 @@
         "keywords": [
           "Trample",
           "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a",
+      "card": {
+        "oracleId": "5efce07e-24c4-4520-a46f-9954b67c4e6e",
+        "scryfallId": "e273f4e6-4691-4cb3-89e2-9b1ab45a2bc0",
+        "name": "Lockjaw, Slobbering Teleporter",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Inhuman Dog Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inhuman",
+          "Dog",
+          "Hero"
+        ],
+        "oracleText": "Vigilance\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on Lockjaw. When you do, Lockjaw and up to one other target creature you control can't be blocked this turn.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Vigilance"
         ],
         "layout": "normal",
         "commanderLegality": "legal",

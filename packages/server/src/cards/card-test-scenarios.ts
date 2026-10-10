@@ -8001,6 +8001,41 @@ function theThingScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function lockjawScenario(gameId: GameId): CardTestScenario {
+  const lockjaw = pinnedFrom(COVERAGE_PR04, 'Lockjaw, Slobbering Teleporter');
+  return pr01Scenario(gameId, {
+    id: 'lockjaw-viewer-counter-and-unblockable',
+    title:
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    instructions: [
+      'Lockjaw, Lab Servo and two Islands are on your battlefield; P2 controls Lab Ox; Lab Ripple is in your hand.',
+      'Cast Lab Ripple, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat Lockjaw gets a +1/+1 counter.',
+      'When you do, choose Lab Servo as the other target creature you control. Then attack P2 with both creatures: neither can be blocked this turn, so Lab Ox cannot block.',
+    ],
+    expectedOutcome:
+      'Lockjaw has one +1/+1 counter and is a 2/2. Both creatures connect for 3 damage and Lab Ox is never asked to block.',
+    oracleSha256: lockjaw.sha256,
+    clauseIds: ['lockjaw-vigilance', 'lockjaw-combat-unblockable'],
+    decks: {
+      P1: [lockjaw.card, LAB_SERVO, LAB_RIPPLE, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lockjaw, Slobbering Teleporter', 'Lab Servo', 'Island', 'Island'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9169,6 +9204,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'lockjaw-viewer-counter-and-unblockable',
   'the-thing-viewer-counters-and-double',
   'aetheric-amplifier-viewer-double-counters',
   'bess-soul-nourisher-viewer-counter-and-pump',
@@ -9411,6 +9447,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
   'the-thing-viewer-counters-and-double': theThingScenario,
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,

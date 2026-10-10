@@ -5755,3 +5755,42 @@ test('The Thing: four counters after a noncreature spell, then pay to double cou
   await expect(permanent(page, 'Lab Hex').getByText('charge×2')).toBeVisible();
   await expect(page.getByText(/The Thing deals 13 to P2/).first()).toBeVisible();
 });
+
+test('Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+  );
+  await expect(permanent(page, 'Lockjaw, Slobbering Teleporter').getByText('1/1')).toBeVisible();
+  await castAndResolve(page, 'Lab Ripple');
+
+  // At the beginning of combat Lockjaw gets a counter, then its reflexive trigger asks for up to
+  // one other creature: choose Lab Servo.
+  await passUntil(page, page.getByRole('button', { name: 'Target Lab Servo' }));
+  await expect(
+    permanent(page, 'Lockjaw, Slobbering Teleporter').getByText('+1/+1×1'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+
+  // Both creatures attack P2, and Lab Ox is never asked to block either of them.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Lockjaw, Slobbering Teleporter', 'Lab Servo']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByRole('button', { name: /Declare blockers/ })).toHaveCount(0);
+  await expect(
+    page.getByText(/Lockjaw, Slobbering Teleporter deals 2 to P2/).first(),
+  ).toBeVisible();
+  await expect(page.getByText(/Lab Servo deals 1 to P2/).first()).toBeVisible();
+  await expect(permanent(page, 'Lockjaw, Slobbering Teleporter').locator('.tap-badge')).toHaveCount(
+    0,
+  );
+});

@@ -8498,6 +8498,37 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "5efce07e-24c4-4520-a46f-9954b67c4e6e": {
+      "name": "Lockjaw, Slobbering Teleporter",
+      "oracleSha256": "c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "lockjaw-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["lockjaw-pinned-oracle-supported"],
+          "viewerScenarioIds": ["lockjaw-viewer-counter-and-unblockable"]
+        },
+        {
+          "id": "lockjaw-combat-unblockable",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on Lockjaw. When you do, Lockjaw and up to one other target creature you control can't be blocked this turn.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on its controller's turn with an intervening-if that its controller has cast at least one noncreature spell this turn (CR 603.4); the effect puts a +1/+1 counter on Lockjaw and, only if Lockjaw is still there to receive it, creates the reflexive \"when you do\" trigger",
+            "the reflexive trigger makes Lockjaw unblockable until end of turn, and lets its controller choose up to one other creature they control (none is allowed, never Lockjaw or an opponent's creature) that can't be blocked this turn either"
+          ],
+          "engineTestIds": [
+            "lockjaw-pinned-oracle-supported",
+            "lockjaw-counter-then-unblockable",
+            "lockjaw-up-to-one",
+            "lockjaw-needs-noncreature-spell",
+            "lockjaw-no-counter-no-trigger"
+          ],
+          "viewerScenarioIds": ["lockjaw-viewer-counter-and-unblockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

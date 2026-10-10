@@ -1412,6 +1412,24 @@ function parseEffectSentence(
   if (s === "creatures can't be blocked this turn") {
     return [{ op: 'creaturesCantBeBlockedThisTurn' }];
   }
+  // "~ and up to one other target creature you control can't be blocked this turn" (Lockjaw).
+  {
+    const m = s.match(/^~ and up to (\w+) other target (.+?) can't be blocked this turn$/);
+    const max = m === null ? null : parseAmount(m[1] as string);
+    const clause = m === null ? null : parseTargetClause(m[2] as string);
+    if (max !== null && max > 0 && clause !== null && opts.allocCount !== undefined) {
+      const slot = opts.allocCount(
+        clause.kind,
+        { min: 0, max },
+        clause.controller,
+        clause.filter === undefined ? OTHER : allOf(OTHER, clause.filter),
+      );
+      return [
+        { op: 'cantBeBlockedUntilEot', target: 'source' },
+        { op: 'cantBeBlockedEachChosen', targetSlot: slot },
+      ];
+    }
+  }
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
   }
