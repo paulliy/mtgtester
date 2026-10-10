@@ -7322,6 +7322,12 @@ export function* payAbilityCosts(
           },
           player.id,
         );
+        // A +N loyalty cost puts counters on the permanent (CR 606.4), so "whenever you put
+        // counters" triggers see it like any other placement.
+        if (adjustedDelta > 0)
+          queueTriggersForEvent(ctx, 'countersPut', [
+            { permanent: perm, playerId: player.id, counterKinds: ['loyalty'] },
+          ]);
         break;
       }
       case 'mana':

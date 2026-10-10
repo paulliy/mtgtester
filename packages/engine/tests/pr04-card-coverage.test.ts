@@ -21,6 +21,7 @@ import {
 import type { AuthoringIssue } from '../src/cards/authoring-validation';
 import type { Effect, TokenSpec } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
+import { activated as activatedAbility } from '../src/cards/templates';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
@@ -1262,6 +1263,36 @@ describe('Mikey & Leo, Chaos & Order', () => {
     expect(hand(ctx)).toBe(before);
     // Neither used up the once-each-turn trigger.
     putCounter(ctx, mikey, ally);
+    expect(hand(ctx)).toBe(before + 1);
+  });
+
+  it('mikey-and-leo-loyalty-cost — paying a +1 loyalty cost on your planeswalker creature puts a counter on it (CR 606.4)', () => {
+    const ctx = pod('mikey-loyalty');
+    spawn(ctx, 'P1', card);
+    const walker = oracle({
+      name: 'Lab Walker',
+      typeLine: 'Legendary Creature Planeswalker — Secret',
+      power: '1',
+      toughness: '1',
+      loyalty: '3',
+    });
+    ctx.defs.set(walker.oracleId, {
+      ...interpretCard(walker),
+      activatedAbilities: [
+        activatedAbility({
+          costs: [{ kind: 'loyalty', delta: 1 }],
+          effects: [],
+          description: '+1: Nothing',
+        }),
+      ],
+    });
+    const perm = spawn(ctx, 'P1', walker);
+    const plus = optionFor(ctx, 'P1', perm.id, /\+1:/);
+    expect(plus).toBeDefined();
+    const before = hand(ctx);
+    takeAction(ctx, 'P1', plus!.payload as PriorityActionPayload);
+    settle(ctx);
+    expect(perm.counters['loyalty']).toBe(4);
     expect(hand(ctx)).toBe(before + 1);
   });
 });
