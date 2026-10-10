@@ -193,8 +193,6 @@ const REASONS: Record<string, string> = {
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Screams from Within':
-    'Return is a required attach target; current Oracle returns this Aura untargeted.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
@@ -299,6 +297,7 @@ describe('Marchesa catalog audit containment', () => {
     'Mask of Memory',
     'Resurrection Orb',
     'Sunforger',
+    'Screams from Within',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

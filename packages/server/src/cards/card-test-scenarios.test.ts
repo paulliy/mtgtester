@@ -355,6 +355,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'mask-of-memory-viewer-draw-discard',
       'resurrection-orb-viewer-lifelink-and-return',
       'sunforger-viewer-unattach-search-and-cast',
+      'screams-from-within-viewer-return-and-enchant',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

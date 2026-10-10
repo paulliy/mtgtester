@@ -915,7 +915,12 @@ export type Effect =
    */
   | { op: 'gainControl'; selector: Selector }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
-  | { op: 'graveyardToBattlefield'; target: EffectRef }
+  | {
+      op: 'graveyardToBattlefield';
+      target: EffectRef;
+      /** "under its owner's control" (Gift of Immortality); the ability's controller otherwise. */
+      under?: 'owner';
+    }
   /**
    * "Put target creature card from a graveyard onto the battlefield under your control. You
    * lose life equal to its mana value." (Reanimate) — combined into one effect rather than a
@@ -1308,8 +1313,29 @@ export type Effect =
    * step" is the first to begin after this resolves, whoever's turn it is (CR 603.7).
    */
   | { op: 'returnDiedTriggerObjectAtNextEndStep'; returnUnder: 'owner' }
-  /** The delayed half of `returnDiedTriggerObjectAtNextEndStep`: the remembered graveyard card. */
-  | { op: 'returnRememberedGraveyardCard'; returnUnder: 'owner' | 'sourceController' }
+  /**
+   * "Return this card [from your graveyard] to the battlefield [attached to that creature] [at the
+   * beginning of the next end step]" once the source has left the battlefield (Screams from
+   * Within, Ghoulish Impetus, Gift of Immortality). "This card" is only the card this very
+   * permanent became in a graveyard (CR 400.7e); `fromYourGraveyard` also requires that to be
+   * the controller's graveyard. It enters under the ability's controller (CR 110.2a). An Aura
+   * with no named host chooses one as it enters (CR 303.4f); with `attachTo: 'triggerObject'`
+   * the host is the trigger object's card as it is on the battlefield when this resolves, and an
+   * Aura that cannot be attached to it stays where it is (CR 303.4i).
+   */
+  | {
+      op: 'returnDepartedSourceToBattlefield';
+      fromYourGraveyard?: true;
+      delay?: 'nextEndStep';
+      attachTo?: 'triggerObject';
+    }
+  /** The delayed half of the next-end-step returns: the remembered graveyard card. */
+  | {
+      op: 'returnRememberedGraveyardCard';
+      returnUnder: 'owner' | 'sourceController';
+      /** The permanent it must enter attached to; gone or illegal, it stays put (CR 303.4i). */
+      attachToObjectId?: string;
+    }
   /**
    * "Return the chosen cards to the battlefield tapped" (Victimize): every graveyard card chosen
    * in a variable-count slot that is still a legal target enters together, tapped, under the

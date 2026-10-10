@@ -6385,3 +6385,78 @@ test('Sunforger: equip it, then unattach it to cast a red instant from your libr
   expect(boards.at(-1)!.find((p) => p.name === 'Sunforger')?.attachedTo ?? null).toBeNull();
   await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
 });
+
+test('Screams from Within: its creature dies and it returns onto a hexproof opposing creature', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Hexproof Elf')?.id)
+    .toBeTruthy();
+  const elfId = boards.at(-1)!.find((p) => p.name === 'Lab Hexproof Elf')!.id;
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura: only creatures you can target are legal, so the hexproof Elf is not.
+  const screams = handCard(page, 'Screams from Within');
+  await expect(screams).toHaveClass(/actionable/, { timeout: 15_000 });
+  await screams.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Hexproof Elf')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Let it resolve: the enchanted Bear is a 1/1 and the Ox is untouched.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('1/1', { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Screams from Within')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the enchanted Bear. The Aura goes to the graveyard with it and its trigger returns it.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The Aura chooses what to enchant as it enters: both the Ox and the opposing hexproof Elf are
+  // legal choices (nothing is targeted), and the Bear that just died is not on the board.
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hexproof Elf')).toHaveClass(/actionable/);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await permanent(page, 'Lab Hexproof Elf').click();
+  await expect(page.getByText('Enchant Lab Hexproof Elf')).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Screams from Within')?.attachedTo)
+    .toBe(elfId);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const final = boards.at(-1)!;
+  const back = final.find((p) => p.name === 'Screams from Within');
+  expect(back?.attachedTo).toBe(elfId);
+  expect(back?.controller).toBe('P1');
+  expect(back?.id).not.toBe(final.find((p) => p.name === 'Lab Ox')?.id);
+  await expect(permanent(page, 'Screams from Within')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hexproof Elf')).toContainText('1/1');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  // Lab Green Bear and Lab Doom are in your graveyard; the Aura is not.
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

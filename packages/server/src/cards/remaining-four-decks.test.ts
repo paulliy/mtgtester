@@ -77,7 +77,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Killian, Decisive Mentor',
       'Spirit Mantle',
-      'Screams from Within',
       "Songbirds' Blessing",
       'Promise of Loyalty',
       'Mob Rule',

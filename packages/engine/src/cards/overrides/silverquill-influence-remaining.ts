@@ -353,12 +353,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   );
   // Needs counts of your Auras attached to creatures for both draw and continuous power.
   unimplemented('bd92cacd-c7d8-43a2-a261-ea4754fefdc5', 'Sage’s Reverie', []);
-  // Catalog audit silverquill-remaining-batch-4: attach target is not on current Oracle.
-  unsupportedCard(
-    'a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50',
-    'Screams from Within',
-    'Return is a required attach target; current Oracle returns this Aura untargeted.',
-  );
+  // Screams from Within: restored in coverage PR05. The interpreter reads the enchanted creature's
+  // dies trigger as returning this card from your graveyard to the battlefield, choosing a creature
+  // to enchant as it enters (CR 303.4f) and staying in the graveyard if there is none.
   // Current Oracle text creates Contract Auras; the Inkling approximation is incorrect.
   unimplemented('64c986f0-e786-419c-9b51-8c316c8fae0e', 'Scriv, the Obligator', []);
   // Catalog audit silverquill-remaining-batch-2: Ward {2} claimed without a ward static.

@@ -4976,13 +4976,50 @@
     "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50": {
       "name": "Screams from Within",
       "oracleSha256": "603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "screams-from-within-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent, and not a hexproof opponent's creature), attaches on resolution"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-enchant-creature"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
+        },
+        {
+          "id": "screams-from-within-pump",
+          "oracleText": "Enchanted creature gets -1/-1.",
+          "implementation": [
+            "interpreted layer 7d modification of -1/-1 to the creature this Aura is attached to (attachedToSource) only: no other creature gets it, an unattached Aura shrinks nobody, moving the Aura moves the penalty, and a 1/1 it enchants is a 0/0 that dies and sets up the return"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-minus-one-enchanted-only"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
+        },
+        {
+          "id": "screams-from-within-return",
           "oracleText": "When enchanted creature dies, return this card from your graveyard to the battlefield.",
-          "implementation": ["explicitly unsupported; return still requires an attach target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose returnDepartedSourceToBattlefield effect (fromYourGraveyard) returns exactly the card this permanent became in the graveyard (CR 400.7e) under the trigger controller's control",
+            "the returning Aura's controller chooses a creature to enchant as it enters (CR 303.4f) without targeting it, so a hexproof opponent's creature is a legal choice, and with no creature to enchant it stays in the graveyard (CR 303.4i)",
+            "it returns only from the controller's own graveyard: a card exiled or bounced before the trigger resolves stays put, and an Aura whose owner differs from its controller sits in the owner's graveyard and does not return",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying set up no return"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-returns-from-graveyard",
+            "screams-from-within-hexproof-host",
+            "screams-from-within-no-creature-stays",
+            "screams-from-within-your-graveyard",
+            "screams-from-within-enchanted-dies-only"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
         }
       ],
       "gameplayAiScenarioIds": []

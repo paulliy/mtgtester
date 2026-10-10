@@ -84,9 +84,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.',
   ]);
 
-  unimplemented('a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50', 'Screams from Within', [
-    'When enchanted creature dies, return this card from your graveyard to the battlefield.',
-  ]);
+  // Screams from Within: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Raffine's Guidance: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 

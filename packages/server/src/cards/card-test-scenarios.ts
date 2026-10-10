@@ -8025,6 +8025,59 @@ function sunforgerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_HEXPROOF_ELF = card({
+  oracleId: 'lab-hexproof-elf',
+  name: 'Lab Hexproof Elf',
+  typeLine: 'Creature — Elf',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+  oracleText: 'Hexproof',
+});
+
+function screamsFromWithinScenario(gameId: GameId): CardTestScenario {
+  const screams = pinnedFrom(COVERAGE_PR05, 'Screams from Within');
+  const swamps = Array.from({ length: 5 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'screams-from-within-viewer-return-and-enchant',
+    title:
+      'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+    instructions: [
+      'Screams from Within and Lab Doom are in your hand. Five Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and P2 controls Lab Hexproof Elf (2/2, hexproof).',
+      'Cast Screams from Within targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 1/1. Lab Hexproof Elf is not a legal target for the Aura spell.',
+      'Cast Lab Doom on Lab Green Bear. It dies, Screams from Within goes to your graveyard with it, and its trigger puts the Aura card back onto the battlefield.',
+      'Choose Lab Hexproof Elf as the creature to enchant. Nothing is targeted, so hexproof does not stop it.',
+    ],
+    expectedOutcome:
+      'Screams from Within is on the battlefield under your control enchanting Lab Hexproof Elf, which is a 1/1. Lab Green Bear and Lab Doom are in your graveyard, Screams from Within is not, and Lab Ox is still a 4/4. All five Swamps are tapped.',
+    oracleSha256: screams.sha256,
+    clauseIds: [
+      'screams-from-within-enchant',
+      'screams-from-within-pump',
+      'screams-from-within-return',
+    ],
+    decks: {
+      P1: [screams.card, LAB_DOOM, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: [LAB_HEXPROOF_ELF, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Screams from Within', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Hexproof Elf'] },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9857,6 +9910,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mask-of-memory-viewer-draw-discard',
   'resurrection-orb-viewer-lifelink-and-return',
   'sunforger-viewer-unattach-search-and-cast',
+  'screams-from-within-viewer-return-and-enchant',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10126,6 +10180,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mask-of-memory-viewer-draw-discard': maskOfMemoryScenario,
   'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
   'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
+  'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

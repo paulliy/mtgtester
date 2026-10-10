@@ -1213,6 +1213,357 @@ describe('Resurrection Orb', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.12 Screams from Within
+// ---------------------------------------------------------------------------------------------
+
+describe('Screams from Within', () => {
+  const { card } = pinned('Screams from Within');
+  const CREATURE = (name: string, power = '2', toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Secret', power, toughness });
+  const HEXPROOF = oracle({
+    name: 'Lab Hexproof',
+    typeLine: 'Creature — Secret',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Hexproof',
+    keywords: ['Hexproof'],
+  });
+  const RESPONSE = oracle({
+    name: 'Lab Response',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+  const SCREAMS_MANA = [{ symbol: 'B' as const }, { symbol: 'B' as const }, ...generic(1)];
+
+  /**
+   * P1 controls Screams enchanting Lab Bear, plus Lab Ally; P2 controls Lab Enemy and a hexproof
+   * creature. Everything is already on the battlefield.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const screams = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const ally = spawn(ctx, 'P1', CREATURE('Lab Ally'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const hexproof = spawn(ctx, 'P2', HEXPROOF);
+    screams.attachedTo = bear.id;
+    return { ctx, screams, bear, ally, enemy, hexproof };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const graveyardOf = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  /** An answer that picks the Aura host by name and records every host choice offered. */
+  function chooseHost(name: string | null, offered: string[][] = []): Answer {
+    return (decision) => {
+      const hosts = decision.options.filter((option) => option.type === 'attachAura');
+      if (hosts.length === 0) return { index: 0, targets: new Map() };
+      offered.push(hosts.map((option) => option.description.replace(/^Enchant /, '')));
+      const index = hosts.findIndex((option) => option.description === `Enchant ${name}`);
+      return { index: decision.options.indexOf(hosts[Math.max(index, 0)]!), targets: new Map() };
+    };
+  }
+
+  /**
+   * Kill `perm`, then run the priority loop; the first time a player holds priority with the
+   * trigger on the stack, `meanwhile` runs (state changes made in response to it).
+   */
+  function dieThenRespond(
+    ctx: GameContext,
+    perm: EnginePermanent,
+    meanwhile: () => void,
+    name: string | null = 'Lab Ally',
+  ) {
+    kill(ctx, perm);
+    // A free instant in hand makes priority a real choice (not a forced pass) with the trigger up.
+    conjure(ctx, 'P1', RESPONSE, 'hand');
+    let responded = false;
+    pump(runPrioritySequence(ctx), (decision, count) => {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) {
+        if (!responded && ctx.state.stack.length > 0) {
+          responded = true;
+          meanwhile();
+        }
+        return { index: pass, targets: new Map() };
+      }
+      return chooseHost(name)(decision, count);
+    });
+    expect(responded, 'a player held priority with the trigger on the stack').toBe(true);
+  }
+
+  /** Kill `perm` and let the trigger go on the stack and resolve, choosing the host by `name`. */
+  function dieAndSettle(
+    ctx: GameContext,
+    perm: EnginePermanent,
+    name: string | null = null,
+    offered: string[][] = [],
+  ) {
+    kill(ctx, perm);
+    return settle(ctx, chooseHost(name, offered));
+  }
+
+  it('screams-from-within-pinned-oracle-supported — the interpreter alone models the -1/-1 and the untargeted return from your graveyard', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    // Enchanted creature gets -1/-1: a layer 7d modification of the attached creature only.
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 7, sublayer: 'd', power: -1, toughness: -1 },
+      },
+    ]);
+    // When enchanted creature dies, return this card from your graveyard: no target (CR 303.4f).
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'dies',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'returnDepartedSourceToBattlefield', fromYourGraveyard: true },
+    ]);
+  });
+
+  it('screams-from-within-enchant-creature — it is cast targeting a creature, never a player or a noncreature permanent, and attaches on resolution', () => {
+    const ctx = pod('screams-cast');
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const relic = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Relic',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    const inHand = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), SCREAMS_MANA);
+    const option = optionFor(ctx, 'P1', inHand.id);
+    expect(option).toBeDefined();
+    const legal = option!.targets!.flatMap((slot) => slot.options).sort();
+    expect(legal).toEqual([bear.id, enemy.id].sort());
+    expect(legal).not.toContain(relic.id);
+    expect(legal).not.toContain('P2');
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, enemy.id]]),
+    );
+    resolveTop(ctx);
+    const [aura] = named(ctx, 'Screams from Within');
+    expect(aura?.attachedTo).toBe(enemy.id);
+    expect(aura?.controllerId).toBe('P1');
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 1, toughness: 1 });
+    expect(effectivePT(ctx, bear)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('screams-from-within-minus-one-enchanted-only — the enchanted creature gets -1/-1 and nothing else does', () => {
+    const { ctx, screams, bear, ally, enemy } = board('screams-pt');
+    expect(effectivePT(ctx, bear)).toEqual({ power: 1, toughness: 1 });
+    expect(effectivePT(ctx, ally)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    // Moved onto another creature, the -1/-1 moves with it.
+    screams.attachedTo = enemy.id;
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 1, toughness: 1 });
+    expect(effectivePT(ctx, bear)).toEqual({ power: 2, toughness: 2 });
+    // Unattached it shrinks nobody.
+    screams.attachedTo = null;
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, ally)).toEqual({ power: 2, toughness: 2 });
+
+    // A 1/1 it enchants is 0/0 and dies on its own; the trigger then returns the Aura.
+    const small = pod('screams-pt-lethal');
+    const aura = spawn(small, 'P1', card);
+    const mite = spawn(small, 'P1', CREATURE('Lab Mite', '1', '1'));
+    const other = spawn(small, 'P1', CREATURE('Lab Other'));
+    aura.attachedTo = mite.id;
+    expect(effectivePT(small, mite)).toEqual({ power: 0, toughness: 0 });
+    settle(small, chooseHost('Lab Other'));
+    expect(named(small, 'Lab Mite')).toEqual([]);
+    expect(graveyardOf(small, 'P1')).toEqual(['Lab Mite']);
+    const [back] = named(small, 'Screams from Within');
+    expect(back?.attachedTo).toBe(other.id);
+    expect(effectivePT(small, other)).toEqual({ power: 1, toughness: 1 });
+  });
+
+  it('screams-from-within-returns-from-graveyard — when the enchanted creature dies the Aura card returns to the battlefield and its controller chooses a creature to enchant', () => {
+    const { ctx, screams, bear, ally, enemy, hexproof } = board('screams-return');
+    const offered: string[][] = [];
+    dieAndSettle(ctx, bear, 'Lab Ally', offered);
+    // The Aura went to the graveyard with the creature (CR 704.5m) and came back off its trigger.
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab Bear']);
+    const [back] = named(ctx, 'Screams from Within');
+    expect(back).toBeDefined();
+    expect(back?.id).not.toBe(screams.id);
+    expect(back?.controllerId).toBe('P1');
+    expect(back?.attachedTo).toBe(ally.id);
+    expect(effectivePT(ctx, ally)).toEqual({ power: 1, toughness: 1 });
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    // The choice was made as it entered, not by targeting, among every creature on the battlefield
+    // - including the opponent's hexproof one (CR 303.4f) - but not the creature that just died.
+    expect(offered).toHaveLength(1);
+    expect([...offered[0]!].sort()).toEqual(['Lab Ally', 'Lab Enemy', hexproof.name].sort());
+    expect(ctx.state.stack).toEqual([]);
+
+    // The returned Aura is a new object that triggers again: it can chain.
+    dieAndSettle(ctx, ally, 'Lab Enemy');
+    expect(graveyardOf(ctx, 'P1')).toEqual(['Lab Bear', 'Lab Ally']);
+    const [again] = named(ctx, 'Screams from Within');
+    expect(again?.attachedTo).toBe(enemy.id);
+    expect(graveyardOf(ctx, 'P1')).not.toContain('Screams from Within');
+  });
+
+  it('screams-from-within-hexproof-host — the host is chosen on entering, not targeted, so a hexproof opponent creature is a legal choice and gets -1/-1', () => {
+    const { ctx, bear, hexproof } = board('screams-hexproof');
+    // A hexproof creature cannot be targeted by the Aura spell cast ...
+    const inHand = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), SCREAMS_MANA);
+    const cast = optionFor(ctx, 'P1', inHand.id);
+    expect(cast!.targets!.flatMap((slot) => slot.options)).not.toContain(hexproof.id);
+    // ... but the return can enchant it.
+    dieAndSettle(ctx, bear, hexproof.name);
+    const [back] = ctx.state.battlefield.filter(
+      (perm) => perm.name === 'Screams from Within' && perm.id !== inHand.id,
+    );
+    expect(back?.attachedTo).toBe(hexproof.id);
+    expect(back?.controllerId).toBe('P1');
+    expect(effectivePT(ctx, hexproof)).toEqual({ power: 1, toughness: 1 });
+  });
+
+  it('screams-from-within-no-creature-stays — with no creature to enchant it stays in the graveyard (CR 303.4i)', () => {
+    const ctx = pod('screams-lonely');
+    const screams = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', CREATURE('Lab Bear'));
+    screams.attachedTo = bear.id;
+    const offered: string[][] = [];
+    dieAndSettle(ctx, bear, null, offered);
+    // No creature remains, so no host was offered and the card is still in the graveyard.
+    expect(offered).toEqual([]);
+    expect(named(ctx, 'Screams from Within')).toEqual([]);
+    expect(graveyardOf(ctx, 'P1').sort()).toEqual(['Lab Bear', 'Screams from Within']);
+    expect(ctx.state.stack).toEqual([]);
+    // A planeswalker or artifact is no host: still nothing to enchant.
+    const walker = pod('screams-lonely-artifact');
+    const aura = spawn(walker, 'P1', card);
+    const dying = spawn(walker, 'P1', CREATURE('Lab Bear'));
+    spawn(
+      walker,
+      'P2',
+      oracle({
+        name: 'Lab Relic',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        power: null,
+        toughness: null,
+      }),
+    );
+    aura.attachedTo = dying.id;
+    dieAndSettle(walker, dying);
+    expect(named(walker, 'Screams from Within')).toEqual([]);
+    expect(graveyardOf(walker, 'P1')).toContain('Screams from Within');
+  });
+
+  it('screams-from-within-your-graveyard — it returns only if it is in your graveyard: not exiled first, not a card an opponent owns', () => {
+    // Exiled from the graveyard before the trigger resolves: it stays in exile.
+    const exiled = board('screams-exiled');
+    dieThenRespond(exiled.ctx, exiled.bear, () => {
+      const inYard = playerById(exiled.ctx, 'P1').graveyard.find(
+        (c) => c.name === 'Screams from Within',
+      );
+      expect(inYard).toBeDefined();
+      pump(moveObject(exiled.ctx, inYard!, { zone: 'exile' }));
+    });
+    expect(named(exiled.ctx, 'Screams from Within')).toEqual([]);
+    expect(exiled.ctx.state.exile.map((c) => c.name)).toEqual(['Screams from Within']);
+
+    // Left and came back as a new object: that is not the card the trigger remembers.
+    const hand = board('screams-bounced');
+    dieThenRespond(hand.ctx, hand.bear, () => {
+      const inYard = playerById(hand.ctx, 'P1').graveyard.find(
+        (c) => c.name === 'Screams from Within',
+      )!;
+      pump(moveObject(hand.ctx, inYard, { zone: 'hand' }));
+      const inHand = playerById(hand.ctx, 'P1').hand.find((c) => c.name === 'Screams from Within');
+      pump(moveObject(hand.ctx, inHand!, { zone: 'graveyard' }));
+    });
+    expect(named(hand.ctx, 'Screams from Within')).toEqual([]);
+    expect(graveyardOf(hand.ctx, 'P1')).toContain('Screams from Within');
+
+    // Control: untouched in your graveyard, it returns.
+    const control = board('screams-control');
+    dieAndSettle(control.ctx, control.bear, 'Lab Ally');
+    expect(named(control.ctx, 'Screams from Within')).toHaveLength(1);
+
+    // P1 controls an Aura that P2 owns: it dies into P2's graveyard, which is not "your
+    // graveyard" for P1's trigger, so it stays there.
+    const stolen = board('screams-stolen');
+    stolen.screams.ownerId = 'P2';
+    dieAndSettle(stolen.ctx, stolen.bear, 'Lab Ally');
+    expect(graveyardOf(stolen.ctx, 'P2')).toEqual(['Screams from Within']);
+    expect(graveyardOf(stolen.ctx, 'P1')).toEqual(['Lab Bear']);
+    expect(named(stolen.ctx, 'Screams from Within')).toEqual([]);
+
+    // The reverse: P2 controls an Aura P1 owns. It goes to P1's graveyard, not the controller's.
+    const lent = board('screams-lent');
+    lent.screams.controllerId = 'P2';
+    dieAndSettle(lent.ctx, lent.bear, 'Lab Enemy');
+    expect(graveyardOf(lent.ctx, 'P1')).toEqual(['Lab Bear', 'Screams from Within']);
+    expect(named(lent.ctx, 'Screams from Within')).toEqual([]);
+  });
+
+  it('screams-from-within-enchanted-dies-only — another creature dying, or the Aura leaving alone, returns nothing', () => {
+    // Another creature of yours dying does not trigger it: the Aura stays on its creature.
+    const beside = board('screams-beside');
+    dieAndSettle(beside.ctx, beside.ally);
+    expect(beside.screams.attachedTo).toBe(beside.bear.id);
+    expect(named(beside.ctx, 'Screams from Within')).toEqual([beside.screams]);
+    expect(graveyardOf(beside.ctx, 'P1')).toEqual(['Lab Ally']);
+
+    // An opponent's creature dying does not either.
+    dieAndSettle(beside.ctx, beside.enemy);
+    expect(named(beside.ctx, 'Screams from Within')).toEqual([beside.screams]);
+
+    // The Aura itself leaving (destroyed, exiled or bounced) while the creature lives is not the
+    // creature dying: it stays where it went.
+    const destroyed = board('screams-aura-dies');
+    kill(destroyed.ctx, destroyed.screams);
+    settle(destroyed.ctx, chooseHost('Lab Ally'));
+    expect(graveyardOf(destroyed.ctx, 'P1')).toEqual(['Screams from Within']);
+    expect(named(destroyed.ctx, 'Screams from Within')).toEqual([]);
+    expect(destroyed.ctx.state.stack).toEqual([]);
+
+    // The enchanted creature leaving without dying (exile, bounce) does not trigger it; the Aura
+    // falls off into the graveyard and stays there.
+    const exiled = board('screams-creature-exiled');
+    pump(moveObject(exiled.ctx, exiled.bear, { zone: 'exile' }));
+    settle(exiled.ctx, chooseHost('Lab Ally'));
+    expect(named(exiled.ctx, 'Screams from Within')).toEqual([]);
+    expect(graveyardOf(exiled.ctx, 'P1')).toEqual(['Screams from Within']);
+    const bounced = board('screams-creature-bounced');
+    pump(moveObject(bounced.ctx, bounced.bear, { zone: 'hand' }));
+    settle(bounced.ctx, chooseHost('Lab Ally'));
+    expect(named(bounced.ctx, 'Screams from Within')).toEqual([]);
+    expect(graveyardOf(bounced.ctx, 'P1')).toEqual(['Screams from Within']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.15 Sunforger
 // ---------------------------------------------------------------------------------------------
 
@@ -1691,6 +2042,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Resurrection Orb',
     sha256: 'ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734',
+    clauseCount: 3,
+  },
+  {
+    name: 'Screams from Within',
+    sha256: '603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3',
     clauseCount: 3,
   },
   {

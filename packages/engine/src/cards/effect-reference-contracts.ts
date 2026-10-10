@@ -329,6 +329,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   returnDiedTriggerObjectTapped: {},
   returnDiedTriggerObjectAtNextEndStep: {},
   returnRememberedGraveyardCard: {},
+  returnDepartedSourceToBattlefield: {},
   reanimateEachChosenTapped: { targetSlot: many(graveyard) },
   connive: {},
   exileTopNPlayableUntilEot: {},

@@ -4339,7 +4339,10 @@ export function* executeAbility(
         // re-checked legality via `graveyardTargets`, so this is the "gone" case, not a bug.
         if (cardObj === undefined) break;
         emit(ctx, 'graveyardToBattlefield', { target: cardObj.name, source: source.name });
-        yield* moveObject(ctx, cardObj, { zone: 'battlefield', controllerId: source.controllerId });
+        yield* moveObject(ctx, cardObj, {
+          zone: 'battlefield',
+          controllerId: effect.under === 'owner' ? cardObj.ownerId : source.controllerId,
+        });
         break;
       }
       case 'reanimateAndLoseLife': {
@@ -5346,10 +5349,70 @@ export function* executeAbility(
           .flatMap((player) => player.graveyard)
           .find((candidate) => candidate.id === remembered);
         if (card === undefined) break;
+        const host = effect.attachToObjectId;
+        if (host !== undefined && findPermanent(ctx, host) === undefined) break;
         emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
         yield* moveObject(ctx, card, {
           zone: 'battlefield',
           controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
+          ...(host === undefined ? {} : { attachedTo: host }),
+        });
+        break;
+      }
+      case 'returnDepartedSourceToBattlefield': {
+        const departed = source.id;
+        if (departed === undefined) break;
+        const graveyards =
+          effect.fromYourGraveyard === true
+            ? [controller.graveyard]
+            : ctx.state.players.map((player) => player.graveyard);
+        const card = graveyards
+          .flat()
+          .find(
+            (candidate) =>
+              candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+          );
+        if (card === undefined) break;
+        let host: ObjectId | undefined;
+        if (effect.attachTo === 'triggerObject') {
+          // The card the trigger object became, followed through this resolution's own moves:
+          // "return that card ... Return this card ... attached to that creature".
+          const destination = scope.eventObjectDestinationId;
+          const current = destination === undefined ? null : movedReferent(destination);
+          if (current === null || findPermanent(ctx, current) === undefined) break;
+          host = current;
+        }
+        if (effect.delay === 'nextEndStep') {
+          ctx.state.delayedTriggers.push({
+            id: `dt-${ctx.state.nextObjectNum++}`,
+            sourceCardId: source.cardId,
+            sourceOracleId: source.oracleId as never,
+            controllerId: source.controllerId,
+            targetId: card.cardId,
+            targetObjectId: card.id,
+            when: 'endStep',
+            ability: {
+              kind: 'triggered',
+              targets: [],
+              effects: [
+                {
+                  op: 'returnRememberedGraveyardCard',
+                  returnUnder: 'sourceController',
+                  ...(host === undefined ? {} : { attachToObjectId: host }),
+                },
+              ],
+              description: `Return ${card.name} to the battlefield`,
+            },
+            // An end step that already began (this resolved during it) is not "the next" one.
+            expiry: 'onFire',
+          });
+          break;
+        }
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          ...(host === undefined ? {} : { attachedTo: host }),
         });
         break;
       }

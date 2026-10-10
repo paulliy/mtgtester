@@ -6664,12 +6664,6 @@
     "def": {}
   },
   {
-    "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
-    "name": "Screams from Within",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a3da7d5b-2c2b-45fe-b9c5-413b8c8fc0a2",
     "name": "Academy Ruins",
     "handledLines": [
@@ -19593,12 +19587,6 @@
   {
     "oracleId": "oracle-scourge-of-valkas",
     "name": "Scourge of Valkas",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-screams-from-within",
-    "name": "Screams from Within",
     "handledLines": [],
     "def": {}
   },

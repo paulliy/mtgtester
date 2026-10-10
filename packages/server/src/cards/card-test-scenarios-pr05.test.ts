@@ -270,3 +270,45 @@ describe('Sunforger Card Test Lab scenario', () => {
     replays('sunforger-viewer-unattach-search-and-cast', steps);
   });
 });
+
+describe('Screams from Within Card Test Lab scenario', () => {
+  it('screams-from-within-viewer-return-and-enchant — cast it on Lab Green Bear, destroy the Bear, and the Aura returns onto the hexproof Lab Hexproof Elf', () => {
+    const steps: Step[] = [
+      { action: 'Cast Screams from Within', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Enchant Lab Hexproof Elf' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts, offered } = run(
+      'screams-from-within-viewer-return-and-enchant',
+      steps,
+    );
+    // The return asked its controller for a host once, offering the other creatures but not the
+    // Bear that died: a choice on entering, so the hexproof Elf is among them.
+    expect(prompts.filter((prompt) => /choose a permanent to enchant/.test(prompt))).toHaveLength(
+      1,
+    );
+    const hosts = offered.find((options) => options.some((option) => /^Enchant /.test(option)));
+    expect([...(hosts ?? [])].sort()).toEqual(['Enchant Lab Hexproof Elf', 'Enchant Lab Ox']);
+    // The Aura came back off its trigger as a new object under P1, enchanting the Elf.
+    const [screams] = onBattlefield('Screams from Within');
+    const [elf] = onBattlefield('Lab Hexproof Elf');
+    expect(onBattlefield('Screams from Within')).toHaveLength(1);
+    expect(screams?.attachedTo).toBe(elf?.id);
+    expect(screams?.controllerId).toBe('P1');
+    expect(state.eventLog.filter((event) => event.type === 'graveyardToBattlefield')).toHaveLength(
+      1,
+    );
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Lab Green Bear']);
+    expect(seat('P2').graveyard).toEqual([]);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('screams-from-within-viewer-return-and-enchant', steps);
+  });
+});

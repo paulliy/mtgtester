@@ -1375,6 +1375,28 @@ function parseEffectSentence(
   if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
     return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
   }
+  if (
+    opts.triggerObject === true &&
+    s === "return that card to the battlefield under its owner's control"
+  ) {
+    return [{ op: 'graveyardToBattlefield', target: 'triggerObject', under: 'owner' }];
+  }
+  // "Return this card [from your graveyard] to the battlefield [attached to that creature] [at the
+  // beginning of the next end step]" (Screams from Within, Ghoulish Impetus, Gift of Immortality).
+  {
+    const m = s.match(
+      /^return this card (from your graveyard )?to the battlefield( attached to that creature)?( at the beginning of the next end step)?$/,
+    );
+    if (m !== null && (m[2] === undefined || opts.triggerObject === true))
+      return [
+        {
+          op: 'returnDepartedSourceToBattlefield',
+          ...(m[1] !== undefined ? { fromYourGraveyard: true as const } : {}),
+          ...(m[3] !== undefined ? { delay: 'nextEndStep' as const } : {}),
+          ...(m[2] !== undefined ? { attachTo: 'triggerObject' as const } : {}),
+        },
+      ];
+  }
   // "... return that card to the battlefield under its owner's control at the beginning of the
   // next end step" (Resurrection Orb). Only the owner's form: Marchesa's "under your control"
   // twin carries a +1/+1-counter subject her reviewed override models.
