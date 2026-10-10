@@ -10,7 +10,7 @@ import {
   type PriorityActionPayload,
 } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
-import { fixtureOracleId } from '../src/cards/overrides';
+import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
@@ -217,6 +217,13 @@ describe('Akoum Hellkite', () => {
 
 describe('Blossoming Defense', () => {
   const card = pinned('Blossoming Defense');
+
+  it('defense-interpreter-reads-the-pump-without-an-override', () => {
+    expect(getOverride(card.oracleId)).toBeUndefined();
+    const definition = interpretCard(card);
+    expect(definition.modeled).toBe(true);
+    expect(definition.spellAbility?.targets).toEqual([{ kind: 'creature', controller: 'you' }]);
+  });
 
   it('defense-pumps-and-grants-hexproof-to-your-creature', () => {
     const ctx = pod('defense-you');

@@ -47,6 +47,12 @@ export interface SelectorCandidate {
   colors: readonly Color[];
   /** Current power. Only `powerAtLeast` reads it — see the module comment. */
   power: number;
+  /**
+   * A card outside the battlefield whose power is not a printed number ("*", a characteristic-
+   * defining ability this candidate does not evaluate). `power` then reads 0, so a comparison
+   * against the source's power (`powerAtMostSource`) refuses it rather than guessing.
+   */
+  powerUnknown?: boolean;
   /** Current toughness. Only `toughnessAtLeast` reads it — see the module comment. */
   toughness?: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
@@ -61,6 +67,8 @@ export interface SelectorCandidate {
   enteredThisTurn: boolean;
   /** Is this permanent/card a Commander (CR 903.3)? */
   isCommander?: boolean;
+  /** Its owner (CR 108.3). Absent when a builder does not know it, which never matches `owner`. */
+  ownerId?: string;
   /** Is this permanent enchanted by an Aura? */
   isEnchanted?: boolean;
   /** Is this permanent equipped by an Equipment? */
@@ -100,6 +108,8 @@ export interface SelectorSource {
   eventPlayerId?: string;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
   chosenOption?: string;
+  /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */
+  sourcePower?: number;
 }
 
 export type Selector =
@@ -135,6 +145,12 @@ export type Selector =
   /** EVENT-ONLY (see the module comment): "with power 2 or less". */
   | { kind: 'powerAtMost'; n: number }
   | { kind: 'toughnessAtLeast'; n: number }
+  /**
+   * EVENT-ONLY: "with equal or lesser power" than the ability's source (Body Launderer) — its
+   * current power, or its last-known power once it has left the battlefield (CR 608.2h). An
+   * unknown source power matches nothing.
+   */
+  | { kind: 'powerAtMostSource' }
   /** "with mana value 4 or less" (Sunforger) — not event-only: mana value is a printed
    * characteristic, not a layer's derived output. */
   | { kind: 'manaValueAtMost'; n: number }
@@ -163,6 +179,8 @@ export type Selector =
   /** "a creature you control that entered this turn" (Neriv, Heart of the Storm). */
   | { kind: 'enteredThisTurn' }
   | { kind: 'isCommander' }
+  /** "you own" (Candlekeep Sage): ownership, not control (CR 108.3); a layer cannot change it. */
+  | { kind: 'owner'; who: 'you' }
   | { kind: 'isMonocolored' }
   | { kind: 'isEnchanted' }
   | { kind: 'isEquipped' }
@@ -226,6 +244,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
   switch (selector.kind) {
     case 'powerAtLeast':
     case 'powerAtMost':
+    case 'powerAtMostSource':
     case 'toughnessAtLeast':
     case 'hasKeyword':
     case 'inCombat':
@@ -258,6 +277,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'isToken':
     case 'enteredThisTurn':
     case 'isCommander':
+    case 'owner':
     case 'isMonocolored':
     case 'isEnchanted':
     case 'isEquipped':
@@ -306,6 +326,12 @@ export function selectMatches(
       return candidate.power >= selector.n;
     case 'powerAtMost':
       return candidate.power <= selector.n;
+    case 'powerAtMostSource':
+      return (
+        source.sourcePower !== undefined &&
+        candidate.powerUnknown !== true &&
+        candidate.power <= source.sourcePower
+      );
     case 'hasAnyCounter':
       return candidate.hasAnyCounter === true;
     case 'hasCounter':
@@ -326,6 +352,8 @@ export function selectMatches(
       return candidate.enteredThisTurn;
     case 'isCommander':
       return candidate.isCommander === true;
+    case 'owner':
+      return candidate.ownerId !== undefined && candidate.ownerId === source.controllerId;
     case 'isMonocolored':
       return candidate.colors.length === 1;
     case 'isEnchanted':
@@ -349,5 +377,20 @@ export function selectMatches(
 
     default:
       assertNever(selector, 'selector');
+  }
+}
+
+/** Does `selector` compare against its source's power (so the caller must supply it)? */
+export function selectorReadsSourcePower(selector: Selector): boolean {
+  switch (selector.kind) {
+    case 'powerAtMostSource':
+      return true;
+    case 'allOf':
+    case 'anyOf':
+      return selector.of.some(selectorReadsSourcePower);
+    case 'not':
+      return selectorReadsSourcePower(selector.of);
+    default:
+      return false;
   }
 }

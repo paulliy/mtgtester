@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 31,
+      "uniqueOracleIds": 29,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5579,21 +5579,21 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 35,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 47,
+      "uniqueOracleIds": 38,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 41,
+      "uniqueOracleIds": 40,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5913,6 +5913,216 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr02",
       "note": "Registration deleted: the interpreter reads the foretell grant (a foretell special action for nonland hand cards, castable from exile on a later turn for the mana cost reduced by {2} generic, kept after the Devourer leaves) and the 'whenever you foretell a card' trigger; engine and Card Test Lab evidence in packages/engine/tests/pr02-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
+      "name": "Triarch Praetorian",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'When this creature enters from a graveyard' as an enters trigger with entersFrom { zone: graveyard }, matched against the zone the permanent recorded as it entered; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
+      "name": "Triarch Praetorian",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+      "name": "Canoptek Tomb Sentinel",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the enters-from-a-graveyard head and 'exile up to one target nonland permanent' as a 0..1 count slot with exileEachChosen; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+      "name": "Canoptek Tomb Sentinel",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
+      "name": "Glen Elendra Archmage",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads Persist as a dies trigger with a last-known -1/-1 counter intervening-if and returnDiedSourceToBattlefield, which returns only the card the permanent became, under its owner's control with a -1/-1 counter; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
+      "name": "Flayer of the Hatebound",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads Undying (a last-known +1/+1 intervening-if dies trigger returning the card it became) and the enters-from-your-graveyard trigger, whose entering creature deals damage equal to its power; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4987c458-604a-4727-b360-170616e91e67",
+      "name": "Kambal, Consul of Allocation",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads 'Whenever an opponent casts a noncreature spell' with caster opponent and 'that player loses 2 life and you gain 2 life' as loseLifeTarget eventPlayer plus gainLife; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
+      "name": "Gleeful Arsonist",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the opponent-cast trigger with '~ deals damage equal to its power to that player' (dealDamage eventPlayer, powerOfSource) and Undying; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
+      "name": "Shard of the Nightbringer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'if you cast it' as the sourceWasCast condition over the permanent's cast record, and the targeted half-life loss with a banked life-lost-this-way gain; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
+      "name": "Shard of the Nightbringer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
+      "name": "Satoru, the Infiltrator",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads 'Satoru and/or one or more other nontoken creatures you control enter' as a self-inclusive aggregate enters head and the not-cast-or-no-mana intervening-if as entersWithoutManaSpentToCast over each entering permanent's cast record; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
+      "name": "River Kelpie",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the enters-from-a-graveyard trigger (entersFrom), the cast-from-a-graveyard trigger (castFrom over the spell's cast record) and Persist; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
+      "name": "Watcher for Tomorrow",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads Hideaway 4, enters tapped, and 'When this creature leaves the battlefield, put the exiled card into its owner's hand' as a leavesBattlefield trigger returning only the card this permanent's Hideaway exiled; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
+      "name": "Psychomancer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the graveyard-or-exile leave trigger (leavesBattlefield with leavesTo) and 'target opponent loses 1 life and you gain 1 life'; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
+      "name": "Shard of the Void Dragon",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads the attack edict ('each opponent sacrifices a nonland permanent of their choice') and Matter Absorption as a leavesBattlefield trigger with leavesTo [graveyard, exile]; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
+      "name": "Shard of the Void Dragon",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
+      "name": "Scavenging Ooze",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Registration deleted: the interpreter reads the {G} graveyard exile and its creature-card rider as one block (exileTargetGraveyardAndBuffIfCreature), which moves the card through a real zone change; engine and Card Test Lab evidence in packages/engine/tests/pr03-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
+      "name": "Imotekh the Stormlord",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads Phaeron as an aggregate leavesGraveyard trigger for your artifact cards (fired by real graveyard zone changes) and Grand Strategist as a begin-combat pump on another target artifact creature you control."
+    },
+    {
+      "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
+      "name": "Imotekh the Stormlord",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "5a851367-1c4a-4cc9-a9c3-3d2775986b4c",
+      "name": "Blossoming Defense",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Reviewed override retired, not a containment: the generalized interpreter pump line (added for Imotekh the Stormlord) now reads \"Target creature you control gets +2/+2 and gains hexproof until end of turn.\" to the same ability, so the duplicate registration is deleted. The reviewed engine tests and Card Test Lab scenario still cover it."
+    },
+    {
+      "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
+      "name": "The Ooze",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the counter-gated leavesBattlefield trigger (last-known +1/+1 counters, one departure event for mass moves), the {T} graveyard exile, and the Mutagen token with its sorcery-speed counter ability."
+    },
+    {
+      "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+      "name": "Return to Nature",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Coverage PR01 override retired, not a containment: with \"Exile target card from a graveyard\" now an interpreter line (added for The Ooze), the interpreter reads the three single-target modes to the same modal ability, so the duplicate registration is deleted. The PR01 engine tests and Card Test Lab scenarios still cover it."
+    },
+    {
+      "oracleId": "00e0b103-892c-49b3-836d-867fff197bbd",
+      "name": "Puppeteer Clique",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the reanimation from an opponent's graveyard as one block, with a lasting haste grant and a delayed exile at your next end step bound to that object, plus Persist."
+    },
+    {
+      "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+      "name": "Cryptek",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the activation as one block, a dies-this-turn delayed trigger bound to the chosen permanent that returns the card it became tapped under your control."
+    },
+    {
+      "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+      "name": "Cryptek",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+      "name": "Living Death",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the spell onto livingDeath, now three simultaneous events — one exile batch, one sacrifice batch, one return of the exact exiled cards under their owners."
+    },
+    {
+      "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+      "name": "Living Death",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+      "name": "Technomancer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads the enters trigger onto mill three plus returnArtifactCreaturesUpToManaValue, which offers picks one at a time against the remaining budget (mana value 0 cards stay offered) and returns the chosen cards together."
+    },
+    {
+      "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+      "name": "Technomancer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
+      "name": "Body Launderer",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr03",
+      "note": "Containment removed: the interpreter reads connive (new connive op, CR 701.50) and the dies return, whose target filter compares against Body Launderer's last-known power through the new powerAtMostSource selector (CR 608.2h)."
     }
   ]
 }

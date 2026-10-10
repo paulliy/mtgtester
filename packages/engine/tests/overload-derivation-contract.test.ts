@@ -297,9 +297,12 @@ describe('guarded Overload lowering and casting', () => {
     ({ card }) => {
       const definition = interpretCard(card);
       expect(definition.modeled, card.name).toBe(false);
-      expect(
-        definition.unmodeledReasons.some((reason) => reason.includes('unrecognized rules text')),
-      ).toBe(true);
+      // Mizzium Skin's base pump now parses, so it fails closed on the missing overload ability.
+      const reason =
+        card.name === 'Mizzium Skin'
+          ? 'overload requires an explicit executable spell ability with no targets'
+          : 'unrecognized rules text';
+      expect(definition.unmodeledReasons.some((entry) => entry.includes(reason))).toBe(true);
       expect(definition.alternativeCasts?.[0]?.ability).toBeUndefined();
     },
   );

@@ -3,8 +3,9 @@ import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
 import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
-import { selectMatches } from '../cards/selector';
+import { selectMatches, selectorReadsSourcePower } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { offBattlefieldCdaPower } from '../effects/values';
 import { spellManaValue } from '../state/objects';
 import {
   cardZoneCandidate,
@@ -13,7 +14,12 @@ import {
   hasProtectionFrom,
   playersInApnapOrder,
 } from '../state/queries';
-import type { EnginePermanent, EngineStackObject, GameContext } from '../state/types';
+import type {
+  EngineCardObject,
+  EnginePermanent,
+  EngineStackObject,
+  GameContext,
+} from '../state/types';
 import { assertNever } from '../utils/assert-never';
 import type { TargetContext } from './context';
 
@@ -58,6 +64,39 @@ export function targetDomainCandidates(ctx: GameContext, kind: TargetKind): Obje
   }
 }
 
+/**
+ * The source's power for a filter relative to it: its last-known power once it has left the
+ * battlefield (CR 608.2h), else its current power. Neither known (a source that left without
+ * facts) leaves it unset, so the filter matches nothing.
+ */
+function sourcePowerFor(ctx: GameContext, context: TargetContext): { sourcePower?: number } {
+  if (context.sourceFacts !== undefined) return { sourcePower: context.sourceFacts.power };
+  const permanent = ctx.state.battlefield.find(
+    (candidate) => candidate.cardId === context.sourceCardId,
+  );
+  return permanent === undefined
+    ? {}
+    : { sourcePower: computeCharacteristics(ctx, permanent).power };
+}
+
+/**
+ * A graveyard card as a selector candidate. A "*" power is its characteristic-defining ability
+ * evaluated in the graveyard (CR 604.3); with none, it stays unknown and a source-power
+ * comparison refuses it.
+ */
+function graveyardCandidate(
+  ctx: GameContext,
+  card: EngineCardObject,
+  ownerId: PlayerId,
+): SelectorCandidate {
+  const candidate = cardZoneCandidate(ctx, card, ownerId);
+  if (candidate.powerUnknown !== true) return candidate;
+  const power = offBattlefieldCdaPower(ctx, card, ownerId);
+  if (power === undefined) return candidate;
+  const { powerUnknown: _unknown, ...known } = candidate;
+  return { ...known, power };
+}
+
 /** Authoritative domain/characteristic predicate at preview, announcement, and resolution. */
 export function targetIsLegal(
   ctx: GameContext,
@@ -68,7 +107,13 @@ export function targetIsLegal(
   const spec = typeof target === 'string' ? { kind: target } : target;
   const { kind, filter, controller } = spec;
   const { controllerId, eventPlayerId } = context;
-  const source = { cardId: context.sourceCardId ?? '', controllerId };
+  const source = {
+    cardId: context.sourceCardId ?? '',
+    controllerId,
+    ...(filter !== undefined && selectorReadsSourcePower(filter)
+      ? sourcePowerFor(ctx, context)
+      : {}),
+  };
   const matchesController = (id: PlayerId): boolean => {
     switch (controller) {
       case undefined:
@@ -116,7 +161,7 @@ export function targetIsLegal(
       return (
         card !== undefined &&
         (filter === undefined ||
-          selectMatches(cardZoneCandidate(ctx, card, player.id), filter, source))
+          selectMatches(graveyardCandidate(ctx, card, player.id), filter, source))
       );
     });
   }

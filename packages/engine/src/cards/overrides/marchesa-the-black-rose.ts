@@ -147,13 +147,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Blasphemous Edict: restored in coverage PR02. The interpreter reads the conditional {B}
   // alternative cost and "each player sacrifices thirteen creatures", so no override remains.
-  // Catalog audit batch 2: connive always puts a counter, and the return trigger omits
-  // the equal-or-lesser-power filter.
-  unsupportedCard(
-    'eaca2576-020b-4af4-b348-6d1b56116c41',
-    'Body Launderer',
-    'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
-  );
+  // Body Launderer: restored in coverage PR03. The interpreter reads connive (CR 701.50) and the
+  // return bounded by its last-known power.
   // Catalog audit batch 1: copyTargetSpell is not "change the target". Contain until a true
   // retarget primitive exists.
   unsupportedCard(
@@ -249,12 +244,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Flare of Malice: restored in coverage PR02. The interpreter reads the sacrifice alternative
   // cost and the greatest-mana-value sacrifice, so no override remains.
-  // Catalog audit batch 4: any of your creatures entering fires this, not only graveyard origin.
-  unsupportedCard(
-    'ba9f3c5d-556f-48d1-8d87-723f7893cfcd',
-    'Flayer of the Hatebound',
-    'Enters-from-graveyard is implemented as any creature you control entering.',
-  );
+  // Flayer of the Hatebound: restored in coverage PR03. The interpreter reads Undying and the
+  // enters-from-your-graveyard damage trigger, so no override remains.
   defineCard(
     '77807103-bcd5-479f-bedd-f5d97aa6d3d2',
     'Forge of Heroes',
@@ -289,18 +280,10 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 8: Undying is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '9025b3ce-f6ae-431d-9eb5-02d713b8c9b8',
-    'Gleeful Arsonist',
-    'Undying is claimed without a persist/undying replacement.',
-  );
-  // Catalog audit batch 8: Persist is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '5f3f68b5-8c6a-4181-bb8a-9c73967d198a',
-    'Glen Elendra Archmage',
-    'Persist is claimed without a persist/undying replacement.',
-  );
+  // Gleeful Arsonist: restored in coverage PR03. The interpreter reads the opponent-cast damage
+  // trigger and Undying, so no override remains.
+  // Glen Elendra Archmage: restored in coverage PR03. The interpreter reads Persist as a dies
+  // trigger that returns the card it became, so no override remains.
   defineCard(
     '6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2',
     'Grave Pact',
@@ -456,26 +439,14 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Pensive Professor',
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   );
-  // Catalog audit batch 7: delayed end-step exile is omitted.
-  unsupportedCard(
-    '00e0b103-892c-49b3-836d-867fff197bbd',
-    'Puppeteer Clique',
-    'Stolen creature is not exiled at the beginning of the next end step.',
-  );
-  // Catalog audit batch 6: graveyard origin is omitted from both triggers.
-  unsupportedCard(
-    'ef5c93ae-91e0-4edb-b8a3-1171a3694bb8',
-    'River Kelpie',
-    'Graveyard-origin enters and cast triggers fire on any enter or cast.',
-  );
+  // Puppeteer Clique: restored in coverage PR03. The interpreter reads the reanimation with haste
+  // and its bound end-step exile, and Persist, so no override remains.
+  // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers
+  // and Persist, so no override remains.
   // Sage of Fables: restored in coverage PR02. The draw's cost is removeCountersFromAmong: a
   // +1/+1 counter from any creature you control, chosen as the cost is paid.
-  // Catalog audit batch 7: uncast/no-mana-spent restriction is omitted.
-  unsupportedCard(
-    '7555c429-5f2d-4171-b6b0-8e3c8da7f314',
-    'Satoru, the Infiltrator',
-    'Enter trigger omits the not-cast-or-no-mana-spent restriction.',
-  );
+  // Satoru, the Infiltrator: restored in coverage PR03. The interpreter reads the self-inclusive
+  // aggregate enters head and the uncast-or-free restriction, so no override remains.
   // Catalog audit batch 7: targeting restriction is omitted.
   unsupportedCard(
     '59c7496b-19a2-478b-b28f-6f153c2458ae',
@@ -502,12 +473,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       },
     },
   );
-  // Catalog audit batch 7: leaves-the-battlefield is implemented as dies.
-  unsupportedCard(
-    '82a6fa6f-13c2-4ea3-bec2-c51b56b2783b',
-    'The Ooze',
-    'Leaves-the-battlefield is implemented as dies.',
-  );
+  // The Ooze: restored in coverage PR03. The interpreter reads the counter-gated leave trigger
+  // (last-known counters), the graveyard exile, and the Mutagen token, so no override remains.
   // Toxic Deluge: restored in coverage PR02. The interpreter reads the announced pay-X-life
   // additional cost and the -X/-X sweep, so no override remains.
   // Catalog audit batch 6: graveyard-origin and once-each-turn restrictions are omitted.
@@ -528,10 +495,6 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Vindictive Lich',
     'Modes are choose-one rather than one-or-more targeting different players.',
   );
-  // Catalog audit batch 7: leaves-the-battlefield is implemented as dies.
-  unsupportedCard(
-    '277aafa6-4270-4d24-a888-cf9e8e635d4b',
-    'Watcher for Tomorrow',
-    'Leaves-the-battlefield is implemented as dies.',
-  );
+  // Watcher for Tomorrow: restored in coverage PR03. The interpreter reads Hideaway, the
+  // leaves-the-battlefield trigger and its linked exiled card, so no override remains.
 }

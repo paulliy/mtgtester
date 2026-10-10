@@ -505,6 +505,8 @@ export type Effect =
   | { op: 'grantKeywordUntilEot'; target: EffectRef; keyword: KeywordAbility }
   /** Target creature cannot be blocked this turn. */
   | { op: 'cantBeBlockedUntilEot'; target: EffectRef }
+  /** "Creatures can't be blocked this turn" — every creature, including later arrivals. */
+  | { op: 'creaturesCantBeBlockedThisTurn' }
   /** A resolution-time choice between effects (for example Pemmin's Aura's two stat modes). */
   | { op: 'chooseOne'; options: { effects: Effect[]; description: string }[] }
   /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */
@@ -551,6 +553,12 @@ export type Effect =
   | { op: 'millAndCreateTokensForCreatures'; spec: TokenSpec }
   | { op: 'returnArtifactCreaturesUpToManaValue'; maxManaValue: number }
   | { op: 'halfLifeDrainTargetOpponent' }
+  /**
+   * "target opponent loses half their life, rounded up" (Shard of the Nightbringer): the half is
+   * computed from the target's life as it resolves; the loss is banked for a following "life
+   * lost this way".
+   */
+  | { op: 'loseHalfLifeTarget'; target: EffectRef }
   | { op: 'tombBladeHit'; target: EffectRef }
   | { op: 'emptyLibraryCreatureOrLose' }
   | { op: 'exileResolvingSpell' }
@@ -685,6 +693,11 @@ export type Effect =
   | { op: 'exileSource' }
   | { op: 'draw'; count: Value; player?: 'controller' | 'eventPlayer' }
   | { op: 'discard'; count: number } // controller chooses cards to discard
+  /**
+   * "This creature connives" (CR 701.50): draw a card, then discard a card; a nonland discard
+   * puts a +1/+1 counter on the source, if it is still the same object on the battlefield.
+   */
+  | { op: 'connive' }
   /** Put a chosen number of cards from hand on top of the library, optionally ordering them. */
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
   /** Discard cards using the game PRNG rather than a player choice. */
@@ -1184,6 +1197,53 @@ export type Effect =
    */
   | { op: 'returnSelfFromGraveyardToHand' }
   /**
+   * Persist and undying (CR 702.79a, 702.93a): "return it to the battlefield under its owner's
+   * control with a `counter` counter on it". "It" is the card the dying source became in the
+   * graveyard (CR 400.7e); if that card has left the graveyard, nothing returns. The counter is
+   * on it as it enters.
+   */
+  | { op: 'returnDiedSourceToBattlefield'; counter: string }
+  /**
+   * "Put it into its owner's library third from the top" (God-Eternal Rhonas), after the source
+   * died or was exiled: "it" is the card the source became in the graveyard or exile (CR
+   * 400.7e); if that card has left that zone, nothing moves. `fromTop` is 1-based, and a library
+   * too short for that position takes it on the bottom (CR 401.7).
+   */
+  | { op: 'putDepartedSourceIntoLibrary'; fromTop: number }
+  /**
+   * "Exile <target>. Return that card to the battlefield under its owner's control at the
+   * beginning of the next end step" (Flickerwisp; Venser, the Sojourner returns it under "your"
+   * control). The delayed return remembers the exact card in exile (CR 400.7): a token ceases to
+   * exist and nothing returns, and a card that left exile first stays where it is. "The next end
+   * step" is the first one to begin after this resolves, whoever's turn it is (CR 603.7).
+   */
+  | {
+      op: 'exileTargetReturnAtNextEndStep';
+      target: EffectRef;
+      returnUnder: 'owner' | 'sourceController';
+    }
+  /** The delayed half of `exileTargetReturnAtNextEndStep`: the remembered card, if still exiled. */
+  | { op: 'returnExiledTriggerObject'; returnUnder: 'owner' | 'sourceController' }
+  /**
+   * "Put target creature card from an opponent's graveyard onto the battlefield under your
+   * control. It gains haste. At the beginning of your next end step, exile it." (Puppeteer
+   * Clique). The haste has no duration, so it lasts as long as that object stays on the
+   * battlefield; the delayed exile remembers that object and skips a new one (CR 400.7).
+   */
+  | { op: 'reanimateTargetHasteExileAtYourNextEndStep'; target: EffectRef }
+  /**
+   * The delayed return of "When that creature dies this turn, return it to the battlefield tapped
+   * under your control" (Cryptek): the card the remembered permanent became in a graveyard
+   * (CR 400.7e), if it is still there.
+   */
+  | { op: 'returnDiedTriggerObjectTapped' }
+  /**
+   * "Return the chosen cards to the battlefield tapped" (Victimize): every graveyard card chosen
+   * in a variable-count slot that is still a legal target enters together, tapped, under the
+   * ability's controller (CR 603.6a).
+   */
+  | { op: 'reanimateEachChosenTapped'; targetSlot: number }
+  /**
    * "Exile that many cards from the top of your library. Until end of turn, you may cast
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
@@ -1277,6 +1337,11 @@ export type ObjectTriggerWhen =
   | 'tokenCreated'
   | 'putIntoGraveyardFromAnywhere'
   | 'leavesGraveyard'
+  /**
+   * "When this creature leaves the battlefield" (CR 603.6c, 603.10a): a permanent left for any
+   * zone. `leavesTo` narrows it to destinations ("is put into exile from the battlefield").
+   */
+  | 'leavesBattlefield'
   | 'transformsInto';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
@@ -1300,6 +1365,27 @@ export type TriggerHead =
        */
       entersUntapped?: true;
       /**
+       * "When this creature enters **from a graveyard**" (Triarch Praetorian) / "enters **from
+       * your graveyard**" (Flayer of the Hatebound) — part of the enters event: the zone the
+       * permanent moved from (CR 603.6a, 603.10). `graveyardOwner: 'you'` requires the card to
+       * have been in the ability controller's graveyard, which a card only ever is when its owner
+       * is that player.
+       */
+      entersFrom?: { zone: 'graveyard'; graveyardOwner?: 'you' };
+      /**
+       * "…enter, if none of them were cast or no mana was spent to cast them" (Satoru, the
+       * Infiltrator): every permanent in the firing (the whole group for an aggregate head) was
+       * either not cast or cast with no mana spent, read from its cast record. A fact about the
+       * event, so the resolution recheck (CR 603.4) cannot change it.
+       */
+      entersWithoutManaSpentToCast?: true;
+      /**
+       * "is put into a graveyard from the battlefield or is put into exile from the battlefield"
+       * (Psychomancer), "dies or is put into exile from the battlefield" (God-Eternal Rhonas): the
+       * zones a `leavesBattlefield` event must have gone to.
+       */
+      leavesTo?: ('graveyard' | 'exile')[];
+      /**
        * "Whenever ~ attacks, destroy target artifact or enchantment **defending player** controls"
        * (Kogla) — for an `attacks` trigger, `eventPlayer` is the player the creature is attacking
        * instead of the attacker's controller.
@@ -1318,6 +1404,12 @@ export type TriggerHead =
       targetFilter?: Selector;
       /** Fire only for this numbered spell by that caster during the current turn. */
       ordinal?: number;
+      /**
+       * Where the spell was cast from, read from its cast record (CR 601.2a): "casts a spell
+       * from a graveyard" (River Kelpie) or "from anywhere other than your hand" (Keeper of
+       * Secrets — the command zone, exile and the library all count).
+       */
+      castFrom?: 'graveyard' | 'notHand';
     }
   /**
    * "At the beginning of your/each upkeep|end step" — `player` says whose step counts.

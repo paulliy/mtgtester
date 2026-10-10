@@ -127,6 +127,7 @@ export function createGame(config: GameConfig): GameContext {
     creaturesDiedThisTurn: 0,
     combatDamagePrevention: { all: false, players: {} },
     lifeFloorPlayers: {},
+    creaturesCantBeBlockedThisTurn: false,
     exiledUntilLeaves: {},
     priorityPlayerIndex: null,
     phase: 'beginning',

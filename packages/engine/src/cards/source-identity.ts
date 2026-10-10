@@ -13,6 +13,9 @@ export interface SourceCastState {
 /** Private rules facts for one incarnation; never exposed by player/spectator projections. */
 export interface ObjectFacts extends SourceCastState {
   objectId: string;
+  /** Its name and definition as it last existed: a token that left has no card to ask. */
+  name?: string;
+  oracleId?: string;
   candidate: SelectorCandidate;
   power: number;
   toughness: number;
@@ -22,6 +25,10 @@ export interface ObjectFacts extends SourceCastState {
   hadToAttackThisCombat: boolean;
   enteredTurnNumber: number;
   chosenOption?: string;
+  /** The permanent's cast record (`CastRecord`), when the spell that became it was cast. */
+  castByPlayerId?: string;
+  castFromZone?: string;
+  manaSpentToCast?: number;
 }
 
 export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent): ObjectFacts {
@@ -30,6 +37,8 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
   const counters = { ...permanent.counters };
   return {
     objectId: permanent.id,
+    name: permanent.name,
+    oracleId: permanent.oracleId,
     candidate: {
       ...candidate,
       types: [...candidate.types],
@@ -47,6 +56,13 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     hadToAttackThisCombat: permanent.hadToAttackThisCombat === true,
     enteredTurnNumber: permanent.enteredTurnNumber,
     ...(permanent.chosenOption === undefined ? {} : { chosenOption: permanent.chosenOption }),
+    ...(permanent.castByPlayerId === undefined
+      ? {}
+      : {
+          castByPlayerId: permanent.castByPlayerId,
+          ...(permanent.castFromZone === undefined ? {} : { castFromZone: permanent.castFromZone }),
+          manaSpentToCast: permanent.manaSpentToCast ?? 0,
+        }),
     wasKicked: permanent.wasKicked === true || permanent.kicked === true,
     announcedX: permanent.announcedX ?? 0,
     escaped: permanent.escaped === true,

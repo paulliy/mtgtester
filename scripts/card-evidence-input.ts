@@ -1709,6 +1709,134 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Marchesa: return creatures after simultaneous deaths'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Triarch Praetorian: unearth it to draw two cards'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Glen Elendra Archmage: counter P3's spell, then persist"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Flayer of the Hatebound: destroy it, undying, deal 5 to P2'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Kambal, Consul of Allocation: tax P2's noncreature spell"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Gleeful Arsonist: burn P2 for casting, then undying'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Shard of the Nightbringer: cast it to drain half of P2's life"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Keeper of Secrets: flash back a spell to ping P2'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['River Kelpie: draw from a flashback and from persist'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aurora Phoenix: cast a cascade spell to return it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Watcher for Tomorrow: hide a card, then get it back as it leaves'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Psychomancer: drain P2 when your artifact is destroyed'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Shard of the Void Dragon: attack, and grow from the sacrificed artifact'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Scavenging Ooze: exile a creature card to grow and gain life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Imotekh the Stormlord: reanimate an artifact, then buff it at combat'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['The Ooze: Mutagens from a leaving creature and a graveyard exile'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['God-Eternal Rhonas: double your creatures, then go third from the top'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Candlekeep Sage: your commander draws as it enters and leaves'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Flickerwisp: exile P2's creature until the next end step"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Venser, the Sojourner: +2 blinks your Lab Ox at the end step'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Venser, the Sojourner: −1 makes creatures unblockable'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Venser, the Sojourner: −8 emblem exiles P2's Lab Ox"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Puppeteer Clique: steal P2's Lab Ox, attack, then exile it"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Puppeteer Clique: destroy it and persist returns it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Cryptek: your Lab Construct dies and returns tapped'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Living Death: swap the battlefield and graveyard creatures'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Technomancer: mill three, then return artifact creatures worth 6'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Victimize: sacrifice Lab Servo, return two creatures tapped'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Body Launderer: Lab Ox dies and it connives'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Body Launderer: it dies and returns Lab Servo, not Lab Ox'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -103,9 +103,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('678b3fb5-aa9f-4268-9433-2a89dd37b927', 'Canoptek Tomb Sentinel', [
-    'Exile Cannon — When this creature enters from a graveyard, exile up to one target nonland permanent.',
-  ]);
+  // Canoptek Tomb Sentinel: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('61849685-b407-4ed0-aafc-ec3a003200b9', 'Canoptek Wraith', [
     "Wraith Form — ~ can't be blocked.",
@@ -118,9 +116,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Convergence of Dominion: restored in coverage PR02 (see necron-dynasties-remaining.ts).
 
-  unimplemented('27a4b633-5a62-4d8c-8cc6-44959c311de9', 'Cryptek', [
-    '{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.',
-  ]);
+  // Cryptek: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   defineCard(
     'e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3',
@@ -216,14 +212,9 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
   ]);
 
-  unimplemented('425fea06-76ec-4cd9-bd3b-750504fd7fd2', 'Imotekh the Stormlord', [
-    'Phaeron — Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.',
-    'Grand Strategist — At the beginning of combat on your turn, another target artifact creature you control gets +2/+2 and gains menace until end of turn.',
-  ]);
+  // Imotekh the Stormlord: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('9e6a3df4-67a3-452e-a6ef-f04dbadb21ef', 'Living Death', [
-    'Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.',
-  ]);
+  // Living Death: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('fd03f20a-d365-48fb-8b2a-ad4b502a0045', 'Lokhust Heavy Destroyer', [
     'Enmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.',
@@ -339,12 +330,8 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  // Catalog audit necron-main-batch-1: exile origin omitted; loseLife hits you.
-  unsupportedCard(
-    '589b742c-fee5-413a-a56c-4d4ffaf0f73d',
-    'Psychomancer',
-    'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
-  );
+  // Psychomancer: restored in coverage PR03. The interpreter reads the graveyard-or-exile leave
+  // trigger and the targeted drain, so no override remains.
 
   unimplemented('c23e5b80-08d2-4e24-9908-fe2aa4f30f6f', 'Reliquary Tower', [
     'You have no maximum hand size.',
@@ -366,22 +353,15 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You may have this artifact enter as a copy of any artifact on the battlefield.',
   ]);
 
-  unimplemented('eedd5a17-d0fe-4a13-8f2c-f343bfa43f92', 'Shard of the Nightbringer', [
-    'Drain Life — When this creature enters, if you cast it, target opponent loses half their life, rounded up. You gain life equal to the life lost this way.',
-  ]);
+  // Shard of the Nightbringer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('d04d2434-121e-4420-abfc-fa21ad5577c3', 'Shard of the Void Dragon', [
-    'Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.',
-    'Matter Absorption — Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.',
-  ]);
+  // Shard of the Void Dragon: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('f96fcb37-5f17-4231-b1a2-64f5fe45730b', 'Skorpekh Destroyer', [
     'Hyperphase Threshers — Whenever an artifact you control enters, this creature gains first strike until end of turn.',
   ]);
 
-  unimplemented('3f97541e-34f3-4f7f-8ac2-7167b2ec9b33', 'Technomancer', [
-    'When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.',
-  ]);
+  // Technomancer: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('5924cbb0-19b5-449c-a7c5-722e744a54f8', 'The War in Heaven', [
     'unsupported layout "saga"',
@@ -412,9 +392,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Prismatic Gallery — As long as ~ is on the battlefield, it has all activated abilities of all artifact cards in your graveyard.',
   ]);
 
-  unimplemented('52aa5a79-db0e-4eaa-b2df-e41674c47794', 'Triarch Praetorian', [
-    'Dynastic Codes — When this creature enters from a graveyard, you draw two cards and you lose 2 life.',
-  ]);
+  // Triarch Praetorian: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
   unimplemented('1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3', 'Triarch Stalker', [
     'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',

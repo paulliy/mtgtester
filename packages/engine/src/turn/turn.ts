@@ -54,6 +54,7 @@ function untapStep(ctx: GameContext): void {
   ctx.state.creaturesDiedThisTurn = 0;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
   ctx.state.lifeFloorPlayers = {};
+  ctx.state.creaturesCantBeBlockedThisTurn = false;
   for (const p of ctx.state.players) {
     p.yieldUntilEndOfTurn = false;
   }

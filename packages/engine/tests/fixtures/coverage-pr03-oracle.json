@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-09",
+  "cards": [
+    {
+      "sha256": "4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a",
+      "card": {
+        "oracleId": "23f86ee2-b1e3-45c2-bfd5-044919033922",
+        "scryfallId": "4fe408aa-14d9-4afd-abfe-b5156c5341b7",
+        "name": "Keeper of Secrets",
+        "manaCost": "{5}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Demon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Demon"
+        ],
+        "oracleText": "First strike, haste\nSymphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+        "power": "6",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike",
+          "Haste",
+          "Symphony of Pain"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db",
+      "card": {
+        "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
+        "scryfallId": "f9a9e74f-8090-4314-9361-97777fb7b63a",
+        "name": "Aurora Phoenix",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Phoenix",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phoenix"
+        ],
+        "oracleText": "Flying\nCascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nWhenever you cast a spell with cascade, return this card from your graveyard to your hand.",
+        "power": "5",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Cascade",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6",
+      "card": {
+        "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",
+        "scryfallId": "0eb444f0-69cc-47c8-8cd6-1f9edad5d903",
+        "name": "God-Eternal Rhonas",
+        "manaCost": "{3}{G}{G}",
+        "cmc": 5,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Zombie God",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie",
+          "God"
+        ],
+        "oracleText": "Deathtouch\nWhen God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.\nWhen God-Eternal Rhonas dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0ed0ff30dcf72ddcda8b2faa9628978ea65b1f7de653a344e84259b1890f052e",
+      "card": {
+        "oracleId": "f9516b60-36dd-4f8a-bebb-ac1bc0961f07",
+        "scryfallId": "6f706ac3-0ad8-44ac-a99e-21c04075951d",
+        "name": "Candlekeep Sage",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Enchantment — Background",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Background"
+        ],
+        "oracleText": "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+      "card": {
+        "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
+        "scryfallId": "f6cccf30-2025-49bb-9b1e-240bbef03f27",
+        "name": "Flickerwisp",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elemental"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+        "power": "3",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2160ba7e8a5046951166879c01d937fbd7fdcc60d7b4a001a89876806249536b",
+      "card": {
+        "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",
+        "scryfallId": "8f61a0ea-c2e8-4571-9669-19abd8bbc874",
+        "name": "Venser, the Sojourner",
+        "manaCost": "{3}{W}{U}",
+        "cmc": 5,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Planeswalker — Venser",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Venser"
+        ],
+        "oracleText": "+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.\n−1: Creatures can't be blocked this turn.\n−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": "3",
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "55746d7550543058962aca55449ec7cfc847179fc2192ac2be63ee3ffe053321",
+      "card": {
+        "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
+        "scryfallId": "ee008d81-df28-49a8-917d-44f66527e469",
+        "name": "Victimize",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

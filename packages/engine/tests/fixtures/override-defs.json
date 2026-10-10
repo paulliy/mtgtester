@@ -62,12 +62,6 @@
     }
   },
   {
-    "oracleId": "00e0b103-892c-49b3-836d-867fff197bbd",
-    "name": "Puppeteer Clique",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
     "name": "Arcbond",
     "handledLines": [],
@@ -1274,7 +1268,6 @@
     "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
     "name": "Soul-Guide Lantern",
     "handledLines": [
-      "When this artifact enters, exile target card from a graveyard.",
       "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
     ],
     "def": {
@@ -1299,30 +1292,6 @@
             }
           ],
           "timing": "any"
-        }
-      ],
-      "triggers": [
-        {
-          "description": "Exile target card from a graveyard",
-          "effects": [
-            {
-              "op": "exileCard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "graveyardOwnerScope": "any",
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
         }
       ]
     },
@@ -1486,12 +1455,6 @@
   {
     "oracleId": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
-    "name": "Scavenging Ooze",
     "handledLines": [],
     "def": {}
   },
@@ -1708,18 +1671,6 @@
   {
     "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
     "name": "Ghoulish Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
-    "name": "Watcher for Tomorrow",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
-    "name": "Cryptek",
     "handledLines": [],
     "def": {}
   },
@@ -2730,18 +2681,6 @@
     "def": {}
   },
   {
-    "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
-    "name": "Technomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
-    "name": "Imotekh the Stormlord",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
@@ -2887,12 +2826,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "4987c458-604a-4727-b360-170616e91e67",
-    "name": "Kambal, Consul of Allocation",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "49be65fd-3755-410d-b0dc-2e5861ea2552",
@@ -3208,12 +3141,6 @@
     "def": {}
   },
   {
-    "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
-    "name": "Triarch Praetorian",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "53b2c8f2-db9a-4ab0-a4e8-17385b2fa3bd",
     "name": "Aethertide Whale",
     "handledLines": [
@@ -3406,12 +3333,6 @@
     }
   },
   {
-    "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
-    "name": "Psychomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "58d7b8b3-ac47-4805-8259-4ba8e70d7dc3",
     "name": "Primal Might",
     "handledLines": [
@@ -3540,38 +3461,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "5a851367-1c4a-4cc9-a9c3-3d2775986b4c",
-    "name": "Blossoming Defense",
-    "handledLines": [
-      "Target creature you control gets +2/+2 and gains hexproof until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature gets +2/+2 and hexproof until end of turn",
-        "effects": [
-          {
-            "op": "pumpUntilEot",
-            "power": 2,
-            "target": 0,
-            "toughness": 2
-          },
-          {
-            "keyword": "hexproof",
-            "op": "grantKeywordUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     }
   },
   {
@@ -3773,12 +3662,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
-    "name": "Glen Elendra Archmage",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
@@ -4188,12 +4071,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
-    "name": "Canoptek Tomb Sentinel",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
@@ -4708,12 +4585,6 @@
     "def": {}
   },
   {
-    "oracleId": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
-    "name": "Satoru, the Infiltrator",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
     "name": "Cranial Plating",
     "handledLines": [],
@@ -5056,76 +4927,6 @@
     }
   },
   {
-    "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
-    "name": "Return to Nature",
-    "handledLines": [
-      "Choose one —",
-      "• Destroy target artifact.",
-      "• Destroy target enchantment.",
-      "• Exile target card from a graveyard."
-    ],
-    "def": {
-      "spellAbility": {
-        "effects": [],
-        "kind": "spell",
-        "modes": {
-          "maxChoices": 1,
-          "minChoices": 1,
-          "options": [
-            {
-              "description": "Destroy target artifact",
-              "effects": [
-                {
-                  "op": "destroy",
-                  "target": 0
-                }
-              ],
-              "targetSlots": [
-                0
-              ]
-            },
-            {
-              "description": "Destroy target enchantment",
-              "effects": [
-                {
-                  "op": "destroy",
-                  "target": 1
-                }
-              ],
-              "targetSlots": [
-                1
-              ]
-            },
-            {
-              "description": "Exile target card from a graveyard",
-              "effects": [
-                {
-                  "op": "exileCard",
-                  "target": 2
-                }
-              ],
-              "targetSlots": [
-                2
-              ]
-            }
-          ]
-        },
-        "targets": [
-          {
-            "kind": "artifact"
-          },
-          {
-            "kind": "enchantment"
-          },
-          {
-            "graveyardOwnerScope": "any",
-            "kind": "cardInGraveyard"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
     "name": "Forge of Heroes",
     "handledLines": [
@@ -5462,12 +5263,6 @@
   {
     "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
     "name": "Firkraag, Cunning Instigator",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
-    "name": "The Ooze",
     "handledLines": [],
     "def": {}
   },
@@ -6023,12 +5818,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
-    "name": "Gleeful Arsonist",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "9070c98b-fd01-4eeb-a4ec-fc464946c7c0",
@@ -6824,12 +6613,6 @@
     "def": {}
   },
   {
-    "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
-    "name": "Living Death",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -7118,6 +6901,36 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
+    "name": "Aurora Phoenix",
+    "handledLines": [
+      "Whenever you cast a spell with cascade, return this card from your graveyard to your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand",
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "functionsInGraveyard": true,
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "keyword": "cascade",
+              "kind": "hasKeyword"
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
     }
   },
   {
@@ -7680,7 +7493,6 @@
     "oracleId": "b3d81980-76f2-44e2-b1c9-01e30c726312",
     "name": "Loran of the Third Path",
     "handledLines": [
-      "When ~ enters, destroy up to one target artifact or enchantment.",
       "{T}: You and target opponent each draw a card."
     ],
     "def": {
@@ -7708,46 +7520,6 @@
             }
           ],
           "timing": "any"
-        }
-      ],
-      "triggers": [
-        {
-          "description": "Destroy up to one target artifact or enchantment",
-          "effects": [
-            {
-              "op": "destroyEachChosen",
-              "targetSlot": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "count": {
-                "max": 1,
-                "min": 0
-              },
-              "filter": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "type",
-                    "value": "Enchantment"
-                  }
-                ]
-              },
-              "kind": "permanent"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
         }
       ]
     }
@@ -7936,12 +7708,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
-    "name": "Flayer of the Hatebound",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
@@ -8957,12 +8723,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
-    "name": "Shard of the Void Dragon",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
@@ -10190,12 +9950,6 @@
     }
   },
   {
-    "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
-    "name": "Body Launderer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
     "name": "Atarka Monument",
     "handledLines": [],
@@ -10360,18 +10114,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
-    "name": "Shard of the Nightbringer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
-    "name": "River Kelpie",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "f08f7814-4585-41dd-b82e-ed2ef5e24242",
@@ -12341,6 +12083,36 @@
     }
   },
   {
+    "oracleId": "oracle-aurora-phoenix",
+    "name": "Aurora Phoenix",
+    "handledLines": [
+      "Whenever you cast a spell with cascade, return this card from your graveyard to your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand",
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "functionsInGraveyard": true,
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "keyword": "cascade",
+              "kind": "hasKeyword"
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-backlash",
     "name": "Backlash",
     "handledLines": [],
@@ -12593,44 +12365,6 @@
   {
     "oracleId": "oracle-bloomvine-regent-claim-territory",
     "name": "Bloomvine Regent // Claim Territory",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-blossoming-defense",
-    "name": "Blossoming Defense",
-    "handledLines": [
-      "Target creature you control gets +2/+2 and gains hexproof until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature gets +2/+2 and hexproof until end of turn",
-        "effects": [
-          {
-            "op": "pumpUntilEot",
-            "power": 2,
-            "target": 0,
-            "toughness": 2
-          },
-          {
-            "keyword": "hexproof",
-            "op": "grantKeywordUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "oracleId": "oracle-body-launderer",
-    "name": "Body Launderer",
     "handledLines": [],
     "def": {}
   },
@@ -13162,12 +12896,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-canoptek-tomb-sentinel",
-    "name": "Canoptek Tomb Sentinel",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-canoptek-wraith",
@@ -13938,12 +13666,6 @@
   {
     "oracleId": "oracle-cranial-plating",
     "name": "Cranial Plating",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-cryptek",
-    "name": "Cryptek",
     "handledLines": [],
     "def": {}
   },
@@ -15214,12 +14936,6 @@
     }
   },
   {
-    "oracleId": "oracle-flayer-of-the-hatebound",
-    "name": "Flayer of the Hatebound",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-flickering-ward",
     "name": "Flickering Ward",
     "handledLines": [
@@ -15950,18 +15666,6 @@
     }
   },
   {
-    "oracleId": "oracle-gleeful-arsonist",
-    "name": "Gleeful Arsonist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-glen-elendra-archmage",
-    "name": "Glen Elendra Archmage",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-glimmer-of-genius",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -16490,12 +16194,6 @@
     }
   },
   {
-    "oracleId": "oracle-imotekh-the-stormlord",
-    "name": "Imotekh the Stormlord",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-inkshield",
     "name": "Inkshield",
     "handledLines": [
@@ -16764,12 +16462,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-kambal-consul-of-allocation",
-    "name": "Kambal, Consul of Allocation",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-karametra-s-favor",
@@ -17149,12 +16841,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-living-death",
-    "name": "Living Death",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-loaming-shaman",
     "name": "Loaming Shaman",
     "handledLines": [
@@ -17226,7 +16912,6 @@
     "oracleId": "oracle-loran-of-the-third-path",
     "name": "Loran of the Third Path",
     "handledLines": [
-      "When ~ enters, destroy up to one target artifact or enchantment.",
       "{T}: You and target opponent each draw a card."
     ],
     "def": {
@@ -17254,46 +16939,6 @@
             }
           ],
           "timing": "any"
-        }
-      ],
-      "triggers": [
-        {
-          "description": "Destroy up to one target artifact or enchantment",
-          "effects": [
-            {
-              "op": "destroyEachChosen",
-              "targetSlot": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "count": {
-                "max": 1,
-                "min": 0
-              },
-              "filter": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "type",
-                    "value": "Enchantment"
-                  }
-                ]
-              },
-              "kind": "permanent"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
         }
       ]
     }
@@ -19412,18 +19057,6 @@
     }
   },
   {
-    "oracleId": "oracle-psychomancer",
-    "name": "Psychomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-puppeteer-clique",
-    "name": "Puppeteer Clique",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-queen-marchesa",
     "name": "Queen Marchesa",
     "handledLines": [
@@ -19714,76 +19347,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-return-to-nature",
-    "name": "Return to Nature",
-    "handledLines": [
-      "Choose one —",
-      "• Destroy target artifact.",
-      "• Destroy target enchantment.",
-      "• Exile target card from a graveyard."
-    ],
-    "def": {
-      "spellAbility": {
-        "effects": [],
-        "kind": "spell",
-        "modes": {
-          "maxChoices": 1,
-          "minChoices": 1,
-          "options": [
-            {
-              "description": "Destroy target artifact",
-              "effects": [
-                {
-                  "op": "destroy",
-                  "target": 0
-                }
-              ],
-              "targetSlots": [
-                0
-              ]
-            },
-            {
-              "description": "Destroy target enchantment",
-              "effects": [
-                {
-                  "op": "destroy",
-                  "target": 1
-                }
-              ],
-              "targetSlots": [
-                1
-              ]
-            },
-            {
-              "description": "Exile target card from a graveyard",
-              "effects": [
-                {
-                  "op": "exileCard",
-                  "target": 2
-                }
-              ],
-              "targetSlots": [
-                2
-              ]
-            }
-          ]
-        },
-        "targets": [
-          {
-            "kind": "artifact"
-          },
-          {
-            "kind": "enchantment"
-          },
-          {
-            "graveyardOwnerScope": "any",
-            "kind": "cardInGraveyard"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-reverberate",
     "name": "Reverberate",
     "handledLines": [],
@@ -19862,12 +19425,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-river-kelpie",
-    "name": "River Kelpie",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-rogue-refiner",
@@ -20074,12 +19631,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-satoru-the-infiltrator",
-    "name": "Satoru, the Infiltrator",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-sautekh-immortal",
     "name": "Sautekh Immortal",
     "handledLines": [],
@@ -20128,12 +19679,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-scavenging-ooze",
-    "name": "Scavenging Ooze",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-scheming-symmetry",
@@ -20592,18 +20137,6 @@
     }
   },
   {
-    "oracleId": "oracle-shard-of-the-nightbringer",
-    "name": "Shard of the Nightbringer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-shard-of-the-void-dragon",
-    "name": "Shard of the Void Dragon",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-sheltered-by-ghosts",
     "name": "Sheltered by Ghosts",
     "handledLines": [],
@@ -20893,7 +20426,6 @@
     "oracleId": "oracle-soul-guide-lantern",
     "name": "Soul-Guide Lantern",
     "handledLines": [
-      "When this artifact enters, exile target card from a graveyard.",
       "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
     ],
     "def": {
@@ -20918,30 +20450,6 @@
             }
           ],
           "timing": "any"
-        }
-      ],
-      "triggers": [
-        {
-          "description": "Exile target card from a graveyard",
-          "effects": [
-            {
-              "op": "exileCard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "graveyardOwnerScope": "any",
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
         }
       ]
     },
@@ -21491,12 +20999,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-technomancer",
-    "name": "Technomancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-tender-wildguide",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -21611,12 +21113,6 @@
   {
     "oracleId": "oracle-teyo-geometric-tactician",
     "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-the-ooze",
-    "name": "The Ooze",
     "handledLines": [],
     "def": {}
   },
@@ -21967,12 +21463,6 @@
   {
     "oracleId": "oracle-trazyn-the-infinite",
     "name": "Trazyn the Infinite",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-triarch-praetorian",
-    "name": "Triarch Praetorian",
     "handledLines": [],
     "def": {}
   },
@@ -22498,12 +21988,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-watcher-for-tomorrow",
-    "name": "Watcher for Tomorrow",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-wear-tear",

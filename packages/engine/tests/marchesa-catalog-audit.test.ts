@@ -83,7 +83,7 @@ describe('Marchesa override catalog audit inventory', () => {
     }
 
     const grandfathered = [...unique.entries()].filter(([id]) => !reviewed.has(id));
-    expect(restored.size).toBe(6);
+    expect(restored.size).toBe(15);
     expect(unique.size).toBe(44 - restored.size);
     expect(reviewed.size).toBe(44 - restored.size);
     expect(grandfathered.length).toBe(0);
@@ -139,6 +139,7 @@ describe('Marchesa override catalog audit inventory', () => {
       // Coverage PR01 cards with no earlier registration, gated by pr01-card-coverage.test.ts.
       'coverage-pr01.ts',
       'coverage-pr02.ts',
+      'coverage-pr03.ts',
     ]);
     const remaining = readdirSync(OVERRIDES_DIR)
       .filter((file) => file.endsWith('.ts') && !skip.has(file))

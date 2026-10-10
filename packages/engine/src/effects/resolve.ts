@@ -72,6 +72,7 @@ import {
   moveObject,
   moveObjects,
   movePermanentsToGraveyard,
+  movePermanentsTogether,
   playerById,
   queuePlayerTriggersForEvent,
   queueTriggersForEvent,
@@ -568,7 +569,8 @@ function* discardCards(
   count: number,
   excludeCardId?: string,
   canDiscard?: (card: EngineCardObject, ordinal: number) => boolean,
-): GameGen<void> {
+): GameGen<EngineCardObject[]> {
+  const discarded: EngineCardObject[] = [];
   for (let i = 0; i < count; i++) {
     const cards = player.hand.filter(
       (card) => card.cardId !== excludeCardId && (canDiscard?.(card, i) ?? true),
@@ -590,8 +592,10 @@ function* discardCards(
     if (chosen === null) throw new Error('engine bug: discard choice was not in hand');
     const card = chosen as EngineCardObject;
     emit(ctx, 'discard', { player: player.id, name: card.name, cardId: card.cardId }, player.id);
+    discarded.push(card);
     yield* moveObject(ctx, card, { zone: 'graveyard' });
   }
+  return discarded;
 }
 
 /** Put a chosen set of hand cards on top of the library (CR 701.7). */
@@ -1144,6 +1148,30 @@ export function* executeAbility(
       : {}),
     ...(extraScope ?? {}),
   };
+  /**
+   * The object an effect names as the source of its damage. "That creature deals damage" still
+   * happens once the creature has left, with its last known characteristics (CR 608.2h, 113.7a).
+   */
+  const damageSourceOf = (r: EffectRef): EffectSource | undefined => {
+    const id = ref(r);
+    const permanent = id === null ? undefined : findPermanent(ctx, id);
+    if (permanent !== undefined) return permanentSource(permanent);
+    if (r !== 'triggerObject') return undefined;
+    const facts = eventObjectFacts(ctx, scope);
+    if (facts === undefined || facts.name === undefined || facts.oracleId === undefined)
+      return undefined;
+    return {
+      id: facts.objectId,
+      cardId: facts.candidate.cardId,
+      name: facts.name,
+      oracleId: facts.oracleId,
+      controllerId: facts.candidate.controllerId as PlayerId,
+      lastKnownColors: facts.candidate.colors,
+      lastKnownDamageKeywords: (['deathtouch', 'lifelink', 'infect'] as const).filter((keyword) =>
+        facts.candidate.keywords.includes(keyword),
+      ),
+    };
+  };
   /** Evaluate an effect's `Value` amount in this ability's scope. */
   const amountOf = (value: Value | number): number => {
     return typeof value === 'number' ? value : evaluateValueIn(ctx, value, scope);
@@ -1185,6 +1213,7 @@ export function* executeAbility(
       controllerId: source.controllerId,
       sourceCardId: source.cardId,
       sourceColors: sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors),
+      ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
       ...(scope.eventPlayerId === undefined ? {} : { eventPlayerId: scope.eventPlayerId }),
     });
   source = { ...source, resolutionTargets };
@@ -1414,6 +1443,11 @@ export function* executeAbility(
         });
         break;
       }
+      case 'creaturesCantBeBlockedThisTurn': {
+        ctx.state.creaturesCantBeBlockedThisTurn = true;
+        emit(ctx, 'creaturesCantBeBlocked', { source: source.name });
+        break;
+      }
       case 'cantBeBlockedUntilEot': {
         const t = ref(effect.target);
         if (t === null) break;
@@ -1518,17 +1552,9 @@ export function* executeAbility(
       case 'dealDamage': {
         const t = ref(effect.target);
         if (t === null) break;
-        const damageSourceId = effect.source === undefined ? null : ref(effect.source);
-        if (effect.source !== undefined && damageSourceId === null) break;
-        const damageSource =
-          damageSourceId === null ? undefined : findPermanent(ctx, damageSourceId);
-        if (effect.source !== undefined && damageSource === undefined) break;
-        dealDamageToObject(
-          ctx,
-          damageSource === undefined ? source : permanentSource(damageSource),
-          t,
-          amountOf(effect.amount),
-        );
+        const damageSource = effect.source === undefined ? source : damageSourceOf(effect.source);
+        if (damageSource === undefined) break;
+        dealDamageToObject(ctx, damageSource, t, amountOf(effect.amount));
         break;
       }
       case 'dealDamageUnlessSacrifice': {
@@ -1632,12 +1658,14 @@ export function* executeAbility(
         break;
       }
       case 'exileEachChosen': {
+        const exiled: EnginePermanent[] = [];
         for (const chosen of legalChosenPermanents(effect.targetSlot)) {
           const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'exile', { target: perm.name, source: source.name });
-          yield* moveObject(ctx, perm, { zone: 'exile' });
+          exiled.push(perm);
         }
+        yield* movePermanentsTogether(ctx, exiled, { zone: 'exile' });
         break;
       }
       case 'destroyEachChosen': {
@@ -1872,12 +1900,14 @@ export function* executeAbility(
         // "Return up to two other target nonland permanents to their owners' hands" (Marang
         // River Regent) — the `returnToHand` analog of `dealDamageEachChosen` above: every
         // object chosen in the variable-count slot is returned independently.
+        const returned: EnginePermanent[] = [];
         for (const chosen of legalChosenPermanents(effect.targetSlot)) {
           const perm = findPermanent(ctx, chosen.id);
           if (perm === undefined) continue;
           emit(ctx, 'returnToHand', { target: perm.name, source: source.name });
-          yield* moveObject(ctx, perm, { zone: 'hand' });
+          returned.push(perm);
         }
+        yield* movePermanentsTogether(ctx, returned, { zone: 'hand' });
         break;
       }
       case 'dealDamageDivided': {
@@ -2191,22 +2221,24 @@ export function* executeAbility(
         // The affected set is fixed before anything moves (CR 611.2c): bouncing the first
         // permanent can change what the selector would match (an anthem leaving, a type-changer
         // going away), and a mass bounce must not re-derive its own targets mid-resolution.
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          yield* moveObject(ctx, perm, { zone: 'hand' });
-        }
+        // They leave in one event, so leave triggers see each other leave (CR 603.10a).
+        yield* movePermanentsTogether(ctx, affectedBy(ctx, source, effect.selector), {
+          zone: 'hand',
+        });
         break;
       }
       case 'exileEach': {
         // Same fixed-set rule as `returnToHandEach`/`destroyEach` above it.
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          yield* moveObject(ctx, perm, { zone: 'exile' });
-        }
+        yield* movePermanentsTogether(ctx, affectedBy(ctx, source, effect.selector), {
+          zone: 'exile',
+        });
         break;
       }
       case 'graveyardToBattlefieldEach':
       case 'graveyardToHandEach': {
-        // "Return all Zombie cards from your graveyard to the battlefield." The set is snapshotted
-        // first: `moveObject` mutates the graveyard array being iterated.
+        // "Return all Zombie cards from your graveyard to the battlefield." One simultaneous move:
+        // every returned creature is on the battlefield before any enters trigger is checked, so
+        // each sees the others enter (CR 603.6a), and leaving the graveyard is one event.
         const owner = playerById(ctx, source.controllerId);
         const matching = owner.graveyard.filter((card) =>
           selectMatches(cardZoneCandidate(ctx, card, owner.id), effect.filter, {
@@ -2214,15 +2246,13 @@ export function* executeAbility(
             controllerId: source.controllerId,
           }),
         );
-        for (const card of [...matching]) {
-          yield* moveObject(
-            ctx,
-            card,
-            effect.op === 'graveyardToBattlefieldEach'
-              ? { zone: 'battlefield', controllerId: source.controllerId }
-              : { zone: 'hand' },
-          );
-        }
+        yield* moveObjects(
+          ctx,
+          matching,
+          effect.op === 'graveyardToBattlefieldEach'
+            ? { zone: 'battlefield', controllerId: source.controllerId }
+            : { zone: 'hand' },
+        );
         break;
       }
       case 'returnOneFromYourGraveyardToBattlefield': {
@@ -2414,6 +2444,19 @@ export function* executeAbility(
       case 'discard':
         yield* discardCards(ctx, controller, effect.count);
         break;
+      case 'connive': {
+        // CR 701.50a: draw a card, then discard a card; a nonland discard puts a +1/+1 counter
+        // on the conniving permanent. CR 701.50c: if it has left the battlefield, its controller
+        // still draws and discards, and no counter is put on anything.
+        yield* drawCards(ctx, controller, 1);
+        const [discarded] = yield* discardCards(ctx, controller, 1);
+        if (discarded === undefined) break;
+        const def = getDefByOracleId(ctx, discarded.oracleId, discarded.name);
+        const conniver = sourcePermanent();
+        if (!def.types.includes('Land') && conniver !== undefined)
+          addCounters(ctx, source, conniver, '+1/+1', 1);
+        break;
+      }
       case 'putFromHandOnLibraryTop':
         yield* putFromHandOnLibraryTop(
           ctx,
@@ -2447,11 +2490,22 @@ export function* executeAbility(
       case 'gainLifeEqualToLifeLostThisWay':
         if (lifeLostThisWay > 0) gainLife(ctx, controller, lifeLostThisWay);
         break;
-      case 'loseLifeTarget': {
+      case 'loseLifeTarget':
+      case 'loseHalfLifeTarget': {
         const targetId = ref(effect.target);
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-        if (target !== undefined) loseLife(ctx, target, amountOf(effect.amount));
+        if (target === undefined) break;
+        const before = target.life;
+        loseLife(
+          ctx,
+          target,
+          effect.op === 'loseLifeTarget'
+            ? amountOf(effect.amount)
+            : Math.ceil(Math.max(0, target.life) / 2),
+        );
+        // What the player actually lost, for a following "life lost this way".
+        lifeLostThisWay += before - target.life;
         break;
       }
       case 'eachOpponentDamage':
@@ -3150,13 +3204,20 @@ export function* executeAbility(
         break;
       }
       case 'returnExiledAttachedCard': {
-        const card = ctx.state.exile.find(
-          (candidate) => candidate.attachedToCardId === source.cardId,
+        // Only cards this very permanent's Hideaway exiled (CR 607.2a). A copied Hideaway
+        // trigger exiles a second linked card, and "the exiled card" means each of them.
+        const cards = ctx.state.exile.filter(
+          (candidate) =>
+            candidate.attachedToCardId === source.cardId &&
+            (candidate.attachedToObjectId === undefined ||
+              source.id === undefined ||
+              candidate.attachedToObjectId === source.id),
         );
-        if (card !== undefined) {
+        for (const card of cards) {
           delete card.attachedToCardId;
-          yield* moveObject(ctx, card, { zone: 'hand' });
+          delete card.attachedToObjectId;
         }
+        if (cards.length > 0) yield* moveObjects(ctx, cards, { zone: 'hand' });
         break;
       }
       case 'sacrificeOneCreatureEachPlayer': {
@@ -3206,26 +3267,27 @@ export function* executeAbility(
         break;
       }
       case 'livingDeath': {
-        const returning: EngineCardObject[] = [];
-        for (const player of ctx.state.players) {
-          const creatures = player.graveyard.filter((card) =>
+        // Each step is one simultaneous event (CR 101.4): every player's graveyard creature cards
+        // are exiled together, every creature is sacrificed together, and every exiled card comes
+        // back together, each under the player who exiled it (its owner).
+        const graveyardCreatures = ctx.state.players.flatMap((player) =>
+          player.graveyard.filter((card) =>
             getDefByOracleId(ctx, card.oracleId, card.name).types.includes('Creature'),
-          );
-          for (const card of creatures) {
-            const moved = yield* moveObject(ctx, card, { zone: 'exile' });
-            if (moved !== null && moved.zone !== 'battlefield')
-              returning.push(moved as EngineCardObject);
-          }
-        }
-        for (const perm of [...ctx.state.battlefield]) {
-          if (computeCharacteristics(ctx, perm).types.includes('Creature'))
-            yield* moveObject(ctx, perm, { zone: 'graveyard' });
-        }
-        for (const card of returning) {
-          const current = ctx.state.exile.find((candidate) => candidate.cardId === card.cardId);
-          if (current !== undefined)
-            yield* moveObject(ctx, current, { zone: 'battlefield', controllerId: current.ownerId });
-        }
+          ),
+        );
+        const exiled = (yield* moveObjects(ctx, graveyardCreatures, { zone: 'exile' })).filter(
+          (card): card is EngineCardObject => card !== null && card.zone === 'exile',
+        );
+        yield* movePermanentsToGraveyard(
+          ctx,
+          ctx.state.battlefield.filter((perm) =>
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+          ),
+          'sacrifice',
+        );
+        // Only the exact cards exiled this way, if they are still in exile (CR 400.7).
+        const stillExiled = exiled.filter((card) => ctx.state.exile.includes(card));
+        yield* moveObjects(ctx, stillExiled, { zone: 'battlefield' });
         break;
       }
       case 'exileGraveyardCreateTokens': {
@@ -3255,9 +3317,14 @@ export function* executeAbility(
         break;
       }
       case 'returnArtifactCreaturesUpToManaValue': {
+        // "Return any number of artifact creature cards with total mana value N or less": choose
+        // the whole set first (a mana value 0 card still fits when nothing is left of the budget),
+        // then return it as one simultaneous move, so each sees the others enter (CR 603.6a).
         let remaining = effect.maxManaValue;
-        while (remaining > 0) {
+        const chosen: EngineCardObject[] = [];
+        for (;;) {
           const choices = controller.graveyard.filter((card) => {
+            if (chosen.includes(card)) return false;
             const def = getDefByOracleId(ctx, card.oracleId, card.name);
             return (
               def.types.includes('Artifact') &&
@@ -3266,7 +3333,7 @@ export function* executeAbility(
             );
           });
           if (choices.length === 0) break;
-          const chosen = yield* chooseCard(ctx, {
+          const pick = yield* chooseCard(ctx, {
             player: controller.id,
             prompt: `${source.name}: return an artifact creature (up to ${remaining} mana value)`,
             cards: choices,
@@ -3274,13 +3341,11 @@ export function* executeAbility(
             verb: 'Return',
             decline: { type: 'decline', description: 'Return no more cards', verb: 'Done' },
           });
-          if (chosen === null) break;
-          remaining -= spellManaValue(
-            getDefByOracleId(ctx, chosen.oracleId, chosen.name),
-            undefined,
-          );
-          yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
+          if (pick === null) break;
+          chosen.push(pick);
+          remaining -= spellManaValue(getDefByOracleId(ctx, pick.oracleId, pick.name), undefined);
         }
+        yield* moveObjects(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
         break;
       }
       case 'halfLifeDrainTargetOpponent': {
@@ -4922,8 +4987,153 @@ export function* executeAbility(
         }
         break;
       }
+      case 'returnDiedSourceToBattlefield': {
+        // Only the card this very permanent became (CR 400.7e): a card that left the graveyard
+        // and came back is a new object, and a token never reaches a graveyard at all.
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find(
+            (candidate) =>
+              candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+          );
+        if (card === undefined) break;
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: card.ownerId,
+          withCounters: { [effect.counter]: 1 },
+        });
+        break;
+      }
+      case 'putDepartedSourceIntoLibrary': {
+        // Only the card this very permanent became in a graveyard or exile (CR 400.7e).
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = [
+          ...ctx.state.players.flatMap((player) => player.graveyard),
+          ...ctx.state.exile,
+        ].find(
+          (candidate) =>
+            candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+        );
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'library', libraryCardsAbove: effect.fromTop - 1 });
+        break;
+      }
+      case 'exileTargetReturnAtNextEndStep': {
+        const targetId = ref(effect.target);
+        const perm = targetId === null ? undefined : findPermanent(ctx, targetId);
+        if (perm === undefined) break;
+        emit(ctx, 'exile', { target: perm.name, source: source.name });
+        const exiled = yield* moveObject(ctx, perm, { zone: 'exile' });
+        // A token ceased to exist; a commander may already have gone to the command zone.
+        if (exiled === null || exiled.zone !== 'exile') break;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: exiled.cardId,
+          targetObjectId: exiled.id,
+          when: 'endStep',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'returnExiledTriggerObject', returnUnder: effect.returnUnder }],
+            description: `Return ${exiled.name} to the battlefield`,
+          },
+          // Survives a cleanup it has not reached yet: an end step that already began (this
+          // resolved during it) is not "the next" one.
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'returnExiledTriggerObject': {
+        const remembered = extraScope?.triggerObjectId;
+        const card = ctx.state.exile.find((candidate) => candidate.id === remembered);
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
+        });
+        break;
+      }
+      case 'reanimateTargetHasteExileAtYourNextEndStep': {
+        const targetId = ref(effect.target);
+        const card = targetId === null ? undefined : findObjectById(ctx, targetId);
+        if (card === undefined || card.zone !== 'graveyard') break;
+        const entered = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+        });
+        if (entered === null || entered.zone !== 'battlefield') break;
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${entered.name} gains haste`,
+          targetCardIds: [entered.cardId],
+          targetObjectIds: [entered.id],
+          kind: 'grantKeyword',
+          keyword: 'haste',
+          duration: 'permanent',
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: entered.cardId,
+          targetObjectId: entered.id,
+          when: 'endStep',
+          player: 'you',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'exile', target: 'triggerObject' }],
+            description: `Exile ${entered.name}`,
+          },
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'returnDiedTriggerObjectTapped': {
+        const remembered = extraScope?.triggerObjectId;
+        if (remembered === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.leftBattlefieldObjectId === remembered);
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          entersTapped: true,
+        });
+        break;
+      }
+      case 'reanimateEachChosenTapped': {
+        // The legal chosen cards still in a graveyard (CR 608.2b), entering together (CR 603.6a).
+        const cards = chosenReferents(effect.targetSlot).flatMap((cardId) => {
+          const card = ctx.state.players
+            .flatMap((player) => player.graveyard)
+            .find((candidate) => candidate.id === cardId);
+          return card === undefined ? [] : [card];
+        });
+        yield* moveObjects(ctx, cards, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          entersTapped: true,
+        });
+        break;
+      }
       case 'returnSelfFromGraveyardToHand': {
-        const card = controller.graveyard.find((c) => c.cardId === source.cardId);
+        // The ability's own graveyard card, and only while it is that object (CR 400.7): a card
+        // that left the graveyard and came back is a new object.
+        const card = controller.graveyard.find(
+          (c) => c.cardId === source.cardId && (source.id === undefined || c.id === source.id),
+        );
         if (card === undefined) break;
         yield* moveObject(ctx, card, { zone: 'hand' });
         break;
@@ -5409,6 +5619,7 @@ export function* executeAbility(
         })) as EngineCardObject | null;
         if (moved !== null) {
           moved.attachedToCardId = source.cardId;
+          if (source.id !== undefined) moved.attachedToObjectId = source.id;
         }
 
         const rest = top4.filter((c) => c.id !== chosenCard.id);

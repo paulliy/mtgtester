@@ -156,15 +156,19 @@
   {
     "oracleId": "a98cc4d0-a322-4142-aee0-83f39b137616",
     "name": "Aurora Phoenix",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever you cast a spell with cascade, return this card from your graveyard to your hand.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
@@ -303,6 +307,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "eaca2576-020b-4af4-b348-6d1b56116c41",
+    "name": "Body Launderer",
+    "package": "PR03.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
     "name": "Boseiju, Who Endures",
     "package": "W4",
@@ -362,15 +383,19 @@
   {
     "oracleId": "f9516b60-36dd-4f8a-bebb-ac1bc0961f07",
     "name": "Candlekeep Sage",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "bcad5b83-5513-4455-a9c9-716281505eaa",
@@ -388,6 +413,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+    "name": "Canoptek Tomb Sentinel",
+    "package": "PR03.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Enters-from-graveyard is implemented as any enter, and up-to-one is a required target."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -646,6 +688,21 @@
     "interpretationTests": ["packages/engine/tests/w1-combat-statics.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+    "name": "Cryptek",
+    "package": "PR03.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: The delayed return omits entering tapped."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "32c14d7f-fdaa-4340-af94-1f10bf064f51",
@@ -911,17 +968,38 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "ba9f3c5d-556f-48d1-8d87-723f7893cfcd",
+    "name": "Flayer of the Hatebound",
+    "package": "PR03.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Enters-from-graveyard is implemented as any creature you control entering."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b23a3d30-6b8e-4aad-890f-db0c3af43ace",
     "name": "Flickerwisp",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.25",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
@@ -1129,6 +1207,40 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
+    "name": "Gleeful Arsonist",
+    "package": "PR03.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Undying is claimed without a persist/undying replacement."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5f3f68b5-8c6a-4181-bb8a-9c73967d198a",
+    "name": "Glen Elendra Archmage",
+    "package": "PR03.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Persist is claimed without a persist/undying replacement."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
     "package": "W6",
@@ -1144,16 +1256,20 @@
   {
     "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",
     "name": "God-Eternal Rhonas",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.27",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.\"",
       "unrecognized rules text: \"When ~ dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "befb211f-37ca-4083-98d4-9ff1f28be3f2",
@@ -1343,6 +1459,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
+    "name": "Imotekh the Stormlord",
+    "package": "PR03.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: leave-graveyard trigger claimed without implementation"],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
     "name": "Improvisation Capstone",
     "package": "W5",
@@ -1429,6 +1560,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "4987c458-604a-4727-b360-170616e91e67",
+    "name": "Kambal, Consul of Allocation",
+    "package": "PR03.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Opponent-casts is implemented as caster each, so your own noncreature spells also trigger."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
     "package": "W6",
@@ -1444,15 +1592,19 @@
   {
     "oracleId": "23f86ee2-b1e3-45c2-bfd5-044919033922",
     "name": "Keeper of Secrets",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR03.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Symphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
@@ -1577,6 +1729,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+    "name": "Living Death",
+    "package": "PR03.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Battlefield creatures are put into graveyards instead of being sacrificed."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "5efce07e-24c4-4520-a46f-9954b67c4e6e",
@@ -2074,6 +2243,40 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
+    "name": "Psychomancer",
+    "package": "PR03.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "00e0b103-892c-49b3-836d-867fff197bbd",
+    "name": "Puppeteer Clique",
+    "package": "PR03.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Stolen creature is not exiled at the beginning of the next end step."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
     "name": "Rabble Rousing",
     "package": "W5",
@@ -2189,6 +2392,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
+    "name": "River Kelpie",
+    "package": "PR03.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard-origin enters and cast triggers fire on any enter or cast."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3640c29b-1534-4952-b297-619ade948431",
     "name": "Roaming Throne",
     "package": "W7",
@@ -2265,6 +2485,40 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
+    "name": "Satoru, the Infiltrator",
+    "package": "PR03.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Enter trigger omits the not-cast-or-no-mana-spent restriction."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
+    "name": "Scavenging Ooze",
+    "package": "PR03.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exile splices the card without a zone-change, so leave-graveyard events are skipped."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "ce08aff3-efe6-4186-9557-274e00a7ca38",
     "name": "Sceptre of Eternal Glory",
     "package": "PR02.21",
@@ -2333,6 +2587,38 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
+    "name": "Shard of the Nightbringer",
+    "package": "PR03.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: The if-you-cast-it intervening if is omitted."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d04d2434-121e-4420-abfc-fa21ad5577c3",
+    "name": "Shard of the Void Dragon",
+    "package": "PR03.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exile-from-battlefield is omitted from the artifact-leaves trigger."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
@@ -2502,6 +2788,21 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+    "name": "Technomancer",
+    "package": "PR03.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: 0-mana cards are blocked after remaining hits 0"],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
     "name": "Teferi's Protection",
     "package": "W8",
@@ -2585,6 +2886,21 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b",
+    "name": "The Ooze",
+    "package": "PR03.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Leaves-the-battlefield is implemented as dies."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c8de07d4-9bc1-4bfe-b5a4-0a58e05af022",
@@ -2695,6 +3011,21 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
+    "name": "Triarch Praetorian",
+    "package": "PR03.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Enters-from-graveyard is implemented as any enter."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
@@ -2817,17 +3148,21 @@
   {
     "oracleId": "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a",
     "name": "Venser, the Sojourner",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.\"",
       "unrecognized rules text: \"−1: Creatures can't be blocked this turn.\"",
       "unrecognized rules text: \"−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "d7315b3b-6e5d-4d28-a503-bfae1daf6c43",
@@ -2858,15 +3193,19 @@
   {
     "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
     "name": "Victimize",
-    "package": "W4",
-    "status": "pending",
+    "package": "PR03.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr03-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "9b40faad-1b96-4461-89d8-9a207b58e832",
@@ -2927,6 +3266,21 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
+    "name": "Watcher for Tomorrow",
+    "package": "PR03.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Leaves-the-battlefield is implemented as dies."],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr03-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f",

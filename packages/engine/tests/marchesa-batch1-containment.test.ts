@@ -33,8 +33,6 @@ function canonical(value: unknown): string {
 }
 
 const REASONS: Record<string, string> = {
-  'Body Launderer':
-    'Connive is approximated as unconditional +1/+1, and the return trigger omits equal-or-lesser power.',
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
@@ -44,30 +42,21 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Flayer of the Hatebound':
-    'Enters-from-graveyard is implemented as any creature you control entering.',
   'Firkraag, Cunning Instigator':
     'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
-  'Gleeful Arsonist': 'Undying is claimed without a persist/undying replacement.',
-  'Glen Elendra Archmage': 'Persist is claimed without a persist/undying replacement.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
   'Pensive Professor':
     'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
-  'Puppeteer Clique': 'Stolen creature is not exiled at the beginning of the next end step.',
-  'River Kelpie': 'Graveyard-origin enters and cast triggers fire on any enter or cast.',
-  'Satoru, the Infiltrator': 'Enter trigger omits the not-cast-or-no-mana-spent restriction.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
-  'The Ooze': 'Leaves-the-battlefield is implemented as dies.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
   'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
-  'Watcher for Tomorrow': 'Leaves-the-battlefield is implemented as dies.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   'Display of Power':
@@ -151,8 +140,6 @@ const REASONS: Record<string, string> = {
     'Source choice and reflection are implemented as unscoped combat-damage prevention.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
-  'Kambal, Consul of Allocation':
-    'Opponent-casts is implemented as caster each, so your own noncreature spells also trigger.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
@@ -166,26 +153,16 @@ const REASONS: Record<string, string> = {
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
-  'Canoptek Tomb Sentinel':
-    'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  Psychomancer:
-    'Exile-from-battlefield is omitted, and loseLife hits the controller instead of the targeted opponent.',
   'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
-  'Imotekh the Stormlord':
-    'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
-  'Triarch Praetorian': 'Enters-from-graveyard is implemented as any enter.',
   'Triarch Stalker':
     'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
-  'Shard of the Void Dragon': 'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
-  Cryptek: 'The delayed return omits entering tapped.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
-  'Shard of the Nightbringer': 'The if-you-cast-it intervening if is omitted.',
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
@@ -224,13 +201,9 @@ const REASONS: Record<string, string> = {
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Living Death': 'Battlefield creatures are put into graveyards instead of being sacrificed.',
   'Screams from Within':
     'Return is a required attach target; current Oracle returns this Aura untargeted.',
-  'Scavenging Ooze':
-    'Exile splices the card without a zone-change, so leave-graveyard events are skipped.',
   Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
-  Technomancer: 'Zero-mana artifact creatures cannot be returned once remaining mana value hits 0.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
@@ -308,6 +281,26 @@ describe('Marchesa catalog audit containment', () => {
     'Changing Loyalty',
     'Grim Haruspex',
     'Dream Devourer',
+    'Triarch Praetorian',
+    'Canoptek Tomb Sentinel',
+    'Glen Elendra Archmage',
+    'Flayer of the Hatebound',
+    'Kambal, Consul of Allocation',
+    'Gleeful Arsonist',
+    'Shard of the Nightbringer',
+    'Satoru, the Infiltrator',
+    'River Kelpie',
+    'Watcher for Tomorrow',
+    'Psychomancer',
+    'Shard of the Void Dragon',
+    'Scavenging Ooze',
+    'Imotekh the Stormlord',
+    'The Ooze',
+    'Puppeteer Clique',
+    'Cryptek',
+    'Living Death',
+    'Technomancer',
+    'Body Launderer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

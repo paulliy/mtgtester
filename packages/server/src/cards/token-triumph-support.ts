@@ -27,11 +27,11 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
   'Great Oak Guardian',
   'Path to Exile',
   'Rootborn Defenses',
+  'Scavenging Ooze',
 ] as const;
 
 export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Champion of Lambholt',
-  'Scavenging Ooze',
   'Curse of Bounty',
   "Karametra's Favor",
 ] as const;

@@ -302,7 +302,12 @@ async function verifyFirstZoneReturn(
       continue;
     }
     const before = boards.length;
-    await pass.click();
+    // The game can move on between seeing the button and clicking it; look again if it went.
+    const clicked = await pass
+      .click({ timeout: 1_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!clicked) continue;
     await expect
       .poll(
         async () =>
@@ -3903,13 +3908,16 @@ test("Kogla and Yidaro: discard it to destroy P2's artifact", async ({ page }) =
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
   await page.getByRole('button', { name: 'Target Lab Anrakyr Relic' }).click({ timeout: 15_000 });
-  // The library holds Kogla and Yidaro and a Forest once it is shuffled in; whichever is drawn,
-  // the ability has resolved. Passing now would stop at the land-drop reminder, so stop here.
+  // Before the shuffle the library holds a Mountain, a Forest and Lab Zombie; Kogla and Yidaro
+  // joins them. Whichever card is drawn, the ability has resolved. Passing now would stop at the
+  // land-drop reminder, so stop here.
   await expect(page.getByText(/Kogla and Yidaro.*resolves/).first()).toBeVisible({
     timeout: 15_000,
   });
   await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
-  await expect(page.getByText(/draws (Forest|Kogla and Yidaro)/).first()).toBeVisible();
+  await expect(
+    page.getByText(/draws (Forest|Mountain|Lab Zombie|Kogla and Yidaro)/).first(),
+  ).toBeVisible();
 });
 
 test("Changing Loyalty: replicate once onto both of P2's creatures", async ({ page }) => {
@@ -4285,7 +4293,9 @@ async function runSelectedFaceViewer(
     await expect.poll(async () => (await over.isVisible()) || (await pass.isVisible())).toBe(true);
     if (await over.isVisible()) break;
     const before = boards.length;
-    await pass.click();
+    // The viewer passes on its own when passing is its only legal action, so the game can end
+    // and the button vanish between the check and the click; never let that click block.
+    await pass.click({ timeout: 1_000 }).catch(() => undefined);
     await expect
       .poll(
         async () =>
@@ -4745,4 +4755,666 @@ test('Marchesa: return creatures after simultaneous deaths', async ({ page }) =>
     false,
     true,
   );
+});
+
+test('Triarch Praetorian: unearth it to draw two cards', async ({ page }) => {
+  await runScenario(page, 'Triarch Praetorian: unearth it to draw two cards');
+  const praetorian = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Triarch Praetorian', exact: true }) });
+  await expect(praetorian).toHaveClass(/actionable/, { timeout: 15_000 });
+  await praetorian.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(handCard(page, 'Lab Ox')).toBeVisible();
+  await expect(handCard(page, 'Lab Zombie')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeVisible();
+  // Unearth's delayed trigger exiled it at the beginning of the end step.
+  await expect(permanent(page, 'Triarch Praetorian')).toHaveCount(0);
+  await expect(
+    page
+      .locator('.zones-strip .zone', { hasText: 'Exile' })
+      .getByRole('img', { name: 'Triarch Praetorian', exact: true }),
+  ).toBeVisible();
+});
+
+test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page }) => {
+  await runScenario(page, "Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox");
+  const sentinel = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }) });
+  await expect(sentinel).toHaveClass(/actionable/, { timeout: 15_000 });
+  await sentinel.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The enters-from-a-graveyard trigger asks for up to one nonland permanent.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  // Unearth's delayed trigger exiled the Sentinel at the beginning of the end step.
+  await expect(permanent(page, 'Canoptek Tomb Sentinel')).toHaveCount(0);
+  await expect(
+    page
+      .locator('.zones-strip .zone', { hasText: 'Exile' })
+      .getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .zone', { hasText: 'Exile' })
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
+});
+
+test("Glen Elendra Archmage: counter P3's spell, then persist", async ({ page }) => {
+  await runScenario(page, "Glen Elendra Archmage: counter P3's spell, then persist");
+  const archmage = permanent(page, 'Glen Elendra Archmage');
+  await expect(archmage).toHaveClass(/actionable/, { timeout: 15_000 });
+  await archmage.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const pending = page.locator('.stack li').filter({ hasText: 'Lab Pending Spell' });
+  await expect(pending).toHaveClass(/targetable/);
+  await pending.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Lab Pending Spell is countered/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Glen Elendra Archmage')).toBeVisible();
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+});
+
+test('Flayer of the Hatebound: destroy it, undying, deal 5 to P2', async ({ page }) => {
+  await runScenario(page, 'Flayer of the Hatebound: destroy it, undying, deal 5 to P2');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Flayer of the Hatebound').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Undying returns it; its enters-from-your-graveyard trigger asks for any target.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Flayer of the Hatebound')).toBeVisible();
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+  await expect(page.getByText(/Flayer of the Hatebound deals 5 to P2/).first()).toBeVisible();
+});
+
+test("Kambal, Consul of Allocation: tax P2's noncreature spell", async ({ page }) => {
+  await runScenario(page, "Kambal, Consul of Allocation: tax P2's noncreature spell");
+  const spell = handCard(page, 'Lab Pending Spell');
+  await expect(spell).toHaveClass(/actionable/);
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // P2's scripted seat casts Lab Shock at you; only that cast triggers Kambal.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.log .line', { hasText: /loses 2 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 2 life$/ })).toHaveCount(1);
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('38');
+});
+
+test('Gleeful Arsonist: burn P2 for casting, then undying', async ({ page }) => {
+  await runScenario(page, 'Gleeful Arsonist: burn P2 for casting, then undying');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Gleeful Arsonist').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // P2's scripted seat responds with Lab Shock, which triggers the Arsonist.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Gleeful Arsonist.* deals 1 to P2/).first()).toBeVisible();
+  await expect(permanent(page, 'Gleeful Arsonist')).toBeVisible();
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+});
+
+test("Shard of the Nightbringer: cast it to drain half of P2's life", async ({ page }) => {
+  await runScenario(page, "Shard of the Nightbringer: cast it to drain half of P2's life");
+  const shard = handCard(page, 'Shard of the Nightbringer');
+  await expect(shard).toHaveClass(/actionable/);
+  await shard.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Cast, so its enters trigger asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Shard of the Nightbringer')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /loses 20 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 20 life$/ })).toHaveCount(1);
+});
+
+test('Satoru, the Infiltrator: a free creature draws, a paid one does not', async ({ page }) => {
+  await runScenario(page, 'Satoru, the Infiltrator: a free creature draws, a paid one does not');
+  const ornithopter = handCard(page, 'Lab Ornithopter');
+  await expect(ornithopter).toHaveClass(/actionable/);
+  await ornithopter.click();
+  // A {0} spell may still ask to confirm its (empty) payment.
+  const confirmButton = page.getByRole('button', { name: 'Confirm' });
+  await expect(permanent(page, 'Lab Ornithopter').or(confirmButton).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  if (await confirmButton.isVisible()) await confirm(page);
+  await expect(handCard(page, 'Lab Ox')).toBeVisible({ timeout: 15_000 });
+  await castAndResolve(page, 'Lab Zombie');
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Zombie')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});
+
+test('Keeper of Secrets: flash back a spell to ping P2', async ({ page }) => {
+  await runScenario(page, 'Keeper of Secrets: flash back a spell to ping P2');
+  const bolt = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Flash Bolt', exact: true }) });
+  await expect(bolt).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bolt.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P3' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Cast from the graveyard, so Keeper of Secrets triggers and asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Keeper of Secrets.* deals 1 to P2/).first()).toBeVisible();
+  await expect(page.getByText(/Lab Flash Bolt deals 1 to P3/).first()).toBeVisible();
+});
+
+test('River Kelpie: draw from a flashback and from persist', async ({ page }) => {
+  await runScenario(page, 'River Kelpie: draw from a flashback and from persist');
+  const bolt = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Lab Flash Bolt', exact: true }) });
+  await expect(bolt).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bolt.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // The Kelpie's cast trigger sits above the bolt; pass until both have resolved.
+  await passUntil(page, page.getByText(/Lab Flash Bolt resolves/).first());
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'River Kelpie').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'River Kelpie')).toBeVisible();
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+  await expect(handCard(page, 'Lab Ox')).toBeVisible();
+  await expect(handCard(page, 'Lab Zombie')).toBeVisible();
+});
+
+test('Aurora Phoenix: cast a cascade spell to return it', async ({ page }) => {
+  await runScenario(page, 'Aurora Phoenix: cast a cascade spell to return it');
+  const cascader = handCard(page, 'Lab Cascader');
+  await expect(cascader).toHaveClass(/actionable/);
+  await cascader.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The Phoenix's graveyard trigger and the cascade trigger fire together: order them.
+  await page
+    .getByRole('button', { name: /Aurora Phoenix: Whenever you cast a spell with cascade/ })
+    .click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Cascader')).toBeVisible();
+  await expect(handCard(page, 'Aurora Phoenix')).toBeVisible();
+});
+
+test('Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly', async ({ page }) => {
+  await runScenario(page, 'Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly');
+  const phoenix = handCard(page, 'Aurora Phoenix');
+  await expect(phoenix).toHaveClass(/actionable/);
+  await phoenix.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Its own cascade exiles the Forest, then stops at Lab Cascade Hit, the first cheaper nonland card.
+  await page
+    .getByRole('button', { name: 'Cast Lab Cascade Hit without paying its mana cost' })
+    .click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Cascade Hit')).toHaveCount(1);
+  await expect(permanent(page, 'Aurora Phoenix')).toHaveCount(1);
+  await expect(permanent(page, 'Aurora Phoenix')).toContainText('5/3');
+  await expect(permanent(page, 'Aurora Phoenix')).toContainText(/flying/i);
+  await expect(handCard(page, 'Aurora Phoenix')).toHaveCount(0);
+});
+
+test('Watcher for Tomorrow: hide a card, then get it back as it leaves', async ({ page }) => {
+  await runScenario(page, 'Watcher for Tomorrow: hide a card, then get it back as it leaves');
+  await castAndResolve(page, 'Watcher for Tomorrow');
+  await expect(permanent(page, 'Watcher for Tomorrow').locator('.tap-badge')).toHaveText('TAP');
+  // Let Hideaway resolve: pick a card from the top four to exile face down.
+  const hide = page.getByRole('button', { name: /Exile face down/ }).first();
+  await passUntil(page, hide);
+  await hide.click();
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Watcher for Tomorrow').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Watcher for Tomorrow')).toHaveCount(0);
+  // Whichever card was hidden is now the only card in hand.
+  await expect(
+    page.locator('.hand-card:not(.hand-card-leave-active)', {
+      hasText: /Lab (Ox|Zombie|Servo|Bird)/,
+    }),
+  ).toHaveCount(1);
+});
+
+test('Psychomancer: drain P2 when your artifact is destroyed', async ({ page }) => {
+  await runScenario(page, 'Psychomancer: drain P2 when your artifact is destroyed');
+  const shatter = handCard(page, 'Lab Shatter');
+  await expect(shatter).toHaveClass(/actionable/);
+  await shatter.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Anrakyr Relic').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // The Relic is destroyed: Psychomancer's trigger asks for target opponent.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P2' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  await expect(page.locator('.log .line', { hasText: /loses 1 life$/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
+});
+
+test('Shard of the Void Dragon: attack, and grow from the sacrificed artifact', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Shard of the Void Dragon: attack, and grow from the sacrificed artifact',
+  );
+  // Nothing is castable, so precombat priority passes itself and combat begins.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Shard of the Void Dragon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Anrakyr Relic')).toHaveCount(0);
+  await expect(page.getByText('+1/+1×2')).toBeVisible();
+  await expect(page.getByText(/Shard of the Void Dragon deals 9 to P2/).first()).toBeVisible();
+});
+
+test('Scavenging Ooze: exile a creature card to grow and gain life', async ({ page }) => {
+  await runScenario(page, 'Scavenging Ooze: exile a creature card to grow and gain life');
+  const ooze = permanent(page, 'Scavenging Ooze');
+  await expect(ooze).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ooze.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const ox = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+  });
+  await expect(ox).toBeVisible();
+  await ox.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText('+1/+1×1')).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /gains 1 life$/ })).toHaveCount(1);
+});
+
+test('Imotekh the Stormlord: reanimate an artifact, then buff it at combat', async ({ page }) => {
+  await runScenario(page, 'Imotekh the Stormlord: reanimate an artifact, then buff it at combat');
+  const reanimate = handCard(page, 'Lab Reanimate');
+  await expect(reanimate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await reanimate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const construct = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Construct', exact: true }),
+  });
+  await expect(construct).toBeVisible();
+  await construct.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // An artifact card left the graveyard: two Necron Warriors, then the combat trigger targets.
+  const target = page.getByText(/Target 1 of 1/);
+  await passUntil(page, target);
+  await expect(permanent(page, 'Necron Warrior')).toContainText('×2');
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Reset declaration' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Construct')).toContainText('3/3');
+});
+
+test('The Ooze: Mutagens from a leaving creature and a graveyard exile', async ({ page }) => {
+  await runScenario(page, 'The Ooze: Mutagens from a leaving creature and a graveyard exile');
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Mutant').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Lab Mutant left with two +1/+1 counters: two Mutagens.
+  const mutagen = permanent(page, 'Mutagen');
+  await passUntil(page, mutagen);
+  await expect(mutagen).toContainText('×2');
+  const ooze = permanent(page, 'The Ooze');
+  await expect(ooze).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ooze.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  const ox = page.locator('.zone-card-thumb.targetable').filter({
+    has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+  });
+  await expect(ox).toBeVisible();
+  await ox.click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Mutagen')).toContainText('×3');
+  await expect(ooze.locator('.tap-badge')).toHaveText('TAP');
+});
+
+test('God-Eternal Rhonas: double your creatures, then go third from the top', async ({ page }) => {
+  await runScenario(page, 'God-Eternal Rhonas: double your creatures, then go third from the top');
+  await castAndResolve(page, 'God-Eternal Rhonas');
+  await expect(permanent(page, 'Lab Ox')).toContainText('8/4', { timeout: 15_000 });
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'God-Eternal Rhonas').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Exiled from the battlefield: choose to put it into the library third from the top.
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  await passUntil(page, yes);
+  await yes.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'God-Eternal Rhonas')).toHaveCount(0);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'God-Eternal Rhonas', exact: true }),
+    }),
+  ).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toContainText('8/4');
+});
+
+test('Candlekeep Sage: your commander draws as it enters and leaves', async ({ page }) => {
+  await runScenario(page, 'Candlekeep Sage: your commander draws as it enters and leaves');
+  await page.locator('.command-zone .commander-card').click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Lab General enters: the granted trigger draws Lab Ox. Waiting on the trigger's resolution
+  // (passing only while the stack is non-empty) never passes the empty-stack priority that
+  // would end the scenario.
+  const granted = 'Lab General — When this creature enters or leaves the battlefield, draw a card';
+  await awaitResolution(page, granted, 0);
+  const ox = handCard(page, 'Lab Ox');
+  await expect(ox).toBeVisible();
+  await expect(permanent(page, 'Lab General')).toHaveCount(1);
+  const banish = handCard(page, 'Lab Banish');
+  await expect(banish).toHaveClass(/actionable/, { timeout: 15_000 });
+  await banish.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab General').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Exiled: the leave trigger draws Lab Servo.
+  await awaitResolution(page, granted, 1);
+  await expect(handCard(page, 'Lab Servo')).toBeVisible();
+  await expect(permanent(page, 'Lab General')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+});
+
+test("Flickerwisp: exile P2's creature until the next end step", async ({ page }) => {
+  await runScenario(page, "Flickerwisp: exile P2's creature until the next end step");
+  await castAndResolve(page, 'Flickerwisp');
+  // The enters trigger targets another permanent: Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by Flickerwisp/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Returned at the beginning of the end step, under P2's control: on P2's board, not in exile.
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+    }),
+  ).toHaveCount(0);
+});
+
+test('Venser, the Sojourner: +2 blinks your Lab Ox at the end step', async ({ page }) => {
+  await runScenario(page, 'Venser, the Sojourner: +2 blinks your Lab Ox at the end step');
+  const venser = permanent(page, 'Venser, the Sojourner');
+  await expect(venser).toHaveClass(/actionable/, { timeout: 15_000 });
+  await venser.click();
+  await page.getByRole('button', { name: /\+2: Exile target permanent you own/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by Venser/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(
+    page.locator('.zone-card-thumb').filter({
+      has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
+    }),
+  ).toHaveCount(0);
+});
+
+test('Venser, the Sojourner: −1 makes creatures unblockable', async ({ page }) => {
+  await runScenario(page, 'Venser, the Sojourner: −1 makes creatures unblockable');
+  await activate(page, 'Venser, the Sojourner', /−1: Creatures can't be blocked/);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
+});
+
+test("Venser, the Sojourner: −8 emblem exiles P2's Lab Ox", async ({ page }) => {
+  await runScenario(page, "Venser, the Sojourner: −8 emblem exiles P2's Lab Ox");
+  await activate(page, 'Venser, the Sojourner', /−8: You get an emblem/);
+  const divination = handCard(page, 'Lab Divination');
+  await expect(divination).toHaveClass(/actionable/, { timeout: 15_000 });
+  await divination.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // The emblem triggers on the cast: choose its target, P2's Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/Lab Ox is exiled by/).first());
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});
+
+test("Puppeteer Clique: steal P2's Lab Ox, attack, then exile it", async ({ page }) => {
+  await runScenario(page, "Puppeteer Clique: steal P2's Lab Ox, attack, then exile it");
+  await castAndResolve(page, 'Puppeteer Clique');
+  // Lab Ox is the only legal target: it enters under your control with haste.
+  const ox = permanent(page, 'Lab Ox');
+  await passUntil(page, ox);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('36');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+});
+
+test('Puppeteer Clique: destroy it and persist returns it', async ({ page }) => {
+  await runScenario(page, 'Puppeteer Clique: destroy it and persist returns it');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Puppeteer Clique').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Persist returned it as a new object with a -1/-1 counter: a 2/1 flier.
+  await expect(permanent(page, 'Puppeteer Clique')).toHaveCount(1);
+  await expect(page.getByText('-1/-1×1')).toBeVisible();
+  await expect(permanent(page, 'Puppeteer Clique')).toContainText('2/1');
+  await expect(handCard(page, 'Lab Doom')).toHaveCount(0);
+});
+
+test('Cryptek: your Lab Construct dies and returns tapped', async ({ page }) => {
+  await runScenario(page, 'Cryptek: your Lab Construct dies and returns tapped');
+  const cryptek = permanent(page, 'Cryptek');
+  await expect(cryptek).toHaveClass(/actionable/, { timeout: 15_000 });
+  await cryptek.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  const doom = handCard(page, 'Lab Doom');
+  await passUntil(page, doom.and(page.locator('.actionable')));
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Construct').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Construct')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Construct').locator('.tap-badge')).toHaveText('TAP');
+});
+
+test('Living Death: swap the battlefield and graveyard creatures', async ({ page }) => {
+  await runScenario(page, 'Living Death: swap the battlefield and graveyard creatures');
+  await castAndResolve(page, 'Living Death');
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Risen Zombie')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  // P2's graveyard creature returns too, on P2's board, and its Lab Ox went to the graveyard.
+  const p2 = page.locator('.opponent[data-seat="P2"]');
+  await expect(permanent(page, 'Lab Risen Bear')).toHaveCount(1);
+  await expect(
+    p2
+      .locator('.tile')
+      .filter({ has: page.getByRole('img', { name: 'Lab Risen Bear', exact: true }) }),
+  ).toHaveCount(1);
+});
+
+test('Technomancer: mill three, then return artifact creatures worth 6', async ({ page }) => {
+  await runScenario(page, 'Technomancer: mill three, then return artifact creatures worth 6');
+  await castAndResolve(page, 'Technomancer');
+  for (const name of ['Lab Three Construct', 'Lab Three Construct', 'Lab Zero Construct']) {
+    const choice = page
+      .locator('.panel-group')
+      .filter({ hasText: name })
+      .first()
+      .getByRole('button', { name: 'Return', exact: true });
+    await passUntil(page, choice);
+    await choice.click();
+  }
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Three Construct')).toContainText('×2');
+  await expect(permanent(page, 'Lab Zero Construct')).toHaveCount(1);
+});
+
+test('Victimize: sacrifice Lab Servo, return two creatures tapped', async ({ page }) => {
+  await runScenario(page, 'Victimize: sacrifice Lab Servo, return two creatures tapped');
+  const victimize = handCard(page, 'Victimize');
+  await expect(victimize).toHaveClass(/actionable/, { timeout: 15_000 });
+  await victimize.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Exactly two: the graveyard cards are named, and stopping early is never offered.
+  await page
+    .getByRole('button', { name: "Target Lab Ox (P1's graveyard)" })
+    .click({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toHaveCount(0);
+  // The second target is then forced (one candidate, no stopping), so the viewer may submit it
+  // on its own; the outcome below shows both were chosen.
+
+  // Lab Servo is the only creature to sacrifice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  for (const name of ['Lab Ox', 'Lab Fallen Bear']) {
+    await expect(permanent(page, name).locator('.tap-badge')).toHaveText('TAP');
+  }
+});
+
+test('Body Launderer: Lab Ox dies and it connives', async ({ page }) => {
+  await runScenario(page, 'Body Launderer: Lab Ox dies and it connives');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Connive: Lab Hex is drawn, then the nonland Lab Servo is discarded.
+  const discard = page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Servo' })
+    .first()
+    .getByRole('button', { name: 'Discard', exact: true });
+  await passUntil(page, discard);
+  await discard.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Body Launderer')).toContainText('4/4');
+  await expect(handCard(page, 'Lab Hex')).toBeVisible();
+});
+
+test('Body Launderer: it dies and returns Lab Servo, not Lab Ox', async ({ page }) => {
+  await runScenario(page, 'Body Launderer: it dies and returns Lab Servo, not Lab Ox');
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Body Launderer').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Servo is the only legal target, so the return needs no choice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Body Launderer')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });

@@ -88,7 +88,7 @@ import {
   whenEnters,
   whenPermanent,
 } from './templates';
-import { canonicalizeToken, FOOD, SOLDIER_1_1, TREASURE } from './tokens';
+import { canonicalizeToken, FOOD, MUTAGEN, SOLDIER_1_1, TREASURE } from './tokens';
 // Use the explicit module path so the registry imported by authored override modules and the
 // interpreter share one module instance under Bun/TypeScript path resolution.
 import { applyOverride, getOverride } from './overrides/index';
@@ -780,6 +780,10 @@ function parseEffectSentence(
   }
   {
     const sacrifice = s.match(/^each opponent sacrifices an? (.+?)(?: of their choice)?$/);
+    // "each opponent sacrifices a nonland permanent of their choice" (Shard of the Void Dragon).
+    if (sacrifice !== null && sacrifice[1] === 'nonland permanent') {
+      return [{ op: 'sacrificeOneEachOpponent', filter: 'nonland' }];
+    }
     if (sacrifice !== null) {
       const filter = parseMassSubject(sacrifice[1] as string, card);
       if (filter !== null) return [{ op: 'sacrificeOneEachOpponent', filter }];
@@ -1024,6 +1028,21 @@ function parseEffectSentence(
   if (s === 'target player gets a poison counter') {
     return [{ op: 'giveTargetPoisonCounters', target: alloc('player'), count: 1 }];
   }
+  // "that player loses 2 life and you gain 2 life" (Kambal, Consul of Allocation): the player
+  // the trigger's event names — the caster of the spell, for a cast trigger.
+  {
+    const m = s.match(/^that player loses (\w+) life(?: and you gain (\w+) life)?$/);
+    if (m) {
+      const loss = parseAmount(m[1] as string);
+      const gain = m[2] === undefined ? null : parseAmount(m[2]);
+      if (loss !== null && (m[2] === undefined || gain !== null)) {
+        return [
+          { op: 'loseLifeTarget', target: 'eventPlayer', amount: constant(loss) },
+          ...(gain === null ? [] : [{ op: 'gainLife' as const, amount: constant(gain) }]),
+        ];
+      }
+    }
+  }
   if (s === 'they get that many poison counters') {
     return [
       {
@@ -1097,8 +1116,37 @@ function parseEffectSentence(
   }
   // "Put target card from your graveyard on the bottom of your library" (Mistveil Plains): any
   // card, so the graveyard target carries no filter.
+  // "Return any number of artifact creature cards with total mana value 6 or less from your
+  // graveyard to the battlefield" (Technomancer): chosen on resolution, not targeted.
+  {
+    const m = s.match(
+      /^return any number of artifact creature cards with total mana value (\d+) or less from your graveyard to the battlefield$/,
+    );
+    if (m !== null)
+      return [{ op: 'returnArtifactCreaturesUpToManaValue', maxManaValue: Number(m[1]) }];
+  }
+  // "This creature connives" (Body Launderer, CR 701.50).
+  if (s === '~ connives') return [{ op: 'connive' }];
+  // "Return another target non-Rogue creature card with equal or lesser power from your
+  // graveyard to the battlefield" (Body Launderer): the power bound is the source's, last-known
+  // once it has died (CR 608.2h).
+  {
+    const m = s.match(
+      /^return another target (.+?) card with equal or lesser power from your graveyard to the battlefield$/,
+    );
+    const filter = m === null ? null : parseCardFilterPhrase(m[1] as string, card);
+    if (filter !== null) {
+      const target = alloc('cardInGraveyard', allOf(OTHER, filter, { kind: 'powerAtMostSource' }));
+      return [{ op: 'graveyardToBattlefield', target }];
+    }
+  }
   if (s === 'put target card from your graveyard on the bottom of your library') {
     return [{ op: 'graveyardToLibraryBottom', target: alloc('cardInGraveyard') }];
+  }
+  // "Exile target card from a graveyard" (The Ooze): any card in any graveyard, moved through a
+  // real zone change so leave-graveyard abilities see it.
+  if (s === 'exile target card from a graveyard') {
+    return [{ op: 'exileCard', target: alloc('cardInGraveyard', undefined, undefined, 'any') }];
   }
   if (s === 'exile target attacking or blocking creature') {
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
@@ -1271,6 +1319,24 @@ function parseEffectSentence(
       ];
     }
   }
+  // "You get an emblem with \"Whenever you cast a spell, exile target permanent.\"" (Venser, the
+  // Sojourner): the quoted ability is parsed as a trigger line, in its printed casing.
+  {
+    const emblem = s.match(/^you get an emblem with "(.+)"$/);
+    if (emblem !== null) {
+      const quoted = (emblem[1] as string).replace(/\.$/, '');
+      const at = card.oracleText.toLowerCase().indexOf(quoted);
+      const abilities = parseTriggerLine(
+        at < 0 ? quoted : card.oracleText.slice(at, at + quoted.length),
+        card,
+      );
+      if (abilities === null || abilities.length === 0) return null;
+      return [{ op: 'createEmblem', name: `${card.name} emblem`, abilities }];
+    }
+  }
+  if (s === "creatures can't be blocked this turn") {
+    return [{ op: 'creaturesCantBeBlockedThisTurn' }];
+  }
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
   }
@@ -1342,8 +1408,10 @@ function parseEffectSentence(
   // "~ gets +1/+0 until end of turn" (firebreathing)
   // "target creature gets +2/+2 and gains flying until end of turn"
   {
+    // Also "another target artifact creature you control gets +2/+2 and gains menace until end
+    // of turn" (Imotekh the Stormlord): the same single slot, narrowed by the target clause.
     const m = s.match(
-      /^(target creature|~) gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ]+))? until end of turn$/,
+      /^(~|(?:another )?target (?:artifact )?creature(?: you control| you don't control| an opponent controls)?) gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ]+))? until end of turn$/,
     );
     if (m) {
       const subject = m[1] as string;
@@ -1364,7 +1432,25 @@ function parseEffectSentence(
         // ONE "target creature", so ONE target slot (CR 601.2c): the pump and the keyword grant
         // both apply to the creature the spell announced. Allocating a second slot here would
         // let the pump and the grant land on different creatures.
-        const target = alloc('creature');
+        const narrowing = [
+          ...(subject.startsWith('another ') ? [OTHER] : []),
+          ...(subject.includes('artifact creature') ? [ofType('Artifact')] : []),
+        ];
+        const controller =
+          subject.endsWith("you don't control") || subject.endsWith('an opponent controls')
+            ? ('opponent' as const)
+            : subject.endsWith('you control')
+              ? ('you' as const)
+              : undefined;
+        const target = alloc(
+          'creature',
+          narrowing.length === 0
+            ? undefined
+            : narrowing.length === 1
+              ? narrowing[0]
+              : allOf(...narrowing),
+          controller,
+        );
         const effects: Effect[] = [
           {
             op: 'pumpUntilEot',
@@ -1459,7 +1545,11 @@ function parseEffectSentence(
   }
   // "~ deals 3 damage to any target" / "â€¦ to target creature" / "â€¦ to each opponent"
   {
-    if (opts.triggerObject === true && s === 'it deals damage equal to its power to any target') {
+    if (
+      opts.triggerObject === true &&
+      (s === 'it deals damage equal to its power to any target' ||
+        s === 'that creature deals damage equal to its power to any target')
+    ) {
       return [
         {
           op: 'dealDamage',
@@ -1476,6 +1566,22 @@ function parseEffectSentence(
       if (targetHandDamage !== null) {
         const target = alloc('player');
         return [{ op: 'dealDamage', target, amount: { kind: 'cardsInTargetHand', target } }];
+      }
+      // "this creature deals damage equal to its power to that player" (Gleeful Arsonist): the
+      // event's player — the caster, for a cast trigger.
+      // "this creature deals damage equal to that spell's mana value to target opponent" (Keeper of
+      // Secrets): the triggering spell's mana value, kept on the trigger as it is cast.
+      if (s === "~ deals damage equal to that spell's mana value to target opponent") {
+        return [
+          {
+            op: 'dealDamage',
+            target: alloc('player', undefined, 'opponent'),
+            amount: { kind: 'spellManaValue' },
+          },
+        ];
+      }
+      if (s === '~ deals damage equal to its power to that player') {
+        return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
       }
       if (s === "~ deals 2 damage to that creature's controller") {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: constant(2) }];
@@ -1549,6 +1655,24 @@ function parseEffectSentence(
       return [
         { op: 'addMana', amount: constant(symbols.length), colors: [], fixedSymbols: symbols },
       ];
+    }
+  }
+  // "exile up to one target nonland permanent" (Canoptek Tomb Sentinel) — a variable-count slot:
+  // choosing no target is legal, and the ability still resolves (CR 115.1d, 601.2c).
+  {
+    const m = s.match(/^(destroy|exile) up to (\w+) target (.+)$/);
+    if (m && opts.allocCount !== undefined) {
+      const max = parseAmount(m[2] as string);
+      const parsed = parseTargetClause(m[3] as string);
+      if (max !== null && parsed !== null) {
+        const targetSlot = opts.allocCount(
+          parsed.kind,
+          { min: 0, max },
+          parsed.controller,
+          parsed.filter,
+        );
+        return [{ op: m[1] === 'destroy' ? 'destroyEachChosen' : 'exileEachChosen', targetSlot }];
+      }
     }
   }
   // "destroy target creature" / "exile target monocolored permanent" / "destroy target artifact you don't control" / â€¦
@@ -2030,6 +2154,14 @@ function parseEffectSentence(
       return [{ op: 'eachOpponentLosesLife', amount: { kind: 'xValue' } }];
     }
   }
+  // "put the exiled card into its owner's hand" (Watcher for Tomorrow): the card this permanent's
+  // Hideaway exiled — a linked ability (CR 607.2a), so only a card with Hideaway can say it.
+  if (s === "put the exiled card into its owner's hand" && /^Hideaway \d/m.test(card.oracleText)) {
+    return [{ op: 'returnExiledAttachedCard' }];
+  }
+  if (s === 'target opponent loses half their life, rounded up') {
+    return [{ op: 'loseHalfLifeTarget', target: alloc('player', undefined, 'opponent') }];
+  }
   if (s === 'you gain life equal to the life lost this way') {
     return [{ op: 'gainLifeEqualToLifeLostThisWay' }];
   }
@@ -2048,15 +2180,16 @@ function parseEffectSentence(
     }
   }
   {
-    const m = s.match(/^target player loses (\w+) life(?: and you gain (\w+) life)?$/);
+    // "target opponent loses 1 life and you gain 1 life" (Psychomancer) is the same drain with an
+    // opponent-only slot.
+    const m = s.match(/^target (player|opponent) loses (\w+) life(?: and you gain (\w+) life)?$/);
     if (m) {
-      const amount = parseAmount(m[1] as string);
+      const amount = parseAmount(m[2] as string);
       if (amount === null) return null;
-      const effects: Effect[] = [
-        { op: 'loseLifeTarget', target: alloc('player'), amount: constant(amount) },
-      ];
-      if (m[2] !== undefined) {
-        const gain = parseAmount(m[2] as string);
+      const target = m[1] === 'opponent' ? alloc('player', undefined, 'opponent') : alloc('player');
+      const effects: Effect[] = [{ op: 'loseLifeTarget', target, amount: constant(amount) }];
+      if (m[3] !== undefined) {
+        const gain = parseAmount(m[3] as string);
         if (gain === null) return null;
         effects.push({ op: 'gainLife', amount: constant(gain) });
       }
@@ -2715,6 +2848,165 @@ function parseHellkiteCourserBlock(
   return null;
 }
 
+/**
+ * "Double the power of each other creature you control until end of turn. Those creatures gain
+ * vigilance until end of turn." (God-Eternal Rhonas) — matched whole, because "those creatures"
+ * is the set the first sentence doubled; nothing between the two changes which creatures match.
+ */
+function parseDoublePowerThoseGainBlock(body: string): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^double the power of each (other )?creature you control until end of turn\. those creatures gain ([a-z]+) until end of turn$/,
+    );
+  if (m === null) return null;
+  const parsed = parseKeywordLine(m[2] as string);
+  const keyword = parsed?.keywords[0];
+  if (parsed === null || parsed.keywords.length !== 1 || keyword === undefined) return null;
+  if (parsed.ward !== undefined || parsed.protectionFrom !== undefined) return null;
+  const selector = allOf(...(m[1] !== undefined ? [OTHER] : []), ofType('Creature'), YOURS);
+  return [
+    { op: 'doublePower', selector },
+    { op: 'grantKeywordEachUntilEot', selector, keyword },
+  ];
+}
+
+/**
+ * "Exile another target permanent. Return that card to the battlefield under its owner's control
+ * at the beginning of the next end step." (Flickerwisp) / "Exile target permanent you own. Return
+ * it to the battlefield under your control at the beginning of the next end step." (Venser, the
+ * Sojourner) — matched whole, because the return is a delayed trigger bound to the exiled card.
+ */
+function parseExileReturnAtNextEndStepBlock(body: string, alloc: SlotAllocator): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^exile (another )?target (permanent|creature|nonland permanent)( you own| you control)?\. return (?:that card|it) to the battlefield under (its owner's|your) control at the beginning of the next end step$/,
+    );
+  if (m === null) return null;
+  const parts: Selector[] = [];
+  if (m[1] !== undefined) parts.push(OTHER);
+  if (m[3] === ' you own') parts.push({ kind: 'owner', who: 'you' });
+  const filter = parts.length === 0 ? undefined : parts.length === 1 ? parts[0] : allOf(...parts);
+  const kind: TargetKind =
+    m[2] === 'creature'
+      ? 'creature'
+      : m[2] === 'nonland permanent'
+        ? 'nonlandPermanent'
+        : 'permanent';
+  const target = alloc(kind, filter, m[3] === ' you control' ? 'you' : undefined);
+  return [
+    {
+      op: 'exileTargetReturnAtNextEndStep',
+      target,
+      returnUnder: m[4] === 'your' ? 'sourceController' : 'owner',
+    },
+  ];
+}
+
+/**
+ * "Put target creature card from an opponent's graveyard onto the battlefield under your control.
+ * It gains haste. At the beginning of your next end step, exile it." (Puppeteer Clique) — matched
+ * whole: "it" in the last two sentences is the permanent the first one put onto the battlefield.
+ */
+function parseReanimateHasteExileAtEndStepBlock(
+  body: string,
+  alloc: SlotAllocator,
+): Effect[] | null {
+  const norm = body.trim().replace(/\.$/, '');
+  if (
+    norm !==
+    "put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end step, exile it"
+  )
+    return null;
+  const target = alloc('cardInGraveyard', ofType('Creature'), undefined, 'opponent');
+  return [{ op: 'reanimateTargetHasteExileAtYourNextEndStep', target }];
+}
+
+/**
+ * "Choose another target artifact creature you control. When that creature dies this turn,
+ * return it to the battlefield tapped under your control." (Cryptek) — a delayed trigger that
+ * remembers the chosen permanent itself (CR 400.7) and expires at cleanup; "it" is the card that
+ * permanent became in the graveyard (CR 400.7e).
+ */
+function parseDiesThisTurnReturnTappedBlock(body: string, alloc: SlotAllocator): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(
+      /^choose (another )?target (artifact )?creature you control\. when that creature dies this turn, return it to the battlefield tapped under your control$/,
+    );
+  if (m === null) return null;
+  const parts: Selector[] = [];
+  if (m[1] !== undefined) parts.push(OTHER);
+  if (m[2] !== undefined) parts.push(ofType('Artifact'));
+  const filter = parts.length === 0 ? undefined : parts.length === 1 ? parts[0] : allOf(...parts);
+  const target = alloc('creature', filter, 'you');
+  return [
+    {
+      op: 'registerDelayedTrigger',
+      when: 'dies',
+      target,
+      sameObject: true,
+      expiry: 'cleanup',
+      ability: {
+        kind: 'triggered',
+        targets: [],
+        effects: [{ op: 'returnDiedTriggerObjectTapped' }],
+        description: 'Return that creature to the battlefield tapped under your control',
+      },
+    },
+  ];
+}
+
+const ORDINALS_FROM_TOP: Record<string, number> = { second: 2, third: 3, fourth: 4, fifth: 5 };
+
+/**
+ * "Put it into its owner's library third from the top" (God-Eternal Rhonas), on a trigger for the
+ * source itself dying or being exiled: "it" is the card the source became (CR 400.7e).
+ */
+function parseDepartedSourceToLibraryBlock(
+  body: string,
+  heads: readonly TriggerHead[],
+): Effect[] | null {
+  const m = body
+    .trim()
+    .replace(/\.$/, '')
+    .match(/^put (?:it|~) into its owner's library (second|third|fourth|fifth) from the top$/);
+  if (m === null) return null;
+  const sourceLeaves = heads.every(
+    (head) =>
+      (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+      'subject' in head &&
+      head.subject.kind === 'self',
+  );
+  if (!sourceLeaves) return null;
+  return [
+    { op: 'putDepartedSourceIntoLibrary', fromTop: ORDINALS_FROM_TOP[m[1] as string] as number },
+  ];
+}
+
+/**
+ * "Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this
+ * creature and you gain 1 life." (Scavenging Ooze) — matched whole, because the second sentence
+ * asks about the card the first one exiled (its characteristics in the graveyard). The exile is a
+ * real zone change, so leave-graveyard abilities see it.
+ */
+function parseGraveyardExileCreatureRider(text: string, alloc: SlotAllocator): Effect[] | null {
+  const body = text.toLowerCase().trim().replace(/\.$/, '');
+  if (
+    body !==
+      'exile target card from a graveyard. if it was a creature card, put a +1/+1 counter on ~ and you gain 1 life' &&
+    body !==
+      'exile target card from a graveyard. if it was a creature card, put a +1/+1 counter on this creature and you gain 1 life'
+  )
+    return null;
+  const targetSlot = alloc('cardInGraveyard', undefined, undefined, 'any');
+  return [{ op: 'exileTargetGraveyardAndBuffIfCreature', targetSlot }];
+}
+
 function parseHerdHeirloomEffect(
   effectText: string,
   alloc: SlotAllocator,
@@ -2996,6 +3288,13 @@ function parseCardFilterPhrase(phrase: string, card: OracleCard): Selector | nul
     const rest = parseCardFilterPhrase(legendary[1] as string, card);
     return rest === null ? null : allOf(ofSupertype('Legendary'), rest);
   }
+  // "non-Rogue creature card" (Body Launderer): a hyphenated negated subtype before the noun.
+  const nonSubtype = noun.match(/^non-([a-z]+) (.+)$/);
+  if (nonSubtype !== null) {
+    const subtype = resolveSubtype(nonSubtype[1] as string, card);
+    const rest = parseCardFilterPhrase(nonSubtype[2] as string, card);
+    return subtype === null || rest === null ? null : allOf(not(ofSubtype(subtype)), rest);
+  }
   const anyPermanentType = (): Selector => anyOf(...PERMANENT_CARD_TYPES.map((t) => ofType(t)));
   if (noun === 'permanent' || noun === 'card' || noun === 'cards') return anyPermanentType();
   const cardType =
@@ -3045,7 +3344,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -3055,7 +3354,7 @@ const STEP_TRIGGER_HEAD_RE =
  * selector.
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
-  /^whenever one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
+  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
 /**
  * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
  * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the
@@ -3153,6 +3452,14 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     noun = powerMatch[1] as string;
   }
 
+  // "a creature you control with a +1/+1 counter on it" (The Ooze): the named counter kind, read
+  // off the subject as the event saw it — a leaving creature's last-known counters (CR 603.10a).
+  const counterMatch = noun.match(/^(.+) with an? ([+-]\d+\/[+-]\d+) counter on it$/);
+  if (counterMatch !== null) {
+    parts.push(hasCounter(counterMatch[2] as string));
+    noun = counterMatch[1] as string;
+  }
+
   for (const [suffix, who] of [
     [' you control', YOURS],
     [' an opponent controls', OPPONENTS],
@@ -3199,6 +3506,7 @@ const PREDEFINED_TOKENS: Record<string, TokenSpec> = {
   // mana-ability costs happened to match. One token, one spelling.
   treasure: TREASURE,
   food: FOOD,
+  mutagen: MUTAGEN,
 };
 
 /** "1/1 black and green Pest creature token" â†’ a `TokenSpec`, or null if any part is unread. */
@@ -3506,6 +3814,9 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
   if (clause === 'it was kicked' || clause === 'this spell was kicked') {
     return { kind: 'wasKicked' };
   }
+  // "When this creature enters, if you cast it, …" (Shard of the Nightbringer): read from the
+  // permanent's cast record, so reanimating or flickering it does not count.
+  if (clause === 'you cast it') return { kind: 'sourceWasCast' };
   if (clause === 'it escaped' || clause === '~ escaped') {
     return { kind: 'escaped' };
   }
@@ -3580,6 +3891,56 @@ function parseConditionClause(clause: string, card: OracleCard): Condition | nul
   const selector = parseTriggerSubject(m[1] as string, card);
   if (selector === null) return null;
   return countPermanents(selector, 'you', '>=', 1);
+}
+
+/**
+ * "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they
+ * control, then puts all cards they exiled this way onto the battlefield." (Living Death) — three
+ * simultaneous events in order: one exile, one sacrifice, one return.
+ */
+function parseLivingDeathBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const normalized = text.trim().toLowerCase().replace(/\.$/, '');
+  if (
+    normalized !==
+    'each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield'
+  )
+    return null;
+  return { targets: [], effects: [{ op: 'livingDeath' }] };
+}
+
+/**
+ * "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return
+ * the chosen cards to the battlefield tapped." (Victimize): the targets are chosen on cast, the
+ * sacrifice is mandatory when possible, and only a completed sacrifice returns the cards.
+ */
+function parseVictimizeBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const match = text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\.$/, '')
+    .match(
+      /^choose (\w+) target creature cards in your graveyard\. sacrifice a creature\. if you do, return the chosen cards to the battlefield tapped$/,
+    );
+  if (match === null) return null;
+  const count = parseAmount(match[1] as string);
+  if (count === null || count < 2) return null;
+  return {
+    targets: [
+      {
+        kind: 'cardInGraveyard',
+        filter: ofType('Creature'),
+        count: { min: count, max: count },
+      },
+    ],
+    effects: [
+      {
+        op: 'sacrificeOneThen',
+        selector: allOf(ofType('Creature'), YOURS),
+        then: [{ op: 'reanimateEachChosenTapped', targetSlot: 0 }],
+      },
+    ],
+  };
 }
 
 function parseBlinkSpellBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
@@ -3700,6 +4061,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const draw = firstLine.match(DRAW_TRIGGER_HEAD_RE);
   const foretell = firstLine.match(FORETELL_TRIGGER_HEAD_RE);
   const graveyardCrossing = firstLine.match(GRAVEYARD_CROSSING_TRIGGER_HEAD_RE);
+  // "Whenever one or more artifact cards leave your graveyard" (Imotekh the Stormlord): one
+  // aggregate event per batch of cards leaving (CR 603.2c); a card is in its owner's graveyard,
+  // so "your" is the card's owner.
+  const leaveGraveyard = firstLine.match(
+    /^whenever (one or more|an?) (artifact|creature|land|enchantment) cards? leaves? your graveyard, (.*)$/,
+  );
   if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
     let subject: TriggerSubject;
@@ -3759,6 +4126,16 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     } else {
       body = match[2] as string;
     }
+  } else if (leaveGraveyard !== null) {
+    const type = CARD_TYPE_SINGULARS[leaveGraveyard[2] as string] as string;
+    heads = [
+      {
+        when: 'leavesGraveyard',
+        subject: { kind: 'permanent', selector: allOf(ofType(type), YOURS) },
+        ...(leaveGraveyard[1] === 'one or more' ? { aggregate: true } : {}),
+      },
+    ];
+    body = leaveGraveyard[3] as string;
   } else if (graveyardCrossing !== null) {
     heads = [
       {
@@ -3888,21 +4265,24 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   } else if (aggregate !== null) {
     // The subject is plural here ("Dragons you control"), so it reads through `parseSubject`
     // rather than `parseTriggerSubject`.
-    const selector = parseSubject(aggregate[1] as string, card);
-    if (selector === null) return null;
+    const plural = parseSubject(aggregate[2] as string, card);
+    if (plural === null) return null;
+    // "Whenever Satoru and/or one or more other nontoken creatures you control enter" — the
+    // source itself joins the same aggregate event.
+    const selector = aggregate[1] === undefined ? plural : anyOf(SELF, plural);
     heads = [
       {
         when:
-          aggregate[2] === 'attack'
+          aggregate[3] === 'attack'
             ? 'attacks'
-            : aggregate[2] === 'enter'
+            : aggregate[3] === 'enter'
               ? 'enters'
               : 'dealsCombatDamageToPlayer',
         subject: { kind: 'permanent', selector },
         aggregate: true,
       },
     ];
-    body = aggregate[3] as string;
+    body = aggregate[4] as string;
   } else if (ordinalCast !== null) {
     const filter = parseSpellFilter(ordinalCast[3] as string, card);
     const ordinal = {
@@ -3924,13 +4304,26 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     ];
     body = ordinalCast[4] as string;
   } else if (cast !== null) {
-    const filter = parseSpellFilter(cast[2] as string, card);
+    // "… casts a spell from a graveyard" / "from anywhere other than your hand": the origin is a
+    // restriction on the cast event, not part of the spell's characteristics.
+    const origin = (cast[2] as string).match(
+      /^(.+?) from (a graveyard|anywhere other than your hand)$/,
+    );
+    const filter = parseSpellFilter(
+      origin === null ? (cast[2] as string) : (origin[1] as string),
+      card,
+    );
     if (filter === null) return null;
     heads = [
       {
         when: 'castsSpell',
         caster: cast[1] === 'you' ? 'you' : cast[1] === 'an opponent' ? 'opponent' : 'each',
         ...(filter === ANY_SPELL ? {} : { filter }),
+        ...(origin === null
+          ? {}
+          : {
+              castFrom: origin[2] === 'a graveyard' ? ('graveyard' as const) : ('notHand' as const),
+            }),
       },
     ];
     body = cast[3] as string;
@@ -3940,29 +4333,33 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     const subjectPhrase = m[1] as string;
     const event = m[2] as string;
     const events: ObjectTriggerWhen[] = event.startsWith('enters')
-      ? event.endsWith('or attacks')
-        ? ['enters', 'attacks']
-        : event.includes('transforms into')
-          ? ['enters', 'transformsInto']
-          : ['enters']
+      ? event === 'enters or leaves the battlefield'
+        ? ['enters', 'leavesBattlefield']
+        : event.endsWith('or attacks')
+          ? ['enters', 'attacks']
+          : event.includes('transforms into')
+            ? ['enters', 'transformsInto']
+            : ['enters']
       : // A BACK face prints the bare form ("When this creature transforms into Awoken Horror"):
         // it only ever exists after the flip, so unlike the front face's "enters or transforms
         // into ~" there is no entry event to pair it with.
         event === 'transforms into ~'
         ? ['transformsInto']
-        : event === 'dies'
-          ? ['dies']
-          : event === 'attacks'
-            ? ['attacks']
-            : event === 'becomes tapped'
-              ? // City of Brass. `becomesTapped` is queued from every tap path already, including
-                // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
-                ['becomesTapped']
-              : event === 'becomes crewed'
-                ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
-                  // from another "becomes an artifact creature" effect.
-                  ['becomesCrewed']
-                : ['dealsCombatDamageToPlayer'];
+        : event === 'leaves the battlefield' || event.endsWith('into exile from the battlefield')
+          ? ['leavesBattlefield']
+          : event === 'dies'
+            ? ['dies']
+            : event === 'attacks'
+              ? ['attacks']
+              : event === 'becomes tapped'
+                ? // City of Brass. `becomesTapped` is queued from every tap path already, including
+                  // `payAbilityCosts(..., 'tapForMana')` - so tapping the land for mana fires it.
+                  ['becomesTapped']
+                : event === 'becomes crewed'
+                  ? // Ghost Ark. Queued only when a crew ability resolves (CR 702.122e), never
+                    // from another "becomes an artifact creature" effect.
+                    ['becomesCrewed']
+                  : ['dealsCombatDamageToPlayer'];
     body = m[3] as string;
 
     let subject: TriggerSubject;
@@ -3973,7 +4370,28 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       if (selector === null) return null;
       subject = { kind: 'permanent', selector };
     }
-    heads = events.map((when) => ({ when, subject }));
+    // "enters from a graveyard" / "enters from your graveyard" (CR 603.6a): the origin zone is
+    // part of the enters event, read off the permanent as it arrives.
+    const origin = event.match(/^enters from (a|your) graveyard$/);
+    // "is put into a graveyard … or … into exile from the battlefield" / "dies or is put into
+    // exile from the battlefield": a leave event narrowed to those destinations.
+    const leavesTo = event.endsWith('into exile from the battlefield')
+      ? (['graveyard', 'exile'] as ('graveyard' | 'exile')[])
+      : undefined;
+    heads = events.map((when) =>
+      leavesTo !== undefined
+        ? { when, subject, leavesTo }
+        : origin === null
+          ? { when, subject }
+          : {
+              when,
+              subject,
+              entersFrom: {
+                zone: 'graveyard' as const,
+                ...(origin[1] === 'your' ? { graveyardOwner: 'you' as const } : {}),
+              },
+            },
+    );
   }
 
   if (continuation.length > 0) body += '\n' + continuation;
@@ -3994,7 +4412,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // Intervening-if (CR 603.4) sits between the head and the effect.
   let condition: Condition | undefined = implicitCondition;
   const iff = body.match(INTERVENING_IF_RE);
-  if (iff !== null) {
+  if (iff !== null && iff[1] === 'none of them were cast or no mana was spent to cast them') {
+    // Satoru: a fact about each entering permanent's cast record, read by the enters dispatcher
+    // over the whole firing rather than as a board condition.
+    if (heads.some((head) => head.when !== 'enters')) return null;
+    heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
+    body = iff[2] as string;
+  } else if (iff !== null) {
     const parsed = parseConditionClause(iff[1] as string, card);
     if (parsed === null) return null;
     condition = parsed;
@@ -4084,7 +4508,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseLookAtTopBlock(body, card) ??
         parseExileTopPlayableBlock(body) ??
         parseAddManaTriggerBlock(body, card) ??
-        parseHellkiteCourserBlock(body, alloc, card))
+        parseHellkiteCourserBlock(body, alloc, card) ??
+        parseDoublePowerThoseGainBlock(body) ??
+        parseDepartedSourceToLibraryBlock(body, heads) ??
+        parseExileReturnAtNextEndStepBlock(body, alloc) ??
+        parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);
   if (effects === null) {
     effects = [];
@@ -5107,6 +5535,9 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   };
   const effects: Effect[] =
     parseHerdHeirloomEffect(split.effectText, alloc, card) ??
+    parseGraveyardExileCreatureRider(split.effectText, alloc) ??
+    parseExileReturnAtNextEndStepBlock(split.effectText, alloc) ??
+    parseDiesThisTurnReturnTappedBlock(split.effectText, alloc) ??
     // Same reason as the spell path: this block's later sentences refer back to the first
     // ("them", "the rest"), so it must be matched whole rather than sentence by sentence.
     // Sensei's Divining Top prints it as an activated ability, not as a spell.
@@ -5396,6 +5827,24 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       if (tr !== null && tr.length > 0) {
         return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
       }
+    }
+  }
+  // "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw
+  // a card.\"" (Candlekeep Sage): ownership, not control (CR 108.3), so a commander an opponent
+  // controls still has it, and the granted trigger is controlled by the creature's controller.
+  {
+    const m = lower.match(/^commander creatures you own have "(.+)"$/);
+    if (m) {
+      const affects = allOf(IS_COMMANDER, ofType('Creature'), { kind: 'owner', who: 'you' });
+      // The printed casing, so the granted ability reads as printed on the board.
+      const quoted = (m[1] as string).replace(/\.$/, '');
+      const at = card.oracleText.toLowerCase().indexOf(quoted);
+      const tr = parseTriggerLine(
+        at < 0 ? quoted : card.oracleText.slice(at, at + quoted.length),
+        card,
+      );
+      if (tr === null || tr.length === 0) return null;
+      return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
     }
   }
   // Anthems and lords â€” "Creatures you control get +1/+1", "Other Elves you control have haste".
@@ -6412,7 +6861,9 @@ export function interpretCard(card: OracleCard): CardDefinition {
             parseCounterAndCreateTokenBlock(spellBlockText, card) ??
             parseDestroyAndCreateTokenBlock(spellBlockText, card) ??
             parseReanimateBlock(spellBlockText, card) ??
-            parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card);
+            parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
+            parseLivingDeathBlock(spellBlockText) ??
+            parseVictimizeBlock(spellBlockText);
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);
@@ -6697,6 +7148,19 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
     }
 
+    // Persist and undying (CR 702.79a, 702.93a): each is a dies trigger with an intervening-if
+    // read from the permanent's last-known counters, returning the card it became.
+    if (lower === 'persist' || lower === 'undying') {
+      const counter = lower === 'persist' ? '-1/-1' : '+1/+1';
+      triggers.push(
+        triggered(onDies(), {
+          condition: { kind: 'sourceHasCounters', counter, cmp: '<=', n: 0 },
+          effects: [{ op: 'returnDiedSourceToBattlefield', counter }],
+          description: lower === 'persist' ? 'Persist' : 'Undying',
+        }),
+      );
+      continue;
+    }
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {
       const parsed = parseKeywordLine(lower.replace(/;/g, ','));

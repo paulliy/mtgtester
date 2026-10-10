@@ -423,6 +423,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           trigger.scope?.eventPlayerId,
           undefined,
           trigger.sourceCardId,
+          true,
+          trigger.sourceFacts,
         ).length,
     );
     if (selections.length === 0) {
@@ -476,6 +478,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       trigger.scope?.eventPlayerId,
       undefined,
       trigger.sourceCardId,
+      true,
+      trigger.sourceFacts,
     );
     if (options.length === 0) {
       emit(
@@ -574,6 +578,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
           trigger.scope?.eventPlayerId,
           chosen,
           trigger.sourceCardId,
+          true,
+          trigger.sourceFacts,
         ).filter((id) => !alreadyChosen.has(id) && !picked.includes(id)),
       );
       if (candidates.length === 0) break;

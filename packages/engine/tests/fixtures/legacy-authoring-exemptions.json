@@ -103,18 +103,8 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "1e380718682a015c19f1603081f3a68db49abab947589e4082da89206ceedd84",
-      "description": "Blossoming Defense"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "fb73f68a80d0d9622cc2fa446090781b3b842ed99ce10095001bedab84c2d69f",
       "description": "Chain Reaction"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "5481cbc6e3263de9d10e9201b7d9ae0b93542d0604d6226fafec5c86f0db96b8",
-      "description": "Return to Nature"
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
@@ -148,7 +138,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "b6e8392625a27cc5c75072dccf063902549cb084bd306f0b28ed66cf2aef3253",
+      "sha256": "edd65f9e1e18f0145d473394450b4a73f5f6db9fa19e978e4297071fc08ecef3",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {
@@ -353,7 +343,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "2d5ee1bea055ab1e174613083774638a1b876598cabcfb83639ba8bc14ef9d18",
+      "sha256": "a41cd7e99ca4242d188922519c1a7819bf397de443a8ba226121d3b62911a546",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -528,7 +518,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "8278e3d25e1e43295035caaadb5b69781bfaf049984b9307f616ead10a3d4a84",
+      "sha256": "7ac2f7ef95f32ce8e8764831cbedac8340ef404f0ae132081b64e64eccef9de6",
       "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
     },
     {
@@ -633,7 +623,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "d395a1c542f6d214c0a5b05f471c53c1db065ab6a288aa4882740bbe97b15193",
+      "sha256": "9c58b04773691be154cbc5168de4f68cf42ac9eccc4ed6cdbd30f355698fb7d1",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {
@@ -668,12 +658,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "b9ec9df1367e382a2057c84dfc0e89af05ccadec75d07f1aade55a8940d3ee17",
-      "description": "Loran of the Third Path"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "9e7994ddcc8069cb8f9a13042fcd3135482a032e307784b68420503bac4d2c54",
+      "sha256": "0555f9776d7f3e33b761aface5c5a5c6db6c9f7e6ebe9f566f87245fd29ed6fd",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {

@@ -25,6 +25,7 @@ import type {
   PlayerId,
   PlayerState,
   StackObject,
+  Zone,
 } from '@mtg/shared';
 import type { ManaEntry, TriggerWhen } from '../cards/ability';
 import type {
@@ -59,7 +60,7 @@ export interface EngineObject extends GameObject {
   escaped?: boolean;
 }
 
-export interface EnginePermanent extends PermanentState, EngineObject {
+export interface EnginePermanent extends PermanentState, EngineObject, CastRecord {
   /** Departure facts belong to this old object only; reincarnation never copies them. */
   lastKnownFacts?: ObjectFacts;
   /** First public destination of this departing incarnation, for CR 400.7e triggers. */
@@ -90,6 +91,12 @@ export interface EnginePermanent extends PermanentState, EngineObject {
   timestamp: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
+  /**
+   * The zone this object moved from to enter the battlefield ("enters from a graveyard",
+   * CR 603.6a): `stack` for a resolving permanent spell. Absent for a token or a permanent-spell
+   * copy, which did not come from any zone.
+   */
+  enteredFromZone?: Zone;
   /** Independent goad requirements, one for each player that has goaded this permanent. */
   goadedBy?: GoadRequirement[];
   /** Latched during declare attackers for "had to attack this combat" triggers. */
@@ -167,7 +174,18 @@ export interface EnginePermanent extends PermanentState, EngineObject {
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
-export interface EngineCardObject extends EngineObject {
+/**
+ * How a spell was cast (CR 601.2): who cast it, the zone it was cast from and the mana spent on
+ * it. Carried by the spell's card and by the permanent that spell becomes, and by nothing after
+ * (CR 400.7): a card put onto the battlefield any other way, or a copy of a spell, was not cast.
+ */
+export interface CastRecord {
+  castByPlayerId?: PlayerId;
+  castFromZone?: Zone;
+  manaSpentToCast?: number;
+}
+
+export interface EngineCardObject extends EngineObject, CastRecord {
   /** X announced when this card was cast, retained while it resolves into a permanent. */
   announcedX?: number;
   optionalCostCounts?: Partial<Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>>;
@@ -175,10 +193,21 @@ export interface EngineCardObject extends EngineObject {
   treasureManaSpentToCast?: number;
   /** Counters last held while this card was a permanent, for death-triggered effects. */
   rememberedCounters?: Record<string, number>;
+  /**
+   * The battlefield object this card was until it moved here (CR 400.7e): an ability that
+   * triggered on that permanent leaving can find this new object, and only this one. A later
+   * zone change makes a new object without the link.
+   */
+  leftBattlefieldObjectId?: ObjectId;
   /** 903.9a flag — see `EnginePermanent.commanderSbaPending`. */
   commanderSbaPending?: boolean;
   /** For cards exiled by Hideaway (Spinerock Knoll, Mosswort Bridge). */
   attachedToCardId?: string;
+  /**
+   * The permanent object whose Hideaway exiled this card (CR 607.2a): a later incarnation of the
+   * same card is a different object, with its own linked card.
+   */
+  attachedToObjectId?: ObjectId;
   /** For Adventure cards in exile (CR 715.3d). */
   onAdventure?: boolean;
   /**
@@ -512,6 +541,11 @@ export interface EngineState extends GameState {
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   /**
+   * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,
+   * so it covers creatures that arrive after it resolved too (CR 611.2c). Reset each turn.
+   */
+  creaturesCantBeBlockedThisTurn: boolean;
+  /**
    * Cards exiled "until SOURCE leaves the battlefield" (Conclave Tribunal), keyed by the
    * source's card id, so `moveObject` can find and return them all when the source itself
    * leaves (CR 610.3c — they return under their owners' control). The exiled
@@ -548,6 +582,12 @@ export interface GameContext {
   resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
   /** CR 608.2h departure information for objects moved by the resolving effect. */
   resolutionObjectFacts?: Map<ObjectId, ObjectFacts>;
+  /**
+   * Card ids of permanents already placed by the simultaneous entry being built. They were not
+   * on the battlefield before that event, so their entry replacements do not apply to fellow
+   * entrants (CR 614.12).
+   */
+  enteringTogether?: ReadonlySet<CardId>;
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

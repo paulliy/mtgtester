@@ -185,6 +185,7 @@ function* payAttackTax(
 function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePermanent): boolean {
   if (blocker.tapped || blocker.cantBlock === true || attacker.cantBeBlocked === true) return false;
   if (computeCharacteristics(ctx, attacker).cantBeBlocked) return false;
+  if (ctx.state.creaturesCantBeBlockedThisTurn) return false;
   for (const champion of ctx.state.battlefield) {
     if (champion.controllerId === attacker.controllerId) {
       const def = ctx.defs.get(champion.oracleId);

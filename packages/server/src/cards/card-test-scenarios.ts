@@ -222,6 +222,11 @@ const COVERAGE_PR02: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr02-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR03 cards that had no earlier pinned fixture. */
+const COVERAGE_PR03: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr03-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -7387,6 +7392,1238 @@ function mosswortCastingScenario(
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Coverage PR03 (docs/plans/card-coverage-chunks.md): zone-change history, last-known
+// information, death and return.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * An opponent seat that casts `spell` the first time it may, aiming every target slot at P1 when
+ * P1 is a legal choice (otherwise at the slot's first option), and otherwise passes.
+ */
+function castWhenAble(spell: string): DecisionProvider {
+  let cast = false;
+  return {
+    decide(request) {
+      const action = cast
+        ? undefined
+        : request.legalActions.find((candidate) =>
+            candidate.description.startsWith(`Cast ${spell}`),
+          );
+      if (action !== undefined) {
+        cast = true;
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function triarchPraetorianScenario(gameId: GameId): CardTestScenario {
+  const praetorian = pinnedFrom(MARCHESA_BATCH1, 'Triarch Praetorian');
+  const swamps = [SWAMP, SWAMP, SWAMP, SWAMP, SWAMP];
+  return pr01Scenario(gameId, {
+    id: 'triarch-praetorian-viewer-unearth',
+    title: 'Triarch Praetorian: unearth it to draw two cards',
+    instructions: [
+      'Triarch Praetorian is in your graveyard and five Swamps are on the battlefield.',
+      'Activate its unearth ability from your graveyard for {4}{B}.',
+      'Pass to the end step: the unearthed Triarch Praetorian is exiled.',
+    ],
+    expectedOutcome:
+      'Triarch Praetorian returns with haste, its enters-from-a-graveyard trigger draws Lab Ox and Lab Zombie and costs 2 life, and it is exiled at the next end step.',
+    oracleSha256: praetorian.sha256,
+    clauseIds: [
+      'triarch-praetorian-flying',
+      'triarch-praetorian-dynastic-codes',
+      'triarch-praetorian-unearth',
+    ],
+    decks: {
+      P1: [praetorian.card, ...swamps, LAB_OX, LAB_ZOMBIE],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Triarch Praetorian'] }],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function canoptekTombSentinelScenario(gameId: GameId): CardTestScenario {
+  const sentinel = pinnedFrom(MARCHESA_BATCH1, 'Canoptek Tomb Sentinel');
+  const swamps = Array.from({ length: 7 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'canoptek-tomb-sentinel-viewer-unearth-exile',
+    title: "Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox",
+    instructions: [
+      'Canoptek Tomb Sentinel is in your graveyard and seven Swamps are on the battlefield.',
+      'Activate its unearth ability for {7}, then target Lab Ox with its enters-from-a-graveyard trigger.',
+      'Pass to the end step: the unearthed Canoptek Tomb Sentinel is exiled.',
+    ],
+    expectedOutcome:
+      'Canoptek Tomb Sentinel returns with haste and its trigger exiles Lab Ox (it would exile nothing if you chose no target); the Sentinel itself is exiled at the next end step.',
+    oracleSha256: sentinel.sha256,
+    clauseIds: [
+      'canoptek-tomb-sentinel-vigilance',
+      'canoptek-tomb-sentinel-exile-cannon',
+      'canoptek-tomb-sentinel-unearth',
+    ],
+    decks: {
+      P1: [sentinel.card, ...swamps],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Canoptek Tomb Sentinel'] }],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function glenElendraArchmageScenario(gameId: GameId): CardTestScenario {
+  const archmage = pinnedFrom(MARCHESA_BATCH1, 'Glen Elendra Archmage');
+  return pr01Scenario(gameId, {
+    id: 'glen-elendra-archmage-viewer-counter-persist',
+    title: "Glen Elendra Archmage: counter P3's spell, then persist",
+    instructions: [
+      "P3's Lab Pending Spell is on the stack; Glen Elendra Archmage and an Island are on your battlefield.",
+      'Activate the Archmage for {U}, sacrificing it, and target Lab Pending Spell.',
+    ],
+    expectedOutcome:
+      'Lab Pending Spell is countered, and persist returns Glen Elendra Archmage as a 1/1 with a -1/-1 counter.',
+    oracleSha256: archmage.sha256,
+    clauseIds: [
+      'glen-elendra-archmage-flying',
+      'glen-elendra-archmage-counter',
+      'glen-elendra-archmage-persist',
+    ],
+    decks: {
+      P1: [archmage.card, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: [ARCANE_PENDING_SPELL, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Glen Elendra Archmage', 'Island'] }],
+      stack: [{ playerId: 'P3', cardNames: ['Lab Pending Spell'] }],
+    },
+  });
+}
+
+function flayerOfTheHateboundScenario(gameId: GameId): CardTestScenario {
+  const flayer = pinnedFrom(MARCHESA_BATCH1, 'Flayer of the Hatebound');
+  return pr01Scenario(gameId, {
+    id: 'flayer-of-the-hatebound-viewer-undying-damage',
+    title: 'Flayer of the Hatebound: destroy it, undying, deal 5 to P2',
+    instructions: [
+      'Flayer of the Hatebound and two Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Cast Lab Doom on Flayer of the Hatebound.',
+      'Undying returns it; aim its enters-from-your-graveyard trigger at P2.',
+    ],
+    expectedOutcome:
+      'Flayer of the Hatebound returns with a +1/+1 counter as a 5/3, and deals 5 damage to P2.',
+    oracleSha256: flayer.sha256,
+    clauseIds: ['flayer-of-the-hatebound-undying', 'flayer-of-the-hatebound-graveyard-damage'],
+    decks: {
+      P1: [flayer.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Flayer of the Hatebound', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
+function kambalScenario(gameId: GameId): CardTestScenario {
+  const kambal = pinnedFrom(MARCHESA_BATCH1, 'Kambal, Consul of Allocation');
+  return pr01Scenario(gameId, {
+    id: 'kambal-viewer-opponent-noncreature-spell',
+    title: "Kambal, Consul of Allocation: tax P2's noncreature spell",
+    instructions: [
+      'Kambal is on your battlefield; Lab Pending Spell is in your hand.',
+      'Cast Lab Pending Spell: your own noncreature spell does not trigger Kambal.',
+      'P2 casts Lab Shock at you when it gets priority.',
+    ],
+    expectedOutcome:
+      "Only P2's Lab Shock triggers Kambal: P2 loses 2 life and you gain 2 life, then Lab Shock deals 2 damage to you.",
+    oracleSha256: kambal.sha256,
+    clauseIds: ['kambal-opponent-noncreature-tax'],
+    decks: {
+      P1: [kambal.card, ARCANE_PENDING_SPELL, FOREST, LAB_OX],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Pending Spell'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kambal, Consul of Allocation', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Shock') },
+  });
+}
+
+function gleefulArsonistScenario(gameId: GameId): CardTestScenario {
+  const arsonist = pinnedFrom(MARCHESA_BATCH1, 'Gleeful Arsonist');
+  return pr01Scenario(gameId, {
+    id: 'gleeful-arsonist-viewer-burn-and-undying',
+    title: 'Gleeful Arsonist: burn P2 for casting, then undying',
+    instructions: [
+      'Gleeful Arsonist and two Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Cast Lab Doom on Gleeful Arsonist. P2 responds by casting Lab Shock at you.',
+    ],
+    expectedOutcome:
+      'Lab Shock triggers the Arsonist, which deals 1 damage to P2; Lab Doom then destroys it and undying returns it as a 2/3 with a +1/+1 counter.',
+    oracleSha256: arsonist.sha256,
+    clauseIds: ['gleeful-arsonist-burn-caster', 'gleeful-arsonist-undying'],
+    decks: {
+      P1: [arsonist.card, LAB_DOOM, SWAMP, SWAMP, LAB_OX],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Doom'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Gleeful Arsonist', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Shock') },
+  });
+}
+
+function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
+  const shard = pinnedFrom(MARCHESA_BATCH1, 'Shard of the Nightbringer');
+  const swamps = Array.from({ length: 8 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'shard-of-the-nightbringer-viewer-cast-drain',
+    title: "Shard of the Nightbringer: cast it to drain half of P2's life",
+    instructions: [
+      'Shard of the Nightbringer is in your hand and eight Swamps are on the battlefield.',
+      'Cast it, then target P2 with its if-you-cast-it trigger.',
+    ],
+    expectedOutcome: 'P2 loses half their life (20) and you gain 20 life.',
+    oracleSha256: shard.sha256,
+    clauseIds: ['shard-of-the-nightbringer-flying', 'shard-of-the-nightbringer-drain-life'],
+    decks: {
+      P1: [shard.card, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Shard of the Nightbringer'] }],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) }],
+    },
+  });
+}
+
+function satoruScenario(gameId: GameId): CardTestScenario {
+  const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
+  const ornithopter = card({
+    oracleId: 'lab-satoru-ornithopter',
+    name: 'Lab Ornithopter',
+    typeLine: 'Artifact Creature — Thopter',
+    manaCost: '{0}',
+    cmc: 0,
+    power: '0',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'satoru-viewer-free-cast-draws',
+    title: 'Satoru, the Infiltrator: a free creature draws, a paid one does not',
+    instructions: [
+      'Satoru and a Forest are on your battlefield; Lab Ornithopter ({0}) and Lab Zombie ({1}) are in your hand.',
+      'Cast Lab Ornithopter for no mana: Satoru draws a card.',
+      'Cast Lab Zombie with the Forest: mana was spent, so Satoru does not draw.',
+    ],
+    expectedOutcome: 'You draw exactly one card (Lab Ox), from Lab Ornithopter entering.',
+    oracleSha256: satoru.sha256,
+    clauseIds: ['satoru-menace', 'satoru-uncast-or-free-draw'],
+    decks: {
+      P1: [satoru.card, ornithopter, LAB_ZOMBIE, FOREST, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ornithopter', 'Lab Zombie'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Satoru, the Infiltrator', 'Forest'] }],
+    },
+  });
+}
+
+/** A fully interpreted flashback instant: the PR03 graveyard-cast scenarios cast it from there. */
+const LAB_FLASH_BOLT = card({
+  oracleId: 'lab-keeper-flash-bolt',
+  name: 'Lab Flash Bolt',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'Lab Flash Bolt deals 1 damage to any target.\nFlashback {1}{R}',
+});
+
+function keeperOfSecretsScenario(gameId: GameId): CardTestScenario {
+  const keeper = pinnedFrom(COVERAGE_PR03, 'Keeper of Secrets');
+  return pr01Scenario(gameId, {
+    id: 'keeper-of-secrets-viewer-flashback',
+    title: 'Keeper of Secrets: flash back a spell to ping P2',
+    instructions: [
+      'Keeper of Secrets and two Mountains are on your battlefield; Lab Flash Bolt is in your graveyard.',
+      'Cast Lab Flash Bolt from your graveyard for its flashback cost, targeting P3.',
+      "Aim Keeper of Secrets' trigger at P2.",
+    ],
+    expectedOutcome:
+      'Keeper of Secrets deals 1 damage (the spell’s mana value) to P2, then Lab Flash Bolt deals 1 damage to P3 and is exiled.',
+    oracleSha256: keeper.sha256,
+    clauseIds: ['keeper-of-secrets-keywords', 'keeper-of-secrets-symphony-of-pain'],
+    decks: {
+      P1: [keeper.card, LAB_FLASH_BOLT, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Keeper of Secrets', 'Mountain', 'Mountain'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Flash Bolt'] }],
+    },
+  });
+}
+
+function riverKelpieScenario(gameId: GameId): CardTestScenario {
+  const kelpie = pinnedFrom(MARCHESA_BATCH1, 'River Kelpie');
+  return pr01Scenario(gameId, {
+    id: 'river-kelpie-viewer-flashback-and-persist',
+    title: 'River Kelpie: draw from a flashback and from persist',
+    instructions: [
+      'River Kelpie, two Mountains and two Swamps are on your battlefield; Lab Flash Bolt is in your graveyard and Lab Doom is in your hand.',
+      'Cast Lab Flash Bolt from your graveyard (flashback), targeting P2: a spell cast from a graveyard draws a card.',
+      'Cast Lab Doom on River Kelpie: persist returns it from your graveyard, and it draws a card again.',
+    ],
+    expectedOutcome:
+      'You draw Lab Ox and Lab Zombie, P2 takes 1 damage, and River Kelpie is back with a -1/-1 counter.',
+    oracleSha256: kelpie.sha256,
+    clauseIds: [
+      'river-kelpie-enters-from-graveyard',
+      'river-kelpie-cast-from-graveyard',
+      'river-kelpie-persist',
+    ],
+    decks: {
+      P1: [
+        kelpie.card,
+        LAB_FLASH_BOLT,
+        LAB_DOOM,
+        MOUNTAIN,
+        MOUNTAIN,
+        SWAMP,
+        SWAMP,
+        LAB_OX,
+        LAB_ZOMBIE,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['River Kelpie', 'Mountain', 'Mountain', 'Swamp', 'Swamp'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Flash Bolt'] }],
+    },
+  });
+}
+
+function auroraPhoenixScenario(gameId: GameId): CardTestScenario {
+  const phoenix = pinnedFrom(COVERAGE_PR03, 'Aurora Phoenix');
+  const cascader = card({
+    oracleId: 'lab-phoenix-cascader',
+    name: 'Lab Cascader',
+    typeLine: 'Creature — Elemental',
+    manaCost: '{2}{R}',
+    cmc: 3,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Cascade',
+  });
+  return pr01Scenario(gameId, {
+    id: 'aurora-phoenix-viewer-cascade-return',
+    title: 'Aurora Phoenix: cast a cascade spell to return it',
+    instructions: [
+      'Aurora Phoenix is in your graveyard; Lab Cascader (cascade) is in your hand with three Mountains.',
+      'Cast Lab Cascader: the Phoenix returns from your graveyard to your hand.',
+    ],
+    expectedOutcome:
+      'Aurora Phoenix returns to your hand; cascade exiles your two lands, finds nothing, and puts them on the bottom.',
+    oracleSha256: phoenix.sha256,
+    clauseIds: ['aurora-phoenix-return'],
+    decks: {
+      P1: [phoenix.card, cascader, MOUNTAIN, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Cascader'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Mountain'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Aurora Phoenix'] }],
+    },
+  });
+}
+
+/** Casts Aurora Phoenix itself: its own cascade finds a cheaper spell, and it flies. */
+function auroraPhoenixCastScenario(gameId: GameId): CardTestScenario {
+  const phoenix = pinnedFrom(COVERAGE_PR03, 'Aurora Phoenix');
+  const hit = card({
+    oracleId: 'lab-phoenix-cascade-hit',
+    name: 'Lab Cascade Hit',
+    typeLine: 'Creature — Elemental',
+    manaCost: '{1}{R}',
+    cmc: 2,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    power: '1',
+    toughness: '1',
+  });
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'aurora-phoenix-viewer-cast-cascade-flying',
+    title: 'Aurora Phoenix: cast it, cascade into a cheaper spell, and see it fly',
+    instructions: [
+      'Aurora Phoenix is in your hand and six Mountains are on your battlefield; a Forest and then Lab Cascade Hit are on top of your library.',
+      'Cast Aurora Phoenix: its cascade exiles the Forest, then Lab Cascade Hit, the first nonland card that costs less.',
+      'Cast Lab Cascade Hit without paying its mana cost, then let both spells resolve.',
+    ],
+    expectedOutcome:
+      'Lab Cascade Hit resolves first, then Aurora Phoenix enters as a 5/3 with flying; the exiled Forest goes to the bottom of your library.',
+    oracleSha256: phoenix.sha256,
+    clauseIds: ['aurora-phoenix-flying', 'aurora-phoenix-cascade'],
+    decks: {
+      P1: [phoenix.card, hit, ...mountains, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Aurora Phoenix'] }],
+      battlefield: [{ playerId: 'P1', cardNames: mountains.map((mountain) => mountain.name) }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Forest', 'Lab Cascade Hit'] }],
+    },
+  });
+}
+
+function watcherForTomorrowScenario(gameId: GameId): CardTestScenario {
+  const watcher = pinnedFrom(MARCHESA_BATCH1, 'Watcher for Tomorrow');
+  return pr01Scenario(gameId, {
+    id: 'watcher-for-tomorrow-viewer-hideaway-leaves',
+    title: 'Watcher for Tomorrow: hide a card, then get it back as it leaves',
+    instructions: [
+      'Cast Watcher for Tomorrow with two Islands: it enters tapped; hide one of the top four cards.',
+      'Cast Lab Doom on Watcher for Tomorrow with two Swamps.',
+    ],
+    expectedOutcome:
+      'Watcher for Tomorrow dies and its leaves-the-battlefield trigger puts the hidden card into your hand.',
+    oracleSha256: watcher.sha256,
+    clauseIds: [
+      'watcher-for-tomorrow-hideaway',
+      'watcher-for-tomorrow-enters-tapped',
+      'watcher-for-tomorrow-leaves',
+    ],
+    decks: {
+      P1: [
+        watcher.card,
+        LAB_DOOM,
+        ISLAND,
+        ISLAND,
+        SWAMP,
+        SWAMP,
+        LAB_OX,
+        LAB_ZOMBIE,
+        LAB_SERVO,
+        LAB_BIRD,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Watcher for Tomorrow', 'Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Island', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
+function psychomancerScenario(gameId: GameId): CardTestScenario {
+  const psycho = pinnedFrom(MARCHESA_BATCH1, 'Psychomancer');
+  const shatter = card({
+    oracleId: 'lab-psycho-shatter',
+    name: 'Lab Shatter',
+    typeLine: 'Instant',
+    manaCost: '{1}{R}',
+    cmc: 2,
+    colors: ['R'],
+    colorIdentity: ['R'],
+    oracleText: 'Destroy target artifact.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'psychomancer-viewer-artifact-drain',
+    title: 'Psychomancer: drain P2 when your artifact is destroyed',
+    instructions: [
+      'Psychomancer, Lab Anrakyr Relic and two Mountains are on your battlefield; Lab Shatter is in your hand.',
+      'Cast Lab Shatter on your own Lab Anrakyr Relic, then aim Psychomancer’s trigger at P2.',
+    ],
+    expectedOutcome: 'Lab Anrakyr Relic is destroyed; P2 loses 1 life and you gain 1 life.',
+    oracleSha256: psycho.sha256,
+    clauseIds: ['psychomancer-flying', 'psychomancer-harbinger-of-despair'],
+    decks: {
+      P1: [psycho.card, LAB_ANRAKYR_RELIC, shatter, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Shatter'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Psychomancer', 'Lab Anrakyr Relic', 'Mountain', 'Mountain'],
+        },
+      ],
+    },
+  });
+}
+
+function shardOfTheVoidDragonScenario(gameId: GameId): CardTestScenario {
+  const shard = pinnedFrom(MARCHESA_BATCH1, 'Shard of the Void Dragon');
+  return pr01Scenario(gameId, {
+    id: 'shard-of-the-void-dragon-viewer-attack-edict',
+    title: 'Shard of the Void Dragon: attack, and grow from the sacrificed artifact',
+    instructions: [
+      'Shard of the Void Dragon is on your battlefield; P2 controls Lab Anrakyr Relic and a Forest.',
+      'Attack P2 with Shard of the Void Dragon.',
+    ],
+    expectedOutcome:
+      'Each opponent sacrifices a nonland permanent: P2 loses Lab Anrakyr Relic, so Matter Absorption puts two +1/+1 counters on the Shard, which deals 9 combat damage to P2.',
+    oracleSha256: shard.sha256,
+    clauseIds: [
+      'shard-of-the-void-dragon-flying',
+      'shard-of-the-void-dragon-spear',
+      'shard-of-the-void-dragon-matter-absorption',
+    ],
+    decks: {
+      P1: [shard.card, SWAMP],
+      P2: [LAB_ANRAKYR_RELIC, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Shard of the Void Dragon'] },
+        { playerId: 'P2', cardNames: ['Lab Anrakyr Relic', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function scavengingOozeScenario(gameId: GameId): CardTestScenario {
+  const ooze = pinnedFrom(MARCHESA_BATCH1, 'Scavenging Ooze');
+  return pr01Scenario(gameId, {
+    id: 'scavenging-ooze-viewer-exile-creature',
+    title: 'Scavenging Ooze: exile a creature card to grow and gain life',
+    instructions: [
+      'Scavenging Ooze and a Forest are on your battlefield; Lab Ox is in your graveyard.',
+      'Activate the Ooze for {G}, targeting Lab Ox in your graveyard.',
+    ],
+    expectedOutcome: 'Lab Ox is exiled; the Ooze gets a +1/+1 counter and you gain 1 life.',
+    oracleSha256: ooze.sha256,
+    clauseIds: ['scavenging-ooze-exile'],
+    decks: {
+      P1: [ooze.card, LAB_OX, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Scavenging Ooze', 'Forest'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function imotekhScenario(gameId: GameId): CardTestScenario {
+  const imotekh = pinnedFrom(MARCHESA_BATCH1, 'Imotekh the Stormlord');
+  const construct = card({
+    oracleId: 'lab-imotekh-construct',
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '1',
+    toughness: '1',
+  });
+  const reanimate = card({
+    oracleId: 'lab-imotekh-reanimate',
+    name: 'Lab Reanimate',
+    typeLine: 'Sorcery',
+    manaCost: '{1}{B}',
+    cmc: 2,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    oracleText: 'Return target creature card from your graveyard to the battlefield.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'imotekh-viewer-phaeron-and-strategist',
+    title: 'Imotekh the Stormlord: reanimate an artifact, then buff it at combat',
+    instructions: [
+      'Imotekh and two Swamps are on your battlefield; Lab Construct is in your graveyard and Lab Reanimate in your hand.',
+      'Cast Lab Reanimate on Lab Construct: an artifact card left your graveyard, so make two Necron Warriors.',
+      'At the beginning of combat, give Lab Construct +2/+2 and menace.',
+    ],
+    expectedOutcome:
+      'Lab Construct returns, two 2/2 Necron Warrior tokens are created, and Lab Construct is 3/3 with menace this turn.',
+    oracleSha256: imotekh.sha256,
+    clauseIds: ['imotekh-phaeron', 'imotekh-grand-strategist'],
+    decks: {
+      P1: [imotekh.card, construct, reanimate, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Reanimate'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Imotekh the Stormlord', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Construct'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function theOozeScenario(gameId: GameId): CardTestScenario {
+  const ooze = pinnedFrom(MARCHESA_BATCH1, 'The Ooze');
+  const mutant = card({
+    oracleId: 'lab-the-ooze-mutant',
+    name: 'Lab Mutant',
+    typeLine: 'Creature — Mutant',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  const banish = card({
+    oracleId: 'lab-the-ooze-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'the-ooze-viewer-leave-and-exile',
+    title: 'The Ooze: Mutagens from a leaving creature and a graveyard exile',
+    instructions: [
+      'The Ooze, a Forest, and Lab Mutant with two +1/+1 counters are on your battlefield; Lab Banish is in your hand and Lab Ox is in your graveyard.',
+      'Cast Lab Banish on Lab Mutant: it leaves the battlefield with two +1/+1 counters, so create two Mutagen tokens.',
+      'Tap The Ooze to exile Lab Ox from your graveyard and create a third Mutagen.',
+    ],
+    expectedOutcome:
+      'Lab Mutant and Lab Ox are exiled, The Ooze is tapped, and you control three Mutagen tokens.',
+    oracleSha256: ooze.sha256,
+    clauseIds: ['the-ooze-leave-trigger', 'the-ooze-exile'],
+    decks: {
+      P1: [ooze.card, mutant, banish, LAB_OX, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Banish'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['The Ooze', 'Forest'] },
+        { playerId: 'P1', cardNames: ['Lab Mutant'], counters: { '+1/+1': 2 } },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+function godEternalRhonasScenario(gameId: GameId): CardTestScenario {
+  const rhonas = pinnedFrom(COVERAGE_PR03, 'God-Eternal Rhonas');
+  const banish = card({
+    oracleId: 'lab-rhonas-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'god-eternal-rhonas-viewer-double-and-return',
+    title: 'God-Eternal Rhonas: double your creatures, then go third from the top',
+    instructions: [
+      'Lab Ox (4/4) and six Forests are on your battlefield; God-Eternal Rhonas and Lab Banish are in your hand, and your library holds three cards.',
+      'Cast God-Eternal Rhonas: Lab Ox has its power doubled and gains vigilance until end of turn.',
+      'Cast Lab Banish on God-Eternal Rhonas, then choose to put it into your library third from the top.',
+    ],
+    expectedOutcome:
+      'Lab Ox is 8/4 with vigilance, and God-Eternal Rhonas is the third card of your library.',
+    oracleSha256: rhonas.sha256,
+    clauseIds: [
+      'god-eternal-rhonas-deathtouch',
+      'god-eternal-rhonas-enters',
+      'god-eternal-rhonas-leaves',
+    ],
+    decks: {
+      P1: [
+        rhonas.card,
+        banish,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        LAB_OX,
+        ...Array.from({ length: 6 }, () => FOREST),
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['God-Eternal Rhonas', 'Lab Banish'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Ox', 'Lab Ox'] }],
+    },
+  });
+}
+
+function candlekeepSageScenario(gameId: GameId): CardTestScenario {
+  const sage = pinnedFrom(COVERAGE_PR03, 'Candlekeep Sage');
+  const general = card({
+    oracleId: 'lab-candlekeep-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Human Soldier',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '3',
+    toughness: '3',
+  });
+  const banish = card({
+    oracleId: 'lab-candlekeep-banish',
+    name: 'Lab Banish',
+    typeLine: 'Sorcery',
+    manaCost: '{G}',
+    cmc: 1,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    oracleText: 'Exile target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'candlekeep-sage-viewer-commander-enters-and-leaves',
+    title: 'Candlekeep Sage: your commander draws as it enters and leaves',
+    instructions: [
+      'Candlekeep Sage and four Forests are on your battlefield; your commander, Lab General, is in the command zone and Lab Banish is in your hand.',
+      'Cast Lab General from the command zone: it enters, so draw a card.',
+      'Cast Lab Banish on Lab General: it leaves the battlefield, so draw another card.',
+    ],
+    expectedOutcome:
+      'You draw Lab Ox when Lab General enters and Lab Servo when it is exiled from the battlefield.',
+    oracleSha256: sage.sha256,
+    clauseIds: ['candlekeep-sage-grant'],
+    decks: {
+      P1: [sage.card, banish, LAB_OX, LAB_SERVO, FOREST, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Banish'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Candlekeep Sage', 'Forest', 'Forest', 'Forest', 'Forest'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] }],
+    },
+  });
+}
+
+function flickerwispScenario(gameId: GameId): CardTestScenario {
+  const wisp = pinnedFrom(COVERAGE_PR03, 'Flickerwisp');
+  return pr01Scenario(gameId, {
+    id: 'flickerwisp-viewer-exile-and-return',
+    title: "Flickerwisp: exile P2's creature until the next end step",
+    instructions: [
+      'Flickerwisp is in your hand and three Plains are on your battlefield; P2 controls Lab Ox.',
+      'Cast Flickerwisp, and when it enters exile Lab Ox.',
+      "Pass to the end step: Lab Ox returns to the battlefield under P2's control.",
+    ],
+    expectedOutcome:
+      "Lab Ox is exiled when Flickerwisp enters and returns under P2's control at the beginning of the end step.",
+    oracleSha256: wisp.sha256,
+    clauseIds: ['flickerwisp-flying', 'flickerwisp-enters'],
+    decks: {
+      P1: [wisp.card, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Flickerwisp'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Plains'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToEndStep: true,
+    },
+  });
+}
+
+function venserScenario(
+  gameId: GameId,
+  id:
+    | 'venser-viewer-plus-two-blink'
+    | 'venser-viewer-minus-one-unblockable'
+    | 'venser-viewer-minus-eight-emblem',
+): CardTestScenario {
+  const venser = pinnedFrom(COVERAGE_PR03, 'Venser, the Sojourner');
+  const divination = card({
+    oracleId: 'lab-venser-divination',
+    name: 'Lab Divination',
+    typeLine: 'Sorcery',
+    manaCost: '{U}',
+    cmc: 1,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    oracleText: 'Draw a card.',
+  });
+  const base = {
+    oracleSha256: venser.sha256,
+    decks: {
+      P1: [venser.card, divination, LAB_OX, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+  };
+  if (id === 'venser-viewer-plus-two-blink')
+    return pr01Scenario(gameId, {
+      ...base,
+      id,
+      title: 'Venser, the Sojourner: +2 blinks your Lab Ox at the end step',
+      instructions: [
+        'Venser (loyalty 3) and Lab Ox are on your battlefield.',
+        'Activate +2 targeting your Lab Ox: it is exiled.',
+        'Pass to the end step: Lab Ox returns to the battlefield under your control.',
+      ],
+      expectedOutcome:
+        'Venser has 5 loyalty; Lab Ox is exiled, then returns under your control at the beginning of the end step.',
+      clauseIds: ['venser-plus-two'],
+      prepared: {
+        hand: [],
+        battlefield: [{ playerId: 'P1', cardNames: ['Venser, the Sojourner', 'Lab Ox'] }],
+        continueToEndStep: true,
+      },
+    });
+  if (id === 'venser-viewer-minus-one-unblockable')
+    return pr01Scenario(gameId, {
+      ...base,
+      id,
+      title: 'Venser, the Sojourner: −1 makes creatures unblockable',
+      instructions: [
+        'Venser (loyalty 3) and Lab Ox are on your battlefield; P2 has an untapped Lab Ox.',
+        "Activate −1: creatures can't be blocked this turn.",
+        "Attack P2 with your Lab Ox: P2's Lab Ox cannot block it.",
+      ],
+      expectedOutcome: 'Venser has 2 loyalty, and your unblocked Lab Ox deals 4 damage to P2.',
+      clauseIds: ['venser-minus-one'],
+      prepared: {
+        hand: [],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Venser, the Sojourner', 'Lab Ox'] },
+          { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ],
+        continueThroughCombat: true,
+      },
+    });
+  return pr01Scenario(gameId, {
+    ...base,
+    id,
+    title: "Venser, the Sojourner: −8 emblem exiles P2's Lab Ox",
+    instructions: [
+      'Venser has 8 loyalty and an Island is on your battlefield; Lab Divination is in your hand and P2 has Lab Ox.',
+      'Activate −8 for the emblem, then cast Lab Divination.',
+      "The emblem triggers: exile P2's Lab Ox.",
+    ],
+    expectedOutcome:
+      "You have Venser's emblem, Venser is put into your graveyard with 0 loyalty, and casting Lab Divination exiles P2's Lab Ox.",
+    clauseIds: ['venser-minus-eight'],
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Divination'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Venser, the Sojourner'], counters: { loyalty: 8 } },
+        { playerId: 'P1', cardNames: ['Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function puppeteerCliqueScenario(gameId: GameId): CardTestScenario {
+  const clique = pinnedFrom(MARCHESA_BATCH1, 'Puppeteer Clique');
+  return pr01Scenario(gameId, {
+    id: 'puppeteer-clique-viewer-steal-attack-exile',
+    title: "Puppeteer Clique: steal P2's Lab Ox, attack, then exile it",
+    instructions: [
+      "Puppeteer Clique is in your hand and five Swamps are on your battlefield; Lab Ox is in P2's graveyard.",
+      "Cast Puppeteer Clique and put P2's Lab Ox onto the battlefield under your control; it has haste.",
+      'Attack P2 with Lab Ox, then pass to your end step: Lab Ox is exiled.',
+    ],
+    expectedOutcome:
+      'Lab Ox enters under your control with haste, deals 4 combat damage to P2, and is exiled at the beginning of your end step.',
+    oracleSha256: clique.sha256,
+    clauseIds: ['puppeteer-clique-flying', 'puppeteer-clique-enters'],
+    decks: {
+      P1: [clique.card, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Puppeteer Clique'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+  });
+}
+
+/** Puppeteer Clique dies to a normal removal spell and persist returns it with a -1/-1 counter. */
+function puppeteerCliquePersistScenario(gameId: GameId): CardTestScenario {
+  const clique = pinnedFrom(MARCHESA_BATCH1, 'Puppeteer Clique');
+  return pr01Scenario(gameId, {
+    id: 'puppeteer-clique-viewer-persist',
+    title: 'Puppeteer Clique: destroy it and persist returns it',
+    instructions: [
+      'Puppeteer Clique and two Swamps are on your battlefield; Lab Doom is in your hand. No opponent has a creature card in a graveyard.',
+      'Cast Lab Doom on Puppeteer Clique: it dies.',
+      "Persist returns it with a -1/-1 counter; its enters trigger finds no creature card in an opponent's graveyard and does nothing.",
+    ],
+    expectedOutcome:
+      'Puppeteer Clique is back on the battlefield as a new 2/1 flier with a -1/-1 counter, and Lab Doom is in your graveyard.',
+    oracleSha256: clique.sha256,
+    clauseIds: ['puppeteer-clique-persist'],
+    decks: {
+      P1: [clique.card, LAB_DOOM, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Puppeteer Clique', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
+function cryptekScenario(gameId: GameId): CardTestScenario {
+  const cryptek = pinnedFrom(MARCHESA_BATCH1, 'Cryptek');
+  const construct = card({
+    oracleId: 'lab-cryptek-construct',
+    name: 'Lab Construct',
+    typeLine: 'Artifact Creature — Construct',
+    manaCost: '{3}',
+    cmc: 3,
+    power: '1',
+    toughness: '1',
+  });
+  const doom = card({
+    oracleId: 'lab-cryptek-doom',
+    name: 'Lab Doom',
+    typeLine: 'Sorcery',
+    manaCost: '{B}',
+    cmc: 1,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    oracleText: 'Destroy target creature.',
+  });
+  return pr01Scenario(gameId, {
+    id: 'cryptek-viewer-dies-and-returns-tapped',
+    title: 'Cryptek: your Lab Construct dies and returns tapped',
+    instructions: [
+      'Cryptek, Lab Construct and three Swamps are on your battlefield; Lab Doom is in your hand.',
+      'Activate Cryptek for {1}{B}, targeting Lab Construct.',
+      'Cast Lab Doom on Lab Construct: it dies and returns to the battlefield tapped under your control.',
+    ],
+    expectedOutcome:
+      'Cryptek is tapped, Lab Construct is destroyed, and it returns to the battlefield tapped under your control.',
+    oracleSha256: cryptek.sha256,
+    clauseIds: ['cryptek-dies-this-turn'],
+    decks: {
+      P1: [cryptek.card, construct, doom, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Cryptek', 'Lab Construct', 'Swamp', 'Swamp', 'Swamp'] },
+      ],
+    },
+  });
+}
+
+function livingDeathScenario(gameId: GameId): CardTestScenario {
+  const death = pinnedFrom(MARCHESA_BATCH1, 'Living Death');
+  const zombie = card({
+    oracleId: 'lab-living-death-zombie',
+    name: 'Lab Risen Zombie',
+    typeLine: 'Creature — Zombie',
+    manaCost: '{1}{B}',
+    cmc: 2,
+    colors: ['B'],
+    colorIdentity: ['B'],
+    power: '2',
+    toughness: '2',
+  });
+  // Living Death acts on every player's graveyard: P2's creature card must come back for P2.
+  const bear = card({
+    oracleId: 'lab-living-death-bear',
+    name: 'Lab Risen Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'living-death-viewer-swap',
+    title: 'Living Death: swap the battlefield and graveyard creatures',
+    instructions: [
+      "Living Death is in your hand and five Swamps are on your battlefield with Lab Servo; Lab Risen Zombie is in your graveyard. Lab Ox is on P2's battlefield and Lab Risen Bear is in P2's graveyard.",
+      'Cast Living Death.',
+    ],
+    expectedOutcome:
+      "Lab Risen Zombie returns under your control and Lab Risen Bear returns under P2's control; Lab Servo and P2's Lab Ox are sacrificed into their owners' graveyards.",
+    oracleSha256: death.sha256,
+    clauseIds: ['living-death-swap'],
+    decks: {
+      P1: [death.card, zombie, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, bear, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Living Death'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      graveyard: [
+        { playerId: 'P1', cardNames: ['Lab Risen Zombie'] },
+        { playerId: 'P2', cardNames: ['Lab Risen Bear'] },
+      ],
+    },
+  });
+}
+
+function bodyLaundererScenario(
+  gameId: GameId,
+  id: 'body-launderer-viewer-connive' | 'body-launderer-viewer-return',
+): CardTestScenario {
+  const launderer = pinnedFrom(MARCHESA_BATCH1, 'Body Launderer');
+  if (id === 'body-launderer-viewer-connive')
+    return pr01Scenario(gameId, {
+      id,
+      title: 'Body Launderer: Lab Ox dies and it connives',
+      instructions: [
+        'Body Launderer, Lab Ox and two Swamps are on your battlefield; Lab Doom and Lab Servo are in your hand, and Lab Hex is on top of your library.',
+        'Cast Lab Doom targeting Lab Ox.',
+        'When Body Launderer connives, draw Lab Hex, then discard Lab Servo.',
+      ],
+      expectedOutcome:
+        'Lab Ox dies; you draw Lab Hex and discard Lab Servo, a nonland card, so Body Launderer gets a +1/+1 counter and is 4/4.',
+      oracleSha256: launderer.sha256,
+      clauseIds: ['body-launderer-connive'],
+      decks: {
+        P1: [launderer.card, LAB_OX, LAB_DOOM, LAB_SERVO, LAB_HEX, SWAMP, SWAMP, SWAMP],
+        P2: PR01_FILLER,
+        P3: PR01_FILLER,
+        P4: PR01_FILLER,
+      },
+      prepared: {
+        hand: [{ playerId: 'P1', cardNames: ['Lab Doom', 'Lab Servo'] }],
+        battlefield: [
+          { playerId: 'P1', cardNames: ['Body Launderer', 'Lab Ox', 'Swamp', 'Swamp'] },
+        ],
+        libraryTop: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
+      },
+    });
+  return pr01Scenario(gameId, {
+    id,
+    title: 'Body Launderer: it dies and returns Lab Servo, not Lab Ox',
+    instructions: [
+      'Body Launderer and two Swamps are on your battlefield; Lab Doom is in your hand; Lab Servo (power 1) and Lab Ox (power 4) are in your graveyard.',
+      'Cast Lab Doom targeting Body Launderer.',
+    ],
+    expectedOutcome:
+      "Body Launderer dies, and its trigger returns Lab Servo: Lab Ox's power 4 is greater than Body Launderer's 3, so it can't be chosen.",
+    oracleSha256: launderer.sha256,
+    clauseIds: ['body-launderer-return'],
+    decks: {
+      P1: [launderer.card, LAB_OX, LAB_DOOM, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Body Launderer', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Servo', 'Lab Ox'] }],
+    },
+  });
+}
+
+function victimizeScenario(gameId: GameId): CardTestScenario {
+  const victimize = pinnedFrom(COVERAGE_PR03, 'Victimize');
+  const bear = card({
+    oracleId: 'lab-victimize-bear',
+    name: 'Lab Fallen Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'victimize-viewer-sacrifice-and-return',
+    title: 'Victimize: sacrifice Lab Servo, return two creatures tapped',
+    instructions: [
+      'Victimize is in your hand and three Swamps are on your battlefield with Lab Servo; Lab Ox and Lab Fallen Bear are in your graveyard.',
+      'Cast Victimize targeting Lab Ox and Lab Fallen Bear.',
+      'As it resolves, sacrifice Lab Servo.',
+    ],
+    expectedOutcome:
+      'Lab Servo is sacrificed, and Lab Ox and Lab Fallen Bear return to the battlefield tapped under your control.',
+    oracleSha256: victimize.sha256,
+    clauseIds: ['victimize-spell'],
+    decks: {
+      P1: [victimize.card, LAB_OX, bear, LAB_SERVO, SWAMP, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Victimize'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Servo', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Ox', 'Lab Fallen Bear'] }],
+    },
+  });
+}
+
+function technomancerScenario(gameId: GameId): CardTestScenario {
+  const techno = pinnedFrom(MARCHESA_BATCH1, 'Technomancer');
+  const construct = (name: string, cost: '{3}' | '{0}', cmc: number) =>
+    card({
+      oracleId: `lab-technomancer-${cmc}`,
+      name,
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: cost,
+      cmc,
+      power: '1',
+      toughness: '1',
+    });
+  const three = construct('Lab Three Construct', '{3}', 3);
+  const zero = construct('Lab Zero Construct', '{0}', 0);
+  return pr01Scenario(gameId, {
+    id: 'technomancer-viewer-mill-and-return',
+    title: 'Technomancer: mill three, then return artifact creatures worth 6',
+    instructions: [
+      'Technomancer is in your hand and seven Swamps are on your battlefield; two Lab Three Constructs are in your graveyard and Lab Zero Construct is on top of your library.',
+      'Cast Technomancer: mill three cards (Lab Zero Construct among them).',
+      'Return both Lab Three Constructs (total mana value 6), then Lab Zero Construct, which still fits.',
+    ],
+    expectedOutcome:
+      'Technomancer mills three, and both Lab Three Constructs and Lab Zero Construct return to the battlefield together.',
+    oracleSha256: techno.sha256,
+    clauseIds: ['technomancer-enters'],
+    decks: {
+      P1: [techno.card, three, three, zero, ...Array.from({ length: 9 }, () => SWAMP)],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Technomancer'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Three Construct', 'Lab Three Construct'] }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Zero Construct', 'Swamp', 'Swamp'] }],
+    },
+  });
+}
+
 /** Historical five-card review batch; later independently reviewed cards use separate evidence. */
 export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'tribute-viewer-cast-search-select-resolve',
@@ -7567,6 +8804,38 @@ export const CARD_TEST_SCENARIO_IDS = [
   'grim-haruspex-viewer-morph',
   'dream-devourer-viewer-foretell',
   'dream-devourer-viewer-foretold-cast',
+  'triarch-praetorian-viewer-unearth',
+  'canoptek-tomb-sentinel-viewer-unearth-exile',
+  'glen-elendra-archmage-viewer-counter-persist',
+  'flayer-of-the-hatebound-viewer-undying-damage',
+  'kambal-viewer-opponent-noncreature-spell',
+  'gleeful-arsonist-viewer-burn-and-undying',
+  'shard-of-the-nightbringer-viewer-cast-drain',
+  'satoru-viewer-free-cast-draws',
+  'keeper-of-secrets-viewer-flashback',
+  'river-kelpie-viewer-flashback-and-persist',
+  'aurora-phoenix-viewer-cascade-return',
+  'aurora-phoenix-viewer-cast-cascade-flying',
+  'watcher-for-tomorrow-viewer-hideaway-leaves',
+  'psychomancer-viewer-artifact-drain',
+  'shard-of-the-void-dragon-viewer-attack-edict',
+  'scavenging-ooze-viewer-exile-creature',
+  'imotekh-viewer-phaeron-and-strategist',
+  'the-ooze-viewer-leave-and-exile',
+  'god-eternal-rhonas-viewer-double-and-return',
+  'candlekeep-sage-viewer-commander-enters-and-leaves',
+  'flickerwisp-viewer-exile-and-return',
+  'venser-viewer-plus-two-blink',
+  'venser-viewer-minus-one-unblockable',
+  'venser-viewer-minus-eight-emblem',
+  'puppeteer-clique-viewer-steal-attack-exile',
+  'puppeteer-clique-viewer-persist',
+  'cryptek-viewer-dies-and-returns-tapped',
+  'living-death-viewer-swap',
+  'technomancer-viewer-mill-and-return',
+  'victimize-viewer-sacrifice-and-return',
+  'body-launderer-viewer-connive',
+  'body-launderer-viewer-return',
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
@@ -7767,6 +9036,43 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'grim-haruspex-viewer-morph': grimHaruspexScenario,
   'dream-devourer-viewer-foretell': dreamDevourerForetellScenario,
   'dream-devourer-viewer-foretold-cast': dreamDevourerForetoldCastScenario,
+  'triarch-praetorian-viewer-unearth': triarchPraetorianScenario,
+  'canoptek-tomb-sentinel-viewer-unearth-exile': canoptekTombSentinelScenario,
+  'glen-elendra-archmage-viewer-counter-persist': glenElendraArchmageScenario,
+  'flayer-of-the-hatebound-viewer-undying-damage': flayerOfTheHateboundScenario,
+  'kambal-viewer-opponent-noncreature-spell': kambalScenario,
+  'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
+  'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
+  'satoru-viewer-free-cast-draws': satoruScenario,
+  'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
+  'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,
+  'aurora-phoenix-viewer-cascade-return': auroraPhoenixScenario,
+  'aurora-phoenix-viewer-cast-cascade-flying': auroraPhoenixCastScenario,
+  'watcher-for-tomorrow-viewer-hideaway-leaves': watcherForTomorrowScenario,
+  'psychomancer-viewer-artifact-drain': psychomancerScenario,
+  'shard-of-the-void-dragon-viewer-attack-edict': shardOfTheVoidDragonScenario,
+  'scavenging-ooze-viewer-exile-creature': scavengingOozeScenario,
+  'imotekh-viewer-phaeron-and-strategist': imotekhScenario,
+  'the-ooze-viewer-leave-and-exile': theOozeScenario,
+  'god-eternal-rhonas-viewer-double-and-return': godEternalRhonasScenario,
+  'candlekeep-sage-viewer-commander-enters-and-leaves': candlekeepSageScenario,
+  'flickerwisp-viewer-exile-and-return': flickerwispScenario,
+  'venser-viewer-plus-two-blink': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-plus-two-blink'),
+  'venser-viewer-minus-one-unblockable': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-minus-one-unblockable'),
+  'venser-viewer-minus-eight-emblem': (gameId: GameId) =>
+    venserScenario(gameId, 'venser-viewer-minus-eight-emblem'),
+  'puppeteer-clique-viewer-steal-attack-exile': puppeteerCliqueScenario,
+  'puppeteer-clique-viewer-persist': puppeteerCliquePersistScenario,
+  'cryptek-viewer-dies-and-returns-tapped': cryptekScenario,
+  'living-death-viewer-swap': livingDeathScenario,
+  'technomancer-viewer-mill-and-return': technomancerScenario,
+  'victimize-viewer-sacrifice-and-return': victimizeScenario,
+  'body-launderer-viewer-connive': (gameId: GameId) =>
+    bodyLaundererScenario(gameId, 'body-launderer-viewer-connive'),
+  'body-launderer-viewer-return': (gameId: GameId) =>
+    bodyLaundererScenario(gameId, 'body-launderer-viewer-return'),
 };
 
 export function createCardTestScenario(

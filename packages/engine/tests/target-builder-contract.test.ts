@@ -341,9 +341,7 @@ it.each([0, 1])('dependent modal counted targets preserve sparse slots with mini
   const next = flow.next();
   expect(next.done).toBe(false);
   if (!next.done) {
-    expect(next.value.options.map((option) => option.description)).not.toContain(
-      `Target ${own.id}`,
-    );
+    expect(JSON.stringify(next.value.options)).not.toContain(own.id);
     const index = next.value.options.findIndex((option) =>
       JSON.stringify(option).includes(other.id),
     );

@@ -13,7 +13,6 @@ import {
   targetSlots,
   triggered,
 } from '../templates';
-import { graveyardCardTarget } from '../target-builders';
 import {
   BEAST_3_3_GREEN,
   BEAST_6_6_ARTIFACT,
@@ -1217,28 +1216,15 @@ export function registerLIVING_ENERGYOverrides(): void {
     PANHARMONICON_DEF,
   );
 
-  // Coverage PR02: the two unparsed lines are appended to the parsed "{1}, {T}, Sacrifice this
-  // artifact: Draw a card." as separate abilities, so the opponent-graveyard exile is its own
-  // free {T}-and-sacrifice ability and the draw keeps its {1}.
-  const lanternExile = targetSlots({ card: graveyardCardTarget('any') });
+  // Coverage PR02: the unparsed line is appended to the parsed "{1}, {T}, Sacrifice this
+  // artifact: Draw a card." as a separate ability, so the opponent-graveyard exile is its own
+  // free {T}-and-sacrifice ability and the draw keeps its {1}. The enters exile is read by the
+  // interpreter since coverage PR03.
   extendCard(
     '1b5e6560-ff2e-4475-96cb-63f64c8a86db',
     'Soul-Guide Lantern',
-    [
-      'When this artifact enters, exile target card from a graveyard.',
-      "{T}, Sacrifice this artifact: Exile each opponent's graveyard.",
-    ],
+    ["{T}, Sacrifice this artifact: Exile each opponent's graveyard."],
     {
-      triggers: [
-        triggered(
-          { when: 'enters', subject: { kind: 'self' } },
-          {
-            targets: lanternExile.targets,
-            effects: [{ op: 'exileCard', target: lanternExile.slot.card }],
-            description: 'Exile target card from a graveyard',
-          },
-        ),
-      ],
       activatedAbilities: [
         activated({
           costs: [TAP, SAC_SELF],

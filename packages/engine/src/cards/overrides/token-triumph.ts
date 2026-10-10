@@ -491,12 +491,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       ],
     },
   );
-  // Catalog audit token-triumph-batch-6: exile splices without a zone-change.
-  unsupportedCard(
-    '1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67',
-    'Scavenging Ooze',
-    'Exile splices the card without a zone-change, so leave-graveyard events are skipped.',
-  );
+  // Scavenging Ooze: restored in coverage PR03. The interpreter reads the graveyard exile with its
+  // creature-card rider, a real zone change, so no override remains.
   // Felidar Retreat
   defineCard(
     '16629f59-bae8-4c19-bf50-443eb0ed6856',

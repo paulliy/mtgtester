@@ -322,6 +322,8 @@ export function spawn(
     zone: 'command',
   };
   const perm = makePermanent(ctx, obj, controllerId);
+  // Spawned permanents stand in for ones already in play; they entered from no zone.
+  delete perm.enteredFromZone;
   perm.summoningSick = opts?.summoningSick ?? false;
   perm.tapped = opts?.tapped ?? false;
   ctx.state.battlefield.push(perm);

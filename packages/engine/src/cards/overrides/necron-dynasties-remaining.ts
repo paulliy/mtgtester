@@ -65,12 +65,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-1: graveyard-origin enter is any enter.
-  unsupportedCard(
-    '678b3fb5-aa9f-4268-9433-2a89dd37b927',
-    'Canoptek Tomb Sentinel',
-    'Enters-from-graveyard is implemented as any enter, and up-to-one is a required target.',
-  );
+  // Canoptek Tomb Sentinel: restored in coverage PR03. The interpreter reads "enters from a
+  // graveyard" and "exile up to one target nonland permanent", so no override remains.
   // Coverage PR01 (was contained by necron-remaining-batch-2): the optional {3}-and-sacrifice
   // payment gates the choice of a land you control and a search for basics with its name.
   defineCard(
@@ -117,12 +113,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Cranial Plating',
     'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   );
-  // Catalog audit necron-remaining-batch-5: delayed return omits tapped.
-  unsupportedCard(
-    '27a4b633-5a62-4d8c-8cc6-44959c311de9',
-    'Cryptek',
-    'The delayed return omits entering tapped.',
-  );
+  // Cryptek: restored in coverage PR03. The interpreter reads the dies-this-turn delayed return,
+  // which enters tapped, so no override remains.
   defineCard(
     '932708ae-9d5c-4561-aa8b-0d2222d37fdc',
     'Darkness',
@@ -165,18 +157,10 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-3: leave-graveyard trigger claimed, not authored.
-  unsupportedCard(
-    '425fea06-76ec-4cd9-bd3b-750504fd7fd2',
-    'Imotekh the Stormlord',
-    'The artifact-cards-leave-graveyard trigger is claimed without an implementation.',
-  );
-  // Catalog audit necron-remaining-batch-8: battlefield creatures are not sacrificed.
-  unsupportedCard(
-    '9e6a3df4-67a3-452e-a6ef-f04dbadb21ef',
-    'Living Death',
-    'Battlefield creatures are put into graveyards instead of being sacrificed.',
-  );
+  // Imotekh the Stormlord: restored in coverage PR03. The interpreter reads the leave-graveyard
+  // token trigger and the combat buff, so no override remains.
+  // Living Death: restored in coverage PR03. The interpreter reads the exile, the simultaneous
+  // sacrifice, and the return, so no override remains.
   defineCard(
     'fd03f20a-d365-48fb-8b2a-ad4b502a0045',
     'Lokhust Heavy Destroyer',
@@ -300,18 +284,10 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     ['You may have this artifact enter as a copy of any artifact on the battlefield.'],
     { entersAsCopy: { selector: ofType('Artifact') } },
   );
-  // Catalog audit necron-remaining-batch-5: intervening if you-cast-it omitted.
-  unsupportedCard(
-    'eedd5a17-d0fe-4a13-8f2c-f343bfa43f92',
-    'Shard of the Nightbringer',
-    'The if-you-cast-it intervening if is omitted.',
-  );
-  // Catalog audit necron-remaining-batch-4: exile-from-battlefield omitted.
-  unsupportedCard(
-    'd04d2434-121e-4420-abfc-fa21ad5577c3',
-    'Shard of the Void Dragon',
-    'Exile-from-battlefield is omitted from the artifact-leaves trigger.',
-  );
+  // Shard of the Nightbringer: restored in coverage PR03. The interpreter reads "if you cast it"
+  // from the permanent's cast record and the targeted half-life drain, so no override remains.
+  // Shard of the Void Dragon: restored in coverage PR03. The interpreter reads the attack edict
+  // and the artifact graveyard-or-exile counters trigger, so no override remains.
   defineCard(
     'f96fcb37-5f17-4231-b1a2-64f5fe45730b',
     'Skorpekh Destroyer',
@@ -339,12 +315,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Szarekh, the Silent King',
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   );
-  // Catalog audit necron-remaining-batch-9: 0-mana cards are blocked after remaining hits 0.
-  unsupportedCard(
-    '3f97541e-34f3-4f7f-8ac2-7167b2ec9b33',
-    'Technomancer',
-    'Zero-mana artifact creatures cannot be returned once remaining mana value hits 0.',
-  );
+  // Technomancer: restored in coverage PR03. The interpreter reads the mill and the capped
+  // simultaneous return, so no override remains.
   // Catalog audit necron-remaining-batch-4: saga chapters are wrong events.
   unsupportedCard(
     '5924cbb0-19b5-449c-a7c5-722e744a54f8',
@@ -403,12 +375,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Trazyn the Infinite',
     'Activated mana abilities of artifacts in the graveyard are omitted.',
   );
-  // Catalog audit necron-remaining-batch-3: graveyard-origin enter is any enter.
-  unsupportedCard(
-    '52aa5a79-db0e-4eaa-b2df-e41674c47794',
-    'Triarch Praetorian',
-    'Enters-from-graveyard is implemented as any enter.',
-  );
+  // Triarch Praetorian: restored in coverage PR03. The interpreter reads "enters from a
+  // graveyard" as an origin-zone enters trigger, so no override remains.
   // Catalog audit necron-remaining-batch-3: chosen-opponent attackers is all in combat.
   unsupportedCard(
     '1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3',

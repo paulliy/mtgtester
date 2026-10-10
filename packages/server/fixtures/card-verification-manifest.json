@@ -253,19 +253,41 @@
     "eaca2576-020b-4af4-b348-6d1b56116c41": {
       "name": "Body Launderer",
       "oracleSha256": "f44de0fbad37339ec628a08e13433d825b21fd8bf9721e5cccd3725082d7a92e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "body-launderer-connive",
           "oracleText": "Whenever another nontoken creature you control dies, this creature connives.",
-          "implementation": ["explicitly unsupported; connive is not unconditional +1/+1"],
-          "engineTestIds": ["marchesa-batch1-body-launderer-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted dies trigger, subject allOf(other, nontoken, controller you, type Creature), with leave look-back so it fires when Body Launderer dies alongside the creature (CR 603.10a)",
+            "new connive op (CR 701.50a): draw a card, then discard a card; a nonland discard puts a +1/+1 counter on the source",
+            "if Body Launderer has left the battlefield, its controller still draws and discards, and no counter is put on anything (CR 701.50c)"
+          ],
+          "engineTestIds": [
+            "body-launderer-pinned-oracle-supported",
+            "body-launderer-connive-nonland",
+            "body-launderer-connive-land",
+            "body-launderer-connive-subject",
+            "body-launderer-connive-after-leaving"
+          ],
+          "viewerScenarioIds": ["body-launderer-viewer-connive"]
         },
         {
+          "id": "body-launderer-return",
           "oracleText": "When this creature dies, return another target non-Rogue creature card with equal or lesser power from your graveyard to the battlefield.",
-          "implementation": ["explicitly unsupported; power filter omitted"],
-          "engineTestIds": ["marchesa-batch1-body-launderer-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted self dies trigger with a cardInGraveyard target filtered by other, not subtype Rogue, type Creature, and the new event-only powerAtMostSource selector",
+            "powerAtMostSource compares against the source's last-known power once it has died (CR 608.2h): the trigger's source facts are passed to target legality at announcement and at resolution",
+            "a graveyard card with \"*\" power uses its characteristic-defining ability evaluated in the graveyard with its owner as \"you\" (CR 604.3, 109.5); one with no such ability is refused rather than read as 0",
+            "graveyardToBattlefield returns the target under its owner, the caster"
+          ],
+          "engineTestIds": [
+            "body-launderer-pinned-oracle-supported",
+            "body-launderer-return-bound",
+            "body-launderer-graveyard-cda-power",
+            "body-launderer-last-known-power"
+          ],
+          "viewerScenarioIds": ["body-launderer-viewer-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -340,13 +362,40 @@
     "ba9f3c5d-556f-48d1-8d87-723f7893cfcd": {
       "name": "Flayer of the Hatebound",
       "oracleSha256": "83e8fbc4e2f4fd410df3e650ed4506fd40c65570897c3e5d7af777e88d35c7bc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "flayer-of-the-hatebound-undying",
+          "oracleText": "Undying",
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters +1/+1 <= 0 on last-known counters (CR 702.93a)",
+            "returnDiedSourceToBattlefield +1/+1: only the graveyard card this permanent became, under its owner's control, entering with a +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "flayer-of-the-hatebound-pinned-oracle-supported",
+            "flayer-of-the-hatebound-undying-deals-five",
+            "flayer-of-the-hatebound-undying-once",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object",
+            "persist-undying-primitive-token"
+          ],
+          "viewerScenarioIds": ["flayer-of-the-hatebound-viewer-undying-damage"]
+        },
+        {
+          "id": "flayer-of-the-hatebound-graveyard-damage",
           "oracleText": "Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger watching this or another creature (anyOf self, other creature) with entersFrom { zone: graveyard, graveyardOwner: you }: the card came from the trigger controller's own graveyard, whoever now controls it",
+            "dealDamage to an anyTarget slot, amount powerOfTriggerObject, with the entering creature as the damage source"
+          ],
+          "engineTestIds": [
+            "flayer-of-the-hatebound-pinned-oracle-supported",
+            "flayer-of-the-hatebound-undying-deals-five",
+            "flayer-of-the-hatebound-other-creature",
+            "flayer-of-the-hatebound-not-other-origins",
+            "enters-from-origin-primitive-your-graveyard"
+          ],
+          "viewerScenarioIds": ["flayer-of-the-hatebound-viewer-undying-damage"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -514,19 +563,48 @@
     "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8": {
       "name": "River Kelpie",
       "oracleSha256": "d37cb44668d016bedab1375e97e13f1a178fadacc72ce65b5d17bc0509048c2c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "river-kelpie-enters-from-graveyard",
           "oracleText": "Whenever this creature or another permanent enters from a graveyard, draw a card.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger watching anyOf(self, other permanent) with entersFrom { zone: graveyard } (any player's graveyard, CR 603.6a); draw 1"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-persist-draws",
+            "river-kelpie-another-permanent",
+            "river-kelpie-other-origins-no-draw"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
         },
         {
+          "id": "river-kelpie-cast-from-graveyard",
           "oracleText": "Whenever a player casts a spell from a graveyard, draw a card.",
-          "implementation": ["explicitly unsupported; graveyard origin omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted castsSpell trigger, caster each, with castFrom graveyard read from the spell card's cast record; draw 1"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-spell-from-graveyard",
+            "river-kelpie-other-origins-no-draw",
+            "cast-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
+        },
+        {
+          "id": "river-kelpie-persist",
+          "oracleText": "Persist",
+          "implementation": [
+            "interpreted as a dies trigger with the intervening-if sourceHasCounters -1/-1 <= 0 on last-known counters, returning only the card it became, under its owner's control with a -1/-1 counter (CR 702.79a)"
+          ],
+          "engineTestIds": [
+            "river-kelpie-pinned-oracle-supported",
+            "river-kelpie-persist-draws",
+            "persist-undying-primitive-new-object"
+          ],
+          "viewerScenarioIds": ["river-kelpie-viewer-flashback-and-persist"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -568,13 +646,40 @@
     "00e0b103-892c-49b3-836d-867fff197bbd": {
       "name": "Puppeteer Clique",
       "oracleSha256": "6cc92266c44c063db23abbdaf1b36dd0d9059367a482a19352ffa09749abb939",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "puppeteer-clique-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword line: flying"],
+          "engineTestIds": ["puppeteer-clique-pinned-oracle-supported"],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
+        },
+        {
+          "id": "puppeteer-clique-enters",
           "oracleText": "When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of your next end step, exile it.",
-          "implementation": ["explicitly unsupported; delayed exile omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted self enters trigger, matched as one block: target cardInGraveyard creature, graveyardOwnerScope opponent",
+            "reanimateTargetHasteExileAtYourNextEndStep: the card enters under your control; a permanent-duration haste grant bound to that object; a delayed endStep trigger (player you, expiry onFire) exiles that same object and skips a new one (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "puppeteer-clique-pinned-oracle-supported",
+            "puppeteer-clique-reanimates-with-haste",
+            "puppeteer-clique-exiled-at-your-end-step",
+            "puppeteer-clique-not-their-end-step",
+            "puppeteer-clique-new-object-spared",
+            "puppeteer-clique-opponent-graveyard-only"
+          ],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-steal-attack-exile"]
+        },
+        {
+          "id": "puppeteer-clique-persist",
+          "oracleText": "Persist",
+          "implementation": [
+            "interpreted Persist: dies trigger with an intervening-if of no -1/-1 counters (last-known), returnDiedSourceToBattlefield with a -1/-1 counter (CR 702.79a)"
+          ],
+          "engineTestIds": ["puppeteer-clique-pinned-oracle-supported", "puppeteer-clique-persist"],
+          "viewerScenarioIds": ["puppeteer-clique-viewer-persist"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -617,13 +722,33 @@
     "7555c429-5f2d-4171-b6b0-8e3c8da7f314": {
       "name": "Satoru, the Infiltrator",
       "oracleSha256": "61506504750f785352e9318aa606928d134418fd60f7036ea0a1c5c971b5b564",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "satoru-menace",
+          "oracleText": "Menace",
+          "implementation": ["keyword menace (interpreted)"],
+          "engineTestIds": ["satoru-the-infiltrator-pinned-oracle-supported"],
+          "viewerScenarioIds": ["satoru-viewer-free-cast-draws"]
+        },
+        {
+          "id": "satoru-uncast-or-free-draw",
           "oracleText": "Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card.",
-          "implementation": ["explicitly unsupported; uncast/no-mana-spent restriction omitted"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted aggregate enters trigger watching anyOf(self, other nontoken creature you control): one firing per simultaneous event (CR 603.2c); moveObjects now queues one enters event per batch",
+            "head entersWithoutManaSpentToCast: every permanent in the firing has a cast record with no mana spent, or none at all (not cast); draw 1"
+          ],
+          "engineTestIds": [
+            "satoru-the-infiltrator-pinned-oracle-supported",
+            "satoru-the-infiltrator-cast-with-mana-no-draw",
+            "satoru-the-infiltrator-not-cast-draws",
+            "satoru-the-infiltrator-free-cast-draws",
+            "satoru-the-infiltrator-one-or-more",
+            "satoru-the-infiltrator-tokens-and-opponents",
+            "enters-without-mana-primitive-contract",
+            "cast-record-primitive"
+          ],
+          "viewerScenarioIds": ["satoru-viewer-free-cast-draws"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -665,13 +790,43 @@
     "82a6fa6f-13c2-4ea3-bec2-c51b56b2783b": {
       "name": "The Ooze",
       "oracleSha256": "b62bfacc5e4d0b4478a1a3f5f84b9e78cdc6f381d6ad8ce42fa9b7da74521387",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "the-ooze-leave-trigger",
           "oracleText": "Whenever a creature you control with a +1/+1 counter on it leaves the battlefield, create a Mutagen token for each +1/+1 counter on it.",
-          "implementation": ["explicitly unsupported; leaves implemented as dies"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted leavesBattlefield trigger (any destination), subject allOf(hasCounter +1/+1, controller you, type Creature) matched on the leaving object's last-known state (CR 603.10a)",
+            "createToken MUTAGEN, count countersOnTriggerObject(+1/+1) read from the last-known counters",
+            "permanents leaving in one event (mass exile, mass bounce, moveObjects batches) are one departure: watchers and facts are captured before any leaves, so The Ooze leaving alongside the creature still triggers",
+            "Mutagen token: {1}, {T}, Sacrifice this token: put a +1/+1 counter on target creature; sorcery timing"
+          ],
+          "engineTestIds": [
+            "the-ooze-pinned-oracle-supported",
+            "the-ooze-dies-counts-last-known-counters",
+            "the-ooze-leaves-not-only-dies",
+            "the-ooze-negative",
+            "the-ooze-leaves-alongside",
+            "the-ooze-mass-exile",
+            "the-ooze-mass-bounce",
+            "the-ooze-mutagen-token",
+            "the-ooze-mutagen-sorcery-speed"
+          ],
+          "viewerScenarioIds": ["the-ooze-viewer-leave-and-exile"]
+        },
+        {
+          "id": "the-ooze-exile",
+          "oracleText": "{T}: Exile target card from a graveyard. Create a Mutagen token.",
+          "implementation": [
+            "interpreted activated ability: cost {T}, target cardInGraveyard (any graveyard)",
+            "exileCard moves the card through moveObject (a real zone change), then createToken MUTAGEN; with its only target gone the ability does nothing (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "the-ooze-pinned-oracle-supported",
+            "the-ooze-exile-makes-a-mutagen",
+            "the-ooze-exile-target-gone"
+          ],
+          "viewerScenarioIds": ["the-ooze-viewer-leave-and-exile"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -679,13 +834,45 @@
     "277aafa6-4270-4d24-a888-cf9e8e635d4b": {
       "name": "Watcher for Tomorrow",
       "oracleSha256": "02360583993a6941a09046d20aefacec8e53d3acaa1cc092eee1f67eff3f2e57",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "watcher-for-tomorrow-hideaway",
+          "oracleText": "Hideaway 4",
+          "implementation": [
+            "interpreted enters trigger hideawayExileTop4: look at the top four, exile one face down linked to this card and, new in PR03, to this permanent object (CR 607.2a), and put the rest on the bottom in a random order"
+          ],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
+        },
+        {
+          "id": "watcher-for-tomorrow-enters-tapped",
+          "oracleText": "This creature enters tapped.",
+          "implementation": ["interpreted entersTapped replacement (CR 614.1c)"],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
+        },
+        {
+          "id": "watcher-for-tomorrow-leaves",
           "oracleText": "When this creature leaves the battlefield, put the exiled card into its owner's hand.",
-          "implementation": ["explicitly unsupported; leaves implemented as dies"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted leavesBattlefield trigger on self: queued for every destination from both the single-move and the simultaneous graveyard paths, read with last-known information (CR 603.6c, 603.10a)",
+            "returnExiledAttachedCard: only the card this permanent's Hideaway exiled moves to its owner's hand"
+          ],
+          "engineTestIds": [
+            "watcher-for-tomorrow-pinned-oracle-supported",
+            "watcher-for-tomorrow-hideaway-then-dies",
+            "watcher-for-tomorrow-leaves-any-way",
+            "watcher-for-tomorrow-linked-card-only",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["watcher-for-tomorrow-viewer-hideaway-leaves"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -724,13 +911,38 @@
     "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8": {
       "name": "Gleeful Arsonist",
       "oracleSha256": "b4a3ce9d3e4fe7ed7f998c785be7bba031639225544a3a577952cd0bfe875143",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "gleeful-arsonist-burn-caster",
+          "oracleText": "Whenever an opponent casts a noncreature spell, this creature deals damage equal to its power to that player.",
+          "implementation": [
+            "interpreted castsSpell trigger with caster opponent and filter not Creature",
+            "dealDamage to eventPlayer (the caster), amount powerOfSource read as the trigger resolves, with the Arsonist as the source"
+          ],
+          "engineTestIds": [
+            "gleeful-arsonist-pinned-oracle-supported",
+            "gleeful-arsonist-damages-caster",
+            "gleeful-arsonist-power-on-resolution",
+            "gleeful-arsonist-undying-then-two",
+            "gleeful-arsonist-own-and-creature-spells"
+          ],
+          "viewerScenarioIds": ["gleeful-arsonist-viewer-burn-and-undying"]
+        },
+        {
+          "id": "gleeful-arsonist-undying",
           "oracleText": "Undying",
-          "implementation": ["explicitly unsupported; Undying is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters +1/+1 <= 0 on last-known counters (CR 702.93a)",
+            "returnDiedSourceToBattlefield +1/+1: only the graveyard card this permanent became, under its owner's control, entering with a +1/+1 counter"
+          ],
+          "engineTestIds": [
+            "gleeful-arsonist-pinned-oracle-supported",
+            "gleeful-arsonist-undying-then-two",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object"
+          ],
+          "viewerScenarioIds": ["gleeful-arsonist-viewer-burn-and-undying"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -738,13 +950,46 @@
     "5f3f68b5-8c6a-4181-bb8a-9c73967d198a": {
       "name": "Glen Elendra Archmage",
       "oracleSha256": "13ec34cf29e69f3cc44cf9c8d95e931ce380bfb01361c0e6778e12daf91a9578",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "glen-elendra-archmage-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["glen-elendra-archmage-pinned-oracle-supported"],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
+        },
+        {
+          "id": "glen-elendra-archmage-counter",
+          "oracleText": "{U}, Sacrifice this creature: Counter target noncreature spell.",
+          "implementation": [
+            "interpreted activated ability: costs {U} and sacrificeSelf; target noncreatureSpell (any controller); effect counter"
+          ],
+          "engineTestIds": [
+            "glen-elendra-archmage-pinned-oracle-supported",
+            "glen-elendra-archmage-counter-and-persist",
+            "glen-elendra-archmage-creature-spells-not-targetable"
+          ],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
+        },
+        {
+          "id": "glen-elendra-archmage-persist",
           "oracleText": "Persist",
-          "implementation": ["explicitly unsupported; Persist is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted as a dies trigger on self with the intervening-if sourceHasCounters -1/-1 <= 0, read from the permanent's last-known counters (CR 702.79a, 603.10a)",
+            "returnDiedSourceToBattlefield -1/-1: finds only the graveyard card this permanent became (leftBattlefieldObjectId, CR 400.7e) and moves it to the battlefield under its owner's control with a -1/-1 counter on it as it enters"
+          ],
+          "engineTestIds": [
+            "glen-elendra-archmage-pinned-oracle-supported",
+            "glen-elendra-archmage-counter-and-persist",
+            "glen-elendra-archmage-persist-once",
+            "glen-elendra-archmage-owner-control",
+            "persist-undying-primitive-undying",
+            "persist-undying-primitive-new-object",
+            "persist-undying-primitive-token",
+            "persist-undying-primitive-simultaneous"
+          ],
+          "viewerScenarioIds": ["glen-elendra-archmage-viewer-counter-persist"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1959,13 +2204,22 @@
     "4987c458-604a-4727-b360-170616e91e67": {
       "name": "Kambal, Consul of Allocation",
       "oracleSha256": "803082206730781d6c0b080302b0679ed14e54b7d5b3f0096d15d7bc0d2edf71",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "kambal-opponent-noncreature-tax",
           "oracleText": "Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
-          "implementation": ["explicitly unsupported; caster each includes you"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted castsSpell trigger with caster opponent and filter not Creature, fired at announcement so it resolves before the spell (CR 603.3b)",
+            "loseLifeTarget eventPlayer 2 (the casting opponent), then gainLife 2 for Kambal's controller"
+          ],
+          "engineTestIds": [
+            "kambal-pinned-oracle-supported",
+            "kambal-opponent-noncreature-spell",
+            "kambal-another-opponent",
+            "kambal-own-and-creature-spells"
+          ],
+          "viewerScenarioIds": ["kambal-viewer-opponent-noncreature-spell"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2193,15 +2447,31 @@
     "589b742c-fee5-413a-a56c-4d4ffaf0f73d": {
       "name": "Psychomancer",
       "oracleSha256": "a9688ee818cfe44f6d23dd346d4e998a40205b0c24397080ecd37f21f26c481c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life.",
+          "id": "psychomancer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["psychomancer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["psychomancer-viewer-artifact-drain"]
+        },
+        {
+          "id": "psychomancer-harbinger-of-despair",
+          "oracleText": "Harbinger of Despair — Whenever this creature or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, target opponent loses 1 life and you gain 1 life.",
           "implementation": [
-            "explicitly unsupported; exile origin omitted; loseLife hits controller"
+            "interpreted leavesBattlefield trigger watching anyOf(self, other nontoken artifact you control) with leavesTo [graveyard, exile], read with last-known information",
+            "target player (opponent) slot; loseLifeTarget 1, then gainLife 1"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "psychomancer-pinned-oracle-supported",
+            "psychomancer-dies-drains",
+            "psychomancer-artifact-graveyard-or-exile",
+            "psychomancer-not-other-departures",
+            "psychomancer-dies-together",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["psychomancer-viewer-artifact-drain"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2209,13 +2479,43 @@
     "678b3fb5-aa9f-4268-9433-2a89dd37b927": {
       "name": "Canoptek Tomb Sentinel",
       "oracleSha256": "8b3b2b8d9dc4c7bc3c7dfa002de18cdd021d265cd16a45096e01e7e9ae29b87a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "canoptek-tomb-sentinel-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["canoptek-tomb-sentinel-pinned-oracle-supported"],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
+        },
+        {
+          "id": "canoptek-tomb-sentinel-exile-cannon",
           "oracleText": "When this creature enters from a graveyard, exile up to one target nonland permanent.",
-          "implementation": ["explicitly unsupported; any enter; required target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger on self with entersFrom { zone: graveyard } (CR 603.6a)",
+            "a 0..1 nonlandPermanent count slot chosen as the trigger goes on the stack; exileEachChosen slot 0, so no target exiles nothing"
+          ],
+          "engineTestIds": [
+            "canoptek-tomb-sentinel-pinned-oracle-supported",
+            "canoptek-tomb-sentinel-unearth-exiles",
+            "canoptek-tomb-sentinel-up-to-one",
+            "canoptek-tomb-sentinel-cast-no-trigger",
+            "up-to-one-removal-grammar"
+          ],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
+        },
+        {
+          "id": "canoptek-tomb-sentinel-unearth",
+          "oracleText": "Unearth {7}",
+          "implementation": [
+            "interpreted graveyard activated ability: {7}, sorcery timing, effect unearth (CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "canoptek-tomb-sentinel-pinned-oracle-supported",
+            "canoptek-tomb-sentinel-unearth-exiles",
+            "canoptek-tomb-sentinel-unearth-needs-seven"
+          ],
+          "viewerScenarioIds": ["canoptek-tomb-sentinel-viewer-unearth-exile"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2500,15 +2800,36 @@
     "425fea06-76ec-4cd9-bd3b-750504fd7fd2": {
       "name": "Imotekh the Stormlord",
       "oracleSha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.",
+          "id": "imotekh-phaeron",
+          "oracleText": "Phaeron — Whenever one or more artifact cards leave your graveyard, create two 2/2 black Necron Warrior artifact creature tokens.",
           "implementation": [
-            "explicitly unsupported; leave-graveyard trigger claimed without implementation"
+            "interpreted leavesGraveyard trigger, subject allOf(type Artifact, controller you), aggregate: one trigger per simultaneous batch of cards leaving your graveyard (CR 603.2c)",
+            "createToken: two 2/2 black Necron Warrior artifact creature tokens"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "imotekh-the-stormlord-pinned-oracle-supported",
+            "imotekh-the-stormlord-phaeron-reanimate",
+            "imotekh-the-stormlord-phaeron-one-or-more",
+            "imotekh-the-stormlord-phaeron-negative"
+          ],
+          "viewerScenarioIds": ["imotekh-viewer-phaeron-and-strategist"]
+        },
+        {
+          "id": "imotekh-grand-strategist",
+          "oracleText": "Grand Strategist — At the beginning of combat on your turn, another target artifact creature you control gets +2/+2 and gains menace until end of turn.",
+          "implementation": [
+            "interpreted beginningOfCombat trigger (your turn), target creature you control filtered allOf(other, type Artifact)",
+            "pump +2/+2 and grant menace until end of turn; with no legal target the trigger is removed"
+          ],
+          "engineTestIds": [
+            "imotekh-the-stormlord-pinned-oracle-supported",
+            "imotekh-the-stormlord-grand-strategist",
+            "imotekh-the-stormlord-grand-strategist-needs-another"
+          ],
+          "viewerScenarioIds": ["imotekh-viewer-phaeron-and-strategist"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2572,15 +2893,46 @@
     "52aa5a79-db0e-4eaa-b2df-e41674c47794": {
       "name": "Triarch Praetorian",
       "oracleSha256": "19702457c7e73d501b2509808cee1350b8f3944fc392e738b8f0080924578c9d",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "triarch-praetorian-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["triarch-praetorian-pinned-oracle-supported"],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
+        },
+        {
+          "id": "triarch-praetorian-dynastic-codes",
           "oracleText": "When this creature enters from a graveyard, you draw two cards and you lose 2 life.",
           "implementation": [
-            "explicitly unsupported; graveyard-origin enter implemented as any enter"
+            "interpreted enters trigger on self with entersFrom { zone: graveyard }: matches only when the permanent's recorded enteredFromZone is graveyard (CR 603.6a), whoever controls it",
+            "effects draw 2 then loseLife 2 for the trigger's controller"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "triarch-praetorian-pinned-oracle-supported",
+            "triarch-praetorian-unearth-draws-two",
+            "triarch-praetorian-cast-from-hand-no-trigger",
+            "triarch-praetorian-other-origins-no-trigger",
+            "triarch-praetorian-reanimated-triggers",
+            "enters-from-origin-primitive-your-graveyard",
+            "enters-from-origin-primitive-tokens-and-copies",
+            "enters-from-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
+        },
+        {
+          "id": "triarch-praetorian-unearth",
+          "oracleText": "Unearth {4}{B}",
+          "implementation": [
+            "interpreted graveyard activated ability: {4}{B}, sorcery timing, effect unearth (returns with haste, exiled at the next end step or if it would leave, CR 702.84a)"
+          ],
+          "engineTestIds": [
+            "triarch-praetorian-pinned-oracle-supported",
+            "triarch-praetorian-unearth-draws-two",
+            "triarch-praetorian-unearth-needs-mana-and-sorcery-timing"
+          ],
+          "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2756,13 +3108,40 @@
     "d04d2434-121e-4420-abfc-fa21ad5577c3": {
       "name": "Shard of the Void Dragon",
       "oracleSha256": "fd95a3c55790914954c24c7f1db5acb38bf6d3721993864206f3541446b7f389",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.",
-          "implementation": ["explicitly unsupported; exile-from-battlefield omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "shard-of-the-void-dragon-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["shard-of-the-void-dragon-pinned-oracle-supported"],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
+        },
+        {
+          "id": "shard-of-the-void-dragon-spear",
+          "oracleText": "Spear of the Void Dragon — Whenever this creature attacks, each opponent sacrifices a nonland permanent of their choice.",
+          "implementation": [
+            "interpreted attacks trigger on self; sacrificeOneEachOpponent nonland: each opponent chooses one of their nonland permanents, then all are sacrificed together"
+          ],
+          "engineTestIds": [
+            "shard-of-the-void-dragon-pinned-oracle-supported",
+            "shard-of-the-void-dragon-attack-edict"
+          ],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
+        },
+        {
+          "id": "shard-of-the-void-dragon-matter-absorption",
+          "oracleText": "Matter Absorption — Whenever an artifact is put into a graveyard from the battlefield or is put into exile from the battlefield, put two +1/+1 counters on this creature.",
+          "implementation": [
+            "interpreted leavesBattlefield trigger watching any artifact (any controller, tokens included) with leavesTo [graveyard, exile]; putCountersEach self +1/+1 x2"
+          ],
+          "engineTestIds": [
+            "shard-of-the-void-dragon-pinned-oracle-supported",
+            "shard-of-the-void-dragon-attack-edict",
+            "shard-of-the-void-dragon-any-artifact",
+            "leaves-battlefield-primitive-destinations"
+          ],
+          "viewerScenarioIds": ["shard-of-the-void-dragon-viewer-attack-edict"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2821,13 +3200,26 @@
     "27a4b633-5a62-4d8c-8cc6-44959c311de9": {
       "name": "Cryptek",
       "oracleSha256": "0e2e938f02e241942dfec466a4126d540bde0e05bf063a6dcfadfec206b85666",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "When that creature dies this turn, return it to the battlefield tapped under your control.",
-          "implementation": ["explicitly unsupported; delayed return omits entering tapped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "cryptek-dies-this-turn",
+          "oracleText": "{1}{B}, {T}: Choose another target artifact creature you control. When that creature dies this turn, return it to the battlefield tapped under your control.",
+          "implementation": [
+            "interpreted activated ability, matched as one block: costs {1}{B} and {T}; target creature you control filtered allOf(other, Artifact)",
+            "registerDelayedTrigger when dies, sameObject, expiry cleanup: watches that permanent only (a new object after a blink is not watched, CR 400.7) and only this turn",
+            "returnDiedTriggerObjectTapped: the card that permanent became in a graveyard (leftBattlefieldObjectId, CR 400.7e) enters tapped under the ability's controller; a card that left the graveyard does not return"
+          ],
+          "engineTestIds": [
+            "cryptek-pinned-oracle-supported",
+            "cryptek-returns-tapped",
+            "cryptek-your-control",
+            "cryptek-this-turn-only",
+            "cryptek-new-object",
+            "cryptek-card-moved-on",
+            "cryptek-targets"
+          ],
+          "viewerScenarioIds": ["cryptek-viewer-dies-and-returns-tapped"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2865,13 +3257,31 @@
     "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92": {
       "name": "Shard of the Nightbringer",
       "oracleSha256": "4c7f7779f494bcf3ef533a08cb6e5c2569a29f7845c354e2d31bb827a925ae3a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "When this creature enters, if you cast it, target opponent loses half their life, rounded up.",
-          "implementation": ["explicitly unsupported; if-you-cast-it intervening if omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "shard-of-the-nightbringer-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["shard-of-the-nightbringer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["shard-of-the-nightbringer-viewer-cast-drain"]
+        },
+        {
+          "id": "shard-of-the-nightbringer-drain-life",
+          "oracleText": "When this creature enters, if you cast it, target opponent loses half their life, rounded up. You gain life equal to the life lost this way.",
+          "implementation": [
+            "interpreted enters trigger on self with intervening-if sourceWasCast: the permanent's cast record (castByPlayerId set when the spell is cast and carried onto the permanent it becomes, CR 601.2) names its controller; checked when queued and on resolution (CR 603.4)",
+            "target player (opponent) slot; loseHalfLifeTarget loses ceil(life/2) as it resolves and banks the actual loss; gainLifeEqualToLifeLostThisWay gains that much"
+          ],
+          "engineTestIds": [
+            "shard-of-the-nightbringer-pinned-oracle-supported",
+            "cast-record-primitive",
+            "shard-of-the-nightbringer-cast-drains-half",
+            "shard-of-the-nightbringer-rounded-up",
+            "shard-of-the-nightbringer-not-cast-no-trigger",
+            "shard-of-the-nightbringer-opponents-only"
+          ],
+          "viewerScenarioIds": ["shard-of-the-nightbringer-viewer-cast-drain"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4322,13 +4732,25 @@
     "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef": {
       "name": "Living Death",
       "oracleSha256": "9fdd5ecd5f37f4bd7362e93fbe6039b728aff07668f041473a208860ece1a1e5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "living-death-swap",
           "oracleText": "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.",
-          "implementation": ["explicitly unsupported; battlefield creatures are not sacrificed"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted spell block onto livingDeath, three simultaneous events in order (CR 101.4)",
+            "every graveyard's creature cards move to exile in one moveObjects batch (one leave-graveyard event)",
+            "every creature is sacrificed in one movePermanentsToGraveyard batch with reason sacrifice (sacrificed and dies triggers, last-known facts)",
+            "the exact cards exiled this way that are still in exile enter together under their owners' control, so enters triggers see each other (CR 603.6a)"
+          ],
+          "engineTestIds": [
+            "living-death-pinned-oracle-supported",
+            "living-death-swaps",
+            "living-death-sacrifices",
+            "living-death-returns-together",
+            "living-death-leaves-graveyard-once"
+          ],
+          "viewerScenarioIds": ["living-death-viewer-swap"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4382,15 +4804,26 @@
     "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33": {
       "name": "Technomancer",
       "oracleSha256": "19cbe3b23619d09af13644931417b1c3ab40deb1d3663febc590fcae248dd0f7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "technomancer-enters",
           "oracleText": "When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.",
           "implementation": [
-            "explicitly unsupported; 0-mana cards are blocked after remaining hits 0"
+            "interpreted enters trigger: mill three, then returnArtifactCreaturesUpToManaValue with a budget of 6",
+            "the controller picks artifact creature cards one at a time from the graveyard as it stands after the mill; each pick must fit the remaining budget, so a mana value 0 card stays offered once the budget is spent",
+            "a decline option ends the picks at any point (any number, including zero)",
+            "the chosen cards enter together in one moveObjects batch under the controller, so their enters triggers see each other (CR 603.6a)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "technomancer-pinned-oracle-supported",
+            "technomancer-mills-then-returns",
+            "technomancer-budget",
+            "technomancer-stop-early",
+            "technomancer-only-artifact-creatures",
+            "technomancer-returns-together"
+          ],
+          "viewerScenarioIds": ["technomancer-viewer-mill-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4437,13 +4870,24 @@
     "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67": {
       "name": "Scavenging Ooze",
       "oracleSha256": "5e3b74f8d24d0bbc052267d35ec3e142201a4101036888a29689867fbf42b971",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "scavenging-ooze-exile",
           "oracleText": "{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life.",
-          "implementation": ["explicitly unsupported; exile splices without a zone-change"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability, matched as one block: cost {G}, target cardInGraveyard (any graveyard)",
+            "exileTargetGraveyardAndBuffIfCreature: the card moves to exile through moveObject (a real zone change, so leave-graveyard abilities see it); if its printed types include Creature, a +1/+1 counter on the Ooze (if it is still on the battlefield) and 1 life for its controller; a target that left the graveyard does nothing"
+          ],
+          "engineTestIds": [
+            "scavenging-ooze-pinned-oracle-supported",
+            "scavenging-ooze-creature-card",
+            "scavenging-ooze-noncreature-card",
+            "scavenging-ooze-leaves-graveyard-event",
+            "scavenging-ooze-target-gone",
+            "scavenging-ooze-source-gone"
+          ],
+          "viewerScenarioIds": ["scavenging-ooze-viewer-exile-creature"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -7516,6 +7960,267 @@
             "force-of-negation-viewer-own-counter",
             "force-of-negation-viewer-opponent-counter"
           ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "23f86ee2-b1e3-45c2-bfd5-044919033922": {
+      "name": "Keeper of Secrets",
+      "oracleSha256": "4ef53442c20bda37718ff851155d979ab82ef135f39dc7da1f7076c9a88bdc5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "keeper-of-secrets-keywords",
+          "oracleText": "First strike, haste",
+          "implementation": ["keywords first strike and haste (interpreted)"],
+          "engineTestIds": ["keeper-of-secrets-pinned-oracle-supported"],
+          "viewerScenarioIds": ["keeper-of-secrets-viewer-flashback"]
+        },
+        {
+          "id": "keeper-of-secrets-symphony-of-pain",
+          "oracleText": "Symphony of Pain — Whenever you cast a spell from anywhere other than your hand, this creature deals damage equal to that spell's mana value to target opponent.",
+          "implementation": [
+            "interpreted castsSpell trigger, caster you, with castFrom notHand: the spell card's cast record names a zone other than the hand (graveyard, exile, library or command zone)",
+            "dealDamage to a target player (opponent) slot, amount spellManaValue captured as the spell is cast, with Keeper as the source"
+          ],
+          "engineTestIds": [
+            "keeper-of-secrets-pinned-oracle-supported",
+            "keeper-of-secrets-flashback-from-graveyard",
+            "keeper-of-secrets-command-zone",
+            "keeper-of-secrets-from-hand-no-trigger",
+            "keeper-of-secrets-opponents-spells",
+            "cast-origin-primitive-contract"
+          ],
+          "viewerScenarioIds": ["keeper-of-secrets-viewer-flashback"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a98cc4d0-a322-4142-aee0-83f39b137616": {
+      "name": "Aurora Phoenix",
+      "oracleSha256": "4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "aurora-phoenix-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["aurora-phoenix-pinned-oracle-supported"],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cast-cascade-flying"]
+        },
+        {
+          "id": "aurora-phoenix-cascade",
+          "oracleText": "Cascade",
+          "implementation": [
+            "keyword cascade (interpreted; resolved by the existing cascade cast trigger)"
+          ],
+          "engineTestIds": [
+            "aurora-phoenix-pinned-oracle-supported",
+            "aurora-phoenix-casting-a-phoenix"
+          ],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cast-cascade-flying"]
+        },
+        {
+          "id": "aurora-phoenix-return",
+          "oracleText": "Whenever you cast a spell with cascade, return this card from your graveyard to your hand.",
+          "implementation": [
+            "coverage-pr03 override: castsSpell trigger, caster you, filter hasKeyword cascade, functionsInGraveyard (CR 112.6): queueCastTriggers now scans graveyard cards, and battlefield sources skip graveyard-only abilities",
+            "returnSelfFromGraveyardToHand, now bound to the exact graveyard object (a card that left and came back is not returned)"
+          ],
+          "engineTestIds": [
+            "aurora-phoenix-pinned-oracle-supported",
+            "aurora-phoenix-cascade-returns",
+            "aurora-phoenix-casting-a-phoenix",
+            "aurora-phoenix-not-other-spells",
+            "aurora-phoenix-only-from-graveyard"
+          ],
+          "viewerScenarioIds": ["aurora-phoenix-viewer-cascade-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fc4f2cdb-966c-4576-8b37-b3d138f5710e": {
+      "name": "God-Eternal Rhonas",
+      "oracleSha256": "9df5c8f3e19a33b551697b160048537779dba35bd4d3e445302bd8e861ed57e6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "god-eternal-rhonas-deathtouch",
+          "oracleText": "Deathtouch",
+          "implementation": ["interpreted keyword line: deathtouch"],
+          "engineTestIds": ["god-eternal-rhonas-pinned-oracle-supported"],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        },
+        {
+          "id": "god-eternal-rhonas-enters",
+          "oracleText": "When God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn.",
+          "implementation": [
+            "interpreted self enters trigger, matched as one block because \"those creatures\" is the doubled set",
+            "doublePower on allOf(other, Creature, controller you): each gets +X/+0 where X is its power as the trigger resolves, until end of turn",
+            "grantKeywordEachUntilEot vigilance on the same selector"
+          ],
+          "engineTestIds": [
+            "god-eternal-rhonas-pinned-oracle-supported",
+            "god-eternal-rhonas-enters-doubles-others"
+          ],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        },
+        {
+          "id": "god-eternal-rhonas-leaves",
+          "oracleText": "When God-Eternal Rhonas dies or is put into exile from the battlefield, you may put it into its owner's library third from the top.",
+          "implementation": [
+            "interpreted optional self leavesBattlefield trigger narrowed to graveyard or exile (leavesTo)",
+            "putDepartedSourceIntoLibrary fromTop 3: finds the card the permanent became in a graveyard or exile through leftBattlefieldObjectId (CR 400.7e) and moves it with two cards above it; a shorter library takes it on the bottom (CR 401.7); a card that already left that zone does not move"
+          ],
+          "engineTestIds": [
+            "god-eternal-rhonas-pinned-oracle-supported",
+            "god-eternal-rhonas-dies-third-from-top",
+            "god-eternal-rhonas-exiled-third-from-top",
+            "god-eternal-rhonas-decline",
+            "god-eternal-rhonas-bounce-no-trigger",
+            "god-eternal-rhonas-card-moved-on",
+            "god-eternal-rhonas-short-library"
+          ],
+          "viewerScenarioIds": ["god-eternal-rhonas-viewer-double-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f9516b60-36dd-4f8a-bebb-ac1bc0961f07": {
+      "name": "Candlekeep Sage",
+      "oracleSha256": "0ed0ff30dcf72ddcda8b2faa9628978ea65b1f7de653a344e84259b1890f052e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "candlekeep-sage-grant",
+          "oracleText": "Commander creatures you own have \"When this creature enters or leaves the battlefield, draw a card.\"",
+          "implementation": [
+            "interpreted static layer-6 addTrigger on allOf(isCommander, Creature, owner you): ownership, not control (CR 108.3), via a new owner selector",
+            "granted trigger \"enters or leaves the battlefield\" is two self heads, enters and leavesBattlefield, each drawing a card for the creature's controller",
+            "leaving is read from the game before the event (CR 603.10a), so the Sage leaving with the commander still grants the draw"
+          ],
+          "engineTestIds": [
+            "candlekeep-sage-pinned-oracle-supported",
+            "candlekeep-sage-commander-enters",
+            "candlekeep-sage-commander-leaves",
+            "candlekeep-sage-negative",
+            "candlekeep-sage-ownership-not-control",
+            "candlekeep-sage-leaves-together",
+            "candlekeep-sage-bounced-to-command-zone",
+            "candlekeep-sage-gone"
+          ],
+          "viewerScenarioIds": ["candlekeep-sage-viewer-commander-enters-and-leaves"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b23a3d30-6b8e-4aad-890f-db0c3af43ace": {
+      "name": "Flickerwisp",
+      "oracleSha256": "2c5047d9ba2f69bc11fae70409c7de721dce424a456f595cdd7c9705b7830404",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "flickerwisp-flying",
+          "oracleText": "Flying",
+          "implementation": ["interpreted keyword line: flying"],
+          "engineTestIds": ["flickerwisp-pinned-oracle-supported"],
+          "viewerScenarioIds": ["flickerwisp-viewer-exile-and-return"]
+        },
+        {
+          "id": "flickerwisp-enters",
+          "oracleText": "When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+          "implementation": [
+            "interpreted self enters trigger, matched as one block: target permanent filtered by other",
+            "exileTargetReturnAtNextEndStep returnUnder owner: the permanent moves to exile, then a delayed endStep trigger (expiry onFire, so one created during an end step waits for the next) remembers the exiled card object",
+            "returnExiledTriggerObject puts that exact card onto the battlefield under its owner's control; a token ceased to exist and a card that left exile does not return (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "flickerwisp-pinned-oracle-supported",
+            "flickerwisp-returns-at-next-end-step",
+            "flickerwisp-owner-not-controller",
+            "flickerwisp-token-ceases",
+            "flickerwisp-card-left-exile",
+            "flickerwisp-during-end-step",
+            "flickerwisp-another"
+          ],
+          "viewerScenarioIds": ["flickerwisp-viewer-exile-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8bf8ff8-d924-4fd2-b5ed-05b38f55325a": {
+      "name": "Venser, the Sojourner",
+      "oracleSha256": "2160ba7e8a5046951166879c01d937fbd7fdcc60d7b4a001a89876806249536b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "venser-plus-two",
+          "oracleText": "+2: Exile target permanent you own. Return it to the battlefield under your control at the beginning of the next end step.",
+          "implementation": [
+            "interpreted loyalty ability, matched as one block: target permanent filtered by owner you (CR 108.3), so one you own under an opponent is legal and one you control but do not own is not",
+            "exileTargetReturnAtNextEndStep returnUnder sourceController: exile, then a delayed end-step return of that exact card under Venser's controller"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-plus-two-blink",
+            "venser-plus-two-ownership"
+          ],
+          "viewerScenarioIds": ["venser-viewer-plus-two-blink"]
+        },
+        {
+          "id": "venser-minus-one",
+          "oracleText": "−1: Creatures can't be blocked this turn.",
+          "implementation": [
+            "creaturesCantBeBlockedThisTurn sets a turn-scoped rule flag read by block legality; it changes no characteristics, so creatures that arrive later this turn are covered too (CR 611.2c); reset at the next untap step"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-minus-one-unblockable",
+            "venser-minus-one-control"
+          ],
+          "viewerScenarioIds": ["venser-viewer-minus-one-unblockable"]
+        },
+        {
+          "id": "venser-minus-eight",
+          "oracleText": "−8: You get an emblem with \"Whenever you cast a spell, exile target permanent.\"",
+          "implementation": [
+            "createEmblem with the quoted ability parsed as a trigger line: castsSpell caster you, target permanent, exile",
+            "emblem cast triggers are scanned by queueCastTriggers (CR 114.4), controlled by the emblem's owner; an opponent's spell does not trigger it"
+          ],
+          "engineTestIds": [
+            "venser-the-sojourner-pinned-oracle-supported",
+            "venser-minus-eight-emblem",
+            "venser-emblem-opponent-casts"
+          ],
+          "viewerScenarioIds": ["venser-viewer-minus-eight-emblem"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "240e85d3-e495-4877-8609-4b4056c402f7": {
+      "name": "Victimize",
+      "oracleSha256": "55746d7550543058962aca55449ec7cfc847179fc2192ac2be63ee3ffe053321",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "victimize-spell",
+          "oracleText": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+          "implementation": [
+            "interpreted spell block: one cardInGraveyard slot with count exactly 2 (creature cards in the caster's graveyard), chosen on cast; the spell can't be cast without two legal targets",
+            "sacrificeOneThen over creatures you control: the sacrifice is mandatory when possible, and the return runs only after a completed sacrifice (\"if you do\")",
+            "reanimateEachChosenTapped returns the chosen cards that are still legal targets together, tapped, under the caster (CR 608.2b, 603.6a)",
+            "counted-target prompts now name graveyard and exile cards instead of showing raw ids"
+          ],
+          "engineTestIds": [
+            "victimize-pinned-oracle-supported",
+            "victimize-sacrifice-then-return-tapped",
+            "victimize-targets-your-creature-cards",
+            "victimize-no-sacrifice-no-return",
+            "victimize-one-target-gone",
+            "victimize-both-targets-gone",
+            "victimize-returns-together"
+          ],
+          "viewerScenarioIds": ["victimize-viewer-sacrifice-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []

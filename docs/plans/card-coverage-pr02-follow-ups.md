@@ -11,6 +11,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 **Follow-up:** Make life-paid casting validate and charge the complete cost for legal X values and additional life costs, while preserving the rule that life equal to mana value replaces the mana cost.
 
 **Acceptance checks:**
+
 - A life-paid cast with X can be offered at each supported, legal value and resolves with the announced value.
 - A cast is not offered when the total life payment (replacement plus additional life costs) cannot be paid.
 - The chosen payment is charged once, with regression coverage for the graveyard and hand paths.
@@ -22,6 +23,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 **Follow-up:** Determine convoke from the face actually being cast, and make the payment planner enforce the mana symbol rules: a creature may pay {1} or one colored symbol matching one of its colors; it cannot pay {C}. Decide separately whether convoke creature selection should become a player choice. Until that choice is implemented, keep the automatic selection deterministic and within the legal payment rules.
 
 **Acceptance checks:**
+
 - A spell face without convoke cannot use creatures to pay, even when another face has convoke.
 - A colorless creature can pay generic mana through convoke but cannot pay colored or {C} symbols.
 - A multicolor creature can pay only one matching colored symbol per creature.
@@ -34,6 +36,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 **Follow-up:** Make the offered cost match the selected target assignment for both normal and non-mana alternative casts. Give options distinct labels when different target slots produce different prices.
 
 **Acceptance checks:**
+
 - Choosing zero targets or only noncreature targets costs full price.
 - Choosing a creature target receives the reduction before payment is planned.
 - Each legal target assignment has an accurate, distinguishable option; applying an option charges exactly the displayed cost.
@@ -46,6 +49,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 **Follow-up:** Support legal optional retargeting for each copy without changing the original spell's target choices. Preserve the engine's existing handling for unchanged and illegal original targets.
 
 **Acceptance checks:**
+
 - For each copy, allow zero through N legal replacement targets where the spell text permits it.
 - Verify each copy resolves with its own chosen targets and that the original spell's targets remain unchanged.
 - Cover no-target, partial-target, full-target, and targets-becoming-illegal cases in engine tests and a real viewer scenario.
@@ -57,6 +61,7 @@ Status: open follow-up work from [Card coverage PR02](https://github.com/paulliy
 **Follow-up:** Make copy creation capture the copied object's current copiable characteristics, including its transformed face, while preserving the existing special mana-value rules. Do not copy unrelated state such as counters or damage. See the [implementation plan](transformed-dfc-copy-characteristics.md) for sequencing and validation.
 
 **Acceptance checks:**
+
 - A copy of a transformed creature has the characteristics of the transformed face, including name, types, color, abilities, and power/toughness.
 - A copy of an untransformed card retains the expected front-face characteristics.
 - A copy of a transformed double-faced card still has mana value 0 where required by the existing mana-value rules.

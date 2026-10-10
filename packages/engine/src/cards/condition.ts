@@ -96,6 +96,12 @@ export type Condition =
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
   | { kind: 'wasKicked' }
+  /**
+   * "if you cast it" (Shard of the Nightbringer): the source permanent is the spell its
+   * controller cast (CR 601.2), read from its cast record or, once it has left, its last-known
+   * facts. A permanent put onto the battlefield without being cast, or a copy, has no record.
+   */
+  | { kind: 'sourceWasCast' }
   | { kind: 'announcedXAtLeast'; n: number }
   | { kind: 'escaped' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
@@ -196,6 +202,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'totalCreaturePower':
     case 'isUntapped':
     case 'wasKicked':
+    case 'sourceWasCast':
     case 'announcedXAtLeast':
     case 'escaped':
     case 'hasCounters':
@@ -440,6 +447,11 @@ export function evaluateCondition(
     }
     case 'createdTokenThisTurn':
       return ctx.state.createdTokenThisTurn?.[source.controllerId] === true;
+    case 'sourceWasCast': {
+      const self = sourceState();
+      if (self === undefined) return false;
+      return self.castByPlayerId !== undefined && self.castByPlayerId === source.controllerId;
+    }
     case 'wasKicked': {
       if (source?.cardId === undefined) return false;
       const perm = sourceState();

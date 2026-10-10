@@ -14,7 +14,7 @@ import type { Value, ValueScope } from '../cards/value';
 import { assertNumericReference, cardTypesInAllGraveyards, devotionTo } from '../cards/value';
 import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
-import type { EnginePermanent, GameContext } from '../state/types';
+import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
 import { cardZoneCandidate, effectivePT, getDefByOracleId, opponentsOf } from '../state/queries';
 import { spellManaValue } from '../state/objects';
@@ -288,4 +288,24 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     default:
       assertNever(value, 'resolution value');
   }
+}
+
+/**
+ * A card's characteristic-defining power off the battlefield (CR 604.3: a characteristic-defining
+ * ability works in every zone). "You" is the card's owner there (CR 109.5). Undefined when the
+ * card has no unconditional layer 7a ability on itself, so a caller can refuse rather than guess.
+ */
+export function offBattlefieldCdaPower(
+  ctx: GameContext,
+  card: EngineCardObject,
+  ownerId: string,
+): number | undefined {
+  const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  for (const effect of def.staticEffects) {
+    const { op } = effect;
+    if (effect.affects.kind !== 'self' || effect.condition !== undefined) continue;
+    if (!('layer' in op) || op.layer !== 7 || op.sublayer !== 'a') continue;
+    return evaluateValueIn(ctx, op.power, { controllerId: ownerId, sourceCardId: card.cardId });
+  }
+  return undefined;
 }
