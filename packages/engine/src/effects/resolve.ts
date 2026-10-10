@@ -3,6 +3,7 @@ import type { ObjectFacts } from '../cards/source-identity';
 import { eventObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
+import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { permanentManaValue, targetCandidates, targetIsLegal } from '../targets/legality';
@@ -6249,40 +6250,29 @@ function* replicateCopies(
   );
   const def =
     original === undefined
-      ? getDefByOracleId(ctx, effect.spell.oracleId, effect.spell.name)
+      ? (effect.spell.definition ?? getDefByOracleId(ctx, effect.spell.oracleId, effect.spell.name))
       : spellDefinitionOf(ctx, original);
-  const ability = original?.ability ?? def.spellAbility;
+  const ability = original?.ability ?? effect.spell.ability ?? def.spellAbility;
   if (ability === null || ability === undefined) return;
   const originalTargets = original?.targets ?? (effect.spell.targets as ObjectId[]);
+  const originalCounted = original?.countTargets ?? effect.spell.countTargets ?? {};
+  const originalDivision = original?.divisionAmounts ?? effect.spell.divisionAmounts ?? {};
   for (let copyIndex = 0; copyIndex < effect.count; copyIndex++) {
-    const targets = [...originalTargets];
-    for (const [slot, spec] of ability.targets.entries()) {
-      if (spec.count !== undefined) continue;
-      const current = targets[slot];
-      const fresh = targetCandidates(ctx, spec, {
-        controllerId,
-        sourceCardId: original?.sourceCardId ?? '',
-        sourceColors: def.colors,
-        chosenTargets: targets,
-      }).filter((id) => id !== current);
-      if (fresh.length === 0) continue;
-      const nameOf = (id: ObjectId): string =>
-        ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? String(id);
-      const choices = [...(current === undefined ? [] : [current]), ...fresh];
-      const outcome = yield {
-        decisionType: 'general' as const,
-        player: controllerId,
-        prompt: `${effect.spell.name}: choose a target for copy ${copyIndex + 1} of ${effect.count}.`,
-        options: choices.map((id, index) => ({
-          type: 'chooseTarget',
-          description:
-            index === 0 && current !== undefined
-              ? `Keep ${nameOf(id)} as the target`
-              : `Target ${nameOf(id)}`,
-        })),
-      };
-      targets[slot] = choices[outcome.index] ?? choices[0]!;
-    }
+    const selected = yield* chooseReplicateTargets(
+      ctx,
+      controllerId,
+      effect.spell.name,
+      copyIndex,
+      effect.count,
+      ability,
+      def.colors,
+      original?.sourceCardId ?? '',
+      originalTargets,
+      originalCounted,
+      originalDivision,
+      effect.spell.targetNames,
+    );
+    const { targets } = selected;
     const copy = queueReplicateCopy(
       ctx,
       controllerId,
@@ -6292,6 +6282,9 @@ function* replicateCopies(
       ability,
       targets,
     );
+    if (Object.keys(selected.countTargets).length > 0) copy.countTargets = selected.countTargets;
+    if (Object.keys(selected.divisionAmounts).length > 0)
+      copy.divisionAmounts = selected.divisionAmounts;
     emit(ctx, 'spellCopied', { name: effect.spell.name, targets }, controllerId);
     // A copy's targets become targets of a spell (ward, "becomes the target") like a cast's.
     const allTargets = [
@@ -6590,9 +6583,28 @@ export function endUntilEotEffects(ctx: GameContext): void {
     perm.manaCost = original.manaCost;
     perm.power = original.power;
     perm.toughness = original.toughness;
+    const def = ctx.defs.get(original.oracleId);
+    const face = perm.transformed ? def?.backFace : def;
+    if (face !== undefined) {
+      perm.name = face.name;
+      perm.typeLine = face.typeLine;
+      perm.power = face.power;
+      perm.toughness = face.toughness;
+      if (def?.backFace !== undefined) {
+        perm.oracleText = perm.transformed ? def.backFace.oracleText : def.backFace.frontOracleText;
+        perm.manaCost = (
+          perm.transformed ? def.backFace.manaCostText : def.backFace.frontManaCostText
+        ) as EnginePermanent['manaCost'];
+      }
+      if (face.cantBlock) perm.cantBlock = true;
+      else delete perm.cantBlock;
+      if (face.cantBeBlocked) perm.cantBeBlocked = true;
+      else delete perm.cantBeBlocked;
+    }
     perm.timestamp = ctx.state.nextTimestamp++;
     delete perm.copyOriginal;
     delete perm.copyUntilEot;
+    delete perm.copyImageFace;
     delete perm.copyAddTypes;
     delete perm.copyAddKeywords;
     delete perm.copyAddTriggers;
@@ -6638,7 +6650,9 @@ export function* payManaCost(
   // Convoke (CR 702.51): the spell's controller may tap creatures to help pay for it.
   const convoke =
     purpose.kind === 'castSpell' &&
-    spellHasConvoke(getDefByOracleId(ctx, purpose.oracleId, purpose.oracleId))
+    spellHasConvoke(
+      purpose.spellDefinition ?? getDefByOracleId(ctx, purpose.oracleId, purpose.oracleId),
+    )
       ? convokeSourcesFor(ctx, player.id)
       : [];
   const sources = withoutReserved(
@@ -6654,6 +6668,8 @@ export function* payManaCost(
   }
   // Prepared plans cannot bypass the supported immediate-rider scope either.
   for (const source of plan.tapSources) assertManaRiders(source.cardId, source.onActivate);
+  // Convoke assignments are local cost payments, never spendable mana in the player's pool.
+  const convokedEntries: ManaEntry[] = [];
   // Activate the sources in the order the plan gives them and add each one's production as it
   // goes, rather than tapping everything and then adding it all. The distinction is invisible
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
@@ -6779,18 +6795,17 @@ export function* payManaCost(
     // unit (correct for multi-color sources, where the first symbol would mispay), carrying
     // whatever restriction, spend trigger and persistence the producing ability attaches.
     // Surplus floats.
-    addMana(
-      player,
-      selectedProduction.map(({ symbol }) => ({
-        symbol,
-        ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
-        ...(source.spendTrigger !== undefined ? { spendTrigger: source.spendTrigger } : {}),
-        ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
-        ...(fromTreasure ? { fromTreasure: true as const } : {}),
-        ...(source.persistent === true ? { persistent: true } : {}),
-        ...(source.convoke === true ? { convoked: true as const } : {}),
-      })),
-    );
+    const entries = selectedProduction.map(({ symbol }) => ({
+      symbol,
+      ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
+      ...(source.spendTrigger !== undefined ? { spendTrigger: source.spendTrigger } : {}),
+      ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
+      ...(fromTreasure ? { fromTreasure: true as const } : {}),
+      ...(source.persistent === true ? { persistent: true } : {}),
+      ...(source.convoke === true ? { convoked: true as const } : {}),
+    }));
+    if (source.convoke === true) convokedEntries.push(...entries);
+    else addMana(player, entries);
     // CR 602.2b / 605.3b: pay the activation costs before resolving the mana ability.
     // A sacrificed source can still deal damage using its last known characteristics;
     // it cannot receive counters once the battlefield object has ceased to exist.
@@ -6804,13 +6819,21 @@ export function* payManaCost(
 
   // Spend specific entries, so the right spend triggers fire. Only mana this payment may
   // legally use is eligible — the pool can hold restricted mana that is not spendable here.
-  const eligible = player.manaEntries.filter((e) => entryIsUsable(e, allows));
+  const eligible = [
+    ...player.manaEntries.filter((e) => entryIsUsable(e, allows)),
+    ...convokedEntries,
+  ];
   const paidManaCost = plan.resolvedCost ?? cost;
   const spent = selectEntriesToSpend(eligible, paidManaCost);
   if (spent === null) {
     throw new Error(`engine bug: payment shortfall for ${player.id} after producing mana`);
   }
-  removeMana(player, spent);
+  if (convokedEntries.some((entry) => !spent.includes(entry)))
+    throw new Error('engine bug: a convoke assignment did not pay a spell cost');
+  removeMana(
+    player,
+    spent.filter((entry) => entry.convoked !== true),
+  );
   if ((plan.lifePaid ?? 0) > 0) payLife(ctx, player, plan.lifePaid ?? 0);
 
   // "When you spend this mana to cast a Dragon creature spell, you gain 2 life" — a reflexive

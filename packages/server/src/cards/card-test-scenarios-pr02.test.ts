@@ -719,10 +719,10 @@ describe('Hour of Reckoning Card Test Lab scenario', () => {
 
 describe('Killian, Ink Duelist Card Test Lab scenario', () => {
   it('killian-ink-duelist-viewer-reduced-bolt — the bolt costs {R} at a creature', () => {
-    const steps: Step[] = [{ action: 'reduced for its target', targets: ['Lab Ox'] }];
+    const steps: Step[] = [{ action: 'reduced for target slot 1', targets: ['Lab Ox'] }];
     const { onBattlefield, offered } = run('killian-ink-duelist-viewer-reduced-bolt', steps);
     expect(offered[0]?.filter((action) => action.includes('Lab Killian Bolt'))).toEqual([
-      expect.stringMatching(/\{R\}.*reduced for its target/),
+      expect.stringMatching(/\{R\}.*reduced for target slot 1/),
     ]);
     expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(2);
     expect(onBattlefield('Mountain')[0]?.tapped).toBe(true);

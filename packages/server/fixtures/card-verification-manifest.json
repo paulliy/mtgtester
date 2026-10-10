@@ -1275,9 +1275,16 @@
             "changing-loyalty-copies-become-aura-tokens",
             "changing-loyalty-copy-may-keep-its-target",
             "changing-loyalty-copies-use-last-known-information",
+            "retains a counted target slot with %i original targets on both copies",
+            "lets a copy keep one counted target and change another to a legal creature",
+            "retargets two copies independently and allows a final-set swap without duplicate targets",
+            "allows a copy to keep an unchanged target that became illegal",
             "changing-loyalty-flash"
           ],
-          "viewerScenarioIds": ["changing-loyalty-viewer-replicate"]
+          "viewerScenarioIds": [
+            "changing-loyalty-viewer-replicate",
+            "changing-loyalty-viewer-replicate-two-original-countered"
+          ]
         },
         {
           "id": "changing-loyalty-enchant",
@@ -1567,9 +1574,19 @@
             "killian-ink-duelist-targeting-a-creature",
             "killian-ink-duelist-targeting-a-player",
             "killian-ink-duelist-untargeted-spells-full-price",
+            "charges full price when a counted target slot is left at zero",
+            "charges full price when the only selected counted target is a noncreature permanent",
+            "offers and charges the reduced price when a counted slot chooses one creature",
+            "emits distinct reduced options for multiple counted slots and the mixed mandatory/count case",
+            "keeps only the reduced option when only reduced mana is available",
+            "reduces the mana component of a nonmana alternative including its mandatory additional mana",
             "killian-ink-duelist-only-yours"
           ],
-          "viewerScenarioIds": ["killian-ink-duelist-viewer-reduced-bolt"]
+          "viewerScenarioIds": [
+            "killian-ink-duelist-viewer-reduced-bolt",
+            "lab-killian-counted-target-zero-contract",
+            "lab-killian-counted-target-creatures-contract"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2580,6 +2597,11 @@
             "anrakyr-the-traveller-cast-from-hand-for-life",
             "anrakyr-the-traveller-cast-from-graveyard-for-life",
             "anrakyr-the-traveller-only-your-artifacts",
+            "uses pinned Anrakyr Oracle and makes X zero for the life replacement cost",
+            "allows an ordinary mana cast to announce positive X",
+            "offers the cast when total life exactly equals replacement and additional costs",
+            "does not offer a cast when combined life costs exceed current life",
+            "does not grant permission for a nonartifact or an opponent graveyard card",
             "anrakyr-the-traveller-needs-the-life"
           ],
           "viewerScenarioIds": ["anrakyr-the-traveller-viewer-cast-for-life"]
@@ -3888,7 +3910,7 @@
             "kairi-the-swirling-sky-budget-and-filter",
             "kairi-the-swirling-sky-bounce-zero",
             "kairi-the-swirling-sky-copy-token-mana-value",
-            "kairi-the-swirling-sky-copied-back-face-mana-value-zero",
+            "kairi-the-swirling-sky-copied-double-faced-token-mana-value",
             "kairi-the-swirling-sky-face-down-mana-value-zero",
             "kairi-the-swirling-sky-budget-rechecked-on-resolution"
           ],
@@ -4993,9 +5015,18 @@
             "conclave-tribunal-pinned-oracle-supported",
             "conclave-tribunal-convoke-generic",
             "conclave-tribunal-convoke-colored",
+            "uses the selected Adventure face: parent convoke cannot pay for a nonconvoke Adventure",
+            "offers the Convoke Adventure face when the parent face has no convoke",
+            "lets a colorless convoker pay generic but never a {C} pip",
+            "never uses one creature twice, including a creature that also produces mana",
+            "keeps convokers in the stateful payment search and chooses the same payer deterministically",
+            "includes convoke creatures in fixed-capacity pruning beside an invariant mana source rider",
             "conclave-tribunal-convoke-taps-once"
           ],
-          "viewerScenarioIds": ["conclave-tribunal-viewer-convoke"]
+          "viewerScenarioIds": [
+            "conclave-tribunal-viewer-convoke",
+            "conclave-tribunal-viewer-convoke-szeras"
+          ]
         },
         {
           "id": "conclave-tribunal-exile",
@@ -5026,6 +5057,7 @@
           "engineTestIds": [
             "hour-of-reckoning-pinned-oracle-supported",
             "hour-of-reckoning-convoke-seven",
+            "Hour of Reckoning remains castable with its pinned convoke rules text",
             "hour-of-reckoning-convoke-needs-white"
           ],
           "viewerScenarioIds": ["hour-of-reckoning-viewer-convoke"]

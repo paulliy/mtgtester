@@ -129,6 +129,8 @@ export type PriorityActionPayload =
        * hold a matching target, or -1 for the variant that targets nothing matching.
        */
       targetReductionSlot?: number;
+      /** Exact target-dependent discount locked by the offered option, including counted slots. */
+      targetReductionAmount?: number;
     }
   /** Activate `index` of the source permanent's `activatedAbilities` (CR 602). */
   | {
@@ -461,53 +463,6 @@ export function targetedReductionAmount(
   return reductions
     .filter((reduction) => targetIds.some((id) => targetMatchesReduction(ctx, id, reduction)))
     .reduce((sum, reduction) => sum + reduction.generic, 0);
-}
-
-/**
- * One cast option per price under target-dependent reductions (Killian): without them, the
- * spell as is; with them, a full-price option whose targets match no reduction, and a reduced
- * option for each slot that can hold a target matching every reduction. A mix that matches only
- * some reductions is left out rather than mispriced. `slot` is the SPEC slot number (what
- * `validateChosenTargets` indexes by), -1 for the full-price option.
- */
-function targetReductionVariants(
-  ctx: GameContext,
-  targeted: readonly TargetedCostReduction[],
-  targets: { slot: number; options: ObjectId[] }[],
-  fullCost: ParsedManaCost,
-): { slot: number | undefined; selectionCost: ParsedManaCost; slots: typeof targets }[] {
-  if (targeted.length === 0 || targets.length === 0) {
-    return [{ slot: undefined, selectionCost: fullCost, slots: targets }];
-  }
-  const matchesNone = (id: ObjectId): boolean =>
-    targeted.every((entry) => !targetMatchesReduction(ctx, id, entry));
-  const matchesAll = (id: ObjectId): boolean =>
-    targeted.every((entry) => targetMatchesReduction(ctx, id, entry));
-  const variants: {
-    slot: number | undefined;
-    selectionCost: ParsedManaCost;
-    slots: typeof targets;
-  }[] = [
-    {
-      slot: -1,
-      selectionCost: fullCost,
-      slots: targets.map((slot) => ({ ...slot, options: slot.options.filter(matchesNone) })),
-    },
-  ];
-  const reducedCost = subtractGeneric(
-    fullCost,
-    targeted.reduce((sum, entry) => sum + entry.generic, 0),
-  );
-  targets.forEach((slot, index) => {
-    const matching = slot.options.filter(matchesAll);
-    if (matching.length === 0) return;
-    variants.push({
-      slot: slot.slot,
-      selectionCost: reducedCost,
-      slots: targets.map((other, i) => (i === index ? { ...other, options: matching } : other)),
-    });
-  });
-  return variants;
 }
 
 /**
@@ -962,6 +917,10 @@ export function computePriorityOptions(
       paymentCtx = castCtx;
       paymentPlayer = castCtx.state.players.find((p) => p.id === player.id)!;
       paymentDefinition = castingDef;
+      const castSources = spellHasConvoke(castingDef)
+        ? [...manaSourcesFor(castCtx, player.id), ...convokeSourcesFor(castCtx, player.id)]
+        : manaSourcesFor(castCtx, player.id);
+      paymentSources = castSources;
       const reduction = costReductionFor(castCtx, player.id, obj.oracleId, obj.cardId, castingDef);
 
       const additionalManaCost = manaPortionOf(spellAdditionalCosts);
@@ -1109,7 +1068,7 @@ export function computePriorityOptions(
               (entry) =>
                 entry.static.kind === 'targetLifeTax' && entry.controllerId !== castPlayer.id,
             );
-            const menusAt = (price: ParsedManaCost) =>
+            const menusAt = (price: ParsedManaCost, discount: number, requiredSlot?: number) =>
               legalTargetMenus(
                 castCtx,
                 castingDef.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
@@ -1120,51 +1079,72 @@ export function computePriorityOptions(
                   x,
                 },
                 selectedModeTargetSlots(castingDef, selectedModes),
-                taxesTargets
-                  ? (ordinary, counted) =>
-                      jointlyPayable(
-                        price,
-                        additionalCosts,
-                        x,
-                        targetLifeTaxFor(castCtx, castPlayer.id, [
-                          ...ordinary,
-                          ...Object.values(counted).flat(),
-                        ]),
-                        energyCost,
-                      )
-                  : undefined,
+                (ordinary, counted) => {
+                  const all = [...ordinary, ...Object.values(counted).flat()];
+                  if (targetedReductionAmount(castCtx, targeted, all) !== discount) return false;
+                  if (
+                    requiredSlot !== undefined &&
+                    requiredSlot >= 0 &&
+                    ![ordinary[requiredSlot], ...(counted[requiredSlot] ?? [])].some(
+                      (id) =>
+                        id !== undefined &&
+                        targeted.every((entry) => targetMatchesReduction(castCtx, id, entry)),
+                    )
+                  )
+                    return false;
+                  return (
+                    !taxesTargets ||
+                    jointlyPayable(
+                      price,
+                      additionalCosts,
+                      x,
+                      targetLifeTaxFor(castCtx, castPlayer.id, all),
+                      energyCost,
+                    )
+                  );
+                },
               );
-            // One option per price: without target-dependent reductions, the spell as is; with
-            // them, a full-price option whose targets match no reduction, and a reduced option
-            // for each slot that can hold a target matching every reduction (Killian). A mix that
-            // matches only some reductions is left out rather than mispriced.
+            // Lock the target-dependent price across ordinary AND counted target slots.
             const priced: {
               slot: number | undefined;
+              discount: number;
               selectionCost: ParsedManaCost;
               payment: NonNullable<ReturnType<typeof jointPayment>>;
               payableTargets: TargetMenu[];
             }[] = [];
             const reducedCost = subtractGeneric(fullCost, bestTargeted);
-            for (const [selectionCost, reduced] of [
-              [fullCost, false],
-              ...(targeted.length > 0 ? [[reducedCost, true] as const] : []),
-            ] as const) {
+            const activeSlots = selectedModeTargetSlots(castingDef, selectedModes);
+            const variants =
+              targeted.length === 0
+                ? [{ slot: undefined, discount: 0, selectionCost: fullCost }]
+                : [
+                    { slot: -1, discount: 0, selectionCost: fullCost },
+                    ...(castingDef.spellAbility?.targets ?? []).flatMap((_spec, slot) =>
+                      activeSlots !== undefined && !activeSlots.includes(slot)
+                        ? []
+                        : [{ slot, discount: bestTargeted, selectionCost: reducedCost }],
+                    ),
+                  ];
+            for (const { slot, discount, selectionCost } of variants) {
               const payment = jointPayment(selectionCost, additionalCosts, x, 0, energyCost);
               if (payment === null) continue;
-              for (const menu of menusAt(selectionCost)) {
-                for (const variant of targetReductionVariants(castCtx, targeted, menu, fullCost)) {
-                  if (reduced !== (variant.slot !== undefined && variant.slot >= 0)) continue;
-                  if (variant.slots.some((slot) => slot.options.length === 0)) continue;
-                  priced.push({
-                    slot: variant.slot,
-                    selectionCost,
-                    payment,
-                    payableTargets: variant.slots,
-                  });
-                }
+              for (const menu of menusAt(selectionCost, discount, slot)) {
+                priced.push({
+                  slot,
+                  discount,
+                  selectionCost,
+                  payment,
+                  payableTargets: menu,
+                });
               }
             }
-            for (const { slot: reductionSlot, selectionCost, payment, payableTargets } of priced) {
+            for (const {
+              slot: reductionSlot,
+              discount,
+              selectionCost,
+              payment,
+              payableTargets,
+            } of priced) {
               const optionalLabel =
                 optional !== undefined && optionalCostCount > 0
                   ? ` — ${optional.mechanic} ${optionalCostCount}`
@@ -1184,7 +1164,7 @@ export function computePriorityOptions(
                   (fromGraveyard ? ' from your graveyard' : '') +
                   (reboundCast ? ' without paying its mana cost' : '') +
                   (reductionSlot !== undefined && reductionSlot >= 0
-                    ? ' — reduced for its target'
+                    ? ` — reduced for target slot ${reductionSlot + 1}`
                     : ''),
                 payload: {
                   kind: 'castSpell',
@@ -1205,9 +1185,13 @@ export function computePriorityOptions(
                     : {}),
                   ...(optionalCostCount > 0 ? { optionalCostCount } : {}),
                   ...(reductionSlot !== undefined ? { targetReductionSlot: reductionSlot } : {}),
+                  ...(targeted.length > 0 ? { targetReductionAmount: discount } : {}),
                 },
                 data: {
                   instantSpeed: familyInstantSpeed,
+                  ...(reductionSlot !== undefined && reductionSlot >= 0
+                    ? { targetReductionSlot: reductionSlot }
+                    : {}),
                   ...(variant.alternativeCast === undefined
                     ? {}
                     : { castVariant: variant.alternativeCast }),

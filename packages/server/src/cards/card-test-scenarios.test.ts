@@ -46,6 +46,9 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'brigid-viewer-token-copy-back',
+      'brigid-viewer-token-copy-front',
+      'brigid-viewer-ordinary-copy-back',
       'madame-null-viewer-pay-life',
       'madame-null-viewer-decline',
       'madame-null-viewer-unfunded',
@@ -153,6 +156,11 @@ describe('deterministic Card Test Lab scenarios', () => {
       'vandalblast-viewer-overload',
       'damn-viewer-normal',
       'damn-viewer-overload',
+      'conclave-tribunal-viewer-convoke-szeras',
+      'lab-killian-counted-target-zero-contract',
+      'lab-killian-counted-target-creatures-contract',
+      'changing-loyalty-viewer-replicate-two-original-countered',
+      'lab-replicate-counted-targets-original-countered-contract',
       'tribute-viewer-cast-search-select-resolve',
       'gev-viewer-opponent-targets-ward',
       'nightscape-viewer-activate-regenerate-destroy',

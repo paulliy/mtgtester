@@ -18,6 +18,7 @@ export function countTargetsCanComplete(
   prefix: CountedTargetChoices = {},
   activeSlots?: readonly number[],
   payable: (chosen: CountedTargetChoices) => boolean = () => true,
+  lockedSlots: readonly number[] = [],
 ): boolean {
   const slots = ability.targets.flatMap((spec, slot) =>
     spec.count === undefined || (activeSlots !== undefined && !activeSlots.includes(slot))
@@ -64,8 +65,9 @@ export function countTargetsCanComplete(
         choices[slot] = [...picked];
         const result = search(index + 1);
         delete choices[slot];
-        return result;
+        if (result) return true;
       }
+      if (lockedSlots.includes(slot)) return false;
       if (picked.length >= maximum) return false;
       for (let i = next; i < candidates.length; i++) {
         const id = candidates[i]!;

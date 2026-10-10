@@ -39,6 +39,8 @@ export interface SpectatorCard {
 
 /** A permanent, with engine-computed effective characteristics. */
 export interface SpectatorPermanent extends SpectatorCard {
+  /** Visible face for double-faced permanents; omitted for ordinary cards (front face). */
+  imageFace?: 'front' | 'back';
   controller: PlayerId;
   tapped: boolean;
   /** Effective P/T after continuous effects; null for non-creatures. */

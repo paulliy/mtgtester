@@ -92,7 +92,11 @@ const marks = computed(() => {
 });
 
 function onEnter(event: MouseEvent): void {
-  cardPreview.show({ scryfallId: props.permanent.scryfallId, name: props.permanent.name });
+  cardPreview.show({
+    scryfallId: props.permanent.scryfallId,
+    name: props.permanent.name,
+    imageFace: props.permanent.imageFace ?? 'front',
+  });
   cardPreview.updateCursor(event.clientX, event.clientY);
 }
 function onMove(event: MouseEvent): void {
@@ -138,6 +142,7 @@ function onLeave(): void {
     <CardImage
       :scryfall-id="permanent.scryfallId"
       :name="permanent.name"
+      :face="permanent.imageFace ?? 'front'"
       :is-token="isToken"
       size="small"
       :tapped="permanent.tapped"

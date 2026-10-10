@@ -1,5 +1,5 @@
 import type { Phase, PlayerId, Step } from '@mtg/shared';
-import { makePermanent } from '../state/objects';
+import { makePermanent, transformPermanent } from '../state/objects';
 import { subtractGeneric } from '../mana/cost';
 import { preparedScenarioSpell } from '../casting/preview';
 import type { EngineCardObject, GameContext } from '../state/types';
@@ -12,6 +12,7 @@ export interface PreparedScenarioSpec {
   lifeTotals?: Array<{ playerId: PlayerId; life: number }>;
   hand: Array<{ playerId: PlayerId; cardNames: string[] }>;
   battlefield: Array<{
+    transformed?: boolean;
     playerId: PlayerId;
     cardNames: string[];
     tapped?: boolean;
@@ -114,6 +115,9 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       // Nor did they arrive from the library the scenario drew them out of.
       delete permanent.enteredFromZone;
       ctx.state.battlefield.push(permanent);
+      if (entry.transformed && !transformPermanent(ctx, permanent)) {
+        throw new Error(`prepared scenario cannot transform ${name}`);
+      }
     }
   }
 

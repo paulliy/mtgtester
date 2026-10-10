@@ -294,6 +294,7 @@ export function* chooseCountTargets(
               { ...countTargets, [slot]: [...picked, id] },
               activeSlots,
               payable,
+              Object.keys(countTargets).map(Number),
             ),
         ),
       );
@@ -307,6 +308,7 @@ export function* chooseCountTargets(
           { ...countTargets, [slot]: picked },
           activeSlots,
           payable,
+          [...Object.keys(countTargets).map(Number), slot],
         );
       const outcome = yield {
         decisionType: 'general',
@@ -761,7 +763,7 @@ function* proposeCast(
       ? targetedCostReductionFor(ctx, player.id)
       : [];
   const slot = payload.targetReductionSlot;
-  if (slot !== undefined && slot >= 0) {
+  if (slot !== undefined && slot >= 0 && ability.targets[slot]?.count === undefined) {
     const chosen = targets[slot];
     if (
       chosen === undefined ||
@@ -771,30 +773,43 @@ function* proposeCast(
     }
   }
   // Payment preview narrows targeting continuations before anything is paid.
-  const totalMana = subtractGeneric(
-    applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts))),
-    targetedReductionAmount(ctx, targeted, targets),
-  );
+  const beforeTargetReduction = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
   // Convoke (CR 702.51): untapped creatures may help pay for this spell.
   const convokeSources = spellHasConvoke(printedSpellDef)
     ? { sources: [...manaSourcesFor(ctx, player.id), ...convokeSourcesFor(ctx, player.id)] }
     : {};
-  const payableTargets = (chosen: CountedTargetChoices): boolean =>
-    planSpellPayment(ctx, player, {
-      ...convokeSources,
-      mana: totalMana,
-      costs: castingAdditionalCosts,
-      sourceCardId: obj.cardId,
-      sourceOracleId: obj.oracleId,
-      sourceIsCommander: obj.isCommander,
-      spellDefinition: printedSpellDef,
-      x: payload.x ?? 0,
-      energyAlternativeCost: energyAlternativeCostToPay,
-      targetLifeTax: targetLifeTaxFor(ctx, player.id, [
-        ...targets,
-        ...Object.values(chosen).flat(),
-      ]),
-    }) !== null;
+  const payableTargets = (chosen: CountedTargetChoices): boolean => {
+    const all = [...targets, ...Object.values(chosen).flat()];
+    const discount = targetedReductionAmount(ctx, targeted, all);
+    if (payload.targetReductionAmount !== undefined && discount !== payload.targetReductionAmount)
+      return false;
+    if (
+      slot !== undefined &&
+      slot >= 0 &&
+      ![targets[slot], ...(chosen[slot] ?? [])].some(
+        (id) =>
+          id !== undefined && targeted.every((entry) => targetMatchesReduction(ctx, id, entry)),
+      )
+    )
+      return false;
+    return (
+      planSpellPayment(ctx, player, {
+        ...convokeSources,
+        mana: subtractGeneric(beforeTargetReduction, discount),
+        costs: castingAdditionalCosts,
+        sourceCardId: obj.cardId,
+        sourceOracleId: obj.oracleId,
+        sourceIsCommander: obj.isCommander,
+        spellDefinition: printedSpellDef,
+        x: payload.x ?? 0,
+        energyAlternativeCost: energyAlternativeCostToPay,
+        targetLifeTax: targetLifeTaxFor(ctx, player.id, [
+          ...targets,
+          ...Object.values(chosen).flat(),
+        ]),
+      }) !== null
+    );
+  };
   const counted = yield* chooseCountTargets(
     ctx,
     ability,

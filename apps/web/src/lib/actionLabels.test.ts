@@ -7,6 +7,17 @@ function action(over: Partial<LegalAction>): LegalAction {
 }
 
 describe('actionLabel', () => {
+  it('distinguishes target-dependent prices by their bound target slot, including alternative casts', () => {
+    expect(actionLabel(action({ data: { targetReductionSlot: 0 } }))).toBe(
+      'Cast — reduced for target slot 1',
+    );
+    expect(actionLabel(action({ data: { targetReductionSlot: 1 } }))).toBe(
+      'Cast — reduced for target slot 2',
+    );
+    expect(actionLabel(action({ data: { targetReductionSlot: 1, castVariant: 'nonMana' } }))).toBe(
+      'Cast for alternative cost — reduced for target slot 2',
+    );
+  });
   it('names a double-faced land play by its face, never the internal "mdfc" variant', () => {
     const label = actionLabel(
       action({

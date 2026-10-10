@@ -83,7 +83,10 @@ describe('Sarkhan, Soul Aflame', () => {
     expect(perm.name).toBe('Sarkhan, Soul Aflame');
     expect(perm.power).toBe(2);
     expect(perm.toughness).toBe(2);
-    expect(perm.oracleId).toBe(dragon.oracleId);
+    const copiedDef = getDefByOracleId(ctx, perm.oracleId, perm.name);
+    const dragonDef = getDefByOracleId(ctx, dragon.oracleId, dragon.name);
+    expect(copiedDef.manaCost).toEqual(dragonDef.manaCost);
+    expect(copiedDef.triggers).toEqual(dragonDef.triggers);
 
     const chars = computeCharacteristics(ctx, perm);
     expect(chars.subtypes).toContain('Dragon');

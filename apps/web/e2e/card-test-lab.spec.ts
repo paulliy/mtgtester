@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { SPELL_FACE_LAB_EXPECTATIONS } from '../../../packages/server/src/cards/spell-face-lab-expectations';
+import { TRANSFORMED_DFC_SCENARIO_IDS } from '../../../packages/server/src/cards/transformed-dfc-scenarios';
+import { PR02_FOLLOW_UP_SCENARIO_IDS } from '../../../packages/server/src/cards/pr02-follow-up-scenarios';
 const SPELL_FACE_VIEWER_PINS = JSON.parse(
   readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
 ) as { cards: { card: OracleCard }[] };
@@ -43,9 +45,27 @@ async function runScenario(page: Page, title: string): Promise<void> {
     .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
   expect(optionIds.length).toBeGreaterThan(0);
   if (catalogScenarioIds.size === 0) {
-    for (const scenarioId of optionIds) catalogScenarioIds.add(scenarioId);
+    // These scenarios have independent assertions and retained traces in transformed-dfc-copy.spec.ts.
+    for (const scenarioId of optionIds)
+      if (
+        !TRANSFORMED_DFC_SCENARIO_IDS.includes(scenarioId) &&
+        !PR02_FOLLOW_UP_SCENARIO_IDS.includes(
+          scenarioId as (typeof PR02_FOLLOW_UP_SCENARIO_IDS)[number],
+        )
+      )
+        catalogScenarioIds.add(scenarioId);
   } else {
-    expect([...optionIds].sort()).toEqual([...catalogScenarioIds].sort());
+    expect(
+      optionIds
+        .filter(
+          (id) =>
+            !TRANSFORMED_DFC_SCENARIO_IDS.includes(id) &&
+            !PR02_FOLLOW_UP_SCENARIO_IDS.includes(
+              id as (typeof PR02_FOLLOW_UP_SCENARIO_IDS)[number],
+            ),
+        )
+        .sort(),
+    ).toEqual([...catalogScenarioIds].sort());
   }
   await picker.selectOption({ label: title });
   const scenarioId = await picker.inputValue();

@@ -48,7 +48,7 @@ function variantLabel(action: LegalAction, variant: string): string {
 }
 
 /** The text on an action's button in the source panel. */
-export function actionLabel(action: LegalAction): string {
+function primaryActionLabel(action: LegalAction): string {
   const mode = data(action, 'modeLabel');
   const variant = data(action, 'castVariant');
   const ability = data(action, 'abilityDescription');
@@ -71,4 +71,12 @@ export function actionLabel(action: LegalAction): string {
   // indistinguishable when a creature can attack three different opponents. `description` is
   // already the full sentence the engine generated ("Grizzly Bears attacks P2 (40 life)").
   return action.description;
+}
+
+export function actionLabel(action: LegalAction): string {
+  const label = primaryActionLabel(action);
+  const slot = data(action, 'targetReductionSlot');
+  return action.type === 'castSpell' && typeof slot === 'number' && slot >= 0
+    ? `${label} — reduced for target slot ${slot + 1}`
+    : label;
 }

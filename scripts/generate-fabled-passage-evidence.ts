@@ -18,6 +18,11 @@ const ORACLE_SHA256 = 'fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd3708
 const SCENARIO_ID = 'fabled-passage-viewer-search-entry-untap';
 
 const SOURCE_FILES = [
+  'packages/engine/src/stack/replicate-targets.ts',
+  'packages/server/src/cards/pr02-follow-up-scenarios.ts',
+  'apps/web/e2e/pr02-limited-mechanics.spec.ts',
+  'packages/engine/tests/fixtures/transformed-dfc-copy-oracle.json',
+  'packages/server/src/cards/transformed-dfc-scenarios.ts',
   'packages/engine/src/cards/authoring-validation.ts',
   'packages/engine/src/cards/expression-validation.ts',
   'packages/engine/src/cards/effect-reference-contracts.ts',

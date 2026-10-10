@@ -23,7 +23,7 @@ import type {
 import { captureObjectFacts, eventObjectScope } from '../cards/source-identity';
 import type { ObjectFacts } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
-import type { CardDefinition } from '../cards/definition';
+import type { BackFace, CardDefinition } from '../cards/definition';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
@@ -171,7 +171,7 @@ function mdfcLandFaceFor(ctx: GameContext, obj: EngineObject) {
 /** Clone `obj` as a brand-new object (new `ObjectId`) in `zone` (CR 400.7). */
 function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCardObject {
   const original = obj.zone === 'battlefield' ? (obj as EnginePermanent).copyOriginal : undefined;
-  const frontDef = ctx.defs.get(obj.oracleId);
+  const frontDef = ctx.defs.get(original?.oracleId ?? obj.oracleId);
   const landFace = mdfcLandFaceFor(ctx, obj);
   const transformFace = frontDef?.backFace;
   const castFromStack = obj.zone === 'stack' && zone === 'battlefield';
@@ -181,25 +181,30 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
     oracleId: original?.oracleId ?? obj.oracleId,
     ownerId: obj.ownerId,
     name:
-      original?.name ??
+      (original !== undefined ? frontDef?.name : undefined) ??
       (zone === 'battlefield' && landFace !== undefined
         ? landFace.name
         : (frontDef?.name ?? obj.name)),
     typeLine:
-      original?.typeLine ??
+      (original !== undefined ? frontDef?.typeLine : undefined) ??
       (zone === 'battlefield' && landFace !== undefined
         ? landFace.typeLine
         : (frontDef?.typeLine ?? obj.typeLine)),
     oracleText:
-      original?.oracleText ??
+      (original !== undefined
+        ? (frontDef?.backFace?.frontOracleText ?? original.oracleText)
+        : undefined) ??
       (zone === 'battlefield' && landFace !== undefined
         ? landFace.oracleText
         : (landFace?.frontOracleText ?? transformFace?.frontOracleText ?? obj.oracleText)),
     manaCost:
-      original?.manaCost ??
-      (zone === 'battlefield' && landFace !== undefined
-        ? landFace.manaCost
-        : (landFace?.frontManaCost ?? transformFace?.frontManaCostText ?? obj.manaCost)),
+      original !== undefined
+        ? frontDef?.backFace !== undefined
+          ? frontDef.backFace.frontManaCostText
+          : original.manaCost
+        : zone === 'battlefield' && landFace !== undefined
+          ? landFace.manaCost
+          : (landFace?.frontManaCost ?? transformFace?.frontManaCostText ?? obj.manaCost),
     isToken: obj.isToken,
     isCommander: obj.isCommander,
     zone,
@@ -411,21 +416,29 @@ export function expireRegenerationShields(ctx: GameContext): void {
 
 /** Transform a permanent in place without changing its object identity or attached state. */
 export function transformPermanent(ctx: GameContext, perm: EnginePermanent): boolean {
-  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  const def = getDefByOracleId(ctx, perm.copyOriginal?.oracleId ?? perm.oracleId, perm.name);
   if (def.backFace === undefined) return false;
 
+  const nextFace = perm.transformed ? def : def.backFace;
+  if (nextFace.types.some((type) => type === 'Instant' || type === 'Sorcery')) return false;
+
   perm.transformed = !perm.transformed;
-  const face = perm.transformed ? def.backFace : def;
-  perm.name = face.name;
-  perm.typeLine = face.typeLine;
-  perm.oracleText = perm.transformed ? def.backFace.oracleText : def.backFace.frontOracleText;
-  perm.manaCost = (
-    perm.transformed ? def.backFace.manaCostText : def.backFace.frontManaCostText
-  ) as EnginePermanent['manaCost'];
-  if (face.cantBlock === true) perm.cantBlock = true;
-  else delete perm.cantBlock;
-  if (face.cantBeBlocked === true) perm.cantBeBlocked = true;
-  else delete perm.cantBeBlocked;
+  // A copy effect continues to apply when the physical DFC turns over (CR 712.20).
+  if (perm.copyOriginal === undefined) {
+    const face = perm.transformed ? def.backFace : def;
+    perm.name = face.name;
+    perm.typeLine = face.typeLine;
+    perm.oracleText = perm.transformed ? def.backFace.oracleText : def.backFace.frontOracleText;
+    perm.manaCost = (
+      perm.transformed ? def.backFace.manaCostText : def.backFace.frontManaCostText
+    ) as EnginePermanent['manaCost'];
+    perm.power = face.power;
+    perm.toughness = face.toughness;
+    if (face.cantBlock === true) perm.cantBlock = true;
+    else delete perm.cantBlock;
+    if (face.cantBeBlocked === true) perm.cantBeBlocked = true;
+    else delete perm.cantBeBlocked;
+  }
 
   emit(ctx, 'transform', {
     cardId: perm.cardId,
@@ -466,6 +479,8 @@ export function applyCopy(
   target: EnginePermanent,
   opts: ApplyCopyOptions = {},
 ): void {
+  const copied = copiableDefinition(ctx, target);
+  const imageFace = copyImageFace(ctx, target);
   perm.copyOriginal ??= {
     oracleId: perm.oracleId,
     name: perm.name,
@@ -475,13 +490,18 @@ export function applyCopy(
     power: perm.power,
     toughness: perm.toughness,
   };
-  perm.oracleId = target.oracleId;
-  perm.name = opts.nameOverride ?? target.name;
-  perm.typeLine = target.typeLine;
-  perm.oracleText = target.oracleText;
-  perm.manaCost = target.manaCost;
-  perm.power = target.power;
-  perm.toughness = target.toughness;
+  perm.oracleId = internCopyDefinition(ctx, copied);
+  perm.copyImageFace = imageFace;
+  perm.name = opts.nameOverride ?? copied.name;
+  perm.typeLine = copied.typeLine;
+  perm.oracleText = target.faceDown ? '' : target.oracleText;
+  perm.manaCost = target.faceDown ? null : target.manaCost;
+  perm.power = copied.power;
+  perm.toughness = copied.toughness;
+  if (copied.cantBlock) perm.cantBlock = true;
+  else delete perm.cantBlock;
+  if (copied.cantBeBlocked) perm.cantBeBlocked = true;
+  else delete perm.cantBeBlocked;
   perm.copyAddTypes = opts.addTypes === undefined ? [] : [...opts.addTypes];
   perm.copyAddKeywords = opts.addKeywords === undefined ? [] : [...opts.addKeywords];
   perm.copyAddTriggers = opts.addTriggers === undefined ? [] : [...opts.addTriggers];
@@ -1056,6 +1076,7 @@ export function faceDownSpellOracleId(ctx: GameContext): OracleId {
 }
 
 function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
+  const { copyDefinition, startsTransformed } = spec as CopyTokenSpec;
   const evalPower =
     spec.power === null || spec.power === undefined
       ? null
@@ -1070,7 +1091,14 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
         : evaluateValue(ctx, spec.toughness);
   // Resolve dynamic P/T before interning. All copiable characteristics, including
   // colors and abilities, distinguish definitions; creation-only haste does not.
-  const { grantHasteUntilEot: _haste, ...copiable } = spec;
+  const { grantHasteUntilEot: _haste, copyDefinition: _copy, ...copiable } = spec as CopyTokenSpec;
+  const copyValues =
+    copyDefinition === undefined
+      ? undefined
+      : (() => {
+          const { oracleId: _oracle, scryfallId: _printing, ...values } = copyDefinition;
+          return values;
+        })();
   const canonical = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(canonical);
     if (value !== null && typeof value === 'object')
@@ -1084,6 +1112,7 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
   const oracleId = `token:${JSON.stringify(
     canonical({
       ...copiable,
+      ...(copyValues !== undefined ? { copyDefinition: copyValues } : {}),
       power: evalPower,
       toughness: evalToughness,
       supertypes: spec.supertypes ?? [],
@@ -1097,6 +1126,7 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
     ctx.defs.set(
       oracleId,
       assertValidModeledDefinition({
+        ...copyDefinition,
         oracleId,
         name: spec.name,
         typeLine: spec.typeLine,
@@ -1122,13 +1152,46 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
         keywords: spec.keywords ?? [],
         manaAbilities: spec.manaAbilities ?? [],
         activatedAbilities: spec.activatedAbilities ?? [],
-        entersTapped: false,
+        entersTapped: copyDefinition?.entersTapped ?? false,
         spellAbility: null,
         triggers: spec.triggers ?? [],
-        staticEffects: [],
-        ruleStatics: [],
+        staticEffects: copyDefinition?.staticEffects ?? [],
+        ruleStatics: copyDefinition?.ruleStatics ?? [],
         modeled: true,
         unmodeledReasons: [],
+      }),
+    );
+  }
+  if (copyDefinition?.backFace !== undefined) {
+    const active = startsTransformed ? copyDefinition.backFace : copyDefinition;
+    const addedTypes = spec.types.filter((type) => !active.types.includes(type));
+    const addedKeywords = (spec.keywords ?? []).filter(
+      (keyword) => !active.keywords.includes(keyword),
+    );
+    const removedSuper = [
+      ...new Set([
+        ...((spec as CopyTokenSpec).removeSupertypes ?? []),
+        ...active.supertypes.filter((type) => !(spec.supertypes ?? []).includes(type)),
+      ]),
+    ];
+    const modify = <T extends CardDefinition | BackFace>(face: T): T => ({
+      ...face,
+      typeLine: removedSuper.reduce(
+        (line, type) => line.replace(new RegExp(`^${type} `), ''),
+        face.typeLine,
+      ),
+      types: [...new Set([...face.types, ...addedTypes])],
+      keywords: [...new Set([...face.keywords, ...addedKeywords])],
+      supertypes: face.supertypes.filter((type) => !removedSuper.includes(type)),
+      ...(spec.power !== active.power ? { power: evalPower } : {}),
+      ...(spec.toughness !== active.toughness ? { toughness: evalToughness } : {}),
+    });
+    ctx.defs.set(
+      oracleId,
+      assertValidModeledDefinition({
+        ...modify(copyDefinition),
+        oracleId,
+        backFace: modify(copyDefinition.backFace),
       }),
     );
   }
@@ -1178,22 +1241,43 @@ export function createToken(
     return first;
   }
   const oracleId = registerTokenDef(ctx, spec);
+  const copySpec = spec as CopyTokenSpec;
+  const def = getDefByOracleId(ctx, oracleId, spec.name);
+  // Entry replacements and ETB triggers must see the face that enters, without a transform event.
+  const entryId =
+    copySpec.startsTransformed && def.backFace !== undefined
+      ? internCopyDefinition(
+          ctx,
+          copiableDefinition(ctx, {
+            oracleId,
+            name: spec.name,
+            transformed: true,
+          } as EnginePermanent),
+        )
+      : oracleId;
   const stub: EngineObject = {
     id: newObjectId(ctx),
     // Tokens need a stable `cardId` like any other object — commander damage, until-EOT effect
     // sets and the layer cache are all keyed by it — but no two tokens ever share one.
     cardId: `tok-${ctx.state.nextObjectNum++}`,
-    oracleId,
+    oracleId: entryId,
     ownerId: controllerId,
     name: spec.name,
     typeLine: spec.typeLine,
-    oracleText: '',
+    oracleText:
+      copySpec.oracleText ??
+      (copySpec.startsTransformed
+        ? (def.backFace?.oracleText ?? '')
+        : (def.backFace?.frontOracleText ?? '')),
     manaCost: spec.manaCostText ?? null,
     isToken: true,
     isCommander: false,
     zone: 'battlefield',
   };
   const perm = makePermanent(ctx, stub, controllerId, entersTapped ? true : undefined);
+  perm.oracleId = oracleId;
+  perm.transformed = copySpec.startsTransformed === true;
+  if (copySpec.imageFace !== undefined) perm.copyImageFace = copySpec.imageFace;
   ctx.state.battlefield.push(perm);
   // "If you created a token this turn" — set by token creation, not by any permanent entering.
   if (ctx.state.createdTokenThisTurn) ctx.state.createdTokenThisTurn[controllerId] = true;
@@ -1307,8 +1391,80 @@ export function tokenSpecCopying(
   perm: EnginePermanent,
   exceptNonLegendary: boolean,
 ): TokenSpec {
-  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
-  return {
+  const def = copiableDefinition(ctx, perm);
+  const printed = getDefByOracleId(ctx, perm.copyOriginal?.oracleId ?? perm.oracleId, perm.name);
+  let copyDefinition = def;
+  if (!perm.faceDown && printed.backFace !== undefined) {
+    const front = copiableDefinition(ctx, { ...perm, transformed: false });
+    const back = copiableDefinition(ctx, { ...perm, transformed: true });
+    const {
+      name,
+      typeLine,
+      manaCost,
+      hasUnsupportedCost,
+      supertypes,
+      types,
+      subtypes,
+      colors,
+      power,
+      toughness,
+      loyalty,
+      defense,
+      keywords,
+      ward,
+      protectionFrom,
+      manaAbilities,
+      activatedAbilities,
+      entersTapped,
+      entersTappedUnless,
+      entersWithCounters,
+      triggers,
+      staticEffects,
+      ruleStatics,
+      cantBlock,
+      cantBeBlocked,
+    } = back;
+    copyDefinition = {
+      ...front,
+      backFace: {
+        name,
+        typeLine,
+        manaCost,
+        hasUnsupportedCost,
+        supertypes,
+        types,
+        subtypes,
+        colors,
+        power,
+        toughness,
+        loyalty,
+        defense,
+        keywords,
+        manaAbilities,
+        activatedAbilities,
+        entersTapped,
+        triggers,
+        staticEffects,
+        ruleStatics,
+        ...(ward !== undefined ? { ward } : {}),
+        ...(protectionFrom !== undefined ? { protectionFrom } : {}),
+        ...(entersTappedUnless !== undefined ? { entersTappedUnless } : {}),
+        ...(entersWithCounters !== undefined ? { entersWithCounters } : {}),
+        ...(cantBlock !== undefined ? { cantBlock } : {}),
+        ...(cantBeBlocked !== undefined ? { cantBeBlocked } : {}),
+        oracleText: perm.copyOriginal ? perm.oracleText : printed.backFace.oracleText,
+        manaCostText: perm.copyOriginal ? perm.manaCost : printed.backFace.manaCostText,
+        frontOracleText: perm.copyOriginal ? perm.oracleText : printed.backFace.frontOracleText,
+        frontManaCostText: perm.copyOriginal ? perm.manaCost : printed.backFace.frontManaCostText,
+      },
+    };
+  }
+  const spec: CopyTokenSpec = {
+    copyDefinition,
+    oracleText: perm.faceDown ? '' : perm.oracleText,
+    imageFace: copyImageFace(ctx, perm),
+    ...(exceptNonLegendary ? { removeSupertypes: ['Legendary'] } : {}),
+    startsTransformed: !perm.faceDown && printed.backFace !== undefined && perm.transformed,
     name: def.name,
     // The type LINE is display text, but it is also what `registerTokenDef` keys on, so the
     // exception has to be applied to both or a non-legendary copy shares a definition with a
@@ -1326,11 +1482,118 @@ export function tokenSpecCopying(
     triggers: def.triggers,
     manaAbilities: def.manaAbilities,
     activatedAbilities: def.activatedAbilities,
-    // A copy copies the mana cost (CR 707.2), so the token's mana value is the original's —
-    // except that a copy of a back face has mana value 0 (CR 202.3b, 712.8e), never the front's.
-    manaCost: perm.transformed ? null : def.manaCost,
-    manaCostText: perm.transformed ? null : perm.manaCost,
+    // The active face's cost is displayed; double-faced tokens retain the front cost in their
+    // definition for mana value (CR 707.8a, 202.3b).
+    manaCost: def.manaCost,
+    manaCostText: perm.faceDown ? null : perm.manaCost,
   };
+  return spec;
+}
+
+/** Runtime copy metadata, produced only by the engine, never authored card IR. */
+interface CopyTokenSpec extends TokenSpec {
+  copyDefinition?: CardDefinition;
+  oracleText?: string;
+  startsTransformed?: boolean;
+  removeSupertypes?: string[];
+  imageFace?: 'front' | 'back';
+}
+
+/** The printing image follows the copied face, rather than the copying card's physical face. */
+export function copyImageFace(ctx: GameContext, perm: EnginePermanent): 'front' | 'back' {
+  if (perm.faceDown) return 'front';
+  const def = ctx.defs.get(perm.oracleId);
+  if (def?.backFace !== undefined) return perm.transformed ? 'back' : 'front';
+  if (perm.copyImageFace !== undefined) return perm.copyImageFace;
+  return perm.face === 'back' ? 'back' : 'front';
+}
+
+/** Layer-1 values only: counters, attachments and later continuous effects never enter a copy. */
+function copiableDefinition(ctx: GameContext, perm: EnginePermanent): CardDefinition {
+  const def = getDefByOracleId(ctx, perm.oracleId, perm.name);
+  const face = perm.transformed ? def.backFace : undefined;
+  const faceValues =
+    face === undefined
+      ? undefined
+      : (() => {
+          const {
+            oracleText: _text,
+            manaCostText: _cost,
+            frontOracleText: _frontText,
+            frontManaCostText: _frontCost,
+            ...values
+          } = face;
+          return values;
+        })();
+  let result: CardDefinition =
+    faceValues === undefined
+      ? { ...def }
+      : {
+          ...faceValues,
+          oracleId: def.oracleId,
+          ...(def.scryfallId !== undefined ? { scryfallId: def.scryfallId } : {}),
+          colorIdentity: def.colorIdentity,
+          spellAbility: null,
+          modeled: def.modeled,
+          unmodeledReasons: def.unmodeledReasons,
+        };
+  delete result.backFace;
+  delete result.alternativeCasts;
+  if (perm.faceDown) {
+    result = {
+      oracleId: def.oracleId,
+      name: '',
+      typeLine: 'Creature',
+      supertypes: [],
+      types: ['Creature'],
+      subtypes: [],
+      colors: [],
+      colorIdentity: [],
+      manaCost: null,
+      hasUnsupportedCost: false,
+      power: 2,
+      toughness: 2,
+      loyalty: null,
+      defense: null,
+      keywords: [],
+      manaAbilities: [],
+      activatedAbilities: [],
+      entersTapped: false,
+      spellAbility: null,
+      triggers: [],
+      staticEffects: [],
+      ruleStatics: [],
+      modeled: true,
+      unmodeledReasons: [],
+    };
+  } else {
+    result.types = [...new Set([...result.types, ...(perm.copyAddTypes ?? [])])];
+    result.keywords = [...new Set([...result.keywords, ...(perm.copyAddKeywords ?? [])])];
+    result.triggers = [...result.triggers, ...(perm.copyAddTriggers ?? [])];
+    result.supertypes = [
+      ...new Set([
+        ...result.supertypes.filter((type) => !perm.copyRemoveSupertypes?.includes(type)),
+        ...(perm.copyAddSupertypes ?? []),
+      ]),
+    ];
+    result.name = perm.copyNameOverride ?? result.name;
+  }
+  return result;
+}
+
+function internCopyDefinition(ctx: GameContext, def: CardDefinition): OracleId {
+  const { oracleId: _id, scryfallId: _printing, ...values } = def;
+  const oracleId = `copy:${JSON.stringify(values)}` as OracleId;
+  if (!ctx.defs.has(oracleId))
+    ctx.defs.set(
+      oracleId,
+      assertValidModeledDefinition({
+        ...values,
+        ...(def.scryfallId !== undefined ? { scryfallId: def.scryfallId } : {}),
+        oracleId,
+      }),
+    );
+  return oracleId;
 }
 
 /**
@@ -2051,6 +2314,27 @@ export function queueKeywordCastTriggers(ctx: GameContext, spell: EngineStackObj
               oracleId: spell.sourceOracleId,
               name: spell.description,
               targets: [...spell.targets],
+              definition: def,
+              ...(spell.ability === null ? {} : { ability: spell.ability }),
+              ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+              ...(spell.countTargets === undefined
+                ? {}
+                : {
+                    countTargets: Object.fromEntries(
+                      Object.entries(spell.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+                    ),
+                  }),
+              ...(spell.divisionAmounts === undefined
+                ? {}
+                : { divisionAmounts: { ...spell.divisionAmounts } }),
+              ...(spell.optionalCostCounts === undefined
+                ? {}
+                : { optionalCostCounts: { ...spell.optionalCostCounts } }),
+              ...(spell.wasKicked === undefined ? {} : { wasKicked: spell.wasKicked }),
+              ...(spell.kicked === undefined ? {} : { kicked: spell.kicked }),
+              targetNames: Object.fromEntries(
+                ctx.state.battlefield.map((perm) => [perm.id, perm.name]),
+              ),
               oracleText: spell.card?.oracleText ?? '',
               manaCost: spell.card?.manaCost ?? null,
             },

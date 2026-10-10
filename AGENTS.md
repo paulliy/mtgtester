@@ -1,6 +1,6 @@
 # Contributor instructions
 
-Read `CLAUDE.md` for repository-wide architecture and command guidance.
+Read `CLAUDE.md` or `CODEX.md` for repository-wide architecture and command guidance.
 
 For every card-modeling change, the sole completion standard is
 `docs/guides/card-modeling-and-testing.md`. Follow its pinned-Oracle, clause mapping, positive and

@@ -1,4 +1,5 @@
 import { SPELL_FACE_SCENARIO_IDS, spellFaceScenario } from './spell-face-scenarios';
+import { TRANSFORMED_DFC_SCENARIO_IDS, transformedDfcScenario } from './transformed-dfc-scenarios';
 import {
   SPECIALIZED_REFERENCE_SCENARIO_IDS,
   specializedReferenceScenario,
@@ -20,6 +21,7 @@ import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } fr
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
 import { TARGET_UNTAP_SCENARIO_IDS, targetUntapScenario } from './target-untap-scenarios';
+import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -8634,6 +8636,7 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
 ] as const;
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
   'mosswort-viewer-free-adventure-face',
@@ -8643,6 +8646,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   ...TARGET_UNTAP_SCENARIO_IDS,
   ...SPELL_FACE_SCENARIO_IDS,
   ...COUNTER_OVERLOAD_SCENARIO_IDS,
+  ...PR02_FOLLOW_UP_SCENARIO_IDS,
   ...REVIEWED_BASELINE_SCENARIO_IDS,
   'swords-viewer-exile-and-gain-life',
   'throat-viewer-destroy-nonartifact',
@@ -8840,6 +8844,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
   ...Object.fromEntries(
+    TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => transformedDfcScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
     SPECIALIZED_REFERENCE_SCENARIO_IDS.map((id) => [
       id,
       (gameId: GameId) => specializedReferenceScenario(id, gameId),
@@ -8868,6 +8878,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   ),
   ...Object.fromEntries(
     BUG_HUNT_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => bugHuntScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    PR02_FOLLOW_UP_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr02FollowUpScenario(id, gameId)!,
+    ]),
   ),
   'tribute-viewer-cast-search-select-resolve': tributeMageScenario,
   'gev-viewer-opponent-targets-ward': gevWardScenario,

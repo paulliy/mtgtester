@@ -11,16 +11,18 @@ const props = withDefaults(
     scryfallId: string | null;
     name: string;
     size: 'small' | 'normal' | 'large';
+    /** Which face to request for a double-faced card image. */
+    face?: 'front' | 'back';
     tapped?: boolean;
     /** True token/emblem with no real printing — always shows the striped placeholder. */
     isToken?: boolean;
   }>(),
-  { tapped: false, isToken: false },
+  { face: 'front', tapped: false, isToken: false },
 );
 
 const failed = ref(false);
 watch(
-  () => props.scryfallId,
+  () => [props.scryfallId, props.face],
   () => {
     failed.value = false;
   },
@@ -44,7 +46,7 @@ const src = computed(() => {
     id = TOKEN_SCRYFALL_IDS[key] ?? null;
   }
   if (id === null || id.length < 2) return null;
-  return `https://cards.scryfall.io/${props.size}/front/${id[0]}/${id[1]}/${id}.jpg`;
+  return `https://cards.scryfall.io/${props.size}/${props.face}/${id[0]}/${id[1]}/${id}.jpg`;
 });
 
 const showImage = computed(() => !props.isToken && src.value !== null && !failed.value);

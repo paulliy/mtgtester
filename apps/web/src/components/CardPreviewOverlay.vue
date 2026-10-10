@@ -41,6 +41,7 @@ const style = computed(() => {
     <CardImage
       :scryfall-id="store.hovered.scryfallId"
       :name="store.hovered.name"
+      :face="store.hovered.imageFace ?? 'front'"
       :size="store.previewSize"
     />
   </div>

@@ -3576,7 +3576,7 @@ describe('Kairi, the Swirling Sky', () => {
     expect(offered).not.toContain('Target Kairi Colossus');
   });
 
-  it('kairi-the-swirling-sky-copied-back-face-mana-value-zero — a token copy of a back face has mana value 0, not the front face cost', () => {
+  it('kairi-the-swirling-sky-copied-double-faced-token-mana-value — a double-faced token keeps the front face mana value', () => {
     const ctx = pod('kairi-copy-back-face');
     const brigidCard = (
       JSON.parse(
@@ -3604,12 +3604,14 @@ describe('Kairi, the Swirling Sky', () => {
     };
     // Front face up: the copy carries the front face's mana value.
     expect(permanentManaValue(ctx, copyOf(brigid))).toBe(3);
-    // Back face up: the permanent itself keeps the front face's mana value (CR 712.8e), but a
-    // copy of the back face has mana value 0 (CR 202.3b).
+    // CR 707.8a: creating a token copy preserves both faces. Its back face therefore uses its
+    // own front face cost; an ordinary permanent copying only the back face has mana value 0.
     expect(transformPermanent(ctx, brigid)).toBe(true);
     expect(permanentManaValue(ctx, brigid)).toBe(3);
     const backCopy = copyOf(brigid);
-    expect(permanentManaValue(ctx, backCopy)).toBe(0);
+    expect(backCopy.name).toBe(brigidCard.backFace!.name);
+    expect(backCopy.transformed).toBe(true);
+    expect(permanentManaValue(ctx, backCopy)).toBe(3);
     expect(backCopy.manaCost).toBeNull();
   });
 
