@@ -444,6 +444,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606",
+      "card": {
+        "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
+        "scryfallId": "ed0beb69-8441-4104-9990-81bd82f81f9a",
+        "name": "The Fantasticar",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact — Vehicle",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Vehicle"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, you may have The Fantasticar become an artifact creature until end of turn.\nWhenever you cast your fourth noncreature spell each turn, you may sacrifice The Fantasticar. If you do, create four 4/4 colorless Construct artifact creature tokens with flying and haste.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

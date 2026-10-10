@@ -2969,16 +2969,20 @@
   {
     "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
     "name": "The Fantasticar",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever you cast a noncreature spell, you may have ~ become an artifact creature until end of turn.\"",
       "unrecognized rules text: \"Whenever you cast your fourth noncreature spell each turn, you may sacrifice ~. If you do, create four 4/4 colorless Construct artifact creature tokens with flying and haste.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "3aa83ed2-f48b-4ce6-a614-2c54ddf50538",

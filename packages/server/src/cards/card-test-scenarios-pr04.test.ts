@@ -561,3 +561,48 @@ describe('Unbreakable Formation Card Test Lab scenario', () => {
     replays('unbreakable-formation-viewer-addendum-main-phase', steps);
   });
 });
+
+describe('The Fantasticar Card Test Lab scenario', () => {
+  it('the-fantasticar-viewer-fourth-noncreature — the fourth noncreature spell sacrifices it for four flying, haste Constructs', () => {
+    const cast = { action: 'Cast Lab Quick Gain' };
+    const pass = { action: 'Pass priority' };
+    const steps: Step[] = [
+      // Spell 1: accept the creature trigger. Spells 2 and 3: decline it.
+      cast,
+      pass,
+      { action: 'Yes' },
+      cast,
+      pass,
+      { action: 'No' },
+      cast,
+      pass,
+      { action: 'No' },
+      // Spell 4: both triggers fire. Put the sacrifice on the stack first so the creature trigger
+      // resolves first (decline it), then accept the sacrifice.
+      cast,
+      { action: 'fourth noncreature spell' },
+      pass,
+      { action: 'No' },
+      { action: 'Yes' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'the-fantasticar-viewer-fourth-noncreature',
+      steps,
+    );
+    expect(onBattlefield('The Fantasticar')).toHaveLength(0);
+    expect(seat('P1').graveyard.map((card) => card.name)).toContain('The Fantasticar');
+    const constructs = onBattlefield('Construct');
+    expect(constructs).toHaveLength(4);
+    for (const token of constructs) {
+      expect(token.controllerId).toBe('P1');
+      expect(token.power).toBe(4);
+      expect(token.toughness).toBe(4);
+    }
+    // One sacrifice prompt, and a creature prompt for each of the four spells.
+    expect(prompts.filter((prompt) => /sacrifice/.test(prompt))).toHaveLength(1);
+    expect(prompts.filter((prompt) => /become an artifact creature/.test(prompt))).toHaveLength(4);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('the-fantasticar-viewer-fourth-noncreature', steps);
+  });
+});

@@ -8704,6 +8704,44 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "9b0abb58-4e2c-45dc-99b1-61a4cb79354b": {
+      "name": "The Fantasticar",
+      "oracleSha256": "182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "the-fantasticar-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["the-fantasticar-pinned-oracle-supported"],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        },
+        {
+          "id": "the-fantasticar-animate",
+          "oracleText": "Whenever you cast a noncreature spell, you may have The Fantasticar become an artifact creature until end of turn.",
+          "implementation": [
+            "interpreted optional castsSpell trigger for its controller's noncreature spells: on yes, The Fantasticar becomes an artifact creature (keeping its printed 4/4 and flying) until end of turn, and on no it stays a Vehicle"
+          ],
+          "engineTestIds": ["the-fantasticar-pinned-oracle-supported", "the-fantasticar-animate"],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        },
+        {
+          "id": "the-fantasticar-fourth-noncreature-sacrifice",
+          "oracleText": "Whenever you cast your fourth noncreature spell each turn, you may sacrifice The Fantasticar. If you do, create four 4/4 colorless Construct artifact creature tokens with flying and haste.",
+          "implementation": [
+            "interpreted optional castsSpell trigger limited to the fourth noncreature spell its controller casts this turn (creature spells and earlier or later spells do not count); the spell that makes it fire also fires the animate trigger, and the controller orders the two",
+            "the effect sacrifices The Fantasticar and, only if it was sacrificed, creates four 4/4 colorless Construct artifact creature tokens with flying and haste; declining creates nothing, and a fifth noncreature spell does not trigger it again"
+          ],
+          "engineTestIds": [
+            "the-fantasticar-pinned-oracle-supported",
+            "the-fantasticar-fourth-noncreature",
+            "the-fantasticar-decline-and-fifth"
+          ],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -330,6 +330,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pensive-professor-viewer-increment-draw',
       'elite-scaleguard-viewer-bolster-and-tap',
       'forgotten-ancient-viewer-cast-and-move',
+      'the-fantasticar-viewer-fourth-noncreature',
       'unbreakable-formation-viewer-addendum-main-phase',
       'first-family-viewer-colors-draw-gain',
       'call-forth-the-tempest-viewer-other-spells-damage',

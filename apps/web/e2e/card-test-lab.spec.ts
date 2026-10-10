@@ -5983,3 +5983,54 @@ test('Unbreakable Formation: cast in your main phase, your creatures also get co
   await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).not.toContainText(/indestructible|vigilance/i);
 });
+
+test('The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+  );
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  const no = page.getByRole('button', { name: 'No', exact: true });
+  const castGain = async () => {
+    const spell = handCard(page, 'Lab Quick Gain').first();
+    await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+    await spell.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+  };
+
+  // As a Vehicle it shows no power and toughness yet.
+  await expect(permanent(page, 'The Fantasticar')).not.toContainText('4/4');
+  // Spell 1: accept the creature trigger; it is a 4/4 flying artifact creature.
+  await castGain();
+  await passUntil(page, yes);
+  await yes.click();
+  await expect(permanent(page, 'The Fantasticar').getByText('4/4')).toBeVisible();
+  await expect(permanent(page, 'The Fantasticar')).toContainText(/flying/i);
+
+  // Spells 2 and 3: decline the creature trigger.
+  for (let spell = 2; spell <= 3; spell++) {
+    await castGain();
+    await passUntil(page, no);
+    await no.click();
+  }
+
+  // Spell 4: both triggers fire. Put the sacrifice on the stack first so it resolves last.
+  await castGain();
+  const sacrificeFirst = page.getByRole('button', { name: /fourth noncreature spell/ });
+  await passUntil(page, sacrificeFirst);
+  await sacrificeFirst.click();
+  await passUntil(page, no);
+  await no.click();
+  await passUntil(page, yes);
+  await yes.click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'The Fantasticar')).toHaveCount(0);
+  await expect(permanent(page, 'Construct')).toContainText('×4');
+  await expect(permanent(page, 'Construct')).toContainText('4/4');
+  await expect(permanent(page, 'Construct')).toContainText(/flying/i);
+  await expect(permanent(page, 'Construct')).toContainText(/haste/i);
+});

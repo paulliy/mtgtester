@@ -1807,6 +1807,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
   },
   {

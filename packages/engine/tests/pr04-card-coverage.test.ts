@@ -2310,6 +2310,117 @@ describe('Unbreakable Formation', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.22 The Fantasticar
+// ---------------------------------------------------------------------------------------------
+
+describe('The Fantasticar', () => {
+  const { card } = pinned('The Fantasticar');
+  const QUICK = oracle({
+    name: 'Lab Quick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+  const FLASH_BEAR = oracle({
+    name: 'Lab Flash Bear',
+    typeLine: 'Creature — Bear',
+    manaCost: '{0}',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flash',
+  });
+
+  /** Cast `spell` and resolve everything, answering the two optional prompts as given. */
+  function cast(ctx: GameContext, spell: OracleCard, animate: boolean, sacrifice: boolean) {
+    castFromHand(ctx, 'P1', spell, []);
+    settle(
+      ctx,
+      answers([
+        [/sacrifice/, sacrifice ? /^Yes$/ : /^No$/],
+        [/become an artifact creature/, animate ? /^Yes$/ : /^No$/],
+      ]),
+    );
+  }
+  const isCreature = (ctx: GameContext, perm: EnginePermanent) => {
+    const live = onField(ctx, perm.cardId);
+    return live !== undefined && computeCharacteristics(ctx, live).types.includes('Creature');
+  };
+  const constructs = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Construct' && perm.controllerId === 'P1');
+
+  it('the-fantasticar-pinned-oracle-supported — the animate trigger and the fourth-noncreature sacrifice', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.optional).toBe(true);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'becomeArtifactCreature' }]);
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      ordinal: 4,
+    });
+    expect(def.triggers[1]!.optional).toBe(true);
+    expect(def.triggers[1]!.effects).toMatchObject([
+      {
+        op: 'sacrificeOneThen',
+        selector: { kind: 'self' },
+        then: [
+          {
+            op: 'createToken',
+            spec: { name: 'Construct', power: 4, toughness: 4, keywords: ['flying', 'haste'] },
+            count: { kind: 'const', n: 4 },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('the-fantasticar-animate — a noncreature spell lets it become a 4/4 artifact creature until end of turn, or not', () => {
+    const ctx = pod('fantasticar-animate');
+    const car = spawn(ctx, 'P1', card);
+    cast(ctx, QUICK, false, false);
+    expect(isCreature(ctx, car)).toBe(false);
+    cast(ctx, QUICK, true, false);
+    expect(isCreature(ctx, car)).toBe(true);
+    expect(effectivePT(ctx, onField(ctx, car.cardId)!)).toEqual({ power: 4, toughness: 4 });
+    quietTurn(ctx);
+    expect(isCreature(ctx, car)).toBe(false);
+  });
+
+  it('the-fantasticar-fourth-noncreature — the fourth noncreature spell (a creature spell between does not count) offers the sacrifice for four Constructs', () => {
+    const ctx = pod('fantasticar-fourth');
+    const car = spawn(ctx, 'P1', card);
+    cast(ctx, QUICK, false, true);
+    cast(ctx, FLASH_BEAR, false, true);
+    cast(ctx, QUICK, false, true);
+    cast(ctx, QUICK, false, true);
+    expect(constructs(ctx)).toHaveLength(0);
+    expect(onField(ctx, car.cardId)).toBeDefined();
+    cast(ctx, QUICK, false, true);
+    expect(onField(ctx, car.cardId)).toBeUndefined();
+    expect(constructs(ctx)).toHaveLength(4);
+    for (const token of constructs(ctx)) {
+      const traits = computeCharacteristics(ctx, token);
+      expect(traits.keywords).toEqual(expect.arrayContaining(['flying', 'haste']));
+      expect(effectivePT(ctx, token)).toEqual({ power: 4, toughness: 4 });
+    }
+  });
+
+  it('the-fantasticar-decline-and-fifth — declining keeps it, and the fifth noncreature spell does not offer it again', () => {
+    const ctx = pod('fantasticar-decline');
+    const car = spawn(ctx, 'P1', card);
+    for (let n = 0; n < 4; n++) cast(ctx, QUICK, false, false);
+    expect(onField(ctx, car.cardId)).toBeDefined();
+    cast(ctx, QUICK, false, true);
+    expect(onField(ctx, car.cardId)).toBeDefined();
+    expect(constructs(ctx)).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2320,6 +2431,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'The Fantasticar',
+    sha256: '182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606',
+    clauseCount: 3,
+  },
   {
     name: 'Unbreakable Formation',
     sha256: 'c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22',

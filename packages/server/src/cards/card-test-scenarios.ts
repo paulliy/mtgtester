@@ -8333,6 +8333,58 @@ function unbreakableFormationScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A one-mana instant that gains 1 life: four of them make the Fantasticar's fourth noncreature spell. */
+const LAB_QUICK_GAIN = card({
+  oracleId: 'lab-quick-gain',
+  name: 'Lab Quick Gain',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 1 life.',
+});
+
+function theFantasticarScenario(gameId: GameId): CardTestScenario {
+  const car = pinnedFrom(COVERAGE_PR04, 'The Fantasticar');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'the-fantasticar-viewer-fourth-noncreature',
+    title: 'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    instructions: [
+      'The Fantasticar (a 4/4 flying Vehicle) and four Mountains are on your battlefield; four Lab Quick Gains are in your hand.',
+      'Cast the first Lab Quick Gain and choose Yes to have The Fantasticar become an artifact creature until end of turn: it is a 4/4 flying creature.',
+      'Cast the second and third Lab Quick Gains and choose No for the creature trigger.',
+      'Cast the fourth. Choose No to become a creature again, then Yes to sacrifice The Fantasticar: you create four 4/4 Construct artifact creature tokens with flying and haste.',
+    ],
+    expectedOutcome:
+      'The Fantasticar is in your graveyard and you control four 4/4 flying, haste Construct tokens.',
+    oracleSha256: car.sha256,
+    clauseIds: [
+      'the-fantasticar-flying',
+      'the-fantasticar-animate',
+      'the-fantasticar-fourth-noncreature-sacrifice',
+    ],
+    decks: {
+      P1: [car.card, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, ...mountains],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['The Fantasticar', ...mountains.map((m) => m.name)] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9501,6 +9553,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'the-fantasticar-viewer-fourth-noncreature',
   'unbreakable-formation-viewer-addendum-main-phase',
   'first-family-viewer-colors-draw-gain',
   'call-forth-the-tempest-viewer-other-spells-damage',
@@ -9750,6 +9803,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,
   'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,
   'first-family-viewer-colors-draw-gain': firstFamilyScenario,
   'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,

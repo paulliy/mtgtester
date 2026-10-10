@@ -1437,6 +1437,14 @@ function parseEffectSentence(
       ];
     }
   }
+  // "you may have The Fantasticar become an artifact creature until end of turn": a Vehicle,
+  // so its printed power and toughness apply (CR 301.7b), as when it is crewed.
+  if (
+    /^~ becomes? an artifact creature until end of turn$/.test(s) &&
+    card.subtypes.includes('Vehicle')
+  ) {
+    return [{ op: 'becomeArtifactCreature' }];
+  }
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
   }
@@ -2557,6 +2565,26 @@ function parseSpreeSpellBlock(
   }
   return { targets, modes: { minChoices: 1, maxChoices: options.length, options } };
 }
+/**
+ * "You may sacrifice ~. If you do, create four 4/4 … tokens" (The Fantasticar): the rest happens
+ * only if the source was actually sacrificed — not if it already left the battlefield.
+ */
+function parseSacrificeSelfIfYouDoBlock(
+  body: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+  opts: Parameters<typeof parseEffectSentence>[3],
+): Effect[] | null {
+  const m = body.match(/^sacrifice ~\. if you do, (.+?)\.?$/);
+  if (m === null) return null;
+  const sentence = m[1] as string;
+  const parsed = parseEffectSentence(sentence, alloc, card, opts);
+  if (parsed === null) return null;
+  const then: Effect[] = [];
+  appendSentenceEffects(then, sentence, parsed);
+  return [{ op: 'sacrificeOneThen', selector: SELF, then }];
+}
+
 const ORDINAL_TIMES: Record<string, number> = {
   first: 1,
   second: 2,
@@ -4930,6 +4958,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseDoublePowerThoseGainBlock(body) ??
         parseDepartedSourceToLibraryBlock(body, heads) ??
         parseResolutionCountBlock(body, line, alloc, card, opts) ??
+        parseSacrificeSelfIfYouDoBlock(body, alloc, card, opts) ??
         parseExileReturnAtNextEndStepBlock(body, alloc) ??
         parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);
