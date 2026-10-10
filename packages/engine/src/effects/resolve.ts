@@ -1,6 +1,6 @@
 import { counterCount, setCounterCount } from '../state/counters';
 import type { ObjectFacts } from '../cards/source-identity';
-import { eventObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { spellDefinitionOf } from '../state/queries';
@@ -3126,6 +3126,16 @@ export function* executeAbility(
               counterCount(target.counters, counter) + adjustedCount,
             );
           }
+        }
+        break;
+      }
+      case 'transferCountersFromSource': {
+        const targetId = ref(effect.target);
+        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
+        const counters = sourceObjectFacts(ctx, scope)?.counters;
+        if (target !== undefined && counters !== undefined) {
+          for (const [counter, count] of Object.entries(counters))
+            addCounters(ctx, source, target, counter, count);
         }
         break;
       }

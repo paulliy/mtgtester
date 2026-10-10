@@ -138,3 +138,30 @@ describe('Sautekh Immortal Card Test Lab scenario', () => {
     replays('sautekh-immortal-viewer-flash-counters', steps);
   });
 });
+
+describe('Iron Apprentice Card Test Lab scenario', () => {
+  it('iron-apprentice-viewer-dies-moves-counters — it dies to Lab Doom and its counter moves to Lab Bird', () => {
+    const steps: Step[] = [
+      { action: 'Cast Iron Apprentice' },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Iron Apprentice'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, onBattlefield, seat } = run(
+      'iron-apprentice-viewer-dies-moves-counters',
+      steps,
+    );
+    // Dead through a real Lab Doom, the counter moved to P1's only other creature.
+    expect(onBattlefield('Iron Apprentice')).toHaveLength(0);
+    expect(seat('P1').graveyard.map((card) => card.name)).toContain('Iron Apprentice');
+    const [bird] = onBattlefield('Lab Bird');
+    expect(onBattlefield('Lab Bird')).toHaveLength(1);
+    expect(bird?.counters).toEqual({ '+1/+1': 1 });
+    // The opponent's creature is never a legal target of the trigger.
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.counters ?? {}).toEqual({});
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('iron-apprentice-viewer-dies-moves-counters', steps);
+  });
+});

@@ -104,7 +104,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Siren Stormtamer',
       'Smokestack',
       'Dark Confidant',
-      'Iron Apprentice',
       'Kardur, Doomscourge',
       'Mana Sculpt',
       'Vindictive Lich',

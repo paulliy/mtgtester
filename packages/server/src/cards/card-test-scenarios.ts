@@ -7680,6 +7680,37 @@ function sautekhImmortalScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function ironApprenticeScenario(gameId: GameId): CardTestScenario {
+  const apprentice = pinnedFrom(MARCHESA_BATCH1, 'Iron Apprentice');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'iron-apprentice-viewer-dies-moves-counters',
+    title: 'Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird',
+    instructions: [
+      'Iron Apprentice and Lab Doom are in your hand; three Swamps and Lab Bird are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Iron Apprentice: it enters as a 1/1 with a +1/+1 counter on it.',
+      'Cast Lab Doom on Iron Apprentice. When it dies, its trigger can only target a creature you control (not Lab Ox), so choose Lab Bird.',
+    ],
+    expectedOutcome:
+      'Iron Apprentice dies with a +1/+1 counter on it, and that counter is put on Lab Bird, which becomes a 2/2.',
+    oracleSha256: apprentice.sha256,
+    clauseIds: ['iron-apprentice-enters-with-counter', 'iron-apprentice-dies-move-counters'],
+    decks: {
+      P1: [apprentice.card, LAB_DOOM, LAB_BIRD, ...swamps],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Iron Apprentice', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Bird', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8843,6 +8874,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
   'sautekh-immortal-viewer-flash-counters',
+  'iron-apprentice-viewer-dies-moves-counters',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9076,6 +9108,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
   'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
+  'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

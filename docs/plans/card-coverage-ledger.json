@@ -1512,6 +1512,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
+    "name": "Iron Apprentice",
+    "package": "PR04.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The dies intervening-if checks the battlefield, so it never sees this creature's counters."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "4a75ef46-c5ae-4b1a-a681-d439b01f6731",
     "name": "It's Clobberin' Time!",
     "package": "W1",

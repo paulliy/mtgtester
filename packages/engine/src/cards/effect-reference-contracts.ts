@@ -97,6 +97,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   sacrificeAndDrawForPower: {},
   sacrificeGreatestEachOpponent: {},
   transferCountersFromTriggerObject: { target: permanent },
+  transferCountersFromSource: { target: permanent },
   mayPayLifeForTriggerPowerAndCounter: {},
   vindictiveLichModes: {},
   returnExiledAttachedCard: {},

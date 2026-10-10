@@ -733,7 +733,13 @@ function parseEffectSentence(
   sentence: string,
   alloc: SlotAllocator,
   card: OracleCard,
-  opts: { triggerObject?: boolean; thatMany?: Value; allocCount?: CountSlotAllocator } = {},
+  opts: {
+    triggerObject?: boolean;
+    /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
+    departedSelf?: boolean;
+    thatMany?: Value;
+    allocCount?: CountSlotAllocator;
+  } = {},
 ): Effect[] | null {
   const s = sentence.toLowerCase();
   // "transform this creature" is the modern templating; "transform ~" the older printing that
@@ -1835,6 +1841,22 @@ function parseEffectSentence(
       const filter = parseCardFilterPhrase(m[1] as string, card);
       if (filter === null) return null;
       return [{ op: 'handToBattlefield', filter, count: 'one' }];
+    }
+  }
+  // "put those counters on target creature you control" (Iron Apprentice): every counter the
+  // departed source last had (CR 603.10a), each kind and number, through counter-placement
+  // replacements.
+  {
+    const m = s.match(/^put those counters on target (.+)$/);
+    if (m !== null) {
+      const parsed = parseTargetClause(m[1] as string);
+      if (opts.departedSelf !== true || parsed === null || parsed.kind !== 'creature') return null;
+      return [
+        {
+          op: 'transferCountersFromSource',
+          target: alloc(parsed.kind, parsed.filter, parsed.controller),
+        },
+      ];
     }
   }
   // "put a +1/+1 counter on target creature" / "put two -1/-1 counters on ~"
@@ -4418,6 +4440,20 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (heads.some((head) => head.when !== 'enters')) return null;
     heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
     body = iff[2] as string;
+  } else if (iff !== null && /^(?:it|~) had counters on it$/.test(iff[1] as string)) {
+    // "When this creature dies, if it had counters on it" (Iron Apprentice): the departed
+    // creature's last-known counters (CR 603.10a), of any kind. Only a self-departure head names
+    // an object whose counters "it had" can mean.
+    if (
+      !heads.every(
+        (head) =>
+          (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+          head.subject.kind === 'self',
+      )
+    )
+      return null;
+    condition = { kind: 'sourceMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
   } else if (iff !== null) {
     const parsed = parseConditionClause(iff[1] as string, card);
     if (parsed === null) return null;
@@ -4488,6 +4524,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const firstHead = heads[0] as TriggerHead;
   const opts = {
     triggerObject: 'subject' in firstHead && firstHead.subject.kind === 'permanent',
+    departedSelf: heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        'subject' in head &&
+        head.subject.kind === 'self',
+    ),
     allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
     // head makes it the number of objects. See `parseCountPhrase`.

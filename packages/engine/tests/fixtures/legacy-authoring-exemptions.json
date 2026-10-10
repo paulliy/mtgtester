@@ -518,7 +518,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "7ac2f7ef95f32ce8e8764831cbedac8340ef404f0ae132081b64e64eccef9de6",
+      "sha256": "412fda0c9e516a689a3cded1a028304162816128c9f81b0a5fed11db9b294499",
       "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
     },
     {

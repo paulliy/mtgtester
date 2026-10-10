@@ -5079,15 +5079,37 @@
     "cd0c8db0-67ee-483b-8298-455cce35fef7": {
       "name": "Iron Apprentice",
       "oracleSha256": "46fcccb41b003c4e811243f737759ceade7e071cb7fc8852b48df71a94e0d680",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "This creature enters with a +1/+1 counter on it.\nWhen this creature dies, if it had counters on it, put those counters on target creature you control.",
+          "id": "iron-apprentice-enters-with-counter",
+          "oracleText": "This creature enters with a +1/+1 counter on it.",
           "implementation": [
-            "explicitly unsupported; dies intervening-if checks the battlefield after this creature has left"
+            "interpreted enters-with replacement effect (CR 614.1c), not a trigger: the permanent enters already carrying one +1/+1 counter (entersWithCounters)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "iron-apprentice-pinned-oracle-supported",
+            "iron-apprentice-enters-with-a-counter",
+            "iron-apprentice-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["iron-apprentice-viewer-dies-moves-counters"]
+        },
+        {
+          "id": "iron-apprentice-dies-move-counters",
+          "oracleText": "When this creature dies, if it had counters on it, put those counters on target creature you control.",
+          "implementation": [
+            "dies trigger targeting a creature you control (never an opponent's); the intervening-if (sourceMatches hasAnyCounter) reads the dead creature's last-known counters (CR 603.10a), so it triggers only if it had counters",
+            "transferCountersFromSource puts each kind and number of the counters it had on the target through addCounters, so counter replacements apply; with no legal target the trigger is removed and the counters are lost"
+          ],
+          "engineTestIds": [
+            "iron-apprentice-pinned-oracle-supported",
+            "iron-apprentice-dies-moves-every-counter",
+            "iron-apprentice-no-counters-no-trigger",
+            "iron-apprentice-only-your-creatures",
+            "iron-apprentice-no-target",
+            "iron-apprentice-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["iron-apprentice-viewer-dies-moves-counters"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -5445,3 +5445,33 @@ test('Sautekh Immortal: two creatures died this turn, so it enters as a 4/4', as
   await expect(permanent(page, 'Sautekh Immortal').getByText('+1/+1×2')).toBeVisible();
   await expect(permanent(page, 'Sautekh Immortal').getByText('4/4')).toBeVisible();
 });
+
+test('Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird', async ({ page }) => {
+  await runScenario(page, 'Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird');
+  const apprentice = handCard(page, 'Iron Apprentice');
+  await expect(apprentice).toHaveClass(/actionable/, { timeout: 15_000 });
+  await apprentice.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Iron Apprentice'));
+  // It enters with its counter already on it: a 1/1, not an enters trigger.
+  await expect(permanent(page, 'Iron Apprentice').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Iron Apprentice').getByText('1/1')).toBeVisible();
+  await expect(permanent(page, 'Lab Bird').getByText('+1/+1×1')).toHaveCount(0);
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Iron Apprentice').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Bird is the only creature P1 controls, so the dies trigger needs no choice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Iron Apprentice')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Bird').getByText('2/2')).toBeVisible();
+});

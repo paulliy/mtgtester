@@ -543,6 +543,12 @@ export type Effect =
       action: 'sacrifice' | 'exile';
     }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
+  /**
+   * "When this creature dies, ... put those counters on target creature you control" (Iron
+   * Apprentice): every counter the ability's own source last had (CR 603.10a), each kind and
+   * number, through counter-placement replacements.
+   */
+  | { op: 'transferCountersFromSource'; target: EffectRef }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
   | { op: 'returnExiledAttachedCard' }

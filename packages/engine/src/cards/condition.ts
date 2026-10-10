@@ -1,5 +1,10 @@
 import { counterCount } from '../state/counters';
-import { eventObjectFacts, sourceObjectState, eventObjectState } from './source-identity';
+import {
+  eventObjectFacts,
+  eventObjectState,
+  sourceObjectFacts,
+  sourceObjectState,
+} from './source-identity';
 import { assertNever } from '../utils/assert-never';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
@@ -118,6 +123,11 @@ export type Condition =
    */
   | { kind: 'triggerObjectMatches'; selector: Selector }
   /**
+   * "When this creature dies, if it had counters on it" (Iron Apprentice): the ability's own
+   * source against a selector, read from its last-known facts once it has left (CR 603.10a).
+   */
+  | { kind: 'sourceMatches'; selector: Selector }
+  /**
    * "Khans — ..." / "Dragons — ..." (Frontier Siege): gates one of two static/triggered
    * clauses by the mode chosen as the permanent entered (`EnginePermanent.chosenOption`),
    * rather than the card needing two mutually-exclusive definitions.
@@ -211,6 +221,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'hadToAttackThisCombat':
     case 'triggerObjectHadToAttackThisCombat':
     case 'triggerObjectMatches':
+    case 'sourceMatches':
     case 'chosenOptionIs':
     case 'controlsYourCommander':
     case 'controlsACommander':
@@ -400,6 +411,10 @@ export function evaluateCondition(
         ...source,
         controllerId: source.controllerId as PlayerId,
       });
+      return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
+    }
+    case 'sourceMatches': {
+      const facts = sourceObjectFacts(ctx, scope);
       return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
     }
     case 'chosenOptionIs': {

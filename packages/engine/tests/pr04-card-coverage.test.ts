@@ -19,6 +19,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runPrioritySequence } from '../src/turn/priority';
 import { runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
@@ -116,6 +117,18 @@ function takeAction(
 
 function resolveTop(ctx: GameContext, answer?: Answer) {
   return pump(resolveTopOfStack(ctx), answer);
+}
+
+/**
+ * Run the normal priority loop with every player passing: pending triggers go on the stack and
+ * resolve in order. Non-priority decisions go to `answer` (default: first option).
+ */
+function settle(ctx: GameContext, answer?: Answer) {
+  return pump(runPrioritySequence(ctx), (decision, count) => {
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
 }
 
 /** Run a whole turn for the current turn player with nobody attacking or blocking. */
@@ -278,6 +291,133 @@ describe('Sautekh Immortal', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.01 Iron Apprentice
+// ---------------------------------------------------------------------------------------------
+
+describe('Iron Apprentice', () => {
+  const { card } = pinned('Iron Apprentice');
+  const ALLY = LAB_CARD('Lab Ally');
+  const RIVAL = LAB_CARD('Lab Rival');
+  const HARDENED_SCALES = oracle({
+    name: 'Hardened Scales',
+    typeLine: 'Enchantment',
+    manaCost: '{G}',
+    power: null,
+    toughness: null,
+    oracleText:
+      'If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.',
+  });
+
+  /** Cast it from hand so it enters through the real replacement, then return the permanent. */
+  function castApprentice(ctx: GameContext): EnginePermanent {
+    const object = castFromHand(ctx, 'P1', card, generic(1));
+    resolveTop(ctx);
+    return onField(ctx, object.cardId)!;
+  }
+
+  /**
+   * Kill it and let its dies trigger resolve. Returns the names of every creature offered when
+   * there was a choice (a single legal target is chosen without a prompt), choosing `pick`.
+   */
+  function dieAndSettle(ctx: GameContext, apprentice: EnginePermanent, pick: string) {
+    kill(ctx, apprentice);
+    const offered: string[] = [];
+    const nameOf = (id: string) => ctx.state.battlefield.find((perm) => perm.id === id)?.name;
+    settle(ctx, (decision) => {
+      if (decision.decisionType !== 'chooseTargets') return { index: 0, targets: new Map() };
+      const slot = decision.options[0]!.targets![0]!;
+      offered.push(...slot.options.map((id) => nameOf(id) ?? id));
+      const chosen = slot.options.find((id) => nameOf(id) === pick);
+      return { index: 0, targets: new Map([[slot.slot, chosen!]]) };
+    });
+    return offered;
+  }
+
+  it('iron-apprentice-pinned-oracle-supported — the interpreter alone models the enters-with counter and the counter-gated dies trigger', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.entersWithCounters).toEqual({ '+1/+1': 1 });
+    expect(def.triggers).toHaveLength(1);
+    const trigger = def.triggers[0]!;
+    expect(trigger.trigger).toMatchObject({
+      when: 'dies',
+      subject: { kind: 'self' },
+      condition: { kind: 'sourceMatches', selector: { kind: 'hasAnyCounter' } },
+    });
+    expect(trigger.targets).toEqual([{ kind: 'creature', controller: 'you' }]);
+    expect(trigger.effects).toEqual([{ op: 'transferCountersFromSource', target: 0 }]);
+  });
+
+  it('iron-apprentice-enters-with-a-counter — cast for {1}, it enters as a 1/1 with a +1/+1 counter', () => {
+    const ctx = pod('apprentice-enters');
+    const apprentice = castApprentice(ctx);
+    expect(apprentice.counters['+1/+1']).toBe(1);
+    expect(effectivePT(ctx, apprentice)).toEqual({ power: 1, toughness: 1 });
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+
+  it('iron-apprentice-dies-moves-every-counter — it dies with three +1/+1 counters and an oil counter, and its target gets all of them', () => {
+    const ctx = pod('apprentice-moves');
+    const ally = spawn(ctx, 'P1', ALLY);
+    const apprentice = castApprentice(ctx);
+    apprentice.counters['+1/+1'] = 3;
+    apprentice.counters['oil'] = 1;
+    dieAndSettle(ctx, apprentice, 'Lab Ally');
+    const target = onField(ctx, ally.cardId)!;
+    expect(target.counters['+1/+1']).toBe(3);
+    expect(target.counters['oil']).toBe(1);
+  });
+
+  it('iron-apprentice-no-counters-no-trigger — it dies with no counters on it and nothing triggers', () => {
+    const ctx = pod('apprentice-empty');
+    spawn(ctx, 'P1', ALLY);
+    const apprentice = castApprentice(ctx);
+    apprentice.counters['+1/+1'] = 0;
+    kill(ctx, apprentice);
+    // CR 603.4: the intervening-if is false as it dies, so the ability never triggers.
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+  });
+
+  it('iron-apprentice-only-your-creatures — only creatures you control are offered, never an opponent’s', () => {
+    const ctx = pod('apprentice-targets');
+    const ally = spawn(ctx, 'P1', ALLY);
+    const friend = spawn(ctx, 'P1', LAB_CARD('Lab Friend'));
+    const rival = spawn(ctx, 'P2', RIVAL);
+    const apprentice = castApprentice(ctx);
+    const offered = dieAndSettle(ctx, apprentice, 'Lab Friend');
+    expect(offered).toContain('Lab Ally');
+    expect(offered).toContain('Lab Friend');
+    expect(offered).not.toContain('Lab Rival');
+    expect(offered).not.toContain('Iron Apprentice');
+    expect(onField(ctx, friend.cardId)!.counters['+1/+1']).toBe(1);
+    expect(onField(ctx, ally.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(onField(ctx, rival.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('iron-apprentice-no-target — with no other creature you control, the counters are simply lost', () => {
+    const ctx = pod('apprentice-alone');
+    const rival = spawn(ctx, 'P2', RIVAL);
+    const apprentice = castApprentice(ctx);
+    kill(ctx, apprentice);
+    settle(ctx);
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(onField(ctx, rival.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('iron-apprentice-counter-replacements-apply — Hardened Scales adds one to the +1/+1 counters it puts', () => {
+    const ctx = pod('apprentice-scales');
+    spawn(ctx, 'P1', HARDENED_SCALES);
+    const ally = spawn(ctx, 'P1', ALLY);
+    const apprentice = castApprentice(ctx);
+    // Scales applied as it entered: 1 + 1.
+    expect(apprentice.counters['+1/+1']).toBe(2);
+    dieAndSettle(ctx, apprentice, 'Lab Ally');
+    expect(onField(ctx, ally.cardId)!.counters['+1/+1']).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -288,6 +428,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Iron Apprentice',
+    sha256: '46fcccb41b003c4e811243f737759ceade7e071cb7fc8852b48df71a94e0d680',
+    clauseCount: 2,
+  },
   {
     name: 'Sautekh Immortal',
     sha256: '26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a',

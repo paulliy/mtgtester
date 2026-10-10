@@ -318,12 +318,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit marchesa-batch-10: dies intervening-if never sees the dead creature.
-  unsupportedCard(
-    'cd0c8db0-67ee-483b-8298-455cce35fef7',
-    'Iron Apprentice',
-    "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
-  );
+  // Iron Apprentice: restored in coverage PR04. The interpreter reads the dies trigger gated on
+  // the creature's last-known counters and moves those counters, so no override remains.
   defineCard(
     '4fca09ac-8134-43d9-a84b-686db5e2bf69',
     'Kalain, Reclusive Painter',

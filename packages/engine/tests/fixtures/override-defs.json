@@ -8477,12 +8477,6 @@
     "def": {}
   },
   {
-    "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
-    "name": "Iron Apprentice",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
     "handledLines": [
@@ -16209,12 +16203,6 @@
   {
     "oracleId": "oracle-intermediate-chirography",
     "name": "Intermediate Chirography",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-iron-apprentice",
-    "name": "Iron Apprentice",
     "handledLines": [],
     "def": {}
   },

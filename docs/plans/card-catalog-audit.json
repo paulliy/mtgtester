@@ -6137,6 +6137,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr04",
       "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
+      "name": "Iron Apprentice",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the dies trigger with an intervening-if on the creature's last-known counters (CR 603.10a, sourceMatches hasAnyCounter) and the transferCountersFromSource effect, which puts every kind and number of those counters on the target creature through addCounters so counter replacements apply; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
     }
   ]
 }
