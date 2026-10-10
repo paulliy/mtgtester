@@ -3359,15 +3359,34 @@
     "7388a797-d40d-4783-a281-d17bc159b856": {
       "name": "Sautekh Immortal",
       "oracleSha256": "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sautekh-immortal-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted): castable at instant speed"],
+          "engineTestIds": [
+            "sautekh-immortal-pinned-oracle-supported",
+            "sautekh-immortal-counts-every-death"
+          ],
+          "viewerScenarioIds": ["sautekh-immortal-viewer-flash-counters"]
+        },
+        {
+          "id": "sautekh-immortal-elite-troops",
           "oracleText": "This creature enters with a +1/+1 counter on it for each creature that died this turn.",
           "implementation": [
-            "explicitly unsupported; enters-with implemented as an enters trigger"
+            "interpreted enters-with replacement effect (CR 614.1c), not a trigger: the permanent enters already carrying counters equal to the creatures that died this turn (entersWithCounters creaturesDiedThisTurn)",
+            "the count reads the turn's death history when the permanent enters, so it applies to a cast and to any other way onto the battlefield and ignores deaths from earlier turns"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "sautekh-immortal-pinned-oracle-supported",
+            "sautekh-immortal-counts-every-death",
+            "sautekh-immortal-no-deaths",
+            "sautekh-immortal-counts-as-it-enters",
+            "sautekh-immortal-any-entry",
+            "sautekh-immortal-this-turn-only"
+          ],
+          "viewerScenarioIds": ["sautekh-immortal-viewer-flash-counters"]
         }
       ],
       "gameplayAiScenarioIds": []

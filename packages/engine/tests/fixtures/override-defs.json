@@ -4525,12 +4525,6 @@
     }
   },
   {
-    "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
-    "name": "Sautekh Immortal",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -19627,12 +19621,6 @@
   {
     "oracleId": "oracle-sarkhan-the-dragonspeaker",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-sautekh-immortal",
-    "name": "Sautekh Immortal",
     "handledLines": [],
     "def": {}
   },

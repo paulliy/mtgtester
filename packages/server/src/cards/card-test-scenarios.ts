@@ -7649,6 +7649,37 @@ function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sautekhImmortalScenario(gameId: GameId): CardTestScenario {
+  const sautekh = pinnedFrom(MARCHESA_BATCH1, 'Sautekh Immortal');
+  const swamps = Array.from({ length: 7 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'sautekh-immortal-viewer-flash-counters',
+    title: 'Sautekh Immortal: two creatures died this turn, so it enters as a 4/4',
+    instructions: [
+      'Sautekh Immortal and two Lab Doom are in your hand; seven Swamps are on your battlefield, and P2 controls Lab Ox and Lab Servo.',
+      'Cast Lab Doom on Lab Ox and let it resolve, then cast the other Lab Doom on Lab Servo and let it resolve.',
+      'Then cast Sautekh Immortal.',
+    ],
+    expectedOutcome:
+      'Two creatures died this turn, so Sautekh Immortal enters with two +1/+1 counters and is a 4/4.',
+    oracleSha256: sautekh.sha256,
+    clauseIds: ['sautekh-immortal-flash', 'sautekh-immortal-elite-troops'],
+    decks: {
+      P1: [sautekh.card, LAB_DOOM, LAB_DOOM, ...swamps],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom', 'Lab Doom', 'Sautekh Immortal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8811,6 +8842,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kambal-viewer-opponent-noncreature-spell',
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
+  'sautekh-immortal-viewer-flash-counters',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9043,6 +9075,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
+  'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

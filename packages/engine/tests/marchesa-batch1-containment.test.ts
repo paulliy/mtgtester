@@ -166,7 +166,6 @@ const REASONS: Record<string, string> = {
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
-  'Sautekh Immortal': 'Enters-with counters is implemented as an enters trigger.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
@@ -301,6 +300,7 @@ describe('Marchesa catalog audit containment', () => {
     'Living Death',
     'Technomancer',
     'Body Launderer',
+    'Sautekh Immortal',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

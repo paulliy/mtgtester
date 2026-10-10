@@ -345,9 +345,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens.',
   ]);
 
-  unimplemented('7388a797-d40d-4783-a281-d17bc159b856', 'Sautekh Immortal', [
-    'Elite Troops — ~ enters with a +1/+1 counter on it for each creature that died this turn.',
-  ]);
+  // Sautekh Immortal: restored in coverage PR04 (see necron-dynasties-remaining.ts).
 
   unimplemented('6c85271c-c711-49b0-a72e-9e576c33714d', 'Sculpting Steel', [
     'You may have this artifact enter as a copy of any artifact on the battlefield.',

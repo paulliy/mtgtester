@@ -1739,6 +1739,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Sautekh Immortal: two creatures died this turn, so it enters as a 4/4'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {

@@ -5418,3 +5418,30 @@ test('Body Launderer: it dies and returns Lab Servo, not Lab Ox', async ({ page 
   await expect(permanent(page, 'Lab Servo')).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test('Sautekh Immortal: two creatures died this turn, so it enters as a 4/4', async ({ page }) => {
+  await runScenario(page, 'Sautekh Immortal: two creatures died this turn, so it enters as a 4/4');
+  // Kill both of P2's creatures with real spells, letting each resolve before the next.
+  let doomResolutions = 0;
+  for (const victim of ['Lab Ox', 'Lab Servo']) {
+    const doom = handCard(page, 'Lab Doom').first();
+    await expect(doom).toHaveClass(/actionable/);
+    await doom.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, victim).click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await awaitResolution(page, 'Lab Doom', doomResolutions);
+    doomResolutions++;
+    await expect(permanent(page, victim)).toHaveCount(0);
+  }
+  const sautekh = handCard(page, 'Sautekh Immortal');
+  await expect(sautekh).toHaveClass(/actionable/);
+  await sautekh.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Sautekh Immortal'));
+  await expect(permanent(page, 'Sautekh Immortal')).toBeVisible();
+  await expect(permanent(page, 'Sautekh Immortal').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Sautekh Immortal').getByText('4/4')).toBeVisible();
+});

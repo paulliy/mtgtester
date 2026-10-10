@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 38,
+      "uniqueOracleIds": 37,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6123,6 +6123,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Containment removed: the interpreter reads connive (new connive op, CR 701.50) and the dies return, whose target filter compares against Body Launderer's last-known power through the new powerAtMostSource selector (CR 608.2h)."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'enters with a +1/+1 counter on it for each creature that died this turn' as an enters-with replacement effect (CR 614.1c, entersWithCounters creaturesDiedThisTurn) rather than an enters trigger; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
     }
   ]
 }

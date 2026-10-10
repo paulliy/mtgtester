@@ -7296,6 +7296,25 @@ export function interpretCard(card: OracleCard): CardDefinition {
           continue;
         }
       }
+      // "~ enters with a +1/+1 counter on it for each creature that died this turn" (Sautekh
+      // Immortal): the same replacement, counted as it enters.
+      const forEach = lower.match(
+        /^~ enters (?:the battlefield )?with (\w+) ([+-][0-9]+[/][+-][0-9]+) counters? on it for each (.+)$/,
+      );
+      if (forEach !== null && entersWithCounters[forEach[2] as string] === undefined) {
+        const per = parseCountPhrase(forEach[1] as string);
+        // "creature that died this turn" is the state-level tally of creatures put into a
+        // graveyard from the battlefield this turn (CR 700.4), whoever controlled them.
+        const count: Value | null =
+          forEach[3] === 'creature that died this turn'
+            ? { kind: 'creaturesDiedThisTurn' }
+            : parseDynamicCountValue('the number of ' + (forEach[3] as string), card);
+        if (per !== null && per.kind === 'const' && count !== null) {
+          entersWithCounters[forEach[2] as string] =
+            per.n === 1 ? count : { kind: 'times', of: count, n: per.n };
+          continue;
+        }
+      }
       const dynamic = lower.match(
         /^~ enters (?:the battlefield )?with (?:a number of )?([+-][0-9]+[/][+-][0-9]+) counters? on it equal to (.+)$/,
       );

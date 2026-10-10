@@ -91,7 +91,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Resurrection Orb',
       'Szarekh, the Silent King',
       'Mask of Memory',
-      'Sautekh Immortal',
       'Trazyn the Infinite',
       'Cranial Plating',
       'Tomb Blade',

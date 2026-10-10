@@ -82,6 +82,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'River Kelpie',
       'Sage of Fables',
       'Satoru, the Infiltrator',
+      'Sautekh Immortal',
       'Scavenging Ooze',
       'Sceptre of Eternal Glory',
       'Shard of the Nightbringer',
