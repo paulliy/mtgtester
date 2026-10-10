@@ -8408,6 +8408,42 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468": {
+      "name": "Bess, Soul Nourisher",
+      "oracleSha256": "00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "bess-soul-nourisher-enters-counter",
+          "oracleText": "Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on Bess.",
+          "implementation": [
+            "interpreted aggregate enters trigger: creatures entering together are one batch and give one counter, however many of them there are",
+            "the creature filter matches on printed (base) power and toughness 1/1, not current, so a base-1/1 that enters with a counter counts and a printed 2/2 or an opponent's 1/1 does not; Bess is a 1/1 but is not an other creature, so her own entry does not count"
+          ],
+          "engineTestIds": [
+            "bess-soul-nourisher-pinned-oracle-supported",
+            "bess-soul-nourisher-one-counter-per-batch",
+            "bess-soul-nourisher-base-not-current",
+            "bess-soul-nourisher-not-itself"
+          ],
+          "viewerScenarioIds": ["bess-soul-nourisher-viewer-counter-and-pump"]
+        },
+        {
+          "id": "bess-soul-nourisher-attack-pump",
+          "oracleText": "Whenever Bess attacks, each other creature you control with base power and toughness 1/1 gets +X/+X until end of turn, where X is the number of +1/+1 counters on Bess.",
+          "implementation": [
+            "interpreted attacks trigger on Bess whose pumpEachUntilEot effect gives every other creature its controller owns with base 1/1 +X/+X until end of turn, with X the +1/+1 counters on Bess",
+            "X is fixed as the trigger resolves, so Bess later losing counters does not change the pump; the base filter ignores counters and other modifications, so a base-1/1 carrying counters is pumped too"
+          ],
+          "engineTestIds": [
+            "bess-soul-nourisher-pinned-oracle-supported",
+            "bess-soul-nourisher-attack-pump"
+          ],
+          "viewerScenarioIds": ["bess-soul-nourisher-viewer-counter-and-pump"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -110,6 +110,44 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9",
+      "card": {
+        "oracleId": "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468",
+        "scryfallId": "d96c33f5-f891-44bc-8ae1-11bc6f6544b6",
+        "name": "Bess, Soul Nourisher",
+        "manaCost": "{1}{G}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Citizen",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Citizen"
+        ],
+        "oracleText": "Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on Bess.\nWhenever Bess attacks, each other creature you control with base power and toughness 1/1 gets +X/+X until end of turn, where X is the number of +1/+1 counters on Bess.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

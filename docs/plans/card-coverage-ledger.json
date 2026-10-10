@@ -264,16 +264,20 @@
   {
     "oracleId": "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468",
     "name": "Bess, Soul Nourisher",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.19",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on ~.\"",
       "unrecognized rules text: \"Whenever ~ attacks, each other creature you control with base power and toughness 1/1 gets +X/+X until end of turn, where X is the number of +1/+1 counters on ~.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",

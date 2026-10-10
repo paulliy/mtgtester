@@ -131,6 +131,9 @@ export interface Characteristics {
   activatedAbilities?: ActivatedAbility[];
   power: number;
   toughness: number;
+  /** Power and toughness after layer 7b, before counters and 7d modifications (CR 613.4). */
+  basePower?: number;
+  baseToughness?: number;
   /**
    * True once this permanent's rules-text abilities have been stripped — by a layer-4 subtype
    * change (CR 305.7) or by a layer-6 "loses all abilities". Continuous effects sourced from

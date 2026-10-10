@@ -103,6 +103,7 @@ const selectorShapes = {
   powerAtMost: { n: finite },
   powerAtMostSource: {},
   toughnessAtLeast: { n: finite },
+  basePowerToughness: { power: finite, toughness: finite },
   manaValueAtMost: { n: finite },
   manaValueAtLeast: { n: finite },
   hasAnyCounter: {},

@@ -19,7 +19,7 @@ import {
   type PriorityActionPayload,
 } from '../src/actions/legal';
 import type { AuthoringIssue } from '../src/cards/authoring-validation';
-import type { Effect } from '../src/cards/ability';
+import type { Effect, TokenSpec } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { validateTriggerHead } from '../src/cards/trigger-contracts';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
@@ -30,7 +30,7 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
-import { moveObject, playerById } from '../src/state/objects';
+import { createTokens, moveObject, playerById } from '../src/state/objects';
 import { effectivePT } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -1262,6 +1262,117 @@ describe('Mikey & Leo, Chaos & Order', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.19 Bess, Soul Nourisher
+// ---------------------------------------------------------------------------------------------
+
+describe('Bess, Soul Nourisher', () => {
+  const { card } = pinned('Bess, Soul Nourisher');
+  const CITIZEN: TokenSpec = {
+    name: 'Citizen',
+    typeLine: 'Token Creature — Human Citizen',
+    types: ['Creature'],
+    subtypes: ['Human', 'Citizen'],
+    colors: ['G', 'W'],
+    power: 1,
+    toughness: 1,
+  };
+  const ONE_ONE = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Secret', power: '1', toughness: '1' });
+  const TWO_TWO = oracle({
+    name: 'Lab Two-Two',
+    typeLine: 'Creature — Secret',
+    power: '2',
+    toughness: '2',
+  });
+  const GROWN = oracle({
+    name: 'Lab Grown',
+    typeLine: 'Creature — Secret',
+    manaCost: '{G}',
+    power: '1',
+    toughness: '1',
+    oracleText: 'This creature enters with a +1/+1 counter on it.',
+  });
+
+  /** Run combat with only Bess attacking P2, nobody blocking. */
+  function bessAttacks(ctx: GameContext, bess: EnginePermanent) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === bess.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('bess-soul-nourisher-pinned-oracle-supported — the interpreter models the batched base-1/1 enters counter and the attack pump', () => {
+    expect(getOverride(card.oracleId)).toBeUndefined();
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters', aggregate: true });
+    expect(JSON.stringify(def.triggers[0]!.trigger)).toContain('"basePowerToughness"');
+    expect(def.triggers[1]!.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    expect(def.triggers[1]!.effects).toMatchObject([
+      {
+        op: 'pumpEachUntilEot',
+        power: { kind: 'countersOnSelf', counter: '+1/+1' },
+        toughness: { kind: 'countersOnSelf', counter: '+1/+1' },
+      },
+    ]);
+  });
+
+  it('bess-soul-nourisher-one-counter-per-batch — three 1/1 tokens entering together give one counter', () => {
+    const ctx = pod('bess-batch');
+    const bess = spawn(ctx, 'P1', card);
+    createTokens(ctx, CITIZEN, 3, 'P1');
+    settle(ctx);
+    expect(onField(ctx, bess.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('bess-soul-nourisher-base-not-current — a base-1/1 entering with a counter counts; a 2/2 or an opponent’s 1/1 does not', () => {
+    const ctx = pod('bess-base');
+    const bess = spawn(ctx, 'P1', card);
+    const grown = enterFrom(ctx, 'P1', GROWN, 'hand');
+    expect(effectivePT(ctx, grown)).toEqual({ power: 2, toughness: 2 });
+    settle(ctx);
+    expect(onField(ctx, bess.cardId)!.counters['+1/+1']).toBe(1);
+    enterFrom(ctx, 'P1', TWO_TWO, 'hand');
+    enterFrom(ctx, 'P2', ONE_ONE('Lab Rival'), 'hand');
+    settle(ctx);
+    expect(onField(ctx, bess.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('bess-soul-nourisher-not-itself — Bess, a 1/1, entering does not count itself', () => {
+    const ctx = pod('bess-self');
+    const bess = enterFrom(ctx, 'P1', card, 'hand');
+    settle(ctx);
+    expect(onField(ctx, bess.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('bess-soul-nourisher-attack-pump — with three counters, other base-1/1 creatures get +3/+3 until end of turn, locked as it resolves', () => {
+    const ctx = pod('bess-attack');
+    const bess = spawn(ctx, 'P1', card);
+    bess.counters['+1/+1'] = 3;
+    const small = spawn(ctx, 'P1', ONE_ONE('Lab Small'));
+    const grown = spawn(ctx, 'P1', ONE_ONE('Lab Countered'));
+    grown.counters['+1/+1'] = 1;
+    const big = spawn(ctx, 'P1', TWO_TWO);
+    const rival = spawn(ctx, 'P2', ONE_ONE('Lab Rival'));
+    bessAttacks(ctx, bess);
+    expect(effectivePT(ctx, onField(ctx, small.cardId)!)).toEqual({ power: 4, toughness: 4 });
+    expect(effectivePT(ctx, onField(ctx, grown.cardId)!)).toEqual({ power: 5, toughness: 5 });
+    expect(effectivePT(ctx, onField(ctx, big.cardId)!)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, onField(ctx, rival.cardId)!)).toEqual({ power: 1, toughness: 1 });
+    // Bess itself is not "other": it is a 1/1 with three counters.
+    expect(effectivePT(ctx, onField(ctx, bess.cardId)!)).toEqual({ power: 4, toughness: 4 });
+    // X was fixed on resolution: losing the counters afterwards changes nothing.
+    onField(ctx, bess.cardId)!.counters['+1/+1'] = 0;
+    expect(effectivePT(ctx, onField(ctx, small.cardId)!)).toEqual({ power: 4, toughness: 4 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1272,6 +1383,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Bess, Soul Nourisher',
+    sha256: '00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9',
+    clauseCount: 2,
+  },
   {
     name: 'Mikey & Leo, Chaos & Order',
     sha256: '0c68ed59f882ea595ee50cbc36912ca70b5b4d5ef1a56bc503e3c532d2bd3b5a',

@@ -297,3 +297,30 @@ describe('Mikey & Leo, Chaos & Order Card Test Lab scenario', () => {
     replays('mikey-and-leo-viewer-counter-draw', steps);
   });
 });
+
+describe('Bess, Soul Nourisher Card Test Lab scenario', () => {
+  it('bess-soul-nourisher-viewer-counter-and-pump — a base-1/1 entering grows Bess, and her attack pumps the other base-1/1', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Servo' },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'bess-soul-nourisher-viewer-counter-and-pump',
+      steps,
+    );
+    const [bess] = onBattlefield('Bess, Soul Nourisher');
+    expect(bess?.counters).toEqual({ '+1/+1': 1 });
+    expect(bess?.tapped).toBe(true);
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.counters ?? {}).toEqual({});
+    // Bess connected as a 2/2 (1/1 plus her counter).
+    expect(seat('P2').life).toBe(38);
+    // Her attack trigger pumped only Lab Servo, by X = 1.
+    const pumps = state.eventLog.filter((event) => event.type === 'pump');
+    expect(pumps).toHaveLength(1);
+    expect(pumps[0]?.payload).toMatchObject({ targets: ['Lab Servo'], power: 1, toughness: 1 });
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('bess-soul-nourisher-viewer-counter-and-pump', steps);
+  });
+});

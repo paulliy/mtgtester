@@ -631,6 +631,27 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     noun = supertypeMatch[2] as string;
   }
 
+  // "other creatures you control with base power and toughness 1/1" (Bess, Soul Nourisher).
+  const baseClause = noun.match(/^(.+) with base power and toughness (\d+)\/(\d+)$/);
+  if (baseClause !== null) {
+    parts.push({
+      kind: 'basePowerToughness',
+      power: Number(baseClause[2]),
+      toughness: Number(baseClause[3]),
+    });
+    noun = baseClause[1] as string;
+    for (const [suffix, who] of [
+      [' you control', YOURS],
+      [' your opponents control', OPPONENTS],
+    ] as const) {
+      if (noun.endsWith(suffix)) {
+        parts.push(who);
+        noun = noun.slice(0, -suffix.length);
+        break;
+      }
+    }
+  }
+
   const counterClause = noun.match(/^(.+) with (?:a )?\+1\/\+1 counter on it$/);
   if (counterClause !== null) {
     // The printed subject names the counter KIND. "Any counter" would pull in -1/-1, stun and
@@ -1542,6 +1563,16 @@ function parseEffectSentence(
           toughness: signed(x[3] as string),
         },
       ];
+    }
+    // "each other creature you control with base power and toughness 1/1 gets +X/+X until end
+    // of turn, where X is the number of +1/+1 counters on ~" (Bess): X is fixed on resolution
+    // (CR 608.2h) and the affected set with it (CR 611.2c).
+    const where = s.match(/^(.+?) gets? \+x\/\+x until end of turn, where x is (.+)$/);
+    if (where !== null) {
+      const selector = parseSubject(where[1] as string, card);
+      const count = parseDynamicCountValue(where[2] as string, card);
+      if (selector === null || count === null) return null;
+      return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
     }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {

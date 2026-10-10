@@ -1765,6 +1765,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card'],
   },
   {

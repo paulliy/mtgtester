@@ -5649,3 +5649,36 @@ test('Mikey & Leo, Chaos & Order: the first counter you put each turn draws a ca
   await expect(drawn).toHaveCount(1);
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
+
+test('Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s',
+  );
+  await expect(permanent(page, 'Bess, Soul Nourisher').getByText('+1/+1')).toHaveCount(0);
+  const servo = handCard(page, 'Lab Servo');
+  await expect(servo).toHaveClass(/actionable/, { timeout: 15_000 });
+  await servo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Lab Servo is another base-1/1 creature entering: Bess gets one counter and is a 2/2.
+  await passUntil(page, permanent(page, 'Lab Servo'));
+  await passUntil(page, permanent(page, 'Bess, Soul Nourisher').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Bess, Soul Nourisher').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('1/1')).toBeVisible();
+
+  // Nothing is castable now, so priority passes and combat begins. Only Bess can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Bess, Soul Nourisher' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // Her attack trigger gives the other base-1/1 creature +1/+1 until end of turn.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  await expect(page.getByText(/Bess, Soul Nourisher deals 2 to P2/).first()).toBeVisible();
+});

@@ -7783,6 +7783,34 @@ function eliteScaleguardScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function bessScenario(gameId: GameId): CardTestScenario {
+  const bess = pinnedFrom(COVERAGE_PR04, 'Bess, Soul Nourisher');
+  return pr01Scenario(gameId, {
+    id: 'bess-soul-nourisher-viewer-counter-and-pump',
+    title: 'Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s',
+    instructions: [
+      'Bess (a 1/1) and a Forest are on your battlefield; Lab Servo (a 1/1 artifact creature) is in your hand.',
+      'Cast Lab Servo for {1}. Another creature you control with base power and toughness 1/1 entered, so Bess gets a +1/+1 counter.',
+      'Attack P2 with Bess (Lab Servo is summoning sick). Her attack trigger gives each other base-1/1 creature you control +X/+X until end of turn, where X is her one counter: Lab Servo becomes a 2/2.',
+    ],
+    expectedOutcome:
+      'Bess has one +1/+1 counter and hits P2 as a 2/2 for 2. Lab Servo gets +1/+1 until end of turn from her attack trigger.',
+    oracleSha256: bess.sha256,
+    clauseIds: ['bess-soul-nourisher-enters-counter', 'bess-soul-nourisher-attack-pump'],
+    decks: {
+      P1: [bess.card, LAB_SERVO, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Bess, Soul Nourisher', 'Forest'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9071,6 +9099,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
@@ -9310,6 +9339,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
