@@ -8,22 +8,19 @@ Current work is organized around card coverage, rules correctness, simulation re
 
 ## Working with subagents
 
-Delegate to subagents by default. Use them more often than not for work that is separable from the main decision, so the main thread stays focused and cheaper to run.
+Subagents run on Sonnet or Haiku only. Never spawn one on Opus. The main thread stays on Opus.
 
-- **Haiku** for read-only search and triage: locating where a card, mechanic, or coverage entry lives; tracing call paths; checking fixture and snapshot files; summarizing test, lint, or coverage output; comparing a list of cards against the coverage reports.
-- **Sonnet** for bounded implementation: writing behavior tests from an existing clause-to-test manifest, mechanical refactors across several files, updating a snapshot after an intentional change, and reviewing a diff against a written checklist.
-- **Stay on the main thread** for choosing an approach, resolving ambiguous Oracle text, anything that decides rules correctness in `packages/engine`, and the final review of subagent output before it is reported as done.
+- **Haiku** (`explorer`): read-only search and triage. Locating where a card, mechanic, or coverage entry lives, tracing call paths, checking fixtures and snapshots, running tests and reading output, comparing card lists against coverage reports.
+- **Sonnet** (`implementer`): bounded implementation. Behavior tests from an existing clause-to-test manifest, mechanical refactors across several files, snapshot updates after an intentional change, and diff review against a written checklist (`reviewer`).
+- **Main thread (Opus)**: choosing an approach, resolving ambiguous Oracue text, anything deciding rules correctness in `packages/engine`, and final review of subagent output before reporting it done.
 
-Limits for this repo (no enforced per-agent token cap, so these are prompt rules):
+Delegate when a task would read many files or produce output the main thread doesn't need. Do small lookups inline.
 
+Limits (prompt rules):
 - Haiku tasks: one bounded question with a known search area, e.g. "find where `Ward` is handled in `packages/engine/src/cards/`". No open-ended surveys.
-- Budget in the prompt: grep before reading, read only matching ranges, stop after about 15 files, and report what remains if the limit is hit.
+- Grep before reading, read only matching ranges, stop after about 15 files, and report what remains if the limit is hit.
 - Returns: at most about 15 bullets, each `path:line - finding`.
-- Long output (tests, coverage, logs): write it to the scratchpad and return the path plus a summary. Filter with `rtk err`, `tail`, or `rtk summary` first.
-- Read-only search agents get no `Bash`.
-- Verify any subagent claim that a card is modeled or a test passes by running the relevant command yourself.
-
-## Where to find everything else
+- Long output (tests, coverage, logs): write to the scratchpad, return the path and a summary.
 
 Read these only when the task needs them:
 

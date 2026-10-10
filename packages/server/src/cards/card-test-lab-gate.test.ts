@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { GameId } from '@mtg/shared';
+import { PR02_FOLLOW_UP_SCENARIO_IDS } from './pr02-follow-up-scenarios';
 import {
   CARD_TEST_SCENARIO_IDS,
   createCardTestScenario,
@@ -17,11 +18,23 @@ import {
 
 const labView = readFileSync(resolve('apps/web/src/views/CardTestLabView.vue'), 'utf8');
 const labSpec = readFileSync(resolve('apps/web/e2e/card-test-lab.spec.ts'), 'utf8');
+const pr02Spec = readFileSync(resolve('apps/web/e2e/pr02-limited-mechanics.spec.ts'), 'utf8');
 const playwrightConfig = readFileSync(resolve('playwright.config.ts'), 'utf8');
 const workflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 const gameServer = readFileSync(resolve('packages/server/src/ws/server.ts'), 'utf8');
 
 describe('Card Test Lab viewer-evidence gate', () => {
+  it('requires independent real viewer coverage for the PR02 supplemental catalog', () => {
+    for (const id of PR02_FOLLOW_UP_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('PR02_FOLLOW_UP_SCENARIO_IDS.includes');
+    expect(pr02Spec).toContain('exercised.add(id)');
+    expect(pr02Spec).toContain(
+      'expect([...exercised].sort()).toEqual([...PR02_FOLLOW_UP_SCENARIO_IDS].sort())',
+    );
+    expect(pr02Spec).toContain("trace: 'on'");
+    expect(pr02Spec).not.toContain('routeWebSocket');
+    expect(pr02Spec).not.toContain('page.route(');
+  });
   it('wires every registered scenario into the catalog the viewer fetches', () => {
     expect(CARD_TEST_SCENARIO_IDS.length).toBeGreaterThan(0);
     expect(labView).toContain('/api/card-test-scenarios');

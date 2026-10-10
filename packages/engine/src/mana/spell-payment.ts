@@ -5,7 +5,13 @@ import { chooseCard } from '../effects/choose';
 import { selectMatches } from '../cards/selector';
 import { matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
-import { allowanceFor, cardZoneCandidate, manaSourcesFor } from '../state/queries';
+import {
+  allowanceFor,
+  cardZoneCandidate,
+  convokeSourcesFor,
+  manaSourcesFor,
+  spellHasConvoke,
+} from '../state/queries';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from './cost';
@@ -213,7 +219,14 @@ export function planSpellPayment(
             player,
             request.mana,
             allows,
-            (context, payer) => usableFrom(payer, manaSourcesFor(context, payer.id, true)),
+            (context, payer) =>
+              usableFrom(payer, [
+                ...manaSourcesFor(context, payer.id, true),
+                ...(request.spellDefinition !== undefined &&
+                spellHasConvoke(request.spellDefinition)
+                  ? convokeSourcesFor(context, payer.id)
+                  : []),
+              ]),
             reservedObjectIds,
             lifePaid,
             request.energyAlternativeCost ?? 0,

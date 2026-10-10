@@ -11,6 +11,7 @@ import { defineStore } from 'pinia';
 export interface PreviewCard {
   scryfallId: string | null;
   name: string;
+  imageFace?: 'front' | 'back';
 }
 
 export const useCardPreviewStore = defineStore('cardPreview', () => {

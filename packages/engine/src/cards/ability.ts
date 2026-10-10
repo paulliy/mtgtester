@@ -619,6 +619,18 @@ export type Effect =
         targets: string[];
         oracleText: string;
         manaCost: string | null;
+        /** Complete cast decisions used if the original has left the stack. */
+        definition?: import('./definition').CardDefinition;
+        ability?: Ability;
+        announcedX?: number;
+        countTargets?: Record<number, string[]>;
+        divisionAmounts?: Record<string, number>;
+        optionalCostCounts?: Partial<
+          Record<'kicker' | 'squad' | 'offspring' | 'replicate', number>
+        >;
+        wasKicked?: boolean;
+        kicked?: boolean;
+        targetNames?: Record<string, string>;
       };
     }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }

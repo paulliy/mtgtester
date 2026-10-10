@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-08",
+  "cards": [
+    {
+      "sha256": "14461035b68b70264c250bab1bb3240ad355b4d2ec0c50fc3d6712e81ce0dfd7",
+      "card": {
+        "oracleId": "60fc89a1-cc6f-4a32-84c3-09abf7a4a1df",
+        "scryfallId": "cb7d5bbb-4f68-4e38-8bb0-a95af21b24c8",
+        "name": "Brigid, Clachan's Heart // Brigid, Doun's Mind",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Kithkin Warrior // Legendary Creature — Kithkin Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Kithkin",
+          "Warrior"
+        ],
+        "oracleText": "Whenever this creature enters or transforms into Brigid, Clachan's Heart, create a 1/1 green and white Kithkin creature token.\nAt the beginning of your first main phase, you may pay {G}. If you do, transform Brigid.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transform"
+        ],
+        "layout": "transform",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Brigid, Doun's Mind",
+          "typeLine": "Legendary Creature — Kithkin Soldier",
+          "oracleText": "{T}: Add X {G} or X {W}, where X is the number of other creatures you control.\nAt the beginning of your first main phase, you may pay {W}. If you do, transform Brigid.",
+          "manaCost": null,
+          "colors": [
+            "G"
+          ],
+          "power": "3",
+          "toughness": "2",
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "503d3f956ecb7c90f732a9455d0a4d0038155b93771afff5391f67c68440c80d",
+      "card": {
+        "oracleId": "197582b9-4c86-41a3-ad0c-789a0db8e087",
+        "scryfallId": "561caecd-e065-48f6-8fde-85b938794ed3",
+        "name": "Quantum Misalignment",
+        "manaCost": "{4}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Create a token that's a copy of target creature you control, except it isn't legendary.\nRebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast this card from exile without paying its mana cost.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Rebound"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f30e0537887ed463a4b71d9461a4b14c0b1a6c9353d8203142f86a91f053b6f1",
+      "card": {
+        "oracleId": "724767ca-bd84-4137-9133-4ad2e96b8428",
+        "scryfallId": "439ad8e0-575b-43cc-95fd-53ddd14e65c2",
+        "name": "Dack's Duplicate",
+        "manaCost": "{2}{U}{R}",
+        "cmc": 4,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Creature — Shapeshifter",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Shapeshifter"
+        ],
+        "oracleText": "You may have this creature enter as a copy of any creature on the battlefield, except it has haste and dethrone. (Whenever it attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "89b1e9da82e1119dd859191c28b979c96beb0dfeb1cdf983c4dee98fcc09ea98",
+      "card": {
+        "oracleId": "5a851367-1c4a-4cc9-a9c3-3d2775986b4c",
+        "scryfallId": "3cce80d0-b937-4325-a603-1278c110f244",
+        "name": "Blossoming Defense",
+        "manaCost": "{G}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gets +2/+2 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

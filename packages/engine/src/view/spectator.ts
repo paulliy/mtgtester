@@ -23,7 +23,7 @@ import type {
 } from '@mtg/shared';
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
-import { playerById } from '../state/objects';
+import { copyImageFace, playerById } from '../state/objects';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -67,6 +67,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
     keywords: [...chars.keywords],
+    imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,
   };

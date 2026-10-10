@@ -128,7 +128,7 @@ export function selectEntriesToSpend(
     return false;
   };
   if (!coverHybrid(0)) return null;
-  if (!take(cost.colorless, (e) => e.symbol === 'C')) return null;
+  if (!take(cost.colorless, (e) => e.symbol === 'C' && e.convoked !== true)) return null;
   // Generic prefers colorless, then WUBRG — the same order the pre-entry code deducted in.
   let generic = cost.generic;
   for (const sym of ['C', ...ALL_COLORS] as const) {

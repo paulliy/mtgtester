@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { executeAbility } from '../src/effects/resolve';
+import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
-import { moveObject } from '../src/state/objects';
+import {
+  applyCopy,
+  copyImageFace,
+  createToken,
+  moveObject,
+  tokenSpecCopying,
+  transformPermanent,
+} from '../src/state/objects';
+import { permanentManaValue } from '../src/targets/legality';
 import { runPrioritySequence } from '../src/turn/priority';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -62,6 +70,174 @@ function transformingCard() {
 }
 
 describe('Tier 3 transforming double-faced permanents', () => {
+  it('copies the active back face and all its abilities, excluding counters and later layers', () => {
+    const ctx = pod('dfc-back-copy');
+    const source = spawn(ctx, 'P1', transformingCard());
+    const clone = spawn(ctx, 'P2', bear());
+    transformPermanent(ctx, source);
+    source.counters['+1/+1'] = 3;
+    // Prime the cache before copying; the copy must invalidate its old characteristics.
+    expect(computeCharacteristics(ctx, clone).keywords).toEqual([]);
+    applyCopy(ctx, clone, source);
+    const chars = computeCharacteristics(ctx, clone);
+    expect(clone.name).toBe('Test Ravager');
+    expect(copyImageFace(ctx, clone)).toBe('back');
+    expect(clone.oracleText).toBe(transformingCard().backFace!.oracleText);
+    expect(chars).toMatchObject({
+      power: 4,
+      toughness: 4,
+      subtypes: ['Werewolf'],
+      keywords: ['trample'],
+    });
+    expect(chars.manaAbilities).toHaveLength(1);
+    expect(chars.activatedAbilities).toHaveLength(1);
+    expect(chars.triggers).toHaveLength(2);
+    expect(computeCharacteristics(ctx, source).power).toBe(7);
+    expect(permanentManaValue(ctx, source)).toBe(2);
+    expect(permanentManaValue(ctx, clone)).toBe(0);
+    expect(transformPermanent(ctx, clone)).toBe(false);
+    const ally = spawn(ctx, 'P2', bear());
+    expect(computeCharacteristics(ctx, ally).power).toBe(3);
+  });
+
+  it('creates a double-faced token with its back face up and no transform trigger on entry', () => {
+    const ctx = pod('dfc-token-back');
+    const source = spawn(ctx, 'P1', transformingCard());
+    transformPermanent(ctx, source);
+    ctx.state.pendingTriggers = [];
+    const token = createToken(ctx, tokenSpecCopying(ctx, source, false), 'P2');
+    expect(token.name).toBe('Test Ravager');
+    expect(token.transformed).toBe(true);
+    expect(copyImageFace(ctx, token)).toBe('back');
+    expect(token.manaCost).toBeNull();
+    expect(permanentManaValue(ctx, token)).toBe(2);
+    expect(computeCharacteristics(ctx, token).power).toBe(4);
+    expect(ctx.state.pendingTriggers).toHaveLength(1); // ETB only, never transformsInto.
+    expect(transformPermanent(ctx, token)).toBe(true);
+    expect(token.name).toBe('Test Initiate');
+    expect(copyImageFace(ctx, token)).toBe('front');
+    expect(computeCharacteristics(ctx, token).power).toBe(2);
+    expect(transformPermanent(ctx, token)).toBe(true);
+    expect(computeCharacteristics(ctx, token).keywords).toEqual(['trample']);
+  });
+
+  it('copies front-face tokens with both faces and separates their interned definitions', () => {
+    const ctx = pod('dfc-token-front');
+    const source = spawn(ctx, 'P1', transformingCard());
+    const front = createToken(ctx, tokenSpecCopying(ctx, source, false), 'P2');
+    expect(front.name).toBe('Test Initiate');
+    expect(front.manaCost).toBe('{1}{G}');
+    expect(computeCharacteristics(ctx, front).activatedAbilities).toHaveLength(1);
+    transformPermanent(ctx, source);
+    const back = createToken(ctx, tokenSpecCopying(ctx, source, false), 'P3');
+    expect(front.oracleId).not.toBe(back.oracleId);
+    expect(front.transformed).toBe(false);
+    expect(back.transformed).toBe(true);
+    transformPermanent(ctx, front);
+    expect(front.name).toBe('Test Ravager');
+    expect(permanentManaValue(ctx, front)).toBe(2);
+  });
+
+  it('applies nonlegendary copy exceptions to an inactive legendary front face too', () => {
+    const ctx = pod('dfc-copy-nonlegendary-both-faces');
+    const card = transformingCard();
+    card.typeLine = `Legendary ${card.typeLine}`;
+    card.supertypes = ['Legendary'];
+    const source = spawn(ctx, 'P1', card);
+    transformPermanent(ctx, source); // Back is not legendary; front is.
+    const token = createToken(ctx, tokenSpecCopying(ctx, source, true), 'P2');
+    expect(computeCharacteristics(ctx, token).supertypes).not.toContain('Legendary');
+    transformPermanent(ctx, token);
+    expect(computeCharacteristics(ctx, token).supertypes).not.toContain('Legendary');
+    expect(token.typeLine).not.toContain('Legendary');
+    const legendary = createToken(ctx, tokenSpecCopying(ctx, source, false), 'P3');
+    transformPermanent(ctx, legendary);
+    expect(computeCharacteristics(ctx, legendary).supertypes).toContain('Legendary');
+  });
+
+  it('keeps copied face and copy exceptions when copying a copy', () => {
+    const ctx = pod('dfc-copy-chain');
+    const source = spawn(ctx, 'P1', transformingCard());
+    transformPermanent(ctx, source);
+    const first = spawn(ctx, 'P2', bear());
+    applyCopy(ctx, first, source, {
+      addTypes: ['Artifact'],
+      addKeywords: ['haste'],
+      nameOverride: 'Copied Ravager',
+    });
+    const second = spawn(ctx, 'P3', bear());
+    applyCopy(ctx, second, first);
+    expect(second.name).toBe('Copied Ravager');
+    expect(computeCharacteristics(ctx, second)).toMatchObject({
+      types: ['Creature', 'Artifact'],
+      keywords: ['trample', 'haste'],
+    });
+    const token = createToken(ctx, tokenSpecCopying(ctx, first, false), 'P4');
+    expect(token.name).toBe('Copied Ravager');
+    expect(computeCharacteristics(ctx, token).keywords).toEqual(['trample', 'haste']);
+    expect(transformPermanent(ctx, token)).toBe(false);
+    transformPermanent(ctx, source);
+    expect(computeCharacteristics(ctx, second).power).toBe(4);
+  });
+
+  it('restores a transformed physical DFC at cleanup and its front face after a zone change', () => {
+    const ctx = pod('dfc-copy-restoration');
+    const source = spawn(ctx, 'P1', transformingCard());
+    const target = spawn(ctx, 'P2', bear());
+    transformPermanent(ctx, source);
+    applyCopy(ctx, source, target, { untilEot: true });
+    expect(copyImageFace(ctx, source)).toBe('front');
+    expect(computeCharacteristics(ctx, source).power).toBe(2);
+    endUntilEotEffects(ctx);
+    expect(source.transformed).toBe(true);
+    expect(source.name).toBe('Test Ravager');
+    expect(copyImageFace(ctx, source)).toBe('back');
+    expect(computeCharacteristics(ctx, source).power).toBe(4);
+    applyCopy(ctx, source, target);
+    const moved = pump(moveObject(ctx, source, { zone: 'hand' })).value!;
+    expect(moved.name).toBe('Test Initiate');
+    expect(moved.manaCost).toBe('{1}{G}');
+    expect(moved.oracleText).toBe('{1}{G}: Transform Test Initiate.');
+  });
+
+  it('does not inherit a target DFC transform state when the copying physical card is transformed', () => {
+    const ctx = pod('dfc-copy-physical-transform');
+    const source = spawn(ctx, 'P1', transformingCard());
+    transformPermanent(ctx, source);
+    const target = spawn(ctx, 'P2', transformingCard());
+    applyCopy(ctx, source, target, { untilEot: true });
+    expect(source.name).toBe('Test Initiate');
+    expect(computeCharacteristics(ctx, source).power).toBe(2);
+    expect(transformPermanent(ctx, source)).toBe(true);
+    expect(source.transformed).toBe(false);
+    expect(source.name).toBe('Test Initiate');
+    endUntilEotEffects(ctx);
+    expect(source.name).toBe('Test Initiate');
+    expect(computeCharacteristics(ctx, source).power).toBe(2);
+  });
+
+  it('copies face-down characteristics without exposing its printed face or abilities', () => {
+    const ctx = pod('dfc-copy-face-down');
+    const source = spawn(ctx, 'P1', transformingCard());
+    source.faceDown = true;
+    const clone = spawn(ctx, 'P2', bear());
+    applyCopy(ctx, clone, source);
+    expect(clone.name).toBe('');
+    expect(clone.oracleText).toBe('');
+    expect(clone.manaCost).toBeNull();
+    expect(computeCharacteristics(ctx, clone)).toMatchObject({
+      power: 2,
+      toughness: 2,
+      colors: [],
+      subtypes: [],
+      activatedAbilities: [],
+    });
+    expect(permanentManaValue(ctx, clone)).toBe(0);
+    const token = createToken(ctx, tokenSpecCopying(ctx, source, false), 'P3');
+    expect(token.oracleId).not.toContain(source.oracleId);
+    expect(ctx.defs.get(token.oracleId)?.scryfallId).toBeUndefined();
+    expect(computeCharacteristics(ctx, token).activatedAbilities).toEqual([]);
+  });
   it('switches all active characteristics and preserves permanent state across a transform', () => {
     const card = transformingCard();
     const def = interpretCard(card);

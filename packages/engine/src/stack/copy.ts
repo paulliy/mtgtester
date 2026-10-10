@@ -89,17 +89,31 @@ export function queueReplicateCopy(
     // one that is not the original card's.
     sourceCardId: `tok-${ctx.state.nextObjectNum++}`,
     isCommanderCast: false,
-    ...(original?.announcedX !== undefined ? { announcedX: original.announcedX } : {}),
+    ...((original?.optionalCostCounts ?? spell.optionalCostCounts) === undefined
+      ? {}
+      : { optionalCostCounts: { ...(original?.optionalCostCounts ?? spell.optionalCostCounts) } }),
+    ...((original?.wasKicked ?? spell.wasKicked) === undefined
+      ? {}
+      : { wasKicked: original?.wasKicked ?? spell.wasKicked }),
+    ...((original?.kicked ?? spell.kicked) === undefined
+      ? {}
+      : { kicked: original?.kicked ?? spell.kicked }),
+    ...((original?.announcedX ?? spell.announcedX) !== undefined
+      ? { announcedX: original?.announcedX ?? spell.announcedX }
+      : {}),
     // A copy copies every decision made for the spell (CR 707.10), into its own records.
-    ...(original?.countTargets !== undefined
+    ...((original?.countTargets ?? spell.countTargets) !== undefined
       ? {
           countTargets: Object.fromEntries(
-            Object.entries(original.countTargets).map(([slot, ids]) => [slot, [...ids]]),
+            Object.entries(original?.countTargets ?? spell.countTargets!).map(([slot, ids]) => [
+              slot,
+              [...ids],
+            ]),
           ),
         }
       : {}),
-    ...(original?.divisionAmounts !== undefined
-      ? { divisionAmounts: { ...original.divisionAmounts } }
+    ...((original?.divisionAmounts ?? spell.divisionAmounts) !== undefined
+      ? { divisionAmounts: { ...(original?.divisionAmounts ?? spell.divisionAmounts) } }
       : {}),
     ...(permanent
       ? {

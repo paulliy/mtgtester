@@ -17,6 +17,11 @@ const ORACLE_ID = '153376c9-dffd-458c-8ce3-a4c8269bc4e9';
 const ORACLE_SHA256 = '38346bcc71227873ac4c358bd89d277f9d1f94a65e7778392c5e0aefeb7ab2c4';
 
 const SOURCE_FILES = [
+  'packages/engine/src/stack/replicate-targets.ts',
+  'packages/server/src/cards/pr02-follow-up-scenarios.ts',
+  'apps/web/e2e/pr02-limited-mechanics.spec.ts',
+  'packages/engine/tests/fixtures/transformed-dfc-copy-oracle.json',
+  'packages/server/src/cards/transformed-dfc-scenarios.ts',
   'packages/engine/src/cards/authoring-validation.ts',
   'packages/engine/src/cards/expression-validation.ts',
   'packages/engine/src/cards/effect-reference-contracts.ts',

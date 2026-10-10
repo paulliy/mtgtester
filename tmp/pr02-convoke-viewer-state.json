@@ -1,0 +1,705 @@
+{
+  "requests": [
+    [
+      "You have priority (precombatMain). Choose an action.",
+      [
+        [
+          "pass",
+          "Pass priority"
+        ],
+        [
+          "passAndYieldTurn",
+          "Pass and yield until end of turn"
+        ],
+        [
+          "castSpell",
+          "Cast Conclave Tribunal ({3}{W})"
+        ]
+      ]
+    ]
+  ],
+  "state": {
+    "gameId": "debug",
+    "seed": "card-lab-conclave-tribunal-viewer-convoke-szeras-v1",
+    "turnNumber": 1,
+    "activePlayerIndex": 0,
+    "createdTokenThisTurn": {
+      "P1": false,
+      "P2": false,
+      "P3": false,
+      "P4": false
+    },
+    "creaturesDiedThisTurn": 1,
+    "combatDamagePrevention": {
+      "all": false,
+      "players": {}
+    },
+    "lifeFloorPlayers": {},
+    "exiledUntilLeaves": {
+      "c-1": [
+        {
+          "cardId": "c-6",
+          "controllerId": "P2"
+        }
+      ]
+    },
+    "priorityPlayerIndex": null,
+    "phase": "precombatMain",
+    "step": null,
+    "stack": [],
+    "players": [
+      {
+        "id": "P1",
+        "deckId": "card-lab-P1",
+        "life": 40,
+        "hand": [],
+        "library": [],
+        "graveyard": [
+          {
+            "id": "o-16",
+            "cardId": "c-3",
+            "oracleId": "lab-pr02-stateful-ox",
+            "ownerId": "P1",
+            "name": "Lab Ox",
+            "typeLine": "Creature — Ox",
+            "oracleText": "",
+            "manaCost": "{2}",
+            "isToken": false,
+            "isCommander": false,
+            "zone": "graveyard"
+          }
+        ],
+        "commandZone": [],
+        "commanderCastCount": {},
+        "commanderDamageTaken": {},
+        "manaPool": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0,
+          "C": 0
+        },
+        "manaEntries": [],
+        "energy": 0,
+        "counters": {},
+        "landsPlayedThisTurn": 0,
+        "poisonCounters": 0,
+        "hasLost": false,
+        "lossReason": null,
+        "companion": null,
+        "emblems": [],
+        "commanderCardIds": [],
+        "commanderNames": {},
+        "commanderColorIdentity": [],
+        "attemptedDrawFromEmptyLibrary": false,
+        "cardsDrawnThisTurn": 0,
+        "cardsDrawnThisDrawStep": 0,
+        "spellsCastThisTurn": 1,
+        "noncreatureSpellsCastThisTurn": 1,
+        "playFromZoneTypeUsesThisTurn": {},
+        "mulligansTaken": 0,
+        "decklistOracleIds": [
+          "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+          "10f274f9-9044-447b-81c9-d4906ad9e6be",
+          "lab-pr02-stateful-ox",
+          "lab-pr02-convoke-bear",
+          "lab-pr02-plains"
+        ],
+        "companionMovedToHand": false,
+        "yieldUntilEndOfTurn": false,
+        "yieldedAbilities": []
+      },
+      {
+        "id": "P2",
+        "deckId": "card-lab-P2",
+        "life": 40,
+        "hand": [],
+        "library": [
+          {
+            "id": "o-7",
+            "cardId": "c-7",
+            "oracleId": "lab-pr02-forest",
+            "ownerId": "P2",
+            "name": "Forest",
+            "typeLine": "Basic Land — Forest",
+            "oracleText": "{T}: Add {G}.",
+            "manaCost": null,
+            "isToken": false,
+            "isCommander": false,
+            "zone": "library"
+          }
+        ],
+        "graveyard": [],
+        "commandZone": [],
+        "commanderCastCount": {},
+        "commanderDamageTaken": {},
+        "manaPool": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0,
+          "C": 0
+        },
+        "manaEntries": [],
+        "energy": 0,
+        "counters": {},
+        "landsPlayedThisTurn": 0,
+        "poisonCounters": 0,
+        "hasLost": false,
+        "lossReason": null,
+        "companion": null,
+        "emblems": [],
+        "commanderCardIds": [],
+        "commanderNames": {},
+        "commanderColorIdentity": [],
+        "attemptedDrawFromEmptyLibrary": false,
+        "cardsDrawnThisTurn": 0,
+        "cardsDrawnThisDrawStep": 0,
+        "spellsCastThisTurn": 0,
+        "noncreatureSpellsCastThisTurn": 0,
+        "playFromZoneTypeUsesThisTurn": {},
+        "mulligansTaken": 0,
+        "decklistOracleIds": [
+          "lab-pr02-stateful-ox",
+          "lab-pr02-forest"
+        ],
+        "companionMovedToHand": false,
+        "yieldUntilEndOfTurn": false,
+        "yieldedAbilities": []
+      },
+      {
+        "id": "P3",
+        "deckId": "card-lab-P3",
+        "life": 40,
+        "hand": [],
+        "library": [
+          {
+            "id": "o-8",
+            "cardId": "c-8",
+            "oracleId": "lab-pr02-forest",
+            "ownerId": "P3",
+            "name": "Forest",
+            "typeLine": "Basic Land — Forest",
+            "oracleText": "{T}: Add {G}.",
+            "manaCost": null,
+            "isToken": false,
+            "isCommander": false,
+            "zone": "library"
+          }
+        ],
+        "graveyard": [],
+        "commandZone": [],
+        "commanderCastCount": {},
+        "commanderDamageTaken": {},
+        "manaPool": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0,
+          "C": 0
+        },
+        "manaEntries": [],
+        "energy": 0,
+        "counters": {},
+        "landsPlayedThisTurn": 0,
+        "poisonCounters": 0,
+        "hasLost": false,
+        "lossReason": null,
+        "companion": null,
+        "emblems": [],
+        "commanderCardIds": [],
+        "commanderNames": {},
+        "commanderColorIdentity": [],
+        "attemptedDrawFromEmptyLibrary": false,
+        "cardsDrawnThisTurn": 0,
+        "cardsDrawnThisDrawStep": 0,
+        "spellsCastThisTurn": 0,
+        "noncreatureSpellsCastThisTurn": 0,
+        "playFromZoneTypeUsesThisTurn": {},
+        "mulligansTaken": 0,
+        "decklistOracleIds": [
+          "lab-pr02-forest"
+        ],
+        "companionMovedToHand": false,
+        "yieldUntilEndOfTurn": false,
+        "yieldedAbilities": []
+      },
+      {
+        "id": "P4",
+        "deckId": "card-lab-P4",
+        "life": 40,
+        "hand": [],
+        "library": [
+          {
+            "id": "o-9",
+            "cardId": "c-9",
+            "oracleId": "lab-pr02-forest",
+            "ownerId": "P4",
+            "name": "Forest",
+            "typeLine": "Basic Land — Forest",
+            "oracleText": "{T}: Add {G}.",
+            "manaCost": null,
+            "isToken": false,
+            "isCommander": false,
+            "zone": "library"
+          }
+        ],
+        "graveyard": [],
+        "commandZone": [],
+        "commanderCastCount": {},
+        "commanderDamageTaken": {},
+        "manaPool": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0,
+          "C": 0
+        },
+        "manaEntries": [],
+        "energy": 0,
+        "counters": {},
+        "landsPlayedThisTurn": 0,
+        "poisonCounters": 0,
+        "hasLost": false,
+        "lossReason": null,
+        "companion": null,
+        "emblems": [],
+        "commanderCardIds": [],
+        "commanderNames": {},
+        "commanderColorIdentity": [],
+        "attemptedDrawFromEmptyLibrary": false,
+        "cardsDrawnThisTurn": 0,
+        "cardsDrawnThisDrawStep": 0,
+        "spellsCastThisTurn": 0,
+        "noncreatureSpellsCastThisTurn": 0,
+        "playFromZoneTypeUsesThisTurn": {},
+        "mulligansTaken": 0,
+        "decklistOracleIds": [
+          "lab-pr02-forest"
+        ],
+        "companionMovedToHand": false,
+        "yieldUntilEndOfTurn": false,
+        "yieldedAbilities": []
+      }
+    ],
+    "battlefield": [
+      {
+        "id": "o-10",
+        "cardId": "c-2",
+        "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
+        "ownerId": "P1",
+        "name": "Illuminor Szeras",
+        "typeLine": "Legendary Artifact Creature — Necron",
+        "oracleText": "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
+        "manaCost": "{2}{B}",
+        "isToken": false,
+        "isCommander": false,
+        "zone": "battlefield",
+        "controllerId": "P1",
+        "defaultControllerId": "P1",
+        "transformed": false,
+        "tapped": true,
+        "faceDown": false,
+        "power": 3,
+        "toughness": 3,
+        "damageMarked": 0,
+        "counters": {},
+        "statuses": [],
+        "summoningSick": false,
+        "attachedTo": null,
+        "attacking": null,
+        "blocking": null,
+        "blockedByOrdered": [],
+        "damagedByDeathtouch": false,
+        "regenerationShields": 0,
+        "dealtFirstStrikeDamage": false,
+        "timestamp": 1,
+        "activationsThisTurn": [],
+        "enteredTurnNumber": 0
+      },
+      {
+        "id": "o-12",
+        "cardId": "c-4",
+        "oracleId": "lab-pr02-convoke-bear",
+        "ownerId": "P1",
+        "name": "Lab Convoke Bear",
+        "typeLine": "Creature — Bear",
+        "oracleText": "",
+        "manaCost": null,
+        "isToken": false,
+        "isCommander": false,
+        "zone": "battlefield",
+        "controllerId": "P1",
+        "defaultControllerId": "P1",
+        "transformed": false,
+        "tapped": false,
+        "faceDown": false,
+        "power": 2,
+        "toughness": 2,
+        "damageMarked": 0,
+        "counters": {},
+        "statuses": [],
+        "summoningSick": false,
+        "attachedTo": null,
+        "attacking": null,
+        "blocking": null,
+        "blockedByOrdered": [],
+        "damagedByDeathtouch": false,
+        "regenerationShields": 0,
+        "dealtFirstStrikeDamage": false,
+        "timestamp": 3,
+        "activationsThisTurn": [],
+        "enteredTurnNumber": 0
+      },
+      {
+        "id": "o-13",
+        "cardId": "c-5",
+        "oracleId": "lab-pr02-plains",
+        "ownerId": "P1",
+        "name": "Plains",
+        "typeLine": "Basic Land — Plains",
+        "oracleText": "{T}: Add {W}.",
+        "manaCost": null,
+        "isToken": false,
+        "isCommander": false,
+        "zone": "battlefield",
+        "controllerId": "P1",
+        "defaultControllerId": "P1",
+        "transformed": false,
+        "tapped": true,
+        "faceDown": false,
+        "power": null,
+        "toughness": null,
+        "damageMarked": 0,
+        "counters": {},
+        "statuses": [],
+        "summoningSick": false,
+        "attachedTo": null,
+        "attacking": null,
+        "blocking": null,
+        "blockedByOrdered": [],
+        "damagedByDeathtouch": false,
+        "regenerationShields": 0,
+        "dealtFirstStrikeDamage": false,
+        "timestamp": 4,
+        "activationsThisTurn": [],
+        "enteredTurnNumber": 0
+      },
+      {
+        "id": "o-17",
+        "cardId": "c-1",
+        "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
+        "ownerId": "P1",
+        "name": "Conclave Tribunal",
+        "typeLine": "Enchantment",
+        "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+        "manaCost": "{3}{W}",
+        "isToken": false,
+        "isCommander": false,
+        "zone": "battlefield",
+        "controllerId": "P1",
+        "defaultControllerId": "P1",
+        "transformed": false,
+        "tapped": false,
+        "faceDown": false,
+        "power": null,
+        "toughness": null,
+        "damageMarked": 0,
+        "counters": {},
+        "statuses": [],
+        "summoningSick": true,
+        "attachedTo": null,
+        "attacking": null,
+        "blocking": null,
+        "blockedByOrdered": [],
+        "damagedByDeathtouch": false,
+        "regenerationShields": 0,
+        "dealtFirstStrikeDamage": false,
+        "timestamp": 6,
+        "activationsThisTurn": [],
+        "enteredTurnNumber": 1
+      }
+    ],
+    "exile": [
+      {
+        "id": "o-19",
+        "cardId": "c-6",
+        "oracleId": "lab-pr02-stateful-ox",
+        "ownerId": "P2",
+        "name": "Lab Ox",
+        "typeLine": "Creature — Ox",
+        "oracleText": "",
+        "manaCost": "{2}",
+        "isToken": false,
+        "isCommander": false,
+        "zone": "exile"
+      }
+    ],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "eliminatedPlayers": [],
+    "effects": [],
+    "eventLog": [
+      {
+        "sequence": 1,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "gameStart",
+        "payload": {
+          "seed": "card-lab-conclave-tribunal-viewer-convoke-szeras-v1",
+          "players": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ]
+        }
+      },
+      {
+        "sequence": 2,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "startingPlayer",
+        "payload": {
+          "player": "P1"
+        }
+      },
+      {
+        "sequence": 3,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "decision",
+        "payload": {
+          "requestId": "debug-t1-d1",
+          "decisionType": "priority",
+          "actionId": 2,
+          "description": "Cast Conclave Tribunal ({3}{W})",
+          "targets": [],
+          "submittedResponse": {
+            "requestId": "debug-t1-d1",
+            "actionId": 2
+          }
+        }
+      },
+      {
+        "sequence": 4,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "tapForMana",
+        "payload": {
+          "name": "Plains",
+          "cardId": "c-5"
+        }
+      },
+      {
+        "sequence": 5,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "tap",
+        "payload": {
+          "name": "Lab Ox",
+          "cardId": "c-3"
+        }
+      },
+      {
+        "sequence": 6,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "tapForMana",
+        "payload": {
+          "name": "Illuminor Szeras",
+          "cardId": "c-2"
+        }
+      },
+      {
+        "sequence": 7,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "sacrifice",
+        "payload": {
+          "name": "Lab Ox",
+          "cardId": "c-3"
+        }
+      },
+      {
+        "sequence": 8,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "zoneChange",
+        "payload": {
+          "cardId": "c-3",
+          "name": "Lab Ox",
+          "from": "battlefield",
+          "to": "graveyard",
+          "owner": "P1",
+          "newObjectId": "o-16"
+        }
+      },
+      {
+        "sequence": 9,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "castSpell",
+        "payload": {
+          "player": "P1",
+          "name": "Conclave Tribunal",
+          "cardId": "c-1",
+          "targets": [],
+          "fromCommand": false,
+          "commanderTax": 0
+        }
+      },
+      {
+        "sequence": 10,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "zoneChange",
+        "payload": {
+          "cardId": "c-1",
+          "name": "Conclave Tribunal",
+          "from": "stack",
+          "to": "battlefield",
+          "owner": "P1",
+          "newObjectId": "o-17"
+        }
+      },
+      {
+        "sequence": 11,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "resolved",
+        "payload": {
+          "description": "Conclave Tribunal"
+        }
+      },
+      {
+        "sequence": 12,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "triggerOnStack",
+        "payload": {
+          "source": "Conclave Tribunal",
+          "description": "When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield."
+        }
+      },
+      {
+        "sequence": 13,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "exile",
+        "payload": {
+          "target": "Lab Ox",
+          "source": "Conclave Tribunal — When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield."
+        }
+      },
+      {
+        "sequence": 14,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "zoneChange",
+        "payload": {
+          "cardId": "c-6",
+          "name": "Lab Ox",
+          "from": "battlefield",
+          "to": "exile",
+          "owner": "P2",
+          "newObjectId": "o-19"
+        }
+      },
+      {
+        "sequence": 15,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": "P1",
+        "type": "resolved",
+        "payload": {
+          "description": "Conclave Tribunal — When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield."
+        }
+      },
+      {
+        "sequence": 16,
+        "turn": 1,
+        "phase": "precombatMain",
+        "step": null,
+        "actorSeat": null,
+        "type": "gameOver",
+        "payload": {
+          "winner": null,
+          "finishingOrder": [],
+          "turns": 1,
+          "halted": false,
+          "haltReason": null
+        }
+      }
+    ],
+    "nextObjectNum": 20,
+    "nextEventSequence": 17,
+    "nextDecisionNum": 2,
+    "nextTimestamp": 7,
+    "combat": null,
+    "seating": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "currentTurnPlayer": "P1",
+    "pendingTriggers": [],
+    "delayedTriggers": [],
+    "excessDamageControllerIds": [],
+    "damageDealtToPlayersThisTurn": {},
+    "lifeLostThisTurn": {},
+    "combatDamagePlayersBySource": {},
+    "extraCombatPhases": 0,
+    "monarchPlayerId": null,
+    "temporaryGraveyardAbilities": {},
+    "turnCap": 2,
+    "pendingSnapshotSequence": 16,
+    "sequenceSnapshots": {}
+  },
+  "result": {
+    "gameId": "debug",
+    "winnerSeat": null,
+    "finishingOrder": [],
+    "turnCount": 1,
+    "halted": false,
+    "haltReason": null
+  }
+}

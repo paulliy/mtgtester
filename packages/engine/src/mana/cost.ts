@@ -512,7 +512,10 @@ function orderForActivation(
   const producedBy = (source: ManaSource): ManaEntry[] =>
     plan.produced
       .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
-      .map(({ symbol }) => ({ symbol }));
+      .map(({ symbol }) => ({
+        symbol,
+        ...(source.convoke === true ? { convoked: true as const } : {}),
+      }));
   const order: ManaSource[] = [];
   // Every source the plan activates is tapped or used by it, so none may also pay a tap cost.
   const plannedIds = new Set(plan.tapSources.map((s) => s.cardId));
@@ -523,15 +526,21 @@ function orderForActivation(
     tapped: ReadonlySet<string>,
   ): boolean => {
     if (remaining.length === 0) return selectEntriesToSpend(available, cost) !== null;
-    // Produce with creatures before sacrificing them. Try other orders when a source's
-    // own mana cost or sacrifice requirements demand it.
-    const candidates = [...remaining].sort(
-      (a, b) => (a.sacrifices?.length ?? 0) - (b.sacrifices?.length ?? 0),
-    );
+    // CR 601.2g-h: activate mana abilities before paying the spell's costs. Convoke cannot
+    // tap a creature first and then sacrifice that same creature to make mana for this cast.
+    const manaAbilitiesRemain = remaining.some((source) => source.convoke !== true);
+    const candidates = remaining
+      .filter((source) => !manaAbilitiesRemain || source.convoke !== true)
+      .sort((a, b) => (a.sacrifices?.length ?? 0) - (b.sacrifices?.length ?? 0));
     for (const source of candidates) {
       if (removed.has(source.cardId)) continue;
       const spent =
-        source.manaCost === undefined ? [] : selectEntriesToSpend(available, source.manaCost);
+        source.manaCost === undefined
+          ? []
+          : selectEntriesToSpend(
+              available.filter((entry) => entry.convoked !== true),
+              source.manaCost,
+            );
       if (spent === null) continue;
       const rest = remaining.filter((s) => s !== source);
       const afterSelf = new Set(removed);
@@ -586,6 +595,7 @@ function orderForActivation(
   // activating it first never hurts; only the others need their order searched. Searching every
   // order of every source made one failing plan cost n! on a board of mana creatures.
   const plain = (source: ManaSource): boolean =>
+    source.convoke !== true &&
     source.manaCost === undefined &&
     source.sacrifices === undefined &&
     source.taps === undefined &&
@@ -596,7 +606,9 @@ function orderForActivation(
   if (
     !search(
       afterFirst,
-      plan.tapSources.filter((source) => !plain(source)),
+      plan.tapSources
+        .filter((source) => !plain(source))
+        .sort((a, b) => Number(a.convoke === true) - Number(b.convoke === true)),
       new Set(),
       new Set(),
     )
@@ -672,7 +684,11 @@ function solveFrom(
     !hasAlternatives &&
     !hasCostly &&
     !usableSources.some(
-      (s) => s.resources !== undefined || s.sacrifices !== undefined || s.taps !== undefined,
+      (s) =>
+        s.convoke === true ||
+        s.resources !== undefined ||
+        s.sacrifices !== undefined ||
+        s.taps !== undefined,
     ) &&
     usableSources.every((s) => s.units.every((u) => u.length === 1))
   ) {
@@ -818,7 +834,7 @@ function solveFrom(
             if (attempt(sym, next)) return true;
           }
         }
-        if (sym === 'C' && needNow.colorless > 0) {
+        if (sym === 'C' && src.convoke !== true && needNow.colorless > 0) {
           const next = { ...needNow, colored: { ...needNow.colored } };
           next.colorless -= 1;
           if (attempt('C', next)) return true;
@@ -832,7 +848,9 @@ function solveFrom(
       // Let this unit float (produce surplus): it still yields mana — record its first
       // (candidate, so a linked unit floats the forced color) symbol so `produced` matches
       // what tapping actually adds to the pool.
-      return attempt((candidates[0] ?? unit[0]) as Color | 'C', needNow);
+      return src.convoke === true
+        ? false
+        : attempt((candidates[0] ?? unit[0]) as Color | 'C', needNow);
     };
 
     chosen.push(src);

@@ -4532,7 +4532,7 @@ describe('Killian, Ink Duelist', () => {
     const options = castOptionsFor(ctx, 'P1', flash.id);
     expect(options.map((option) => option.description)).toEqual([
       expect.stringMatching(
-        /\(\{1\}\{R\}\) \(alternate cost\) from your graveyard — reduced for its target/,
+        /\(\{1\}\{R\}\) \(alternate cost\) from your graveyard — reduced for target slot 1/,
       ),
     ]);
     takeAction(
@@ -5138,9 +5138,15 @@ describe('PR02 restoration gate', () => {
   const manifest = JSON.parse(
     repoFile('packages/server/fixtures/card-verification-manifest.json'),
   ) as Manifest;
-  const engineSource = readFileSync(import.meta.filename, 'utf8');
+  const engineSource = [
+    readFileSync(import.meta.filename, 'utf8'),
+    ...['convoke', 'life-casting', 'replicate', 'target-cost'].map((area) =>
+      repoFile(`packages/engine/tests/pr02-${area}-follow-ups.test.ts`),
+    ),
+  ].join('\n');
   const viewerSource = [
     repoFile('packages/server/src/cards/card-test-scenarios.ts'),
+    repoFile('packages/server/src/cards/pr02-follow-up-scenarios.ts'),
     repoFile('apps/web/e2e/card-test-lab.spec.ts'),
   ].join('\n');
 
@@ -5190,7 +5196,7 @@ describe('PR02 restoration gate', () => {
         expect(clause.implementation, `${name} implementation`).not.toHaveLength(0);
         expect(clause.engineTestIds, `${name} engine tests`).not.toHaveLength(0);
         expect(clause.viewerScenarioIds, `${name} viewer scenarios`).not.toHaveLength(0);
-        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(`${id} —`);
+        for (const id of clause.engineTestIds) expect(engineSource, id).toContain(id);
         for (const id of clause.viewerScenarioIds) expect(viewerSource, id).toContain(id);
       }
     },

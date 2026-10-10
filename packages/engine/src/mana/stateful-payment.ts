@@ -137,20 +137,21 @@ export function planStatefulManaPayment(
   };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
+    const availableSources = sourcesFor(snapshot, payer);
     if ((lifeReserved === 0 || payer.life >= lifeReserved) && payer.energy >= energyReserved) {
       const final = planPayment(
         cost,
         payer.manaEntries,
-        [],
+        availableSources.filter((source) => source.convoke === true),
         allows,
         Math.max(0, payer.life - lifeReserved),
       );
       if (final)
         return {
           ...final,
-          tapSources: [...sources],
-          tapCardIds: sources.map((s) => s.cardId),
-          produced: [...produced],
+          tapSources: [...sources, ...final.tapSources],
+          tapCardIds: [...sources.map((s) => s.cardId), ...final.tapCardIds],
+          produced: [...produced, ...final.produced],
         };
     }
     const key = JSON.stringify([
@@ -167,10 +168,10 @@ export function planStatefulManaPayment(
     ]);
     if (seen.has(key)) return null;
     seen.add(key);
-    const candidates = sourcesFor(snapshot, payer);
+    const candidates = availableSources.filter((source) => source.convoke !== true);
     if (fixedCapacity && candidates.every((source) => !source.stateDependentProduction)) {
       const remaining = new Map<string, number>();
-      for (const source of candidates)
+      for (const source of availableSources)
         remaining.set(
           source.cardId,
           Math.max(remaining.get(source.cardId) ?? 0, source.units.length),

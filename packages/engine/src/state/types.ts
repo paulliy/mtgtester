@@ -158,6 +158,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   };
   /** Cleanup restores temporary copy effects; permanent copies omit this flag. */
   copyUntilEot?: boolean;
+  /** Printing face inherited by a copy of one exposed face, independently of physical turns. */
+  copyImageFace?: 'front' | 'back';
   copyAddTypes?: string[];
   /** Keywords granted alongside a copy that the copied object doesn't itself have (Dack's
    * Duplicate's "and it has haste"). */
