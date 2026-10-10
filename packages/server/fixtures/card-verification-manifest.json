@@ -4785,15 +4785,47 @@
     "75564721-e4e9-463a-b49e-f0c7cd6f53a7": {
       "name": "Cranial Plating",
       "oracleSha256": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Equipped creature gets +1/+0 for each artifact you control.\n{B}{B}: Attach this Equipment to target creature you control.\nEquip {1}",
+          "id": "cranial-plating-pump",
+          "oracleText": "Equipped creature gets +1/+0 for each artifact you control.",
           "implementation": [
-            "explicitly unsupported; Equip {1} is dropped when attach replaces activatedAbilities"
+            "interpreted layer 7d static effect on the creature this Equipment is attached to: power +1 for each artifact its controller controls, counted continuously and including this Equipment itself; toughness is unchanged, an opponent's artifacts are not counted, and an unattached Equipment pumps nothing"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-pump-per-artifact"
+          ],
+          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
+        },
+        {
+          "id": "cranial-plating-attach",
+          "oracleText": "{B}{B}: Attach this Equipment to target creature you control.",
+          "implementation": [
+            "interpreted instant-speed activated ability costing {B}{B} (timing any) whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it (CR 701.3); it is offered with a spell on the stack and on an opponent's turn, never targets an opponent's creature, and leaves the Equipment where it was if the target is gone on resolution (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-instant-speed-attach",
+            "cranial-plating-target-you-control",
+            "cranial-plating-target-gone"
+          ],
+          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
+        },
+        {
+          "id": "cranial-plating-equip",
+          "oracleText": "Equip {1}",
+          "implementation": [
+            "interpreted Equip {1} (CR 702.6a) as its own sorcery-speed activated ability beside the {B}{B} attach: it targets a creature you control and attaches only in your main phase with an empty stack, never at instant speed, and fizzles without moving the Equipment if the target is gone on resolution"
+          ],
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-instant-speed-attach",
+            "cranial-plating-target-you-control",
+            "cranial-plating-target-gone"
+          ],
+          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
         }
       ],
       "gameplayAiScenarioIds": []

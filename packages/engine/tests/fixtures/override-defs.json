@@ -4561,12 +4561,6 @@
     "def": {}
   },
   {
-    "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
-    "name": "Cranial Plating",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "756042c5-e444-45d7-8dc6-ae7c83c98438",
     "name": "Ghalta and Mavren",
     "handledLines": [
@@ -13626,12 +13620,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-cranial-plating",
-    "name": "Cranial Plating",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-cryptothrall",

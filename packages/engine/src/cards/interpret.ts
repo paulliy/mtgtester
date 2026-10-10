@@ -1002,9 +1002,16 @@ function parseEffectSentence(
     return [{ op: 'forceAttackEach', selector: { kind: 'type', value: 'Creature' } }];
   }
   {
-    const m = s.match(/^attach (?:this equipment|~) to target creature an opponent controls$/);
+    const m = s.match(
+      /^attach (?:this equipment|~) to target creature (you control|an opponent controls)$/,
+    );
     if (m !== null)
-      return [{ op: 'attachSelfTo', target: alloc('creature', undefined, 'opponent') }];
+      return [
+        {
+          op: 'attachSelfTo',
+          target: alloc('creature', undefined, m[1] === 'you control' ? 'you' : 'opponent'),
+        },
+      ];
   }
   if (s === 'it gains haste until end of turn') {
     return opts.triggerObject === true

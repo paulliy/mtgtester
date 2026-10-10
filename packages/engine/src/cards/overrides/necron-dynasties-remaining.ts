@@ -107,12 +107,6 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Convergence of Dominion: restored in coverage PR02. The interpreter reads the conditional
   // graveyard activation reduction and the mill ability, so no override remains.
-  // Catalog audit necron-remaining-batch-7: Equip is dropped by activatedAbilities replace.
-  unsupportedCard(
-    '75564721-e4e9-463a-b49e-f0c7cd6f53a7',
-    'Cranial Plating',
-    'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
-  );
   // Cryptek: restored in coverage PR03. The interpreter reads the dies-this-turn delayed return,
   // which enters tapped, so no override remains.
   defineCard(

@@ -92,7 +92,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Szarekh, the Silent King',
       'Mask of Memory',
       'Trazyn the Infinite',
-      'Cranial Plating',
       'Tomb Blade',
       // Catalog audit batch 1: retarget authored as copyTargetSpell.
       'Bolt Bend',

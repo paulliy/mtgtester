@@ -234,6 +234,11 @@ const COVERAGE_PR04: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr04-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR05 cards that had no earlier pinned fixture. */
+const COVERAGE_PR05: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr05-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -7849,6 +7854,40 @@ function aethericAmplifierScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function cranialPlatingScenario(gameId: GameId): CardTestScenario {
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'cranial-plating-viewer-instant-attach',
+    title: 'Cranial Plating: equip, then move it with {B}{B}',
+    instructions: [
+      'Cranial Plating, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and an opponent controls Lab Bird. Plating is not attached to anything.',
+      'Activate Equip {1} targeting Lab Green Bear and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2.',
+      'Activate the {B}{B} ability, which has no timing restriction, targeting Lab Ox, and let it resolve. Lab Green Bear is not offered as an equip or attach target while it already carries Plating, and the opponent’s Lab Bird never is.',
+    ],
+    expectedOutcome:
+      'Cranial Plating ends attached to Lab Ox, which is a 5/4. Lab Green Bear is back to 2/2. All three Swamps are tapped.',
+    oracleSha256: plating.sha256,
+    clauseIds: ['cranial-plating-pump', 'cranial-plating-attach', 'cranial-plating-equip'],
+    decks: {
+      P1: [plating.card, LAB_GREEN_BEAR, LAB_OX, ...swamps],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Cranial Plating', 'Lab Green Bear', 'Lab Ox', ...swamps.map((s) => s.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      hand: [],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9677,6 +9716,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'lockjaw-viewer-counter-and-unblockable',
   'the-thing-viewer-counters-and-double',
   'aetheric-amplifier-viewer-double-counters',
+  'cranial-plating-viewer-instant-attach',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -9942,6 +9982,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
   'the-thing-viewer-counters-and-double': theThingScenario,
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
+  'cranial-plating-viewer-instant-attach': cranialPlatingScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

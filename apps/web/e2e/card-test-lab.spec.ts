@@ -6146,3 +6146,41 @@ test('Captain America, Skybound: battalion grows each attacker and makes them in
   await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
   await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
 });
+
+test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
+  await runScenario(page, 'Cranial Plating: equip, then move it with {B}{B}');
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  // Equip {1} and the {B}{B} attach are separate actions.
+  await expect(page.getByRole('button', { name: /Attach this Equipment/ })).toBeVisible();
+  await page.getByRole('button', { name: /Equip \{1\}/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Only your own creatures can be chosen: the opponent's Lab Bird is not a legal target.
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Bird')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Payment is automatic: the untapped Swamps are the only way to pay.
+
+  // Plating is the only artifact: the Bear gets +1/+0 and Lab Ox is untouched.
+  await passUntil(page, permanent(page, 'Lab Green Bear').getByText('3/2'));
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+
+  // The {B}{B} ability needs no timing window: move Plating onto Lab Ox.
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  // Choose Lab Ox for the attach: Lab Green Bear already carries Plating, so it is not offered.
+  await page.getByRole('button', { name: /Attach this Equipment/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, permanent(page, 'Lab Ox').getByText('5/4'));
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+});

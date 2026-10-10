@@ -192,7 +192,6 @@ const REASONS: Record<string, string> = {
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
@@ -299,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Vigean Graftmage',
     'Pensive Professor',
     'Aetheric Amplifier',
+    'Cranial Plating',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

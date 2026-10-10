@@ -351,6 +351,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'lockjaw-viewer-counter-and-unblockable',
       'the-thing-viewer-counters-and-double',
       'aetheric-amplifier-viewer-double-counters',
+      'cranial-plating-viewer-instant-attach',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

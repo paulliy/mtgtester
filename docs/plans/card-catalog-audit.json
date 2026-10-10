@@ -5579,7 +5579,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 25,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6165,6 +6165,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
       "restoredIn": "coverage-pr04",
       "note": "Registration deleted: the interpreter reads the any-color mana ability and the choose-one activation as one modal sorcery-speed ability (CR 700.2), offered once per mode, whose permanent mode targets a permanent and whose player mode has no target; the doubleCountersTarget and doublePlayerCounters effects double every counter kind through the counter-adding path. Engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
+      "name": "Cranial Plating",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted: the interpreter reads {B}{B}: Attach this Equipment to target creature you control as an instant-speed activated ability beside the sorcery-speed Equip {1}, both with a creature-you-control target and an attachSelfTo effect, plus the layer 7d +1/+0 per artifact you control on the equipped creature. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }
