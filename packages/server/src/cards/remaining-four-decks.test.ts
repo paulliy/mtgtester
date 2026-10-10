@@ -100,7 +100,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Cytoplast Manipulator',
       'Flare of Duplication',
       'Twilight Diviner',
-      'Pensive Professor',
       'Siren Stormtamer',
       'Smokestack',
       'Dark Confidant',

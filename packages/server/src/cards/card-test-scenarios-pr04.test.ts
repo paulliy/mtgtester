@@ -252,3 +252,23 @@ describe('Forgotten Ancient Card Test Lab scenario', () => {
     replays('forgotten-ancient-viewer-cast-and-move', steps);
   });
 });
+
+describe('Pensive Professor Card Test Lab scenario', () => {
+  it('pensive-professor-viewer-increment-draw — casting a one-mana spell grows the 0-power Professor, and the counter draws a card', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Ripple' }, { action: 'Pass priority' }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'pensive-professor-viewer-increment-draw',
+      steps,
+    );
+    // Increment put exactly one +1/+1 counter on the Professor, making it a 1/3.
+    const [professor] = onBattlefield('Pensive Professor');
+    expect(professor?.counters).toEqual({ '+1/+1': 1 });
+    // Lab Ripple left the hand, and the counters trigger drew one card to replace it.
+    const p1 = seat('P1');
+    expect(p1.hand.map((card) => card.name)).toEqual(['Island']);
+    expect(p1.graveyard.map((card) => card.name)).toEqual(['Lab Ripple']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('pensive-professor-viewer-increment-draw', steps);
+  });
+});

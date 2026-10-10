@@ -6151,6 +6151,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr04",
       "note": "Registration deleted: the interpreter reads Graft 2 (CR 702.58a) as an enters-with +1/+1 replacement plus an optional trigger on another creature entering, with the intervening-if that this creature has a +1/+1 counter, whose moveCounters effect removes the counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and reads the untap ability's hasCounter target filter; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4b8736e2-fc41-4a25-bb6c-7351afc40981",
+      "name": "Pensive Professor",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Increment (a castsSpell trigger with an intervening-if that the mana spent is greater than this creature's power or toughness, rechecked on resolution, CR 603.4) and a countersPut trigger on this creature that draws a card once per batch of +1/+1 counters."
     }
   ]
 }

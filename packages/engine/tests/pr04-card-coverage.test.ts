@@ -18,9 +18,13 @@ import {
   computeTargetOptions,
   type PriorityActionPayload,
 } from '../src/actions/legal';
+import type { AuthoringIssue } from '../src/cards/authoring-validation';
+import type { Effect } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
+import { validateTriggerHead } from '../src/cards/trigger-contracts';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+import { executeAbility } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -153,6 +157,25 @@ function settle(ctx: GameContext, answer?: Answer) {
     if (pass >= 0) return { index: pass, targets: new Map() };
     return answer?.(decision, count) ?? { index: 0, targets: new Map() };
   });
+}
+
+/** Resolve `effects` as an ability of `perm`, then let any triggers they caused resolve. */
+function resolveEffects(ctx: GameContext, perm: EnginePermanent, effects: Effect[]) {
+  pump(
+    executeAbility(
+      ctx,
+      {
+        id: perm.id,
+        cardId: perm.cardId,
+        name: perm.name,
+        oracleId: perm.oracleId,
+        controllerId: perm.controllerId,
+      },
+      { kind: 'activated', targets: [], effects },
+      [],
+    ),
+  );
+  settle(ctx);
 }
 
 /** Run a whole turn for the current turn player with nobody attacking or blocking. */
@@ -956,6 +979,166 @@ describe('Forgotten Ancient', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Primitive: counters being put on a permanent (CR 122.6)
+// ---------------------------------------------------------------------------------------------
+
+describe('Primitive: counters-put trigger', () => {
+  const GROWER = oracle({
+    name: 'Lab Grower',
+    typeLine: 'Creature — Secret',
+    manaCost: '{G}',
+    power: '0',
+    toughness: '1',
+    oracleText:
+      'This creature enters with two +1/+1 counters on it.\nWhenever one or more +1/+1 counters are put on this creature, draw a card.',
+  });
+
+  it('counters-put-primitive-entering-counts — entering with counters is counters being put on it, and fires once', () => {
+    const ctx = pod('counters-put-entry');
+    const before = playerById(ctx, 'P1').hand.length;
+    const grower = enterFrom(ctx, 'P1', GROWER, 'hand');
+    expect(grower.counters['+1/+1']).toBe(2);
+    settle(ctx);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before + 1);
+  });
+
+  it('counters-put-primitive-kind — a -1/-1 counter is not a +1/+1 counter, and one placement of three fires once', () => {
+    const ctx = pod('counters-put-kind');
+    const grower = enterFrom(ctx, 'P1', GROWER, 'hand');
+    settle(ctx);
+    const before = playerById(ctx, 'P1').hand.length;
+    resolveEffects(ctx, grower, [
+      { op: 'putCounters', target: 'source', counter: '-1/-1', count: 1 },
+    ]);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before);
+    resolveEffects(ctx, grower, [
+      { op: 'putCounters', target: 'source', counter: '+1/+1', count: 3 },
+    ]);
+    expect(playerById(ctx, 'P1').hand.length).toBe(before + 1);
+  });
+
+  it('counters-put-primitive-contract — a counter kind is valid only on a countersPut head', () => {
+    const issues: AuthoringIssue[] = [];
+    validateTriggerHead(
+      { when: 'enters', subject: { kind: 'self' }, counter: '+1/+1' },
+      'trigger',
+      issues,
+    );
+    expect(issues.map((issue) => issue.message)).toContain(
+      'a counter kind requires a countersPut event',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// PR04.03 Pensive Professor
+// ---------------------------------------------------------------------------------------------
+
+describe('Pensive Professor', () => {
+  const { card } = pinned('Pensive Professor');
+  /** An instant costing `cost`, so it can be cast at any time and leaves no permanent. */
+  const instant = (name: string, cost: string) =>
+    oracle({
+      name,
+      typeLine: 'Instant',
+      manaCost: cost,
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 1 life.',
+    });
+  const ZERO = instant('Lab Zero', '{0}');
+  const ONE = instant('Lab One', '{1}');
+  const TWO = instant('Lab Two', '{2}');
+
+  function hand(ctx: GameContext) {
+    return playerById(ctx, 'P1').hand.length;
+  }
+
+  it('pensive-professor-pinned-oracle-supported — the interpreter alone models Increment and the counters-put draw', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'castsSpell',
+      caster: 'you',
+      condition: { kind: 'anyOf' },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'putCountersEach', selector: { kind: 'self' }, counter: '+1/+1', count: 1 },
+    ]);
+    expect(def.triggers[1]!.trigger).toEqual({
+      when: 'countersPut',
+      subject: { kind: 'self' },
+      counter: '+1/+1',
+    });
+  });
+
+  it('pensive-professor-increment-grows-and-draws — a one-mana spell beats its 0 power, so it gets a counter and you draw', () => {
+    const ctx = pod('professor-grows');
+    const professor = spawn(ctx, 'P1', card);
+    const before = hand(ctx);
+    castFromHand(ctx, 'P1', ONE, generic(1));
+    settle(ctx);
+    expect(onField(ctx, professor.cardId)!.counters['+1/+1']).toBe(1);
+    // Lab One was conjured into the hand and cast from it; the counter drew one card.
+    expect(hand(ctx)).toBe(before + 1);
+  });
+
+  it('pensive-professor-increment-threshold — as a 1/3, one mana is not greater than 1 or 3, but two mana is greater than 1', () => {
+    const ctx = pod('professor-threshold');
+    const professor = spawn(ctx, 'P1', card);
+    professor.counters['+1/+1'] = 1;
+    castFromHand(ctx, 'P1', ONE, generic(1));
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    castFromHand(ctx, 'P1', TWO, generic(2));
+    settle(ctx);
+    expect(onField(ctx, professor.cardId)!.counters['+1/+1']).toBe(2);
+  });
+
+  it('pensive-professor-increment-no-mana — a spell cast for no mana adds nothing', () => {
+    const ctx = pod('professor-free');
+    const professor = spawn(ctx, 'P1', card);
+    castFromHand(ctx, 'P1', ZERO, []);
+    settle(ctx);
+    expect(onField(ctx, professor.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('pensive-professor-increment-your-spells — an opponent’s spell does not trigger Increment', () => {
+    const ctx = pod('professor-opponent');
+    const professor = spawn(ctx, 'P1', card);
+    castFromHand(ctx, 'P2', TWO, generic(2));
+    expect(ctx.state.pendingTriggers).toHaveLength(0);
+    settle(ctx);
+    expect(onField(ctx, professor.cardId)!.counters['+1/+1'] ?? 0).toBe(0);
+  });
+
+  it('pensive-professor-increment-rechecked — grown in response, the one-mana spell no longer beats it on resolution (CR 603.4)', () => {
+    const ctx = pod('professor-recheck');
+    const professor = spawn(ctx, 'P1', card);
+    castFromHand(ctx, 'P1', ONE, generic(1));
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    professor.counters['+1/+1'] = 1;
+    settle(ctx);
+    expect(onField(ctx, professor.cardId)!.counters['+1/+1']).toBe(1);
+  });
+
+  it('pensive-professor-counters-draw-once — three +1/+1 counters put at once draw one card; a -1/-1 counter draws none', () => {
+    const ctx = pod('professor-counters');
+    const professor = spawn(ctx, 'P1', card);
+    const before = hand(ctx);
+    resolveEffects(ctx, professor, [
+      { op: 'putCounters', target: 'source', counter: '+1/+1', count: 3 },
+    ]);
+    expect(hand(ctx)).toBe(before + 1);
+    resolveEffects(ctx, professor, [
+      { op: 'putCounters', target: 'source', counter: '-1/-1', count: 1 },
+    ]);
+    expect(hand(ctx)).toBe(before + 1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -966,6 +1149,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Pensive Professor',
+    sha256: 'd1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8',
+    clauseCount: 2,
+  },
   {
     name: 'Forgotten Ancient',
     sha256: '4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86',

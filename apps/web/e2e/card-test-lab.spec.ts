@@ -5595,3 +5595,20 @@ test('Forgotten Ancient: grow when a spell is cast, then move counters at your u
   await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
   await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
 });
+
+test('Pensive Professor: Increment grows it, then the counter draws a card', async ({ page }) => {
+  await runScenario(page, 'Pensive Professor: Increment grows it, then the counter draws a card');
+  // The only card in hand is Lab Ripple, and nothing has been drawn yet.
+  await expect(handCard(page, 'Island')).toHaveCount(0);
+  const ripple = handCard(page, 'Lab Ripple');
+  await expect(ripple).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ripple.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // One mana beats the 0/3's power of 0: Increment puts a counter, and that counter draws a card.
+  await passUntil(page, permanent(page, 'Pensive Professor').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Pensive Professor').getByText('1/3')).toBeVisible();
+  await passUntil(page, handCard(page, 'Island'));
+  await expect(handCard(page, 'Island')).toHaveCount(1);
+  await expect(handCard(page, 'Lab Ripple')).toHaveCount(0);
+});

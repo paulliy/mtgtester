@@ -209,6 +209,11 @@ const conditionShapes = {
   triggerObjectHadToAttackThisCombat: {},
   triggerObjectMatches: { selector: selector },
   sourceMatches: { selector: selector },
+  compareValues: {
+    left: (value, path, issues) => numericExpression(value, path, issues),
+    cmp: oneOf('>=', '<=', '=='),
+    right: (value, path, issues) => numericExpression(value, path, issues),
+  },
   chosenOptionIs: { value: text },
   controlsYourCommander: {},
   controlsACommander: {},

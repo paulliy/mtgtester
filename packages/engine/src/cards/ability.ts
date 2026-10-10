@@ -1366,7 +1366,13 @@ export type ObjectTriggerWhen =
    * zone. `leavesTo` narrows it to destinations ("is put into exile from the battlefield").
    */
   | 'leavesBattlefield'
-  | 'transformsInto';
+  | 'transformsInto'
+  /**
+   * "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
+   * event per placement, including a permanent entering with counters (CR 122.6). `counter`
+   * narrows it to one kind.
+   */
+  | 'countersPut';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
@@ -1415,6 +1421,8 @@ export type TriggerHead =
        * instead of the attacker's controller.
        */
       defendingPlayerIsEventPlayer?: true;
+      /** `countersPut`: only a placement that includes this counter kind. */
+      counter?: string;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

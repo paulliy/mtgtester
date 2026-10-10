@@ -2192,6 +2192,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "4b8736e2-fc41-4a25-bb6c-7351afc40981",
+    "name": "Pensive Professor",
+    "package": "PR04.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Increment is claimed, and the draw trigger fires on damage instead of counters being placed."
+    ],
+    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9af4a832-d634-47aa-91ed-79d44fe08864",
     "name": "Pick Your Poison",
     "package": "W1",

@@ -73,6 +73,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Necron Deathmark',
       'Nullmage Shepherd',
       'Peema Trailblazer',
+      'Pensive Professor',
       'Plasmancer',
       'Psychomancer',
       'Puppeteer Clique',

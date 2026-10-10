@@ -4118,7 +4118,17 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const leaveGraveyard = firstLine.match(
     /^whenever (one or more|an?) (artifact|creature|land|enchantment) cards? leaves? your graveyard, (.*)$/,
   );
-  if (enterAndCast !== null) {
+  // "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
+  // event per placement, entering with counters included (CR 122.6).
+  const countersPutOnSelf = firstLine.match(
+    /^whenever one or more ([+-]\d+\/[+-]\d+|[a-z]+) counters are put on (?:~|this creature), (.*)$/,
+  );
+  if (countersPutOnSelf !== null) {
+    heads = [
+      { when: 'countersPut', subject: SELF_SUBJECT, counter: countersPutOnSelf[1] as string },
+    ];
+    body = countersPutOnSelf[2] as string;
+  } else if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
     let subject: TriggerSubject;
     if (SELF_TRIGGER_SUBJECT_RE.test(subjectPhrase)) {
@@ -7243,6 +7253,28 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
     }
 
+    // Increment: "Whenever you cast a spell, if the amount of mana you spent is greater than this
+    // creature's power or toughness, put a +1/+1 counter on this creature." Greater than either
+    // one suffices; both the mana spent and the creature are read again on resolution (CR 603.4).
+    if (lower === 'increment') {
+      const exceeds = (stat: Value): Condition => ({
+        kind: 'compareValues',
+        left: { kind: 'manaSpent' },
+        cmp: '>=',
+        right: { kind: 'plus', of: stat, n: 1 },
+      });
+      triggers.push(
+        triggered(onCast('you'), {
+          condition: {
+            kind: 'anyOf',
+            of: [exceeds({ kind: 'powerOfSource' }), exceeds({ kind: 'toughnessOfSource' })],
+          },
+          effects: [{ op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 }],
+          description: 'Increment',
+        }),
+      );
+      continue;
+    }
     // Persist and undying (CR 702.79a, 702.93a): each is a dies trigger with an intervening-if
     // read from the permanent's last-known counters, returning the card it became.
     if (lower === 'persist' || lower === 'undying') {

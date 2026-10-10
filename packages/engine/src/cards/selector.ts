@@ -106,6 +106,8 @@ export interface SelectorSource {
   triggerObjectCardId?: string;
   /** Player whose action caused the event, for event-relative conditions. */
   eventPlayerId?: string;
+  /** Mana spent to cast the spell a cast trigger is about, for `compareValues` (Increment). */
+  manaSpent?: number;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
   chosenOption?: string;
   /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */

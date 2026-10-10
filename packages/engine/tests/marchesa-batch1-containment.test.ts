@@ -48,8 +48,6 @@ const REASONS: Record<string, string> = {
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
-  'Pensive Professor':
-    'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
@@ -300,6 +298,7 @@ describe('Marchesa catalog audit containment', () => {
     'Sautekh Immortal',
     'Iron Apprentice',
     'Vigean Graftmage',
+    'Pensive Professor',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

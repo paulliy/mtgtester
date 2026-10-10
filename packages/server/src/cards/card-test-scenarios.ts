@@ -7820,6 +7820,45 @@ function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** A one-mana instant with no target: casting it is all the Increment scenario needs. */
+const LAB_RIPPLE = card({
+  oracleId: 'lab-ripple',
+  name: 'Lab Ripple',
+  typeLine: 'Instant',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  oracleText: 'You gain 1 life.',
+});
+
+function pensiveProfessorScenario(gameId: GameId): CardTestScenario {
+  const professor = pinnedFrom(MARCHESA_BATCH1, 'Pensive Professor');
+  return pr01Scenario(gameId, {
+    id: 'pensive-professor-viewer-increment-draw',
+    title: 'Pensive Professor: Increment grows it, then the counter draws a card',
+    instructions: [
+      'Pensive Professor (a 0/3) and an Island are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple for {U}. One mana is more than the Professor’s power of 0, so Increment triggers.',
+      'Let Increment resolve to put a +1/+1 counter on the Professor, then let the draw trigger resolve.',
+    ],
+    expectedOutcome:
+      'Pensive Professor has one +1/+1 counter and is a 1/3, and you drew a card for the counter.',
+    oracleSha256: professor.sha256,
+    clauseIds: ['pensive-professor-increment', 'pensive-professor-counters-draw'],
+    decks: {
+      P1: [professor.card, LAB_RIPPLE, ISLAND, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Pensive Professor', 'Island'] }],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8985,6 +9024,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sautekh-immortal-viewer-flash-counters',
   'iron-apprentice-viewer-dies-moves-counters',
   'vigean-graftmage-viewer-graft-and-untap',
+  'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
   'satoru-viewer-free-cast-draws',
@@ -9222,6 +9262,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
   'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
   'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
+  'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

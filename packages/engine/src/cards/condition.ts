@@ -6,6 +6,8 @@ import {
   sourceObjectState,
 } from './source-identity';
 import { assertNever } from '../utils/assert-never';
+import { evaluateValueIn } from '../effects/values';
+import type { Value, ValueScope } from './value';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
  *
@@ -128,6 +130,12 @@ export type Condition =
    */
   | { kind: 'sourceMatches'; selector: Selector }
   /**
+   * "if the amount of mana you spent is greater than this creature's power or toughness"
+   * (Increment): two numeric values compared in the trigger's scope, so a cast trigger's mana
+   * spent and the source's current power can be read together.
+   */
+  | { kind: 'compareValues'; left: Value; cmp: Comparison; right: Value }
+  /**
    * "Khans — ..." / "Dragons — ..." (Frontier Siege): gates one of two static/triggered
    * clauses by the mode chosen as the permanent entered (`EnginePermanent.chosenOption`),
    * rather than the card needing two mutually-exclusive definitions.
@@ -222,6 +230,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'triggerObjectHadToAttackThisCombat':
     case 'triggerObjectMatches':
     case 'sourceMatches':
+    case 'compareValues':
     case 'chosenOptionIs':
     case 'controlsYourCommander':
     case 'controlsACommander':
@@ -405,6 +414,14 @@ export function evaluateCondition(
       if (source.triggerObjectCardId === undefined) return false;
       const perm = eventObjectState(ctx, scope);
       return perm?.hadToAttackThisCombat === true;
+    }
+    case 'compareValues': {
+      const valueScope = scope as ValueScope;
+      return compare(
+        evaluateValueIn(ctx, condition.left, valueScope),
+        condition.cmp,
+        evaluateValueIn(ctx, condition.right, valueScope),
+      );
     }
     case 'triggerObjectMatches': {
       const facts = eventObjectFacts(ctx, {

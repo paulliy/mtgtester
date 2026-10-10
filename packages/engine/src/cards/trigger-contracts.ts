@@ -26,6 +26,7 @@ export function triggerEventFamily(
     case 'leavesGraveyard':
     case 'leavesBattlefield':
     case 'transformsInto':
+    case 'countersPut':
       return 'object';
     case 'castsSpell':
       return 'cast';
@@ -95,6 +96,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'leavesGraveyard':
     case 'leavesBattlefield':
     case 'transformsInto':
+    case 'countersPut':
       return false;
     default:
       return assertNever(when, 'event player dispatcher');
@@ -127,6 +129,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'entersWithoutManaSpentToCast',
           'leavesTo',
           'defendingPlayerIsEventPlayer',
+          'counter',
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
@@ -215,6 +218,14 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({
         path: `${path}.defendingPlayerIsEventPlayer`,
         message: 'defending player requires an attacks event',
+      });
+    if (
+      head['counter'] !== undefined &&
+      (typeof head['counter'] !== 'string' || head['when'] !== 'countersPut')
+    )
+      issues.push({
+        path: `${path}.counter`,
+        message: 'a counter kind requires a countersPut event',
       });
   } else if (family === 'cast') {
     if (!['you', 'opponent', 'each'].includes(head['caster'] as string))

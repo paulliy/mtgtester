@@ -626,19 +626,36 @@
     "4b8736e2-fc41-4a25-bb6c-7351afc40981": {
       "name": "Pensive Professor",
       "oracleSha256": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "pensive-professor-increment",
           "oracleText": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
-          "implementation": ["explicitly unsupported; Increment is claimed without a keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Increment keyword: a trigger on you casting a spell, with an intervening-if that the mana spent on that spell is greater than this creature's power or its toughness (anyOf), rechecked on resolution (CR 603.4); the effect puts one +1/+1 counter on this creature. A spell cast for no mana, or by an opponent, adds nothing"
+          ],
+          "engineTestIds": [
+            "pensive-professor-pinned-oracle-supported",
+            "pensive-professor-increment-grows-and-draws",
+            "pensive-professor-increment-threshold",
+            "pensive-professor-increment-no-mana",
+            "pensive-professor-increment-your-spells",
+            "pensive-professor-increment-rechecked"
+          ],
+          "viewerScenarioIds": ["pensive-professor-viewer-increment-draw"]
         },
         {
+          "id": "pensive-professor-counters-draw",
           "oracleText": "Whenever one or more +1/+1 counters are put on this creature, draw a card.",
-          "implementation": ["explicitly unsupported; authored as a dealtDamage trigger"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted countersPut trigger on this creature for +1/+1 counters: it fires once per batch of counters put on it, not once per counter, and not for other counter kinds; the effect draws a card"
+          ],
+          "engineTestIds": [
+            "pensive-professor-pinned-oracle-supported",
+            "pensive-professor-increment-grows-and-draws",
+            "pensive-professor-counters-draw-once"
+          ],
+          "viewerScenarioIds": ["pensive-professor-viewer-increment-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

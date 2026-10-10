@@ -1751,6 +1751,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Pensive Professor: Increment grows it, then the counter draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: [
       'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
     ],

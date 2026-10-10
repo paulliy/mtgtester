@@ -1352,6 +1352,8 @@ export interface TriggerEventSubject {
   sourceControllerId?: PlayerId;
   /** `leavesBattlefield`: the zone this permanent went to. */
   toZone?: Zone;
+  /** `countersPut`: the counter kinds this placement put on the permanent. */
+  counterKinds?: readonly string[];
 }
 
 /**
@@ -1511,6 +1513,12 @@ export function queueTriggersForEvent(
           if (s.toZone !== 'graveyard' && s.toZone !== 'exile') return false;
           if (!spec.leavesTo.includes(s.toZone)) return false;
         }
+        if (
+          'counter' in spec &&
+          spec.counter !== undefined &&
+          !(s.counterKinds ?? []).includes(spec.counter)
+        )
+          return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -1740,6 +1748,28 @@ export function queueTriggersForEvent(
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
       (delayed) => !firedDelayedIds.has(delayed.id),
     );
+  // A permanent that enters with counters has had them put on it (CR 122.6), by its controller
+  // unless an effect says otherwise (CR 122.6a): one placement for each entering permanent.
+  if (when === 'enters') {
+    queueTriggersForEvent(
+      ctx,
+      'countersPut',
+      subjects.flatMap((subject) => {
+        const counterKinds = Object.entries(subject.permanent.counters)
+          .filter(([, count]) => count > 0)
+          .map(([counter]) => counter);
+        return counterKinds.length === 0
+          ? []
+          : [
+              {
+                permanent: subject.permanent,
+                playerId: subject.permanent.controllerId,
+                counterKinds,
+              },
+            ];
+      }),
+    );
+  }
 }
 
 /**
@@ -1891,8 +1921,12 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 
       const from: SelectorSource = {
         cardId: source.cardId,
+        objectId: source.id,
         controllerId: source.controllerId,
         eventPlayerId: spell.controllerId,
+        ...(spell.triggerScope?.manaSpent !== undefined
+          ? { manaSpent: spell.triggerScope.manaSpent }
+          : {}),
         attachedToCardId:
           source.attachedTo === null
             ? null

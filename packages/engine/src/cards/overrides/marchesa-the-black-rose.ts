@@ -429,12 +429,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 7: Increment is claimed; the draw fires on damage, not counters.
-  unsupportedCard(
-    '4b8736e2-fc41-4a25-bb6c-7351afc40981',
-    'Pensive Professor',
-    'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
-  );
+  // Pensive Professor: restored in coverage PR04. The interpreter reads Increment and the
+  // counters-put draw trigger, so no override remains.
   // Puppeteer Clique: restored in coverage PR03. The interpreter reads the reanimation with haste
   // and its bound end-step exile, and Persist, so no override remains.
   // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers

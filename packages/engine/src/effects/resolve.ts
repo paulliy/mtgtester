@@ -915,6 +915,10 @@ function addCounters(
     added: adjustedCount,
     total: counterCount(perm.counters, counter),
   });
+  if (adjustedCount > 0)
+    queueTriggersForEvent(ctx, 'countersPut', [
+      { permanent: perm, playerId: source.controllerId, counterKinds: [counter] },
+    ]);
   const def = ctx.defs.get(perm.oracleId);
   for (const threshold of def?.counterThresholdTriggers ?? []) {
     if (

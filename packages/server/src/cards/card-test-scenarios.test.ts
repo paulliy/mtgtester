@@ -327,6 +327,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sautekh-immortal-viewer-flash-counters',
       'iron-apprentice-viewer-dies-moves-counters',
       'vigean-graftmage-viewer-graft-and-untap',
+      'pensive-professor-viewer-increment-draw',
       'elite-scaleguard-viewer-bolster-and-tap',
       'forgotten-ancient-viewer-cast-and-move',
       'satoru-viewer-free-cast-draws',
