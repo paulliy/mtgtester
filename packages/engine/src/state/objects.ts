@@ -1351,6 +1351,58 @@ export function applyTokenCreationReplacements(
 }
 
 /**
+ * Whether `attachment` could be attached to `host` (CR 701.3a): an Aura to what its enchant ability
+ * allows, chosen without targeting (CR 303.4), and not while it is a creature (CR 303.4d); an
+ * Equipment only to a creature other than itself, and not while it is a creature (CR 301.5c).
+ * Reattaching to what it is already on is not a move (CR 701.3b).
+ */
+export function canAttach(
+  ctx: GameContext,
+  attachment: EnginePermanent,
+  host: EnginePermanent,
+): boolean {
+  if (host.id === attachment.id || attachment.attachedTo === host.id) return false;
+  if (!ctx.state.battlefield.includes(host)) return false;
+  const chars = computeCharacteristics(ctx, attachment);
+  if (chars.types.includes('Creature')) return false;
+  if (chars.subtypes.includes('Aura')) {
+    const enchant = getDefByOracleId(ctx, attachment.oracleId, attachment.name).spellAbility
+      ?.targets[0];
+    if (enchant === undefined) return false;
+    return computeTargetOptions(
+      ctx,
+      enchant,
+      attachment.controllerId,
+      chars.colors,
+      undefined,
+      undefined,
+      attachment.cardId,
+      false,
+    ).includes(host.id);
+  }
+  if (chars.subtypes.includes('Equipment'))
+    return computeCharacteristics(ctx, host).types.includes('Creature');
+  return false;
+}
+
+/**
+ * Attach an Aura or Equipment on the battlefield to `host` (CR 701.3a). It doesn't move if it can't
+ * legally be attached there (CR 701.3b), and moving to a different object gives it a new
+ * timestamp (CR 701.3c, 613.7e). Returns whether it moved.
+ */
+export function attachPermanent(
+  ctx: GameContext,
+  attachment: EnginePermanent,
+  host: EnginePermanent,
+): boolean {
+  if (!canAttach(ctx, attachment, host)) return false;
+  attachment.attachedTo = host.id;
+  attachment.timestamp = ctx.state.nextTimestamp++;
+  emit(ctx, 'attach', { equipment: attachment.name, to: host.name });
+  return true;
+}
+
+/**
  * Create `count` tokens as ONE creation event: each token is a separate object with its own ETB
  * trigger (CR 707.2), but the "one or more tokens would be created" replacements above see a
  * single event and fire once.

@@ -65,6 +65,7 @@ import {
   additionalTypedTriggerCopies,
   applyCopy,
   applyTokenCreationReplacements,
+  attachPermanent,
   consumeRegenerationShield,
   createToken,
   changeController,
@@ -4022,13 +4023,10 @@ export function* executeAbility(
           (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
         );
         if (t === null || equipment === undefined) break;
-        // CR 702.6b: equipping moves the Equipment; it never leaves the battlefield, so its
-        // timestamp is unchanged and the granted abilities keep their layer position.
-        equipment.attachedTo = t;
-        emit(ctx, 'attach', {
-          equipment: equipment.name,
-          to: findPermanent(ctx, t)?.name ?? t,
-        });
+        const host = findPermanent(ctx, t);
+        // CR 701.3b-c, 613.7e: attaching to a different creature gives it a new timestamp;
+        // attaching to the creature it is already on, or to one it can't equip, does nothing.
+        if (host !== undefined) attachPermanent(ctx, equipment, host);
         break;
       }
       case 'createToken': {
