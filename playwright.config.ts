@@ -9,6 +9,9 @@ export default defineConfig({
   testIgnore: /player-(setup|game)\.spec\.ts$/,
   fullyParallel: true,
   retries: 0,
+  // The lab backend holds a single live session, so specs that share it must not overlap in time.
+  // Parallel workers let one spec's game replace another's and leave it stuck on /card-test-lab.
+  workers: 1,
   // Card Test Lab traces are viewer-verification evidence (docs/guides/card-modeling-and-testing.md):
   // they must survive passing runs, not just failures.
   preserveOutput: 'always',

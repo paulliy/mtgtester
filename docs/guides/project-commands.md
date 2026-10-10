@@ -41,4 +41,5 @@ bun run agent-client [--seat P1] [--seed S] [--port N] [--provider random|ai]
 ```
 
 - If the production typecheck runs out of memory, set `NODE_OPTIONS=--max-old-space-size=8192` for that command.
+- Viewer evidence input tests are split by group, so a change to one area only needs its group: `bun run test card-evidence-input.resolution` (installed resolution and routing drift), `card-evidence-input.discovery` (runtime discovery and source lists), `card-evidence-input.zip` (trace ZIP validation), `card-evidence-input.manifest` (manifest, report, catalog and attachments), and `card-evidence-input.cli` (CLI options and generator adapters). Shared setup is in `packages/server/src/cards/card-evidence-input.fixtures.ts`. The full set is the same path without a suffix: `bun run test card-evidence-input`.
 - `agent-client` plays one seat over the running server's `/ws` as a JSON process (NDJSON on stdout, one reply line per decision on stdin, diagnostics on stderr). It is a client of the single-player flow, not another way to run a game. See [the JSON agent client](json-agent-client.md).

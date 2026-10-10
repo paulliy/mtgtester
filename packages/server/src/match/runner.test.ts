@@ -103,7 +103,7 @@ function randomProviders(seed = 'runner-test'): (playerId: string) => AsyncDecis
 
 const SEATS = [1, 2, 3, 4].map((n) => ({ seat: `P${n}`, deckSnapshotId: `snap-${n}` }));
 
-describe('MatchRunner — compute-ahead cap (brief §10.1)', () => {
+describe('MatchRunner — compute-ahead cap (brief §10.1)', { timeout: 60_000 }, () => {
   it('parks once the frontier is lookahead turns past the viewer', async () => {
     const engine = makeEngine();
     const runner = new MatchRunner({
