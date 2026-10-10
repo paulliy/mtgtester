@@ -5904,3 +5904,37 @@ test('Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent', as
   ).toHaveCount(3);
   await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
 });
+
+test('Call Forth the Tempest: damage equals the mana value of your other spells this turn', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+  );
+  const callForth = handCard(page, 'Call Forth the Tempest');
+  await expect(callForth).toHaveClass(/actionable/, { timeout: 15_000 });
+  await callForth.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Two identical cascade triggers: put either on the stack first.
+  const order = page.getByRole('button', { name: /Call Forth the Tempest: Cascade/ }).first();
+  await passUntil(page, order);
+  await order.click();
+
+  // Each cascade finds a cheaper spell: cast both for free.
+  for (const name of ['Lab Cascade Two', 'Lab Cascade Three']) {
+    const cast = page.getByRole('button', { name: `Cast ${name} without paying its mana cost` });
+    await passUntil(page, cast);
+    await cast.click();
+  }
+
+  // 2 + 3 = 5 damage to each of P2's creatures: Lab Ox (4/4) dies, Lab Tower (0/10) lives.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Tower')).toBeVisible();
+  await expect(page.getByText(/Call Forth the Tempest deals 5 to Lab Tower/).first()).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(page.getByText(/Call Forth the Tempest deals \d+ to Lab Servo/)).toHaveCount(0);
+});

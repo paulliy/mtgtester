@@ -378,15 +378,19 @@
   {
     "oracleId": "0623c51a-e829-413f-a3a0-817c0902821e",
     "name": "Call Forth the Tempest",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR04.07",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"~ deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr04-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr04-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "interpreter only; no override registration"
   },
   {
     "oracleId": "f9516b60-36dd-4f8a-bebb-ac1bc0961f07",

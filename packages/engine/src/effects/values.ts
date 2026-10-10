@@ -269,6 +269,13 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'attackingCreatures':
       return ctx.state.battlefield.filter((permanent) => permanent.attacking !== null).length;
+    case 'manaValueOfOtherSpellsCastThisTurn':
+      return (
+        ctx.state.players.find((player) => player.id === scope.controllerId)
+          ?.spellsCastThisTurnRecords ?? []
+      )
+        .filter((record) => record.objectId !== scope.sourceObjectId)
+        .reduce((total, record) => total + record.manaValue, 0);
     case 'spellsCastThisTurn':
       return (
         ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ??

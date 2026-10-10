@@ -2080,6 +2080,87 @@ describe('Crystal, Inhuman Princess', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR04.07 Call Forth the Tempest
+// ---------------------------------------------------------------------------------------------
+
+describe('Call Forth the Tempest', () => {
+  const { card } = pinned('Call Forth the Tempest');
+  const instant = (name: string, manaCost: string) =>
+    oracle({
+      name,
+      typeLine: 'Instant',
+      manaCost,
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 1 life.',
+    });
+  const TOUGH = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Secret', power: '1', toughness: '10' });
+  const red = (n: number) => Array.from({ length: n }, () => ({ symbol: 'R' as const }));
+
+  /** Cast Call Forth from hand for its full cost and let everything (cascades included) resolve. */
+  function callForth(ctx: GameContext) {
+    castFromHand(ctx, 'P1', card, [...generic(5), ...red(3)]);
+    settle(ctx);
+  }
+
+  it('call-forth-the-tempest-pinned-oracle-supported — two cascades and the other-spells damage', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords.filter((keyword) => keyword === 'cascade')).toHaveLength(2);
+    expect(def.spellAbility!.effects).toEqual([
+      {
+        op: 'damageEach',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'opponents' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
+        amount: { kind: 'manaValueOfOtherSpellsCastThisTurn' },
+      },
+    ]);
+  });
+
+  it('call-forth-the-tempest-other-spells-total — two earlier spells (2 + 3) deal 5 to each opponent’s creature; its own 8 is not counted', () => {
+    const ctx = pod('call-forth-total');
+    const rival = spawn(ctx, 'P2', TOUGH('Lab Rival'));
+    const ally = spawn(ctx, 'P1', TOUGH('Lab Ally'));
+    castFromHand(ctx, 'P1', instant('Lab Two', '{2}'), generic(2));
+    settle(ctx);
+    castFromHand(ctx, 'P1', instant('Lab Three', '{3}'), generic(3));
+    settle(ctx);
+    callForth(ctx);
+    expect(onField(ctx, rival.cardId)!.damageMarked).toBe(5);
+    expect(onField(ctx, ally.cardId)!.damageMarked).toBe(0);
+  });
+
+  it('call-forth-the-tempest-yours-only — an opponent’s spells this turn do not count', () => {
+    const ctx = pod('call-forth-theirs');
+    const rival = spawn(ctx, 'P2', TOUGH('Lab Rival'));
+    castFromHand(ctx, 'P2', instant('Lab Theirs', '{3}'), generic(3));
+    settle(ctx);
+    callForth(ctx);
+    expect(onField(ctx, rival.cardId)!.damageMarked).toBe(0);
+  });
+
+  it('call-forth-the-tempest-cascades-count — spells cast by its own cascades are other spells cast this turn', () => {
+    const ctx = pod('call-forth-cascade');
+    const rival = spawn(ctx, 'P2', TOUGH('Lab Rival'));
+    // Library top: Lab Cascade Two, then Lab Cascade Three — one hit for each cascade.
+    conjure(ctx, 'P1', instant('Lab Cascade Three', '{3}'), 'library');
+    conjure(ctx, 'P1', instant('Lab Cascade Two', '{2}'), 'library');
+    castFromHand(ctx, 'P1', card, [...generic(5), ...red(3)]);
+    settle(ctx, answers([[/cast/i, /^(Yes|Cast)/]]));
+    expect(
+      playerById(ctx, 'P1').spellsCastThisTurnRecords?.map((record) => record.manaValue),
+    ).toEqual([8, 2, 3]);
+    expect(onField(ctx, rival.cardId)!.damageMarked).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2090,6 +2171,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: 'Call Forth the Tempest',
+    sha256: 'c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6',
+    clauseCount: 2,
+  },
   {
     name: 'Crystal, Inhuman Princess',
     sha256: '8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385',

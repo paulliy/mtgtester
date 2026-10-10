@@ -345,6 +345,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6",
+      "card": {
+        "oracleId": "0623c51a-e829-413f-a3a0-817c0902821e",
+        "scryfallId": "81d6b979-251a-4736-86f0-35a6c8b492c9",
+        "name": "Call Forth the Tempest",
+        "manaCost": "{5}{R}{R}{R}",
+        "cmc": 8,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Cascade, cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom of your library in a random order. Then do it again.)\nCall Forth the Tempest deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Cascade"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

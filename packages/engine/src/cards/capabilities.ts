@@ -1121,6 +1121,7 @@ const families = {
       tappedCreaturesControlledByTarget: true,
       attackingCreatures: true,
       spellsCastThisTurn: true,
+      manaValueOfOtherSpellsCastThisTurn: true,
       countersOnTriggerObject: true,
     } satisfies Record<Extract<Value['kind'], string | number>, true>,
   },

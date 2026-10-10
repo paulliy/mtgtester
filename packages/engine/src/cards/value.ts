@@ -190,6 +190,11 @@ export type Value =
   | { kind: 'spellManaValue' }
   /** "X is the number of colors that spell is" — read from the trigger's cast event. */
   | { kind: 'spellColorCount' }
+  /**
+   * "The total mana value of other spells you've cast this turn" (Call Forth the Tempest): every
+   * spell the controller cast this turn except the resolving one (CR 202.3).
+   */
+  | { kind: 'manaValueOfOtherSpellsCastThisTurn' }
   | { kind: 'manaSpent' }
   | { kind: 'treasureManaSpent' }
   | { kind: 'energyPaid' }
@@ -289,6 +294,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -348,6 +354,7 @@ export function needsScope(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -485,6 +492,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,

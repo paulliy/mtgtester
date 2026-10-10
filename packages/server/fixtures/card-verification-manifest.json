@@ -8613,6 +8613,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "0623c51a-e829-413f-a3a0-817c0902821e": {
+      "name": "Call Forth the Tempest",
+      "oracleSha256": "c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "call-forth-the-tempest-cascade",
+          "oracleText": "Cascade, cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom of your library in a random order. Then do it again.)",
+          "implementation": [
+            "interpreted cascade keyword twice: two cast triggers, each exiling until a nonland card with lesser mana value and offering a free cast, so the spells they cast count as spells cast this turn"
+          ],
+          "engineTestIds": [
+            "call-forth-the-tempest-pinned-oracle-supported",
+            "call-forth-the-tempest-cascades-count"
+          ],
+          "viewerScenarioIds": ["call-forth-the-tempest-viewer-other-spells-damage"]
+        },
+        {
+          "id": "call-forth-the-tempest-other-spells-damage",
+          "oracleText": "Call Forth the Tempest deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.",
+          "implementation": [
+            "interpreted spell effect damaging every creature controlled by an opponent by manaValueOfOtherSpellsCastThisTurn: the sum of the mana values of the spells its controller has cast this turn, excluding Call Forth the Tempest itself, whether cast before it or by its own cascades; an opponent's spells never count and the controller's own creatures are not hit"
+          ],
+          "engineTestIds": [
+            "call-forth-the-tempest-pinned-oracle-supported",
+            "call-forth-the-tempest-other-spells-total",
+            "call-forth-the-tempest-yours-only",
+            "call-forth-the-tempest-cascades-count"
+          ],
+          "viewerScenarioIds": ["call-forth-the-tempest-viewer-other-spells-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

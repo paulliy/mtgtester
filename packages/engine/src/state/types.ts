@@ -182,6 +182,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
 /** One spell a player cast this turn (see `EnginePlayerState.spellsCastThisTurnRecords`). */
 export interface CastSpellRecord {
+  /** The spell's object id on the stack, so "other spells" can leave out exactly this one. */
+  objectId: ObjectId;
   candidate: SelectorCandidate;
   manaValue: number;
 }

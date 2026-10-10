@@ -489,3 +489,33 @@ describe('Crystal, Inhuman Princess Card Test Lab scenario', () => {
     replays('crystal-inhuman-princess-viewer-colors-damage', steps);
   });
 });
+
+describe('Call Forth the Tempest Card Test Lab scenario', () => {
+  it('call-forth-the-tempest-viewer-other-spells-damage — both cascaded spells deal 5 to each opposing creature', () => {
+    const steps: Step[] = [
+      { action: 'Cast Call Forth the Tempest' },
+      { action: 'Cast Lab Cascade' },
+      { action: 'Cast Lab Cascade' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'call-forth-the-tempest-viewer-other-spells-damage',
+      steps,
+    );
+    // Lab Cascade Two (2) + Lab Cascade Three (3) = 5; Call Forth's own 8 is not counted.
+    expect(onBattlefield('Lab Ox')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toContain('Lab Ox');
+    const [tower] = onBattlefield('Lab Tower');
+    expect(tower?.damageMarked).toBe(5);
+    // Your own creature is not hit.
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.damageMarked).toBe(0);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Call Forth the Tempest', 'Lab Cascade Three', 'Lab Cascade Two']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('call-forth-the-tempest-viewer-other-spells-damage', steps);
+  });
+});

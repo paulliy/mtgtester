@@ -8184,6 +8184,82 @@ function crystalScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Two cheap instants for Call Forth the Tempest's cascades to find; they gain life and need no target. */
+const LAB_CASCADE_TWO = card({
+  oracleId: 'lab-cascade-two',
+  name: 'Lab Cascade Two',
+  typeLine: 'Instant',
+  manaCost: '{2}',
+  cmc: 2,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_CASCADE_THREE = card({
+  oracleId: 'lab-cascade-three',
+  name: 'Lab Cascade Three',
+  typeLine: 'Instant',
+  manaCost: '{3}',
+  cmc: 3,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_TOWER = card({
+  oracleId: 'lab-tower',
+  name: 'Lab Tower',
+  typeLine: 'Creature — Wall',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '10',
+});
+
+function callForthTheTempestScenario(gameId: GameId): CardTestScenario {
+  const callForth = pinnedFrom(COVERAGE_PR04, 'Call Forth the Tempest');
+  const mountains = Array.from({ length: 3 }, () => MOUNTAIN);
+  const forests = Array.from({ length: 5 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'call-forth-the-tempest-viewer-other-spells-damage',
+    title: 'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+    instructions: [
+      'Lab Servo, three Mountains and five Forests are on your battlefield; P2 controls Lab Ox (4/4) and Lab Tower (0/10). Call Forth the Tempest is in your hand, and Lab Cascade Two and Lab Cascade Three are on top of your library.',
+      'Cast Call Forth the Tempest for {5}{R}{R}{R}. Each cascade exiles until a cheaper spell: cast Lab Cascade Two for free, then Lab Cascade Three for free.',
+      'Pass priority until everything resolves. Call Forth deals 2 + 3 = 5 to each creature P2 controls: the total mana value of your other spells cast this turn, not counting its own 8.',
+    ],
+    expectedOutcome:
+      'Lab Ox (4/4) dies, Lab Tower (0/10) survives with 5 damage, and your Lab Servo takes none.',
+    oracleSha256: callForth.sha256,
+    clauseIds: ['call-forth-the-tempest-cascade', 'call-forth-the-tempest-other-spells-damage'],
+    decks: {
+      P1: [
+        callForth.card,
+        LAB_SERVO,
+        ...mountains,
+        ...forests,
+        LAB_CASCADE_TWO,
+        LAB_CASCADE_THREE,
+        FOREST,
+        FOREST,
+      ],
+      P2: [LAB_OX, LAB_TOWER, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Call Forth the Tempest'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab Servo',
+            ...mountains.map((mountain) => mountain.name),
+            ...forests.map((forest) => forest.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Tower'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Cascade Two', 'Lab Cascade Three'] }],
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -9352,6 +9428,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pensive-professor-viewer-increment-draw',
   'elite-scaleguard-viewer-bolster-and-tap',
   'forgotten-ancient-viewer-cast-and-move',
+  'call-forth-the-tempest-viewer-other-spells-damage',
   'crystal-inhuman-princess-viewer-colors-damage',
   'rumor-gatherer-viewer-scry-then-draw',
   'belladonna-took-viewer-three-tokens',
@@ -9598,6 +9675,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
   'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
   'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,
   'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,
   'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,
   'belladonna-took-viewer-three-tokens': belladonnaTookScenario,

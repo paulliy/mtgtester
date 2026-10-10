@@ -1915,7 +1915,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   };
   const manaValue = spellManaValue(def, spell.announcedX);
   const castThisTurn = (caster.spellsCastThisTurnRecords ??= []);
-  castThisTurn.push({ candidate, manaValue });
+  castThisTurn.push({ objectId: spell.sourceId, candidate, manaValue });
   // "Your fourth NONCREATURE spell each turn" numbers the spells that match the filter, not
   // every spell cast: a creature spell cast first does not use up "first noncreature".
   const ordinalMatches = (

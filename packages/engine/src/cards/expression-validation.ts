@@ -176,6 +176,7 @@ const valueShapes = {
   tappedCreaturesControlledByTarget: { target: reference },
   attackingCreatures: {},
   spellsCastThisTurn: {},
+  manaValueOfOtherSpellsCastThisTurn: {},
   countersOnTriggerObject: { counter: text },
 } satisfies Shapes<Value>;
 

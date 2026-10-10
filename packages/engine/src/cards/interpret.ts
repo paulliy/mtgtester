@@ -2322,6 +2322,22 @@ function parseEffectSentence(
       return effects;
     }
   }
+  // "~ deals damage to each creature your opponents control equal to the total mana value of
+  // other spells you've cast this turn" (Call Forth the Tempest).
+  {
+    const m = s.match(
+      /^~ deals damage to each (.+?) equal to the total mana value of other spells you've cast this turn$/,
+    );
+    const selector = m === null ? null : parseMassSubject(m[1] as string, card);
+    if (selector !== null)
+      return [
+        {
+          op: 'damageEach',
+          selector,
+          amount: { kind: 'manaValueOfOtherSpellsCastThisTurn' },
+        },
+      ];
+  }
   // "~ deals 5 damage to each creature without flying" (Ryusei) / "it deals 3 damage to â€¦"
   // (Thunder Dragon â€” "it" is the source, both cards' triggers being self-subjected).
   // "~ deals X damage to each creature without flying and each player" (Earthquake).
