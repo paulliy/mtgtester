@@ -5478,12 +5478,9 @@ test('Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird', async (
 
 test('Vigean Graftmage: graft a counter, then untap a creature that has one', async ({ page }) => {
   await runScenario(page, 'Vigean Graftmage: graft a counter, then untap a creature that has one');
-  const graftmage = handCard(page, 'Vigean Graftmage');
-  await expect(graftmage).toHaveClass(/actionable/, { timeout: 15_000 });
-  await graftmage.click();
-  await expect(page.getByText(/Auto-pay/)).toBeVisible();
-  await confirm(page);
-  await passUntil(page, permanent(page, 'Vigean Graftmage'));
+  // Pass only while something is on the stack: a pass with an empty stack would leave the main
+  // phase before Lab Servo is cast.
+  await castAndResolve(page, 'Vigean Graftmage');
   // It enters with both counters already on it: a 2/2, and its own entry grafts nothing.
   await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×2')).toBeVisible();
   await expect(permanent(page, 'Vigean Graftmage').getByText('2/2')).toBeVisible();
@@ -5500,7 +5497,8 @@ test('Vigean Graftmage: graft a counter, then untap a creature that has one', as
   const use = page.getByText(/use this ability/i).first();
   await passUntil(page, use);
   await page.getByRole('button', { name: 'Yes', exact: true }).click();
-  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×1'));
+  // Answering finishes the trigger's resolution; passing again here would leave the main phase.
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×1')).toBeVisible();
   await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×1')).toBeVisible();
   await expect(permanent(page, 'Vigean Graftmage').getByText('1/1')).toBeVisible();
   await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
