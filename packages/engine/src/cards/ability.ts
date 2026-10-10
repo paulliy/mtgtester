@@ -543,6 +543,30 @@ export type Effect =
       action: 'sacrifice' | 'exile';
     }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
+  /**
+   * "When this creature dies, ... put those counters on target creature you control" (Iron
+   * Apprentice): every counter the ability's own source last had (CR 603.10a), each kind and
+   * number, through counter-placement replacements.
+   */
+  | { op: 'transferCountersFromSource'; target: EffectRef }
+  /**
+   * "Move a +1/+1 counter from this creature onto it" (Graft, CR 702.58a): remove up to `count`
+   * counters of the kind from `from` and put that many on `to` (CR 122.5), so counter-placement
+   * replacements apply to the second half. If either object is gone, nothing moves.
+   */
+  | { op: 'moveCounters'; from: EffectRef; to: EffectRef; counter: string; count: number }
+  /**
+   * "Bolster N" (CR 701.39a): as it resolves, the controller chooses a creature with the least
+   * toughness among creatures they control and puts N +1/+1 counters on it. Not a target.
+   */
+  | { op: 'bolster'; count: number }
+  /**
+   * "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten
+   * Ancient): the controller divides as many of the source's counters as they like among
+   * permanents matching `selector`, then they all move at once — one placement per recipient, so
+   * a counter-placement replacement applies once to each creature, not once per counter.
+   */
+  | { op: 'distributeCountersFromSource'; counter: string; selector: Selector }
   | { op: 'mayPayLifeForTriggerPowerAndCounter' }
   | { op: 'vindictiveLichModes' }
   | { op: 'returnExiledAttachedCard' }
@@ -645,6 +669,17 @@ export type Effect =
    * priority window in between; if it could not be sacrificed, nothing triggers.
    */
   | { op: 'sacrificeSourceThenReflexive'; then: Ability }
+  /**
+   * "You may pay {R}{G}{W}{U}. When you do, …" (The Thing) — a reflexive trigger (CR 603.12) on a
+   * payment made while this ability resolves. Paying fires `then`, which goes on the stack as its
+   * own ability and announces its own targets then (CR 603.3d); declining fires nothing.
+   */
+  | { op: 'mayPayManaThenReflexive'; cost: ParsedManaCost; then: Ability }
+  /**
+   * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
+   * counters were actually put on the source — not if it left the battlefield first.
+   */
+  | { op: 'putCountersOnSourceThenReflexive'; counter: string; count: number; then: Ability }
   | { op: 'gainControlTarget'; target: EffectRef }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
@@ -736,7 +771,7 @@ export type Effect =
    * `executeAbility` call and is 0 if nothing in this ability lost anyone life.
    */
   | { op: 'gainLifeEqualToLifeLostThisWay' }
-  | { op: 'eachOpponentDamage'; amount: number } // damage from source to each opponent
+  | { op: 'eachOpponentDamage'; amount: number | Value } // damage from source to each opponent
   /** "This land deals 1 damage to you" — damage from the source to its own controller. */
   | { op: 'damageController'; amount: number }
   /** "It deals 5 damage to each creature without flying" — the untargeted mass form. */
@@ -956,6 +991,10 @@ export type Effect =
   | { op: 'selfToLibraryTop' }
   | { op: 'putCountersEachChosen'; targetSlot: number; counter: string; count: Value | number }
   | { op: 'grantKeywordEachChosenUntilEot'; targetSlot: number; keyword: KeywordAbility }
+  /** "Double the number of each kind of counter on any number of target permanents" (The Thing). */
+  | { op: 'doubleCountersEachChosen'; targetSlot: number }
+  /** "… and up to one other target creature you control can't be blocked this turn" (Lockjaw). */
+  | { op: 'cantBeBlockedEachChosen'; targetSlot: number }
   | { op: 'untapUpTo'; selector: Selector; max: number }
   | { op: 'exileEachChosen'; targetSlot: number }
   /**
@@ -1002,6 +1041,18 @@ export type Effect =
    * lists, rather than a card-specific op. `condition` is read at RESOLUTION (its board state
    * must be current then, not at announcement).
    */
+  | {
+      /**
+       * "You gain 1 life if this is the first time this ability has resolved this turn. If it's
+       * the second time, draw a card." (Belladonna Took) / "scry 1. If this is the second time
+       * …, draw a card instead." (Rumor Gatherer): counts this resolution, then runs the case
+       * for that count, or `otherwise`. `key` names the ability within its card.
+       */
+      op: 'byResolutionCountThisTurn';
+      key: string;
+      cases: { n: number; effects: Effect[] }[];
+      otherwise: Effect[];
+    }
   | {
       op: 'conditionalEffect';
       condition: Condition;
@@ -1354,7 +1405,13 @@ export type ObjectTriggerWhen =
    * zone. `leavesTo` narrows it to destinations ("is put into exile from the battlefield").
    */
   | 'leavesBattlefield'
-  | 'transformsInto';
+  | 'transformsInto'
+  /**
+   * "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
+   * event per placement, including a permanent entering with counters (CR 122.6). `counter`
+   * narrows it to one kind.
+   */
+  | 'countersPut';
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
@@ -1403,6 +1460,17 @@ export type TriggerHead =
        * instead of the attacker's controller.
        */
       defendingPlayerIsEventPlayer?: true;
+      /**
+       * Battalion: "whenever ~ and at least two other creatures attack" — part of the attack
+       * event, counted among the attackers declared with it, not an intervening-if (CR 603.4).
+       */
+      withOtherAttackers?: number;
+      /** `countersPut`: only a placement that includes this counter kind. */
+      counter?: string;
+      /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
+      byYou?: true;
+      /** "This ability triggers only once each turn." */
+      oncePerTurn?: true;
     }
   /**
    * "Whenever you cast a Dragon spell" — the subject is a spell on the stack, so it is matched

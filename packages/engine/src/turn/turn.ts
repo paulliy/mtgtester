@@ -45,6 +45,7 @@ function untapStep(ctx: GameContext): void {
     player.cardsDrawnThisDrawStep = 0;
     player.spellsCastThisTurn = 0;
     player.noncreatureSpellsCastThisTurn = 0;
+    delete player.spellsCastThisTurnRecords;
     player.playFromZoneTypeUsesThisTurn = {};
   }
   ctx.state.excessDamageControllerIds = [];
@@ -52,6 +53,7 @@ function untapStep(ctx: GameContext): void {
   ctx.state.lifeLostThisTurn = {};
   ctx.state.combatDamagePlayersBySource = {};
   ctx.state.creaturesDiedThisTurn = 0;
+  delete ctx.state.abilityResolutionsThisTurn;
   ctx.state.combatDamagePrevention = { all: false, players: {} };
   ctx.state.lifeFloorPlayers = {};
   ctx.state.creaturesCantBeBlockedThisTurn = false;
@@ -62,6 +64,7 @@ function untapStep(ctx: GameContext): void {
   // this clears for every permanent on the battlefield — not just the active player's.
   for (const perm of ctx.state.battlefield) {
     perm.activationsThisTurn = [];
+    if (perm.triggeredOnceThisTurn !== undefined) delete perm.triggeredOnceThisTurn;
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
     perm.mustBlockThisTurn = false;
     // CR 701.15a: a goad requirement lasts until the next turn of the player who caused it.

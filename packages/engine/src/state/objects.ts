@@ -1615,6 +1615,8 @@ export interface TriggerEventSubject {
   sourceControllerId?: PlayerId;
   /** `leavesBattlefield`: the zone this permanent went to. */
   toZone?: Zone;
+  /** `countersPut`: the counter kinds this placement put on the permanent. */
+  counterKinds?: readonly string[];
 }
 
 /**
@@ -1746,7 +1748,7 @@ export function queueTriggersForEvent(
   const sources = [...ctx.state.battlefield, ...missing];
 
   for (const source of sources) {
-    for (const ability of triggersOf(ctx, source)) {
+    for (const [abilityIndex, ability] of triggersOf(ctx, source).entries()) {
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       // A graveyard-only ability does not function on the battlefield (CR 112.6).
@@ -1774,6 +1776,14 @@ export function queueTriggersForEvent(
           if (s.toZone !== 'graveyard' && s.toZone !== 'exile') return false;
           if (!spec.leavesTo.includes(s.toZone)) return false;
         }
+        if (
+          'counter' in spec &&
+          spec.counter !== undefined &&
+          !(s.counterKinds ?? []).includes(spec.counter)
+        )
+          return false;
+        if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
+          return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -1803,6 +1813,14 @@ export function queueTriggersForEvent(
                 ).values(),
               ]
             : matched.map((s) => [s]);
+      // Battalion: the other creatures declared as attackers alongside this one (CR 508.1).
+      if (
+        'withOtherAttackers' in spec &&
+        spec.withOtherAttackers !== undefined &&
+        subjects.filter((subject) => subject.permanent.id !== source.id).length <
+          spec.withOtherAttackers
+      )
+        continue;
       // "if none of them were cast or no mana was spent to cast them" — judged over the firing.
       const firings =
         'entersWithoutManaSpentToCast' in spec && spec.entersWithoutManaSpentToCast === true
@@ -1861,6 +1879,13 @@ export function queueTriggersForEvent(
           ) {
             debug(ctx, 'stack', `trigger not queued: ${source.name} � intervening-if false`);
             continue;
+          }
+          // "This ability triggers only once each turn": the object's first firing this turn is
+          // the only one, even within one simultaneous event. An effect that makes that firing
+          // trigger additional times still adds its copies.
+          if ('oncePerTurn' in spec && spec.oncePerTurn === true && copy === 0) {
+            if (source.triggeredOnceThisTurn?.includes(abilityIndex) === true) break;
+            source.triggeredOnceThisTurn = [...(source.triggeredOnceThisTurn ?? []), abilityIndex];
           }
           const amounts = group.filter((s) => s.amount !== undefined);
           const scope: TriggerScope = {
@@ -2003,6 +2028,28 @@ export function queueTriggersForEvent(
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter(
       (delayed) => !firedDelayedIds.has(delayed.id),
     );
+  // A permanent that enters with counters has had them put on it (CR 122.6), by its controller
+  // unless an effect says otherwise (CR 122.6a): one placement for each entering permanent.
+  if (when === 'enters') {
+    queueTriggersForEvent(
+      ctx,
+      'countersPut',
+      subjects.flatMap((subject) => {
+        const counterKinds = Object.entries(subject.permanent.counters)
+          .filter(([, count]) => count > 0)
+          .map(([counter]) => counter);
+        return counterKinds.length === 0
+          ? []
+          : [
+              {
+                permanent: subject.permanent,
+                playerId: subject.permanent.controllerId,
+                counterKinds,
+              },
+            ];
+      }),
+    );
+  }
 }
 
 /**
@@ -2117,6 +2164,12 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
 
   const caster = playerById(ctx, spell.controllerId);
   caster.spellsCastThisTurn += 1;
+  // Addendum: "if you cast this spell during your main phase" is a fact of the cast itself.
+  if (
+    ctx.state.currentTurnPlayer === caster.id &&
+    (ctx.state.phase === 'precombatMain' || ctx.state.phase === 'postcombatMain')
+  )
+    spell.castDuringOwnMainPhase = true;
   // A spell's type is read off its printed characteristics — it is on the stack, not the
   // battlefield, so the layer engine has produced nothing for it (CR 608.2 has not run yet).
   if (!def.types.includes('Creature')) caster.noncreatureSpellsCastThisTurn += 1;
@@ -2138,6 +2191,18 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
     enteredThisTurn: false,
   };
   const manaValue = spellManaValue(def, spell.announcedX);
+  const castThisTurn = (caster.spellsCastThisTurnRecords ??= []);
+  castThisTurn.push({ objectId: spell.sourceId, candidate, manaValue });
+  // "Your fourth NONCREATURE spell each turn" numbers the spells that match the filter, not
+  // every spell cast: a creature spell cast first does not use up "first noncreature".
+  const ordinalMatches = (
+    spec: Extract<TriggerSpec, { when: 'castsSpell' }>,
+    from: SelectorSource,
+  ): boolean =>
+    spec.ordinal === undefined ||
+    castThisTurn.filter(
+      (record) => spec.filter === undefined || selectMatches(record.candidate, spec.filter, from),
+    ).length === spec.ordinal;
 
   for (const source of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, source)) {
@@ -2149,13 +2214,16 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       const isController = spell.controllerId === source.controllerId;
       if (spec.caster === 'you' && !isController) continue;
       if (spec.caster === 'opponent' && isController) continue;
-      if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
       if (!castFromMatches(spec, spell)) continue;
 
       const from: SelectorSource = {
         cardId: source.cardId,
+        objectId: source.id,
         controllerId: source.controllerId,
         eventPlayerId: spell.controllerId,
+        ...(spell.triggerScope?.manaSpent !== undefined
+          ? { manaSpent: spell.triggerScope.manaSpent }
+          : {}),
         attachedToCardId:
           source.attachedTo === null
             ? null
@@ -2164,6 +2232,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
       // layered characteristics to compute — the candidate above is already the whole answer.
       if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+      if (!ordinalMatches(spec, from)) continue;
       if (spec.targetFilter !== undefined) {
         const hasMatchingTarget = spell.targets.some((targetId) => {
           const target = ctx.state.battlefield.find(
@@ -2189,6 +2258,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }
@@ -2213,7 +2283,6 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         const isController = spell.controllerId === card.ownerId;
         if (spec.caster === 'you' && !isController) continue;
         if (spec.caster === 'opponent' && isController) continue;
-        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
         if (!castFromMatches(spec, spell)) continue;
         const from: SelectorSource = {
           cardId: card.cardId,
@@ -2222,6 +2291,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           eventPlayerId: spell.controllerId,
         };
         if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        if (!ordinalMatches(spec, from)) continue;
         // No graveyard-functioning card watches a spell's targets; fail closed rather than fire.
         if (spec.targetFilter !== undefined) continue;
         if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
@@ -2234,6 +2304,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }
@@ -2255,7 +2326,6 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
         const isController = spell.controllerId === emblem.controllerId;
         if (spec.caster === 'you' && !isController) continue;
         if (spec.caster === 'opponent' && isController) continue;
-        if (spec.ordinal !== undefined && caster.spellsCastThisTurn !== spec.ordinal) continue;
         if (!castFromMatches(spec, spell)) continue;
         const from: SelectorSource = {
           cardId: emblem.id,
@@ -2263,6 +2333,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           eventPlayerId: spell.controllerId,
         };
         if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        if (!ordinalMatches(spec, from)) continue;
         // No emblem watches a spell's targets; fail closed rather than fire.
         if (spec.targetFilter !== undefined) continue;
         if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
@@ -2274,6 +2345,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
           ability,
           scope: {
             spellManaValue: manaValue,
+            spellColorCount: candidate.colors.length,
             eventPlayerId: spell.controllerId,
             ...(spell.triggerScope?.manaSpent !== undefined
               ? { manaSpent: spell.triggerScope.manaSpent }

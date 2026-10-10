@@ -55,6 +55,9 @@ export interface SelectorCandidate {
   powerUnknown?: boolean;
   /** Current toughness. Only `toughnessAtLeast` reads it — see the module comment. */
   toughness?: number;
+  /** Power and toughness after layer 7b (CR 613.4b), for `basePowerToughness`. */
+  basePower?: number;
+  baseToughness?: number;
   /** Current keywords. Only `hasKeyword` reads them — see the module comment. */
   keywords: readonly string[];
   /** Mana value (CR 202.3), read by `manaValueAtMost`/`manaValueAtLeast`. Absent when the
@@ -106,6 +109,8 @@ export interface SelectorSource {
   triggerObjectCardId?: string;
   /** Player whose action caused the event, for event-relative conditions. */
   eventPlayerId?: string;
+  /** Mana spent to cast the spell a cast trigger is about, for `compareValues` (Increment). */
+  manaSpent?: number;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
   chosenOption?: string;
   /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */
@@ -145,6 +150,17 @@ export type Selector =
   /** EVENT-ONLY (see the module comment): "with power 2 or less". */
   | { kind: 'powerAtMost'; n: number }
   | { kind: 'toughnessAtLeast'; n: number }
+  /**
+   * EVENT-ONLY: "with base power and toughness 1/1" (Bess, Soul Nourisher) — power and toughness
+   * after characteristic-defining and setting effects (layers 7a-7b), before counters and
+   * modifications (CR 208.1, 613.4).
+   */
+  | { kind: 'basePowerToughness'; power: number; toughness: number }
+  /**
+   * EVENT-ONLY: "with power greater than its base power" (Kutzil, Malamet Exemplar) — current
+   * power above the layer 7b value (CR 613.4b), so counters or a pump raised it.
+   */
+  | { kind: 'powerGreaterThanBase' }
   /**
    * EVENT-ONLY: "with equal or lesser power" than the ability's source (Body Launderer) — its
    * current power, or its last-known power once it has left the battlefield (CR 608.2h). An
@@ -246,6 +262,8 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'powerAtMost':
     case 'powerAtMostSource':
     case 'toughnessAtLeast':
+    case 'basePowerToughness':
+    case 'powerGreaterThanBase':
     case 'hasKeyword':
     case 'inCombat':
     case 'attackingEventPlayer':
@@ -340,6 +358,12 @@ export function selectMatches(
       return (candidate.counters?.[selector.counter] ?? 0) > 0;
     case 'toughnessAtLeast':
       return candidate.toughness !== undefined && candidate.toughness >= selector.n;
+    case 'basePowerToughness':
+      return (
+        candidate.basePower === selector.power && candidate.baseToughness === selector.toughness
+      );
+    case 'powerGreaterThanBase':
+      return candidate.basePower !== undefined && candidate.power > candidate.basePower;
     case 'manaValueAtMost':
       return candidate.manaValue !== undefined && candidate.manaValue <= selector.n;
     case 'manaValueAtLeast':

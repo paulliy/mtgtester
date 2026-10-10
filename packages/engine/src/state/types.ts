@@ -35,6 +35,7 @@ import type {
   KeywordAbility,
 } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
+import type { SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -119,6 +120,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * activation, and a permanent that leaves and returns is a new object with a clean slate.
    */
   activationsThisTurn: number[];
+  /**
+   * Indexes (into its triggered abilities) of "This ability triggers only once each turn"
+   * abilities that have triggered this turn. Cleared every turn; a new object starts empty.
+   */
+  triggeredOnceThisTurn?: number[];
   /** Exhaust abilities (by index) this object has already activated (CR 702.177). */
   exhaustedAbilities?: number[];
   /**
@@ -176,6 +182,14 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
 }
 
 /** Non-battlefield engine object living in graveyard/exile with 903.9a bookkeeping. */
+/** One spell a player cast this turn (see `EnginePlayerState.spellsCastThisTurnRecords`). */
+export interface CastSpellRecord {
+  /** The spell's object id on the stack, so "other spells" can leave out exactly this one. */
+  objectId: ObjectId;
+  candidate: SelectorCandidate;
+  manaValue: number;
+}
+
 /**
  * How a spell was cast (CR 601.2): who cast it, the zone it was cast from and the mana spent on
  * it. Carried by the spell's card and by the permanent that spell becomes, and by nothing after
@@ -231,6 +245,8 @@ export interface EngineCardObject extends EngineObject, CastRecord {
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  /** Addendum (Unbreakable Formation): cast during a main phase of its caster's own turn. */
+  castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
   sourceFacts?: ObjectFacts;
   /** Internal CR 601 proposal; never triggers a cast until payment finalizes. */
@@ -359,6 +375,13 @@ export interface EnginePlayerState extends PlayerState {
   spellsCastThisTurn: number;
   /** Of those, the ones that were not creature spells ("you've cast a noncreature spell"). */
   noncreatureSpellsCastThisTurn: number;
+  /**
+   * Those spells in cast order, by their characteristics as cast: "your fourth noncreature spell
+   * each turn" (The Fantasticar), "the total mana value of other spells you've cast this turn"
+   * (Call Forth the Tempest), "colors among … spells you've cast this turn" (First Family).
+   * Cleared at the start of each turn.
+   */
+  spellsCastThisTurnRecords?: CastSpellRecord[];
   /** Muldrotha-style graveyard play uses, keyed by the permanent type spent. */
   playFromZoneTypeUsesThisTurn: Record<string, number>;
   mulligansTaken: number;
@@ -534,6 +557,13 @@ export interface EngineState extends GameState {
   createdTokenThisTurn: Record<PlayerId, boolean>;
   /** Number of creatures put into graveyards this turn. */
   creaturesDiedThisTurn: number;
+  /**
+   * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
+   * times each counted ability has resolved this turn, keyed by the source's battlefield object
+   * id and the ability's key. A source that changes zones is a new object with a fresh count
+   * (CR 400.7). Cleared at the start of each turn.
+   */
+  abilityResolutionsThisTurn?: Record<string, number>;
   /** Combat-damage replacement shields used by Darkness-style effects this turn. */
   combatDamagePrevention: {
     all: boolean;

@@ -626,19 +626,36 @@
     "4b8736e2-fc41-4a25-bb6c-7351afc40981": {
       "name": "Pensive Professor",
       "oracleSha256": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "pensive-professor-increment",
           "oracleText": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
-          "implementation": ["explicitly unsupported; Increment is claimed without a keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Increment keyword: a trigger on you casting a spell, with an intervening-if that the mana spent on that spell is greater than this creature's power or its toughness (anyOf), rechecked on resolution (CR 603.4); the effect puts one +1/+1 counter on this creature. A spell cast for no mana, or by an opponent, adds nothing"
+          ],
+          "engineTestIds": [
+            "pensive-professor-pinned-oracle-supported",
+            "pensive-professor-increment-grows-and-draws",
+            "pensive-professor-increment-threshold",
+            "pensive-professor-increment-no-mana",
+            "pensive-professor-increment-your-spells",
+            "pensive-professor-increment-rechecked"
+          ],
+          "viewerScenarioIds": ["pensive-professor-viewer-increment-draw"]
         },
         {
+          "id": "pensive-professor-counters-draw",
           "oracleText": "Whenever one or more +1/+1 counters are put on this creature, draw a card.",
-          "implementation": ["explicitly unsupported; authored as a dealtDamage trigger"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted countersPut trigger on this creature for +1/+1 counters: it fires once per batch of counters put on it, not once per counter, and not for other counter kinds; the effect draws a card"
+          ],
+          "engineTestIds": [
+            "pensive-professor-pinned-oracle-supported",
+            "pensive-professor-increment-grows-and-draws",
+            "pensive-professor-counters-draw-once"
+          ],
+          "viewerScenarioIds": ["pensive-professor-viewer-increment-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1086,13 +1103,39 @@
     "4c209165-a159-4cd7-8e99-1e533d3a22a6": {
       "name": "Vigean Graftmage",
       "oracleSha256": "dd42fa4af6fe68996fc19d54535d43d6ef28cc4915fe353b5d36a6451a592e9b",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "vigean-graftmage-graft",
           "oracleText": "Graft 2",
-          "implementation": ["explicitly unsupported; Graft is not an implemented keyword"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters-with replacement effect (CR 614.1c, CR 702.58a): the permanent enters already carrying two +1/+1 counters (entersWithCounters), so it is a 2/2 and does not trigger its own Graft",
+            "optional trigger on another creature entering under any player's control, with the keyword's intervening-if that this creature has a +1/+1 counter (sourceHasCounters); moveCounters removes one +1/+1 counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and nothing moves if either object has left the battlefield"
+          ],
+          "engineTestIds": [
+            "vigean-graftmage-pinned-oracle-supported",
+            "vigean-graftmage-enters-with-two",
+            "vigean-graftmage-graft-moves-a-counter",
+            "vigean-graftmage-graft-any-creature",
+            "vigean-graftmage-graft-may-decline",
+            "vigean-graftmage-graft-needs-a-counter",
+            "vigean-graftmage-graft-creature-gone",
+            "vigean-graftmage-graft-last-counter-spent",
+            "vigean-graftmage-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["vigean-graftmage-viewer-graft-and-untap"]
+        },
+        {
+          "id": "vigean-graftmage-untap",
+          "oracleText": "{1}{U}: Untap target creature with a +1/+1 counter on it.",
+          "implementation": [
+            "activated ability costing {1}{U} whose creature target is filtered to creatures with a +1/+1 counter on them (hasCounter), so a creature with no counter is never offered; the effect untaps the target"
+          ],
+          "engineTestIds": [
+            "vigean-graftmage-pinned-oracle-supported",
+            "vigean-graftmage-untap-needs-a-counter"
+          ],
+          "viewerScenarioIds": ["vigean-graftmage-viewer-graft-and-untap"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3381,15 +3424,34 @@
     "7388a797-d40d-4783-a281-d17bc159b856": {
       "name": "Sautekh Immortal",
       "oracleSha256": "26aff26dc163a5d13ad98195d74dcfd5d2260ab0cfad68928b3ac90c457ec21a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sautekh-immortal-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted): castable at instant speed"],
+          "engineTestIds": [
+            "sautekh-immortal-pinned-oracle-supported",
+            "sautekh-immortal-counts-every-death"
+          ],
+          "viewerScenarioIds": ["sautekh-immortal-viewer-flash-counters"]
+        },
+        {
+          "id": "sautekh-immortal-elite-troops",
           "oracleText": "This creature enters with a +1/+1 counter on it for each creature that died this turn.",
           "implementation": [
-            "explicitly unsupported; enters-with implemented as an enters trigger"
+            "interpreted enters-with replacement effect (CR 614.1c), not a trigger: the permanent enters already carrying counters equal to the creatures that died this turn (entersWithCounters creaturesDiedThisTurn)",
+            "the count reads the turn's death history when the permanent enters, so it applies to a cast and to any other way onto the battlefield and ignores deaths from earlier turns"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "sautekh-immortal-pinned-oracle-supported",
+            "sautekh-immortal-counts-every-death",
+            "sautekh-immortal-no-deaths",
+            "sautekh-immortal-counts-as-it-enters",
+            "sautekh-immortal-any-entry",
+            "sautekh-immortal-this-turn-only"
+          ],
+          "viewerScenarioIds": ["sautekh-immortal-viewer-flash-counters"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3474,15 +3536,30 @@
     "295cd8e1-0830-46c1-9957-556afd4bcee6": {
       "name": "Aetheric Amplifier",
       "oracleSha256": "22243544923ec334e7ae37b5b5e30c9d3ba8372ba0dea881bcd3f07387177be6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "{4}, {T}: Choose one. Activate only as a sorcery.",
+          "id": "aetheric-amplifier-mana",
+          "oracleText": "{T}: Add one mana of any color.",
+          "implementation": ["interpreted tap mana ability producing one mana of any color"],
+          "engineTestIds": ["aetheric-amplifier-pinned-oracle-supported"],
+          "viewerScenarioIds": ["aetheric-amplifier-viewer-double-counters"]
+        },
+        {
+          "id": "aetheric-amplifier-modal-double",
+          "oracleText": "{4}, {T}: Choose one. Activate only as a sorcery.\n• Double the number of each kind of counter on target permanent.\n• Double the number of each kind of counter you have.",
           "implementation": [
-            "explicitly unsupported; choose-one authored as two independent activations"
+            "interpreted as one sorcery-speed activated ability with a choose-one mode block (CR 700.2) costing {4} and tapping it, offered once per mode, so the mode is chosen as the ability is activated",
+            "the permanent mode takes one permanent target and its doubleCountersTarget effect adds as many counters of each kind as are already there; the player mode has no target and its doublePlayerCounters effect doubles only your own counters (energy, poison and so on), never an opponent's"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "aetheric-amplifier-pinned-oracle-supported",
+            "aetheric-amplifier-one-activation-per-mode",
+            "aetheric-amplifier-doubles-permanent-counters",
+            "aetheric-amplifier-doubles-your-counters",
+            "aetheric-amplifier-sorcery-speed"
+          ],
+          "viewerScenarioIds": ["aetheric-amplifier-viewer-double-counters"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5092,15 +5169,37 @@
     "cd0c8db0-67ee-483b-8298-455cce35fef7": {
       "name": "Iron Apprentice",
       "oracleSha256": "46fcccb41b003c4e811243f737759ceade7e071cb7fc8852b48df71a94e0d680",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "This creature enters with a +1/+1 counter on it.\nWhen this creature dies, if it had counters on it, put those counters on target creature you control.",
+          "id": "iron-apprentice-enters-with-counter",
+          "oracleText": "This creature enters with a +1/+1 counter on it.",
           "implementation": [
-            "explicitly unsupported; dies intervening-if checks the battlefield after this creature has left"
+            "interpreted enters-with replacement effect (CR 614.1c), not a trigger: the permanent enters already carrying one +1/+1 counter (entersWithCounters)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "iron-apprentice-pinned-oracle-supported",
+            "iron-apprentice-enters-with-a-counter",
+            "iron-apprentice-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["iron-apprentice-viewer-dies-moves-counters"]
+        },
+        {
+          "id": "iron-apprentice-dies-move-counters",
+          "oracleText": "When this creature dies, if it had counters on it, put those counters on target creature you control.",
+          "implementation": [
+            "dies trigger targeting a creature you control (never an opponent's); the intervening-if (sourceMatches hasAnyCounter) reads the dead creature's last-known counters (CR 603.10a), so it triggers only if it had counters",
+            "transferCountersFromSource puts each kind and number of the counters it had on the target through addCounters, so counter replacements apply; with no legal target the trigger is removed and the counters are lost"
+          ],
+          "engineTestIds": [
+            "iron-apprentice-pinned-oracle-supported",
+            "iron-apprentice-dies-moves-every-counter",
+            "iron-apprentice-no-counters-no-trigger",
+            "iron-apprentice-only-your-creatures",
+            "iron-apprentice-no-target",
+            "iron-apprentice-counter-replacements-apply"
+          ],
+          "viewerScenarioIds": ["iron-apprentice-viewer-dies-moves-counters"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -8253,6 +8352,517 @@
             "victimize-returns-together"
           ],
           "viewerScenarioIds": ["victimize-viewer-sacrifice-and-return"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b90af42d-edb6-4654-b7dc-10f0f272c883": {
+      "name": "Elite Scaleguard",
+      "oracleSha256": "f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "elite-scaleguard-bolster",
+          "oracleText": "When this creature enters, bolster 2.",
+          "implementation": [
+            "interpreted self enters trigger whose bolster effect (CR 701.39a) puts N +1/+1 counters on a creature with the least toughness among the creatures its controller controls, through addCounters so counter replacements apply",
+            "the creature is a choice made on resolution, not a target: a unique least-toughness creature is picked without a prompt, a tie lets the controller choose, and Elite Scaleguard itself is a candidate (it bolsters itself when alone or least tough)"
+          ],
+          "engineTestIds": [
+            "elite-scaleguard-pinned-oracle-supported",
+            "elite-scaleguard-bolster-least-toughness",
+            "elite-scaleguard-bolster-tie-is-a-choice",
+            "elite-scaleguard-bolster-itself"
+          ],
+          "viewerScenarioIds": ["elite-scaleguard-viewer-bolster-and-tap"]
+        },
+        {
+          "id": "elite-scaleguard-attack-tap",
+          "oracleText": "Whenever a creature you control with a +1/+1 counter on it attacks, tap target creature defending player controls.",
+          "implementation": [
+            "interpreted watched-creature attacks head on creatures its controller controls that have a +1/+1 counter, so an attacker without a counter or an opponent's attacker triggers nothing",
+            "the tap target is a creature controlled by the player the attacker is attacking (defendingPlayerIsEventPlayer, target controller eventPlayer), and each such attacker triggers once"
+          ],
+          "engineTestIds": [
+            "elite-scaleguard-pinned-oracle-supported",
+            "elite-scaleguard-attack-taps-defenders-creature",
+            "elite-scaleguard-attack-needs-a-counter",
+            "elite-scaleguard-attack-each-attacker"
+          ],
+          "viewerScenarioIds": ["elite-scaleguard-viewer-bolster-and-tap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2ef75cf3-30dc-4852-a6d1-1d6391fad022": {
+      "name": "Forgotten Ancient",
+      "oracleSha256": "4024f52e734af98755f7494ab043fed6e9a7e9288ffb2fa538b8e0735ddb7d86",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "forgotten-ancient-cast-counter",
+          "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.",
+          "implementation": [
+            "interpreted castsSpell trigger for every caster (caster each), so a spell cast by any player, including its controller, triggers it",
+            "the trigger is optional: its controller is asked whether to use the ability and the counter is put on Forgotten Ancient only on yes"
+          ],
+          "engineTestIds": [
+            "forgotten-ancient-pinned-oracle-supported",
+            "forgotten-ancient-any-player-casts"
+          ],
+          "viewerScenarioIds": ["forgotten-ancient-viewer-cast-and-move"]
+        },
+        {
+          "id": "forgotten-ancient-upkeep-move",
+          "oracleText": "At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+          "implementation": [
+            "interpreted upkeep trigger for its controller only whose distributeCountersFromSource effect has the controller assign +1/+1 counters one at a time to other creatures (any controller, never itself or a noncreature) or stop with Move no more counters, so any number from none to all may move",
+            "the assigned counters then move together, one placement per recipient (CR 122.5), so a counter-doubling replacement such as Hardened Scales applies once to each creature rather than once per counter"
+          ],
+          "engineTestIds": [
+            "forgotten-ancient-upkeep-divides",
+            "forgotten-ancient-may-move-none",
+            "forgotten-ancient-other-creatures-only",
+            "forgotten-ancient-moves-together",
+            "forgotten-ancient-your-upkeep-only"
+          ],
+          "viewerScenarioIds": ["forgotten-ancient-viewer-cast-and-move"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a86117c1-b83d-4350-9a10-a23b7e67e1bd": {
+      "name": "Mikey & Leo, Chaos & Order",
+      "oracleSha256": "0c68ed59f882ea595ee50cbc36912ca70b5b4d5ef1a56bc503e3c532d2bd3b5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "mikey-and-leo-counter-draw",
+          "oracleText": "Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.",
+          "implementation": [
+            "interpreted countersPut trigger whose byYou filter matches only counters its controller puts, on a creature that controller controls (an effect of theirs, or a creature of theirs entering with counters, CR 122.6a), of any counter kind",
+            "the trigger's oncePerTurn limit lets it trigger a single time each turn; a counter an opponent puts on your creature, or that you put on theirs, neither triggers it nor uses up the limit"
+          ],
+          "engineTestIds": [
+            "mikey-and-leo-pinned-oracle-supported",
+            "mikey-and-leo-you-put-a-counter-draws",
+            "mikey-and-leo-once-each-turn",
+            "mikey-and-leo-any-counter-kind",
+            "mikey-and-leo-entering-with-counters",
+            "mikey-and-leo-not-theirs"
+          ],
+          "viewerScenarioIds": ["mikey-and-leo-viewer-counter-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "df72b5d6-6f9e-4d6b-acf6-7dec4ff35468": {
+      "name": "Bess, Soul Nourisher",
+      "oracleSha256": "00655037d7422a06b8926f8538613d5998a3c10bd7cdf633b10aa75e91e592d9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "bess-soul-nourisher-enters-counter",
+          "oracleText": "Whenever one or more other creatures you control with base power and toughness 1/1 enter, put a +1/+1 counter on Bess.",
+          "implementation": [
+            "interpreted aggregate enters trigger: creatures entering together are one batch and give one counter, however many of them there are",
+            "the creature filter matches on printed (base) power and toughness 1/1, not current, so a base-1/1 that enters with a counter counts and a printed 2/2 or an opponent's 1/1 does not; Bess is a 1/1 but is not an other creature, so her own entry does not count"
+          ],
+          "engineTestIds": [
+            "bess-soul-nourisher-pinned-oracle-supported",
+            "bess-soul-nourisher-one-counter-per-batch",
+            "bess-soul-nourisher-base-not-current",
+            "bess-soul-nourisher-not-itself"
+          ],
+          "viewerScenarioIds": ["bess-soul-nourisher-viewer-counter-and-pump"]
+        },
+        {
+          "id": "bess-soul-nourisher-attack-pump",
+          "oracleText": "Whenever Bess attacks, each other creature you control with base power and toughness 1/1 gets +X/+X until end of turn, where X is the number of +1/+1 counters on Bess.",
+          "implementation": [
+            "interpreted attacks trigger on Bess whose pumpEachUntilEot effect gives every other creature its controller owns with base 1/1 +X/+X until end of turn, with X the +1/+1 counters on Bess",
+            "X is fixed as the trigger resolves, so Bess later losing counters does not change the pump; the base filter ignores counters and other modifications, so a base-1/1 carrying counters is pumped too"
+          ],
+          "engineTestIds": [
+            "bess-soul-nourisher-pinned-oracle-supported",
+            "bess-soul-nourisher-attack-pump"
+          ],
+          "viewerScenarioIds": ["bess-soul-nourisher-viewer-counter-and-pump"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c8de07d4-9bc1-4bfe-b5a4-0a58e05af022": {
+      "name": "The Thing",
+      "oracleSha256": "dec568f46ce9c8621a6b2415d420f8b28d7a761f7a8d2c118642fc04c78b2792",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "the-thing-trample",
+          "oracleText": "Trample",
+          "implementation": ["keyword trample (interpreted)"],
+          "engineTestIds": ["the-thing-pinned-oracle-supported"],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        },
+        {
+          "id": "the-thing-combat-counters",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put four +1/+1 counters on The Thing.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on its controller's turn with an intervening-if that its controller has cast at least one noncreature spell this turn (checked on trigger and on resolution, CR 603.4); the effect puts four +1/+1 counters on The Thing, and nothing happens on a turn with only creature spells or none"
+          ],
+          "engineTestIds": ["the-thing-pinned-oracle-supported", "the-thing-combat-counters"],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        },
+        {
+          "id": "the-thing-paid-double",
+          "oracleText": "Whenever The Thing attacks, you may pay {R}{G}{W}{U}. When you do, double the number of each kind of counter on any number of target permanents you control.",
+          "implementation": [
+            "interpreted attacks trigger whose effect lets its controller pay {R}{G}{W}{U} as it resolves; only paying creates the reflexive trigger, so declining or being unable to pay asks for no targets",
+            "the reflexive trigger lets its controller choose any number (including none) of permanents they control one at a time, never an opponent's, then doubles every kind of counter on each chosen permanent through the counter-adding path so replacements apply"
+          ],
+          "engineTestIds": [
+            "the-thing-pinned-oracle-supported",
+            "the-thing-pay-then-double",
+            "the-thing-decline-no-trigger",
+            "the-thing-cannot-pay"
+          ],
+          "viewerScenarioIds": ["the-thing-viewer-counters-and-double"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5efce07e-24c4-4520-a46f-9954b67c4e6e": {
+      "name": "Lockjaw, Slobbering Teleporter",
+      "oracleSha256": "c6552c5158eb975d6f921d85bb1c65dc4428f800b2d7d96d1cf753bb8060052a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "lockjaw-vigilance",
+          "oracleText": "Vigilance",
+          "implementation": ["keyword vigilance (interpreted)"],
+          "engineTestIds": ["lockjaw-pinned-oracle-supported"],
+          "viewerScenarioIds": ["lockjaw-viewer-counter-and-unblockable"]
+        },
+        {
+          "id": "lockjaw-combat-unblockable",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, put a +1/+1 counter on Lockjaw. When you do, Lockjaw and up to one other target creature you control can't be blocked this turn.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on its controller's turn with an intervening-if that its controller has cast at least one noncreature spell this turn (CR 603.4); the effect puts a +1/+1 counter on Lockjaw and, only if Lockjaw is still there to receive it, creates the reflexive \"when you do\" trigger",
+            "the reflexive trigger makes Lockjaw unblockable until end of turn, and lets its controller choose up to one other creature they control (none is allowed, never Lockjaw or an opponent's creature) that can't be blocked this turn either"
+          ],
+          "engineTestIds": [
+            "lockjaw-pinned-oracle-supported",
+            "lockjaw-counter-then-unblockable",
+            "lockjaw-up-to-one",
+            "lockjaw-needs-noncreature-spell",
+            "lockjaw-no-counter-no-trigger"
+          ],
+          "viewerScenarioIds": ["lockjaw-viewer-counter-and-unblockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "011da9c5-aa8a-4fa0-b1f2-62b9f3760476": {
+      "name": "Belladonna Took",
+      "oracleSha256": "65b2c91a9085899dbe7b631298e7cc2893a867f894c885688c34f3a4d2c5525d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "belladonna-took-token-resolutions",
+          "oracleText": "Whenever a token you control enters, you gain 1 life if this is the first time this ability has resolved this turn. If it's the second time, draw a card. If it's the third time, put a +1/+1 counter on each creature you control.",
+          "implementation": [
+            "interpreted enters trigger for tokens its controller controls (an opponent's tokens never trigger it); one effect branches on how many times this ability has resolved this turn, counting the current resolution",
+            "first resolution gains 1 life, second draws a card, third puts a +1/+1 counter on each creature its controller controls at that moment (a token that just entered included, never an opponent's creature), and any later resolution that turn does nothing; the count resets each turn"
+          ],
+          "engineTestIds": [
+            "belladonna-took-pinned-oracle-supported",
+            "belladonna-took-first-second-third",
+            "belladonna-took-your-tokens-only",
+            "belladonna-took-count-resets"
+          ],
+          "viewerScenarioIds": ["belladonna-took-viewer-three-tokens"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3ceca713-38de-4428-a4f1-2146f6e98393": {
+      "name": "Rumor Gatherer",
+      "oracleSha256": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "rumor-gatherer-alliance",
+          "oracleText": "Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead.",
+          "implementation": [
+            "interpreted enters trigger for another creature its controller controls (Rumor Gatherer entering itself, or an opponent's creature, never triggers it); one effect branches on how many times this ability has resolved this turn, counting the current resolution",
+            "the second resolution draws a card instead of scrying (no scry prompt is shown for it); every other resolution scries 1, so the first and third each scry"
+          ],
+          "engineTestIds": [
+            "rumor-gatherer-pinned-oracle-supported",
+            "rumor-gatherer-second-draws-instead",
+            "rumor-gatherer-another-creature"
+          ],
+          "viewerScenarioIds": ["rumor-gatherer-viewer-scry-then-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "32c14d7f-fdaa-4340-af94-1f10bf064f51": {
+      "name": "Crystal, Inhuman Princess",
+      "oracleSha256": "8a355e5c6a459e628aff3fb7c22a648424b60a76abf57295153c83289528c385",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "crystal-inhuman-princess-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["crystal-inhuman-princess-pinned-oracle-supported"],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        },
+        {
+          "id": "crystal-inhuman-princess-colors-damage",
+          "oracleText": "Whenever you cast a noncreature spell, Crystal deals X damage to each opponent, where X is the number of colors that spell is.",
+          "implementation": [
+            "interpreted castsSpell trigger for its controller's noncreature spells (their creature spells and an opponent's spells never trigger it)",
+            "the eachOpponentDamage effect deals X to each opponent, with X the number of colors of the spell that was cast (spellColorCount), so a colorless spell deals none and a two-color spell deals 2 whatever its mana value"
+          ],
+          "engineTestIds": [
+            "crystal-inhuman-princess-pinned-oracle-supported",
+            "crystal-inhuman-princess-colors-of-spell",
+            "crystal-inhuman-princess-colorless",
+            "crystal-inhuman-princess-noncreature-yours"
+          ],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        },
+        {
+          "id": "crystal-inhuman-princess-mana",
+          "oracleText": "{T}: Add {R}, {G}, {W}, or {U}.",
+          "implementation": [
+            "interpreted tap mana ability producing one mana of red, green, white or blue"
+          ],
+          "engineTestIds": ["crystal-inhuman-princess-pinned-oracle-supported"],
+          "viewerScenarioIds": ["crystal-inhuman-princess-viewer-colors-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0623c51a-e829-413f-a3a0-817c0902821e": {
+      "name": "Call Forth the Tempest",
+      "oracleSha256": "c48b93c22b22cbd4fc9fdac7bb9504e1651e7a9025e5e3bf58d675be756241f6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "call-forth-the-tempest-cascade",
+          "oracleText": "Cascade, cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom of your library in a random order. Then do it again.)",
+          "implementation": [
+            "interpreted cascade keyword twice: two cast triggers, each exiling until a nonland card with lesser mana value and offering a free cast, so the spells they cast count as spells cast this turn"
+          ],
+          "engineTestIds": [
+            "call-forth-the-tempest-pinned-oracle-supported",
+            "call-forth-the-tempest-cascades-count"
+          ],
+          "viewerScenarioIds": ["call-forth-the-tempest-viewer-other-spells-damage"]
+        },
+        {
+          "id": "call-forth-the-tempest-other-spells-damage",
+          "oracleText": "Call Forth the Tempest deals damage to each creature your opponents control equal to the total mana value of other spells you've cast this turn.",
+          "implementation": [
+            "interpreted spell effect damaging every creature controlled by an opponent by manaValueOfOtherSpellsCastThisTurn: the sum of the mana values of the spells its controller has cast this turn, excluding Call Forth the Tempest itself, whether cast before it or by its own cascades; an opponent's spells never count and the controller's own creatures are not hit"
+          ],
+          "engineTestIds": [
+            "call-forth-the-tempest-pinned-oracle-supported",
+            "call-forth-the-tempest-other-spells-total",
+            "call-forth-the-tempest-yours-only",
+            "call-forth-the-tempest-cascades-count"
+          ],
+          "viewerScenarioIds": ["call-forth-the-tempest-viewer-other-spells-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e119c709-bf9d-451e-827b-9787d455029a": {
+      "name": "First Family",
+      "oracleSha256": "e81f7767b10c31b9b2a8751591afe24d39f155ca1780fd55ddcb03f805ce4a64",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "first-family-draw-gain-colors",
+          "oracleText": "You draw X cards and gain X life, where X is the number of colors among permanents you control and spells you've cast this turn.",
+          "implementation": [
+            "interpreted spell effect that draws X cards and gains X life with one shared X: the number of distinct colors among the permanents its controller controls and the spells they have cast this turn, each color counted once however many sources share it",
+            "First Family is itself a spell cast this turn (green and blue), so X is at least 2 even with nothing else; an opponent's permanents and spells add nothing"
+          ],
+          "engineTestIds": [
+            "first-family-pinned-oracle-supported",
+            "first-family-counts-itself",
+            "first-family-permanents-and-spells",
+            "first-family-yours-only"
+          ],
+          "viewerScenarioIds": ["first-family-viewer-colors-draw-gain"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "97435e03-2fff-4fe0-8fa9-69ab0a046a33": {
+      "name": "Unbreakable Formation",
+      "oracleSha256": "c0032b5882eac2dab751071f0e153e44f6a893f674fca87ab09b69e8ff7ecc22",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "unbreakable-formation-indestructible",
+          "oracleText": "Creatures you control gain indestructible until end of turn.",
+          "implementation": [
+            "interpreted spell effect granting indestructible until end of turn to each creature its controller controls as it resolves; creatures that enter later and an opponent's creatures do not get it"
+          ],
+          "engineTestIds": [
+            "unbreakable-formation-pinned-oracle-supported",
+            "unbreakable-formation-main-phase",
+            "unbreakable-formation-not-main-phase"
+          ],
+          "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
+        },
+        {
+          "id": "unbreakable-formation-addendum",
+          "oracleText": "Addendum — If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn.",
+          "implementation": [
+            "interpreted conditional on the spell having been cast during its controller's own main phase (recorded when it is cast, so a copy, a cast on an opponent's turn and a cast in combat do not qualify); when it holds, the same creatures get a +1/+1 counter each and vigilance until end of turn"
+          ],
+          "engineTestIds": [
+            "unbreakable-formation-pinned-oracle-supported",
+            "unbreakable-formation-main-phase",
+            "unbreakable-formation-not-main-phase"
+          ],
+          "viewerScenarioIds": ["unbreakable-formation-viewer-addendum-main-phase"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9b0abb58-4e2c-45dc-99b1-61a4cb79354b": {
+      "name": "The Fantasticar",
+      "oracleSha256": "182d86221fe07659b0bee9b3ec6363bd9666aeaefa4ddb31c86ac781cc32e606",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "the-fantasticar-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["the-fantasticar-pinned-oracle-supported"],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        },
+        {
+          "id": "the-fantasticar-animate",
+          "oracleText": "Whenever you cast a noncreature spell, you may have The Fantasticar become an artifact creature until end of turn.",
+          "implementation": [
+            "interpreted optional castsSpell trigger for its controller's noncreature spells: on yes, The Fantasticar becomes an artifact creature (keeping its printed 4/4 and flying) until end of turn, and on no it stays a Vehicle"
+          ],
+          "engineTestIds": ["the-fantasticar-pinned-oracle-supported", "the-fantasticar-animate"],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        },
+        {
+          "id": "the-fantasticar-fourth-noncreature-sacrifice",
+          "oracleText": "Whenever you cast your fourth noncreature spell each turn, you may sacrifice The Fantasticar. If you do, create four 4/4 colorless Construct artifact creature tokens with flying and haste.",
+          "implementation": [
+            "interpreted optional castsSpell trigger limited to the fourth noncreature spell its controller casts this turn (creature spells and earlier or later spells do not count); the spell that makes it fire also fires the animate trigger, and the controller orders the two",
+            "the effect sacrifices The Fantasticar and, only if it was sacrificed, creates four 4/4 colorless Construct artifact creature tokens with flying and haste; declining creates nothing, and a fifth noncreature spell does not trigger it again"
+          ],
+          "engineTestIds": [
+            "the-fantasticar-pinned-oracle-supported",
+            "the-fantasticar-fourth-noncreature",
+            "the-fantasticar-decline-and-fifth"
+          ],
+          "viewerScenarioIds": ["the-fantasticar-viewer-fourth-noncreature"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3233af43-7826-4895-b67e-03c6102c2cd5": {
+      "name": "Kutzil, Malamet Exemplar",
+      "oracleSha256": "57d13b3c3e5284079d246751145b8de3e74f83fb584b80df956a5b620956a242",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kutzil-malamet-exemplar-cast-lock",
+          "oracleText": "Your opponents can't cast spells during your turn.",
+          "implementation": [
+            "interpreted static restriction from the Oracle sentence: while Kutzil is on the battlefield, no opponent of its controller is offered a spell to cast during its controller's turn, but they may still cast spells on their own turn and activate abilities"
+          ],
+          "engineTestIds": [
+            "kutzil-malamet-exemplar-pinned-oracle-supported",
+            "kutzil-malamet-exemplar-cast-lock"
+          ],
+          "viewerScenarioIds": ["kutzil-malamet-exemplar-viewer-above-base-draw"]
+        },
+        {
+          "id": "kutzil-malamet-exemplar-above-base-draw",
+          "oracleText": "Whenever one or more creatures you control each with power greater than its base power deals combat damage to a player, draw a card.",
+          "implementation": [
+            "interpreted dealsCombatDamageToPlayer trigger over creatures its controller controls whose current power is greater than their base power (so a +1/+1 counter qualifies and a creature at base power does not), aggregated per damaged player",
+            "creatures dealing damage together to one player draw one card; damage to two different players triggers it once for each player"
+          ],
+          "engineTestIds": [
+            "kutzil-malamet-exemplar-pinned-oracle-supported",
+            "kutzil-malamet-exemplar-above-base-draws",
+            "kutzil-malamet-exemplar-once-per-player"
+          ],
+          "viewerScenarioIds": ["kutzil-malamet-exemplar-viewer-above-base-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "69924636-138e-4baa-a378-0fd7df5b847d": {
+      "name": "Finneas, Ace Archer",
+      "oracleSha256": "00e1495e7bebbf263cf6809022878d58016492044ae18a32f092274897ded028",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "finneas-ace-archer-keywords",
+          "oracleText": "Reach, vigilance",
+          "implementation": ["keywords reach and vigilance (interpreted)"],
+          "engineTestIds": ["finneas-ace-archer-pinned-oracle-supported"],
+          "viewerScenarioIds": ["finneas-ace-archer-viewer-counters-then-draw"]
+        },
+        {
+          "id": "finneas-ace-archer-attack-counters-draw",
+          "oracleText": "Whenever Finneas attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power 10 or greater, draw a card.",
+          "implementation": [
+            "interpreted attacks trigger on Finneas whose first effect puts one +1/+1 counter on each other creature its controller controls that is a token or has the Rabbit subtype (never Finneas itself, other creatures, or an opponent's creatures)",
+            "then, checked after the counters are on, a conditional draws a card if the total power of creatures its controller controls is 10 or greater, so the counters can themselves reach the threshold"
+          ],
+          "engineTestIds": [
+            "finneas-ace-archer-pinned-oracle-supported",
+            "finneas-ace-archer-tokens-and-rabbits",
+            "finneas-ace-archer-total-power-draw"
+          ],
+          "viewerScenarioIds": ["finneas-ace-archer-viewer-counters-then-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e9566303-15cf-4444-a044-fc19540f21b6": {
+      "name": "Captain America, Skybound",
+      "oracleSha256": "e0fd42e6696204ae8cdbd23b1b5a9576da3ee8573327710106c2726512fa023b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "captain-america-skybound-keywords",
+          "oracleText": "Flying, vigilance",
+          "implementation": ["keywords flying and vigilance (interpreted)"],
+          "engineTestIds": ["captain-america-skybound-pinned-oracle-supported"],
+          "viewerScenarioIds": ["captain-america-skybound-viewer-battalion"]
+        },
+        {
+          "id": "captain-america-skybound-battalion",
+          "oracleText": "Battalion — Whenever Captain America and at least two other creatures attack, put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn.",
+          "implementation": [
+            "interpreted attacks trigger on Captain America that fires only when at least two other creatures are attacking with it (withOtherAttackers 2), so it does not fire with one other attacker, nor when others attack without it",
+            "the effect puts one +1/+1 counter on each attacking creature and grants those same creatures indestructible until end of turn; a creature that stayed home gets neither"
+          ],
+          "engineTestIds": [
+            "captain-america-skybound-pinned-oracle-supported",
+            "captain-america-skybound-battalion",
+            "captain-america-skybound-needs-two-others"
+          ],
+          "viewerScenarioIds": ["captain-america-skybound-viewer-battalion"]
         }
       ],
       "gameplayAiScenarioIds": []

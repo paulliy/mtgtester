@@ -504,7 +504,7 @@
         "optional": true,
         "targets": [],
         "trigger": {
-          "aggregate": true,
+          "aggregate": "byEventPlayer",
           "subject": {
             "kind": "permanent",
             "selector": {

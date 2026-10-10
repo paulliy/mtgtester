@@ -51,6 +51,8 @@ export function queueSpellCopy(
       ? {}
       : { optionalCostCounts: { ...original.optionalCostCounts } }),
   };
+  // Addendum asks whether the spell was CAST in a main phase; a copy was never cast.
+  delete copy.castDuringOwnMainPhase;
   ctx.state.stack.push(copy);
   return copy;
 }

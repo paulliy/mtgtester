@@ -88,11 +88,17 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       }
       return count;
     }
-    case 'colorsAmongPermanents': {
+    case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn': {
       const colors = new Set<string>();
       for (const perm of ctx.state.battlefield) {
         if (perm.controllerId !== scope.controllerId) continue;
         for (const color of computeCharacteristics(ctx, perm).colors) colors.add(color);
+      }
+      if (value.kind === 'colorsAmongPermanentsAndSpellsCastThisTurn') {
+        const caster = ctx.state.players.find((player) => player.id === scope.controllerId);
+        for (const record of caster?.spellsCastThisTurnRecords ?? [])
+          for (const color of record.candidate.colors) colors.add(color);
       }
       return colors.size;
     }
@@ -155,6 +161,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return scope.triggerCount ?? 1;
     case 'spellManaValue':
       return scope.spellManaValue ?? 0;
+    case 'spellColorCount':
+      return scope.spellColorCount ?? 0;
     case 'manaSpent':
       return scope.manaSpent ?? 0;
     case 'treasureManaSpent':
@@ -267,6 +275,13 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'attackingCreatures':
       return ctx.state.battlefield.filter((permanent) => permanent.attacking !== null).length;
+    case 'manaValueOfOtherSpellsCastThisTurn':
+      return (
+        ctx.state.players.find((player) => player.id === scope.controllerId)
+          ?.spellsCastThisTurnRecords ?? []
+      )
+        .filter((record) => record.objectId !== scope.sourceObjectId)
+        .reduce((total, record) => total + record.manaValue, 0);
     case 'spellsCastThisTurn':
       return (
         ctx.state.players.find((player) => player.id === scope.controllerId)?.spellsCastThisTurn ??

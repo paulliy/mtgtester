@@ -26,6 +26,7 @@ export function triggerEventFamily(
     case 'leavesGraveyard':
     case 'leavesBattlefield':
     case 'transformsInto':
+    case 'countersPut':
       return 'object';
     case 'castsSpell':
       return 'cast';
@@ -95,6 +96,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'leavesGraveyard':
     case 'leavesBattlefield':
     case 'transformsInto':
+    case 'countersPut':
       return false;
     default:
       return assertNever(when, 'event player dispatcher');
@@ -127,6 +129,10 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'entersWithoutManaSpentToCast',
           'leavesTo',
           'defendingPlayerIsEventPlayer',
+          'withOtherAttackers',
+          'counter',
+          'byYou',
+          'oncePerTurn',
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
@@ -168,6 +174,17 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({
         path: `${path}.entersUntapped`,
         message: 'untapped entry restriction requires an enters event',
+      });
+    if (
+      head['withOtherAttackers'] !== undefined &&
+      (head['when'] !== 'attacks' ||
+        typeof head['withOtherAttackers'] !== 'number' ||
+        !Number.isInteger(head['withOtherAttackers']) ||
+        head['withOtherAttackers'] < 1)
+    )
+      issues.push({
+        path: `${path}.withOtherAttackers`,
+        message: 'an attacker-count requirement needs an attacks event and a positive count',
       });
     if (
       head['entersWithoutManaSpentToCast'] !== undefined &&
@@ -216,6 +233,21 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.defendingPlayerIsEventPlayer`,
         message: 'defending player requires an attacks event',
       });
+    if (
+      head['counter'] !== undefined &&
+      (typeof head['counter'] !== 'string' || head['when'] !== 'countersPut')
+    )
+      issues.push({
+        path: `${path}.counter`,
+        message: 'a counter kind requires a countersPut event',
+      });
+    if (head['byYou'] !== undefined && (head['byYou'] !== true || head['when'] !== 'countersPut'))
+      issues.push({
+        path: `${path}.byYou`,
+        message: 'a placing player requires a countersPut event',
+      });
+    if (head['oncePerTurn'] !== undefined && head['oncePerTurn'] !== true)
+      issues.push({ path: `${path}.oncePerTurn`, message: 'once each turn is a flag' });
   } else if (family === 'cast') {
     if (!['you', 'opponent', 'each'].includes(head['caster'] as string))
       issues.push({

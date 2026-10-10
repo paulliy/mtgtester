@@ -17,6 +17,7 @@ Subagents run on Sonnet or Haiku only. Never spawn one on Opus. The main thread 
 Delegate when a task would read many files or produce output the main thread doesn't need. Do small lookups inline.
 
 Limits (prompt rules):
+
 - Haiku tasks: one bounded question with a known search area, e.g. "find where `Ward` is handled in `packages/engine/src/cards/`". No open-ended surveys.
 - Grep before reading, read only matching ranges, stop after about 15 files, and report what remains if the limit is hit.
 - Returns: at most about 15 bullets, each `path:line - finding`.

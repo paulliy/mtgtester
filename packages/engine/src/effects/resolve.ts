@@ -1,12 +1,12 @@
 import { counterCount, setCounterCount } from '../state/counters';
 import type { ObjectFacts } from '../cards/source-identity';
-import { eventObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
-import { permanentManaValue, targetCandidates, targetIsLegal } from '../targets/legality';
+import { permanentManaValue, targetIsLegal } from '../targets/legality';
 import { captureResolutionTargets, type ResolutionTargets } from '../targets/resolution';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -894,6 +894,42 @@ function protectedFromCounter(ctx: GameContext, entry: EngineStackObject): boole
 const signed = (n: number): string => `${n >= 0 ? '+' : ''}${n}`;
 
 /**
+ * "Double the number of each kind of counter you have": every player counter kind, energy and
+ * poison as well as the named ones such as experience (CR 122.1, 122.8). Each kind that grows is
+ * logged as proliferate logs it.
+ */
+function doubleEachPlayerCounter(
+  ctx: GameContext,
+  source: EffectSource,
+  player: EnginePlayerState,
+  actorId: PlayerId,
+): void {
+  const logCounter = (counter: string, added: number, total: number) =>
+    emit(
+      ctx,
+      'counters',
+      { source: source.name, target: player.id, counter, added, total },
+      actorId,
+    );
+  const energy = player.energy;
+  if (energy > 0) {
+    player.energy = energy * 2;
+    emit(ctx, 'energy', { player: player.id, amount: energy, total: player.energy }, actorId);
+  }
+  const poison = player.poisonCounters;
+  if (poison > 0) {
+    player.poisonCounters = poison * 2;
+    logCounter('poison', poison, player.poisonCounters);
+  }
+  const named = player.counters ?? {};
+  for (const [kind, have] of Object.entries(named)) {
+    if (have <= 0) continue;
+    named[kind] = have * 2;
+    logCounter(kind, have, have * 2);
+  }
+}
+
+/**
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
  */
@@ -903,8 +939,8 @@ function addCounters(
   perm: EnginePermanent,
   counter: string,
   count: number,
-): void {
-  if (count <= 0) return;
+): number {
+  if (count <= 0) return 0;
   const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
   const before = counterCount(perm.counters, counter);
   setCounterCount(perm.counters, counter, counterCount(perm.counters, counter) + adjustedCount);
@@ -916,6 +952,10 @@ function addCounters(
     added: adjustedCount,
     total: counterCount(perm.counters, counter),
   });
+  if (adjustedCount > 0)
+    queueTriggersForEvent(ctx, 'countersPut', [
+      { permanent: perm, playerId: source.controllerId, counterKinds: [counter] },
+    ]);
   const def = ctx.defs.get(perm.oracleId);
   for (const threshold of def?.counterThresholdTriggers ?? []) {
     if (
@@ -936,6 +976,7 @@ function addCounters(
       });
     }
   }
+  return adjustedCount;
 }
 
 /**
@@ -1140,6 +1181,7 @@ export function* executeAbility(
               source.resolvingStackObject.kicked === true,
             announcedX: source.resolvingStackObject.announcedX ?? 0,
             escaped: source.resolvingStackObject.escaped === true,
+            castDuringOwnMainPhase: source.resolvingStackObject.castDuringOwnMainPhase === true,
           },
         }),
     ...(targets !== undefined ? { targets } : {}),
@@ -1462,6 +1504,20 @@ export function* executeAbility(
           kind: 'cantBeBlocked',
           timestamp: ctx.state.nextTimestamp++,
         });
+        break;
+      }
+      case 'cantBeBlockedEachChosen': {
+        const chosen = legalChosenPermanents(effect.targetSlot);
+        if (chosen.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${chosen.map((permanent) => permanent.name).join(', ')} can't be blocked this turn`,
+            targetCardIds: chosen.map((permanent) => permanent.cardId),
+            kind: 'cantBeBlocked',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
         break;
       }
       case 'grantKeywordUntilEot': {
@@ -2366,6 +2422,13 @@ export function* executeAbility(
         }
         break;
       }
+      case 'doubleCountersEachChosen':
+        for (const perm of legalChosenPermanents(effect.targetSlot)) {
+          for (const [counter, count] of Object.entries(perm.counters)) {
+            if (count > 0) addCounters(ctx, source, perm, counter, count);
+          }
+        }
+        break;
       case 'doubleCountersEach':
         for (const perm of affectedBy(ctx, source, effect.selector)) {
           for (const [counter, count] of Object.entries(perm.counters)) {
@@ -2509,15 +2572,14 @@ export function* executeAbility(
         lifeLostThisWay += before - target.life;
         break;
       }
-      case 'eachOpponentDamage':
-        for (const opp of opponentsOf(ctx, controller.id)) {
-          dealDamageToPlayer(ctx, source, opp, effect.amount, {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
-        }
+      case 'eachOpponentDamage': {
+        // The source's own lifelink and infect apply, last-known if it has left (CR 702.15b,
+        // 702.90b): the shared object path reads them, as for any other noncombat damage.
+        const amount = amountOf(effect.amount);
+        for (const opp of opponentsOf(ctx, controller.id))
+          dealDamageToObject(ctx, source, opp.id, amount);
         break;
+      }
       case 'damageEachCreatureController': {
         // This is intentionally one resolving effect. It deals one damage per creature, but
         // never creates one player decision/trigger per creature.
@@ -2982,6 +3044,38 @@ export function* executeAbility(
         yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
+      case 'mayPayManaThenReflexive':
+      case 'putCountersOnSourceThenReflexive': {
+        // CR 603.12: the reflexive ability triggers only on the action actually happening.
+        let done = false;
+        if (effect.op === 'mayPayManaThenReflexive') {
+          done = yield* resolveCondition(
+            ctx,
+            { kind: 'mayPayMana', cost: effect.cost },
+            {
+              ...scope,
+              cardId: source.cardId,
+              controllerId: source.controllerId,
+              ...(source.id === undefined ? {} : { objectId: source.id }),
+            },
+            source.name,
+          );
+        } else {
+          const perm = sourcePermanent();
+          done =
+            perm !== undefined && addCounters(ctx, source, perm, effect.counter, effect.count) > 0;
+        }
+        if (!done) break;
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability: effect.then,
+        });
+        break;
+      }
       case 'sacrificeSourceThenReflexive': {
         const perm = sourcePermanent();
         // Only a permanent you control can be sacrificed (CR 701.21a).
@@ -3128,6 +3222,97 @@ export function* executeAbility(
             );
           }
         }
+        break;
+      }
+      case 'transferCountersFromSource': {
+        const targetId = ref(effect.target);
+        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
+        const counters = sourceObjectFacts(ctx, scope)?.counters;
+        if (target !== undefined && counters !== undefined) {
+          for (const [counter, count] of Object.entries(counters))
+            addCounters(ctx, source, target, counter, count);
+        }
+        break;
+      }
+      case 'bolster': {
+        const creatures = ctx.state.battlefield.filter(
+          (perm) =>
+            perm.controllerId === controller.id &&
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+        );
+        if (creatures.length === 0) break;
+        const toughness = (perm: EnginePermanent) => effectivePT(ctx, perm).toughness;
+        const least = Math.min(...creatures.map(toughness));
+        const tied = creatures.filter((perm) => toughness(perm) === least);
+        const chosen =
+          tied.length === 1
+            ? tied[0]
+            : yield* chooseCard(ctx, {
+                player: controller.id,
+                prompt: `${source.name}: bolster ${effect.count} — choose a creature with the least toughness`,
+                cards: tied,
+                type: 'bolster',
+                verb: 'Bolster',
+              });
+        if (chosen !== null && chosen !== undefined)
+          addCounters(ctx, source, chosen, '+1/+1', effect.count);
+        break;
+      }
+      case 'distributeCountersFromSource': {
+        const selfId = ref('source');
+        const self = selfId === null ? undefined : findPermanent(ctx, selfId);
+        if (self === undefined) break;
+        const available = counterCount(self.counters, effect.counter);
+        const recipients = ctx.state.battlefield.filter(
+          (perm) =>
+            perm.id !== self.id &&
+            matchesSelector(ctx, perm, effect.selector, {
+              cardId: self.cardId,
+              objectId: self.id,
+              controllerId: self.controllerId,
+            }),
+        );
+        // Choose the whole division first (CR 122.5: the counters move together).
+        const assigned = new Map<string, number>();
+        let total = 0;
+        while (total < available && recipients.length > 0) {
+          const chosen = yield* chooseCard(ctx, {
+            player: controller.id,
+            prompt: `${source.name}: move a ${effect.counter} counter onto another creature (${available - total} left)`,
+            cards: recipients,
+            type: 'moveCounter',
+            verb: 'Move',
+            describe: (perm) =>
+              `Move a ${effect.counter} counter onto ${perm.name} (${(assigned.get(perm.id) ?? 0) + 1})`,
+            decline: { type: 'decline', description: 'Move no more counters', verb: 'Stop' },
+          });
+          if (chosen === null) break;
+          assigned.set(chosen.id, (assigned.get(chosen.id) ?? 0) + 1);
+          total++;
+        }
+        if (total === 0) break;
+        if (total === available) delete self.counters[effect.counter];
+        else setCounterCount(self.counters, effect.counter, available - total);
+        emit(ctx, 'removeCounter', { target: self.name, counter: effect.counter, count: total });
+        for (const [id, count] of assigned) {
+          const recipient = findPermanent(ctx, id);
+          if (recipient !== undefined) addCounters(ctx, source, recipient, effect.counter, count);
+        }
+        break;
+      }
+      case 'moveCounters': {
+        const fromId = ref(effect.from);
+        const toId = ref(effect.to);
+        const from = fromId === null ? undefined : findPermanent(ctx, fromId);
+        const to = toId === null ? undefined : findPermanent(ctx, toId);
+        if (from === undefined || to === undefined || from.id === to.id) break;
+        const present = counterCount(from.counters, effect.counter);
+        const moved = Math.min(present, effect.count);
+        if (moved <= 0) break;
+        if (moved === present) delete from.counters[effect.counter];
+        else setCounterCount(from.counters, effect.counter, present - moved);
+        emit(ctx, 'removeCounter', { target: from.name, counter: effect.counter, count: moved });
+        addCounters(ctx, source, to, effect.counter, moved);
         break;
       }
       case 'mayPayLifeForTriggerPowerAndCounter': {
@@ -4059,9 +4244,7 @@ export function* executeAbility(
         const player =
           t === null ? undefined : ctx.state.players.find((candidate) => candidate.id === t);
         if (player === undefined) break;
-        player.energy *= 2;
-        player.poisonCounters *= 2;
-        emit(ctx, 'energy', { amount: player.energy, total: player.energy }, player.id);
+        doubleEachPlayerCounter(ctx, source, player, controller.id);
         break;
       }
       case 'becomeCopyOf': {
@@ -4509,12 +4692,9 @@ export function* executeAbility(
         }
         break;
       }
-      case 'doublePlayerCounters': {
-        controller.energy *= 2;
-        controller.poisonCounters *= 2;
-        emit(ctx, 'energy', { amount: controller.energy, total: controller.energy }, controller.id);
+      case 'doublePlayerCounters':
+        doubleEachPlayerCounter(ctx, source, controller, controller.id);
         break;
-      }
       case 'shuffleHandGraveyardIntoLibrary': {
         const cards = [...controller.hand, ...controller.graveyard];
         controller.hand = [];
@@ -4729,6 +4909,26 @@ export function* executeAbility(
           const exiled = ctx.state.exile.find((card) => card.cardId === cardId);
           if (exiled !== undefined)
             yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: targetController });
+        }
+        break;
+      }
+      case 'byResolutionCountThisTurn': {
+        const counts = (ctx.state.abilityResolutionsThisTurn ??= {});
+        const id = `${source.id ?? source.cardId}:${effect.key}`;
+        const count = (counts[id] ?? 0) + 1;
+        counts[id] = count;
+        const chosen = effect.cases.find((entry) => entry.n === count)?.effects ?? effect.otherwise;
+        if (chosen.length > 0) {
+          yield* executeAbility(
+            ctx,
+            source,
+            { ...ability, effects: chosen },
+            targets,
+            triggerObjectCardId,
+            extraScope,
+            countTargets,
+            divisionAmounts,
+          );
         }
         break;
       }
@@ -7145,6 +7345,12 @@ export function* payAbilityCosts(
           },
           player.id,
         );
+        // A +N loyalty cost puts counters on the permanent (CR 606.4), so "whenever you put
+        // counters" triggers see it like any other placement.
+        if (adjustedDelta > 0)
+          queueTriggersForEvent(ctx, 'countersPut', [
+            { permanent: perm, playerId: player.id, counterKinds: ['loyalty'] },
+          ]);
         break;
       }
       case 'mana':

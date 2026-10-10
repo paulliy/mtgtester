@@ -48,14 +48,11 @@ const REASONS: Record<string, string> = {
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
-  'Pensive Professor':
-    'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
   'Siren Stormtamer':
     'Counter target is any stack object, not only spells or abilities that target you or your creature.',
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
-  'Vigean Graftmage': 'Graft is claimed without enters-with-counters or move-counter behavior.',
   'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
@@ -166,11 +163,9 @@ const REASONS: Record<string, string> = {
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
-  'Sautekh Immortal': 'Enters-with counters is implemented as an enters trigger.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
-  'Aetheric Amplifier': 'Choose-one is implemented as two independent activated abilities.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -209,8 +204,6 @@ const REASONS: Record<string, string> = {
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
-  'Iron Apprentice':
-    "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
@@ -301,6 +294,11 @@ describe('Marchesa catalog audit containment', () => {
     'Living Death',
     'Technomancer',
     'Body Launderer',
+    'Sautekh Immortal',
+    'Iron Apprentice',
+    'Vigean Graftmage',
+    'Pensive Professor',
+    'Aetheric Amplifier',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

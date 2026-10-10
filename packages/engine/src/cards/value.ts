@@ -67,6 +67,8 @@ export interface ValueScope {
   triggerCount?: number;
   /** Mana value of the spell that fired a `castsSpell` trigger (Lozhan). */
   spellManaValue?: number;
+  /** How many colors the spell that fired a `castsSpell` trigger is (Crystal, Inhuman Princess). */
+  spellColorCount?: number;
   /** Mana actually spent to cast the spell that fired a trigger (Aetherflux Conduit). */
   manaSpent?: number;
   /** Mana produced by Treasure permanents that was spent to cast the entering spell. */
@@ -117,6 +119,7 @@ export type TriggerScope = Pick<
   | 'damageDealt'
   | 'triggerCount'
   | 'spellManaValue'
+  | 'spellColorCount'
   | 'manaSpent'
   | 'treasureManaSpent'
   | 'eventPlayerId'
@@ -162,6 +165,11 @@ export type Value =
     }
   /** Number of distinct colors among permanents controlled by the resolving player. */
   | { kind: 'colorsAmongPermanents' }
+  /**
+   * "The number of colors among permanents you control and spells you've cast this turn" (First
+   * Family): one set of colors over both, the resolving spell included — it was cast this turn.
+   */
+  | { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' }
   /** Colored mana symbols in the mana costs of permanents controlled by the resolving player. */
   | { kind: 'devotionTo'; color: import('@mtg/shared').Color }
   /** Number of opponents of the resolving controller. */
@@ -185,6 +193,13 @@ export type Value =
   | { kind: 'triggerCount' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
+  /** "X is the number of colors that spell is" — read from the trigger's cast event. */
+  | { kind: 'spellColorCount' }
+  /**
+   * "The total mana value of other spells you've cast this turn" (Call Forth the Tempest): every
+   * spell the controller cast this turn except the resolving one (CR 202.3).
+   */
+  | { kind: 'manaValueOfOtherSpellsCastThisTurn' }
   | { kind: 'manaSpent' }
   | { kind: 'treasureManaSpent' }
   | { kind: 'energyPaid' }
@@ -248,6 +263,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'aurasYouControlAttachedToCreatures':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -260,6 +276,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -283,6 +300,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -306,6 +324,7 @@ export function needsScope(value: Value): boolean {
     case 'aurasYouControlAttachedToCreatures':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'devotionTo':
     case 'countOpponents':
     case 'greatestToughnessAmong':
@@ -318,6 +337,7 @@ export function needsScope(value: Value): boolean {
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -341,6 +361,7 @@ export function needsScope(value: Value): boolean {
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       return true;
     default:
@@ -446,6 +467,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'countPermanentsControlledByTarget':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
+    case 'colorsAmongPermanentsAndSpellsCastThisTurn':
     case 'countOpponents':
     case 'greatestToughnessAmong':
     case 'greatestPowerAmong':
@@ -457,6 +479,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'damageDealt':
     case 'triggerCount':
     case 'spellManaValue':
+    case 'spellColorCount':
     case 'manaSpent':
     case 'treasureManaSpent':
     case 'energyPaid':
@@ -477,6 +500,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'tappedCreaturesControlledByTarget':
     case 'attackingCreatures':
     case 'spellsCastThisTurn':
+    case 'manaValueOfOtherSpellsCastThisTurn':
     case 'countersOnTriggerObject':
       throw new Error(
         `engine bug: value "${value.kind}" needs a resolving ability's scope — use evaluateValueIn`,

@@ -5438,3 +5438,711 @@ test('Body Launderer: it dies and returns Lab Servo, not Lab Ox', async ({ page 
   await expect(permanent(page, 'Lab Servo')).toBeVisible();
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
 });
+
+test('Sautekh Immortal: two creatures died this turn, so it enters as a 4/4', async ({ page }) => {
+  await runScenario(page, 'Sautekh Immortal: two creatures died this turn, so it enters as a 4/4');
+  // Kill both of P2's creatures with real spells, letting each resolve before the next.
+  let doomResolutions = 0;
+  for (const victim of ['Lab Ox', 'Lab Servo']) {
+    const doom = handCard(page, 'Lab Doom').first();
+    await expect(doom).toHaveClass(/actionable/);
+    await doom.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, victim).click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await awaitResolution(page, 'Lab Doom', doomResolutions);
+    doomResolutions++;
+    await expect(permanent(page, victim)).toHaveCount(0);
+  }
+  const sautekh = handCard(page, 'Sautekh Immortal');
+  await expect(sautekh).toHaveClass(/actionable/);
+  await sautekh.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Sautekh Immortal'));
+  await expect(permanent(page, 'Sautekh Immortal')).toBeVisible();
+  await expect(permanent(page, 'Sautekh Immortal').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Sautekh Immortal').getByText('4/4')).toBeVisible();
+});
+
+test('Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird', async ({ page }) => {
+  await runScenario(page, 'Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird');
+  const apprentice = handCard(page, 'Iron Apprentice');
+  await expect(apprentice).toHaveClass(/actionable/, { timeout: 15_000 });
+  await apprentice.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Iron Apprentice'));
+  // It enters with its counter already on it: a 1/1, not an enters trigger.
+  await expect(permanent(page, 'Iron Apprentice').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Iron Apprentice').getByText('1/1')).toBeVisible();
+  await expect(permanent(page, 'Lab Bird').getByText('+1/+1×1')).toHaveCount(0);
+
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/);
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Iron Apprentice').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Bird is the only creature P1 controls, so the dies trigger needs no choice.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Iron Apprentice')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Bird').getByText('2/2')).toBeVisible();
+});
+
+test('Vigean Graftmage: graft a counter, then untap a creature that has one', async ({ page }) => {
+  await runScenario(page, 'Vigean Graftmage: graft a counter, then untap a creature that has one');
+  // Pass only while something is on the stack: a pass with an empty stack would leave the main
+  // phase before Lab Servo is cast.
+  await castAndResolve(page, 'Vigean Graftmage');
+  // It enters with both counters already on it: a 2/2, and its own entry grafts nothing.
+  await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Vigean Graftmage').getByText('2/2')).toBeVisible();
+  // The prepared Lab Ox starts tapped with one counter.
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toBeVisible();
+
+  const servo = handCard(page, 'Lab Servo');
+  await expect(servo).toHaveClass(/actionable/);
+  await servo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Another creature entered, so Graft asks whether to move a counter onto it.
+  const use = page.getByText(/use this ability/i).first();
+  await passUntil(page, use);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  // Answering finishes the trigger's resolution; passing again here would leave the main phase.
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Vigean Graftmage').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Vigean Graftmage').getByText('1/1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+
+  // Untap Lab Ox, which has a +1/+1 counter on it.
+  const untapped = page.getByText(/Untap target creature with a \+1\/\+1 counter on it\. resolves/);
+  await expect(permanent(page, 'Vigean Graftmage')).toHaveClass(/actionable/);
+  await permanent(page, 'Vigean Graftmage').click();
+  const ability = page.getByRole('button', { name: /Untap target creature/ });
+  if (await ability.isVisible()) await ability.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, untapped.first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+});
+
+test('Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+  );
+  const scaleguard = handCard(page, 'Elite Scaleguard');
+  await expect(scaleguard).toHaveClass(/actionable/, { timeout: 15_000 });
+  await scaleguard.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Elite Scaleguard'));
+  // Bolster 2 is not targeted: Lab Servo (toughness 1) is the only least-toughness creature.
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×2'));
+  await expect(permanent(page, 'Lab Servo').getByText('3/3')).toBeVisible();
+  await expect(permanent(page, 'Elite Scaleguard').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+
+  // Nothing is castable now, so priority passes and combat begins. Only Lab Servo can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Servo' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // The countered attacker's trigger taps Lab Ox (P2's only creature), so nothing blocks.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Lab Servo deals 3 to P2/).first()).toBeVisible();
+});
+
+test('Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep',
+  );
+  // Forgotten Ancient starts with two +1/+1 counters; it is a 2/5 with them.
+  await expect(permanent(page, 'Forgotten Ancient').getByText('+1/+1×2')).toBeVisible();
+  const shock = handCard(page, 'Lab Shock');
+  await expect(shock).toHaveClass(/actionable/, { timeout: 15_000 });
+  await shock.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Your own cast triggers it too: accept the optional counter.
+  const use = page.getByText(/use this ability/i).first();
+  await passUntil(page, use);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await passUntil(page, permanent(page, 'Forgotten Ancient').getByText('+1/+1×3'));
+
+  // At your upkeep, put one counter on each of two other creatures (either player's) and stop.
+  // Moving none is the decline, so there is no "use this ability?" prompt first.
+  // Each recipient is a card in the prompt with its own Move button; Forgotten Ancient is not one.
+  const moveOnto = (name: string) =>
+    page.locator('.panel-group').filter({ hasText: name }).getByRole('button', { name: 'Move' });
+  await passUntil(page, moveOnto('Lab Servo'));
+  await expect(page.locator('.panel-group').getByRole('button', { name: 'Move' })).toHaveCount(2);
+  await moveOnto('Lab Servo').click();
+  await passUntil(page, page.getByText(/\(2 left\)/).first());
+  await moveOnto('Lab Ox').click();
+  await passUntil(page, page.getByText(/\(1 left\)/).first());
+  await passUntil(page, page.getByRole('button', { name: 'Move no more counters' }));
+  await page.getByRole('button', { name: 'Move no more counters' }).click();
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Forgotten Ancient').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
+});
+
+test('Pensive Professor: Increment grows it, then the counter draws a card', async ({ page }) => {
+  await runScenario(page, 'Pensive Professor: Increment grows it, then the counter draws a card');
+  // The only card in hand is Lab Ripple, and nothing has been drawn yet.
+  await expect(handCard(page, 'Island')).toHaveCount(0);
+  const ripple = handCard(page, 'Lab Ripple');
+  await expect(ripple).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ripple.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // One mana beats the 0/3's power of 0: Increment puts a counter, and that counter draws a card.
+  await passUntil(page, permanent(page, 'Pensive Professor').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Pensive Professor').getByText('1/3')).toBeVisible();
+  await passUntil(page, handCard(page, 'Island'));
+  await expect(handCard(page, 'Island')).toHaveCount(1);
+  await expect(handCard(page, 'Lab Ripple')).toHaveCount(0);
+});
+
+test('Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card',
+  );
+  // Nothing has been drawn yet: the hand is the two Lab Grafts.
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(2);
+  await expect(handCard(page, 'Lab Ox').or(handCard(page, 'Lab Hex'))).toHaveCount(0);
+  const castOnServo = async () => {
+    const graft = handCard(page, 'Lab Graft').first();
+    await expect(graft).toHaveClass(/actionable/, { timeout: 15_000 });
+    await graft.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Lab Servo').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+  };
+
+  // The first counter you put on a creature you control draws a card.
+  await castOnServo();
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×1'));
+  const drawn = handCard(page, 'Lab Ox').or(handCard(page, 'Lab Hex'));
+  await passUntil(page, drawn);
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(1);
+  await expect(drawn).toHaveCount(1);
+
+  // The second counter the same turn does not: the ability triggers only once each turn.
+  await castOnServo();
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×2'));
+  await expect(handCard(page, 'Lab Graft')).toHaveCount(0);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(drawn).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});
+
+test('Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s',
+  );
+  await expect(permanent(page, 'Bess, Soul Nourisher').getByText('+1/+1')).toHaveCount(0);
+  const servo = handCard(page, 'Lab Servo');
+  await expect(servo).toHaveClass(/actionable/, { timeout: 15_000 });
+  await servo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Lab Servo is another base-1/1 creature entering: Bess gets one counter and is a 2/2.
+  await passUntil(page, permanent(page, 'Lab Servo'));
+  await passUntil(page, permanent(page, 'Bess, Soul Nourisher').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Bess, Soul Nourisher').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('1/1')).toBeVisible();
+
+  // Nothing is castable now, so priority passes and combat begins. Only Bess can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Bess, Soul Nourisher' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // Her attack trigger gives the other base-1/1 creature +1/+1 until end of turn.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  await expect(page.getByText(/Bess, Soul Nourisher deals 2 to P2/).first()).toBeVisible();
+});
+
+test('Aetheric Amplifier: double the counters on a target permanent', async ({ page }) => {
+  await runScenario(page, 'Aetheric Amplifier: double the counters on a target permanent');
+  // Lab Servo carries two +1/+1 counters and one charge counter; you have three energy.
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('3/3')).toBeVisible();
+  await expect(page.getByLabel('Global counters')).toContainText('3');
+
+  const amplifier = permanent(page, 'Aetheric Amplifier');
+  await expect(amplifier).toHaveClass(/actionable/, { timeout: 15_000 });
+  await amplifier.click();
+  // The choose-one is offered as one action per mode.
+  const permanentMode = page.getByRole('button', {
+    name: /double the number of each kind of counter on target permanent/i,
+  });
+  await expect(permanentMode).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /double the number of each kind of counter you have/i }),
+  ).toBeVisible();
+  await permanentMode.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Servo').click();
+  // The tray auto-pays the {4} as it confirms: one Confirm puts the ability on the stack.
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, permanent(page, 'Lab Servo').getByText('+1/+1×4'));
+  await expect(permanent(page, 'Lab Servo').getByText('5/5')).toBeVisible();
+  await expect(permanent(page, 'Aetheric Amplifier').locator('.tap-badge')).toHaveText('TAP');
+  // The mode only doubles the target's counters: your energy is unchanged.
+  await expect(page.getByLabel('Global counters')).toContainText('3');
+});
+
+test('The Thing: four counters after a noncreature spell, then pay to double counters', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'The Thing: four counters after a noncreature spell, then pay to double counters',
+  );
+  await expect(permanent(page, 'The Thing').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex').getByText('charge×1')).toBeVisible();
+
+  // A noncreature spell this turn: at the beginning of combat The Thing gets four counters.
+  await castAndResolve(page, 'Lab Ripple');
+  await passUntil(page, permanent(page, 'The Thing').getByText('+1/+1×4'));
+  await expect(permanent(page, 'The Thing').getByText('9/9')).toBeVisible();
+
+  // Only The Thing can attack.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'The Thing' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Pay {R}{G}{W}{U} with the other four lands, then choose the permanents to double.
+  const pay = page.getByRole('button', { name: /^Pay / });
+  await passUntil(page, pay);
+  await pay.click();
+  await passUntil(page, page.getByRole('button', { name: 'Choose no more targets' }));
+  await page.getByRole('button', { name: 'Target The Thing' }).click();
+  await page.getByRole('button', { name: 'Target Lab Hex' }).click();
+  await page.getByRole('button', { name: 'Choose no more targets' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'The Thing').getByText('+1/+1×8')).toBeVisible();
+  await expect(permanent(page, 'The Thing').getByText('13/13')).toBeVisible();
+  await expect(permanent(page, 'Lab Hex').getByText('charge×2')).toBeVisible();
+  await expect(page.getByText(/The Thing deals 13 to P2/).first()).toBeVisible();
+});
+
+test('Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+  );
+  await expect(permanent(page, 'Lockjaw, Slobbering Teleporter').getByText('1/1')).toBeVisible();
+  await castAndResolve(page, 'Lab Ripple');
+
+  // At the beginning of combat Lockjaw gets a counter, then its reflexive trigger asks for up to
+  // one other creature: choose Lab Servo.
+  await passUntil(page, page.getByRole('button', { name: 'Target Lab Servo' }));
+  await expect(
+    permanent(page, 'Lockjaw, Slobbering Teleporter').getByText('+1/+1×1'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+
+  // Both creatures attack P2, and Lab Ox is never asked to block either of them.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Lockjaw, Slobbering Teleporter', 'Lab Servo']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByRole('button', { name: /Declare blockers/ })).toHaveCount(0);
+  await expect(
+    page.getByText(/Lockjaw, Slobbering Teleporter deals 2 to P2/).first(),
+  ).toBeVisible();
+  await expect(page.getByText(/Lab Servo deals 1 to P2/).first()).toBeVisible();
+  await expect(permanent(page, 'Lockjaw, Slobbering Teleporter').locator('.tap-badge')).toHaveCount(
+    0,
+  );
+});
+
+test('Belladonna Took: three tokens give life, then a card, then a counter on each creature', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(3);
+
+  const castForge = async (servos: number) => {
+    const forge = handCard(page, 'Lab Token Forge').first();
+    await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+    await forge.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+    // Identical tokens share one tile with a count.
+    await passUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  };
+
+  // First resolution: gain 1 life.
+  await castForge(1);
+  await passUntil(page, page.locator('.log .line', { hasText: /gains 1 life/ }).first());
+  await expect(hand).toHaveCount(2);
+
+  // Second resolution: draw a card (two Forges left, then one drawn card).
+  await castForge(2);
+  await passUntil(page, page.locator('.log .line', { hasText: /draws/ }).first());
+  await expect(hand).toHaveCount(2);
+
+  // Third resolution: a +1/+1 counter on each creature you control.
+  await castForge(3);
+  await passUntil(page, permanent(page, 'Belladonna Took').getByText('+1/+1×1'));
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Servo')).toContainText('×3');
+  await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});
+
+test('Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(3);
+  const keep = page.getByRole('button', { name: /^Keep .+ on top$/ });
+
+  const castForge = async (servos: number) => {
+    const forge = handCard(page, 'Lab Token Forge').first();
+    await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+    await forge.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+    // Identical tokens share one tile with a count.
+    await passUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  };
+
+  // First creature: scry 1.
+  await castForge(1);
+  await passUntil(page, keep);
+  await keep.click();
+  await expect(hand).toHaveCount(2);
+
+  // Second creature: draw a card instead, with no scry prompt.
+  await castForge(2);
+  await passUntil(page, page.locator('.log .line', { hasText: /draws/ }).first());
+  await expect(keep).toHaveCount(0);
+  await expect(hand).toHaveCount(2);
+
+  // Third creature: scry 1 again.
+  await castForge(3);
+  await passUntil(page, keep);
+  await keep.click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});
+
+test('Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent', async ({ page }) => {
+  await runScenario(page, 'Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent');
+  await castAndResolve(page, 'Lab Gruul Charm');
+  await passUntil(page, page.getByText(/game over/i).first());
+  // The spell is two colors, so Crystal dealt 2 to each of the three opponents, and no more.
+  for (const opponent of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.log .line', {
+        hasText: new RegExp(`Crystal, Inhuman Princess.*deals 2 to ${opponent}`),
+      }),
+    ).toHaveCount(1);
+  }
+  await expect(
+    page.locator('.log .line', { hasText: /Crystal, Inhuman Princess.*deals \d+ to/ }),
+  ).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /gains 1 life/ })).toHaveCount(1);
+});
+
+test('Call Forth the Tempest: damage equals the mana value of your other spells this turn', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+  );
+  const callForth = handCard(page, 'Call Forth the Tempest');
+  await expect(callForth).toHaveClass(/actionable/, { timeout: 15_000 });
+  await callForth.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Two identical cascade triggers: put either on the stack first.
+  const order = page.getByRole('button', { name: /Call Forth the Tempest: Cascade/ }).first();
+  await passUntil(page, order);
+  await order.click();
+
+  // Each cascade finds a cheaper spell: cast both for free.
+  for (const name of ['Lab Cascade Two', 'Lab Cascade Three']) {
+    const cast = page.getByRole('button', { name: `Cast ${name} without paying its mana cost` });
+    await passUntil(page, cast);
+    await cast.click();
+  }
+
+  // 2 + 3 = 5 damage to each of P2's creatures: Lab Ox (4/4) dies, Lab Tower (0/10) lives.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Tower')).toBeVisible();
+  await expect(page.getByText(/Call Forth the Tempest deals 5 to Lab Tower/).first()).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(page.getByText(/Call Forth the Tempest deals \d+ to Lab Servo/)).toHaveCount(0);
+});
+
+test('First Family: draw and gain life for each color among your permanents and spells', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'First Family: draw and gain life for each color among your permanents and spells',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await castAndResolve(page, 'First Family');
+  // Red from Lab Red Bear, green and blue from First Family itself: X = 3.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(3);
+  await expect(page.locator('.log .line', { hasText: /gains 3 life/ })).toHaveCount(1);
+});
+
+test('Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+  );
+  await expect(permanent(page, 'Lab Red Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('1/1')).toBeVisible();
+  await castAndResolve(page, 'Unbreakable Formation');
+  await passUntil(page, page.getByText(/game over/i).first());
+
+  // Cast in your main phase: each of your creatures gets a counter (and so grows by one).
+  await expect(permanent(page, 'Lab Red Bear').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+  // Indestructible and vigilance until end of turn are granted to those two creatures only.
+  for (const name of ['Lab Red Bear', 'Lab Servo']) {
+    await expect(permanent(page, name)).toContainText(/indestructible/i);
+    await expect(permanent(page, name)).toContainText(/vigilance/i);
+  }
+  // The opponent's creature gets nothing.
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/indestructible|vigilance/i);
+});
+
+test('The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+  );
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  const no = page.getByRole('button', { name: 'No', exact: true });
+  const castGain = async () => {
+    const spell = handCard(page, 'Lab Quick Gain').first();
+    await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+    await spell.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+  };
+
+  // As a Vehicle it shows no power and toughness yet.
+  await expect(permanent(page, 'The Fantasticar')).not.toContainText('4/4');
+  // Spell 1: accept the creature trigger; it is a 4/4 flying artifact creature.
+  await castGain();
+  await passUntil(page, yes);
+  await yes.click();
+  await expect(permanent(page, 'The Fantasticar').getByText('4/4')).toBeVisible();
+  await expect(permanent(page, 'The Fantasticar')).toContainText(/flying/i);
+
+  // Spells 2 and 3: decline the creature trigger.
+  for (let spell = 2; spell <= 3; spell++) {
+    await castGain();
+    await passUntil(page, no);
+    await no.click();
+  }
+
+  // Spell 4: both triggers fire. Put the sacrifice on the stack first so it resolves last.
+  await castGain();
+  const sacrificeFirst = page.getByRole('button', { name: /fourth noncreature spell/ });
+  await passUntil(page, sacrificeFirst);
+  await sacrificeFirst.click();
+  await passUntil(page, no);
+  await no.click();
+  await passUntil(page, yes);
+  await yes.click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'The Fantasticar')).toHaveCount(0);
+  await expect(permanent(page, 'Construct')).toContainText('×4');
+  await expect(permanent(page, 'Construct')).toContainText('4/4');
+  await expect(permanent(page, 'Construct')).toContainText(/flying/i);
+  await expect(permanent(page, 'Construct')).toContainText(/haste/i);
+});
+
+test('Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo').getByText('2/2')).toBeVisible();
+
+  // All three creatures attack P2, who controls no creatures.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Kutzil, Malamet Exemplar', 'Lab Servo', 'Lab Red Bear']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Only the grown Lab Servo is above its base power: a single trigger, a single card.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+  // P2 never cast Lab Shock on our turn.
+  await expect(page.locator('.log .line', { hasText: /P2 casts/ })).toHaveCount(0);
+});
+
+test('Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+  );
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await castAndResolve(page, 'Lab Token Forge');
+  await passUntil(page, permanent(page, 'Servo'));
+  await expect(hand).toHaveCount(0);
+
+  // Finneas, Lab Rabbit and Lab Ox can attack; the Servo token is summoning sick.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Finneas, Ace Archer', 'Lab Rabbit', 'Lab Ox']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The token and the Rabbit grow (total power 9 -> 11), and that draws one card.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Servo').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Lab Rabbit').getByText('+1/+1×1')).toBeVisible();
+  await expect(permanent(page, 'Finneas, Ace Archer').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox').getByText('+1/+1')).toHaveCount(0);
+  await expect(hand).toHaveCount(1);
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
+});
+
+test('Captain America, Skybound: battalion grows each attacker and makes them indestructible', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+  );
+  // Captain America and two others attack; Lab Servo stays home.
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const name of ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const name of ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear']) {
+    await expect(permanent(page, name).getByText('+1/+1×1')).toBeVisible();
+    await expect(permanent(page, name)).toContainText(/indestructible/i);
+  }
+  await expect(permanent(page, 'Lab Servo').getByText('+1/+1')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).not.toContainText(/indestructible/i);
+  // Lab Ox 4/4 -> 5/5, Lab Red Bear 2/2 -> 3/3.
+  await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
+  await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
+});

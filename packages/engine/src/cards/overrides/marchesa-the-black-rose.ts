@@ -318,12 +318,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit marchesa-batch-10: dies intervening-if never sees the dead creature.
-  unsupportedCard(
-    'cd0c8db0-67ee-483b-8298-455cce35fef7',
-    'Iron Apprentice',
-    "The dies intervening-if checks the battlefield, so it never sees this creature's counters.",
-  );
+  // Iron Apprentice: restored in coverage PR04. The interpreter reads the dies trigger gated on
+  // the creature's last-known counters and moves those counters, so no override remains.
   defineCard(
     '4fca09ac-8134-43d9-a84b-686db5e2bf69',
     'Kalain, Reclusive Painter',
@@ -433,12 +429,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 7: Increment is claimed; the draw fires on damage, not counters.
-  unsupportedCard(
-    '4b8736e2-fc41-4a25-bb6c-7351afc40981',
-    'Pensive Professor',
-    'Increment is claimed, and the draw trigger fires on damage instead of counters being placed.',
-  );
+  // Pensive Professor: restored in coverage PR04. The interpreter reads Increment and the
+  // counters-put draw trigger, so no override remains.
   // Puppeteer Clique: restored in coverage PR03. The interpreter reads the reanimation with haste
   // and its bound end-step exile, and Persist, so no override remains.
   // River Kelpie: restored in coverage PR03. The interpreter reads both graveyard-origin triggers
@@ -483,12 +475,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
     'Twilight Diviner',
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
   );
-  // Catalog audit batch 8: Graft is claimed and is not an implemented keyword.
-  unsupportedCard(
-    '4c209165-a159-4cd7-8e99-1e533d3a22a6',
-    'Vigean Graftmage',
-    'Graft is claimed without enters-with-counters or move-counter behavior.',
-  );
+  // Vigean Graftmage: restored in coverage PR04. The interpreter reads Graft 2 as its
+  // enters-with counters and its move-a-counter trigger, so no override remains.
   // Catalog audit batch 8: one mode and one opponent, not one-or-more different players.
   unsupportedCard(
     '6dc7f837-158f-4ccf-86a5-a07a20891ec5',

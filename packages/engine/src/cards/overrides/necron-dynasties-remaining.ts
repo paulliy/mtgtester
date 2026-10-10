@@ -270,12 +270,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Resurrection Orb',
     "Return is under the equipment controller, not the card's owner.",
   );
-  // Catalog audit necron-remaining-batch-6: enters-with is an enters trigger.
-  unsupportedCard(
-    '7388a797-d40d-4783-a281-d17bc159b856',
-    'Sautekh Immortal',
-    'Enters-with counters is implemented as an enters trigger.',
-  );
+  // Sautekh Immortal: restored in coverage PR04. The interpreter reads the enters-with
+  // replacement counted from the creatures that died this turn, so no override remains.
   // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
   // ability and its same-name-lands condition, so no override remains.
   defineCard(

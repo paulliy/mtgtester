@@ -5572,21 +5572,21 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 53,
+      "uniqueOracleIds": 52,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 38,
+      "uniqueOracleIds": 37,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6123,6 +6123,48 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr03",
       "note": "Containment removed: the interpreter reads connive (new connive op, CR 701.50) and the dies return, whose target filter compares against Body Launderer's last-known power through the new powerAtMostSource selector (CR 608.2h)."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registrations deleted (this containment and the unimplemented placeholder in necron-dynasties.ts): the interpreter reads 'enters with a +1/+1 counter on it for each creature that died this turn' as an enters-with replacement effect (CR 614.1c, entersWithCounters creaturesDiedThisTurn) rather than an enters trigger; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
+      "name": "Sautekh Immortal",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Unimplemented placeholder registration deleted alongside the necron-dynasties-remaining.ts containment; see that entry."
+    },
+    {
+      "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
+      "name": "Iron Apprentice",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the dies trigger with an intervening-if on the creature's last-known counters (CR 603.10a, sourceMatches hasAnyCounter) and the transferCountersFromSource effect, which puts every kind and number of those counters on the target creature through addCounters so counter replacements apply; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
+      "name": "Vigean Graftmage",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Graft 2 (CR 702.58a) as an enters-with +1/+1 replacement plus an optional trigger on another creature entering, with the intervening-if that this creature has a +1/+1 counter, whose moveCounters effect removes the counter and puts it on the entering creature through addCounters so counter replacements apply (CR 122.5), and reads the untap ability's hasCounter target filter; engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "4b8736e2-fc41-4a25-bb6c-7351afc40981",
+      "name": "Pensive Professor",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads Increment (a castsSpell trigger with an intervening-if that the mana spent is greater than this creature's power or toughness, rechecked on resolution, CR 603.4) and a countersPut trigger on this creature that draws a card once per batch of +1/+1 counters."
+    },
+    {
+      "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
+      "name": "Aetheric Amplifier",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr04",
+      "note": "Registration deleted: the interpreter reads the any-color mana ability and the choose-one activation as one modal sorcery-speed ability (CR 700.2), offered once per mode, whose permanent mode targets a permanent and whose player mode has no target; the doubleCountersTarget and doublePlayerCounters effects double every counter kind through the counter-adding path. Engine and Card Test Lab evidence in packages/engine/tests/pr04-card-coverage.test.ts."
     }
   ]
 }

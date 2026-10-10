@@ -21,6 +21,7 @@ packages/engine/tests/fixtures
 graphify-out
 test-results
 playwright-report
+tmp
 
 # Historical byte-for-byte audit snapshot
 docs/reviews/2026-09-04/override-defs-before-audit-fixes.json

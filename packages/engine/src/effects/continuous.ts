@@ -306,6 +306,8 @@ export function candidateOf(
     colors: chars.colors,
     power: chars.power,
     toughness: chars.toughness,
+    ...(chars.basePower === undefined ? {} : { basePower: chars.basePower }),
+    ...(chars.baseToughness === undefined ? {} : { baseToughness: chars.baseToughness }),
     keywords: chars.keywords,
     ...(manaValue === undefined ? {} : { manaValue }),
     isToken: perm.isToken,
@@ -766,6 +768,10 @@ function runLayers(
   applyGroup(ctx, work, group('6'));
   applyGroup(ctx, work, group('7a'));
   applyGroup(ctx, work, group('7b'));
+  for (const entry of work.values()) {
+    entry.chars.basePower = entry.chars.power;
+    entry.chars.baseToughness = entry.chars.toughness;
+  }
   applyCounters(work); // 7c
   applyGroup(ctx, work, group('7d'), false);
 

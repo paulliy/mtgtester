@@ -1681,12 +1681,6 @@
     "def": {}
   },
   {
-    "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
-    "name": "Aetheric Amplifier",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
     "name": "Starfield Mystic",
     "handledLines": [
@@ -2948,18 +2942,6 @@
   {
     "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
     "name": "Fallen Ideal",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "4b8736e2-fc41-4a25-bb6c-7351afc40981",
-    "name": "Pensive Professor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "4c209165-a159-4cd7-8e99-1e533d3a22a6",
-    "name": "Vigean Graftmage",
     "handledLines": [],
     "def": {}
   },
@@ -4523,12 +4505,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "7388a797-d40d-4783-a281-d17bc159b856",
-    "name": "Sautekh Immortal",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
@@ -8483,12 +8459,6 @@
     "def": {}
   },
   {
-    "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
-    "name": "Iron Apprentice",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
     "name": "Conjurer's Closet",
     "handledLines": [
@@ -11370,12 +11340,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-aetheric-amplifier",
-    "name": "Aetheric Amplifier",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-aethersquall-ancient",
@@ -16219,12 +16183,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-iron-apprentice",
-    "name": "Iron Apprentice",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-iymrith-desert-doom",
     "name": "Iymrith, Desert Doom",
     "handledLines": [
@@ -18774,12 +18732,6 @@
     }
   },
   {
-    "oracleId": "oracle-pensive-professor",
-    "name": "Pensive Professor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-pia-and-kiran-nalaar",
     "name": "Pia and Kiran Nalaar",
     "handledLines": [
@@ -19627,12 +19579,6 @@
   {
     "oracleId": "oracle-sarkhan-the-dragonspeaker",
     "name": "Sarkhan, the Dragonspeaker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-sautekh-immortal",
-    "name": "Sautekh Immortal",
     "handledLines": [],
     "def": {}
   },
@@ -21869,12 +21815,6 @@
   {
     "oracleId": "oracle-verrak-warped-sengir",
     "name": "Verrak, Warped Sengir",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-vigean-graftmage",
-    "name": "Vigean Graftmage",
     "handledLines": [],
     "def": {}
   },

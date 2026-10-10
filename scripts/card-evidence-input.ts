@@ -1739,6 +1739,110 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Sautekh Immortal: two creatures died this turn, so it enters as a 4/4'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Vigean Graftmage: graft a counter, then untap a creature that has one'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Pensive Professor: Increment grows it, then the counter draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['The Thing: four counters after a noncreature spell, then pay to double counters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['First Family: draw and gain life for each color among your permanents and spells'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Aetheric Amplifier: double the counters on a target permanent'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Satoru, the Infiltrator: a free creature draws, a paid one does not'],
   },
   {

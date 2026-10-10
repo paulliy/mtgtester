@@ -1,6 +1,13 @@
 import { counterCount } from '../state/counters';
-import { eventObjectFacts, sourceObjectState, eventObjectState } from './source-identity';
+import {
+  eventObjectFacts,
+  eventObjectState,
+  sourceObjectFacts,
+  sourceObjectState,
+} from './source-identity';
 import { assertNever } from '../utils/assert-never';
+import { evaluateValueIn } from '../effects/values';
+import type { Value, ValueScope } from './value';
 /**
  * `Condition` — a predicate over game state, and the counterpart to `Selector` (ADR 0008).
  *
@@ -104,6 +111,8 @@ export type Condition =
   | { kind: 'sourceWasCast' }
   | { kind: 'announcedXAtLeast'; n: number }
   | { kind: 'escaped' }
+  /** Addendum: "if you cast this spell during your main phase" (Unbreakable Formation). */
+  | { kind: 'castDuringYourMainPhase' }
   | { kind: 'hasCounters'; selector: Selector; counter: string; cmp: '>=' | '<='; n: number }
   | { kind: 'enteredThisTurn' }
   | { kind: 'createdTokenThisTurn' }
@@ -117,6 +126,17 @@ export type Condition =
    * `Selector`. Reuses the selector grammar rather than a bespoke predicate per shape of check.
    */
   | { kind: 'triggerObjectMatches'; selector: Selector }
+  /**
+   * "When this creature dies, if it had counters on it" (Iron Apprentice): the ability's own
+   * source against a selector, read from its last-known facts once it has left (CR 603.10a).
+   */
+  | { kind: 'sourceMatches'; selector: Selector }
+  /**
+   * "if the amount of mana you spent is greater than this creature's power or toughness"
+   * (Increment): two numeric values compared in the trigger's scope, so a cast trigger's mana
+   * spent and the source's current power can be read together.
+   */
+  | { kind: 'compareValues'; left: Value; cmp: Comparison; right: Value }
   /**
    * "Khans — ..." / "Dragons — ..." (Frontier Siege): gates one of two static/triggered
    * clauses by the mode chosen as the permanent entered (`EnginePermanent.chosenOption`),
@@ -205,12 +225,15 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'sourceWasCast':
     case 'announcedXAtLeast':
     case 'escaped':
+    case 'castDuringYourMainPhase':
     case 'hasCounters':
     case 'enteredThisTurn':
     case 'createdTokenThisTurn':
     case 'hadToAttackThisCombat':
     case 'triggerObjectHadToAttackThisCombat':
     case 'triggerObjectMatches':
+    case 'sourceMatches':
+    case 'compareValues':
     case 'chosenOptionIs':
     case 'controlsYourCommander':
     case 'controlsACommander':
@@ -395,11 +418,23 @@ export function evaluateCondition(
       const perm = eventObjectState(ctx, scope);
       return perm?.hadToAttackThisCombat === true;
     }
+    case 'compareValues': {
+      const valueScope = scope as ValueScope;
+      return compare(
+        evaluateValueIn(ctx, condition.left, valueScope),
+        condition.cmp,
+        evaluateValueIn(ctx, condition.right, valueScope),
+      );
+    }
     case 'triggerObjectMatches': {
       const facts = eventObjectFacts(ctx, {
         ...source,
         controllerId: source.controllerId as PlayerId,
       });
+      return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
+    }
+    case 'sourceMatches': {
+      const facts = sourceObjectFacts(ctx, scope);
       return facts !== undefined && selectMatches(facts.candidate, condition.selector, source);
     }
     case 'chosenOptionIs': {
@@ -478,6 +513,13 @@ export function evaluateCondition(
       );
       return (stackObject?.announcedX ?? 0) >= condition.n;
     }
+    case 'castDuringYourMainPhase':
+      if (source.sourceCastState !== undefined)
+        return source.sourceCastState.castDuringOwnMainPhase === true;
+      return ctx.state.stack.some(
+        (candidate) =>
+          candidate.id === source.objectId && candidate.castDuringOwnMainPhase === true,
+      );
     case 'escaped': {
       if (source.cardId === undefined) return false;
       const permanent = sourceState();

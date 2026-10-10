@@ -229,6 +229,11 @@ const COVERAGE_PR03: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr03-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR04 cards that had no earlier pinned fixture. */
+const COVERAGE_PR04: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr04-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -7651,6 +7656,844 @@ function shardOfTheNightbringerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sautekhImmortalScenario(gameId: GameId): CardTestScenario {
+  const sautekh = pinnedFrom(MARCHESA_BATCH1, 'Sautekh Immortal');
+  const swamps = Array.from({ length: 7 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'sautekh-immortal-viewer-flash-counters',
+    title: 'Sautekh Immortal: two creatures died this turn, so it enters as a 4/4',
+    instructions: [
+      'Sautekh Immortal and two Lab Doom are in your hand; seven Swamps are on your battlefield, and P2 controls Lab Ox and Lab Servo.',
+      'Cast Lab Doom on Lab Ox and let it resolve, then cast the other Lab Doom on Lab Servo and let it resolve.',
+      'Then cast Sautekh Immortal.',
+    ],
+    expectedOutcome:
+      'Two creatures died this turn, so Sautekh Immortal enters with two +1/+1 counters and is a 4/4.',
+    oracleSha256: sautekh.sha256,
+    clauseIds: ['sautekh-immortal-flash', 'sautekh-immortal-elite-troops'],
+    decks: {
+      P1: [sautekh.card, LAB_DOOM, LAB_DOOM, ...swamps],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Doom', 'Lab Doom', 'Sautekh Immortal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((swamp) => swamp.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+    },
+  });
+}
+
+function ironApprenticeScenario(gameId: GameId): CardTestScenario {
+  const apprentice = pinnedFrom(MARCHESA_BATCH1, 'Iron Apprentice');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'iron-apprentice-viewer-dies-moves-counters',
+    title: 'Iron Apprentice: it dies and its +1/+1 counter moves to Lab Bird',
+    instructions: [
+      'Iron Apprentice and Lab Doom are in your hand; three Swamps and Lab Bird are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Iron Apprentice: it enters as a 1/1 with a +1/+1 counter on it.',
+      'Cast Lab Doom on Iron Apprentice. When it dies, its trigger can only target a creature you control (not Lab Ox), so choose Lab Bird.',
+    ],
+    expectedOutcome:
+      'Iron Apprentice dies with a +1/+1 counter on it, and that counter is put on Lab Bird, which becomes a 2/2.',
+    oracleSha256: apprentice.sha256,
+    clauseIds: ['iron-apprentice-enters-with-counter', 'iron-apprentice-dies-move-counters'],
+    decks: {
+      P1: [apprentice.card, LAB_DOOM, LAB_BIRD, ...swamps],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Iron Apprentice', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Bird', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+function vigeanGraftmageScenario(gameId: GameId): CardTestScenario {
+  const graftmage = pinnedFrom(MARCHESA_BATCH1, 'Vigean Graftmage');
+  const islands = Array.from({ length: 6 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: 'vigean-graftmage-viewer-graft-and-untap',
+    title: 'Vigean Graftmage: graft a counter, then untap a creature that has one',
+    instructions: [
+      'Vigean Graftmage and Lab Servo are in your hand; six Islands and a tapped Lab Ox carrying a +1/+1 counter are on your battlefield.',
+      'Cast Vigean Graftmage: it enters as a 2/2 with two +1/+1 counters on it.',
+      'Cast Lab Servo. When another creature enters, Graft asks whether to use this ability: say Yes to move one +1/+1 counter from Vigean Graftmage onto Lab Servo.',
+      'Activate Vigean Graftmage ({1}{U}) and target the tapped Lab Ox, which has a +1/+1 counter on it.',
+    ],
+    expectedOutcome:
+      'Vigean Graftmage is a 1/1 with one +1/+1 counter, Lab Servo is a 2/2 with one, and Lab Ox is untapped.',
+    oracleSha256: graftmage.sha256,
+    clauseIds: ['vigean-graftmage-graft', 'vigean-graftmage-untap'],
+    decks: {
+      P1: [graftmage.card, LAB_SERVO, LAB_OX, ...islands],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Vigean Graftmage', 'Lab Servo'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((island) => island.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true, counters: { '+1/+1': 1 } },
+      ],
+    },
+  });
+}
+
+function eliteScaleguardScenario(gameId: GameId): CardTestScenario {
+  const scaleguard = pinnedFrom(COVERAGE_PR04, 'Elite Scaleguard');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'elite-scaleguard-viewer-bolster-and-tap',
+    title: 'Elite Scaleguard: bolster the smallest creature, then tap a blocker as it attacks',
+    instructions: [
+      'Elite Scaleguard is in your hand; Lab Servo (a 1/1) and five lands are on your battlefield, and P2 controls Lab Ox.',
+      'Cast Elite Scaleguard. When it enters, bolster 2 puts two +1/+1 counters on Lab Servo, the creature with the least toughness among your creatures.',
+      'Attack P2 with Lab Servo (Elite Scaleguard is summoning sick). Because Lab Servo has +1/+1 counters, its attack trigger taps target creature defending player controls: target Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lab Servo is a 3/3 with two +1/+1 counters and Elite Scaleguard has none. Lab Ox is tapped by the attack trigger.',
+    oracleSha256: scaleguard.sha256,
+    clauseIds: ['elite-scaleguard-bolster', 'elite-scaleguard-attack-tap'],
+    decks: {
+      P1: [scaleguard.card, LAB_SERVO, PLAINS, ...forests],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Elite Scaleguard'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo', 'Plains', ...forests.map((forest) => forest.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function bessScenario(gameId: GameId): CardTestScenario {
+  const bess = pinnedFrom(COVERAGE_PR04, 'Bess, Soul Nourisher');
+  return pr01Scenario(gameId, {
+    id: 'bess-soul-nourisher-viewer-counter-and-pump',
+    title: 'Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s',
+    instructions: [
+      'Bess (a 1/1) and a Forest are on your battlefield; Lab Servo (a 1/1 artifact creature) is in your hand.',
+      'Cast Lab Servo for {1}. Another creature you control with base power and toughness 1/1 entered, so Bess gets a +1/+1 counter.',
+      'Attack P2 with Bess (Lab Servo is summoning sick). Her attack trigger gives each other base-1/1 creature you control +X/+X until end of turn, where X is her one counter: Lab Servo becomes a 2/2.',
+    ],
+    expectedOutcome:
+      'Bess has one +1/+1 counter and hits P2 as a 2/2 for 2. Lab Servo gets +1/+1 until end of turn from her attack trigger.',
+    oracleSha256: bess.sha256,
+    clauseIds: ['bess-soul-nourisher-enters-counter', 'bess-soul-nourisher-attack-pump'],
+    decks: {
+      P1: [bess.card, LAB_SERVO, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Servo'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Bess, Soul Nourisher', 'Forest'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function aethericAmplifierScenario(gameId: GameId): CardTestScenario {
+  const amplifier = pinnedFrom(MARCHESA_BATCH1, 'Aetheric Amplifier');
+  const forests = Array.from({ length: 4 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'aetheric-amplifier-viewer-double-counters',
+    title: 'Aetheric Amplifier: double the counters on a target permanent',
+    instructions: [
+      'Aetheric Amplifier, four Forests and Lab Servo (carrying two +1/+1 counters and one charge counter) are on your battlefield, and you have three energy.',
+      'Activate Aetheric Amplifier with the mode that doubles the counters on a target permanent, and target Lab Servo. The other mode, which doubles the counters you have, is offered as its own action.',
+      'Let the ability resolve. The energy is not doubled, because this mode only affects the target.',
+    ],
+    expectedOutcome:
+      'Lab Servo ends with four +1/+1 counters (a 5/5) and two charge counters. You still have three energy.',
+    oracleSha256: amplifier.sha256,
+    clauseIds: ['aetheric-amplifier-mana', 'aetheric-amplifier-modal-double'],
+    decks: {
+      P1: [amplifier.card, LAB_SERVO, ...forests],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Aetheric Amplifier', ...forests.map((f) => f.name)] },
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Servo'],
+          counters: { '+1/+1': 2, charge: 1 },
+        },
+      ],
+      hand: [],
+      energy: [{ playerId: 'P1', amount: 3 }],
+    },
+  });
+}
+
+function forgottenAncientScenario(gameId: GameId): CardTestScenario {
+  const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
+  return pr01Scenario(gameId, {
+    id: 'forgotten-ancient-viewer-cast-and-move',
+    title: 'Forgotten Ancient: grow when a spell is cast, then move counters at your upkeep',
+    instructions: [
+      "During P4's turn, Forgotten Ancient (already carrying two +1/+1 counters) is on your battlefield with Lab Servo; P2 controls Lab Ox. Cast Lab Shock at P2.",
+      'Forgotten Ancient triggers on the cast; choose Yes to put a third +1/+1 counter on it.',
+      'At the beginning of your upkeep, move one counter onto Lab Servo, one onto Lab Ox (any player controls it), then choose Move no more counters.',
+    ],
+    expectedOutcome:
+      'Forgotten Ancient ends with one +1/+1 counter, and Lab Servo and Lab Ox each have one.',
+    oracleSha256: ancient.sha256,
+    clauseIds: ['forgotten-ancient-cast-counter', 'forgotten-ancient-upkeep-move'],
+    decks: {
+      P1: [ancient.card, LAB_SERVO, LAB_SHOCK, MOUNTAIN],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Shock'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Forgotten Ancient'],
+          counters: { '+1/+1': 2 },
+        },
+        { playerId: 'P1', cardNames: ['Lab Servo', 'Mountain'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+/** A one-mana instant with no target: casting it is all the Increment scenario needs. */
+const LAB_RIPPLE = card({
+  oracleId: 'lab-ripple',
+  name: 'Lab Ripple',
+  typeLine: 'Instant',
+  manaCost: '{U}',
+  cmc: 1,
+  colors: ['U'],
+  colorIdentity: ['U'],
+  oracleText: 'You gain 1 life.',
+});
+
+function pensiveProfessorScenario(gameId: GameId): CardTestScenario {
+  const professor = pinnedFrom(MARCHESA_BATCH1, 'Pensive Professor');
+  return pr01Scenario(gameId, {
+    id: 'pensive-professor-viewer-increment-draw',
+    title: 'Pensive Professor: Increment grows it, then the counter draws a card',
+    instructions: [
+      'Pensive Professor (a 0/2) and an Island are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple for {U}. One mana is more than the Professor’s power of 0, so Increment triggers.',
+      'Let Increment resolve to put a +1/+1 counter on the Professor, then let the draw trigger resolve.',
+    ],
+    expectedOutcome:
+      'Pensive Professor has one +1/+1 counter and is a 1/3, and you drew a card for the counter.',
+    oracleSha256: professor.sha256,
+    clauseIds: ['pensive-professor-increment', 'pensive-professor-counters-draw'],
+    decks: {
+      P1: [professor.card, LAB_RIPPLE, ISLAND, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Pensive Professor', 'Island'] }],
+    },
+  });
+}
+
+/** A one-mana instant that puts a +1/+1 counter on a target creature: Mikey & Leo's trigger source. */
+const LAB_GRAFT = card({
+  oracleId: 'lab-graft',
+  name: 'Lab Graft',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Put a +1/+1 counter on target creature.',
+});
+
+function mikeyAndLeoScenario(gameId: GameId): CardTestScenario {
+  const mikey = pinnedFrom(COVERAGE_PR04, 'Mikey & Leo, Chaos & Order');
+  return pr01Scenario(gameId, {
+    id: 'mikey-and-leo-viewer-counter-draw',
+    title: 'Mikey & Leo, Chaos & Order: the first counter you put each turn draws a card',
+    instructions: [
+      'Mikey & Leo and Lab Servo are on your battlefield with two Forests; two Lab Grafts are in your hand.',
+      'Cast Lab Graft targeting Lab Servo. You put a counter on a creature you control, so Mikey & Leo draws you a card.',
+      'Cast the second Lab Graft on Lab Servo. The ability triggers only once each turn, so you draw nothing more.',
+    ],
+    expectedOutcome:
+      'Lab Servo has two +1/+1 counters and you drew exactly one card, from the first Lab Graft.',
+    oracleSha256: mikey.sha256,
+    clauseIds: ['mikey-and-leo-counter-draw'],
+    decks: {
+      P1: [mikey.card, LAB_GRAFT, LAB_GRAFT, LAB_SERVO, FOREST, FOREST, LAB_OX, LAB_HEX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Graft', 'Lab Graft'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Mikey & Leo, Chaos & Order', 'Lab Servo', 'Forest', 'Forest'],
+        },
+      ],
+    },
+  });
+}
+
+function theThingScenario(gameId: GameId): CardTestScenario {
+  const thing = pinnedFrom(COVERAGE_PR04, 'The Thing');
+  return pr01Scenario(gameId, {
+    id: 'the-thing-viewer-counters-and-double',
+    title: 'The Thing: four counters after a noncreature spell, then pay to double counters',
+    instructions: [
+      'The Thing, Lab Hex (an enchantment with one charge counter), a Mountain, a Forest, a Plains and two Islands are on your battlefield; Lab Ripple is in your hand.',
+      'Cast Lab Ripple with one Island, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat The Thing gets four +1/+1 counters.',
+      'Attack P2 with The Thing. When it attacks, pay {R}{G}{W}{U} with the other four lands, then choose The Thing and Lab Hex as targets of the reflexive trigger.',
+    ],
+    expectedOutcome:
+      'The Thing has eight +1/+1 counters (a 13/13) and Lab Hex has two charge counters. P2 takes 13 combat damage.',
+    oracleSha256: thing.sha256,
+    clauseIds: ['the-thing-trample', 'the-thing-combat-counters', 'the-thing-paid-double'],
+    decks: {
+      P1: [thing.card, LAB_HEX, LAB_RIPPLE, MOUNTAIN, FOREST, PLAINS, ISLAND, ISLAND],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['The Thing', 'Mountain', 'Forest', 'Plains', 'Island', 'Island'],
+        },
+        { playerId: 'P1', cardNames: ['Lab Hex'], counters: { charge: 1 } },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function lockjawScenario(gameId: GameId): CardTestScenario {
+  const lockjaw = pinnedFrom(COVERAGE_PR04, 'Lockjaw, Slobbering Teleporter');
+  return pr01Scenario(gameId, {
+    id: 'lockjaw-viewer-counter-and-unblockable',
+    title:
+      'Lockjaw, Slobbering Teleporter: a noncreature spell grows it and makes two creatures unblockable',
+    instructions: [
+      'Lockjaw, Lab Servo and two Islands are on your battlefield; P2 controls Lab Ox; Lab Ripple is in your hand.',
+      'Cast Lab Ripple, then pass priority to move to combat. You cast a noncreature spell this turn, so at the beginning of combat Lockjaw gets a +1/+1 counter.',
+      'When you do, choose Lab Servo as the other target creature you control. Then attack P2 with both creatures: neither can be blocked this turn, so Lab Ox cannot block.',
+    ],
+    expectedOutcome:
+      'Lockjaw has one +1/+1 counter and is a 2/2. Both creatures connect for 3 damage and Lab Ox is never asked to block.',
+    oracleSha256: lockjaw.sha256,
+    clauseIds: ['lockjaw-vigilance', 'lockjaw-combat-unblockable'],
+    decks: {
+      P1: [lockjaw.card, LAB_SERVO, LAB_RIPPLE, ISLAND, ISLAND],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Ripple'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lockjaw, Slobbering Teleporter', 'Lab Servo', 'Island', 'Island'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/** A one-mana instant that makes one token: each cast is one "token you control enters" event. */
+const LAB_TOKEN_FORGE = card({
+  oracleId: 'lab-token-forge',
+  name: 'Lab Token Forge',
+  typeLine: 'Instant',
+  manaCost: '{G}',
+  cmc: 1,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  oracleText: 'Create a 1/1 colorless Servo artifact creature token.',
+});
+
+function belladonnaTookScenario(gameId: GameId): CardTestScenario {
+  const belladonna = pinnedFrom(COVERAGE_PR04, 'Belladonna Took');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'belladonna-took-viewer-three-tokens',
+    title: 'Belladonna Took: three tokens give life, then a card, then a counter on each creature',
+    instructions: [
+      'Belladonna Took, Lab Ox and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge and let the Servo token and then Belladonna’s trigger resolve: the first resolution gains you 1 life.',
+      'Cast a second Lab Token Forge: the second resolution draws a card.',
+      'Cast the third: the third resolution puts a +1/+1 counter on each creature you control, including the three Servo tokens.',
+    ],
+    expectedOutcome:
+      'You gained 1 life (41) and drew 1 card, and Belladonna Took, Lab Ox and all three Servo tokens each have one +1/+1 counter.',
+    oracleSha256: belladonna.sha256,
+    clauseIds: ['belladonna-took-token-resolutions'],
+    decks: {
+      P1: [
+        belladonna.card,
+        LAB_OX,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_HEX,
+        LAB_SERVO,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Belladonna Took', 'Lab Ox', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
+function rumorGathererScenario(gameId: GameId): CardTestScenario {
+  const gatherer = pinnedFrom(COVERAGE_PR04, 'Rumor Gatherer');
+  const forests = Array.from({ length: 3 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'rumor-gatherer-viewer-scry-then-draw',
+    title: 'Rumor Gatherer: scry 1, then draw instead on the second creature, then scry again',
+    instructions: [
+      'Rumor Gatherer and three Forests are on your battlefield; three Lab Token Forges are in your hand.',
+      'Cast Lab Token Forge. The Servo token entering is another creature you control, so the first resolution scries 1: keep the card on top.',
+      'Cast a second Lab Token Forge. This is the second resolution this turn, so you draw a card instead of scrying.',
+      'Cast the third. The third resolution scries 1 again.',
+    ],
+    expectedOutcome:
+      'You scried twice (first and third tokens) and drew exactly one card (second token), with three Servo tokens on the battlefield.',
+    oracleSha256: gatherer.sha256,
+    clauseIds: ['rumor-gatherer-alliance'],
+    decks: {
+      P1: [
+        gatherer.card,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        LAB_TOKEN_FORGE,
+        ...forests,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'] },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Rumor Gatherer', ...forests.map((forest) => forest.name)],
+        },
+      ],
+    },
+  });
+}
+
+/** A two-color instant with a trivial effect: Crystal counts its colors, not its mana value. */
+const LAB_GRUUL_CHARM = card({
+  oracleId: 'lab-gruul-charm',
+  name: 'Lab Gruul Charm',
+  typeLine: 'Instant',
+  manaCost: '{R}{G}',
+  cmc: 2,
+  colors: ['R', 'G'],
+  colorIdentity: ['R', 'G'],
+  oracleText: 'You gain 1 life.',
+});
+
+function crystalScenario(gameId: GameId): CardTestScenario {
+  const crystal = pinnedFrom(COVERAGE_PR04, 'Crystal, Inhuman Princess');
+  return pr01Scenario(gameId, {
+    id: 'crystal-inhuman-princess-viewer-colors-damage',
+    title: 'Crystal, Inhuman Princess: a two-color spell deals 2 to each opponent',
+    instructions: [
+      'Crystal, a Mountain and a Forest are on your battlefield; Lab Gruul Charm (a red-green instant) is in your hand.',
+      'Cast Lab Gruul Charm. You cast a noncreature spell that is two colors, so Crystal deals 2 damage to each opponent.',
+      'Pass priority to resolve Crystal’s trigger, then the spell.',
+    ],
+    expectedOutcome:
+      'Each of P2, P3 and P4 lost exactly 2 life (38), and you gained 1 life from Lab Gruul Charm (41).',
+    oracleSha256: crystal.sha256,
+    clauseIds: [
+      'crystal-inhuman-princess-flying',
+      'crystal-inhuman-princess-colors-damage',
+      'crystal-inhuman-princess-mana',
+    ],
+    decks: {
+      P1: [crystal.card, LAB_GRUUL_CHARM, MOUNTAIN, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Gruul Charm'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Crystal, Inhuman Princess', 'Mountain', 'Forest'] },
+      ],
+    },
+  });
+}
+
+/** Two cheap instants for Call Forth the Tempest's cascades to find; they gain life and need no target. */
+const LAB_CASCADE_TWO = card({
+  oracleId: 'lab-cascade-two',
+  name: 'Lab Cascade Two',
+  typeLine: 'Instant',
+  manaCost: '{2}',
+  cmc: 2,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_CASCADE_THREE = card({
+  oracleId: 'lab-cascade-three',
+  name: 'Lab Cascade Three',
+  typeLine: 'Instant',
+  manaCost: '{3}',
+  cmc: 3,
+  oracleText: 'You gain 1 life.',
+});
+const LAB_TOWER = card({
+  oracleId: 'lab-tower',
+  name: 'Lab Tower',
+  typeLine: 'Creature — Wall',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '10',
+});
+
+function callForthTheTempestScenario(gameId: GameId): CardTestScenario {
+  const callForth = pinnedFrom(COVERAGE_PR04, 'Call Forth the Tempest');
+  const mountains = Array.from({ length: 3 }, () => MOUNTAIN);
+  const forests = Array.from({ length: 5 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'call-forth-the-tempest-viewer-other-spells-damage',
+    title: 'Call Forth the Tempest: damage equals the mana value of your other spells this turn',
+    instructions: [
+      'Lab Servo, three Mountains and five Forests are on your battlefield; P2 controls Lab Ox (4/4) and Lab Tower (0/10). Call Forth the Tempest is in your hand, and Lab Cascade Two and Lab Cascade Three are on top of your library.',
+      'Cast Call Forth the Tempest for {5}{R}{R}{R}. Each cascade exiles until a cheaper spell: cast Lab Cascade Two for free, then Lab Cascade Three for free.',
+      'Pass priority until everything resolves. Call Forth deals 2 + 3 = 5 to each creature P2 controls: the total mana value of your other spells cast this turn, not counting its own 8.',
+    ],
+    expectedOutcome:
+      'Lab Ox (4/4) dies, Lab Tower (0/10) survives with 5 damage, and your Lab Servo takes none.',
+    oracleSha256: callForth.sha256,
+    clauseIds: ['call-forth-the-tempest-cascade', 'call-forth-the-tempest-other-spells-damage'],
+    decks: {
+      P1: [
+        callForth.card,
+        LAB_SERVO,
+        ...mountains,
+        ...forests,
+        LAB_CASCADE_TWO,
+        LAB_CASCADE_THREE,
+        FOREST,
+        FOREST,
+      ],
+      P2: [LAB_OX, LAB_TOWER, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Call Forth the Tempest'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab Servo',
+            ...mountains.map((mountain) => mountain.name),
+            ...forests.map((forest) => forest.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Tower'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Cascade Two', 'Lab Cascade Three'] }],
+    },
+  });
+}
+
+function firstFamilyScenario(gameId: GameId): CardTestScenario {
+  const family = pinnedFrom(COVERAGE_PR04, 'First Family');
+  return pr01Scenario(gameId, {
+    id: 'first-family-viewer-colors-draw-gain',
+    title: 'First Family: draw and gain life for each color among your permanents and spells',
+    instructions: [
+      'Lab Red Bear (red), two Forests, an Island and a Mountain are on your battlefield; First Family is in your hand.',
+      'Cast First Family for {2}{G}{U}. It is green and blue and you control a red permanent, so X is 3.',
+      'Pass priority to resolve it: you draw three cards and gain three life.',
+    ],
+    expectedOutcome: 'You drew exactly three cards and gained 3 life (43).',
+    oracleSha256: family.sha256,
+    clauseIds: ['first-family-draw-gain-colors'],
+    decks: {
+      P1: [
+        family.card,
+        LAB_RED_BEAR,
+        FOREST,
+        FOREST,
+        ISLAND,
+        MOUNTAIN,
+        LAB_OX,
+        LAB_HEX,
+        LAB_SERVO,
+        LAB_SHOCK,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['First Family'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Red Bear', 'Forest', 'Forest', 'Island', 'Mountain'] },
+      ],
+    },
+  });
+}
+
+function unbreakableFormationScenario(gameId: GameId): CardTestScenario {
+  const formation = pinnedFrom(COVERAGE_PR04, 'Unbreakable Formation');
+  return pr01Scenario(gameId, {
+    id: 'unbreakable-formation-viewer-addendum-main-phase',
+    title:
+      'Unbreakable Formation: cast in your main phase, your creatures also get counters and vigilance',
+    instructions: [
+      'Lab Red Bear (a 2/2), Lab Servo (a 1/1) and three Plains are on your battlefield; P2 controls Lab Ox. Unbreakable Formation is in your hand.',
+      'Cast Unbreakable Formation for {2}{W} during your main phase, then pass priority to resolve it.',
+      'Your creatures gain indestructible until end of turn, and because you cast it in your main phase each also gets a +1/+1 counter and vigilance. Lab Ox gets nothing.',
+    ],
+    expectedOutcome:
+      'Lab Red Bear is a 3/3 and Lab Servo a 2/2, each with a +1/+1 counter, indestructible and vigilance. Lab Ox is unchanged.',
+    oracleSha256: formation.sha256,
+    clauseIds: ['unbreakable-formation-indestructible', 'unbreakable-formation-addendum'],
+    decks: {
+      P1: [formation.card, LAB_RED_BEAR, LAB_SERVO, PLAINS, PLAINS, PLAINS],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Unbreakable Formation'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Red Bear', 'Lab Servo', 'Plains', 'Plains', 'Plains'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
+/** A one-mana instant that gains 1 life: four of them make the Fantasticar's fourth noncreature spell. */
+const LAB_QUICK_GAIN = card({
+  oracleId: 'lab-quick-gain',
+  name: 'Lab Quick Gain',
+  typeLine: 'Instant',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 1 life.',
+});
+
+function theFantasticarScenario(gameId: GameId): CardTestScenario {
+  const car = pinnedFrom(COVERAGE_PR04, 'The Fantasticar');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'the-fantasticar-viewer-fourth-noncreature',
+    title: 'The Fantasticar: become a creature, then sacrifice it on your fourth noncreature spell',
+    instructions: [
+      'The Fantasticar (a 4/4 flying Vehicle) and four Mountains are on your battlefield; four Lab Quick Gains are in your hand.',
+      'Cast the first Lab Quick Gain and choose Yes to have The Fantasticar become an artifact creature until end of turn: it is a 4/4 flying creature.',
+      'Cast the second and third Lab Quick Gains and choose No for the creature trigger.',
+      'Cast the fourth. Choose No to become a creature again, then Yes to sacrifice The Fantasticar: you create four 4/4 Construct artifact creature tokens with flying and haste.',
+    ],
+    expectedOutcome:
+      'The Fantasticar is in your graveyard and you control four 4/4 flying, haste Construct tokens.',
+    oracleSha256: car.sha256,
+    clauseIds: [
+      'the-fantasticar-flying',
+      'the-fantasticar-animate',
+      'the-fantasticar-fourth-noncreature-sacrifice',
+    ],
+    decks: {
+      P1: [car.card, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, LAB_QUICK_GAIN, ...mountains],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain', 'Lab Quick Gain'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['The Fantasticar', ...mountains.map((m) => m.name)] },
+      ],
+    },
+  });
+}
+
+function kutzilScenario(gameId: GameId): CardTestScenario {
+  const kutzil = pinnedFrom(COVERAGE_PR04, 'Kutzil, Malamet Exemplar');
+  return pr01Scenario(gameId, {
+    id: 'kutzil-malamet-exemplar-viewer-above-base-draw',
+    title:
+      'Kutzil, Malamet Exemplar: one grown creature connecting draws a card, and opponents cannot cast spells',
+    instructions: [
+      'Kutzil, Lab Servo (carrying a +1/+1 counter, so its power is above its base power) and Lab Red Bear (no counters) are on your battlefield. P2 has a Mountain and a Lab Shock in hand but controls no creatures.',
+      'Attack P2 with all three creatures. Kutzil’s first ability stops P2 from casting Lab Shock during your turn.',
+      'Combat damage is dealt: only Lab Servo has power greater than its base power, so Kutzil’s trigger draws you exactly one card.',
+    ],
+    expectedOutcome:
+      'P2 takes 7 combat damage (33) and cannot cast Lab Shock, and you drew exactly one card, from the single trigger.',
+    oracleSha256: kutzil.sha256,
+    clauseIds: ['kutzil-malamet-exemplar-cast-lock', 'kutzil-malamet-exemplar-above-base-draw'],
+    decks: {
+      P1: [kutzil.card, LAB_SERVO, LAB_RED_BEAR, FOREST, FOREST, FOREST],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Kutzil, Malamet Exemplar', 'Lab Red Bear'] },
+        { playerId: 'P1', cardNames: ['Lab Servo'], counters: { '+1/+1': 1 } },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+      hand: [{ playerId: 'P2', cardNames: ['Lab Shock'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+const LAB_RABBIT = card({
+  oracleId: 'lab-rabbit',
+  name: 'Lab Rabbit',
+  typeLine: 'Creature — Rabbit',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '2',
+  toughness: '2',
+});
+
+function finneasScenario(gameId: GameId): CardTestScenario {
+  const finneas = pinnedFrom(COVERAGE_PR04, 'Finneas, Ace Archer');
+  return pr01Scenario(gameId, {
+    id: 'finneas-ace-archer-viewer-counters-then-draw',
+    title:
+      'Finneas, Ace Archer: attacking grows your tokens and Rabbits, and total power 10 draws a card',
+    instructions: [
+      'Finneas (2/2), Lab Rabbit (a 2/2 Rabbit), Lab Ox (a 4/4 that is neither a token nor a Rabbit) and a Forest are on your battlefield; Lab Token Forge is in your hand.',
+      'Cast Lab Token Forge to create a 1/1 Servo token. Your creatures have total power 2 + 2 + 4 + 1 = 9.',
+      'Attack P2 with Finneas (Lab Rabbit and Lab Ox attack too). Its trigger puts a +1/+1 counter on the Servo token and on Lab Rabbit, bringing total power to 11, so you draw a card.',
+    ],
+    expectedOutcome:
+      'The Servo token and Lab Rabbit each have one +1/+1 counter; Finneas and Lab Ox have none. You drew exactly one card.',
+    oracleSha256: finneas.sha256,
+    clauseIds: ['finneas-ace-archer-keywords', 'finneas-ace-archer-attack-counters-draw'],
+    decks: {
+      P1: [finneas.card, LAB_RABBIT, LAB_OX, LAB_TOKEN_FORGE, FOREST, LAB_HEX, LAB_SHOCK],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Token Forge'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Finneas, Ace Archer', 'Lab Rabbit', 'Lab Ox', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function captainAmericaScenario(gameId: GameId): CardTestScenario {
+  const captain = pinnedFrom(COVERAGE_PR04, 'Captain America, Skybound');
+  return pr01Scenario(gameId, {
+    id: 'captain-america-skybound-viewer-battalion',
+    title: 'Captain America, Skybound: battalion grows each attacker and makes them indestructible',
+    instructions: [
+      'Captain America, Lab Ox, Lab Red Bear and Lab Servo are on your battlefield, none summoning sick.',
+      'Attack P2 with Captain America, Lab Ox and Lab Red Bear, and keep Lab Servo at home. Captain America and two other creatures attack, so battalion triggers.',
+      'Each of the three attackers gets a +1/+1 counter and gains indestructible until end of turn. Lab Servo, which stayed home, gets neither.',
+    ],
+    expectedOutcome:
+      'Captain America, Lab Ox and Lab Red Bear each have one +1/+1 counter and are indestructible. Lab Servo has no counter.',
+    oracleSha256: captain.sha256,
+    clauseIds: ['captain-america-skybound-keywords', 'captain-america-skybound-battalion'],
+    decks: {
+      P1: [captain.card, LAB_OX, LAB_RED_BEAR, LAB_SERVO, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Captain America, Skybound', 'Lab Ox', 'Lab Red Bear', 'Lab Servo'],
+        },
+      ],
+      hand: [],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function satoruScenario(gameId: GameId): CardTestScenario {
   const satoru = pinnedFrom(MARCHESA_BATCH1, 'Satoru, the Infiltrator');
   const ornithopter = card({
@@ -8815,6 +9658,27 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kambal-viewer-opponent-noncreature-spell',
   'gleeful-arsonist-viewer-burn-and-undying',
   'shard-of-the-nightbringer-viewer-cast-drain',
+  'sautekh-immortal-viewer-flash-counters',
+  'iron-apprentice-viewer-dies-moves-counters',
+  'vigean-graftmage-viewer-graft-and-untap',
+  'pensive-professor-viewer-increment-draw',
+  'elite-scaleguard-viewer-bolster-and-tap',
+  'forgotten-ancient-viewer-cast-and-move',
+  'captain-america-skybound-viewer-battalion',
+  'finneas-ace-archer-viewer-counters-then-draw',
+  'kutzil-malamet-exemplar-viewer-above-base-draw',
+  'the-fantasticar-viewer-fourth-noncreature',
+  'unbreakable-formation-viewer-addendum-main-phase',
+  'first-family-viewer-colors-draw-gain',
+  'call-forth-the-tempest-viewer-other-spells-damage',
+  'crystal-inhuman-princess-viewer-colors-damage',
+  'rumor-gatherer-viewer-scry-then-draw',
+  'belladonna-took-viewer-three-tokens',
+  'lockjaw-viewer-counter-and-unblockable',
+  'the-thing-viewer-counters-and-double',
+  'aetheric-amplifier-viewer-double-counters',
+  'bess-soul-nourisher-viewer-counter-and-pump',
+  'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
   'keeper-of-secrets-viewer-flashback',
   'river-kelpie-viewer-flashback-and-persist',
@@ -9059,6 +9923,27 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kambal-viewer-opponent-noncreature-spell': kambalScenario,
   'gleeful-arsonist-viewer-burn-and-undying': gleefulArsonistScenario,
   'shard-of-the-nightbringer-viewer-cast-drain': shardOfTheNightbringerScenario,
+  'sautekh-immortal-viewer-flash-counters': sautekhImmortalScenario,
+  'iron-apprentice-viewer-dies-moves-counters': ironApprenticeScenario,
+  'vigean-graftmage-viewer-graft-and-untap': vigeanGraftmageScenario,
+  'pensive-professor-viewer-increment-draw': pensiveProfessorScenario,
+  'elite-scaleguard-viewer-bolster-and-tap': eliteScaleguardScenario,
+  'forgotten-ancient-viewer-cast-and-move': forgottenAncientScenario,
+  'captain-america-skybound-viewer-battalion': captainAmericaScenario,
+  'finneas-ace-archer-viewer-counters-then-draw': finneasScenario,
+  'kutzil-malamet-exemplar-viewer-above-base-draw': kutzilScenario,
+  'the-fantasticar-viewer-fourth-noncreature': theFantasticarScenario,
+  'unbreakable-formation-viewer-addendum-main-phase': unbreakableFormationScenario,
+  'first-family-viewer-colors-draw-gain': firstFamilyScenario,
+  'call-forth-the-tempest-viewer-other-spells-damage': callForthTheTempestScenario,
+  'crystal-inhuman-princess-viewer-colors-damage': crystalScenario,
+  'rumor-gatherer-viewer-scry-then-draw': rumorGathererScenario,
+  'belladonna-took-viewer-three-tokens': belladonnaTookScenario,
+  'lockjaw-viewer-counter-and-unblockable': lockjawScenario,
+  'the-thing-viewer-counters-and-double': theThingScenario,
+  'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
+  'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
+  'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
   'keeper-of-secrets-viewer-flashback': keeperOfSecretsScenario,
   'river-kelpie-viewer-flashback-and-persist': riverKelpieScenario,

@@ -205,6 +205,13 @@ function parseDynamicCountValue(
   if (/^the number of colou?rs? among permanents you control$/.test(text)) {
     return { kind: 'colorsAmongPermanents' };
   }
+  if (
+    /^the number of colors among permanents you control and spells you've cast this turn$/.test(
+      text,
+    )
+  ) {
+    return { kind: 'colorsAmongPermanentsAndSpellsCastThisTurn' };
+  }
   const opponents = text.match(/^(?:the )?number of opponents$/);
   if (opponents !== null) return { kind: 'countOpponents' };
   const cardsInYourZone = text.match(
@@ -596,6 +603,13 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
     noun = powerClause[1] as string;
   }
 
+  // "each other creature you control that's a token or a Rabbit" (Finneas, Ace Archer).
+  const tokenOrType = noun.match(/^(.+?) that's a token or an? ([a-z]+)$/);
+  if (tokenOrType !== null) {
+    parts.push(anyOf(IS_TOKEN, ofSubtype(titleCase(tokenOrType[2] as string))));
+    noun = tokenOrType[1] as string;
+  }
+
   // "Creatures you control OF THE CHOSEN TYPE get +1/+1" (Patchwork Banner) - the type was named
   // as the source entered (`entersChoosingOption`). Stripped before the "you control" suffix
   // below, because it is printed AFTER it.
@@ -629,6 +643,46 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   if (supertypeMatch !== null) {
     parts.push(ofSupertype(titleCase(supertypeMatch[1] as string)));
     noun = supertypeMatch[2] as string;
+  }
+
+  // "other creatures you control with base power and toughness 1/1" (Bess, Soul Nourisher).
+  const baseClause = noun.match(/^(.+) with base power and toughness (\d+)\/(\d+)$/);
+  if (baseClause !== null) {
+    parts.push({
+      kind: 'basePowerToughness',
+      power: Number(baseClause[2]),
+      toughness: Number(baseClause[3]),
+    });
+    noun = baseClause[1] as string;
+    for (const [suffix, who] of [
+      [' you control', YOURS],
+      [' your opponents control', OPPONENTS],
+    ] as const) {
+      if (noun.endsWith(suffix)) {
+        parts.push(who);
+        noun = noun.slice(0, -suffix.length);
+        break;
+      }
+    }
+  }
+
+  // "creatures you control each with power greater than its base power" (Kutzil).
+  const aboveBase = noun.match(
+    /^(.+?) (?:each )?with power greater than (?:its|their) base power$/,
+  );
+  if (aboveBase !== null) {
+    parts.push({ kind: 'powerGreaterThanBase' });
+    noun = aboveBase[1] as string;
+    for (const [suffix, who] of [
+      [' you control', YOURS],
+      [' your opponents control', OPPONENTS],
+    ] as const) {
+      if (noun.endsWith(suffix)) {
+        parts.push(who);
+        noun = noun.slice(0, -suffix.length);
+        break;
+      }
+    }
   }
 
   const counterClause = noun.match(/^(.+) with (?:a )?\+1\/\+1 counter on it$/);
@@ -733,7 +787,13 @@ function parseEffectSentence(
   sentence: string,
   alloc: SlotAllocator,
   card: OracleCard,
-  opts: { triggerObject?: boolean; thatMany?: Value; allocCount?: CountSlotAllocator } = {},
+  opts: {
+    triggerObject?: boolean;
+    /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
+    departedSelf?: boolean;
+    thatMany?: Value;
+    allocCount?: CountSlotAllocator;
+  } = {},
 ): Effect[] | null {
   const s = sentence.toLowerCase();
   // "transform this creature" is the modern templating; "transform ~" the older printing that
@@ -1019,8 +1079,48 @@ function parseEffectSentence(
   if (s === "~ fights target creature you don't control") {
     return [{ op: 'fight', first: 'source', second: alloc('creature', undefined, 'opponent') }];
   }
+  // "you may move any number of +1/+1 counters from this creature onto other creatures"
+  // (Forgotten Ancient): a division chosen on resolution, zero included, so the "may" is part of it.
+  {
+    const m = s.match(
+      /^(?:you may )?move any number of ([+-]\d+\/[+-]\d+) counters from (?:~|this creature) onto other creatures$/,
+    );
+    if (m !== null)
+      return [
+        {
+          op: 'distributeCountersFromSource',
+          counter: m[1] as string,
+          selector: allOf(OTHER, ofType('Creature')),
+        },
+      ];
+  }
+  // "bolster 2" (CR 701.39a): a choice made on resolution among the least-toughness creatures.
+  {
+    const m = s.match(/^bolster (\w+)$/);
+    const n = m === null ? null : parseAmount(m[1] as string);
+    if (n !== null && n > 0) return [{ op: 'bolster', count: n }];
+  }
   if (s === 'double the number of each kind of counter on target permanent') {
     return [{ op: 'doubleCountersTarget', target: alloc('permanent') }];
+  }
+  // CR 122.1: energy and poison are the player counters the engine tracks.
+  if (s === 'double the number of each kind of counter you have') {
+    return [{ op: 'doublePlayerCounters' }];
+  }
+  // "double the number of each kind of counter on any number of target permanents you control"
+  // (The Thing): a variable-count slot, so only where a trigger can announce one.
+  {
+    const m = s.match(
+      /^double the number of each kind of counter on any number of target (permanents|creatures)( you control)?$/,
+    );
+    if (m !== null && opts.allocCount !== undefined) {
+      const slot = opts.allocCount(
+        m[1] === 'permanents' ? 'permanent' : 'creature',
+        { min: 0, max: Infinity },
+        m[2] === undefined ? undefined : 'you',
+      );
+      return [{ op: 'doubleCountersEachChosen', targetSlot: slot }];
+    }
   }
   if (s === 'double the number of each kind of counter on ~') {
     return [{ op: 'doubleCountersTarget', target: 'source' }];
@@ -1090,6 +1190,11 @@ function parseEffectSentence(
   }
   if (s === 'untap target creature') {
     return [{ op: 'untapTarget', target: alloc('creature') }];
+  }
+  // Vigean Graftmage: the counter is part of the target's legality, checked again on
+  // resolution (CR 608.2b).
+  if (s === 'untap target creature with a +1/+1 counter on it') {
+    return [{ op: 'untapTarget', target: alloc('creature', hasCounter('+1/+1')) }];
   }
   if (s === 'untap target permanent') {
     return [{ op: 'untapTarget', target: alloc('permanent') }];
@@ -1259,6 +1364,9 @@ function parseEffectSentence(
   if (s === 'tap enchanted creature' || s === 'tap equipped creature') {
     return [{ op: 'tapTarget', target: 'attachedToSource' }];
   }
+  if (s === 'tap target creature that player controls') {
+    return [{ op: 'tapTarget', target: alloc('creature', undefined, 'eventPlayer') }];
+  }
   {
     const m = s.match(/^(enchanted|equipped) creature gains ([a-z ]+) until end of turn$/);
     if (m) {
@@ -1336,6 +1444,32 @@ function parseEffectSentence(
   }
   if (s === "creatures can't be blocked this turn") {
     return [{ op: 'creaturesCantBeBlockedThisTurn' }];
+  }
+  // "~ and up to one other target creature you control can't be blocked this turn" (Lockjaw).
+  {
+    const m = s.match(/^~ and up to (\w+) other target (.+?) can't be blocked this turn$/);
+    const max = m === null ? null : parseAmount(m[1] as string);
+    const clause = m === null ? null : parseTargetClause(m[2] as string);
+    if (max !== null && max > 0 && clause !== null && opts.allocCount !== undefined) {
+      const slot = opts.allocCount(
+        clause.kind,
+        { min: 0, max },
+        clause.controller,
+        clause.filter === undefined ? OTHER : allOf(OTHER, clause.filter),
+      );
+      return [
+        { op: 'cantBeBlockedUntilEot', target: 'source' },
+        { op: 'cantBeBlockedEachChosen', targetSlot: slot },
+      ];
+    }
+  }
+  // "you may have The Fantasticar become an artifact creature until end of turn": a Vehicle,
+  // so its printed power and toughness apply (CR 301.7b), as when it is crewed.
+  if (
+    /^~ becomes? an artifact creature until end of turn$/.test(s) &&
+    card.subtypes.includes('Vehicle')
+  ) {
+    return [{ op: 'becomeArtifactCreature' }];
   }
   if (s === "target creature can't be blocked this turn") {
     return [{ op: 'cantBeBlockedUntilEot', target: alloc('creature') }];
@@ -1508,6 +1642,16 @@ function parseEffectSentence(
         },
       ];
     }
+    // "each other creature you control with base power and toughness 1/1 gets +X/+X until end
+    // of turn, where X is the number of +1/+1 counters on ~" (Bess): X is fixed on resolution
+    // (CR 608.2h) and the affected set with it (CR 611.2c).
+    const where = s.match(/^(.+?) gets? \+x\/\+x until end of turn, where x is (.+)$/);
+    if (where !== null) {
+      const selector = parseSubject(where[1] as string, card);
+      const count = parseDynamicCountValue(where[2] as string, card);
+      if (selector === null || count === null) return null;
+      return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
+    }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
       const selector = parseSubject(m[1] as string, card);
@@ -1579,6 +1723,13 @@ function parseEffectSentence(
             amount: { kind: 'spellManaValue' },
           },
         ];
+      }
+      // "Crystal deals X damage to each opponent, where X is the number of colors that spell is"
+      // (Crystal, Inhuman Princess): the triggering spell's colors, kept on the trigger as cast.
+      if (
+        s === '~ deals x damage to each opponent, where x is the number of colors that spell is'
+      ) {
+        return [{ op: 'eachOpponentDamage', amount: { kind: 'spellColorCount' } }];
       }
       if (s === '~ deals damage equal to its power to that player') {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
@@ -1835,6 +1986,22 @@ function parseEffectSentence(
       const filter = parseCardFilterPhrase(m[1] as string, card);
       if (filter === null) return null;
       return [{ op: 'handToBattlefield', filter, count: 'one' }];
+    }
+  }
+  // "put those counters on target creature you control" (Iron Apprentice): every counter the
+  // departed source last had (CR 603.10a), each kind and number, through counter-placement
+  // replacements.
+  {
+    const m = s.match(/^put those counters on target (.+)$/);
+    if (m !== null) {
+      const parsed = parseTargetClause(m[1] as string);
+      if (opts.departedSelf !== true || parsed === null || parsed.kind !== 'creature') return null;
+      return [
+        {
+          op: 'transferCountersFromSource',
+          target: alloc(parsed.kind, parsed.filter, parsed.controller),
+        },
+      ];
     }
   }
   // "put a +1/+1 counter on target creature" / "put two -1/-1 counters on ~"
@@ -2196,6 +2363,49 @@ function parseEffectSentence(
       return effects;
     }
   }
+  // "Then if creatures you control have total power 10 or greater, draw a card." (Finneas): read
+  // as the ability resolves, after the counters before it were put (CR 608.2c).
+  {
+    const m = s.match(
+      /^(?:then )?if creatures you control have total power (\d+) or greater, (.+)$/,
+    );
+    const rest = m === null ? null : parseEffectSentence(m[2] as string, alloc, card, opts);
+    if (m !== null && rest !== null)
+      return [
+        {
+          op: 'conditionalEffect',
+          condition: { kind: 'totalCreaturePower', scope: 'you', cmp: '>=', n: Number(m[1]) },
+          then: rest,
+          else: [],
+        },
+      ];
+  }
+  // "You draw X cards and gain X life, where X is …" (First Family).
+  {
+    const m = s.match(/^you draw x cards and gain x life, where x is (.+)$/);
+    const amount = m === null ? null : parseDynamicCountValue(m[1] as string, card);
+    if (amount !== null)
+      return [
+        { op: 'draw', count: amount },
+        { op: 'gainLife', amount },
+      ];
+  }
+  // "~ deals damage to each creature your opponents control equal to the total mana value of
+  // other spells you've cast this turn" (Call Forth the Tempest).
+  {
+    const m = s.match(
+      /^~ deals damage to each (.+?) equal to the total mana value of other spells you've cast this turn$/,
+    );
+    const selector = m === null ? null : parseMassSubject(m[1] as string, card);
+    if (selector !== null)
+      return [
+        {
+          op: 'damageEach',
+          selector,
+          amount: { kind: 'manaValueOfOtherSpellsCastThisTurn' },
+        },
+      ];
+  }
   // "~ deals 5 damage to each creature without flying" (Ryusei) / "it deals 3 damage to â€¦"
   // (Thunder Dragon â€” "it" is the source, both cards' triggers being self-subjected).
   // "~ deals X damage to each creature without flying and each player" (Earthquake).
@@ -2398,6 +2608,201 @@ function parseSpreeSpellBlock(
   }
   return { targets, modes: { minChoices: 1, maxChoices: options.length, options } };
 }
+/**
+ * "You may sacrifice ~. If you do, create four 4/4 … tokens" (The Fantasticar): the rest happens
+ * only if the source was actually sacrificed — not if it already left the battlefield.
+ */
+function parseSacrificeSelfIfYouDoBlock(
+  body: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+  opts: Parameters<typeof parseEffectSentence>[3],
+): Effect[] | null {
+  const m = body.match(/^sacrifice ~\. if you do, (.+?)\.?$/);
+  if (m === null) return null;
+  const sentence = m[1] as string;
+  const parsed = parseEffectSentence(sentence, alloc, card, opts);
+  if (parsed === null) return null;
+  const then: Effect[] = [];
+  appendSentenceEffects(then, sentence, parsed);
+  return [{ op: 'sacrificeOneThen', selector: SELF, then }];
+}
+
+/**
+ * "Put a +1/+1 counter on each attacking creature. They gain indestructible until end of turn."
+ * (Captain America, Skybound): "they" is the set the first sentence counted, fixed as the
+ * ability resolves (CR 608.2c) — the same creatures a moment later.
+ */
+function parseCountersThenTheyGainBlock(body: string, card: OracleCard): Effect[] | null {
+  const m = body.match(
+    /^put a \+1\/\+1 counter on each (.+?)\. they gain (\w+) until end of turn\.?$/,
+  );
+  const selector = m === null ? null : parseSubject(m[1] as string, card);
+  const keyword = m?.[2] as KeywordAbility | undefined;
+  if (selector === null || keyword === undefined || !KEYWORD_SET.has(keyword)) return null;
+  return [
+    { op: 'putCountersEach', selector, counter: '+1/+1', count: 1 },
+    { op: 'grantKeywordEachUntilEot', selector, keyword },
+  ];
+}
+
+const ORDINAL_TIMES: Record<string, number> = {
+  first: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+};
+
+/**
+ * "You gain 1 life if this is the first time this ability has resolved this turn. If it's the
+ * second time, draw a card. If it's the third time, …" (Belladonna Took) and "scry 1. If this is
+ * the second time this ability has resolved this turn, draw a card instead." (Rumor Gatherer):
+ * branches on how many times this ability has resolved this turn, counting this resolution.
+ */
+function parseResolutionCountBlock(
+  body: string,
+  key: string,
+  alloc: SlotAllocator,
+  card: OracleCard,
+  opts: Parameters<typeof parseEffectSentence>[3],
+): Effect[] | null {
+  if (!body.includes(' time this ability has resolved this turn')) return null;
+  const sentences = splitSentences(body);
+  const cases: { n: number; effects: Effect[] }[] = [];
+  let otherwise: Effect[] = [];
+  const parse = (text: string): Effect[] | null => {
+    const parsed = parseEffectSentence(text, alloc, card, opts);
+    if (parsed === null) return null;
+    const effects: Effect[] = [];
+    appendSentenceEffects(effects, text, parsed);
+    return effects;
+  };
+  const addCase = (ordinal: string, text: string): boolean => {
+    const n = ORDINAL_TIMES[ordinal];
+    const effects = parse(text);
+    if (n === undefined || effects === null || cases.some((entry) => entry.n === n)) return false;
+    cases.push({ n, effects });
+    return true;
+  };
+  const [first, ...rest] = sentences.map((sentence) => sentence.replace(/\.$/, ''));
+  if (first === undefined) return null;
+  const leading = first.match(
+    /^(.+) if this is the (\w+) time this ability has resolved this turn$/,
+  );
+  if (leading !== null) {
+    // Belladonna: each sentence is one count's effect; any other count does nothing.
+    if (!addCase(leading[2] as string, leading[1] as string)) return null;
+    for (const sentence of rest) {
+      const m = sentence.match(/^if it's the (\w+) time, (.+)$/);
+      if (m === null || !addCase(m[1] as string, m[2] as string)) return null;
+    }
+  } else {
+    // Rumor Gatherer: the first sentence is the usual effect, which the count replaces.
+    const instead =
+      rest.length === 1
+        ? (rest[0] as string).match(
+            /^if this is the (\w+) time this ability has resolved this turn, (.+) instead$/,
+          )
+        : null;
+    const usual = parse(first);
+    if (instead === null || usual === null) return null;
+    if (!addCase(instead[1] as string, instead[2] as string)) return null;
+    otherwise = usual;
+  }
+  return [{ op: 'byResolutionCountThisTurn', key, cases, otherwise }];
+}
+
+/**
+ * "Creatures you control gain indestructible until end of turn.\nAddendum — If you cast this
+ * spell during your main phase, put a +1/+1 counter on each of those creatures and they gain
+ * vigilance until end of turn." (Unbreakable Formation). Read as one block because "those
+ * creatures" is the first line's set: fixed as the spell resolves (CR 611.2c), the same
+ * creatures you control when the Addendum half applies a moment later.
+ */
+function parseAddendumMassBlock(text: string): { targets: TargetSpec[]; effects: Effect[] } | null {
+  const lines = text
+    .toLowerCase()
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (lines.length !== 2) return null;
+  const first = (lines[0] as string).match(
+    /^creatures you control gain (\w+) until end of turn\.?$/,
+  );
+  const second = (lines[1] as string).match(
+    /^(?:addendum \u2014 )?if you cast this spell during your main phase, put a \+1\/\+1 counter on each of those creatures and they gain (\w+) until end of turn\.?$/,
+  );
+  if (first === null || second === null) return null;
+  const keywordA = first[1] as KeywordAbility;
+  const keywordB = second[1] as KeywordAbility;
+  if (!KEYWORD_SET.has(keywordA) || !KEYWORD_SET.has(keywordB)) return null;
+  const creatures = allOf(YOURS, ofType('Creature'));
+  return {
+    targets: [],
+    effects: [
+      { op: 'grantKeywordEachUntilEot', selector: creatures, keyword: keywordA },
+      {
+        op: 'conditionalEffect',
+        condition: { kind: 'castDuringYourMainPhase' },
+        then: [
+          { op: 'putCountersEach', selector: creatures, counter: '+1/+1', count: 1 },
+          { op: 'grantKeywordEachUntilEot', selector: creatures, keyword: keywordB },
+        ],
+        else: [],
+      },
+    ],
+  };
+}
+
+/**
+ * The ability a "When you do, …" reflexive trigger puts on the stack (CR 603.12). It declares
+ * its own targets, chosen as it goes on the stack (CR 603.3d), so it gets its own slot list —
+ * ordinary slots first, then variable-count ones, as `pushTriggerOnStack` requires.
+ */
+function parseReflexiveAbility(text: string, card: OracleCard): Ability | null {
+  const targets: TargetSpec[] = [];
+  let countSlotSeen = false;
+  let ordinaryAfterCount = false;
+  const alloc: SlotAllocator = (kind, filter, controller, graveyardOwnerScope) => {
+    if (countSlotSeen) ordinaryAfterCount = true;
+    targets.push(
+      kind === 'cardInGraveyard'
+        ? graveyardCardTarget(
+            graveyardOwnerScope ?? 'controller',
+            filter === undefined ? {} : { filter },
+          )
+        : {
+            kind,
+            ...(filter !== undefined ? { filter } : {}),
+            ...(controller !== undefined ? { controller } : {}),
+          },
+    );
+    return targets.length - 1;
+  };
+  const allocCount: CountSlotAllocator = (kind, count, controller, filter) => {
+    countSlotSeen = true;
+    targets.push({
+      kind,
+      count,
+      ...(controller !== undefined ? { controller } : {}),
+      ...(filter !== undefined ? { filter } : {}),
+    });
+    return targets.length - 1;
+  };
+  // One sentence only: where a later sentence stops belonging to the reflexive ability and
+  // goes back to the triggering one is not knowable from the text alone, so fail closed.
+  const sentences = splitSentences(text);
+  if (sentences.length !== 1) return null;
+  const sentence = sentences[0] as string;
+  const parsed = parseEffectSentence(sentence, alloc, card, { allocCount });
+  if (parsed === null) return null;
+  const effects: Effect[] = [];
+  appendSentenceEffects(effects, sentence, parsed);
+  if (effects.length === 0 || ordinaryAfterCount) return null;
+  return { kind: 'triggered', targets, effects, description: `When you do, ${text}` };
+}
+
 function parseModalSpellBlock(
   text: string,
   card: OracleCard,
@@ -3354,7 +3759,7 @@ const STEP_TRIGGER_HEAD_RE =
  * selector.
  */
 const AGGREGATE_TRIGGER_HEAD_RE =
-  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deal combat damage to a player), (.*)$/;
+  /^whenever (?:(~) and\/or )?one or more (.+?) (attack|enter|deals? combat damage to a player), (.*)$/;
 /**
  * "Whenever you cast a Dragon spell" (CR 603.2) / "Whenever you cast OR COPY an instant or
  * sorcery spell" (Archmage Emeritus, Storm-Kiln Artist) â€” the "or copy" half is read onto the
@@ -4024,7 +4429,15 @@ function parseBlinkChosenBlock(body: string, allocCount: CountSlotAllocator): Ef
  * and modeling it as one would make it fire once when it should fire twice.
  */
 function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
-  const lower = line.toLowerCase();
+  let lower = line.toLowerCase();
+  // Battalion: "Whenever ~ and at least two other creatures attack" is ~'s own attack trigger
+  // with an attacker count on the event; the count is put back on the head below.
+  const battalion = lower.match(/^whenever ~ and at least (\w+) other creatures attack, /);
+  const otherAttackers = battalion === null ? null : parseAmount(battalion[1] as string);
+  if (battalion !== null) {
+    if (otherAttackers === null || otherAttackers < 1) return null;
+    lower = `whenever ~ attacks, ${lower.slice(battalion[0].length)}`;
+  }
   const firstLine = lower.split('\n')[0] as string;
   const continuation = lower.split('\n').slice(1).join('\n');
 
@@ -4067,7 +4480,27 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const leaveGraveyard = firstLine.match(
     /^whenever (one or more|an?) (artifact|creature|land|enchantment) cards? leaves? your graveyard, (.*)$/,
   );
-  if (enterAndCast !== null) {
+  // "Whenever one or more +1/+1 counters are put on this creature" (Pensive Professor): one
+  // event per placement, entering with counters included (CR 122.6).
+  const countersPutOnSelf = firstLine.match(
+    /^whenever one or more ([+-]\d+\/[+-]\d+|[a-z]+) counters are put on (?:~|this creature), (.*)$/,
+  );
+  // "Whenever you put a counter on a creature you control" (Mikey & Leo): any kind, placed by
+  // you (CR 122.6a: an entering permanent's counters are put on it by its controller).
+  const countersPutByYou = firstLine.match(
+    /^whenever you put (?:a|one or more) counters? on (.+?), (.*)$/,
+  );
+  if (countersPutByYou !== null) {
+    const selector = parseTriggerSubject(countersPutByYou[1] as string, card);
+    if (selector === null) return null;
+    heads = [{ when: 'countersPut', subject: { kind: 'permanent', selector }, byYou: true }];
+    body = countersPutByYou[2] as string;
+  } else if (countersPutOnSelf !== null) {
+    heads = [
+      { when: 'countersPut', subject: SELF_SUBJECT, counter: countersPutOnSelf[1] as string },
+    ];
+    body = countersPutOnSelf[2] as string;
+  } else if (enterAndCast !== null) {
     const subjectPhrase = enterAndCast[1] as string;
     let subject: TriggerSubject;
     if (SELF_TRIGGER_SUBJECT_RE.test(subjectPhrase)) {
@@ -4279,7 +4712,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
               ? 'enters'
               : 'dealsCombatDamageToPlayer',
         subject: { kind: 'permanent', selector },
-        aggregate: true,
+        // "… deal combat damage to a player" fires once for EACH player dealt damage, "that
+        // damage" being the damage to that player — the same grouping as Pia Nalaar's override.
+        aggregate: (aggregate[3] as string).startsWith('deal') ? 'byEventPlayer' : true,
       },
     ];
     body = aggregate[4] as string;
@@ -4418,11 +4853,84 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (heads.some((head) => head.when !== 'enters')) return null;
     heads = heads.map((head) => ({ ...head, entersWithoutManaSpentToCast: true as const }));
     body = iff[2] as string;
+  } else if (iff !== null && /^(?:it|~) had counters on it$/.test(iff[1] as string)) {
+    // "When this creature dies, if it had counters on it" (Iron Apprentice): the departed
+    // creature's last-known counters (CR 603.10a), of any kind. Only a self-departure head names
+    // an object whose counters "it had" can mean.
+    if (
+      !heads.every(
+        (head) =>
+          (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+          head.subject.kind === 'self',
+      )
+    )
+      return null;
+    condition = { kind: 'sourceMatches', selector: { kind: 'hasAnyCounter' } };
+    body = iff[2] as string;
   } else if (iff !== null) {
     const parsed = parseConditionClause(iff[1] as string, card);
     if (parsed === null) return null;
     condition = parsed;
     body = iff[2] as string;
+  }
+  // "This ability triggers only once each turn." (Mikey & Leo) — a limit on the object's
+  // ability, kept on the head so every dispatcher of that event can honor it.
+  {
+    const once = body.match(/^([\s\S]+?)\.? this ability triggers only once each turn\.?$/);
+    if (once !== null) {
+      if (!heads.every((head) => 'subject' in head)) return null;
+      heads = heads.map((head) => ({ ...head, oncePerTurn: true as const }));
+      body = once[1] as string;
+    }
+  }
+  if (otherAttackers !== null) {
+    if (!heads.every((head) => head.when === 'attacks')) return null;
+    heads = heads.map((head) => ({ ...head, withOtherAttackers: otherAttackers }));
+  }
+  // "Whenever a creature you control with a +1/+1 counter on it attacks, tap target creature
+  // defending player controls" (Elite Scaleguard): for an attacks head the event player is the
+  // player that creature is attacking (CR 506.3d), so the target clause reads as "that player".
+  // Only the watched-creature head: self heads with this clause (Kogla) are still owned by their
+  // reviewed overrides. Not an aggregate head either: "one or more creatures attack" can attack
+  // several players at once, so it has no single defending player.
+  if (
+    / defending player controls\b/.test(body) &&
+    heads.every(
+      (head) =>
+        head.when === 'attacks' &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
+    )
+  ) {
+    heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
+    body = body.replace(/ defending player controls\b/g, ' that player controls');
+  }
+  // "You may pay {R}{G}{W}{U}. When you do, …" (The Thing) / "Put a +1/+1 counter on ~. When you
+  // do, …" (Lockjaw): a reflexive trigger (CR 603.12) whose ability announces its own targets
+  // when it goes on the stack, after this one has resolved.
+  let reflexive: Effect[] | null = null;
+  {
+    const m = body.match(/^(.+?)\. when you do, (.+?)\.?$/);
+    const then = m === null ? null : parseReflexiveAbility(m[2] as string, card);
+    if (m !== null && then !== null) {
+      const action = m[1] as string;
+      const pay = action.match(/^you may pay ((?:\{[^}]+\})+)$/);
+      const put = action.match(
+        /^put (a|an|one|two|three|four|five) ([+-]\d+\/[+-]\d+) counters? on ~$/,
+      );
+      if (pay !== null) {
+        const parsed = parseManaCost((pay[1] as string).toUpperCase() as never);
+        if (parsed.cost !== null && parsed.unsupportedSymbols.length === 0)
+          reflexive = [{ op: 'mayPayManaThenReflexive', cost: parsed.cost, then }];
+      } else if (put !== null) {
+        const count = parseAmount(put[1] as string);
+        if (count !== null)
+          reflexive = [
+            { op: 'putCountersOnSourceThenReflexive', counter: put[2] as string, count, then },
+          ];
+      }
+    }
   }
   let paidTransform: Effect[] | null = null;
   const paidTransformMatch = body.match(
@@ -4440,7 +4948,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
   }
-  let optional = paidTransform === null && body.startsWith('you may ');
+  // "you may move any number of … counters" (Forgotten Ancient) is one choice, zero included: the
+  // division is the decline, so it is not also a "use this ability?" prompt.
+  let optional =
+    paidTransform === null &&
+    reflexive === null &&
+    body.startsWith('you may ') &&
+    !body.startsWith('you may move any number of ');
   if (body.startsWith('you may have ')) {
     optional = true;
     body = body
@@ -4488,6 +5002,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   const firstHead = heads[0] as TriggerHead;
   const opts = {
     triggerObject: 'subject' in firstHead && firstHead.subject.kind === 'permanent',
+    departedSelf: heads.every(
+      (head) =>
+        (head.when === 'dies' || head.when === 'leavesBattlefield') &&
+        'subject' in head &&
+        head.subject.kind === 'self',
+    ),
     allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
     // head makes it the number of objects. See `parseCountPhrase`.
@@ -4502,6 +5022,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   // together ("look at the top eight â€¦ put the rest â€¦", Klauth's mana-then-restriction-then-
   // persistence).
   let effects: Effect[] | null =
+    reflexive ??
     paidTransform ??
     (modalBlock === null
       ? (parseBlinkChosenBlock(body, allocCount) ??
@@ -4511,6 +5032,9 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         parseHellkiteCourserBlock(body, alloc, card) ??
         parseDoublePowerThoseGainBlock(body) ??
         parseDepartedSourceToLibraryBlock(body, heads) ??
+        parseResolutionCountBlock(body, line, alloc, card, opts) ??
+        parseSacrificeSelfIfYouDoBlock(body, alloc, card, opts) ??
+        parseCountersThenTheyGainBlock(body, card) ??
         parseExileReturnAtNextEndStepBlock(body, alloc) ??
         parseReanimateHasteExileAtEndStepBlock(body, alloc))
       : []);
@@ -5466,7 +5990,12 @@ function parseManaAbilityLines(lower: string, card: OracleCard): ManaAbilitySpec
  * be an ability the engine charges the wrong price for.
  */
 function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | null {
-  let lower = line.toLowerCase().replace(/\.$/, '');
+  // A modal activation arrives as its header line plus the bullet lines. Its "Activate only …"
+  // restrictions trail the header ("{4}, {T}: Choose one. Activate only as a sorcery." —
+  // Aetheric Amplifier), so they are stripped from that first line; the bullets rejoin after.
+  const newline = line.indexOf('\n');
+  const modeLines = newline < 0 ? '' : line.slice(newline).toLowerCase();
+  let lower = (newline < 0 ? line : line.slice(0, newline)).toLowerCase().replace(/\.$/, '');
   let timing: 'any' | 'sorcery' = 'any';
   let oncePerTurn = false;
   // The two "Activate only â€¦" restrictions are independent and can both appear, so they are
@@ -5490,6 +6019,8 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     condition = parsed;
     lower = onlyIf[1] as string;
   }
+  // The header keeps its own punctuation: "choose one —" as printed, "choose one." restored.
+  if (modeLines !== '') lower = `${lower}${/[\u2014-]$/.test(lower) ? '' : '.'}${modeLines}`;
 
   const split = splitActivation(lower);
   if (split === null) return null;
@@ -6863,7 +7394,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
             parseReanimateBlock(spellBlockText, card) ??
             parseDestroyThenLoseLifeEqualToManaValueBlock(spellBlockText, card) ??
             parseLivingDeathBlock(spellBlockText) ??
-            parseVictimizeBlock(spellBlockText);
+            parseVictimizeBlock(spellBlockText) ??
+            parseAddendumMassBlock(spellBlockText);
           if (wholeSpell !== null) {
             spellTargets.push(...wholeSpell.targets);
             spellEffects.push(...wholeSpell.effects);
@@ -7148,6 +7680,28 @@ export function interpretCard(card: OracleCard): CardDefinition {
       }
     }
 
+    // Increment: "Whenever you cast a spell, if the amount of mana you spent is greater than this
+    // creature's power or toughness, put a +1/+1 counter on this creature." Greater than either
+    // one suffices; both the mana spent and the creature are read again on resolution (CR 603.4).
+    if (lower === 'increment') {
+      const exceeds = (stat: Value): Condition => ({
+        kind: 'compareValues',
+        left: { kind: 'manaSpent' },
+        cmp: '>=',
+        right: { kind: 'plus', of: stat, n: 1 },
+      });
+      triggers.push(
+        triggered(onCast('you'), {
+          condition: {
+            kind: 'anyOf',
+            of: [exceeds({ kind: 'powerOfSource' }), exceeds({ kind: 'toughnessOfSource' })],
+          },
+          effects: [{ op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 }],
+          description: 'Increment',
+        }),
+      );
+      continue;
+    }
     // Persist and undying (CR 702.79a, 702.93a): each is a dies trigger with an intervening-if
     // read from the permanent's last-known counters, returning the card it became.
     if (lower === 'persist' || lower === 'undying') {
@@ -7160,6 +7714,35 @@ export function interpretCard(card: OracleCard): CardDefinition {
         }),
       );
       continue;
+    }
+    // Graft N (CR 702.58a): "This permanent enters with N +1/+1 counters on it" and "Whenever
+    // another creature enters, if this permanent has a +1/+1 counter on it, you may move a +1/+1
+    // counter from this permanent onto that creature." The intervening-if is the rule's, not the
+    // reminder text's.
+    {
+      const graft = lower.match(/^graft (\w+)$/);
+      const n = graft === null ? null : parseAmount(graft[1] as string);
+      const previous = entersWithCounters['+1/+1'];
+      if (n !== null && n > 0 && (previous === undefined || typeof previous === 'number')) {
+        entersWithCounters['+1/+1'] = (previous ?? 0) + n;
+        triggers.push(
+          triggered(whenEnters(allOf(OTHER, ofType('Creature'))), {
+            condition: { kind: 'sourceHasCounters', counter: '+1/+1', cmp: '>=', n: 1 },
+            optional: true,
+            effects: [
+              {
+                op: 'moveCounters',
+                from: 'source',
+                to: 'triggerObject',
+                counter: '+1/+1',
+                count: 1,
+              },
+            ],
+            description: `Graft ${n}`,
+          }),
+        );
+        continue;
+      }
     }
     // 1. A pure keyword list ("Flying, vigilance", "Flying, ward {3}").
     {
@@ -7293,6 +7876,25 @@ export function interpretCard(card: OracleCard): CardDefinition {
           } else {
             reasons.push('multiple dynamic entry-counter replacements for ' + counter);
           }
+          continue;
+        }
+      }
+      // "~ enters with a +1/+1 counter on it for each creature that died this turn" (Sautekh
+      // Immortal): the same replacement, counted as it enters.
+      const forEach = lower.match(
+        /^~ enters (?:the battlefield )?with (\w+) ([+-][0-9]+[/][+-][0-9]+) counters? on it for each (.+)$/,
+      );
+      if (forEach !== null && entersWithCounters[forEach[2] as string] === undefined) {
+        const per = parseCountPhrase(forEach[1] as string);
+        // "creature that died this turn" is the state-level tally of creatures put into a
+        // graveyard from the battlefield this turn (CR 700.4), whoever controlled them.
+        const count: Value | null =
+          forEach[3] === 'creature that died this turn'
+            ? { kind: 'creaturesDiedThisTurn' }
+            : parseDynamicCountValue('the number of ' + (forEach[3] as string), card);
+        if (per !== null && per.kind === 'const' && count !== null) {
+          entersWithCounters[forEach[2] as string] =
+            per.n === 1 ? count : { kind: 'times', of: count, n: per.n };
           continue;
         }
       }

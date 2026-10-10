@@ -8,6 +8,8 @@ export interface SourceCastState {
   wasKicked: boolean;
   announcedX: number;
   escaped: boolean;
+  /** Addendum: the resolving spell was cast during its caster's main phase. */
+  castDuringOwnMainPhase?: boolean;
 }
 
 /** Private rules facts for one incarnation; never exposed by player/spectator projections. */
