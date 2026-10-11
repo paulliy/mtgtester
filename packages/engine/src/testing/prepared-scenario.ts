@@ -149,6 +149,12 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       if (entry.goadedBy !== undefined) {
         if (!ctx.state.players.some((candidate) => candidate.id === entry.goadedBy))
           throw new Error(`prepared scenario has unknown goading player ${entry.goadedBy}`);
+        // A goad lasts until the goader's next turn begins (CR 701.15a), so on the goader's own
+        // turn the arranged goad would already have ended.
+        if (entry.goadedBy === spec.currentTurnPlayer)
+          throw new Error(
+            `prepared scenario cannot arrange a goad by ${entry.goadedBy} on that player's own turn`,
+          );
         permanent.goadedBy = [{ goaderId: entry.goadedBy, appliedTurn: spec.turnNumber - 1 }];
       }
       if (entry.attachedToCard !== undefined) {

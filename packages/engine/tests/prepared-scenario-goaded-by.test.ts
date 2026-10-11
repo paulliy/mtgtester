@@ -39,4 +39,10 @@ describe('prepared scenario goaded-by', () => {
   it('rejects a goading player that is not in the game', () => {
     expect(() => arrange('P9').run()).toThrow(/unknown goading player P9/);
   });
+
+  it('rejects a goad by the current turn player, which would already have ended (CR 701.15a)', () => {
+    expect(() => arrange('P2').run()).toThrow(
+      /cannot arrange a goad by P2 on that player's own turn/,
+    );
+  });
 });
