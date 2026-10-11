@@ -1456,6 +1456,10 @@ function parseEffectSentence(
   if (s === 'tap enchanted creature' || s === 'tap equipped creature') {
     return [{ op: 'tapTarget', target: 'attachedToSource' }];
   }
+  // Redemption Arc's "{1}{W}: Exile enchanted creature." — again the attached object, untargeted.
+  if (s === 'exile enchanted creature' || s === 'exile equipped creature') {
+    return [{ op: 'exile', target: 'attachedToSource' }];
+  }
   if (s === 'tap target creature that player controls') {
     return [{ op: 'tapTarget', target: alloc('creature', undefined, 'eventPlayer') }];
   }

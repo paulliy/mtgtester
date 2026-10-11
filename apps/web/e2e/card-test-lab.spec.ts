@@ -6805,3 +6805,51 @@ test("Karametra's Favor: draw a card, then tap the enchanted creature for mana t
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
   await expect(permanent(page, "Karametra's Favor")).toHaveCount(1);
 });
+
+test('Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve.
+  const arc = handCard(page, 'Redemption Arc');
+  await expect(arc).toHaveClass(/actionable/, { timeout: 15_000 });
+  await arc.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Redemption Arc')?.attachedTo)
+    .toBe(bearId);
+
+  // Activate {1}{W}: the Aura's ability takes no target, so there is no target prompt.
+  const aura = permanent(page, 'Redemption Arc');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aura.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of/)).toHaveCount(0);
+  await confirm(page);
+
+  // It resolves: Lab Green Bear is exiled, and the Aura has nothing to enchant.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Redemption Arc')).toHaveCount(0);
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')).toBeUndefined();
+  await expect(page.getByText('Exile (1)')).toBeVisible();
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});

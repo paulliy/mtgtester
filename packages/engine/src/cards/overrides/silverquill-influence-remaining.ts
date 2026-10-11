@@ -329,12 +329,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   );
   // Raffine's Guidance: restored in coverage PR02. The interpreter reads the {2}{W} graveyard
   // recast as an alternative cost, so no override remains.
-  // Catalog audit silverquill-remaining-batch-2: exile activated ability claimed without a def.
-  unsupportedCard(
-    'c22e5fc6-9b4e-4197-b472-70d168eb4330',
-    'Redemption Arc',
-    'Exile-enchanted-creature activated ability is claimed without an implementation.',
-  );
+  // Redemption Arc: restored in coverage PR05. The interpreter reads the granted indestructible and
+  // goad, and the untargeted exile of the enchanted creature, so no override remains.
   // Needs counts of your Auras attached to creatures for both draw and continuous power.
   unimplemented('bd92cacd-c7d8-43a2-a261-ea4754fefdc5', 'Sage’s Reverie', []);
   // Screams from Within: restored in coverage PR05. The interpreter reads the enchanted creature's

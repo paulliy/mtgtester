@@ -2323,6 +2323,250 @@ describe('Mask of Memory', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.10 Redemption Arc
+// ---------------------------------------------------------------------------------------------
+
+describe('Redemption Arc', () => {
+  const { card } = pinned('Redemption Arc');
+  const EXILE = /Exile enchanted creature/;
+  const CREATURE = (name: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Secret', oracleText: text });
+  const SMITE = oracle({
+    name: 'Lab Smite',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'Destroy target creature.',
+  });
+  const BLAST = oracle({
+    name: 'Lab Blast',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'Lab Blast deals 5 damage to target creature.',
+  });
+  const COST = [{ symbol: 'W' as const }, ...generic(1)];
+
+  /** P1 controls Redemption Arc on Lab Host and Lab Other; P2 controls Lab Enemy and Lab Wall. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const aura = spawn(ctx, 'P1', card);
+    const host = spawn(ctx, 'P1', CREATURE('Lab Host'));
+    const other = spawn(ctx, 'P1', CREATURE('Lab Other'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    const wall = spawn(ctx, 'P2', CREATURE('Lab Wall'));
+    aura.attachedTo = host.id;
+    return { ctx, aura, host, other, enemy, wall };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const alive = (ctx: GameContext, perm: EnginePermanent) => ctx.state.battlefield.includes(perm);
+  const goaded = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).staticGoadedBy ?? [];
+
+  /** P1 casts an instant at `targetId` through the normal path and lets it resolve. */
+  function castAt(ctx: GameContext, spell: OracleCard, targetId: string) {
+    const object = conjure(ctx, 'P1', spell, 'hand');
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, `P1 casts ${spell.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    resolveTop(ctx);
+    return settle(ctx);
+  }
+
+  /** The attack declaration `P2` is offered on its own turn, as the engine presents it. */
+  function p2AttackSubjects(ctx: GameContext) {
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const seen: { name: string; mustAttack: boolean; defenders: string[] }[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          seen.push({
+            name: subject.name,
+            mustAttack: subject.mustAttack,
+            defenders: subject.defenders.map((defender) => defender.playerId),
+          });
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return seen;
+  }
+
+  it('redemption-arc-pinned-oracle-supported — the interpreter alone models the granted indestructible and goad and the untargeted exile activation', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    expect(def.triggers).toEqual([]);
+    // Indestructible and goaded: two layer 6 grants on the creature this Aura is attached to.
+    expect(def.staticEffects).toEqual([
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'indestructible' } },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
+    ]);
+    // {1}{W}: Exile enchanted creature. At instant speed, with no target.
+    expect(def.activatedAbilities).toHaveLength(1);
+    const [exile] = def.activatedAbilities;
+    expect(exile!.timing).toBe('any');
+    expect(exile!.costs).toEqual([
+      {
+        kind: 'mana',
+        cost: { generic: 1, colored: { W: 1, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },
+      },
+    ]);
+    expect(exile!.ability.targets).toEqual([]);
+    expect(exile!.ability.effects).toEqual([{ op: 'exile', target: 'attachedToSource' }]);
+  });
+
+  it('redemption-arc-indestructible-enchanted-only — only the enchanted creature is indestructible: it survives destroy and lethal damage, nothing else does', () => {
+    const { ctx, aura, host, other, enemy } = board('redemption-indestructible');
+    expect(hasKeyword(ctx, host, 'indestructible')).toBe(true);
+    expect(hasKeyword(ctx, other, 'indestructible')).toBe(false);
+    expect(hasKeyword(ctx, enemy, 'indestructible')).toBe(false);
+    castAt(ctx, SMITE, host.id);
+    expect(alive(ctx, host)).toBe(true);
+    castAt(ctx, BLAST, host.id);
+    expect(alive(ctx, host)).toBe(true);
+
+    // The same spells kill creatures it is not on.
+    castAt(ctx, SMITE, other.id);
+    expect(alive(ctx, other)).toBe(false);
+    castAt(ctx, BLAST, enemy.id);
+    expect(alive(ctx, enemy)).toBe(false);
+
+    // Moved to an opponent's creature, it follows; unattached, nothing is indestructible.
+    const wall = named(ctx, 'Lab Wall')[0]!;
+    aura.attachedTo = wall.id;
+    expect(hasKeyword(ctx, wall, 'indestructible')).toBe(true);
+    expect(hasKeyword(ctx, host, 'indestructible')).toBe(false);
+    aura.attachedTo = null;
+    expect(hasKeyword(ctx, wall, 'indestructible')).toBe(false);
+    castAt(ctx, SMITE, host.id);
+    expect(alive(ctx, host)).toBe(false);
+  });
+
+  it("redemption-arc-goaded — the enchanted creature is goaded by the Aura's controller: it must attack and attacks a player other than them; unenchanted creatures are free", () => {
+    const { ctx, aura, host, other, enemy } = board('redemption-goad');
+    expect(goaded(ctx, host)).toEqual(['P1']);
+    for (const perm of [other, enemy]) expect(goaded(ctx, perm)).toEqual([]);
+
+    // P2's creature enchanted by P1's Aura must attack, and never P1 while P3 or P4 can be.
+    aura.attachedTo = enemy.id;
+    const seen = p2AttackSubjects(ctx);
+    const forced = seen.find((subject) => subject.name === 'Lab Enemy');
+    expect(forced?.mustAttack).toBe(true);
+    expect(forced?.defenders.sort()).toEqual(['P3', 'P4']);
+    const free = seen.find((subject) => subject.name === 'Lab Wall');
+    expect(free?.mustAttack).toBe(false);
+    expect(free?.defenders.sort()).toEqual(['P1', 'P3', 'P4']);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    // Lab Enemy is a 2/2 and really attacked: one of P3 or P4 took 2, P1 took nothing.
+    expect(playerById(ctx, 'P3').life + playerById(ctx, 'P4').life).toBe(78);
+
+    // Unattached, the Aura goads nobody.
+    const bare = board('redemption-goad-bare');
+    bare.aura.attachedTo = null;
+    expect(p2AttackSubjects(bare.ctx).every((subject) => !subject.mustAttack)).toBe(true);
+  });
+
+  it('redemption-arc-exile-untargeted — {1}{W} exiles the enchanted creature without targeting, even a hexproof or indestructible one', () => {
+    const { ctx, aura, host, other } = board('redemption-exile');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', aura.id, EXILE);
+    expect(option).toBeDefined();
+    // No target is asked for, and none is chosen.
+    expect(option!.targets ?? []).toEqual([]);
+    const { decisions } = takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    expect(decisions.filter((decision) => /target/i.test(decision.prompt))).toEqual([]);
+    expect(ctx.state.stack).toHaveLength(1);
+    // The ability is on the stack; nothing has happened to the creature yet, and the mana is spent.
+    expect(alive(ctx, host)).toBe(true);
+    resolveTop(ctx);
+    settle(ctx);
+    // Indestructible does not stop exile: the card is in exile, not the graveyard.
+    expect(alive(ctx, host)).toBe(false);
+    expect(ctx.state.exile.map((c) => c.name)).toEqual(['Lab Host']);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toEqual(['Redemption Arc']);
+    // Only the enchanted creature went.
+    expect(alive(ctx, other)).toBe(true);
+
+    // A hexproof creature of an opponent's is exiled the same way: nothing is targeted.
+    const hexproof = board('redemption-exile-hexproof');
+    const shielded = spawn(
+      hexproof.ctx,
+      'P2',
+      oracle({
+        name: 'Lab Hexproof Elf',
+        typeLine: 'Creature — Elf',
+        oracleText: 'Hexproof',
+        keywords: ['Hexproof'],
+      }),
+    );
+    hexproof.aura.attachedTo = shielded.id;
+    addMana(playerById(hexproof.ctx, 'P1'), COST);
+    const again = optionFor(hexproof.ctx, 'P1', hexproof.aura.id, EXILE);
+    expect(again).toBeDefined();
+    takeAction(hexproof.ctx, 'P1', again!.payload as PriorityActionPayload);
+    resolveTop(hexproof.ctx);
+    settle(hexproof.ctx);
+    expect(alive(hexproof.ctx, shielded)).toBe(false);
+    expect(playerById(hexproof.ctx, 'P2').graveyard).toEqual([]);
+    expect(hexproof.ctx.state.exile.map((c) => c.name)).toEqual(['Lab Hexproof Elf']);
+    expect(hexproof.ctx.state.stack).toEqual([]);
+  });
+
+  it('redemption-arc-activation-controller-mana — only the Aura’s controller can activate it, and only with {1}{W}', () => {
+    const { ctx, aura } = board('redemption-activation');
+    // No mana, then too little mana: not offered.
+    expect(optionFor(ctx, 'P1', aura.id, EXILE)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }]);
+    expect(optionFor(ctx, 'P1', aura.id, EXILE)).toBeUndefined();
+    // Two mana but no white: not offered.
+    const colorless = board('redemption-activation-colorless');
+    addMana(playerById(colorless.ctx, 'P1'), generic(2));
+    expect(optionFor(colorless.ctx, 'P1', colorless.aura.id, EXILE)).toBeUndefined();
+    // {1}{W}: offered, at instant speed even on an opponent's turn.
+    addMana(playerById(ctx, 'P1'), generic(1));
+    expect(optionFor(ctx, 'P1', aura.id, EXILE)).toBeDefined();
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    expect(optionFor(ctx, 'P1', aura.id, EXILE)).toBeDefined();
+
+    // The creature's controller is not the Aura's: P2 enchanted by P1's Aura cannot exile it, and
+    // activating it as P1 exiles P2's creature.
+    const theirs = board('redemption-activation-opponent');
+    theirs.aura.attachedTo = theirs.enemy.id;
+    addMana(playerById(theirs.ctx, 'P2'), COST);
+    expect(optionFor(theirs.ctx, 'P2', theirs.aura.id, EXILE)).toBeUndefined();
+    addMana(playerById(theirs.ctx, 'P1'), COST);
+    const option = optionFor(theirs.ctx, 'P1', theirs.aura.id, EXILE);
+    expect(option).toBeDefined();
+    takeAction(theirs.ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(theirs.ctx);
+    settle(theirs.ctx);
+    expect(alive(theirs.ctx, theirs.enemy)).toBe(false);
+    expect(theirs.ctx.state.exile.map((c) => c.name)).toEqual(['Lab Enemy']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.11 Resurrection Orb
 // ---------------------------------------------------------------------------------------------
 
@@ -3862,6 +4106,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Mask of Memory',
     sha256: 'cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310',
+    clauseCount: 2,
+  },
+  {
+    name: 'Redemption Arc',
+    sha256: 'c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638',
     clauseCount: 2,
   },
   {

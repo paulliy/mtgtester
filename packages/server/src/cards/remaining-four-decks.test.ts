@@ -126,7 +126,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Keen Duelist',
       'Kor Spiritdancer',
       'Martial Impetus',
-      'Redemption Arc',
       'Sheltered by Ghosts',
       'Tomik, Wielder of Law',
       'Combat Calligrapher',

@@ -86,6 +86,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Psychomancer',
       'Puppeteer Clique',
       "Raffine's Guidance",
+      'Redemption Arc',
       'Resurrection Orb',
       'Retrofitter Foundry',
       'Return to Nature',

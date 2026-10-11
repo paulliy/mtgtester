@@ -1793,13 +1793,35 @@
     "c22e5fc6-9b4e-4197-b472-70d168eb4330": {
       "name": "Redemption Arc",
       "oracleSha256": "c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "redemption-arc-statics",
+          "oracleText": "Enchanted creature has indestructible and is goaded.",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus two layer 6 grants on the creature this Aura is attached to (attachedToSource) and nothing else: the indestructible keyword, so it survives destroy effects and lethal damage, and goad by the Aura's controller",
+            "a goaded creature must attack each combat if able and attacks a player other than the Aura's controller if able; unenchanted creatures have no requirement, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "redemption-arc-pinned-oracle-supported",
+            "redemption-arc-indestructible-enchanted-only",
+            "redemption-arc-goaded"
+          ],
+          "viewerScenarioIds": ["redemption-arc-viewer-exile-enchanted-creature"]
+        },
+        {
+          "id": "redemption-arc-exile",
           "oracleText": "{1}{W}: Exile enchanted creature.",
-          "implementation": ["explicitly unsupported; exile activation omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability of the Aura at instant speed with a {1}{W} mana cost and no target, whose effect exiles the creature the Aura is attached to (exile attachedToSource): it is not targeted, so hexproof does not stop it, and indestructible does not stop exile",
+            "only the Aura's controller can activate it, and only when {1}{W} is available; the exiled card goes to exile, not the graveyard, and the Aura then has nothing to enchant and is put into its owner's graveyard"
+          ],
+          "engineTestIds": [
+            "redemption-arc-pinned-oracle-supported",
+            "redemption-arc-exile-untargeted",
+            "redemption-arc-activation-controller-mana"
+          ],
+          "viewerScenarioIds": ["redemption-arc-viewer-exile-enchanted-creature"]
         }
       ],
       "gameplayAiScenarioIds": []

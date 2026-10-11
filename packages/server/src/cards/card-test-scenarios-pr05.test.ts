@@ -539,3 +539,33 @@ describe("Karametra's Favor Card Test Lab scenario", () => {
     replays('karametras-favor-viewer-granted-mana-pays-spell', steps);
   });
 });
+
+describe('Redemption Arc Card Test Lab scenario', () => {
+  it('redemption-arc-viewer-exile-enchanted-creature — the Aura goes on Lab Green Bear, then {1}{W} exiles it with no target and the Aura falls off', () => {
+    const steps: Step[] = [
+      { action: 'Cast Redemption Arc', targets: ['Lab Green Bear'] },
+      { action: 'Exile enchanted creature' },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'redemption-arc-viewer-exile-enchanted-creature',
+      steps,
+    );
+    // The activation was offered with the Aura on the battlefield and took no target.
+    expect(
+      offered.some((options) => options.some((option) => /Exile enchanted creature/.test(option))),
+    ).toBe(true);
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    expect(onBattlefield('Redemption Arc')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Green Bear']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Redemption Arc']);
+    expect(
+      onBattlefield('Plains')
+        .concat(onBattlefield('Swamp'))
+        .filter((land) => land.tapped),
+    ).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('redemption-arc-viewer-exile-enchanted-creature', steps);
+  });
+});

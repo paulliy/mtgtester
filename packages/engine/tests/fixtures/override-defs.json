@@ -8067,12 +8067,6 @@
     "def": {}
   },
   {
-    "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
-    "name": "Redemption Arc",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
     "name": "Reliquary Tower",
     "handledLines": [
@@ -19169,12 +19163,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-redemption-arc",
-    "name": "Redemption Arc",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-reliquary-tower",

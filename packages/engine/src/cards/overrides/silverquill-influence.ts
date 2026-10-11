@@ -74,9 +74,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.',
   ]);
 
-  unimplemented('c22e5fc6-9b4e-4197-b472-70d168eb4330', 'Redemption Arc', [
-    '{1}{W}: Exile enchanted creature.',
-  ]);
+  // Redemption Arc: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Ghoulish Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 

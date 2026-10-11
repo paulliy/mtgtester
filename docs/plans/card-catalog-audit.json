@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 36,
+      "uniqueOracleIds": 35,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 47,
+      "uniqueOracleIds": 46,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6298,6 +6298,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the fail-closed unsupportedCard that dropped the enchanted creature's printed statics when its mana ability replaced them): the interpreter reads When this Aura enters, draw a card as an enters trigger on the Aura itself, and reads Enchanted creature has \"{T}: Add one mana of any color.\" as a layer 6 grant of a one-mana any-color mana ability to the creature this Aura is attached to (attachedToSource), so that creature taps for mana through the normal cast path and is bound by summoning sickness (CR 302.6). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+      "name": "Redemption Arc",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the exile activation without an implementation): the interpreter reads Enchanted creature has indestructible and is goaded as a layer 6 indestructible keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads {1}{W}: Exile enchanted creature as an instant-speed activated ability of the Aura with no target that exiles the attached creature, so hexproof does not stop it and the Aura then falls off. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+      "name": "Redemption Arc",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature has indestructible and is goaded as a layer 6 indestructible keyword and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads {1}{W}: Exile enchanted creature as an instant-speed activated ability of the Aura with no target that exiles the attached creature, so hexproof does not stop it and the Aura then falls off. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

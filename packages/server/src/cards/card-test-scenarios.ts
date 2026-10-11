@@ -8302,6 +8302,39 @@ function karametrasFavorScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function redemptionArcScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-exile-enchanted-creature',
+    title: 'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+    instructions: [
+      'Redemption Arc is in your hand. Two Plains, three Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Redemption Arc targeting Lab Green Bear and let it resolve: Lab Green Bear is indestructible and goaded.',
+      'Activate Redemption Arc’s {1}{W} ability. It asks for no target: it exiles the creature the Aura is attached to.',
+      'Let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is in exile, not your graveyard, and Redemption Arc is in your graveyard because nothing is left to enchant. All five lands are tapped.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics', 'redemption-arc-exile'],
+    decks: {
+      P1: [arc.card, PLAINS, SWAMP, SWAMP, SWAMP, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Redemption Arc'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Swamp', 'Swamp', 'Swamp', 'Plains', 'Lab Green Bear'],
+        },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10141,6 +10174,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'shielded-by-faith-viewer-attach-to-entering-creature',
   'forum-filibuster-viewer-inkling-and-aura',
   'karametras-favor-viewer-granted-mana-pays-spell',
+  'redemption-arc-viewer-exile-enchanted-creature',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10417,6 +10451,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
+  'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

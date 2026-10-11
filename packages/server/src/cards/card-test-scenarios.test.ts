@@ -362,6 +362,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'shielded-by-faith-viewer-attach-to-entering-creature',
       'forum-filibuster-viewer-inkling-and-aura',
       'karametras-favor-viewer-granted-mana-pays-spell',
+      'redemption-arc-viewer-exile-enchanted-creature',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

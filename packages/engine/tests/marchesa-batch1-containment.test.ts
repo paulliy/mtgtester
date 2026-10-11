@@ -95,8 +95,6 @@ const REASONS: Record<string, string> = {
   'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
   'Martial Impetus':
     'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
-  'Redemption Arc':
-    'Exile-enchanted-creature activated ability is claimed without an implementation.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
   'Tomik, Wielder of Law':
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
@@ -296,6 +294,7 @@ describe('Marchesa catalog audit containment', () => {
     'Shielded by Faith',
     'Forum Filibuster',
     "Karametra's Favor",
+    'Redemption Arc',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
