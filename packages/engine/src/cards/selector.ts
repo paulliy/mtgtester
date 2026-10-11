@@ -204,6 +204,11 @@ export type Selector =
   | { kind: 'combatRole'; role: 'attacking' | 'blocking' }
   /** A resolving attack trigger's "that player": compare against the event's defender. */
   | { kind: 'attackingEventPlayer' }
+  /**
+   * "that's attacking one of your opponents" (Martial Impetus): attacking a player other than the
+   * source's controller. Attack assignment is game state, like `combatRole`.
+   */
+  | { kind: 'attackingOpponent' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -274,6 +279,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'not':
       return selectorIsEventOnly(selector.of);
     case 'combatRole':
+    case 'attackingOpponent':
       // Attack/block assignment is game state, not output from a continuous-effect layer.
       // Static effects such as attacking-creature anthems may therefore use this selector.
       return false;
@@ -388,6 +394,11 @@ export function selectMatches(
       return candidate.inCombat === true;
     case 'combatRole':
       return candidate.combatRole === selector.role;
+    case 'attackingOpponent':
+      return (
+        candidate.attackingDefenderId != null &&
+        candidate.attackingDefenderId !== source.controllerId
+      );
     case 'attackingEventPlayer':
       return (
         source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId

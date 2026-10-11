@@ -313,6 +313,7 @@ const shapes = {
     what: leaf,
     requireAura: leaf,
     optional: leaf,
+    exceptTriggerObject: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -1092,6 +1093,7 @@ const families = {
       inCombat: true,
       combatRole: true,
       attackingEventPlayer: true,
+      attackingOpponent: true,
       allOf: true,
       anyOf: true,
       not: true,

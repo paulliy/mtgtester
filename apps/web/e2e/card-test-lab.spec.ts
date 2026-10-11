@@ -7004,3 +7004,60 @@ test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and y
   await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+test('Martial Impetus: the enchanted creature attacks and pumps your other attacker', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Martial Impetus: the enchanted creature attacks and pumps your other attacker',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Cast the Aura on Lab Green Bear and let it resolve: a 3/3 that is goaded.
+  const impetus = handCard(page, 'Martial Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Martial Impetus')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Attack: the goaded Bear must attack and may not attack you; Lab Ox attacks P3.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The attack trigger pumps the other attacker, and unblocked damage is dealt.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('35');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});

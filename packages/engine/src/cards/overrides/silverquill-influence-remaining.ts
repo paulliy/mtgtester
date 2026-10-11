@@ -275,12 +275,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit silverquill-remaining-batch-2: pumps every creature in combat.
-  unsupportedCard(
-    'c8decfdf-1421-4649-acde-5215e7f08bb9',
-    'Martial Impetus',
-    'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
-  );
+  // Martial Impetus: restored in coverage PR05. The interpreter reads the +1/+1 and goad on the
+  // enchanted creature, and its attack trigger pumps each other creature attacking an opponent of
+  // the Aura's controller, not every creature in combat.
   defineCard(
     'ff3de07d-86c3-49e1-9de0-97c85301ff93',
     'Parasitic Impetus',

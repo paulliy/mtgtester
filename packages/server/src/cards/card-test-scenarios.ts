@@ -8428,6 +8428,40 @@ function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function martialImpetusScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Martial Impetus');
+  return pr01Scenario(gameId, {
+    id: 'martial-impetus-viewer-attack-pump',
+    title: 'Martial Impetus: the enchanted creature attacks and pumps your other attacker',
+    instructions: [
+      'Martial Impetus is in your hand. A Plains, two Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and your library holds only Forests.',
+      'Cast Martial Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear is a 3/3 and is goaded by you.',
+      'Attack P2 with Lab Green Bear and P3 with Lab Ox. When Lab Green Bear attacks, Martial Impetus gives each other creature attacking one of your opponents +1/+1 until end of turn: Lab Ox becomes a 5/5.',
+      'Let combat damage be dealt. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is a 3/3 and Lab Ox is a 5/5 until end of turn. P2 took 3 combat damage and is at 37, and P3 took 5 and is at 35.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['martial-impetus-statics', 'martial-impetus-attack-pump'],
+    decks: {
+      P1: [impetus.card, PLAINS, SWAMP, SWAMP, LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Martial Impetus'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Swamp', 'Swamp', 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10271,6 +10305,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'fallen-ideal-viewer-sacrifice-then-return',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+  'martial-impetus-viewer-attack-pump',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10551,6 +10586,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
+  'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -122,7 +122,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Herald of Amity',
       'Intermediate Chirography',
       'Keen Duelist',
-      'Martial Impetus',
       'Sheltered by Ghosts',
       'Tomik, Wielder of Law',
       'Combat Calligrapher',

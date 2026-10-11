@@ -511,7 +511,14 @@ export type Effect =
   | { op: 'chooseOne'; options: { effects: Effect[]; description: string }[] }
   /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */
   | { op: 'fight'; first: EffectRef; second: EffectRef }
-  | { op: 'pumpEachUntilEot'; selector: Selector; power: Value | number; toughness: Value | number }
+  | {
+      op: 'pumpEachUntilEot';
+      selector: Selector;
+      power: Value | number;
+      toughness: Value | number;
+      /** "each other creature" beside a trigger's subject (Martial Impetus): not that object. */
+      exceptTriggerObject?: true;
+    }
   /** Snapshot each matching creature's current P/T and add that much again until end of turn. */
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }

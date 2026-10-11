@@ -1798,13 +1798,35 @@
     "c8decfdf-1421-4649-acde-5215e7f08bb9": {
       "name": "Martial Impetus",
       "oracleSha256": "f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "martial-impetus-statics",
+          "oracleText": "Enchanted creature gets +1/+1 and is goaded.",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus two grants on the creature this Aura is attached to (attachedToSource): a layer 7d +1/+1 and a layer 6 goad by the Aura's controller",
+            "a goaded creature must attack each combat if able and attacks a player other than the Aura's controller if able; unenchanted creatures get neither, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "martial-impetus-pinned-oracle-supported",
+            "martial-impetus-buff-and-goad"
+          ],
+          "viewerScenarioIds": ["martial-impetus-viewer-attack-pump"]
+        },
+        {
+          "id": "martial-impetus-attack-pump",
           "oracleText": "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
-          "implementation": ["explicitly unsupported; pumps all creatures in combat"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory attack trigger on the creature this Aura is attached to, with no target, whose effect pumps +1/+1 until end of turn each creature selected by attackingOpponent (attacking a player other than the Aura's controller), excluding the attacking trigger object itself (exceptTriggerObject)",
+            "the enchanted creature itself is not pumped by it, a creature attacking the Aura's controller is not, and a non-attacking creature is not; it does not trigger when only other creatures attack"
+          ],
+          "engineTestIds": [
+            "martial-impetus-pinned-oracle-supported",
+            "martial-impetus-attack-pump",
+            "martial-impetus-own-attackers",
+            "martial-impetus-enchanted-attack-only"
+          ],
+          "viewerScenarioIds": ["martial-impetus-viewer-attack-pump"]
         }
       ],
       "gameplayAiScenarioIds": []

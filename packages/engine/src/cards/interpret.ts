@@ -1759,6 +1759,24 @@ function parseEffectSentence(
       if (selector === null || count === null) return null;
       return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
     }
+    // "Whenever enchanted creature attacks, each other creature that's attacking one of your
+    // opponents gets +1/+1 until end of turn" (Martial Impetus): "other" is beside the attacking
+    // creature, and any creature attacking an opponent of this ability's controller counts.
+    {
+      const m = s.match(
+        /^each other creature that's attacking one of your opponents gets \+(\d+)\/\+(\d+) until end of turn$/,
+      );
+      if (m !== null && opts.triggerObject === true)
+        return [
+          {
+            op: 'pumpEachUntilEot',
+            selector: allOf(ofType('Creature'), { kind: 'attackingOpponent' }),
+            power: Number(m[1]),
+            toughness: Number(m[2]),
+            exceptTriggerObject: true,
+          },
+        ];
+    }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
       const selector = parseSubject(m[1] as string, card);

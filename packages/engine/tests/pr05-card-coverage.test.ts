@@ -4729,6 +4729,211 @@ describe('Hateful Eidolon', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.08 Martial Impetus
+// ---------------------------------------------------------------------------------------------
+
+describe('Martial Impetus', () => {
+  const { card } = pinned('Martial Impetus');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const PLUS = { power: 3, toughness: 3 } as const;
+  const BASE = { power: 2, toughness: 2 } as const;
+  const goaded = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).staticGoadedBy ?? [];
+
+  /** Make `playerId` the active player. */
+  function turnOf(ctx: GameContext, playerId: string) {
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  }
+
+  /** The active player attacks with `attackers` (permanent id -> defending player), no blocks. */
+  function fight(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId, subject) =>
+          subject.mustAttack
+            ? (attackers.get(subjectId) ?? subject.defenders[0]?.playerId ?? null)
+            : (attackers.get(subjectId) ?? null),
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** P1's Martial Impetus on P2's Lab A; P2 also controls Lab B and Lab C; P1 controls Lab Mine. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const a = spawn(ctx, 'P2', BEAR('Lab A'));
+    const b = spawn(ctx, 'P2', BEAR('Lab B'));
+    const c = spawn(ctx, 'P2', BEAR('Lab C'));
+    const mine = spawn(ctx, 'P1', BEAR('Lab Mine'));
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = a.id;
+    turnOf(ctx, 'P2');
+    return { ctx, aura, a, b, c, mine };
+  }
+
+  it('martial-impetus-pinned-oracle-supported — the interpreter alone models the +1/+1 and goad and the attack trigger that pumps other creatures attacking your opponents', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // +1/+1 and goaded on the creature this Aura is attached to.
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+      },
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addGoad: true } },
+    ]);
+    // Whenever enchanted creature attacks: a mandatory trigger, with no target, that pumps each
+    // OTHER creature attacking an opponent of the Aura's controller until end of turn.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'attacks',
+      subject: { kind: 'permanent', selector: { kind: 'attachedToSource' } },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      {
+        op: 'pumpEachUntilEot',
+        selector: {
+          kind: 'allOf',
+          of: [{ kind: 'type', value: 'Creature' }, { kind: 'attackingOpponent' }],
+        },
+        power: 1,
+        toughness: 1,
+        exceptTriggerObject: true,
+      },
+    ]);
+  });
+
+  it('martial-impetus-buff-and-goad — the enchanted creature gets +1/+1 and is goaded by the Aura’s controller; nothing else is', () => {
+    const { ctx, aura, a, b, mine } = board('martial-static');
+    expect(effectivePT(ctx, a)).toEqual(PLUS);
+    expect(goaded(ctx, a)).toEqual(['P1']);
+    for (const perm of [b, mine]) {
+      expect(effectivePT(ctx, perm)).toEqual(BASE);
+      expect(goaded(ctx, perm)).toEqual([]);
+    }
+
+    // Goaded: it must attack, and never the Aura's controller while another player can be attacked.
+    const seen: { name: string; mustAttack: boolean; defenders: string[] }[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          seen.push({
+            name: subject.name,
+            mustAttack: subject.mustAttack,
+            defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+          });
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(seen.find((subject) => subject.name === 'Lab A')).toEqual({
+      name: 'Lab A',
+      mustAttack: true,
+      defenders: ['P3', 'P4'],
+    });
+    expect(seen.find((subject) => subject.name === 'Lab B')?.mustAttack).toBe(false);
+
+    // Moved to another creature, the buff and goad go with it; unattached, nothing has them.
+    aura.attachedTo = b.id;
+    expect(effectivePT(ctx, b)).toEqual(PLUS);
+    expect(effectivePT(ctx, a)).toEqual(BASE);
+    aura.attachedTo = null;
+    expect(effectivePT(ctx, b)).toEqual(BASE);
+    expect(goaded(ctx, b)).toEqual([]);
+  });
+
+  it('martial-impetus-attack-pump — when the enchanted creature attacks, each other creature attacking one of your opponents gets +1/+1 until end of turn, and no one else does', () => {
+    const { ctx, a, b, c, mine } = board('martial-pump');
+    // P2's turn: Lab A (enchanted by P1) attacks P3, Lab B attacks P1 (the Aura's controller),
+    // Lab C attacks P4. P1's own Lab Mine stays home.
+    fight(
+      ctx,
+      new Map([
+        [a.id, 'P3'],
+        [b.id, 'P1'],
+        [c.id, 'P4'],
+      ]),
+    );
+    // The enchanted creature has its static +1/+1 and nothing more: "other" excludes it.
+    expect(effectivePT(ctx, a)).toEqual(PLUS);
+    // Lab C attacks one of P1's opponents: pumped.
+    expect(effectivePT(ctx, c)).toEqual(PLUS);
+    // Lab B attacks P1 itself, not one of P1's opponents: not pumped. A non-attacker neither.
+    expect(effectivePT(ctx, b)).toEqual(BASE);
+    expect(effectivePT(ctx, mine)).toEqual(BASE);
+
+    // It is until end of turn only: through the cleanup step Lab C is back to 2/2.
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(effectivePT(ctx, c)).toEqual(BASE);
+  });
+
+  it('martial-impetus-own-attackers — on the Aura controller’s own turn it pumps their other attackers, and only creatures attacking their opponents', () => {
+    const ctx = pod('martial-own');
+    const host = spawn(ctx, 'P1', BEAR('Lab Host'));
+    const first = spawn(ctx, 'P1', BEAR('Lab First'));
+    const stay = spawn(ctx, 'P1', BEAR('Lab Stay'));
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = host.id;
+    fight(
+      ctx,
+      new Map([
+        [host.id, 'P2'],
+        [first.id, 'P3'],
+      ]),
+    );
+    expect(effectivePT(ctx, host)).toEqual(PLUS);
+    expect(effectivePT(ctx, first)).toEqual(PLUS);
+    expect(effectivePT(ctx, stay)).toEqual(BASE);
+  });
+
+  it('martial-impetus-enchanted-attack-only — nothing triggers when only other creatures attack', () => {
+    // Baseline: the enchanted creature attacking does pump the other attacker.
+    const base = board('martial-baseline');
+    fight(
+      base.ctx,
+      new Map([
+        [base.a.id, 'P3'],
+        [base.c.id, 'P4'],
+      ]),
+    );
+    expect(effectivePT(base.ctx, base.c)).toEqual(PLUS);
+
+    // The enchanted creature is tapped and cannot attack: Lab C attacking alone is not pumped.
+    const { ctx, a, c } = board('martial-others-only');
+    a.tapped = true;
+    fight(ctx, new Map([[c.id, 'P4']]));
+    expect(effectivePT(ctx, c)).toEqual(BASE);
+    expect(effectivePT(ctx, a)).toEqual(PLUS);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4782,6 +4987,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Kor Spiritdancer',
     sha256: 'fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35',
+    clauseCount: 2,
+  },
+  {
+    name: 'Martial Impetus',
+    sha256: 'f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6',
     clauseCount: 2,
   },
   {

@@ -8208,12 +8208,6 @@
     "def": {}
   },
   {
-    "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
-    "name": "Martial Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c8f1e3bd-bbf0-4750-b054-03553fc61850",
     "name": "Demanding Dragon",
     "handledLines": [
@@ -17201,12 +17195,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-martial-impetus",
-    "name": "Martial Impetus",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-master-of-ceremonies",

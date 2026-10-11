@@ -647,3 +647,26 @@ describe('Hateful Eidolon Card Test Lab scenario', () => {
     replays('hateful-eidolon-viewer-enchanted-creature-dies-draw', steps);
   });
 });
+
+describe('Martial Impetus Card Test Lab scenario', () => {
+  it('martial-impetus-viewer-attack-pump — Lab Green Bear attacks P2 and Lab Ox attacks P3, so the Aura pumps Lab Ox and P3 takes 5', () => {
+    const steps: Step[] = [
+      { action: 'Cast Martial Impetus', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2', 'P3'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'martial-impetus-viewer-attack-pump',
+      steps,
+    );
+    const [impetus] = onBattlefield('Martial Impetus');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(impetus?.attachedTo).toBe(bear?.id);
+    // Lab Green Bear (2/2, +1/+1 from the Aura) hit P2; Lab Ox (4/4 plus the attack pump) hit P3.
+    expect(seat('P2').life).toBe(37);
+    expect(seat('P3').life).toBe(35);
+    expect(seat('P4').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('martial-impetus-viewer-attack-pump', steps);
+  });
+});

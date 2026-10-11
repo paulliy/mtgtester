@@ -120,6 +120,7 @@ const selectorShapes = {
   inCombat: {},
   combatRole: { role: oneOf('attacking', 'blocking') },
   attackingEventPlayer: {},
+  attackingOpponent: {},
   allOf: { of: arrayOf(selector) },
   anyOf: { of: arrayOf(selector) },
   not: { of: selector },

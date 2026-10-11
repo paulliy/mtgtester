@@ -89,8 +89,6 @@ const REASONS: Record<string, string> = {
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Martial Impetus':
-    'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
   'Tomik, Wielder of Law':
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
@@ -294,6 +292,7 @@ describe('Marchesa catalog audit containment', () => {
     'Fallen Ideal',
     'Kor Spiritdancer',
     'Hateful Eidolon',
+    'Martial Impetus',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

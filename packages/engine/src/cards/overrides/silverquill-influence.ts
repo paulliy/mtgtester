@@ -125,9 +125,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.',
   ]);
 
-  unimplemented('c8decfdf-1421-4649-acde-5215e7f08bb9', 'Martial Impetus', [
-    "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
-  ]);
+  // Martial Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('d13fc657-c6fc-4394-bc70-691050550226', 'Sheltered by Ghosts', [
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',

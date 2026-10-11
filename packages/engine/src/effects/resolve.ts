@@ -1546,7 +1546,13 @@ export function* executeAbility(
         break;
       }
       case 'pumpEachUntilEot': {
-        const affected = affectedBy(ctx, source, effect.selector, scope.eventPlayerId);
+        const except =
+          effect.exceptTriggerObject === true
+            ? (scope.triggerObjectId ?? scope.eventObjectId)
+            : undefined;
+        const affected = affectedBy(ctx, source, effect.selector, scope.eventPlayerId).filter(
+          (perm) => except === undefined || perm.id !== except,
+        );
         const power = amountOf(effect.power);
         const toughness = amountOf(effect.toughness);
         const clause = `get ${signed(power)}/${signed(toughness)}`;

@@ -366,6 +366,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'fallen-ideal-viewer-sacrifice-then-return',
       'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
       'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+      'martial-impetus-viewer-attack-pump',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',
