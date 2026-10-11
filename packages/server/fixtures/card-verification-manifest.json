@@ -2000,7 +2000,11 @@
             "redemption-arc-indestructible-enchanted-only",
             "redemption-arc-goaded"
           ],
-          "viewerScenarioIds": ["redemption-arc-viewer-exile-enchanted-creature"]
+          "viewerScenarioIds": [
+            "redemption-arc-viewer-exile-enchanted-creature",
+            "redemption-arc-viewer-indestructible-goaded-attack",
+            "redemption-arc-viewer-goaded-opponent-attack"
+          ]
         },
         {
           "id": "redemption-arc-exile",

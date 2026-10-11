@@ -1914,6 +1914,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: Lab Doom cannot destroy the creature, which must attack'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: P2’s goaded creature cannot attack you, their other creature can'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: [
       'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
     ],

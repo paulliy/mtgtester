@@ -689,6 +689,124 @@ describe('Redemption Arc Card Test Lab scenario', () => {
   });
 });
 
+describe('Redemption Arc grants Card Test Lab scenario', () => {
+  it('redemption-arc-viewer-indestructible-goaded-attack — Lab Doom resolves without killing the indestructible Bear, which is then forced to attack P2', () => {
+    const steps: Step[] = [
+      { action: 'Cast Redemption Arc', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2', '__no_attack__'] },
+    ];
+    const declarations: NonNullable<DecisionRequest['presentation']>['attackDeclaration'][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'redemption-arc-viewer-indestructible-goaded-attack',
+      steps,
+      (request, current) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration === undefined) return;
+        declarations.push(declaration);
+        const action = request.legalActions.find((candidate) =>
+          candidate.description.startsWith('Declare attackers'),
+        )!;
+        // Negative: keeping both creatures home is refused, because the goaded Bear must attack.
+        expect(() =>
+          current.engine.submit({
+            requestId: request.requestId,
+            actionId: action.id,
+            targets: declaration.subjects.map((_, slot) => ({ slot, choice: '__no_attack__' })),
+          }),
+        ).toThrow();
+      },
+    );
+    // Lab Doom resolved (it is in the graveyard) and did nothing: the Bear and the Aura remain.
+    const [arc] = onBattlefield('Redemption Arc');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(onBattlefield('Lab Green Bear')).toHaveLength(1);
+    expect(arc?.attachedTo).toBe(bear?.id);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(state.eventLog.some((event) => event.type === 'destroy')).toBe(false);
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.keywords).toContain('indestructible');
+    // The goaded Bear must attack; the unenchanted Ox may stay home. Neither may attack P1.
+    expect(declarations).toHaveLength(1);
+    const names = objectNames(scenario);
+    expect(
+      declarations[0]!.subjects.map((subject) => ({
+        name: names.get(subject.subjectId) ?? subject.subjectId,
+        mustAttack: subject.mustAttack,
+        defenders: subject.defenders.map((defender) => defender.playerId),
+      })),
+    ).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P2', 'P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P2', 'P3', 'P4'] },
+    ]);
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(false);
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P3').life).toBe(40);
+    expect(seat('P4').life).toBe(40);
+    expect(
+      onBattlefield('Plains')
+        .concat(onBattlefield('Swamp'))
+        .filter((land) => land.tapped),
+    ).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('redemption-arc-viewer-indestructible-goaded-attack', steps);
+  });
+});
+
+describe('Redemption Arc opponent goad Card Test Lab scenario', () => {
+  it('redemption-arc-viewer-goaded-opponent-attack — P2’s goaded Lab Green Bear cannot attack P1 and must attack, while the unenchanted Lab Ox may attack P1 or stay home', () => {
+    const declarations: Array<{ player: string; subjects: AttackDeclarationSubject[] }> = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'redemption-arc-viewer-goaded-opponent-attack',
+      [],
+      (request) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration !== undefined)
+          declarations.push({ player: request.decidingPlayer, subjects: declaration.subjects });
+      },
+    );
+    const [arc] = onBattlefield('Redemption Arc');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(arc?.attachedTo).toBe(bear?.id);
+    expect(arc?.controllerId).toBe('P1');
+    expect(bear?.controllerId).toBe('P2');
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.keywords).toContain('indestructible');
+    // P2 declared once. The goaded Bear must attack and is never offered P1, the goader; the
+    // unenchanted Ox may stay home and may attack P1.
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0]!.player).toBe('P2');
+    const names = objectNames(scenario);
+    expect(
+      declarations[0]!.subjects.map((subject) => ({
+        name: names.get(subject.subjectId) ?? subject.subjectId,
+        mustAttack: subject.mustAttack,
+        defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+      })),
+    ).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P1', 'P3', 'P4'] },
+    ]);
+    // P2's seat attacks P1 whenever P1 is offered: the Ox hit P1 for 4, the Bear hit P3 or P4
+    // for 2, and P1 took nothing from the Bear.
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P2').life).toBe(40);
+    expect([seat('P3').life, seat('P4').life].sort()).toEqual([38, 40]);
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('redemption-arc-viewer-goaded-opponent-attack', []);
+  });
+});
+
 describe('Fallen Ideal Card Test Lab scenario', () => {
   it('fallen-ideal-viewer-sacrifice-then-return — the Aura goes on Lab Green Bear, a sacrifice pumps it, then sacrificing the creature itself returns the Aura to hand', () => {
     const steps: Step[] = [

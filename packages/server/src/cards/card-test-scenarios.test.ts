@@ -365,6 +365,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'forum-filibuster-viewer-inkling-and-aura',
       'karametras-favor-viewer-granted-mana-pays-spell',
       'redemption-arc-viewer-exile-enchanted-creature',
+      'redemption-arc-viewer-indestructible-goaded-attack',
+      'redemption-arc-viewer-goaded-opponent-attack',
       'fallen-ideal-viewer-sacrifice-then-return',
       'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
       'hateful-eidolon-viewer-enchanted-creature-dies-draw',

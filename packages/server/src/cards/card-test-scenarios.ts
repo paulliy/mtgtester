@@ -8415,6 +8415,82 @@ function redemptionArcScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Redemption Arc's grants: a real destroy spell cannot kill its creature, which is also goaded. */
+function redemptionArcGrantsScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-indestructible-goaded-attack',
+    title: 'Redemption Arc: Lab Doom cannot destroy the creature, which must attack',
+    instructions: [
+      'Redemption Arc and Lab Doom are in your hand. Two Plains, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield. Your opponents control no creatures.',
+      'Cast Redemption Arc targeting Lab Green Bear and let it resolve: Lab Green Bear is indestructible and goaded.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve: the destroy effect does nothing, because Lab Green Bear is indestructible.',
+      'Declare attackers. Lab Green Bear is goaded, so it has no "Stay home" choice; Lab Ox does. Leave Lab Green Bear unassigned and keep Lab Ox at home, then confirm: Lab Green Bear attacks anyway. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear survived Lab Doom, which is in your graveyard, and Redemption Arc is still attached to it. It attacked P2 although you never chose to attack, and hit for 2, leaving P2 at 38. Lab Ox stayed home untapped. All five lands are tapped.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics'],
+    decks: {
+      P1: [arc.card, LAB_DOOM, PLAINS, PLAINS, SWAMP, SWAMP, SWAMP, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Redemption Arc', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Plains', 'Swamp', 'Swamp', 'Swamp', 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Redemption Arc on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can.
+ */
+function redemptionArcOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const arc = pinnedFrom(COVERAGE_PR05, 'Redemption Arc');
+  return pr01Scenario(gameId, {
+    id: 'redemption-arc-viewer-goaded-opponent-attack',
+    title: 'Redemption Arc: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Redemption Arc is already attached to P2’s Lab Green Bear (2/2), which is indestructible and goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures and no lands.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 38 or 34. P3 took 2 from Lab Green Bear and is at 38, and P4 is untouched at 40.',
+    oracleSha256: arc.sha256,
+    clauseIds: ['redemption-arc-statics'],
+    decks: {
+      P1: [arc.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Redemption Arc'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 function fallenIdealScenario(gameId: GameId): CardTestScenario {
   const ideal = pinnedFrom(COVERAGE_PR05, 'Fallen Ideal');
   const swamps = Array.from({ length: 3 }, () => SWAMP);
@@ -10888,6 +10964,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'forum-filibuster-viewer-inkling-and-aura',
   'karametras-favor-viewer-granted-mana-pays-spell',
   'redemption-arc-viewer-exile-enchanted-creature',
+  'redemption-arc-viewer-indestructible-goaded-attack',
+  'redemption-arc-viewer-goaded-opponent-attack',
   'fallen-ideal-viewer-sacrifice-then-return',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
@@ -11183,6 +11261,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
+  'redemption-arc-viewer-indestructible-goaded-attack': redemptionArcGrantsScenario,
+  'redemption-arc-viewer-goaded-opponent-attack': redemptionArcOpponentAttackScenario,
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
