@@ -22,8 +22,15 @@ import { generateArcaneDenialVerificationEvidence } from '../../../../scripts/ge
 import { generateFabledPassageVerificationEvidence } from '../../../../scripts/generate-fabled-passage-evidence';
 import { generateMyriadLandscapeVerificationEvidence } from '../../../../scripts/generate-myriad-landscape-evidence';
 import { generateSmotheringTitheVerificationEvidence } from '../../../../scripts/generate-smothering-tithe-evidence';
-import { generateWarRoomVerificationEvidence, WAR_ROOM_TRACE_PATHS } from '../../../../scripts/generate-war-room-evidence';
-import { parseViewerEvidenceOptions, loadGeneratorViewerEvidence, type ValidatedViewerEvidence } from '../../../../scripts/card-evidence-input';
+import {
+  generateWarRoomVerificationEvidence,
+  WAR_ROOM_TRACE_PATHS,
+} from '../../../../scripts/generate-war-room-evidence';
+import {
+  parseViewerEvidenceOptions,
+  loadGeneratorViewerEvidence,
+  type ValidatedViewerEvidence,
+} from '../../../../scripts/card-evidence-input';
 
 import { repoRoot } from './card-evidence-input.fixtures';
 

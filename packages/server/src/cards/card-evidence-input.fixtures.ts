@@ -12,7 +12,10 @@ import { dirname, relative, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import ts from 'typescript';
 
-import { getViewerEvidenceSourceFiles, type CatalogSpec } from '../../../../scripts/card-evidence-input';
+import {
+  getViewerEvidenceSourceFiles,
+  type CatalogSpec,
+} from '../../../../scripts/card-evidence-input';
 
 export const repoRoot = resolve(import.meta.dirname, '../../../..');
 export const scratch = process.env['MTG_EVIDENCE_TEST_SCRATCH'] ?? tmpdir();
@@ -300,7 +303,11 @@ export function bindCopiedInputs(f: ReturnType<typeof fixture>, copy: string, ex
   f.seal(); // Fixture preparation only, before any loader capture.
 }
 
-export function prepareBoundRouting(f: ReturnType<typeof fixture>, copy: string, equalBytes: boolean) {
+export function prepareBoundRouting(
+  f: ReturnType<typeof fixture>,
+  copy: string,
+  equalBytes: boolean,
+) {
   const engine = resolve(copy, 'packages/engine/src');
   for (const name of ['route-a', 'route-b']) {
     mkdirSync(resolve(engine, name), { recursive: true });

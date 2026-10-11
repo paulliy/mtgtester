@@ -23,7 +23,10 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { loadViewerEvidence, validateCurrentEvidenceSources } from '../../../../scripts/card-evidence-input';
+import {
+  loadViewerEvidence,
+  validateCurrentEvidenceSources,
+} from '../../../../scripts/card-evidence-input';
 
 import { repoRoot, scratch, hash, withFixture } from './card-evidence-input.fixtures';
 

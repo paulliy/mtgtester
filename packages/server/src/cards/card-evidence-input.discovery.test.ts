@@ -26,9 +26,21 @@ import { generateFabledPassageVerificationEvidence } from '../../../../scripts/g
 import { generateMyriadLandscapeVerificationEvidence } from '../../../../scripts/generate-myriad-landscape-evidence';
 import { generateSmotheringTitheVerificationEvidence } from '../../../../scripts/generate-smothering-tithe-evidence';
 import { generateWarRoomVerificationEvidence } from '../../../../scripts/generate-war-room-evidence';
-import { getViewerEvidenceSourceFiles, discoverGeneratorSourceFiles, loadViewerEvidence, validateCurrentEvidenceSources } from '../../../../scripts/card-evidence-input';
+import {
+  getViewerEvidenceSourceFiles,
+  discoverGeneratorSourceFiles,
+  loadViewerEvidence,
+  validateCurrentEvidenceSources,
+} from '../../../../scripts/card-evidence-input';
 
-import { repoRoot, scratch, hash, cards, independentRuntimeBinding, withFixture } from './card-evidence-input.fixtures';
+import {
+  repoRoot,
+  scratch,
+  hash,
+  cards,
+  independentRuntimeBinding,
+  withFixture,
+} from './card-evidence-input.fixtures';
 
 describe('viewer evidence input: runtime discovery and source lists', { timeout: 120_000 }, () => {
   // CPU-heavy discovery plus immediately rejected promises can starve worker IPC callbacks.
@@ -269,7 +281,10 @@ const pinned = require('./pinned.json');
       'apps/web/public',
     ]) {
       if (!fs.existsSync(resolve(repoRoot, directory))) continue;
-      for (const path of fs.readdirSync(resolve(repoRoot, directory), { recursive: true, encoding: 'utf8' })) {
+      for (const path of fs.readdirSync(resolve(repoRoot, directory), {
+        recursive: true,
+        encoding: 'utf8',
+      })) {
         // Windows returns backslash-separated recursive names; repository paths are always '/'.
         const local = `${directory}/${path.replaceAll('\\', '/')}`;
         if (fs.statSync(resolve(repoRoot, local)).isFile()) union.add(local);
