@@ -246,10 +246,11 @@ describe('Cranial Plating spell-on-the-stack Card Test Lab scenario', () => {
 });
 
 describe('Mask of Memory Card Test Lab scenario', () => {
-  it('mask-of-memory-viewer-draw-discard — Equip {1} onto Lab Green Bear, then its unblocked hit draws two and discards Lab Hex', () => {
+  it('mask-of-memory-viewer-draw-discard — Equip {1} onto Lab Green Bear and Cranial Plating onto Lab Ox, then only the Mask’s creature draws two and discards Lab Hex', () => {
     const steps: Step[] = [
-      { action: 'Equip {1}', targets: ['Lab Green Bear'] },
-      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Mask of Memory: Equip {1}', targets: ['Lab Green Bear'] },
+      { action: 'Cranial Plating: Equip {1}', targets: ['Lab Ox'] },
+      { action: 'Declare attackers', targets: ['P2', 'P3'] },
       { action: 'Yes' },
       { action: 'Discard Lab Hex' },
     ];
@@ -258,11 +259,25 @@ describe('Mask of Memory Card Test Lab scenario', () => {
       steps,
     );
     const [mask] = onBattlefield('Mask of Memory');
+    const [plating] = onBattlefield('Cranial Plating');
     const [bear] = onBattlefield('Lab Green Bear');
+    const [ox] = onBattlefield('Lab Ox');
     expect(mask?.attachedTo).toBe(bear?.id);
-    // The Mask asked once, and the discard was offered from the enlarged hand: Lab Hex and the
-    // two drawn Forests.
+    // The other creature carries a different Equipment, and both creatures hit a player.
+    expect(plating?.attachedTo).toBe(ox?.id);
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([
+      { equipment: 'Mask of Memory', to: 'Lab Green Bear' },
+      { equipment: 'Cranial Plating', to: 'Lab Ox' },
+    ]);
+    expect(seat('P2').life).toBe(38);
+    expect(seat('P3').life).toBe(34);
+    // The Mask asked once, for the Bear only: Lab Ox's damage to P3 triggered nothing, so there
+    // is no second prompt and no second draw.
     expect(prompts.filter((prompt) => /use this ability/.test(prompt))).toHaveLength(1);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toHaveLength(2);
+    // The discard was offered from the enlarged hand: Lab Hex and the two drawn Forests.
     const discard = offered.find((options) => options.some((option) => /^Discard /.test(option)));
     expect([...(discard ?? [])].sort()).toEqual([
       'Discard Forest',
@@ -273,8 +288,7 @@ describe('Mask of Memory Card Test Lab scenario', () => {
     expect(seat('P1').hand.map((card) => card.name)).toEqual(['Forest', 'Forest']);
     expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Hex']);
     expect(seat('P1').library).toHaveLength(2);
-    expect(seat('P2').life).toBe(38);
-    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(1);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(2);
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('mask-of-memory-viewer-draw-discard', steps);

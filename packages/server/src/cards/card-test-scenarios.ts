@@ -7941,28 +7941,41 @@ function cranialPlatingStackScenario(gameId: GameId): CardTestScenario {
 
 function maskOfMemoryScenario(gameId: GameId): CardTestScenario {
   const mask = pinnedFrom(COVERAGE_PR05, 'Mask of Memory');
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
   const forests = Array.from({ length: 4 }, () => FOREST);
   return pr01Scenario(gameId, {
     id: 'mask-of-memory-viewer-draw-discard',
     title: 'Mask of Memory: equip it, connect, then draw two and discard a card',
     instructions: [
-      'Mask of Memory, Lab Green Bear (2/2) and a Swamp are on your battlefield, and Lab Hex is in your hand. Your library holds only Forests. The Mask is not attached to anything and P2 controls no creatures.',
-      'Activate Equip {1} targeting Lab Green Bear and let it resolve.',
-      'Attack P2 with Lab Green Bear. It is unblocked, so it deals combat damage to a player and the Mask triggers: choose Yes to draw two cards.',
-      'Choose Lab Hex as the card to discard from your hand of Lab Hex and the two drawn Forests.',
+      'Mask of Memory, Cranial Plating, Lab Green Bear (2/2), Lab Ox (4/4) and two Swamps are on your battlefield, and Lab Hex is in your hand. Your library holds only Forests. Neither Equipment is attached to anything and P2 and P3 control no creatures.',
+      'Activate the Mask’s Equip {1} targeting Lab Green Bear and let it resolve. Then activate Cranial Plating’s Equip {1} targeting Lab Ox and let it resolve: Lab Ox carries a different Equipment, and with the Mask and Plating you control two artifacts, so it becomes a 6/4.',
+      'Attack P2 with Lab Green Bear and P3 with Lab Ox. Both are unblocked and both deal combat damage to a player, but only the Mask’s creature triggers it: choose Yes once to draw two cards.',
+      'Choose Lab Hex as the card to discard from your hand of Lab Hex and the two drawn Forests. Lab Ox’s damage does not ask for another draw.',
     ],
     expectedOutcome:
-      'Mask of Memory is attached to Lab Green Bear. P2 took 2 combat damage and is at 38 life. You drew two Forests and discarded Lab Hex, so you hold two Forests and Lab Hex is in your graveyard.',
+      'Mask of Memory is attached to Lab Green Bear and Cranial Plating to Lab Ox. P2 took 2 combat damage and is at 38 life; P3 took 6 and is at 34. You were asked about the Mask once, drew two Forests and discarded Lab Hex, so you hold two Forests and Lab Hex is in your graveyard.',
     oracleSha256: mask.sha256,
     clauseIds: ['mask-of-memory-trigger', 'mask-of-memory-equip'],
     decks: {
-      P1: [mask.card, LAB_GREEN_BEAR, SWAMP, LAB_HEX, ...forests],
+      P1: [mask.card, plating.card, LAB_GREEN_BEAR, LAB_OX, SWAMP, SWAMP, LAB_HEX, ...forests],
       P2: PR01_FILLER,
       P3: PR01_FILLER,
       P4: PR01_FILLER,
     },
     prepared: {
-      battlefield: [{ playerId: 'P1', cardNames: ['Mask of Memory', 'Lab Green Bear', 'Swamp'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Mask of Memory',
+            'Cranial Plating',
+            'Lab Green Bear',
+            'Lab Ox',
+            'Swamp',
+            'Swamp',
+          ],
+        },
+      ],
       hand: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
       continueThroughCombat: true,
     },

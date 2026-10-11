@@ -6362,26 +6362,53 @@ test('Mask of Memory: equip it, connect, then draw two and discard a card', asyn
   // Equip {1} is the Mask's only ability, so clicking it goes straight to choosing a target.
   await mask.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-  // Only your own creatures can be chosen, and the Bear is the only one.
+  // Only your own creatures can be chosen: the Bear and Lab Ox.
   await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
 
-  // Equip resolves, then the turn moves on to attackers.
-  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  // Equip resolves on its own (passing is the only legal action). Wait for the attachment
+  // rather than passing, because the next step is still this main phase.
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Mask of Memory')?.attachedTo)
     .toBe(bearId);
+
+  // A second, differently equipped creature: Cranial Plating goes on Lab Ox. With the Mask and
+  // Plating you control two artifacts, so Lab Ox becomes a 6/4.
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  // One Swamp is left, so the {B}{B} attach is unaffordable and Equip {1} is Plating's only action.
+  await plating.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Cranial Plating')?.attachedTo)
+    .toBe(oxId);
+  await expect(permanent(page, 'Lab Ox').getByText('6/4')).toBeVisible();
+  expect(boards.at(-1)!.find((p) => p.name === 'Mask of Memory')?.attachedTo).toBe(bearId);
+
+  // Both Equipment are on, so move on to attackers (advancing the turn is the intent here).
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
   await page.getByRole('button', { name: /Declare attackers/ }).click();
   await page
     .locator('.combat-assignment-row')
     .filter({ hasText: 'Lab Green Bear' })
     .getByRole('button', { name: 'P2' })
     .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
   await page.getByRole('button', { name: 'Confirm attacks' }).click();
 
-  // The unblocked Bear deals combat damage to P2: accept the optional draw.
+  // Both unblocked creatures deal combat damage to a player, but only the Mask's creature
+  // triggers it: accept the optional draw once.
   await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Yes', exact: true }).click();
@@ -6395,13 +6422,19 @@ test('Mask of Memory: equip it, connect, then draw two and discard a card', asyn
     .getByRole('button', { name: 'Discard', exact: true })
     .click();
 
+  // Lab Ox's damage to P3 asked about nothing: the game ends with no second prompt or draw.
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/use this ability/i)).toHaveCount(0);
   await expect(hand).toHaveCount(2);
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
   await expect(
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('38');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(2);
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo).toBe(oxId);
 });
 
 test('Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home', async ({
