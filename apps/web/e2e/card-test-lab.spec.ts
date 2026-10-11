@@ -6239,7 +6239,7 @@ test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
   // Payment is automatic: the untapped Swamps are the only way to pay.
 
   // Plating is the only artifact: the Bear gets +1/+0 and Lab Ox is untouched.
-  await passUntil(page, permanent(page, 'Lab Green Bear').getByText('3/2'));
+  await passStackUntil(page, permanent(page, 'Lab Green Bear').getByText('3/2'));
   await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
 
   // The {B}{B} ability needs no timing window: move Plating onto Lab Ox.
@@ -7434,7 +7434,7 @@ test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the
   await confirm(page);
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
-  await passUntil(page, permanent(page, 'Lab Green Bear').filter({ hasText: '4/3' }));
+  await passStackUntil(page, permanent(page, 'Lab Green Bear').filter({ hasText: '4/3' }));
 
   // Sacrifice the enchanted creature itself: the Aura goes to the graveyard and back to hand.
   await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
@@ -8323,7 +8323,7 @@ test('Eidolon of Countless Battles: bestow onto a creature, then it becomes a cr
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await passUntil(page, permanent(page, 'Eidolon of Countless Battles'));
+  await passStackUntil(page, permanent(page, 'Eidolon of Countless Battles'));
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
     .toBe(bearId);
@@ -8458,7 +8458,7 @@ test('Animate Dead: return an opponent’s creature, then it dies and the Aura g
     .click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await passUntil(page, permanent(page, 'Lab Ox'));
+  await passStackUntil(page, permanent(page, 'Lab Ox'));
   // The creature returns under your control with the Aura attached, as a 3/4.
   await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
   await expect
