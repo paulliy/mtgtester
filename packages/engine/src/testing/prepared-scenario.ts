@@ -30,6 +30,14 @@ export interface PreparedScenarioSpec {
      * actions, so an illegal arrangement falls off exactly as in a real game.
      */
     attachedToCard?: { playerId: PlayerId; cardName: string };
+    /**
+     * Arrange each named permanent as already goaded (CR 701.15a) by this player, as if a goad
+     * effect had applied it on that player's previous turn: it lasts until that player's next
+     * turn, and the engine's untap step, combat requirement and expiry all run as normal. This
+     * arranges the starting position only; the effect that applies a goad is exercised by the
+     * scenario where it triggers.
+     */
+    goadedBy?: PlayerId;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /**
@@ -138,6 +146,11 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       // Nor did they arrive from the library the scenario drew them out of.
       delete permanent.enteredFromZone;
       ctx.state.battlefield.push(permanent);
+      if (entry.goadedBy !== undefined) {
+        if (!ctx.state.players.some((candidate) => candidate.id === entry.goadedBy))
+          throw new Error(`prepared scenario has unknown goading player ${entry.goadedBy}`);
+        permanent.goadedBy = [{ goaderId: entry.goadedBy, appliedTurn: spec.turnNumber - 1 }];
+      }
       if (entry.attachedToCard !== undefined) {
         pendingAttachments.push({ permanent, host: entry.attachedToCard });
       }
