@@ -1947,6 +1947,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
     ],
   },

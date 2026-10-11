@@ -372,6 +372,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'hateful-eidolon-viewer-enchanted-creature-dies-draw',
       'hateful-eidolon-viewer-combat-lifelink',
       'martial-impetus-viewer-attack-pump',
+      'martial-impetus-viewer-goaded-opponent-attack',
       'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
       'angelic-destiny-viewer-angel-then-return',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',

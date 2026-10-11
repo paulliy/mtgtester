@@ -936,6 +936,56 @@ describe('Martial Impetus Card Test Lab scenario', () => {
   });
 });
 
+describe('Martial Impetus opponent goad Card Test Lab scenario', () => {
+  it('martial-impetus-viewer-goaded-opponent-attack — P2’s goaded Lab Green Bear cannot attack P1 and must attack, while the unenchanted, unpumped Lab Ox may attack P1 or stay home', () => {
+    const declarations: Array<{ player: string; subjects: AttackDeclarationSubject[] }> = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'martial-impetus-viewer-goaded-opponent-attack',
+      [],
+      (request) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration !== undefined)
+          declarations.push({ player: request.decidingPlayer, subjects: declaration.subjects });
+      },
+    );
+    const [impetus] = onBattlefield('Martial Impetus');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(impetus?.attachedTo).toBe(bear?.id);
+    expect(impetus?.controllerId).toBe('P1');
+    expect(bear?.controllerId).toBe('P2');
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.power).toBe(3);
+    expect(viewed?.toughness).toBe(3);
+    // P2 declared once. The goaded Bear must attack and is never offered P1, the goader; the
+    // unenchanted Ox may stay home and may attack P1.
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0]!.player).toBe('P2');
+    const names = objectNames(scenario);
+    expect(
+      declarations[0]!.subjects.map((subject) => ({
+        name: names.get(subject.subjectId) ?? subject.subjectId,
+        mustAttack: subject.mustAttack,
+        defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+      })),
+    ).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P1', 'P3', 'P4'] },
+    ]);
+    // P2's seat attacks P1 whenever P1 is offered: the Ox hit P1 for 4 (it attacks P1, not an
+    // opponent of P1, so the Aura's pump skipped it), and the Bear hit P3 or P4 for 3.
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P2').life).toBe(40);
+    expect([seat('P3').life, seat('P4').life].sort()).toEqual([37, 40]);
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('martial-impetus-viewer-goaded-opponent-attack', []);
+  });
+});
+
 describe('Killian, Decisive Mentor Card Test Lab scenario', () => {
   it('killian-decisive-mentor-viewer-tap-goad-and-attack-draw — Lab Aegis entering taps and goads Lab Bird, then the enchanted Lab Green Bear attacks and draws', () => {
     const steps: Step[] = [

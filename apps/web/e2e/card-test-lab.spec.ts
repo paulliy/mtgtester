@@ -7372,6 +7372,40 @@ test('Martial Impetus: the enchanted creature attacks and pumps your other attac
   await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
 });
 
+test('Martial Impetus: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Your Aura stays on P2's Lab Green Bear (a 3/3).
+  const final = boards.at(-1)!;
+  const bear = final.find((p) => p.name === 'Lab Green Bear')!;
+  expect(final.find((p) => p.name === 'Martial Impetus')?.attachedTo).toBe(bear.id);
+  expect(final.find((p) => p.name === 'Martial Impetus')?.controller).toBe('P1');
+  expect(bear.controller).toBe('P2');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Only the unenchanted, unpumped Lab Ox attacked you (4): you are at 36, not 33. The goaded
+  // Bear attacked someone else: P3 took 3 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
 test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws', async ({
   page,
 }) => {

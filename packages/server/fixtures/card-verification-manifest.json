@@ -1919,7 +1919,10 @@
             "martial-impetus-pinned-oracle-supported",
             "martial-impetus-buff-and-goad"
           ],
-          "viewerScenarioIds": ["martial-impetus-viewer-attack-pump"]
+          "viewerScenarioIds": [
+            "martial-impetus-viewer-attack-pump",
+            "martial-impetus-viewer-goaded-opponent-attack"
+          ]
         },
         {
           "id": "martial-impetus-attack-pump",

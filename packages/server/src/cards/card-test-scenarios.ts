@@ -8613,6 +8613,47 @@ function hatefulEidolonLifelinkScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * Martial Impetus on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can and is not pumped.
+ */
+function martialImpetusOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Martial Impetus');
+  return pr01Scenario(gameId, {
+    id: 'martial-impetus-viewer-goaded-opponent-attack',
+    title: 'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Martial Impetus is already attached to P2’s Lab Green Bear, which is a 3/3 goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Martial Impetus pumps each other creature attacking one of your opponents. Lab Ox attacks you, not an opponent of yours, so it is not pumped. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 from the unpumped Lab Ox and are at 36, not 33. P3 took 3 from Lab Green Bear and is at 37, and P4 is untouched at 40.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['martial-impetus-statics'],
+    decks: {
+      P1: [impetus.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Martial Impetus'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 function martialImpetusScenario(gameId: GameId): CardTestScenario {
   const impetus = pinnedFrom(COVERAGE_PR05, 'Martial Impetus');
   return pr01Scenario(gameId, {
@@ -10971,6 +11012,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
   'hateful-eidolon-viewer-combat-lifelink',
   'martial-impetus-viewer-attack-pump',
+  'martial-impetus-viewer-goaded-opponent-attack',
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
@@ -11268,6 +11310,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
   'hateful-eidolon-viewer-combat-lifelink': hatefulEidolonLifelinkScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
+  'martial-impetus-viewer-goaded-opponent-attack': martialImpetusOpponentAttackScenario,
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
