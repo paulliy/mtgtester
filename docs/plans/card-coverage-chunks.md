@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 to PR03 are complete, PR04 is in review and PR05 is next. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 to PR04 are complete, PR05 is in review and PR06 is next. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
@@ -9,16 +9,16 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR03 by interpreting every card in the committed
+numbers below were measured after PR05 by interpreting every card in the committed
 `packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
 `bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
 same numbers.
 
-| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | Remaining |
-| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) |       211 |
-| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) |        11 |
-| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) |       220 |
+| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | After PR04      | After PR05      | Remaining |
+| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) | 612/802 (76.3%) | 636/802 (79.3%) |       166 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) |        11 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) | 707/906 (78.0%) | 731/906 (80.7%) |       175 |
 
 PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
 and the remaining count for every deck matched the PR01 and PR02 columns below.
@@ -34,6 +34,10 @@ without them.
 
 PR03 modeled 27 of its 28 cards; Twilight Diviner moved to PR10 (see the PR03 section). No card
 regressed: main plus those 27 cards gives exactly the 686 measured after PR03.
+
+PR04 modeled its 21 cards (707 measured). PR05 modeled 24 of its 26 cards; Spirit Mantle and
+Unquestioned Authority moved to PR11 (see the PR05 section). No card regressed: main plus those
+24 cards gives exactly the 731 measured after PR05.
 
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
@@ -110,13 +114,13 @@ PR08 once PR02 and PR03 have landed. All other PRs follow the arrows.
 | PR02 | Activation and casting costs                     |    33 |          32 |       2 |                666/906 |
 | PR03 | Zone-change history, LKI, death and return       |    27 |          20 |       1 | 693/906 (686 measured) |
 | PR04 | Counters and turn history                        |    21 |           5 |       0 | 714/906 (707 measured) |
-| PR05 | Auras, Equipment, attachment lifecycle           |    26 |          24 |       0 |                740/906 |
-| PR06 | Combat and damage events, damage prevention      |    27 |          21 |       0 |                767/906 |
-| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |                793/906 |
-| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                816/906 |
-| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                847/906 |
-| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |                878/906 |
-| PR11 | Protection, phasing, layouts, game lifecycle     |    28 |          14 |       7 |                906/906 |
+| PR05 | Auras, Equipment, attachment lifecycle           |    24 |          23 |       0 | 738/906 (731 measured) |
+| PR06 | Combat and damage events, damage prevention      |    27 |          21 |       0 |                765/906 |
+| PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |                791/906 |
+| PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                814/906 |
+| PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                845/906 |
+| PR10 | Stack manipulation, copying, characteristics     |    31 |          18 |       2 |                876/906 |
+| PR11 | Protection, phasing, layouts, game lifecycle     |    30 |          15 |       7 |                906/906 |
 
 ### Remaining cards per deck after each PR
 
@@ -132,13 +136,13 @@ several decks counts in each of them.
 | LEN  |    19 |   17 |   11 |   11 |   10 |   10 |    9 |    8 |    7 |    4 |    0 |    0 |
 | MAR  |    31 |   30 |   23 |   14 |   11 |   11 |   11 |   10 |    8 |    7 |    1 |    0 |
 | NEC  |    37 |   31 |   23 |   14 |   13 |   10 |    9 |    7 |    7 |    5 |    3 |    0 |
-| PRA  |    36 |   35 |   36 |   33 |   33 |   30 |   24 |   15 |    5 |    4 |    2 |    0 |
+| PRA  |    36 |   35 |   36 |   33 |   33 |   32 |   25 |   16 |    6 |    5 |    3 |    0 |
 | QMQ  |    39 |   38 |   35 |   34 |   34 |   33 |   22 |   18 |   11 |    9 |    5 |    0 |
 | RUB  |    21 |   16 |   15 |   13 |   12 |   12 |   11 |   10 |   10 |    1 |    0 |    0 |
-| SIL  |    40 |   38 |   35 |   35 |   35 |   17 |   13 |    9 |    8 |    4 |    4 |    0 |
-| FF4  |    31 |   31 |   32 |   32 |   27 |   26 |   24 |   19 |   16 |    9 |    2 |    0 |
+| SIL  |    40 |   38 |   35 |   35 |   35 |   18 |   14 |   10 |    9 |    5 |    5 |    0 |
+| FF4  |    31 |   31 |   32 |   32 |   27 |   27 |   24 |   19 |   16 |    9 |    2 |    0 |
 | TOK  |    13 |    8 |    4 |    3 |    3 |    1 |    1 |    0 |    0 |    0 |    0 |    0 |
-| URD  |     3 |    2 |    7 |    7 |    7 |    2 |    1 |    0 |    0 |    0 |    0 |    0 |
+| URD  |     3 |    2 |    7 |    7 |    7 |    7 |    1 |    0 |    0 |    0 |    0 |    0 |
 | S    |    15 |   14 |   12 |   11 |   11 |   11 |   11 |   11 |   10 |    9 |    7 |    0 |
 
 ## PR sections
@@ -378,8 +382,8 @@ Depends on: PR02 for bestow and cost merging, and PR03 for death and return.
   information on death (Kor Spiritdancer, Hateful Eidolon).
 - Granted creature types (Angelic Destiny), bestow, the Kindred card type with annihilator, and
   enchant player (Curse of Bounty, Tenuous Truce).
-- Protection from creatures and ward granted by Auras (Spirit Mantle, Unquestioned Authority,
-  Sheltered by Ghosts). Selectors for creatures enchanted by an Aura you control.
+- Ward granted by an Aura (Sheltered by Ghosts). Selectors for creatures enchanted by an Aura you
+  control.
 - Equipment: equip merges with other activations, equipped-creature damage triggers, returning a
   card under its owner's control, and the corrected Sunforger equip cost.
 
@@ -398,7 +402,7 @@ Depends on: PR02 for bestow and cost merging, and PR03 for death and return.
 | 5.11 | Resurrection Orb             | NEC        | fail-closed | Return is under the equipment controller, not the card's owner.                                                |
 | 5.12 | Screams from Within          | SIL        | fail-closed | Return is a required attach target; current Oracle returns this Aura untargeted.                               |
 | 5.13 | Shielded by Faith            | SIL        | fail-closed | Optional attach is implemented as mandatory attach.                                                            |
-| 5.14 | Spirit Mantle                | SIL        | fail-closed | Protection from creatures is unimplemented.                                                                    |
+| 5.14 | Spirit Mantle                | SIL        | moved       | Moved to PR11 as 11.29: protection from creatures needs protection keyed on the source's card type.            |
 | 5.15 | Sunforger                    | QMQ        | fail-closed | Equip {2} is authored; current Oracle is Equip {3}.                                                            |
 | 5.16 | Angelic Destiny              | SIL        | fail-closed | Angel type-changing is claimed without a type-changing static.                                                 |
 | 5.17 | Animate Dead                 | SIL        | fail-closed | Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.                                         |
@@ -409,8 +413,14 @@ Depends on: PR02 for bestow and cost merging, and PR03 for death and return.
 | 5.22 | Killian, Decisive Mentor     | SIL        | fail-closed | Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.                                   |
 | 5.23 | Kor Spiritdancer             | SIL        | fail-closed | Attached-Aura pump counts all Auras you control.                                                               |
 | 5.24 | Sheltered by Ghosts          | SIL        | fail-closed | Ward {2} is claimed without a ward static.                                                                     |
-| 5.25 | Unquestioned Authority       | PRA        | unmodeled   | Enchanted creature has protection from creatures.                                                              |
+| 5.25 | Unquestioned Authority       | PRA        | moved       | Moved to PR11 as 11.30: protection from creatures needs protection keyed on the source's card type.            |
 | 5.26 | Tenuous Truce                | PRA        | unmodeled   | Enchant opponent (+2)                                                                                          |
+
+Spirit Mantle (5.14) and Unquestioned Authority (5.25) moved to PR11. Each Aura grants protection
+from creatures, but the engine's protection is keyed on colors only: every damage, targeting,
+blocking and attachment check passes the source's colors. Protection from a card type needs the
+source's characteristics at each of those checks, which is PR11's protection-quality work, so the
+two commits land there instead of approximating protection here.
 
 ### PR06: Combat and damage events, damage prevention
 
@@ -681,7 +691,8 @@ worth splitting further.
   can't win", and split second (Teferi's Protection, The One Ring, Angel's Grace).
 - Phasing, including attachments and no zone-change triggers (Clever Concealment). Removing
   hexproof (Arcane Lighthouse). "Can't be the target of abilities your opponents control" (Shanna).
-  Protection from multicolored (Basri's Lieutenant).
+  Protection from multicolored (Basri's Lieutenant) and protection from creatures granted by an
+  Aura (Spirit Mantle, Unquestioned Authority), which key protection on the source's card type.
 - Layouts:
   - Saga chapters, lore counters and sacrifice (Urza's Saga, The War in Heaven);
   - Class levels (Intermediate Chirography) and prepare (Defacing Duskmage, Eiganjo Dynastorian);
@@ -727,6 +738,8 @@ worth splitting further.
 | 11.26 | Dollmaker's Shop // Porcelain Gallery           | BRI        | unmodeled   | unsupported layout "split (+1)                                                                                                                             |
 | 11.27 | Mila, Crafty Companion // Lukka, Wayward Bonder | PRA        | unmodeled   | unsupported layout "modal_dfc (+1)                                                                                                                         |
 | 11.28 | Negative Zone Portal                            | FF4        | unmodeled   | {2}, {T}: Exile target card from an opponent's graveyard. If it's a creature card, draw a card. (+1)                                                       |
+| 11.29 | Spirit Mantle                                   | SIL        | fail-closed | Protection from creatures is unimplemented.                                                                                                                |
+| 11.30 | Unquestioned Authority                          | PRA        | unmodeled   | Enchanted creature has protection from creatures.                                                                                                          |
 
 ## Keeping this plan current
 
