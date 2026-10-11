@@ -50,6 +50,24 @@ describe('departed-card returns are gated on the trigger head', () => {
     ).toBe(true);
   });
 
+  it('"return this card to the battlefield" under a leave head needs it to go to a graveyard', () => {
+    // The card could have gone to exile, a hand or a library, where the return can't find it.
+    expect(
+      creature('When this creature leaves the battlefield, return this card to the battlefield.')
+        .modeled,
+    ).toBe(false);
+    expect(
+      creature(
+        'When this creature leaves the battlefield, return this card from your graveyard to the battlefield.',
+      ).modeled,
+    ).toBe(true);
+    expect(
+      creature(
+        'When this creature is put into a graveyard from the battlefield, return this card to the battlefield.',
+      ).modeled,
+    ).toBe(true);
+  });
+
   it('"attached to that creature" needs the enchanted creature dying', () => {
     expect(
       creature(

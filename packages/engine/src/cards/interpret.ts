@@ -1448,7 +1448,12 @@ function parseEffectSentence(
     );
     if (
       m !== null &&
-      (opts.attachedDies === true || (opts.departedSelf === true && m[2] === undefined))
+      (opts.attachedDies === true ||
+        (opts.departedSelf === true &&
+          m[2] === undefined &&
+          // The resolver looks for the card only in a graveyard, so a bare "leaves the
+          // battlefield" head (exile, hand, library) must name the graveyard itself.
+          (m[1] !== undefined || opts.departedToGraveyard === true)))
     )
       return [
         {
