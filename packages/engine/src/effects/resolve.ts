@@ -4160,18 +4160,20 @@ export function* executeAbility(
             continue;
           }
           emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
-          const entered = yield* moveObject(ctx, card, {
+          // An Equipment enters attached, so its entry already sees it equipping the host; one
+          // that couldn't equip it enters unattached (CR 301.5e): a creature can't be equipped
+          // by an Equipment that is itself a creature or of a color it has protection from.
+          const equips =
+            host !== undefined &&
+            def.subtypes.includes('Equipment') &&
+            !def.types.includes('Creature') &&
+            computeCharacteristics(ctx, host).types.includes('Creature') &&
+            !hasProtectionFrom(ctx, host, def.colors);
+          yield* moveObject(ctx, card, {
             zone: 'battlefield',
             controllerId: controller.id,
+            ...(equips ? { attachedTo: host.id } : {}),
           });
-          // An Equipment enters attached only to something it could equip (CR 301.5e).
-          if (
-            entered !== null &&
-            entered.zone === 'battlefield' &&
-            host !== undefined &&
-            canAttach(ctx, entered as EnginePermanent, host)
-          )
-            (entered as EnginePermanent).attachedTo = host.id;
         }
         break;
       }

@@ -915,9 +915,20 @@ describe('Forum Filibuster', () => {
     expect(yard(aura.ctx, 'P2')).toEqual(['Lab Enemy Aura']);
 
     const equipment = board('forum-equipment');
+    // It enters attached (CR 301.5e): the Equipment is already on the Inkling at the moment it
+    // joins the battlefield, so anything seeing its entry sees it equipped.
+    const battlefield = equipment.ctx.state.battlefield;
+    const attachedOnEntry: Array<string | null> = [];
+    const push = battlefield.push.bind(battlefield);
+    battlefield.push = (...perms: EnginePermanent[]) => {
+      for (const perm of perms)
+        if (perm.name === 'Lab Blade') attachedOnEntry.push(perm.attachedTo);
+      return push(...perms);
+    };
     upkeep(equipment.ctx, 'Lab Blade');
     const [token] = named(equipment.ctx, 'Inkling');
     const [blade] = named(equipment.ctx, 'Lab Blade');
+    expect(attachedOnEntry).toEqual([token?.id]);
     expect(blade?.controllerId).toBe('P1');
     expect(blade?.attachedTo).toBe(token?.id);
     expect(effectivePT(equipment.ctx, token!)).toEqual({ power: 4, toughness: 1 });
