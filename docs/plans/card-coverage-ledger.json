@@ -122,6 +122,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+    "name": "Angelic Destiny",
+    "package": "PR05.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Angel type-changing is claimed without a type-changing static."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
     "name": "Annie Joins Up",
     "package": "W7",

@@ -5597,12 +5597,6 @@
     }
   },
   {
-    "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
-    "name": "Angelic Destiny",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
     "name": "Spark Double",
     "handledLines": [
@@ -11659,12 +11653,6 @@
   {
     "oracleId": "oracle-angel-s-grace",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-angelic-destiny",
-    "name": "Angelic Destiny",
     "handledLines": [],
     "def": {}
   },

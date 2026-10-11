@@ -266,10 +266,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
   ]);
 
-  unimplemented('8ba36878-0816-44c7-b543-8ebfc28c2ecd', 'Angelic Destiny', [
-    'Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.',
-    "When enchanted creature dies, return this card to its owner's hand.",
-  ]);
+  // Angelic Destiny: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('d11e627b-8a48-411d-a261-2c9a02a758ba', 'Breena, the Demagogue', [
     'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.',

@@ -702,3 +702,29 @@ describe('Killian, Decisive Mentor Card Test Lab scenario', () => {
     replays('killian-decisive-mentor-viewer-tap-goad-and-attack-draw', steps);
   });
 });
+
+describe('Angelic Destiny Card Test Lab scenario', () => {
+  it('angelic-destiny-viewer-angel-then-return — the Aura makes Lab Green Bear a 6/6 Angel, and when Lab Doom kills it the Aura returns to hand', () => {
+    const steps: Step[] = [
+      { action: 'Cast Angelic Destiny', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'angelic-destiny-viewer-angel-then-return',
+      steps,
+    );
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    expect(onBattlefield('Angelic Destiny')).toEqual([]);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Angelic Destiny']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Lab Green Bear']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('angelic-destiny-viewer-angel-then-return', steps);
+  });
+});

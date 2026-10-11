@@ -1499,13 +1499,35 @@
     "8ba36878-0816-44c7-b543-8ebfc28c2ecd": {
       "name": "Angelic Destiny",
       "oracleSha256": "3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "angelic-destiny-buff",
           "oracleText": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
-          "implementation": ["explicitly unsupported; Angel type-changing omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus four statics on the creature this Aura is attached to (attachedToSource): a layer 4 addition of the Angel creature subtype (CR 205.1b, 613.1d), layer 6 flying and first strike grants, and a layer 7d +4/+4",
+            "only the enchanted creature changes, whoever controls it, and it keeps its other creature types (a Bear stays a Bear and also becomes an Angel); moved or unattached, the Aura gives nothing"
+          ],
+          "engineTestIds": [
+            "angelic-destiny-pinned-oracle-supported",
+            "angelic-destiny-cast-onto-creature",
+            "angelic-destiny-enchanted-only"
+          ],
+          "viewerScenarioIds": ["angelic-destiny-viewer-angel-then-return"]
+        },
+        {
+          "id": "angelic-destiny-return",
+          "oracleText": "When enchanted creature dies, return this card to its owner's hand.",
+          "implementation": [
+            "interpreted triggered ability of the Aura: when the creature it is attached to dies, it returns the Aura card, which went to the graveyard with that creature as a state-based action (CR 704.5m), from the graveyard to its owner's hand (returnDepartedSourceToHand, graveyard only)",
+            "it goes to the Aura card's owner's hand whoever owned the creature; the Aura leaving the battlefield alone does not trigger it, another creature dying does not, and a card that left the graveyard before the trigger resolves is not returned (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "angelic-destiny-pinned-oracle-supported",
+            "angelic-destiny-return-to-owner-hand",
+            "angelic-destiny-return-negative"
+          ],
+          "viewerScenarioIds": ["angelic-destiny-viewer-angel-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []

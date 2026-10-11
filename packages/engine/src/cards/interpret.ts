@@ -38,7 +38,11 @@ import type {
 } from './ability';
 import type { Condition } from './condition';
 import { countPermanents } from './condition';
-import { CREATURE_TYPE_BY_LOWER, NONCREATURE_SUBTYPE_BY_LOWER } from './creature-types';
+import {
+  CREATURE_TYPE_BY_LOWER,
+  CREATURE_TYPES,
+  NONCREATURE_SUBTYPE_BY_LOWER,
+} from './creature-types';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
@@ -2135,6 +2139,10 @@ function parseEffectSentence(
         ...(opts.departedToGraveyard === true ? { fromGraveyard: true as const } : {}),
       },
     ];
+  // "When enchanted creature dies, return this card to its owner's hand" (Angelic Destiny): the
+  // Aura card the source became once it followed its creature to the graveyard.
+  if (opts.attachedDies === true && s === "return this card to its owner's hand")
+    return [{ op: 'returnDepartedSourceToHand', fromGraveyard: true }];
   // "put those counters on target creature you control" (Iron Apprentice): every counter the
   // departed source last had (CR 603.10a), each kind and number, through counter-placement
   // replacements.
@@ -6515,6 +6523,37 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       if (granted !== null && granted.length === 1 && affects !== null) {
         return [{ affects, op: { layer: 6, addManaAbility: granted[0] as ManaAbilitySpec } }];
       }
+    }
+  }
+  // "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to
+  // its other types" (Angelic Destiny): the creature type is a layer-4 addition (CR 205.1b), the
+  // keywords layer 6 and the stats the same P/T modification sublayer as every attached buff.
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature gets ([+-]\d+)\/([+-]\d+), has ([a-z ]+?), and is an? ([a-z]+) in addition to its other types$/,
+    );
+    if (m !== null) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      const subtype = titleCase(m[5] as string);
+      const parsed = parseKeywordLine(m[4] as string);
+      if (
+        CREATURE_TYPES.includes(subtype) &&
+        parsed !== null &&
+        parsed.keywords.length > 0 &&
+        parsed.ward === undefined &&
+        parsed.protectionFrom === undefined
+      )
+        return [
+          { affects, op: { layer: 4, addSubtypes: [subtype] } },
+          ...parsed.keywords.map((keyword): StaticEffect => ({
+            affects,
+            op: { layer: 6, addKeyword: keyword },
+          })),
+          {
+            affects,
+            op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) },
+          },
+        ];
     }
   }
   // Dynamic attached buffs: "Equipped creature gets +1/+0 for each land you control"

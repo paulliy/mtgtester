@@ -73,7 +73,6 @@ const REASONS: Record<string, string> = {
   'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
   'Firemane Commando':
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
-  'Angelic Destiny': 'Angel type-changing is claimed without a type-changing static.',
   'Armored Skyhunter': 'Equipment filter is any artifact, and attach is omitted.',
   "Defacing Duskmage // Vandal's Edit":
     'Prepare is implemented as a pump trigger on any draw step.',
@@ -292,6 +291,7 @@ describe('Marchesa catalog audit containment', () => {
     'Hateful Eidolon',
     'Martial Impetus',
     'Killian, Decisive Mentor',
+    'Angelic Destiny',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

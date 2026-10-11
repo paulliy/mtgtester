@@ -7117,3 +7117,51 @@ test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchante
   await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('36');
   await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
 });
+
+test('Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Aura on Lab Green Bear: it becomes a 6/6.
+  const destiny = handCard(page, 'Angelic Destiny');
+  await expect(destiny).toHaveClass(/actionable/, { timeout: 15_000 });
+  await destiny.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Angelic Destiny')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/6');
+
+  // Destroy it: the Aura goes to the graveyard with it and returns to your hand.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Angelic Destiny')).toHaveCount(0);
+  await expect(handCard(page, 'Angelic Destiny')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

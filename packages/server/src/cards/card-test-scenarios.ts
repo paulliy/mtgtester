@@ -8495,6 +8495,38 @@ function killianDecisiveMentorScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function angelicDestinyScenario(gameId: GameId): CardTestScenario {
+  const destiny = pinnedFrom(COVERAGE_PR05, 'Angelic Destiny');
+  return pr01Scenario(gameId, {
+    id: 'angelic-destiny-viewer-angel-then-return',
+    title: 'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+    instructions: [
+      'Angelic Destiny and Lab Doom are in your hand. Two Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Angelic Destiny targeting Lab Green Bear and let it resolve: Lab Green Bear is a 6/6 flying, first-striking Angel Bear.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve. Lab Green Bear dies, and Angelic Destiny’s trigger returns the Aura from your graveyard to your hand.',
+    ],
+    expectedOutcome:
+      'Angelic Destiny is back in your hand, not in your graveyard. Lab Green Bear and Lab Doom are in your graveyard.',
+    oracleSha256: destiny.sha256,
+    clauseIds: ['angelic-destiny-buff', 'angelic-destiny-return'],
+    decks: {
+      P1: [destiny.card, LAB_DOOM, LAB_GREEN_BEAR, PLAINS, PLAINS, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Angelic Destiny', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Plains', 'Plains', 'Swamp', 'Swamp', 'Swamp', 'Swamp'],
+        },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10340,6 +10372,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
   'martial-impetus-viewer-attack-pump',
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+  'angelic-destiny-viewer-angel-then-return',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10622,6 +10655,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
+  'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

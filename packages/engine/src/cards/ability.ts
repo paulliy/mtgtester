@@ -1322,7 +1322,8 @@ export type Effect =
    * "Return it to its owner's hand" after the source left the battlefield (Fallen Ideal): "it" is
    * the card the source became in a graveyard or exile (CR 400.7e); if that card has left that
    * zone, nothing moves. `fromGraveyard` looks only in graveyards, for a trigger whose event puts
-   * the source there.
+   * the source there (Fallen Ideal) or an Aura that follows its creature there as a state-based
+   * action (Angelic Destiny, CR 704.5m).
    */
   | { op: 'returnDepartedSourceToHand'; fromGraveyard?: true }
   /**

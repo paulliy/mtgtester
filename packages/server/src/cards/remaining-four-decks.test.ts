@@ -112,7 +112,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Arcane Lighthouse',
       'Eldrazi Conscription',
       'Firemane Commando',
-      'Angelic Destiny',
       'Armored Skyhunter',
       "Defacing Duskmage // Vandal's Edit",
       'Eidolon of Countless Battles',

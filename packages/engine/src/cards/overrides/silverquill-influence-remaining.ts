@@ -70,12 +70,9 @@ const auraBuff = (
 export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // Ajani's Chosen: restored in coverage PR05. The interpreter reads the Cat token and the optional
   // attach of an entering Aura to it, so no override remains.
-  // Catalog audit silverquill-remaining-batch-2: Angel type-changing claimed without a static.
-  unsupportedCard(
-    '8ba36878-0816-44c7-b543-8ebfc28c2ecd',
-    'Angelic Destiny',
-    'Angel type-changing is claimed without a type-changing static.',
-  );
+  // Angelic Destiny: restored in coverage PR05. The interpreter reads the +4/+4, flying and first
+  // strike, and the Angel creature type as a layer 4 addition on the enchanted creature, and
+  // returns this Aura card from the graveyard to its owner's hand when that creature dies.
   // Catalog audit silverquill-remaining-batch-1: graveyard Aura attach and leave-sacrifice omitted.
   unsupportedCard(
     'c0d8fef4-65f4-4769-982d-b397d2b7e977',

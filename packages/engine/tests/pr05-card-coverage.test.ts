@@ -5257,6 +5257,189 @@ describe('Killian, Decisive Mentor', () => {
   });
 });
 
+// PR05.16 Angelic Destiny
+// ---------------------------------------------------------------------------------------------
+
+describe('Angelic Destiny', () => {
+  const { card } = pinned('Angelic Destiny');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const inHand = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).hand.map((c) => c.name);
+  const inGraveyard = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  /** P1 controls Lab Mine and a Lab Spare; P2 controls Lab Theirs. Angelic Destiny is not cast yet. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mine = spawn(ctx, 'P1', BEAR('Lab Mine'));
+    const spare = spawn(ctx, 'P1', BEAR('Lab Spare'));
+    const theirs = spawn(ctx, 'P2', BEAR('Lab Theirs'));
+    return { ctx, mine, spare, theirs };
+  }
+
+  /** The Aura on the battlefield, put there as if it had resolved onto `host`. */
+  function enchant(ctx: GameContext, controllerId: string, host: EnginePermanent) {
+    const aura = spawn(ctx, controllerId as 'P1', card);
+    aura.attachedTo = host.id;
+    return aura;
+  }
+
+  /** `playerId` casts Angelic Destiny from hand onto `host` through the normal path and resolves it. */
+  function castOnto(ctx: GameContext, playerId: string, host: EnginePermanent) {
+    const object = conjure(ctx, playerId, card, 'hand');
+    addMana(playerById(ctx, playerId), [
+      { symbol: 'W' },
+      { symbol: 'W' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+    ]);
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Angelic Destiny`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, host.id]]),
+    );
+    resolveTop(ctx);
+    return object;
+  }
+
+  it('angelic-destiny-pinned-oracle-supported — the interpreter alone models the +4/+4, the keywords, the added Angel type and the return to hand', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // Four statics on the creature this Aura is attached to: the Angel type is a layer 4 addition
+    // (CR 205.1b, 613.1d), flying and first strike are layer 6, and the stats layer 7d.
+    const affects = { kind: 'attachedToSource' };
+    expect(def.staticEffects).toEqual([
+      { affects, op: { layer: 4, addSubtypes: ['Angel'] } },
+      { affects, op: { layer: 6, addKeyword: 'flying' } },
+      { affects, op: { layer: 6, addKeyword: 'first strike' } },
+      { affects, op: { layer: 7, sublayer: 'd', power: 4, toughness: 4 } },
+    ]);
+    // When enchanted creature dies: one mandatory return of the Aura card from the graveyard.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.effects).toEqual([{ op: 'returnDepartedSourceToHand', fromGraveyard: true }]);
+  });
+
+  it('angelic-destiny-cast-onto-creature — cast onto a creature it attaches there and makes it a 6/6 flying, first-striking Angel Bear', () => {
+    const { ctx, mine } = board('angelic-cast');
+    expect(effectivePT(ctx, mine)).toEqual({ power: 2, toughness: 2 });
+    expect(hasKeyword(ctx, mine, 'flying')).toBe(false);
+    castOnto(ctx, 'P1', mine);
+    const aura = ctx.state.battlefield.find((perm) => perm.name === 'Angelic Destiny');
+    expect(aura?.attachedTo).toBe(mine.id);
+    expect(effectivePT(ctx, mine)).toEqual({ power: 6, toughness: 6 });
+    expect(hasKeyword(ctx, mine, 'flying')).toBe(true);
+    expect(hasKeyword(ctx, mine, 'first strike')).toBe(true);
+    // Added in addition to its other types: the Bear stays a Bear and the type line gains Angel.
+    const subtypes = computeCharacteristics(ctx, mine).subtypes;
+    expect(subtypes).toEqual(expect.arrayContaining(['Bear', 'Angel']));
+    expect(computeCharacteristics(ctx, mine).types).toContain('Creature');
+    // Negative: it can also enchant an opponent's creature, but only the enchanted one changes.
+    const other = board('angelic-cast-theirs');
+    castOnto(other.ctx, 'P1', other.theirs);
+    expect(effectivePT(other.ctx, other.theirs)).toEqual({ power: 6, toughness: 6 });
+    expect(effectivePT(other.ctx, other.mine)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('angelic-destiny-enchanted-only — only the enchanted creature gets the stats, keywords and Angel type, and they leave with the Aura', () => {
+    const { ctx, mine, spare, theirs } = board('angelic-only');
+    const aura = enchant(ctx, 'P1', mine);
+    for (const perm of [spare, theirs]) {
+      expect(effectivePT(ctx, perm)).toEqual({ power: 2, toughness: 2 });
+      expect(hasKeyword(ctx, perm, 'flying')).toBe(false);
+      expect(hasKeyword(ctx, perm, 'first strike')).toBe(false);
+      expect(computeCharacteristics(ctx, perm).subtypes).not.toContain('Angel');
+    }
+    expect(effectivePT(ctx, mine)).toEqual({ power: 6, toughness: 6 });
+    // Moved to another creature, everything goes with it.
+    aura.attachedTo = theirs.id;
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 6, toughness: 6 });
+    expect(computeCharacteristics(ctx, theirs).subtypes).toEqual(
+      expect.arrayContaining(['Bear', 'Angel']),
+    );
+    expect(effectivePT(ctx, mine)).toEqual({ power: 2, toughness: 2 });
+    expect(hasKeyword(ctx, mine, 'flying')).toBe(false);
+    expect(computeCharacteristics(ctx, mine).subtypes).toEqual(['Bear']);
+    // Unattached, nobody has any of it.
+    aura.attachedTo = null;
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 2, toughness: 2 });
+    expect(computeCharacteristics(ctx, theirs).subtypes).not.toContain('Angel');
+  });
+
+  it('angelic-destiny-return-to-owner-hand — when the enchanted creature dies the Aura card goes from the graveyard to its owner’s hand, whoever controlled the creature', () => {
+    const mine = board('angelic-return-mine');
+    enchant(mine.ctx, 'P1', mine.mine);
+    kill(mine.ctx, mine.mine);
+    settle(mine.ctx);
+    expect(mine.ctx.state.battlefield.some((perm) => perm.name === 'Angelic Destiny')).toBe(false);
+    expect(inHand(mine.ctx, 'P1')).toEqual(['Angelic Destiny']);
+    expect(inGraveyard(mine.ctx, 'P1')).not.toContain('Angelic Destiny');
+
+    // On an opponent's creature it returns to the Aura's owner, P1, not the creature's owner.
+    const theirs = board('angelic-return-theirs');
+    enchant(theirs.ctx, 'P1', theirs.theirs);
+    kill(theirs.ctx, theirs.theirs);
+    settle(theirs.ctx);
+    expect(inHand(theirs.ctx, 'P1')).toEqual(['Angelic Destiny']);
+    expect(inHand(theirs.ctx, 'P2')).toEqual([]);
+    expect(inGraveyard(theirs.ctx, 'P2')).toEqual(['Lab Theirs']);
+
+    // An Aura P1 owns but P2 controls still returns to its owner's hand, P1's.
+    const stolen = board('angelic-return-owner');
+    const aura = enchant(stolen.ctx, 'P1', stolen.theirs);
+    aura.controllerId = 'P2';
+    kill(stolen.ctx, stolen.theirs);
+    settle(stolen.ctx);
+    expect(inHand(stolen.ctx, 'P1')).toEqual(['Angelic Destiny']);
+    expect(inHand(stolen.ctx, 'P2')).toEqual([]);
+  });
+
+  it('angelic-destiny-return-negative — the Aura leaving alone, an exiled card, or another creature dying returns nothing', () => {
+    // The Aura itself going to the graveyard is not the creature dying: it stays there, and the
+    // creature loses everything it gave.
+    const alone = board('angelic-alone');
+    const aura = enchant(alone.ctx, 'P1', alone.mine);
+    kill(alone.ctx, aura);
+    settle(alone.ctx);
+    expect(inGraveyard(alone.ctx, 'P1')).toEqual(['Angelic Destiny']);
+    expect(inHand(alone.ctx, 'P1')).toEqual([]);
+    expect(alone.ctx.state.battlefield.includes(alone.mine)).toBe(true);
+    expect(computeCharacteristics(alone.ctx, alone.mine).subtypes).not.toContain('Angel');
+
+    // The creature dies, but the card is exiled from the graveyard before the trigger resolves.
+    const gone = board('angelic-exiled');
+    enchant(gone.ctx, 'P1', gone.mine);
+    kill(gone.ctx, gone.mine);
+    pump(priorityCheckpoint(gone.ctx));
+    expect(gone.ctx.state.stack).toHaveLength(1);
+    const inYard = playerById(gone.ctx, 'P1').graveyard.find((c) => c.name === 'Angelic Destiny')!;
+    pump(moveObject(gone.ctx, inYard, { zone: 'exile' }));
+    resolveTop(gone.ctx);
+    expect(inHand(gone.ctx, 'P1')).toEqual([]);
+    expect(gone.ctx.state.exile.map((c) => c.name)).toEqual(['Angelic Destiny']);
+
+    // A different creature dying while the Aura stays on its own host returns nothing.
+    const other = board('angelic-other');
+    const stays = enchant(other.ctx, 'P1', other.mine);
+    kill(other.ctx, other.spare);
+    kill(other.ctx, other.theirs);
+    settle(other.ctx);
+    expect(other.ctx.state.battlefield.includes(stays)).toBe(true);
+    expect(inHand(other.ctx, 'P1')).toEqual([]);
+    expect(effectivePT(other.ctx, other.mine)).toEqual({ power: 6, toughness: 6 });
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -5271,6 +5454,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: "Ajani's Chosen",
     sha256: 'a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48',
+    clauseCount: 2,
+  },
+  {
+    name: 'Angelic Destiny',
+    sha256: '3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496',
     clauseCount: 2,
   },
   {

@@ -120,10 +120,19 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
     expect(ctx.state.pendingTriggers.filter((t) => t.sourceCardId === aura.cardId)).toHaveLength(0);
   });
 
-  it('keeps Angelic Destiny contained until its Angel type-changing clause is modeled', () => {
+  it('models Angelic Destiny: the Angel type is a layer 4 addition and the Aura returns when its creature dies', () => {
     const def = interpretCard(angelicDestiny());
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join(' ')).toContain('explicitly unsupported:');
+    // Restored in coverage PR05: the Angel type is added in layer 4, and the dies trigger returns
+    // the Aura card from the graveyard to its owner's hand.
+    expect(def.unmodeledReasons).toEqual([]);
+    expect(def.modeled).toBe(true);
+    expect(def.staticEffects[0]).toEqual({
+      affects: { kind: 'attachedToSource' },
+      op: { layer: 4, addSubtypes: ['Angel'] },
+    });
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'returnDepartedSourceToHand', fromGraveyard: true },
+    ]);
   });
 
   it('models Hateful Eidolon: any enchanted creature dying draws per Aura you controlled on it', () => {
