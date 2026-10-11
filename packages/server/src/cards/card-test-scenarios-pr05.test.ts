@@ -1018,6 +1018,54 @@ describe('Killian, Decisive Mentor Card Test Lab scenario', () => {
   });
 });
 
+describe('Killian, Decisive Mentor opponent goad Card Test Lab scenario', () => {
+  it('killian-decisive-mentor-viewer-goaded-opponent-attack — P2’s goaded Lab Green Bear cannot attack P1 and must attack, while the ungoaded Lab Ox may attack P1 or stay home', () => {
+    const declarations: Array<{ player: string; subjects: AttackDeclarationSubject[] }> = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'killian-decisive-mentor-viewer-goaded-opponent-attack',
+      [],
+      (request) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration !== undefined)
+          declarations.push({ player: request.decidingPlayer, subjects: declaration.subjects });
+      },
+    );
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(bear?.controllerId).toBe('P2');
+    expect((bear as { goadedBy?: { goaderId: string }[] } | undefined)?.goadedBy).toEqual([
+      expect.objectContaining({ goaderId: 'P1' }),
+    ]);
+    expect(
+      (onBattlefield('Lab Ox')[0] as { goadedBy?: unknown } | undefined)?.goadedBy,
+    ).toBeUndefined();
+    // P2 declared once. The goaded Bear must attack and is never offered P1, the goader; the
+    // ungoaded Ox may stay home and may attack P1. Killian is tapped, so nothing blocks.
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0]!.player).toBe('P2');
+    const names = objectNames(scenario);
+    expect(
+      declarations[0]!.subjects.map((subject) => ({
+        name: names.get(subject.subjectId) ?? subject.subjectId,
+        mustAttack: subject.mustAttack,
+        defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+      })),
+    ).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P1', 'P3', 'P4'] },
+    ]);
+    // P2's seat attacks P1 whenever P1 is offered: the Ox hit P1 for 4, the Bear hit P3 or P4
+    // for 2, and P1 took nothing from the Bear.
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P2').life).toBe(40);
+    expect([seat('P3').life, seat('P4').life].sort()).toEqual([38, 40]);
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('killian-decisive-mentor-viewer-goaded-opponent-attack', []);
+  });
+});
+
 describe('Angelic Destiny Card Test Lab scenario', () => {
   it('angelic-destiny-viewer-angel-then-return — the Aura makes Lab Green Bear a 6/6 Angel, and when Lab Doom kills it the Aura returns to hand', () => {
     const steps: Step[] = [

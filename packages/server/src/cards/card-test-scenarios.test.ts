@@ -374,6 +374,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'martial-impetus-viewer-attack-pump',
       'martial-impetus-viewer-goaded-opponent-attack',
       'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+      'killian-decisive-mentor-viewer-goaded-opponent-attack',
       'angelic-destiny-viewer-angel-then-return',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
       'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',

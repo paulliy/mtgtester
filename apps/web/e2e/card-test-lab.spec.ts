@@ -7463,6 +7463,25 @@ test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchante
   await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
 });
 
+test('Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Killian, Decisive Mentor')).toHaveCount(1);
+
+  // Only the ungoaded Lab Ox attacked you (4): you are at 36, not 34. The goaded Bear attacked
+  // someone else: P3 took 2 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('38');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
 test('Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand', async ({
   page,
 }) => {

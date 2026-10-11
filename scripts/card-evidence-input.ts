@@ -1959,6 +1959,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
     ],
   },

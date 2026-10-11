@@ -8721,6 +8721,47 @@ function killianDecisiveMentorScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * The combat half of Killian's goad, on the goaded creature's controller's turn. Lab Green Bear
+ * STARTS goaded by you (arranged with goadedBy, as if Killian's trigger had goaded it on your last
+ * turn); the trigger that taps and goads is shown by the scenario where it fires. Everything from
+ * the untap step and the declare-attackers menu to the damage runs through production code.
+ */
+function killianOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(COVERAGE_PR05, 'Killian, Decisive Mentor');
+  return pr01Scenario(gameId, {
+    id: 'killian-decisive-mentor-viewer-goaded-opponent-attack',
+    title:
+      'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your tapped Killian, Decisive Mentor is on the battlefield. P2’s Lab Green Bear (2/2) starts goaded by you, as if Killian’s trigger had goaded it on your last turn; this position is arranged for the scenario. P2 also controls Lab Ox (4/4), which is not goaded.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the goading player; Lab Ox may attack you or stay home.',
+      'Nobody blocks: Killian is tapped.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 38 or 34. P3 took 2 from Lab Green Bear and is at 38, and P4 is untouched at 40.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-enchantment-enters'],
+    decks: {
+      P1: [killian.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Decisive Mentor'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Green Bear'], goadedBy: 'P1' },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 function angelicDestinyScenario(gameId: GameId): CardTestScenario {
   const destiny = pinnedFrom(COVERAGE_PR05, 'Angelic Destiny');
   return pr01Scenario(gameId, {
@@ -11014,6 +11055,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'martial-impetus-viewer-attack-pump',
   'martial-impetus-viewer-goaded-opponent-attack',
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+  'killian-decisive-mentor-viewer-goaded-opponent-attack',
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
@@ -11312,6 +11354,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'martial-impetus-viewer-goaded-opponent-attack': martialImpetusOpponentAttackScenario,
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
+  'killian-decisive-mentor-viewer-goaded-opponent-attack': killianOpponentAttackScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'sheltered-by-ghosts-viewer-ward-counters-opponent-spell': shelteredByGhostsWardScenario,

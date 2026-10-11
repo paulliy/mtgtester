@@ -2712,7 +2712,10 @@
             "killian-enters-yours-only",
             "killian-goaded-creature-must-attack"
           ],
-          "viewerScenarioIds": ["killian-decisive-mentor-viewer-tap-goad-and-attack-draw"]
+          "viewerScenarioIds": [
+            "killian-decisive-mentor-viewer-tap-goad-and-attack-draw",
+            "killian-decisive-mentor-viewer-goaded-opponent-attack"
+          ]
         },
         {
           "id": "killian-attack-draw",
