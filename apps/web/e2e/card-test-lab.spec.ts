@@ -6557,14 +6557,19 @@ test('Sunforger: equip it, then unattach it to cast a red instant from your libr
   await expect(permanent(page, 'Sunforger')).toHaveCount(1);
   await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
 
-  // Only the red instant is offered from the library, not the blue instant or the red sorcery.
+  // Only the red or white instants with mana value 4 or less are offered from the library: the
+  // red instant and the white one, not the mana value 5 red instant, the blue instant or the red
+  // sorcery.
   const castForFree = page.getByRole('button', { name: 'Cast for free' });
-  await expect(castForFree).toHaveCount(1, { timeout: 15_000 });
+  await expect(castForFree).toHaveCount(2, { timeout: 15_000 });
   await expect(page.getByRole('img', { name: 'Lab Quick Gain' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Lab Sun White Instant' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Lab Sun Red Big Instant' })).toHaveCount(0);
   await expect(page.getByRole('img', { name: 'Lab Sun Blue Instant' })).toHaveCount(0);
   await expect(page.getByRole('img', { name: 'Lab Sun Red Sorcery' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
-  await castForFree.click();
+  // Cast the red one, which is listed first.
+  await castForFree.first().click();
 
   // The free spell resolves: 1 life gained, and Sunforger stays on the battlefield unattached.
   await passUntil(page, page.getByText(/game over/i).first());

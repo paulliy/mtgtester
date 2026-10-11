@@ -349,11 +349,16 @@ describe('Sunforger Card Test Lab scenario', () => {
     expect(sunforgerActions(offered[0] ?? [])[0]).not.toMatch(/Unattach/);
     expect(sunforgerActions(offered[1] ?? [])).toHaveLength(1);
     expect(sunforgerActions(offered[1] ?? [])[0]).toMatch(/\{R\}\{W\}, Unattach this Equipment/);
-    // The search offered only the red instant (and finding nothing).
+    // The search offered the red instant and the white instant (mana value 3) and finding
+    // nothing: not the mana value 5 red instant, the blue instant or the red sorcery.
     const search = offered.find((options) =>
       options.some((option) => /^Cast .* without paying its mana cost$/.test(option)),
     );
-    expect(search).toEqual(['Cast Lab Quick Gain without paying its mana cost', 'Find nothing']);
+    expect([...(search ?? [])].sort()).toEqual([
+      'Cast Lab Quick Gain without paying its mana cost',
+      'Cast Lab Sun White Instant without paying its mana cost',
+      'Find nothing',
+    ]);
     // Equip attached it to the Bear, and the cost then took it off again.
     expect(
       state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
@@ -368,7 +373,12 @@ describe('Sunforger Card Test Lab scenario', () => {
       seat('P1')
         .library.map((card) => card.name)
         .sort(),
-    ).toEqual(['Lab Sun Blue Instant', 'Lab Sun Red Sorcery']);
+    ).toEqual([
+      'Lab Sun Blue Instant',
+      'Lab Sun Red Big Instant',
+      'Lab Sun Red Sorcery',
+      'Lab Sun White Instant',
+    ]);
     expect(state.eventLog.filter((event) => event.type === 'shuffle')).toHaveLength(1);
     const lands = state.battlefield.filter((perm) => /Basic Land/.test(perm.typeLine));
     expect(lands).toHaveLength(5);

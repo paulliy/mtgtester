@@ -8039,6 +8039,27 @@ const LAB_SUN_RED_SORCERY = card({
   oracleText: 'You gain 3 life.',
 });
 
+const LAB_SUN_WHITE_INSTANT = card({
+  oracleId: 'lab-sun-white-instant',
+  name: 'Lab Sun White Instant',
+  typeLine: 'Instant',
+  manaCost: '{2}{W}',
+  cmc: 3,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'You gain 4 life.',
+});
+const LAB_SUN_RED_BIG_INSTANT = card({
+  oracleId: 'lab-sun-red-big-instant',
+  name: 'Lab Sun Red Big Instant',
+  typeLine: 'Instant',
+  manaCost: '{4}{R}',
+  cmc: 5,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  oracleText: 'You gain 5 life.',
+});
+
 function sunforgerScenario(gameId: GameId): CardTestScenario {
   const sunforger = pinnedFrom(COVERAGE_PR05, 'Sunforger');
   const forests = Array.from({ length: 3 }, () => FOREST);
@@ -8046,14 +8067,14 @@ function sunforgerScenario(gameId: GameId): CardTestScenario {
     id: 'sunforger-viewer-unattach-search-and-cast',
     title: 'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
     instructions: [
-      'Sunforger, Lab Green Bear (2/2), three Forests, a Mountain and a Plains are on your battlefield. Your library holds Lab Quick Gain (a red instant), Lab Sun Blue Instant (a blue instant) and Lab Sun Red Sorcery (a red sorcery). Sunforger is not attached to anything, so its {R}{W} ability is not offered yet.',
+      'Sunforger, Lab Green Bear (2/2), three Forests, a Mountain and a Plains are on your battlefield. Your library holds Lab Quick Gain (a red instant, mana value 1), Lab Sun White Instant (a white instant, mana value 3), Lab Sun Red Big Instant (a red instant, mana value 5), Lab Sun Blue Instant (a blue instant) and Lab Sun Red Sorcery (a red sorcery). Sunforger is not attached to anything, so its {R}{W} ability is not offered yet.',
       'Activate Equip {3} targeting Lab Green Bear, paying with the Forests, and let it resolve: Lab Green Bear becomes a 6/2.',
       'Activate {R}{W}, Unattach this Equipment, paying with the Mountain and the Plains. Sunforger comes off Lab Green Bear as a cost, which is a 2/2 again before the ability resolves.',
-      'Let the ability resolve and choose Lab Quick Gain. Only the red instant is offered, not the blue instant or the red sorcery, and no mana is paid for it.',
+      'Let the ability resolve. Only the two instants that are red or white with mana value 4 or less are offered, Lab Quick Gain and Lab Sun White Instant; the mana value 5 red instant, the blue instant and the red sorcery are not. Choose Lab Quick Gain; no mana is paid for it.',
       'Let Lab Quick Gain resolve.',
     ],
     expectedOutcome:
-      'Sunforger is on the battlefield, unattached, and Lab Green Bear is a 2/2. Lab Quick Gain was cast without paying for it and is in your graveyard, so you gained 1 life and are at 41. Your library still holds Lab Sun Blue Instant and Lab Sun Red Sorcery, reshuffled. All five lands are tapped.',
+      'Sunforger is on the battlefield, unattached, and Lab Green Bear is a 2/2. Lab Quick Gain was cast without paying for it and is in your graveyard, so you gained 1 life and are at 41. Your library still holds Lab Sun White Instant, Lab Sun Red Big Instant, Lab Sun Blue Instant and Lab Sun Red Sorcery, reshuffled. All five lands are tapped.',
     oracleSha256: sunforger.sha256,
     clauseIds: ['sunforger-pump', 'sunforger-search', 'sunforger-equip'],
     decks: {
@@ -8064,6 +8085,8 @@ function sunforgerScenario(gameId: GameId): CardTestScenario {
         MOUNTAIN,
         PLAINS,
         LAB_QUICK_GAIN,
+        LAB_SUN_WHITE_INSTANT,
+        LAB_SUN_RED_BIG_INSTANT,
         LAB_SUN_BLUE_INSTANT,
         LAB_SUN_RED_SORCERY,
       ],
