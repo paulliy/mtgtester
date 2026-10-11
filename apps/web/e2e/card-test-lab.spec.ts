@@ -6174,7 +6174,8 @@ test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
   // The {B}{B} ability needs no timing window: move Plating onto Lab Ox.
   await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
   await plating.click();
-  // Choose Lab Ox for the attach: Lab Green Bear already carries Plating, so it is not offered.
+  // Choose Lab Ox for the attach. Lab Green Bear is a legal but no-op target (CR 701.3b); the
+  // engine leaves the current host out of the options.
   await page.getByRole('button', { name: /Attach this Equipment/ }).click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Ox').click();

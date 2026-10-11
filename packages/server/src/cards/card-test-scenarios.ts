@@ -7863,7 +7863,7 @@ function cranialPlatingScenario(gameId: GameId): CardTestScenario {
     instructions: [
       'Cranial Plating, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and an opponent controls Lab Bird. Plating is not attached to anything.',
       'Activate Equip {1} targeting Lab Green Bear and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2.',
-      'Activate the {B}{B} ability, which has no timing restriction, targeting Lab Ox, and let it resolve. Lab Green Bear is not offered as an equip or attach target while it already carries Plating, and the opponent’s Lab Bird never is.',
+      'Activate the {B}{B} ability, which has no timing restriction, targeting Lab Ox, and let it resolve. The rules allow targeting the creature Plating is already attached to, but the move would do nothing (CR 701.3b), so this engine leaves Lab Green Bear out of the targets while it carries Plating. The opponent’s Lab Bird is never offered.',
     ],
     expectedOutcome:
       'Cranial Plating ends attached to Lab Ox, which is a 5/4. Lab Green Bear is back to 2/2. All three Swamps are tapped.',
