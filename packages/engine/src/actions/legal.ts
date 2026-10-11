@@ -1,7 +1,7 @@
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
-import { selectedSpellDefinition } from '../cards/spell-faces';
+import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
@@ -122,7 +122,14 @@ export type PriorityActionPayload =
       /** Number of times the card's optional additional cost was paid. */
       optionalCostCount?: number;
       alternativeCast?:
-        'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
+        | 'overload'
+        | 'adventure'
+        | 'omen'
+        | 'nonMana'
+        | 'energy'
+        | 'commanderFree'
+        | 'faceDown'
+        | 'bestow';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -1291,31 +1298,70 @@ export function computePriorityOptions(
       const separatelyCastableFromTop =
         fromLibraryTop &&
         castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id);
-      if (permission === null && !separatelyCastableFromTop) {
-        options.splice(normalOptionsStart);
-      } else if (permission?.budgetTypes !== undefined) {
-        const generated = options.splice(normalOptionsStart);
-        for (const budgetType of permission.budgetTypes) {
-          for (const option of generated) {
-            const castPayload = option.payload as Extract<
-              PriorityActionPayload,
-              { kind: 'castSpell' }
-            >;
-            options.push({
-              ...option,
-              description: `${option.description} (using ${budgetType} permission)`,
-              payload: { ...castPayload, zoneBudgetType: budgetType },
-              data: { ...option.data, zoneBudgetType: budgetType },
-            });
+      /** Keep the options generated from `start` only under `permission`, one per budget type. */
+      const applyZonePermission = (
+        start: number,
+        zonePermission: { budgetTypes?: string[] } | null,
+        separatelyCastable: boolean,
+      ): void => {
+        if (zonePermission === null && !separatelyCastable) {
+          options.splice(start);
+        } else if (zonePermission?.budgetTypes !== undefined) {
+          const generated = options.splice(start);
+          for (const budgetType of zonePermission.budgetTypes) {
+            for (const option of generated) {
+              const castPayload = option.payload as Extract<
+                PriorityActionPayload,
+                { kind: 'castSpell' }
+              >;
+              options.push({
+                ...option,
+                description: `${option.description} (using ${budgetType} permission)`,
+                payload: { ...castPayload, zoneBudgetType: budgetType },
+                data: { ...option.data, zoneBudgetType: budgetType },
+              });
+            }
           }
         }
+      };
+      applyZonePermission(normalOptionsStart, permission, separatelyCastableFromTop);
+      // A permission to cast the card also allows its bestow cost (CR 118.9). Whether the
+      // permission applies, and which permanent-type budget it spends, is judged on the bestowed
+      // Aura enchantment spell, not the creature card (CR 601.3e, 702.103b).
+      for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (alt.kind !== 'bestow') continue;
+        const bestowed = bestowedDefinition(def);
+        const bestowStart = options.length;
+        offerCast(
+          alt.manaCost,
+          spellAdditionalCosts,
+          bestowed,
+          { alternativeCast: alt.kind, altIndex: index },
+          ' via Bestow',
+        );
+        applyZonePermission(
+          bestowStart,
+          playFromZonePermission(
+            ctx,
+            player.id,
+            obj,
+            fromGraveyard ? 'graveyard' : 'libraryTop',
+            bestowed,
+          ),
+          fromLibraryTop &&
+            castFromLibraryTopCandidates(ctx, player.id, bestowed).some(
+              (card) => card.id === obj.id,
+            ),
+        );
       }
     }
     // Adventure's own exile permission allows only the permanent face. A broad temporary
-    // play permission also permits choosing a spell face, without granting alternate costs.
+    // play permission also permits choosing a spell face or paying bestow (CR 118.9); other
+    // alternate costs are not offered from exile.
     if ((!fromExile || obj.playableUntilEotBy === player.id) && !fromLibraryTop) {
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
-        if (fromExile && alt.kind !== 'adventure' && alt.kind !== 'omen') continue;
+        if (fromExile && alt.kind !== 'adventure' && alt.kind !== 'omen' && alt.kind !== 'bestow')
+          continue;
         if (fromExile && alt.from === 'hand') continue;
         if (fromCommand && alt.from === 'hand') continue;
         if (
@@ -1371,6 +1417,15 @@ export function computePriorityOptions(
             );
             break;
           }
+          case 'bestow':
+            offerCast(
+              alt.manaCost,
+              spellAdditionalCosts,
+              bestowedDefinition(def),
+              { alternativeCast: alt.kind, altIndex: index },
+              ' via Bestow',
+            );
+            break;
           case 'mdfc':
             // The supported alternate face is a land play, already offered above.
             break;
@@ -1384,12 +1439,20 @@ export function computePriorityOptions(
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
   const libraryTop = player.library[0];
-  if (
-    libraryTop !== undefined &&
-    (castFromLibraryTopCandidates(ctx, player.id).some((obj) => obj.id === libraryTop.id) ||
-      canPlayFromZone(ctx, player.id, libraryTop, 'libraryTop'))
-  )
-    considerCast(libraryTop, false, true);
+  /** Whether a library-top permission lets `libraryTop` be cast as `spell` (CR 601.3e). */
+  const topCastableAs = (top: EngineCardObject, spell?: CardDefinition): boolean =>
+    castFromLibraryTopCandidates(ctx, player.id, spell).some((obj) => obj.id === top.id) ||
+    playFromZonePermission(ctx, player.id, top, 'libraryTop', spell) !== null;
+  if (libraryTop !== undefined) {
+    const topDef = getDefByOracleId(ctx, libraryTop.oracleId, libraryTop.name);
+    if (
+      topCastableAs(libraryTop) ||
+      // A permission only the bestowed Aura spell satisfies ("Aura spells") still allows bestow.
+      ((topDef.alternativeCasts ?? []).some((alt) => alt.kind === 'bestow') &&
+        topCastableAs(libraryTop, bestowedDefinition(topDef)))
+    )
+      considerCast(libraryTop, false, true);
+  }
   for (const obj of player.graveyard) considerCast(obj, false, false, false, true);
   for (const obj of ctx.state.exile) {
     // One pass per card even when both permissions apply, or every option is offered twice.

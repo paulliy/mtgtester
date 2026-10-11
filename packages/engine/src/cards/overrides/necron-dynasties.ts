@@ -220,10 +220,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'Enmitic Exterminator — When this creature enters, each player sacrifices a creature of their choice.',
   ]);
 
-  unimplemented('d6b2c998-a226-426c-a40d-6e6007041bfe', 'Mask of Memory', [
-    'Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.',
-  ]);
-
   defineCard(
     '698e79ec-c2bc-4973-a095-f3c57b50e39c',
     'Mutilate',
@@ -335,10 +331,6 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   unimplemented('c23e5b80-08d2-4e24-9908-fe2aa4f30f6f', 'Reliquary Tower', [
     'You have no maximum hand size.',
-  ]);
-
-  unimplemented('b410f294-cbb6-4016-981f-808fd9b7bbae', 'Resurrection Orb', [
-    "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
   ]);
 
   unimplemented('0192ba05-6144-4fec-a803-462ecdf64195', 'Royal Warden', [

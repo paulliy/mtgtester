@@ -201,10 +201,10 @@ describe('Batch 3 subsystems and card overrides', () => {
           'Enchant player\nWhenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.',
       }),
     );
-    expect(curse.modeled).toBe(false);
-    expect(curse.unmodeledReasons.join('\n')).toContain(
-      'Only the attacking player untaps; the curse controller always should.',
-    );
+    // Restored in coverage PR05: the curse controller and an attacking opponent both untap
+    // (pr05-card-coverage.test.ts).
+    expect(curse.modeled).toBe(true);
+    expect(curse.unmodeledReasons).toEqual([]);
 
     const path = interpretCard(
       oracle({

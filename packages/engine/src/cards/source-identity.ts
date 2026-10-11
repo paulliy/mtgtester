@@ -31,12 +31,24 @@ export interface ObjectFacts extends SourceCastState {
   castByPlayerId?: string;
   castFromZone?: string;
   manaSpentToCast?: number;
+  /**
+   * The controller of each Aura attached to it as it last existed (CR 603.10a), one entry per
+   * Aura: "each Aura you controlled that was attached to it" (Hateful Eidolon).
+   */
+  attachedAuraControllerIds?: string[];
 }
 
 export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent): ObjectFacts {
   const chars = computeCharacteristics(ctx, permanent);
   const candidate = candidateOf(ctx, permanent, chars);
   const counters = { ...permanent.counters };
+  const attachedAuraControllerIds = ctx.state.battlefield
+    .filter(
+      (other) =>
+        other.attachedTo === permanent.id &&
+        computeCharacteristics(ctx, other).subtypes.includes('Aura'),
+    )
+    .map((aura) => aura.controllerId);
   return {
     objectId: permanent.id,
     name: permanent.name,
@@ -68,6 +80,7 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     wasKicked: permanent.wasKicked === true || permanent.kicked === true,
     announcedX: permanent.announcedX ?? 0,
     escaped: permanent.escaped === true,
+    ...(attachedAuraControllerIds.length === 0 ? {} : { attachedAuraControllerIds }),
   };
 }
 

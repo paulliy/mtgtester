@@ -152,6 +152,8 @@ export type Value =
   | { kind: 'countPermanentsControlledByTarget'; target: EffectRef; selector: Selector }
   /** Number of Auras you control that are currently attached to creatures. */
   | { kind: 'aurasYouControlAttachedToCreatures' }
+  /** "for each Aura attached to it" (Kor Spiritdancer): every Aura on the source, any controller. */
+  | { kind: 'aurasAttachedToSource' }
   /**
    * Cards matching printed characteristics in a non-battlefield zone. Unlike
    * `countPermanents`, this deliberately uses card-zone candidates: continuous effects do not
@@ -191,6 +193,11 @@ export type Value =
   | { kind: 'damageDealt' }
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
   | { kind: 'triggerCount' }
+  /**
+   * "for each Aura you controlled that was attached to it" (Hateful Eidolon): the trigger
+   * object's last-known attached Auras whose controller was this ability's controller.
+   */
+  | { kind: 'aurasYouControlledAttachedToTriggerObject' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
   /** "X is the number of colors that spell is" — read from the trigger's cast event. */
@@ -261,6 +268,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
     case 'aurasYouControlAttachedToCreatures':
+    case 'aurasAttachedToSource':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
     case 'colorsAmongPermanentsAndSpellsCastThisTurn':
@@ -275,6 +283,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':
@@ -322,6 +331,7 @@ export function needsScope(value: Value): boolean {
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
     case 'aurasYouControlAttachedToCreatures':
+    case 'aurasAttachedToSource':
     case 'countCardsInZone':
     case 'colorsAmongPermanents':
     case 'colorsAmongPermanentsAndSpellsCastThisTurn':
@@ -336,6 +346,7 @@ export function needsScope(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':
@@ -410,6 +421,7 @@ export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Colo
 export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents'> & {
   sourceCounters?: Readonly<Record<string, number>>;
   countAurasYouControlAttachedToCreatures?: () => number;
+  countAurasAttachedToSource?: () => number;
 };
 
 export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValueScope): number {
@@ -439,6 +451,13 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
         throw new Error('engine bug: attached Aura count needs a layer evaluation scope');
       }
       return scope.countAurasYouControlAttachedToCreatures();
+    case 'aurasAttachedToSource':
+      if (scope?.countAurasAttachedToSource === undefined) {
+        throw new Error(
+          'engine bug: Auras-attached-to-source count needs a layer evaluation scope',
+        );
+      }
+      return scope.countAurasAttachedToSource();
     case 'devotionTo':
       if (scope?.controllerId === undefined) {
         throw new Error(`engine bug: value "devotionTo" needs a source controller`);
@@ -478,6 +497,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':

@@ -1,0 +1,804 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-10",
+  "cards": [
+    {
+      "sha256": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
+      "card": {
+        "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
+        "scryfallId": "e1375f17-bc25-4a65-98b7-4785bbdbe974",
+        "name": "Cranial Plating",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature gets +1/+0 for each artifact you control.\n{B}{B}: Attach this Equipment to target creature you control.\nEquip {1}",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310",
+      "card": {
+        "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+        "scryfallId": "ba275c02-8581-46a0-9c7c-8baa0fdb4982",
+        "name": "Mask of Memory",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.\nEquip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734",
+      "card": {
+        "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+        "scryfallId": "2d6209c8-9fa1-4f0a-ab65-ac2fedfcd09b",
+        "name": "Resurrection Orb",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature has lifelink.\nWhenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.\nEquip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e",
+      "card": {
+        "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+        "scryfallId": "dd3e42ee-ab13-460b-90fd-86e677abce4f",
+        "name": "Sunforger",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3",
+      "card": {
+        "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
+        "scryfallId": "27e2a759-971d-455b-845c-2e9b471950bb",
+        "name": "Screams from Within",
+        "manaCost": "{1}{B}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets -1/-1.\nWhen enchanted creature dies, return this card from your graveyard to the battlefield.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd",
+      "card": {
+        "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
+        "scryfallId": "f6fab24d-0174-4248-8481-52194e05d6f9",
+        "name": "Ghoulish Impetus",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +1/+1, has deathtouch, and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\nWhen enchanted creature dies, return this card to the battlefield at the beginning of the next end step.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781",
+      "card": {
+        "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
+        "scryfallId": "4ae22015-073a-4666-9e3b-15dcf61f50ce",
+        "name": "Gift of Immortality",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhen enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at the beginning of the next end step.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48",
+      "card": {
+        "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
+        "scryfallId": "bc20cca0-303f-4463-85ae-26b80ff26211",
+        "name": "Ajani's Chosen",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Cat Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Soldier"
+        ],
+        "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7",
+      "card": {
+        "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
+        "scryfallId": "681149f2-0802-4ab7-9521-3b3c7281f55d",
+        "name": "Shielded by Faith",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature has indestructible.\nWhenever a creature enters, you may attach this Aura to that creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0ba03edb28796d0bf9c9db05a772b35e3a219d24ff8a81648d9a440a2fd35cb2",
+      "card": {
+        "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
+        "scryfallId": "1c2fcf3e-63ce-45bd-afc4-2c11f54c70c4",
+        "name": "Forum Filibuster",
+        "manaCost": "{3}{W}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683",
+      "card": {
+        "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
+        "scryfallId": "77026cf6-7e89-41a6-8279-de1068569a02",
+        "name": "Karametra's Favor",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhen this Aura enters, draw a card.\nEnchanted creature has \"{T}: Add one mana of any color.\"",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638",
+      "card": {
+        "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+        "scryfallId": "49326de1-d3b0-4f2b-95bc-5f2878e14a89",
+        "name": "Redemption Arc",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature has indestructible and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\n{1}{W}: Exile enchanted creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
+      "card": {
+        "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
+        "scryfallId": "f54acc9f-d128-49d4-b1a9-47a7ece13833",
+        "name": "Fallen Ideal",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\"\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35",
+      "card": {
+        "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
+        "scryfallId": "48da45bd-ed72-4239-af02-e848703a1d02",
+        "name": "Kor Spiritdancer",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Kor Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Kor",
+          "Wizard"
+        ],
+        "oracleText": "This creature gets +2/+2 for each Aura attached to it.\nWhenever you cast an Aura spell, you may draw a card.",
+        "power": "0",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
+      "card": {
+        "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+        "scryfallId": "ff028d0b-066a-4769-89bc-f267d15eb707",
+        "name": "Hateful Eidolon",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Lifelink\nWhenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6",
+      "card": {
+        "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
+        "scryfallId": "41ccc31c-9377-4e8a-aede-248d16cd5264",
+        "name": "Martial Impetus",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 and is goaded. (It attacks each combat if able and attacks a player other than you if able.)\nWhenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad",
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f",
+      "card": {
+        "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+        "scryfallId": "76b6c35a-bb92-4ad3-8f85-88b9bafc6266",
+        "name": "Killian, Decisive Mentor",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Warlock",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warlock"
+        ],
+        "oracleText": "Whenever an enchantment you control enters, tap up to one target creature and goad it. (Until your next turn, that creature attacks each combat if able and attacks a player other than you if able.)\nWhenever one or more creatures that are enchanted by an Aura you control attack, draw a card.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496",
+      "card": {
+        "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+        "scryfallId": "a588b610-86bb-4a18-b54e-a12f7d7d15c8",
+        "name": "Angelic Destiny",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.\nWhen enchanted creature dies, return this card to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31",
+      "card": {
+        "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+        "scryfallId": "8e8a5cfe-1b3f-4414-b9a4-078bdb4072a7",
+        "name": "Sheltered by Ghosts",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature you control\nWhen this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\nEnchanted creature gets +1/+0 and has lifelink and ward {2}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe",
+      "card": {
+        "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+        "scryfallId": "33965c48-a7ce-4a04-8251-8eeb2d908c0b",
+        "name": "Eldrazi Conscription",
+        "manaCost": "{8}",
+        "cmc": 8,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Kindred Enchantment — Eldrazi Aura",
+        "supertypes": [],
+        "types": [
+          "Kindred",
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Eldrazi",
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +10/+10 and has trample and annihilator 2. (Whenever it attacks, defending player sacrifices two permanents of their choice.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18",
+      "card": {
+        "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+        "scryfallId": "2f497641-b73a-4399-bc89-5274c42e17cc",
+        "name": "Curse of Bounty",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment — Aura Curse",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura",
+          "Curse"
+        ],
+        "oracleText": "Enchant player\nWhenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756",
+      "card": {
+        "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
+        "scryfallId": "4ad6fcb1-7c35-4111-8f1e-d18a2fae5638",
+        "name": "Eidolon of Countless Battles",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Bestow {2}{W}{W} (If you cast this card for its bestow cost, it's an Aura spell with enchant creature. It becomes a creature again if it's not attached.)\nThis creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Bestow"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
+      "card": {
+        "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+        "scryfallId": "cc0c2bab-4392-4e7b-9d14-2901f4ffbae8",
+        "name": "Animate Dead",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature card in a graveyard\nWhen this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.\nEnchanted creature gets -1/-0.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

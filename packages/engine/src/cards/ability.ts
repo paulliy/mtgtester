@@ -92,7 +92,7 @@ export type AbilityCost =
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow';
   /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;
@@ -511,7 +511,14 @@ export type Effect =
   | { op: 'chooseOne'; options: { effects: Effect[]; description: string }[] }
   /** Two creatures deal damage equal to their power to each other simultaneously (CR 701.12). */
   | { op: 'fight'; first: EffectRef; second: EffectRef }
-  | { op: 'pumpEachUntilEot'; selector: Selector; power: Value | number; toughness: Value | number }
+  | {
+      op: 'pumpEachUntilEot';
+      selector: Selector;
+      power: Value | number;
+      toughness: Value | number;
+      /** "each other creature" beside a trigger's subject (Martial Impetus): not that object. */
+      exceptTriggerObject?: true;
+    }
   /** Snapshot each matching creature's current P/T and add that much again until end of turn. */
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
@@ -591,6 +598,27 @@ export type Effect =
   | { op: 'dealDamageNonbasicLands'; target: EffectRef }
   | { op: 'sacrificeOneEachOpponent'; filter: 'creature' | 'nonland' | Selector }
   | { op: 'sacrificeEachPlayer'; count: number; filter: 'creature' | 'any' }
+  /**
+   * Annihilator N (CR 702.86a): "defending player sacrifices N permanents" of their choice — the
+   * attack trigger's event player, all at once.
+   */
+  | { op: 'eventPlayerSacrificesPermanents'; count: number }
+  /**
+   * "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
+   * Bounty): the attacking player (the event player), only if they are an opponent of this
+   * ability's controller.
+   */
+  | { op: 'attackingOpponentUntapsNonland' }
+  /**
+   * Animate Dead's enters trigger, "if it's on the battlefield": it now enchants only the creature
+   * put onto the battlefield with it; the creature card it enchants, if still in a graveyard,
+   * returns under this ability's controller and this Aura attaches to it with a new timestamp
+   * (CR 613.7e); and "when this Aura leaves the battlefield, that creature's controller
+   * sacrifices it" is set up as a delayed trigger on this Aura object (CR 603.7).
+   */
+  | { op: 'reanimateEnchantedCardAndAttach' }
+  /** The delayed half: that exact object, if it is still on the battlefield, is sacrificed. */
+  | { op: 'sacrificeRememberedPermanent'; objectId: string }
   | {
       op: 'putCounterByPermanentType';
       target: EffectRef;
@@ -844,6 +872,34 @@ export type Effect =
   | { op: 'counterUnlessPays'; cost: WardCost; stackObjectId: string }
   /** Equip (CR 702.6): attach the ability's source to the target permanent. */
   | { op: 'attachSelfTo'; target: EffectRef }
+  /**
+   * "Create a … token. When you do, …" (Forum Filibuster): the reflexive trigger (CR 603.12)
+   * fires only if a token was created, and "that token" is the one this ability just created
+   * (its controller picks one if a replacement made several).
+   */
+  | { op: 'reflexiveOnCreatedToken'; then: Ability }
+  /**
+   * "Return up to one target Aura or Equipment card from your graveyard to the battlefield
+   * attached to that token" (Forum Filibuster): each chosen card still in the graveyard enters
+   * under the ability's controller attached to the trigger object. An Aura that can't enchant it,
+   * or finds it gone, stays in the graveyard (CR 303.4i); an Equipment that can't equip it enters
+   * unattached (CR 301.5e).
+   */
+  | { op: 'returnChosenCardsAttachedTo'; targetSlot: number; to: 'triggerObject' }
+  /**
+   * "You may attach it to the token" (Ajani's Chosen, `requireAura` for "if that enchantment is
+   * an Aura") / "attach this Aura to that creature" (Shielded by Faith): move an Aura or
+   * Equipment on the battlefield onto a permanent (CR 701.3). It doesn't move where it can't be
+   * attached (CR 701.3b). `createdToken` is a token this ability created; if a replacement made
+   * several, the controller picks one. `optional` asks first, offering only legal hosts.
+   */
+  | {
+      op: 'attach';
+      what: 'source' | 'triggerObject';
+      to: 'triggerObject' | 'createdToken';
+      requireAura?: true;
+      optional?: true;
+    }
   /** "Create a 1/1 black and green Pest creature token …" (CR 111.1). */
   | {
       op: 'createToken';
@@ -915,7 +971,12 @@ export type Effect =
    */
   | { op: 'gainControl'; selector: Selector }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
-  | { op: 'graveyardToBattlefield'; target: EffectRef }
+  | {
+      op: 'graveyardToBattlefield';
+      target: EffectRef;
+      /** "under its owner's control" (Gift of Immortality); the ability's controller otherwise. */
+      under?: 'owner';
+    }
   /**
    * "Put target creature card from a graveyard onto the battlefield under your control. You
    * lose life equal to its mana value." (Reanimate) — combined into one effect rather than a
@@ -1002,6 +1063,11 @@ export type Effect =
    * (possibly none), skipping any that became illegal (CR 608.2b).
    */
   | { op: 'destroyEachChosen'; targetSlot: number }
+  /**
+   * "Tap up to one target creature and goad it" (Killian, Decisive Mentor): each legal chosen
+   * creature becomes tapped and is goaded by this ability's controller (CR 701.15a).
+   */
+  | { op: 'tapAndGoadEachChosen'; targetSlot: number }
   | {
       op: 'blinkEachChosen';
       targetSlot: number;
@@ -1274,6 +1340,14 @@ export type Effect =
    */
   | { op: 'putDepartedSourceIntoLibrary'; fromTop: number }
   /**
+   * "Return it to its owner's hand" after the source left the battlefield (Fallen Ideal): "it" is
+   * the card the source became in a graveyard or exile (CR 400.7e); if that card has left that
+   * zone, nothing moves. `fromGraveyard` looks only in graveyards, for a trigger whose event puts
+   * the source there (Fallen Ideal) or an Aura that follows its creature there as a state-based
+   * action (Angelic Destiny, CR 704.5m).
+   */
+  | { op: 'returnDepartedSourceToHand'; fromGraveyard?: true }
+  /**
    * "Exile <target>. Return that card to the battlefield under its owner's control at the
    * beginning of the next end step" (Flickerwisp; Venser, the Sojourner returns it under "your"
    * control). The delayed return remembers the exact card in exile (CR 400.7): a token ceases to
@@ -1300,6 +1374,37 @@ export type Effect =
    * (CR 400.7e), if it is still there.
    */
   | { op: 'returnDiedTriggerObjectTapped' }
+  /**
+   * "Whenever equipped creature dies, return that card to the battlefield under its owner's
+   * control at the beginning of the next end step" (Resurrection Orb). "That card" is the card
+   * the trigger's subject became in a graveyard (CR 400.7e). The delayed trigger remembers that
+   * exact card, so a card that has left the graveyard by then stays where it is. "The next end
+   * step" is the first to begin after this resolves, whoever's turn it is (CR 603.7).
+   */
+  | { op: 'returnDiedTriggerObjectAtNextEndStep'; returnUnder: 'owner' }
+  /**
+   * "Return this card [from your graveyard] to the battlefield [attached to that creature] [at the
+   * beginning of the next end step]" once the source has left the battlefield (Screams from
+   * Within, Ghoulish Impetus, Gift of Immortality). "This card" is only the card this very
+   * permanent became in a graveyard (CR 400.7e); `fromYourGraveyard` also requires that to be
+   * the controller's graveyard. It enters under the ability's controller (CR 110.2a). An Aura
+   * with no named host chooses one as it enters (CR 303.4f); with `attachTo: 'triggerObject'`
+   * the host is the trigger object's card as it is on the battlefield when this resolves, and an
+   * Aura that cannot be attached to it stays where it is (CR 303.4i).
+   */
+  | {
+      op: 'returnDepartedSourceToBattlefield';
+      fromYourGraveyard?: true;
+      delay?: 'nextEndStep';
+      attachTo?: 'triggerObject';
+    }
+  /** The delayed half of the next-end-step returns: the remembered graveyard card. */
+  | {
+      op: 'returnRememberedGraveyardCard';
+      returnUnder: 'owner' | 'sourceController';
+      /** The permanent it must enter attached to; gone or illegal, it stays put (CR 303.4i). */
+      attachToObjectId?: string;
+    }
   /**
    * "Return the chosen cards to the battlefield tapped" (Victimize): every graveyard card chosen
    * in a variable-count slot that is still a legal target enters together, tapped, under the

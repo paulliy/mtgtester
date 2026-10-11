@@ -186,8 +186,9 @@ function validatePlayFromZonePermission(
   card: EngineCardObject,
   zone: 'libraryTop' | 'graveyard',
   chosenBudgetType: string | undefined,
+  spellDefinition?: CardDefinition,
 ): string | undefined {
-  const permission = playFromZonePermission(ctx, player.id, card, zone);
+  const permission = playFromZonePermission(ctx, player.id, card, zone, spellDefinition);
   if (permission === null) throw new Error(`play from ${zone} is not legal`);
   if (permission.budgetTypes === undefined) {
     if (chosenBudgetType !== undefined) throw new Error('unexpected permanent-type budget choice');
@@ -460,7 +461,7 @@ function* proposeCast(
   }
   if (
     payload.alternativeCast !== undefined &&
-    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen'].includes(
+    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen', 'bestow'].includes(
       payload.alternativeCast,
     )
   )
@@ -469,7 +470,8 @@ function* proposeCast(
     payload.alternativeCast === 'nonMana' ||
     payload.alternativeCast === 'overload' ||
     payload.alternativeCast === 'adventure' ||
-    payload.alternativeCast === 'omen';
+    payload.alternativeCast === 'omen' ||
+    payload.alternativeCast === 'bestow';
   if (payload.altIndex !== undefined && !authoredAlternative) {
     throw new Error('unexpected alternative index');
   }
@@ -486,17 +488,28 @@ function* proposeCast(
     const freeSpellFace =
       resolutionPermission !== undefined &&
       (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+    // A broad "you may play that card this turn" permission allows a spell face or bestow.
     const temporaryExileSpellFace =
       payload.fromExile === true &&
       obj.playableUntilEotBy === player.id &&
-      (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+      (selectedAlternative.kind === 'adventure' ||
+        selectedAlternative.kind === 'omen' ||
+        selectedAlternative.kind === 'bestow');
+    // So does a permission to cast it from the top of the library or a graveyard (CR 118.9);
+    // that permission is checked against the bestowed spell below.
+    const zonePermissionBestow =
+      selectedAlternative.kind === 'bestow' &&
+      (payload.fromLibraryTop === true ||
+        (payload.fromGraveyard === true && def.castFromGraveyard !== true));
     if (
       (!freeSpellFace &&
+        !zonePermissionBestow &&
         (payload.fromLibraryTop === true ||
           (payload.fromExile === true && !temporaryExileSpellFace))) ||
       (payload.fromCommand && from === 'hand') ||
       (payload.fromExile === true && from === 'hand') ||
       (!freeSpellFace &&
+        !zonePermissionBestow &&
         (payload.fromGraveyard === true
           ? from !== 'graveyard'
           : from === 'graveyard' || from === 'exile'))
@@ -553,6 +566,9 @@ function* proposeCast(
       throw new Error('casting player does not have priority');
   }
   let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
+  // A zone permission is checked against the spell being cast: a bestowed card is an Aura
+  // enchantment spell, not a creature spell (CR 601.3e, 702.103b).
+  const permissionSpell = payload.alternativeCast === 'bestow' ? printedSpellDef : undefined;
   if (
     resolutionPermission === undefined &&
     payload.fromGraveyard === true &&
@@ -560,15 +576,33 @@ function* proposeCast(
     // A card's own "you may cast this card from your graveyard" needs no outside permission.
     printedSpellDef.castFromGraveyard !== true
   ) {
-    validatePlayFromZonePermission(ctx, player, obj, 'graveyard', payload.zoneBudgetType);
+    validatePlayFromZonePermission(
+      ctx,
+      player,
+      obj,
+      'graveyard',
+      payload.zoneBudgetType,
+      permissionSpell,
+    );
     consumeZonePermission = 'graveyard';
   }
   if (resolutionPermission === undefined && payload.fromLibraryTop === true) {
-    const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop');
+    const permission = playFromZonePermission(ctx, player.id, obj, 'libraryTop', permissionSpell);
     if (permission !== null) {
-      validatePlayFromZonePermission(ctx, player, obj, 'libraryTop', payload.zoneBudgetType);
+      validatePlayFromZonePermission(
+        ctx,
+        player,
+        obj,
+        'libraryTop',
+        payload.zoneBudgetType,
+        permissionSpell,
+      );
       consumeZonePermission = 'libraryTop';
-    } else if (!castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id)) {
+    } else if (
+      !castFromLibraryTopCandidates(ctx, player.id, permissionSpell).some(
+        (card) => card.id === obj.id,
+      )
+    ) {
       throw new Error('cast from library top is not legal');
     }
   }
@@ -698,6 +732,13 @@ function* proposeCast(
       ...def,
       spellAbility: alt.ability,
     };
+  } else if (payload.alternativeCast === 'bestow') {
+    // CR 702.103a-b: the bestow cost replaces the mana cost, and the spell is the bestowed Aura
+    // that `selectedSpellDefinition` describes.
+    const alt = selectedAlternative;
+    if (alt?.kind !== 'bestow') throw new Error('missing bestow cost');
+    cost = alt.manaCost;
+    abilityDef = printedSpellDef;
   } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
     const alt = selectedAlternative;
     if (alt?.kind !== payload.alternativeCast)

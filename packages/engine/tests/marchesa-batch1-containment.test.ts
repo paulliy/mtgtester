@@ -68,42 +68,22 @@ const REASONS: Record<string, string> = {
     'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
-  'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
-  'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
-  'Fallen Ideal':
-    'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
   'Firemane Commando':
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
-  'Hateful Eidolon': 'Draws one card instead of one per Aura that was attached.',
-  "Ajani's Chosen": 'Aura-enters attach-to-token is omitted from the Cat trigger.',
-  'Angelic Destiny': 'Angel type-changing is claimed without a type-changing static.',
   'Armored Skyhunter': 'Equipment filter is any artifact, and attach is omitted.',
   "Defacing Duskmage // Vandal's Edit":
     'Prepare is implemented as a pump trigger on any draw step.',
-  'Eidolon of Countless Battles':
-    'Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.',
   'Eiganjo Dynastorian // Replenish':
     'Prepare is implemented as a pump trigger when this creature attacks.',
   'Etali, Primal Conqueror // Etali, Primal Sickness':
     'Exile splices library cards without a zone-change, so leave-library events are skipped.',
   'Eriette of the Charmed Apple': 'Cannot-attack-you static is claimed without an implementation.',
-  'Forum Filibuster': 'Reflexive Aura/Equipment return attached to the token is omitted.',
-  'Gift of Immortality': 'Delayed Aura return attached to the creature is omitted.',
-  'Ghoulish Impetus':
-    'Delayed Aura return does not attach, so SBA immediately puts it into the graveyard.',
   'Herald of Amity':
     'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
-  'Martial Impetus':
-    'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
-  'Redemption Arc':
-    'Exile-enchanted-creature activated ability is claimed without an implementation.',
-  'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
-  'Shielded by Faith': 'Optional attach is implemented as mandatory attach.',
   'Tomik, Wielder of Law':
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
   'Combat Calligrapher':
@@ -141,8 +121,6 @@ const REASONS: Record<string, string> = {
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
-  'Killian, Decisive Mentor':
-    'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
   'Promise of Loyalty':
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
@@ -159,10 +137,8 @@ const REASONS: Record<string, string> = {
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Out of the Tombs':
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
-  'Resurrection Orb': "Return is under the equipment controller, not the card's owner.",
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
-  'Mask of Memory': 'Equipped-creature combat damage is implemented as any equipped creature.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
   'Lightning Runner':
     'Untap all creatures you control is implemented as untapEach of all permanents you control.',
@@ -186,19 +162,12 @@ const REASONS: Record<string, string> = {
   'Atarka Monument': 'The animation does not make it red and green.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
-  "Karametra's Favor":
-    'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
-  'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Cranial Plating': 'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Screams from Within':
-    'Return is a required attach target; current Oracle returns this Aura untargeted.',
-  Sunforger: 'Equip {2} is authored; current Oracle is Equip {3}.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
@@ -299,6 +268,29 @@ describe('Marchesa catalog audit containment', () => {
     'Vigean Graftmage',
     'Pensive Professor',
     'Aetheric Amplifier',
+    'Cranial Plating',
+    'Mask of Memory',
+    'Resurrection Orb',
+    'Sunforger',
+    'Screams from Within',
+    'Ghoulish Impetus',
+    'Gift of Immortality',
+    "Ajani's Chosen",
+    'Shielded by Faith',
+    'Forum Filibuster',
+    "Karametra's Favor",
+    'Redemption Arc',
+    'Fallen Ideal',
+    'Kor Spiritdancer',
+    'Hateful Eidolon',
+    'Martial Impetus',
+    'Killian, Decisive Mentor',
+    'Angelic Destiny',
+    'Sheltered by Ghosts',
+    'Eldrazi Conscription',
+    'Curse of Bounty',
+    'Eidolon of Countless Battles',
+    'Animate Dead',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

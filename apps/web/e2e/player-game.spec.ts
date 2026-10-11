@@ -11,9 +11,10 @@ import { expect, test } from './setup-test';
  * to do, so the server passes for them until their next turn (turn 5). The generated decks come
  * from the supported pool, so a change to which cards are modeled can change what a seed deals;
  * re-pick the seed then (event-player containment moved this from `e2e-2578`, coverage PR02 from
- * `e2e-15162`, coverage PR03 from `e2e-895`, coverage PR04 from `e2e-1485`).
+ * `e2e-15162`, coverage PR03 from `e2e-895`, coverage PR04 from `e2e-1485`, coverage PR05 from
+ * `e2e-10395` and then, when Tenuous Truce moved to PR06, from `e2e-14308`).
  */
-const SEED = 'e2e-10395';
+const SEED = 'e2e-4180';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
   await page.goto('/');

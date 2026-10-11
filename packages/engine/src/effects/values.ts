@@ -73,6 +73,15 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
           attached !== undefined && computeCharacteristics(ctx, attached).types.includes('Creature')
         );
       }).length;
+    case 'aurasAttachedToSource': {
+      const host = ctx.state.battlefield.find((perm) => perm.cardId === scope.sourceCardId);
+      if (host === undefined) return 0;
+      return ctx.state.battlefield.filter(
+        (perm) =>
+          perm.attachedTo === host.id &&
+          computeCharacteristics(ctx, perm).subtypes.includes('Aura'),
+      ).length;
+    }
     case 'countCardsInZone': {
       const source = { cardId: scope.sourceCardId ?? '', controllerId: scope.controllerId };
       let count = 0;
@@ -155,6 +164,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'damageDealt':
       return scope.damageDealt ?? 0;
+    case 'aurasYouControlledAttachedToTriggerObject':
+      return (scope.triggerObjectFacts?.attachedAuraControllerIds ?? []).filter(
+        (controllerId) => controllerId === scope.controllerId,
+      ).length;
     case 'triggerCount':
       // An aggregate trigger always fired because at least one object matched, so the absent
       // case is a scope that was never populated — 1 is the honest floor, not 0.

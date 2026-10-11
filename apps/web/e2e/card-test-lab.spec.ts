@@ -3200,6 +3200,26 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
     .toBe(true);
 }
 
+/**
+ * Like `passUntil`, but passes only while something is on the stack: for a wait whose next step
+ * needs the same main phase, where a pass on an empty stack would end it.
+ */
+async function passStackUntil(page: Page, target: Locator): Promise<void> {
+  const empty = page.getByText('empty', { exact: true });
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect
+    .poll(
+      async () => {
+        if (await target.isVisible()) return true;
+        if ((await empty.count()) === 0 && (await pass.isEnabled()))
+          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
 /** Wait until the action log shows `resolves` resolving more than `before` times. */
 async function awaitResolution(page: Page, resolves: string, before: number): Promise<void> {
   const resolved = page.getByText(`${resolves} resolves`);
@@ -5668,6 +5688,57 @@ test('Mikey & Leo, Chaos & Order: the first counter you put each turn draws a ca
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
 
+test('Animate Dead: destroy the Aura and the returned creature is sacrificed', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Animate Dead: destroy the Aura and the returned creature is sacrificed');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+
+  // Return Lab Ox from P2's graveyard under your control with the Aura attached.
+  const animate = handCard(page, 'Animate Dead');
+  await expect(animate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await animate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Lab Uproot is cast in this same main phase, so never pass on an empty stack here.
+  await passStackUntil(page, permanent(page, 'Lab Ox'));
+  await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
+  await expect
+    .poll(() => {
+      const board = boards.at(-1);
+      const ox = board?.find((p) => p.name === 'Lab Ox');
+      return ox === undefined
+        ? undefined
+        : board?.find((p) => p.name === 'Animate Dead')?.attachedTo === ox.id;
+    })
+    .toBe(true);
+
+  // Destroy the Aura while Lab Ox is alive: leaving the battlefield sacrifices it.
+  const uproot = handCard(page, 'Lab Uproot');
+  await expect(uproot).toHaveClass(/actionable/, { timeout: 15_000 });
+  await uproot.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Animate Dead').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Animate Dead')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText(/Lab Ox's controller sacrifices it/).first()).toBeVisible();
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
 test('Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s', async ({
   page,
 }) => {
@@ -6145,4 +6216,2271 @@ test('Captain America, Skybound: battalion grows each attacker and makes them in
   // Lab Ox 4/4 -> 5/5, Lab Red Bear 2/2 -> 3/3.
   await expect(permanent(page, 'Lab Ox').getByText('5/5')).toBeVisible();
   await expect(permanent(page, 'Lab Red Bear').getByText('3/3')).toBeVisible();
+});
+
+test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
+  await runScenario(page, 'Cranial Plating: equip, then move it with {B}{B}');
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  // Equip {1} and the {B}{B} attach are separate actions.
+  await expect(page.getByRole('button', { name: /Attach this Equipment/ })).toBeVisible();
+  await page.getByRole('button', { name: /Equip \{1\}/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Only your own creatures can be chosen: the opponent's Lab Bird is not a legal target.
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Bird')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Payment is automatic: the untapped Swamps are the only way to pay.
+
+  // Plating is the only artifact: the Bear gets +1/+0 and Lab Ox is untouched.
+  await passStackUntil(page, permanent(page, 'Lab Green Bear').getByText('3/2'));
+  await expect(permanent(page, 'Lab Ox').getByText('4/4')).toBeVisible();
+
+  // The {B}{B} ability needs no timing window: move Plating onto Lab Ox.
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  // Choose Lab Ox for the attach. Lab Green Bear is a legal but no-op target (CR 701.3b); the
+  // engine leaves the current host out of the options.
+  await page.getByRole('button', { name: /Attach this Equipment/ }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, permanent(page, 'Lab Ox').getByText('5/4'));
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+});
+
+test('Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+  );
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo ?? null).toBeNull();
+
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  // With an empty stack Plating offers Equip {1} and the {B}{B} attach as two separate actions.
+  await plating.click();
+  await expect(page.getByRole('button', { name: /Equip \{1\}/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Attach this Equipment/ })).toBeVisible();
+
+  // Cast Lab Token Forge and leave it on the stack: it is the spell Plating is activated over.
+  const forge = handCard(page, 'Lab Token Forge');
+  await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+  await forge.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.locator('.stack li').filter({ hasText: 'Lab Token Forge' })).toHaveCount(1, {
+    timeout: 15_000,
+  });
+
+  // Equip is sorcery speed, so it is gone; the {B}{B} attach is Plating's only action now and
+  // clicking Plating goes straight to choosing a creature you control.
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Equip \{1\}/ })).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Servo')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Attach over Forge: both abilities are on the stack and nothing has resolved yet.
+  await expect(page.locator('.stack li')).toHaveCount(2, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+
+  // One deliberate pass resolves only the attach (it is on top): Plating is the only artifact
+  // you control, so +1 and P2's Lab Servo adds nothing. The Forge is still on the stack.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Green Bear').getByText('3/2')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.stack li').filter({ hasText: 'Lab Token Forge' })).toHaveCount(1);
+  await expect(permanent(page, 'Servo')).toHaveCount(0);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Cranial Plating')?.attachedTo)
+    .toBe(bearId);
+
+  // Forge resolves: the Servo token is a second artifact you control, so +2.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Servo')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear').getByText('4/2')).toBeVisible();
+
+  // Destroy your own Servo token: you control one artifact again, so the bonus falls to +1.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Servo').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear').getByText('3/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo).toBe(bearId);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Mask of Memory: equip it, connect, then draw two and discard a card', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Mask of Memory: equip it, connect, then draw two and discard a card');
+  const hand = page.locator('.human-zone .hand-card');
+  await expect(hand).toHaveCount(1);
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Mask of Memory')?.attachedTo ?? null).toBeNull();
+
+  const mask = permanent(page, 'Mask of Memory');
+  await expect(mask).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Equip {1} is the Mask's only ability, so clicking it goes straight to choosing a target.
+  await mask.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Only your own creatures can be chosen: the Bear and Lab Ox.
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves on its own (passing is the only legal action). Wait for the attachment
+  // rather than passing, because the next step is still this main phase.
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Mask of Memory')?.attachedTo)
+    .toBe(bearId);
+
+  // A second, differently equipped creature: Cranial Plating goes on Lab Ox. With the Mask and
+  // Plating you control two artifacts, so Lab Ox becomes a 6/4.
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  // One Swamp is left, so the {B}{B} attach is unaffordable and Equip {1} is Plating's only action.
+  await plating.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Cranial Plating')?.attachedTo)
+    .toBe(oxId);
+  await expect(permanent(page, 'Lab Ox').getByText('6/4')).toBeVisible();
+  expect(boards.at(-1)!.find((p) => p.name === 'Mask of Memory')?.attachedTo).toBe(bearId);
+
+  // Both Equipment are on, so move on to attackers (advancing the turn is the intent here).
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Both unblocked creatures deal combat damage to a player, but only the Mask's creature
+  // triggers it: accept the optional draw once.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  // The hand is Lab Hex plus the two drawn Forests; discarding is the player's choice.
+  await expect(page.getByText(/Discard a card \(1 of 1\)/i)).toBeVisible({ timeout: 15_000 });
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Hex' })
+    .first()
+    .getByRole('button', { name: 'Discard', exact: true })
+    .click();
+
+  // Lab Ox's damage to P3 asked about nothing: the game ends with no second prompt or draw.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/use this ability/i)).toHaveCount(0);
+  await expect(hand).toHaveCount(2);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('38');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
+  await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(2);
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo).toBe(oxId);
+});
+
+test('Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  // P1 controls the Bear but P2 owns it; the Orb starts unattached and grants nothing yet.
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.controller).toBe('P1');
+  expect(boards.at(-1)!.find((p) => p.name === 'Resurrection Orb')?.attachedTo ?? null).toBeNull();
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.keywords ?? []).not.toContain(
+    'lifelink',
+  );
+
+  const orb = permanent(page, 'Resurrection Orb');
+  await expect(orb).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Equip {4} is the Orb's only activated ability, so clicking it goes straight to a target.
+  await orb.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves, then the turn moves on to attackers; the Bear now has lifelink.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Resurrection Orb')?.attachedTo)
+    .toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('lifelink');
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The unblocked Bear connects: P2 takes 2 and the lifelink gains you 2.
+  await passUntil(page, page.locator('.human-zone .life-badge', { hasText: '42' }));
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('38');
+
+  // In your second main phase, destroy your own Bear: it dies into its owner P2's graveyard.
+  await passUntil(page, page.getByText(/Main phase\s*2/).first());
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The Orb's trigger waits for the end step; the Bear returns then, under P2's control.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  const back = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear');
+  expect(back?.controller).toBe('P2');
+  expect(back?.id).not.toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.name === 'Resurrection Orb')?.attachedTo ?? null).toBeNull();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test('Sunforger: equip it, then unattach it to cast a red instant from your library for free', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Sunforger')?.attachedTo ?? null).toBeNull();
+
+  const sunforger = permanent(page, 'Sunforger');
+  await expect(sunforger).toHaveClass(/actionable/, { timeout: 15_000 });
+  // Unattached, Equip {3} is its only legal action, so clicking it goes straight to a target.
+  await sunforger.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Equip resolves on its own (passing is the only legal action) and the Bear becomes a 6/2.
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/2', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo)
+    .toBe(bearId);
+
+  // Attached, the {R}{W} ability is its only legal action now: pay it and unattach as a cost.
+  await expect(sunforger).toHaveClass(/actionable/, { timeout: 15_000 });
+  await sunforger.click();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo ?? null)
+    .toBeNull();
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Only the red or white instants with mana value 4 or less are offered from the library: the
+  // red instant and the white one, not the mana value 5 red instant, the blue instant or the red
+  // sorcery.
+  const castForFree = page.getByRole('button', { name: 'Cast for free' });
+  await expect(castForFree).toHaveCount(2, { timeout: 15_000 });
+  await expect(page.getByRole('img', { name: 'Lab Quick Gain' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Lab Sun White Instant' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Lab Sun Red Big Instant' })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: 'Lab Sun Blue Instant' })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: 'Lab Sun Red Sorcery' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Find nothing' })).toBeVisible();
+  // Cast the red one, which is listed first.
+  await castForFree.first().click();
+
+  // The free spell resolves: 1 life gained, and Sunforger stays on the battlefield unattached.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Sunforger')?.attachedTo ?? null).toBeNull();
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+});
+
+test('Screams from Within: its creature dies and it returns onto a hexproof opposing creature', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Hexproof Elf')?.id)
+    .toBeTruthy();
+  const elfId = boards.at(-1)!.find((p) => p.name === 'Lab Hexproof Elf')!.id;
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura: only creatures you can target are legal, so the hexproof Elf is not.
+  const screams = handCard(page, 'Screams from Within');
+  await expect(screams).toHaveClass(/actionable/, { timeout: 15_000 });
+  const screamsBefore = await page.getByText('Screams from Within resolves').count();
+  await screams.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Hexproof Elf')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Let it resolve: the enchanted Bear is a 1/1 and the Ox is untouched.
+  await awaitResolution(page, 'Screams from Within', screamsBefore);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('1/1', { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Screams from Within')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the enchanted Bear. The Aura goes to the graveyard with it and its trigger returns it.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The Aura chooses what to enchant as it enters: both the Ox and the opposing hexproof Elf are
+  // legal choices (nothing is targeted), and the Bear that just died is not on the board.
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hexproof Elf')).toHaveClass(/actionable/);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await permanent(page, 'Lab Hexproof Elf').click();
+  await expect(page.getByText('Enchant Lab Hexproof Elf')).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Screams from Within')?.attachedTo)
+    .toBe(elfId);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const final = boards.at(-1)!;
+  const back = final.find((p) => p.name === 'Screams from Within');
+  expect(back?.attachedTo).toBe(elfId);
+  expect(back?.controller).toBe('P1');
+  expect(back?.id).not.toBe(final.find((p) => p.name === 'Lab Ox')?.id);
+  await expect(permanent(page, 'Screams from Within')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hexproof Elf')).toContainText('1/1');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  // Lab Green Bear and Lab Doom are in your graveyard; the Aura is not.
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Ghoulish Impetus: its creature dies and it returns at the next end step', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: its creature dies and it returns at the next end step',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on the Bear: the hexproof Elf is not a legal target.
+  const impetus = handCard(page, 'Ghoulish Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Ghoulish Impetus resolves').count();
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Hexproof Elf')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Let it resolve: the Bear is a 3/3 with deathtouch, goaded by you.
+  await awaitResolution(page, 'Ghoulish Impetus', impetusBefore);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Destroy the enchanted Bear. The Aura goes to the graveyard with it, and nothing returns yet.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The return waits for the beginning of the end step, where the Aura chooses what to enchant.
+  await passUntil(page, page.getByText('Ghoulish Impetus: choose a permanent to enchant.'));
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/actionable/, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hexproof Elf')).toHaveClass(/actionable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText('Enchant Lab Ox')).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(oxId);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const back = boards.at(-1)!.find((p) => p.name === 'Ghoulish Impetus');
+  expect(back?.attachedTo).toBe(oxId);
+  expect(back?.controller).toBe('P1');
+  expect(boards.at(-1)!.find((p) => p.id === oxId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve: a 3/3 with deathtouch.
+  const impetus = handCard(page, 'Ghoulish Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Ghoulish Impetus resolves').count();
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Ghoulish Impetus', impetusBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Declare attackers: the goaded Bear has no "Stay home" choice and may not attack you; the
+  // unenchanted Ox has one.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  const bearRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Green Bear' });
+  const oxRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Ox' });
+  await expect(bearRow).toBeVisible();
+  await expect(bearRow.getByRole('button', { name: 'Stay home' })).toHaveCount(0);
+  await expect(oxRow.getByRole('button', { name: 'Stay home' })).toHaveCount(1);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(bearRow.getByRole('button', { name: seat })).toHaveCount(1);
+  await expect(bearRow.getByRole('button', { name: 'P1' })).toHaveCount(0);
+
+  // Never assign the Bear: it attacks anyway. Ox stays home.
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(1);
+});
+
+test('Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Your Aura stays on P2's Lab Green Bear (a 3/3 with deathtouch).
+  const final = boards.at(-1)!;
+  const bear = final.find((p) => p.name === 'Lab Green Bear')!;
+  expect(final.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo).toBe(bear.id);
+  expect(final.find((p) => p.name === 'Ghoulish Impetus')?.controller).toBe('P1');
+  expect(bear.controller).toBe('P2');
+  expect(bear.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Only the unenchanted Lab Ox attacked you (4): you are at 36, not 33. The goaded Bear
+  // attacked someone else: P3 took 3 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
+test('Gift of Immortality: the creature returns to its owner, then the Aura returns onto it', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.controller).toBe('P1');
+
+  // Cast the Aura on the Bear you control but P2 owns.
+  const gift = handCard(page, 'Gift of Immortality');
+  await expect(gift).toHaveClass(/actionable/, { timeout: 15_000 });
+  const giftBefore = await page.getByText('Gift of Immortality resolves').count();
+  await gift.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Gift of Immortality', giftBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Gift of Immortality')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the enchanted Bear. It dies into P2's graveyard and its trigger returns it at once,
+  // under P2's control (the Aura follows at the end step; the headless scenario pins that order).
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.controller)
+    .toBe('P2');
+  const returnedBear = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!;
+  expect(returnedBear.id).not.toBe(bearId);
+
+  // At the beginning of the end step the Aura returns attached to that Bear, under your control.
+  await passUntil(page, page.getByText(/game over/i).first());
+  const back = boards.at(-1)!.find((p) => p.name === 'Gift of Immortality');
+  expect(back?.attachedTo).toBe(returnedBear.id);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Gift of Immortality')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.controller).toBe('P2');
+  // Lab Doom is your only graveyard card.
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test("Ajani's Chosen: an Aura you cast moves onto the Cat it makes", async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, "Ajani's Chosen: an Aura you cast moves onto the Cat it makes");
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on the Bear and let it resolve: the Bear is a 4/4.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(bearId);
+
+  // The trigger resolves on its own: a Cat is made, and the attach is offered with a way to
+  // decline.
+  await expect(page.getByRole('button', { name: /Don.t attach Lab Aegis/ })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('img', { name: 'Cat', exact: true }).last()).toBeVisible();
+  await page.getByRole('button', { name: 'Attach', exact: true }).click();
+
+  // The Aura moved: the Cat is a 4/4 and the Bear a 2/2 again.
+  await expect(permanent(page, 'Cat')).toContainText('4/4', { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+  const catId = boards.at(-1)!.find((p) => p.name === 'Cat')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Aegis')?.attachedTo).toBe(catId);
+  await expect(permanent(page, 'Cat')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});
+
+test("Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+  );
+  await expect(permanent(page, 'Cat')).toHaveCount(0);
+
+  // Cast the enchantment: it is not an Aura, so it has no target.
+  const hex = handCard(page, 'Lab Hex');
+  await expect(hex).toHaveClass(/actionable/, { timeout: 15_000 });
+  const hexBefore = await page.getByText('Lab Hex resolves').count();
+  await hex.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Hex', hexBefore);
+
+  // The trigger resolves on its own and makes the Cat.
+  await expect(permanent(page, 'Cat')).toContainText('2/2', { timeout: 15_000 });
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Cat')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(1);
+  await expect(permanent(page, "Ajani's Chosen")).toContainText('3/3');
+  // There was never an attach choice.
+  await expect(page.getByRole('button', { name: /attach/i })).toHaveCount(0);
+});
+
+test('Shielded by Faith: it moves onto a creature that enters and keeps it indestructible', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+
+  // Cast the Aura on Lab Ox and let it resolve.
+  const aura = handCard(page, 'Shielded by Faith');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const auraBefore = await page.getByText('Shielded by Faith resolves').count();
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Shielded by Faith', auraBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(oxId);
+
+  // Cast the Bear: the Aura's trigger asks whether to attach it to the new creature.
+  const bear = handCard(page, 'Lab Green Bear');
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  const bearBefore = await page.getByText('Lab Green Bear resolves').count();
+  await bear.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Green Bear', bearBefore);
+  await expect(
+    page.getByText(/Shielded by Faith — Whenever a creature enters/).first(),
+  ).toBeVisible();
+  await passUntil(page, page.getByRole('button', { name: 'No', exact: true }));
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the Bear: it is indestructible now, so it survives.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.attachedTo).toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(permanent(page, 'Shielded by Faith')).toHaveCount(1);
+  // Lab Doom is your only graveyard card.
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test('Shielded by Faith: an opponent’s creature entering offers you the attach', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Shielded by Faith: an opponent’s creature entering offers you the attach',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  await expect(permanent(page, 'Lab Flash Wolf')).toHaveCount(0);
+
+  // Cast the Aura on Lab Ox and let it resolve: Lab Ox is indestructible.
+  const aura = handCard(page, 'Shielded by Faith');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const auraBefore = await page.getByText('Shielded by Faith resolves').count();
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Shielded by Faith', auraBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(oxId);
+  await expect(permanent(page, 'Lab Ox')).toContainText(/indestructible/i);
+
+  // Pass: P2 flashes in Lab Flash Wolf, and Shielded by Faith asks you, not P2, about attaching.
+  await passUntil(page, page.getByRole('button', { name: 'No', exact: true }));
+  await expect(
+    page.getByText(/Shielded by Faith — Whenever a creature enters/).first(),
+  ).toBeVisible();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Flash Wolf')?.controller)
+    .toBe('P2');
+  await expect(permanent(page, 'Lab Flash Wolf')).not.toContainText(/indestructible/i);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  // The Aura moved onto P2's creature, taking the indestructible with it.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  const wolfId = boards.at(-1)!.find((p) => p.name === 'Lab Flash Wolf')!.id;
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.attachedTo).toBe(wolfId);
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.controller).toBe('P1');
+  await expect(permanent(page, 'Lab Flash Wolf')).toContainText(/indestructible/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/indestructible/i);
+  await expect(permanent(page, 'Shielded by Faith')).toHaveCount(1);
+});
+
+test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard',
+  );
+  // Your upkeep: the Inkling is made, then the reflexive ability asks for up to one target. Only
+  // the Aura is offered, not the creature card, and choosing none is a button of its own.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Aegis' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Green Bear' })).toHaveCount(0);
+  await expect(permanent(page, 'Inkling')).toContainText('2/1');
+  // The token flies: the viewer shows the keyword on the chip and in the board state.
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Inkling')?.keywords)
+    .toEqual(['flying']);
+  await page.getByRole('button', { name: 'Target Lab Aegis' }).click();
+
+  // It resolves: the Aura is on the Inkling, which is a 4/3, and the creature card stays.
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Inkling')).toContainText('4/3');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBeTruthy();
+  const inklingId = boards.at(-1)!.find((p) => p.name === 'Inkling')!.id;
+  const back = boards.at(-1)!.find((p) => p.name === 'Lab Aegis');
+  expect(back?.attachedTo).toBe(inklingId);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Inkling')).toHaveCount(1);
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  expect(boards.at(-1)!.find((p) => p.name === 'Inkling')?.keywords).toEqual(['flying']);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test('Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+  );
+  // Your upkeep: the Inkling is made, then the reflexive ability offers the Equipment and the
+  // Aura but not the creature card.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Sunforger' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Aegis' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Green Bear' })).toHaveCount(0);
+  await expect(permanent(page, 'Inkling')).toContainText('2/1');
+  await page.getByRole('button', { name: 'Target Sunforger' }).click();
+
+  // It resolves: the Equipment is attached to the Inkling, which is a 6/1 flier; the Aura stays.
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Inkling')).toContainText('6/1');
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo)
+    .toBeTruthy();
+  const inklingId = boards.at(-1)!.find((p) => p.name === 'Inkling')!.id;
+  const back = boards.at(-1)!.find((p) => p.name === 'Sunforger');
+  expect(back?.attachedTo).toBe(inklingId);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Inkling')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  // Lab Aegis and Lab Green Bear are still in the graveyard.
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test("Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell", async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  // Before the Aura the Bear has no mana ability: with the Forests tapped nothing could pay {R}.
+  await expect(handCard(page, 'Lab Shock')).not.toHaveClass(/actionable/);
+
+  // Cast the Aura on Lab Green Bear, paying with the Forests, and let it resolve.
+  const aura = handCard(page, "Karametra's Favor");
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const favorBefore = await page.getByText("Karametra's Favor resolves").count();
+  const drawBefore = await page.getByText('When this Aura enters, draw a card. resolves').count();
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, "Karametra's Favor", favorBefore);
+  await awaitResolution(page, 'When this Aura enters, draw a card.', drawBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === "Karametra's Favor")?.attachedTo)
+    .toBe(bearId);
+
+  // The enters trigger has resolved and drawn the Plains. A pass here would hit the land-drop
+  // reminder, since the Plains is then a playable land.
+  await expect(handCard(page, 'Plains')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText('TAP');
+
+  // Both Forests are tapped, yet Lab Shock is castable: the enchanted Bear taps for {R}.
+  const shock = handCard(page, 'Lab Shock');
+  await expect(shock).toHaveClass(/actionable/, { timeout: 15_000 });
+  await shock.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText('Lab Shock resolves')).toBeVisible({ timeout: 15_000 });
+  // The drawn Plains is a playable land, so passing asks about the land drop.
+  await passUntil(page, page.getByRole('button', { name: 'Pass anyway' }));
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.tapped).toBe(true);
+  expect(boards.at(-1)!.find((p) => p.name === "Karametra's Favor")?.attachedTo).toBe(bearId);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(permanent(page, "Karametra's Favor")).toHaveCount(1);
+});
+
+test('Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve.
+  const arc = handCard(page, 'Redemption Arc');
+  await expect(arc).toHaveClass(/actionable/, { timeout: 15_000 });
+  const arcBefore = await page.getByText('Redemption Arc resolves').count();
+  await arc.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Redemption Arc', arcBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Redemption Arc')?.attachedTo)
+    .toBe(bearId);
+
+  // Activate {1}{W}: the Aura's ability takes no target, so there is no target prompt.
+  const aura = permanent(page, 'Redemption Arc');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aura.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of/)).toHaveCount(0);
+  await confirm(page);
+
+  // It resolves: Lab Green Bear is exiled, and the Aura has nothing to enchant.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Redemption Arc')).toHaveCount(0);
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')).toBeUndefined();
+  await expect(page.getByText('Exile (1)')).toBeVisible();
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test('Redemption Arc: Lab Doom cannot destroy the creature, which must attack', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Redemption Arc: Lab Doom cannot destroy the creature, which must attack',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve: indestructible.
+  const arc = handCard(page, 'Redemption Arc');
+  await expect(arc).toHaveClass(/actionable/, { timeout: 15_000 });
+  const arcBefore = await page.getByText('Redemption Arc resolves').count();
+  await arc.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Redemption Arc', arcBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Redemption Arc')?.attachedTo)
+    .toBe(bearId);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('indestructible');
+
+  // Destroy it: Lab Doom resolves, but the indestructible Bear survives.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  const doomBefore = await page.getByText('Lab Doom resolves').count();
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Doom', doomBefore);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)).toBeDefined();
+  await expect(permanent(page, 'Redemption Arc')).toHaveCount(1);
+
+  // Declare attackers: the goaded Bear has no "Stay home" choice and may not attack you; the
+  // unenchanted Ox has one.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  const bearRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Green Bear' });
+  const oxRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Ox' });
+  await expect(bearRow).toBeVisible();
+  await expect(bearRow.getByRole('button', { name: 'Stay home' })).toHaveCount(0);
+  await expect(oxRow.getByRole('button', { name: 'Stay home' })).toHaveCount(1);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(bearRow.getByRole('button', { name: seat })).toHaveCount(1);
+  await expect(bearRow.getByRole('button', { name: 'P1' })).toHaveCount(0);
+
+  // Never assign the Bear: it attacks anyway. Ox stays home.
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+});
+
+test('Redemption Arc: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Redemption Arc: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Your Aura stays on P2's indestructible Lab Green Bear.
+  const final = boards.at(-1)!;
+  const bear = final.find((p) => p.name === 'Lab Green Bear')!;
+  expect(final.find((p) => p.name === 'Redemption Arc')?.attachedTo).toBe(bear.id);
+  expect(final.find((p) => p.name === 'Redemption Arc')?.controller).toBe('P1');
+  expect(bear.controller).toBe('P2');
+  expect(bear.keywords).toContain('indestructible');
+
+  // Only the unenchanted Lab Ox attacked you (4): you are at 36, not 34. The goaded Bear
+  // attacked someone else: P3 took 2 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('38');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
+test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve.
+  const ideal = handCard(page, 'Fallen Ideal');
+  await expect(ideal).toHaveClass(/actionable/, { timeout: 15_000 });
+  const idealBefore = await page.getByText('Fallen Ideal resolves').count();
+  await ideal.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Fallen Ideal', idealBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Fallen Ideal')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Sacrifice Lab Ox to the granted ability: the cost is paid at once, and the pump follows.
+  const bear = permanent(page, 'Lab Green Bear');
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bear.click();
+  // The ability has no mana cost, so there is no payment to configure; the sacrifice is chosen
+  // from your creatures, the enchanted one included.
+  await confirm(page);
+  await expect(page.getByText(/choose permanent 1 of 1 to sacrifice/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText('Sacrifice Lab Ox')).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await passStackUntil(page, permanent(page, 'Lab Green Bear').filter({ hasText: '4/3' }));
+
+  // Sacrifice the enchanted creature itself: the Aura goes to the graveyard and back to hand.
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bear.click();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Fallen Ideal')).toHaveCount(0);
+  await expect(handCard(page, 'Fallen Ideal')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText(/flying/i);
+
+  // Cast the Aura on Lab Green Bear: it gains flying.
+  const ideal = handCard(page, 'Fallen Ideal');
+  await expect(ideal).toHaveClass(/actionable/, { timeout: 15_000 });
+  const idealBefore = await page.getByText('Fallen Ideal resolves').count();
+  await ideal.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Fallen Ideal', idealBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Fallen Ideal')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/flying/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/flying/i);
+
+  // Attack P2: Lab Ox cannot block a flier, so the Bear connects and survives.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // The enchanted creature has an activated ability, so you are given priority in each step.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  expect(final.find((p) => p.name === 'Lab Ox')?.damageMarked).toBe(0);
+});
+
+test('Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Kor Spiritdancer')?.id)
+    .toBeTruthy();
+  const korId = boards.at(-1)!.find((p) => p.name === 'Kor Spiritdancer')!.id;
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('0/2');
+
+  // Cast the Aura on Kor Spiritdancer: its trigger goes on the stack above the spell.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Kor Spiritdancer').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The trigger is optional: accept the draw.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1, { timeout: 15_000 });
+
+  // Lab Aegis resolves onto it: +2/+2 from the Aura and +2/+2 more for the Aura attached to it.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(korId);
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('4/6');
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});
+
+test('Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Kor Spiritdancer')?.id)
+    .toBeTruthy();
+  const korId = boards.at(-1)!.find((p) => p.name === 'Kor Spiritdancer')!.id;
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('0/2');
+
+  // Cast each Aura on Kor Spiritdancer, declining its optional draw, and let it resolve.
+  const castAura = async (aura: string, size: string) => {
+    const card = handCard(page, aura);
+    await expect(card).toHaveClass(/actionable/, { timeout: 15_000 });
+    const before = await page.getByText(`${aura} resolves`).count();
+    await card.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Kor Spiritdancer').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'No', exact: true }).click();
+    await awaitResolution(page, aura, before);
+    await expect.poll(() => boards.at(-1)?.find((p) => p.name === aura)?.attachedTo).toBe(korId);
+    await expect(permanent(page, 'Kor Spiritdancer')).toContainText(size);
+  };
+  // One Aura: +2/+2 from Lab Aegis and +2/+2 for the Aura attached to it.
+  await castAura('Lab Aegis', '4/6');
+  // Two Auras: +2/+2 and +1/+1 from them, and +4/+4 for the two attached to it.
+  await castAura('Lab Mantle', '7/9');
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('7/9');
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Mantle')).toHaveCount(1);
+  await expect(page.locator('.hand-card')).toHaveCount(0);
+});
+
+test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Bird')?.id).toBeTruthy();
+  const birdId = boards.at(-1)!.find((p) => p.name === 'Lab Bird')!.id;
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(0);
+
+  // Enchant the opponent's Lab Bird with your Lab Aegis.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(birdId);
+
+  // Destroy it: Lab Bird dies carrying one Aura you control, so one card is drawn.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Hateful Eidolon: two of your Auras on a creature that dies draw you two cards', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Hateful Eidolon: two of your Auras on a creature that dies draw you two cards',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Bird')?.id).toBeTruthy();
+  const birdId = boards.at(-1)!.find((p) => p.name === 'Lab Bird')!.id;
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(0);
+
+  // Enchant the opponent's Lab Bird with both of your Auras.
+  for (const aura of ['Lab Aegis', 'Lab Mantle']) {
+    const card = handCard(page, aura);
+    await expect(card).toHaveClass(/actionable/, { timeout: 15_000 });
+    const before = await page.getByText(`${aura} resolves`).count();
+    await card.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Lab Bird').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await awaitResolution(page, aura, before);
+    await expect.poll(() => boards.at(-1)?.find((p) => p.name === aura)?.attachedTo).toBe(birdId);
+  }
+
+  // Destroy it: Lab Bird dies carrying two Auras you control, so two cards are drawn.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Mantle')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+  await expect(page.locator('.hand-card')).toHaveCount(2);
+  // Lab Aegis, Lab Mantle and Lab Doom are in your graveyard.
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+});
+
+test('Hateful Eidolon: its combat damage gains life, Lab Ox’s does not', async ({ page }) => {
+  await runScenario(page, 'Hateful Eidolon: its combat damage gains life, Lab Ox’s does not');
+  await expect(permanent(page, 'Hateful Eidolon')).toContainText(/lifelink/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/lifelink/i);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+
+  // Attack P2 with the lifelinker and P3 with the Ox.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Hateful Eidolon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Only the Eidolon's 1 damage gains life: 41, not 45.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('39');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('36');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+});
+
+test('Martial Impetus: the enchanted creature attacks and pumps your other attacker', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Martial Impetus: the enchanted creature attacks and pumps your other attacker',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Cast the Aura on Lab Green Bear and let it resolve: a 3/3 that is goaded.
+  const impetus = handCard(page, 'Martial Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Martial Impetus resolves').count();
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Martial Impetus', impetusBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Martial Impetus')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Attack: the goaded Bear must attack and may not attack you; Lab Ox attacks P3.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The attack trigger pumps the other attacker, and unblocked damage is dealt.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('35');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
+test('Martial Impetus: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Your Aura stays on P2's Lab Green Bear (a 3/3).
+  const final = boards.at(-1)!;
+  const bear = final.find((p) => p.name === 'Lab Green Bear')!;
+  expect(final.find((p) => p.name === 'Martial Impetus')?.attachedTo).toBe(bear.id);
+  expect(final.find((p) => p.name === 'Martial Impetus')?.controller).toBe('P1');
+  expect(bear.controller).toBe('P2');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Only the unenchanted, unpumped Lab Ox attacked you (4): you are at 36, not 33. The goaded
+  // Bear attacked someone else: P3 took 3 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
+test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Bird').locator('.tap-badge')).toHaveCount(0);
+
+  // Cast the Aura on Lab Green Bear. Entering, it triggers Killian: up to one target creature.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(bearId);
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Bird' }).click();
+
+  // The trigger resolves: Lab Bird is tapped (the goad is asserted in the headless scenario).
+  await expect(permanent(page, 'Lab Bird').locator('.tap-badge')).toHaveText('TAP', {
+    timeout: 15_000,
+  });
+
+  // Attack P2 with the enchanted Lab Green Bear: Killian's attack trigger draws a card.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('36');
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});
+
+test('Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Killian, Decisive Mentor')).toHaveCount(1);
+
+  // Only the ungoaded Lab Ox attacked you (4): you are at 36, not 34. The goaded Bear attacked
+  // someone else: P3 took 2 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('38');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
+test('Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Aura on Lab Green Bear: it becomes a 6/6.
+  const destiny = handCard(page, 'Angelic Destiny');
+  await expect(destiny).toHaveClass(/actionable/, { timeout: 15_000 });
+  const destinyBefore = await page.getByText('Angelic Destiny resolves').count();
+  await destiny.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Angelic Destiny', destinyBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Angelic Destiny')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/6');
+
+  // Destroy it: the Aura goes to the graveyard with it and returns to your hand.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Angelic Destiny')).toHaveCount(0);
+  await expect(handCard(page, 'Angelic Destiny')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText(/flying/i);
+
+  // Cast the Aura on Lab Green Bear: 2/2 + 4/+4 + Lab Choir's +1/+1 for the Angel type = 7/7,
+  // with flying and first strike.
+  const destiny = handCard(page, 'Angelic Destiny');
+  await expect(destiny).toHaveClass(/actionable/, { timeout: 15_000 });
+  const destinyBefore = await page.getByText('Angelic Destiny resolves').count();
+  await destiny.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Angelic Destiny', destinyBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Angelic Destiny')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('7/7');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/flying/i);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/first strike/i);
+
+  // Attack P2. Only the flier Lab Titan can block it; Lab Ox has no flying or reach.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Only Lab Titan could block the flier, and first strike killed it before it hit back: the Bear
+  // is undamaged, Lab Ox is untouched, and nothing reached P2.
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  expect(final.find((p) => p.name === 'Lab Ox')?.damageMarked).toBe(0);
+  await expect(permanent(page, 'Lab Titan')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('7/7');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
+test('Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(1);
+
+  // Cast the Aura on Lab Green Bear; it can only enchant a creature you control.
+  const ghosts = handCard(page, 'Sheltered by Ghosts');
+  await expect(ghosts).toHaveClass(/actionable/, { timeout: 15_000 });
+  const ghostsBefore = await page.getByText('Sheltered by Ghosts resolves').count();
+  await ghosts.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Sheltered by Ghosts', ghostsBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sheltered by Ghosts')?.attachedTo)
+    .toBe(bearId);
+
+  // The enters trigger needs a target: choose the opposing Lab Bird.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/2');
+
+  // Attack P2: the 3/2 lifelinker hits for 3 and you gain 3.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
+  await expect(permanent(page, 'Sheltered by Ghosts')).toHaveCount(1);
+});
+
+test('Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Aura on Lab Green Bear and let it resolve. Nothing is left for its enters trigger
+  // to exile, so no extra target prompt appears.
+  const ghosts = handCard(page, 'Sheltered by Ghosts');
+  await expect(ghosts).toHaveClass(/actionable/, { timeout: 15_000 });
+  const ghostsBefore = await page.getByText('Sheltered by Ghosts resolves').count();
+  await ghosts.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Sheltered by Ghosts', ghostsBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sheltered by Ghosts')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/2');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/lifelink/i);
+
+  // Pass with an empty stack: P2 casts Lab Shock at the enchanted Bear, which would be lethal.
+  // Ward {2} triggers; P2's only untapped Mountain cannot pay, so Lab Shock is countered.
+  await passUntil(page, page.getByText(/Lab Shock is countered by Lab Green Bear — ward—\{2\}/));
+  await expect(page.getByText('Lab Green Bear — ward—{2} resolves')).toBeVisible();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/2');
+  await expect(permanent(page, 'Sheltered by Ghosts')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
+test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(1);
+
+  // Cast the Aura on Lab Green Bear: it becomes a 12/12.
+  const conscription = handCard(page, 'Eldrazi Conscription');
+  await expect(conscription).toHaveClass(/actionable/, { timeout: 15_000 });
+  const conscriptionBefore = await page.getByText('Eldrazi Conscription resolves').count();
+  await conscription.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Eldrazi Conscription', conscriptionBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eldrazi Conscription')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('12/12');
+
+  // Attack P2: annihilator 2 makes the defending player sacrifice both of their permanents.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('28');
+  await expect(permanent(page, 'Eldrazi Conscription')).toHaveCount(1);
+});
+
+test('Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+  );
+  // P2 casts the Aura on its Lab Green Bear and attacks you; let the Aura resolve.
+  await awaitResolution(page, 'Eldrazi Conscription', 0);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('12/12');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/trample/i);
+
+  // Annihilator 2: sacrifice two Forests, keeping Lab Ox to block. Each prompt lists Lab Ox first,
+  // so the second "Sacrifice" button is a Forest (a missing block below would expose a mistake).
+  const prompt = (position: string) =>
+    page
+      .getByRole('complementary')
+      .filter({ hasText: `choose a permanent to sacrifice (${position})` });
+  await expect(prompt('1 of 2').last()).toBeVisible({ timeout: 15_000 });
+  await prompt('1 of 2').last().getByRole('button', { name: 'Sacrifice' }).nth(1).click();
+  await expect(prompt('2 of 2').last()).toBeVisible({ timeout: 15_000 });
+  await prompt('2 of 2').last().getByRole('button', { name: 'Sacrifice' }).nth(1).click();
+
+  // Block the trampler with Lab Ox.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'Lab Green Bear' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  // P2 assigns lethal (4) to Lab Ox and tramples the other 8 over to you: 40 - 8 = 32.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
+  ).toHaveText('32');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toBeVisible();
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
+test('Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+
+  // Cast the Curse targeting P2: it enchants the player, not a permanent.
+  const curse = handCard(page, 'Curse of Bounty');
+  await expect(curse).toHaveClass(/actionable/, { timeout: 15_000 });
+  const curseBefore = await page.getByText('Curse of Bounty resolves').count();
+  await curse.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Curse of Bounty', curseBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Curse of Bounty')?.attachedTo)
+    .toBe('P2');
+  await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+
+  // Attack P2: the Curse untaps your nonland permanents, but not the lands.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
+});
+
+test('Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+  );
+  // P3 attacks P2, the player your Curse enchants; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Before the attack, everything that matters was tapped except P3's Lab Green Bear.
+  const tappedBefore = (name: string) =>
+    boards.some((board) => board.find((p) => p.name === name)?.tapped === true);
+  for (const name of ['Lab Ox', 'Forest', 'Lab Servo', 'Lab Thrull', 'Plains', 'Lab Bird', 'Swamp'])
+    expect(tappedBefore(name), `${name} started tapped`).toBe(true);
+
+  // The attacking opponent untapped their nonland permanents, the attacker included.
+  for (const name of ['Lab Green Bear', 'Lab Thrull', 'Lab Ox'])
+    await expect(permanent(page, name)).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Thrull').locator('.tap-badge')).toHaveCount(0);
+  // The Curse's controller untapped its own nonland permanent.
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+  // Lands stay tapped, and the enchanted player and the bystander untapped nothing.
+  for (const name of ['Forest', 'Plains', 'Lab Servo', 'Lab Bird', 'Swamp'])
+    await expect(permanent(page, name).locator('.tap-badge'), name).toHaveText('TAP');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
+});
+
+test('Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Eidolon with its bestow cost: it is an Aura spell that targets Lab Green Bear.
+  const eidolon = handCard(page, 'Eidolon of Countless Battles');
+  await expect(eidolon).toHaveClass(/actionable/, { timeout: 15_000 });
+  await eidolon.click();
+  const actions = page.locator('.source-actions .source-action-row button');
+  await expect(actions).toHaveCount(2);
+  await actions.filter({ hasText: /bestow/i }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Eidolon of Countless Battles'));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBe(bearId);
+  // +1/+1 for the one creature and +1/+1 for the one Aura you control.
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+
+  // Destroy the Bear: the Eidolon stays on the battlefield as a creature again.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Eidolon of Countless Battles')).toHaveCount(1);
+  await expect(permanent(page, 'Eidolon of Countless Battles')).toContainText('1/1');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBeFalsy();
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
+test('Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Bestow onto Lab Green Bear: one creature and one Aura you control, so +2/+2. P2's Lab Ox
+  // adds nothing.
+  const eidolon = handCard(page, 'Eidolon of Countless Battles');
+  await expect(eidolon).toHaveClass(/actionable/, { timeout: 15_000 });
+  const eidolonBefore = await page.getByText('Eidolon of Countless Battles resolves').count();
+  await eidolon.click();
+  await page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /bestow/i })
+    .click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Eidolon of Countless Battles', eidolonBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+
+  // A second creature only: +1/+1 more.
+  const bird = handCard(page, 'Lab Bird');
+  await expect(bird).toHaveClass(/actionable/, { timeout: 15_000 });
+  const birdBefore = await page.getByText('Lab Bird resolves').count();
+  await bird.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Bird', birdBefore);
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('5/5');
+
+  // A second Aura only (on Lab Bird, so the creature count is unchanged): +1/+1 more.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
+  await expect(permanent(page, 'Lab Bird')).toContainText('3/3');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/6');
+
+  // Destroy Lab Bird: the creature and its Aura go together, so the Bear drops back to 4/4.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  expect(boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo).toBe(
+    bearId,
+  );
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+});
+
+test('Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+  );
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+
+  // Cast Animate Dead on Lab Ox in P2's graveyard: the Aura's only legal targets are cards there.
+  const animate = handCard(page, 'Animate Dead');
+  await expect(animate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await animate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Lab Ox'));
+  // The creature returns under your control with the Aura attached, as a 3/4.
+  await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
+  await expect
+    .poll(() => {
+      const board = boards.at(-1);
+      const ox = board?.find((p) => p.name === 'Lab Ox');
+      return ox === undefined
+        ? undefined
+        : board?.find((p) => p.name === 'Animate Dead')?.attachedTo === ox.id;
+    })
+    .toBe(true);
+
+  // Destroy it: the Aura is put into the graveyard with it.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Animate Dead')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });

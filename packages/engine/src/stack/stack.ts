@@ -77,7 +77,14 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     },
   );
   const { anyChosen, anyLegal } = resolutionTargets;
-  if (anyChosen && !anyLegal) {
+  // CR 702.103e, 608.3b: a bestowed Aura spell whose target is illegal ceases to be bestowed and
+  // resolves as the creature spell it is printed as, instead of being removed.
+  if (anyChosen && !anyLegal && top.kind === 'spell' && top.alternativeCastKind === 'bestow') {
+    delete top.alternativeCastKind;
+    delete top.spellDefinition;
+    top.targets = [];
+    emit(ctx, 'bestowTargetIllegal', { description: top.description }, top.controllerId);
+  } else if (anyChosen && !anyLegal) {
     emit(ctx, 'fizzle', { description: top.description }, top.controllerId);
     debug(ctx, 'stack', `${top.description} fizzles — all targets illegal`);
     if (top.card !== null) {
@@ -166,10 +173,13 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
   // Permanent spells (creatures, artifacts, enchantments, planeswalkers, battles) enter
   // the battlefield under their caster; instants/sorceries head to the graveyard (CR 608.3).
   if (isPermanentCard(def)) {
+    const bestowed = spell.alternativeCastKind === 'bestow';
     const moved = yield* moveObject(ctx, card, {
       zone: 'battlefield',
       controllerId: spell.controllerId,
-      ...(def.subtypes.includes('Aura') ? { attachedTo: spell.targets[0] } : {}),
+      ...(def.subtypes.includes('Aura') || bestowed ? { attachedTo: spell.targets[0] } : {}),
+      // A bestowed Aura spell becomes a bestowed Aura (CR 702.103b).
+      ...(bestowed ? { bestowed: true } : {}),
       // A face-down spell becomes a face-down permanent (CR 708.4).
       ...(spell.alternativeCastKind === 'faceDown' ? { faceDown: true } : {}),
     });
@@ -238,6 +248,11 @@ function putPermanentSpellCopyOntoBattlefield(ctx: GameContext, spell: EngineSta
     spell.controllerId,
   );
   if (def.subtypes.includes('Aura')) perm.attachedTo = spell.targets[0] ?? null;
+  // A copy of a bestowed Aura spell is one too (CR 702.103c), and becomes a bestowed Aura.
+  if (spell.alternativeCastKind === 'bestow') {
+    perm.attachedTo = spell.targets[0] ?? null;
+    perm.bestowed = true;
+  }
   ctx.state.battlefield.push(perm);
   emit(
     ctx,

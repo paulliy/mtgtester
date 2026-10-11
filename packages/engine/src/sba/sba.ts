@@ -26,11 +26,18 @@ import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
+  enchantAllows,
   moveObject,
   movePermanentsToGraveyard,
   returnExiledUntilLeaves,
 } from '../state/objects';
-import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
+import {
+  getDefByOracleId,
+  hasProtectionFrom,
+  isCreaturePermanent,
+  playersInApnapOrder,
+  sourceColorsOf,
+} from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -229,12 +236,61 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (!s.battlefield.includes(perm)) continue;
     const chars = computeCharacteristics(ctx, perm);
 
-    // An Aura must remain attached to a permanent allowed by its enchant restriction (CR 704.5m).
+    // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
+    // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
+    // battlefield as the creature it is printed as (CR 702.103f, an exception to 704.5m).
+    if (perm.bestowed === true) {
+      const host =
+        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
+      if (host === undefined || enchantAllows(ctx, perm, host) !== true) {
+        debug(ctx, 'sba', `bestowed ${perm.name} unattached — it is a creature again`);
+        emit(ctx, 'bestowEnded', { name: perm.name });
+        perm.attachedTo = null;
+        delete perm.bestowed;
+        return true;
+      }
+    }
+
+    // An Aura must remain attached to a permanent allowed by its enchant restriction for its
+    // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
     if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined) {
-        debug(ctx, 'sba', `aura ${perm.name} attached to nothing — to graveyard`);
+      // An Aura enchanting a player (Curse of Bounty) stays while that player is still one its
+      // enchant ability allows ("enchant opponent" of its current controller), CR 303.4d.
+      const playerHostLegal =
+        perm.attachedTo !== null &&
+        s.players.some((p) => p.id === perm.attachedTo) &&
+        auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
+      // Animate Dead before its enters trigger resolves: "enchant creature card in a graveyard"
+      // is satisfied by that card while it stays there.
+      const graveyardHostLegal =
+        perm.attachedTo !== null &&
+        perm.reanimatedHostId === undefined &&
+        auraGraveyardHostIsLegal(ctx, perm, perm.attachedTo);
+      // After it: only the creature put onto the battlefield with it, while it is a creature
+      // without protection from the Aura (CR 702.16c).
+      const reanimatedHostIllegal =
+        perm.reanimatedHostId !== undefined &&
+        (host === undefined ||
+          host.id !== perm.reanimatedHostId ||
+          !isCreaturePermanent(ctx, host) ||
+          hasProtectionFrom(ctx, host, chars.colors));
+      // Any other permanent host must satisfy the enchant restriction.
+      const hostIllegal =
+        host !== undefined &&
+        perm.reanimatedHostId === undefined &&
+        enchantAllows(ctx, perm, host) === false;
+      if (
+        (host === undefined && !playerHostLegal && !graveyardHostLegal) ||
+        reanimatedHostIllegal ||
+        hostIllegal
+      ) {
+        debug(
+          ctx,
+          'sba',
+          `aura ${perm.name} attached to nothing or an illegal host — to graveyard`,
+        );
         emit(ctx, 'sbaAuraDies', { name: perm.name });
         yield* moveObject(ctx, perm, { zone: 'graveyard' });
         return true;
@@ -389,6 +445,11 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
 function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   const perm = ctx.state.battlefield.find((p) => p.id === id);
   if (perm !== undefined) return perm.name;
+  // A card target in a graveyard or exile (Victimize, Forum Filibuster) is named, not its id.
+  const card = [...ctx.state.players.flatMap((p) => p.graveyard), ...ctx.state.exile].find(
+    (candidate) => candidate.id === id,
+  );
+  if (card !== undefined) return card.name;
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
@@ -711,4 +772,40 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
     if (sbaActed || placed) anything = true;
     if (!placed && !sbaActed) return anything;
   }
+}
+
+/** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
+function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'player') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(playerId);
+}
+
+/** Whether a graveyard card is still a legal host for `aura`'s enchant ability (Animate Dead). */
+function auraGraveyardHostIsLegal(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  cardId: string,
+): boolean {
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'cardInGraveyard') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(cardId);
 }

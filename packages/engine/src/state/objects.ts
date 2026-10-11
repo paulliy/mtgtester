@@ -13,6 +13,7 @@ import { spellDefinitionOf } from './queries';
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
+import { BESTOW_ENCHANT } from '../cards/spell-faces';
 import type {
   Ability,
   KeywordAbility,
@@ -42,6 +43,7 @@ import {
   colorsOf,
   damageKeywordsOf,
   getDefByOracleId,
+  hasProtectionFrom,
   opponentsOf,
   tokenCreationMultiplierFor,
   triggersOf,
@@ -83,6 +85,8 @@ export interface MoveDestination {
   controllerId?: PlayerId;
   /** Aura host chosen when casting, attached before entry triggers are collected. */
   attachedTo?: ObjectId;
+  /** Battlefield only: it enters as a bestowed Aura (CR 702.103b), attached to `attachedTo`. */
+  bestowed?: true;
   /** Battlefield only: choose the back face of an MDFC land // spell. */
   face?: 'front' | 'back';
   /**
@@ -639,6 +643,8 @@ export function* moveObject(
     if (def.subtypes.includes('Aura')) {
       const enchant = def.spellAbility?.targets[0];
       const controllerId = target.controllerId ?? obj.ownerId;
+      // Chosen without targeting (CR 303.4f), but protection still forbids being enchanted by
+      // an Aura of that color (CR 702.16d).
       const hosts =
         enchant === undefined
           ? []
@@ -651,7 +657,10 @@ export function* moveObject(
               undefined,
               obj.cardId,
               false,
-            );
+            ).filter((id) => {
+              const host = ctx.state.battlefield.find((perm) => perm.id === id);
+              return host === undefined || !hasProtectionFrom(ctx, host, def.colors);
+            });
       if (target.attachedTo !== undefined) {
         if (!hosts.includes(target.attachedTo)) return null;
       } else {
@@ -661,10 +670,10 @@ export function* moveObject(
         const outcome = yield {
           decisionType: 'general',
           player: controllerId,
-          prompt: `${obj.name}: choose a permanent to enchant.`,
+          prompt: `${obj.name}: choose ${enchant?.kind === 'player' ? 'a player' : 'a permanent'} to enchant.`,
           options: hosts.map((id) => ({
             type: 'attachAura',
-            description: `Enchant ${ctx.state.battlefield.find((p) => p.id === id)!.name}`,
+            description: `Enchant ${ctx.state.battlefield.find((p) => p.id === id)?.name ?? id}`,
             payload: id,
           })),
         };
@@ -739,6 +748,7 @@ export function* moveObject(
       target.withCounters,
     );
     perm.attachedTo = target.attachedTo ?? null;
+    if (target.bestowed === true && perm.attachedTo !== null) perm.bestowed = true;
     ctx.state.battlefield.push(perm);
     next = perm;
 
@@ -1348,6 +1358,76 @@ export function applyTokenCreationReplacements(
       false,
     );
   }
+}
+
+/**
+ * Whether `attachment` could be attached to `host` (CR 701.3a): an Aura to what its enchant ability
+ * allows, chosen without targeting (CR 303.4), and not while it is a creature (CR 303.4d); an
+ * Equipment only to a creature other than itself, and not while it is a creature (CR 301.5c).
+ * Reattaching to what it is already on is not a move (CR 701.3b).
+ */
+export function canAttach(
+  ctx: GameContext,
+  attachment: EnginePermanent,
+  host: EnginePermanent,
+): boolean {
+  if (host.id === attachment.id || attachment.attachedTo === host.id) return false;
+  if (!ctx.state.battlefield.includes(host)) return false;
+  const chars = computeCharacteristics(ctx, attachment);
+  if (chars.types.includes('Creature')) return false;
+  // Protection: can't be Enchanted or Equipped by something of that color (CR 702.16d).
+  if (hasProtectionFrom(ctx, host, chars.colors)) return false;
+  if (chars.subtypes.includes('Aura')) return enchantAllows(ctx, attachment, host) === true;
+  if (chars.subtypes.includes('Equipment'))
+    return computeCharacteristics(ctx, host).types.includes('Creature');
+  return false;
+}
+
+/**
+ * Whether an Aura's enchant ability allows `host` for the Aura's current controller, chosen without
+ * targeting (CR 303.4a), and `host` has no protection from the Aura's colors (CR 702.16c). Undefined
+ * when the definition carries no enchant restriction to check.
+ */
+export function enchantAllows(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  host: EnginePermanent,
+): boolean | undefined {
+  const colors = computeCharacteristics(ctx, aura).colors;
+  if (hasProtectionFrom(ctx, host, colors)) return false;
+  // A bestowed Aura has "enchant creature" (CR 702.103b).
+  const enchant =
+    aura.bestowed === true
+      ? BESTOW_ENCHANT
+      : getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined) return undefined;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(host.id);
+}
+
+/**
+ * Attach an Aura or Equipment on the battlefield to `host` (CR 701.3a). It doesn't move if it can't
+ * legally be attached there (CR 701.3b), and moving to a different object gives it a new
+ * timestamp (CR 701.3c, 613.7e). Returns whether it moved.
+ */
+export function attachPermanent(
+  ctx: GameContext,
+  attachment: EnginePermanent,
+  host: EnginePermanent,
+): boolean {
+  if (!canAttach(ctx, attachment, host)) return false;
+  attachment.attachedTo = host.id;
+  attachment.timestamp = ctx.state.nextTimestamp++;
+  emit(ctx, 'attach', { equipment: attachment.name, to: host.name });
+  return true;
 }
 
 /**

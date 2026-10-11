@@ -1840,6 +1840,232 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Cranial Plating: equip, then move it with {B}{B}'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mask of Memory: equip it, connect, then draw two and discard a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Resurrection Orb: equip a stolen creature, gain life, lose it, and it returns home',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Sunforger: equip it, then unattach it to cast a red instant from your library for free',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Screams from Within: its creature dies and it returns onto a hexproof opposing creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ghoulish Impetus: its creature dies and it returns at the next end step'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Ajani's Chosen: an Aura you cast moves onto the Cat it makes"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Shielded by Faith: an opponent’s creature entering offers you the attach'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no target',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: Lab Doom cannot destroy the creature, which must attack'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Redemption Arc: P2’s goaded creature cannot attack you, their other creature can'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: two of your Auras on a creature that dies draw you two cards'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: its combat damage gains life, Lab Ox’s does not'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Martial Impetus: the enchanted creature attacks and pumps your other attacker'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Martial Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Killian, Decisive Mentor: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to your hand',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Animate Dead: destroy the Aura and the returned creature is sacrificed'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

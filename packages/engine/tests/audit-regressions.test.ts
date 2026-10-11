@@ -168,10 +168,6 @@ describe('audit: Sram only draws for the printed spell types', () => {
 describe('audit: approximate cards fail closed', () => {
   it.each([
     [
-      'Killian, Decisive Mentor',
-      'Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.',
-    ],
-    [
       "Sage's Reverie",
       "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
     ],

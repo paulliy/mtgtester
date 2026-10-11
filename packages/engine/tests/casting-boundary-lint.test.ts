@@ -126,23 +126,27 @@ describe('casting constructor and export boundary', () => {
   });
 });
 
-it('resolves authorized file identities when ESLint runs from a nested directory', async () => {
-  const { execFileSync } = await import('node:child_process');
-  const { resolve } = await import('node:path');
-  const output = execFileSync(
-    process.execPath,
-    [
-      resolve('node_modules/eslint/bin/eslint.js'),
-      resolve('packages/engine/src/casting/cast.ts'),
-      '--format',
-      'json',
-    ],
-    { cwd: resolve('packages/engine'), encoding: 'utf8' },
-  );
-  const results = JSON.parse(output) as { messages: { ruleId: string }[] }[];
-  expect(
-    results
-      .flatMap((result) => result.messages)
-      .filter((message) => message.ruleId === 'casting-boundary/constructors'),
-  ).toEqual([]);
-}, ESLINT_CHILD_TIMEOUT_MS);
+it(
+  'resolves authorized file identities when ESLint runs from a nested directory',
+  async () => {
+    const { execFileSync } = await import('node:child_process');
+    const { resolve } = await import('node:path');
+    const output = execFileSync(
+      process.execPath,
+      [
+        resolve('node_modules/eslint/bin/eslint.js'),
+        resolve('packages/engine/src/casting/cast.ts'),
+        '--format',
+        'json',
+      ],
+      { cwd: resolve('packages/engine'), encoding: 'utf8' },
+    );
+    const results = JSON.parse(output) as { messages: { ruleId: string }[] }[];
+    expect(
+      results
+        .flatMap((result) => result.messages)
+        .filter((message) => message.ruleId === 'casting-boundary/constructors'),
+    ).toEqual([]);
+  },
+  ESLINT_CHILD_TIMEOUT_MS,
+);

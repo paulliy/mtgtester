@@ -337,12 +337,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     SMOTHERING_TITHE_HANDLED_LINES,
     SMOTHERING_TITHE_DEFINITION,
   );
-  // Catalog audit queen-batch-7: Equip {2} is authored; current Oracle is Equip {3}.
-  unsupportedCard(
-    'd1421070-a3cc-4af3-bf91-0f97372f4161',
-    'Sunforger',
-    'Equip {2} is authored; current Oracle is Equip {3}.',
-  );
+  // Sunforger: restored in coverage PR05. The interpreter reads Equip {3} and the unattach
+  // activation that casts a found instant for free, so no override remains.
   // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
   unsupportedCard(
     '0dfdf1a1-3a9a-490f-bd9d-dcba088c6785',

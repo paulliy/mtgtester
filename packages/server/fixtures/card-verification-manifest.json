@@ -1273,13 +1273,48 @@
     "c0d8fef4-65f4-4769-982d-b397d2b7e977": {
       "name": "Animate Dead",
       "oracleSha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "animate-dead-enchant",
           "oracleText": "Enchant creature card in a graveyard",
-          "implementation": ["explicitly unsupported; graveyard Aura attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Aura spell whose one target is a creature card in any player's graveyard (cardInGraveyard, creature filter, any graveyard owner); a noncreature card in a graveyard and a creature on the battlefield are not legal hosts, and with no creature card in any graveyard the Aura cannot be cast",
+            "the Aura enters attached to that graveyard card and stays legal there as a state-based action until its enters trigger resolves; if the card has left the graveyard by resolution the spell has no legal target and does not resolve, and if it leaves while the trigger is on the stack nothing returns and the Aura is put into the graveyard"
+          ],
+          "engineTestIds": [
+            "animate-dead-pinned-oracle-supported",
+            "animate-dead-enchant-graveyard-creature",
+            "animate-dead-card-left"
+          ],
+          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
+        },
+        {
+          "id": "animate-dead-reanimate-attach",
+          "oracleText": "When this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.",
+          "implementation": [
+            "interpreted mandatory enters trigger with an intervening if (CR 603.4) running one effect, reanimateEnchantedCardAndAttach: the Aura now enchants only the creature put onto the battlefield with it; that creature card returns from its graveyard under the Aura controller's control, whoever owned it, and the Aura attaches to it with a new timestamp (CR 613.7e)",
+            "a delayed trigger set up on the Aura object makes that creature's controller sacrifice that exact creature when the Aura leaves the battlefield, by any means; the returned creature leaving instead puts the Aura into the graveyard as a state-based action and sacrifices nothing else; a creature with protection from black returns but the Aura cannot attach to it (CR 702.16c), so the Aura goes to the graveyard and that creature is sacrificed"
+          ],
+          "engineTestIds": [
+            "animate-dead-pinned-oracle-supported",
+            "animate-dead-reanimate",
+            "animate-dead-leave-sacrifice",
+            "animate-dead-creature-dies",
+            "animate-dead-card-left",
+            "animate-dead-protection"
+          ],
+          "viewerScenarioIds": ["animate-dead-viewer-aura-leaves-sacrifices"]
+        },
+        {
+          "id": "animate-dead-shrink",
+          "oracleText": "Enchanted creature gets -1/-0.",
+          "implementation": [
+            "interpreted layer 7d -1/-0 on the creature this Aura is attached to (attachedToSource), so the returned creature is one power smaller and no other creature changes; it applies from the moment the Aura attaches to the returned creature",
+            "the Aura gives nothing once it has left the battlefield"
+          ],
+          "engineTestIds": ["animate-dead-pinned-oracle-supported", "animate-dead-reanimate"],
+          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1364,13 +1399,36 @@
     "3635e4e5-e655-45f4-a444-39756f55129a": {
       "name": "Eldrazi Conscription",
       "oracleSha256": "89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature gets +10/+10 and has trample and annihilator 2.",
-          "implementation": ["explicitly unsupported; Annihilator is omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "eldrazi-conscription-buff",
+          "oracleText": "Enchanted creature gets +10/+10 and has trample",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus a layer 7d +10/+10 and a layer 6 trample grant on the creature this Aura is attached to (attachedToSource); only the enchanted creature changes and an unattached Aura grants nothing",
+            "the Kindred card type (CR 308) is accepted only on Auras, so Eldrazi Conscription is cast and resolves as a Kindred Enchantment — Eldrazi Aura, while another Kindred card, such as a Kindred instant, stays unmodeled"
+          ],
+          "engineTestIds": [
+            "eldrazi-conscription-pinned-oracle-supported",
+            "eldrazi-conscription-kindred-aura-only",
+            "eldrazi-conscription-buff"
+          ],
+          "viewerScenarioIds": ["eldrazi-conscription-viewer-trample"]
+        },
+        {
+          "id": "eldrazi-conscription-annihilator",
+          "oracleText": "annihilator 2. (Whenever it attacks, defending player sacrifices two permanents of their choice.)",
+          "implementation": [
+            "interpreted layer 6 grant of a triggered ability to the enchanted creature (annihilator, CR 702.86a): whenever it attacks, a mandatory trigger makes its defending player, the event player of the attack, sacrifice two permanents of their choice, all of them when they control two or fewer",
+            "only the player that creature attacks sacrifices anything; an attack by another creature, or no attack, triggers nothing"
+          ],
+          "engineTestIds": [
+            "eldrazi-conscription-pinned-oracle-supported",
+            "eldrazi-conscription-defender-sacrifices-two",
+            "eldrazi-conscription-defender-only",
+            "eldrazi-conscription-two-or-fewer"
+          ],
+          "viewerScenarioIds": ["eldrazi-conscription-viewer-annihilator"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1378,15 +1436,40 @@
     "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3": {
       "name": "Fallen Ideal",
       "oracleSha256": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature has flying and \"Sacrifice a creature: this creature gets +2/+1 until end of turn.\"",
+          "id": "fallen-ideal-grants",
+          "oracleText": "Enchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\"",
           "implementation": [
-            "explicitly unsupported; granted sacrifice ability authored on the Aura"
+            "interpreted Aura spell (enchant creature) plus two layer 6 grants on the creature this Aura is attached to (attachedToSource): the flying keyword and an activated ability with no mana cost whose cost is sacrificing a creature you control, the enchanted creature itself included",
+            "the creature's controller activates it (not the Aura's controller unless they are the same); its effect pumps the creature that has the ability, +2/+1 until end of turn, once per activation, and the Aura grants nothing when unattached"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "fallen-ideal-pinned-oracle-supported",
+            "fallen-ideal-flying-enchanted-only",
+            "fallen-ideal-sacrifice-pump",
+            "fallen-ideal-sacrifice-itself",
+            "fallen-ideal-activation-controller"
+          ],
+          "viewerScenarioIds": [
+            "fallen-ideal-viewer-sacrifice-then-return",
+            "fallen-ideal-viewer-flying-attack"
+          ]
+        },
+        {
+          "id": "fallen-ideal-return",
+          "oracleText": "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+          "implementation": [
+            "interpreted triggered ability of the Aura: a leave-the-battlefield trigger narrowed to the graveyard (the bare 'is put into a graveyard from the battlefield' head) whose effect returns the card this permanent became in a graveyard to its owner's hand (returnDepartedSourceToHand, graveyard only)",
+            "it returns to its owner's hand whichever creature it was on and whoever controlled it; exiled from the battlefield it does not trigger, and a card that left the graveyard before the trigger resolves is not returned (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "fallen-ideal-pinned-oracle-supported",
+            "fallen-ideal-return-to-owner-hand",
+            "fallen-ideal-return-only-from-graveyard"
+          ],
+          "viewerScenarioIds": ["fallen-ideal-viewer-sacrifice-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1408,13 +1491,35 @@
     "a3b39590-34b7-4fd0-877f-748e6df30e88": {
       "name": "Hateful Eidolon",
       "oracleSha256": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "hateful-eidolon-lifelink",
+          "oracleText": "Lifelink",
+          "implementation": [
+            "interpreted printed lifelink keyword on the creature; damage it deals gains its controller that much life (CR 702.15)",
+            "no other creature has lifelink from it, and the card has no other static ability"
+          ],
+          "engineTestIds": ["hateful-eidolon-pinned-oracle-supported", "hateful-eidolon-lifelink"],
+          "viewerScenarioIds": ["hateful-eidolon-viewer-combat-lifelink"]
+        },
+        {
+          "id": "hateful-eidolon-draw",
           "oracleText": "Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.",
-          "implementation": ["explicitly unsupported; draws one instead of one per Aura"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory dies trigger whose subject is any creature with an Aura attached (isEnchanted and Creature), yours or an opponent's, whose effect draws aurasYouControlledAttachedToTriggerObject cards",
+            "the count is read from the dying creature's last-known facts (CR 603.10a): one card for each attached Aura whose controller was this ability's controller, so Auras controlled by opponents add nothing, an Aura going to the graveyard in the same event still counts, and a creature with no Aura on it, or one that left without dying, draws nothing"
+          ],
+          "engineTestIds": [
+            "hateful-eidolon-pinned-oracle-supported",
+            "hateful-eidolon-draw-per-aura-you-controlled",
+            "hateful-eidolon-enchanted-only",
+            "hateful-eidolon-last-known-auras"
+          ],
+          "viewerScenarioIds": [
+            "hateful-eidolon-viewer-enchanted-creature-dies-draw",
+            "hateful-eidolon-viewer-two-auras-draw-two"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1422,13 +1527,38 @@
     "9c77eb0a-543a-41db-ba1f-aa0163837ae0": {
       "name": "Ajani's Chosen",
       "oracleSha256": "a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.",
-          "implementation": ["explicitly unsupported; Aura attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "ajanis-chosen-cat",
+          "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token.",
+          "implementation": [
+            "interpreted enters trigger on a permanent you control with the Enchantment type, with no target, whose first effect creates one 2/2 white Cat creature token under your control: any enchantment you control entering counts (an Aura, a non-Aura, an enchantment creature), but not one an opponent controls and not a nonenchantment permanent such as a creature or an artifact",
+            "the Cat is a token, not an enchantment, so it starts no chain of its own"
+          ],
+          "engineTestIds": [
+            "ajanis-chosen-pinned-oracle-supported",
+            "ajanis-chosen-cat-for-enchantment"
+          ],
+          "viewerScenarioIds": [
+            "ajanis-chosen-viewer-aura-moves-to-cat",
+            "ajanis-chosen-viewer-enchantment-makes-cat"
+          ]
+        },
+        {
+          "id": "ajanis-chosen-attach",
+          "oracleText": "If that enchantment is an Aura, you may attach it to the token.",
+          "implementation": [
+            "interpreted second effect of the same trigger (attach with what triggerObject, to createdToken, requireAura and optional): only an Aura is asked about, you choose to attach it to the Cat this trigger just made or to leave it where it is; a non-Aura enchantment gets no prompt",
+            "attaching moves the Aura onto the Cat and gives it a new timestamp (CR 701.3c, 613.7e), so its static effect follows it; a no leaves it on its creature at its old timestamp",
+            "an Aura that cannot enchant the Cat (enchant land, enchant creature an opponent controls) or that has left the battlefield does not move and is not offered (CR 701.3b)"
+          ],
+          "engineTestIds": [
+            "ajanis-chosen-pinned-oracle-supported",
+            "ajanis-chosen-aura-optional-attach",
+            "ajanis-chosen-aura-illegal-or-gone"
+          ],
+          "viewerScenarioIds": ["ajanis-chosen-viewer-aura-moves-to-cat"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1436,13 +1566,38 @@
     "8ba36878-0816-44c7-b543-8ebfc28c2ecd": {
       "name": "Angelic Destiny",
       "oracleSha256": "3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "angelic-destiny-buff",
           "oracleText": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
-          "implementation": ["explicitly unsupported; Angel type-changing omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus four statics on the creature this Aura is attached to (attachedToSource): a layer 4 addition of the Angel creature subtype (CR 205.1b, 613.1d), layer 6 flying and first strike grants, and a layer 7d +4/+4",
+            "only the enchanted creature changes, whoever controls it, and it keeps its other creature types (a Bear stays a Bear and also becomes an Angel); moved or unattached, the Aura gives nothing"
+          ],
+          "engineTestIds": [
+            "angelic-destiny-pinned-oracle-supported",
+            "angelic-destiny-cast-onto-creature",
+            "angelic-destiny-enchanted-only"
+          ],
+          "viewerScenarioIds": [
+            "angelic-destiny-viewer-angel-then-return",
+            "angelic-destiny-viewer-flying-first-strike-angel-combat"
+          ]
+        },
+        {
+          "id": "angelic-destiny-return",
+          "oracleText": "When enchanted creature dies, return this card to its owner's hand.",
+          "implementation": [
+            "interpreted triggered ability of the Aura: when the creature it is attached to dies, it returns the Aura card, which went to the graveyard with that creature as a state-based action (CR 704.5m), from the graveyard to its owner's hand (returnDepartedSourceToHand, graveyard only)",
+            "it goes to the Aura card's owner's hand whoever owned the creature; the Aura leaving the battlefield alone does not trigger it, another creature dying does not, and a card that left the graveyard before the trigger resolves is not returned (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "angelic-destiny-pinned-oracle-supported",
+            "angelic-destiny-return-to-owner-hand",
+            "angelic-destiny-return-negative"
+          ],
+          "viewerScenarioIds": ["angelic-destiny-viewer-angel-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1478,13 +1633,44 @@
     "441b51b0-ecd0-466d-9ca8-e754eb563aec": {
       "name": "Eidolon of Countless Battles",
       "oracleSha256": "9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "eidolon-of-countless-battles-bestow",
           "oracleText": "Bestow {2}{W}{W}",
-          "implementation": ["explicitly unsupported; Bestow and Aura-count buff omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted bestow alternative cost (CR 702.103a): a second way to cast the card, offered only when its cost can be paid and a creature can be enchanted, whose spell is an Aura spell with enchant creature (CR 702.103b) that targets the creature it will enchant, so Aura-spell cast triggers see it; cast for its mana cost it is an ordinary creature spell",
+            "a bestowed Eidolon enters attached as a noncreature Enchantment — Aura through a type-changing effect; if its target is illegal on resolution it resolves as a creature (CR 702.103e), and when the enchanted creature leaves or the host is one it may not enchant, such as a creature with protection from white, it becomes an unattached creature instead of going to the graveyard (CR 702.103f)"
+          ],
+          "engineTestIds": [
+            "eidolon-of-countless-battles-pinned-oracle-supported",
+            "eidolon-of-countless-battles-normal-cast",
+            "eidolon-of-countless-battles-bestow-cast",
+            "eidolon-of-countless-battles-bestow-needs-creature",
+            "eidolon-of-countless-battles-illegal-target",
+            "eidolon-of-countless-battles-host-leaves",
+            "eidolon-of-countless-battles-protection"
+          ],
+          "viewerScenarioIds": ["eidolon-of-countless-battles-viewer-bestow"]
+        },
+        {
+          "id": "eidolon-of-countless-battles-buff",
+          "oracleText": "This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.",
+          "implementation": [
+            "interpreted as two additive layer 7d statics on this permanent and the creature it is attached to (self or attachedToSource): +1/+1 for each creature you control, and +1/+1 for each Aura you control; cast normally it is a creature buffed by itself, bestowed it buffs the creature it enchants",
+            "only permanents you control are counted, a bestowed Eidolon counts as an Aura you control but not as a creature, and opponents' creatures and Auras add nothing; it is an Aura you control for effects such as Killian, Decisive Mentor's attack trigger"
+          ],
+          "engineTestIds": [
+            "eidolon-of-countless-battles-pinned-oracle-supported",
+            "eidolon-of-countless-battles-normal-cast",
+            "eidolon-of-countless-battles-bestow-cast",
+            "eidolon-of-countless-battles-buff-counts",
+            "eidolon-of-countless-battles-counts-as-aura"
+          ],
+          "viewerScenarioIds": [
+            "eidolon-of-countless-battles-viewer-bestow",
+            "eidolon-of-countless-battles-viewer-creature-and-aura-counts"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1520,13 +1706,38 @@
     "6a9cc11b-a223-46f0-bf58-c1e08ad1253d": {
       "name": "Forum Filibuster",
       "oracleSha256": "0ba03edb28796d0bf9c9db05a772b35e3a219d24ff8a81648d9a440a2fd35cb2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "forum-filibuster-inkling",
+          "oracleText": "At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying.",
+          "implementation": [
+            "interpreted upkeep trigger for its controller only (player you), with no target of its own, whose first effect creates one 2/1 white and black Inkling creature token with flying under your control; an opponent's upkeep makes nothing"
+          ],
+          "engineTestIds": [
+            "forum-filibuster-pinned-oracle-supported",
+            "forum-filibuster-upkeep-token"
+          ],
+          "viewerScenarioIds": ["forum-filibuster-viewer-inkling-and-aura"]
+        },
+        {
+          "id": "forum-filibuster-reflexive-return",
           "oracleText": "When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.",
-          "implementation": ["explicitly unsupported; reflexive attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted reflexive ability (reflexiveOnCreatedToken, CR 603.12) that goes on the stack only if the token was created and remembers that token: its target is up to one Aura or Equipment card in the controller's own graveyard (not an opponent's graveyard, a non-Aura enchantment or a creature card), choosing none is legal, and with no such card nothing is asked",
+            "returnChosenCardsAttachedTo puts the chosen card onto the battlefield under the controller attached to the Inkling: an Aura enters enchanting it (and stays in the graveyard if it cannot enchant the Inkling), an Equipment enters and is attached to it",
+            "if the Inkling is gone by resolution an Aura stays in the graveyard (CR 303.4i) and an Equipment enters unattached (CR 301.5e)"
+          ],
+          "engineTestIds": [
+            "forum-filibuster-pinned-oracle-supported",
+            "forum-filibuster-reflexive-targets",
+            "forum-filibuster-attached-return",
+            "forum-filibuster-token-gone-or-illegal"
+          ],
+          "viewerScenarioIds": [
+            "forum-filibuster-viewer-inkling-and-aura",
+            "forum-filibuster-viewer-equipment-return"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1534,13 +1745,53 @@
     "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b": {
       "name": "Gift of Immortality",
       "oracleSha256": "668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "gift-of-immortality-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent), attaches on resolution; the Aura has no static effect, so it changes nothing about the creature it enchants"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-enchant-creature"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
+        },
+        {
+          "id": "gift-of-immortality-creature-return",
+          "oracleText": "When enchanted creature dies, return that card to the battlefield under its owner's control.",
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose first effect puts the exact graveyard card the creature became (the trigger object, CR 400.7e) onto the battlefield at once, as a new object, under its OWNER's control rather than the trigger controller's: a creature you control but an opponent owns returns under that opponent",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying return nothing; a creature card that left the graveyard before the trigger resolves, or left and came back as a new object, returns nothing, and a token that dies ceases to exist"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-creature-returns-now",
+            "gift-of-immortality-creature-under-owner",
+            "gift-of-immortality-left-graveyard",
+            "gift-of-immortality-enchanted-dies-only"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
+        },
+        {
+          "id": "gift-of-immortality-aura-return",
           "oracleText": "Return this card to the battlefield attached to that creature at the beginning of the next end step.",
-          "implementation": ["explicitly unsupported; delayed Aura return omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted second effect of the same trigger (returnDepartedSourceToBattlefield with delay nextEndStep and attachTo triggerObject): it remembers the exact graveyard card this Aura became (CR 400.7e) and the creature as it is on the battlefield after the first effect, and sets up one delayed trigger for the beginning of the next end step to begin (CR 603.7), which lasts through cleanup until it fires; an end step that already began is not the next one, and it is the next end step whoever's turn it is",
+            "at that end step the Aura enters under the control of the player whose ability returns it (its controller), attached to that returned creature with no choice of host (CR 303.4f), even when an opponent controls the creature",
+            "if that creature left the battlefield (dying again, exile, bounce) or became a new object before the end step, or never returned because its card left the graveyard first, or the Aura card itself left the graveyard, the Aura stays where it is"
+          ],
+          "engineTestIds": [
+            "gift-of-immortality-pinned-oracle-supported",
+            "gift-of-immortality-aura-returns-attached",
+            "gift-of-immortality-next-end-step-any-turn",
+            "gift-of-immortality-creature-gone",
+            "gift-of-immortality-left-graveyard",
+            "gift-of-immortality-creature-under-owner"
+          ],
+          "viewerScenarioIds": ["gift-of-immortality-viewer-owner-return-then-aura"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1637,13 +1888,38 @@
     "2bfc7467-1316-43d3-9ca6-ff36cc2de607": {
       "name": "Kor Spiritdancer",
       "oracleSha256": "fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "kor-spiritdancer-pump",
           "oracleText": "This creature gets +2/+2 for each Aura attached to it.",
-          "implementation": ["explicitly unsupported; counts all Auras you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted layer 7d power/toughness modification of this creature, twice the number of Auras attached to the source (value aurasAttachedToSource), recomputed whenever Auras attach, move or leave",
+            "it counts every Aura attached to it whoever controls the Aura (an opponent's Aura on it counts) and does not count Auras attached to other creatures or an Equipment attached to it"
+          ],
+          "engineTestIds": [
+            "kor-spiritdancer-pinned-oracle-supported",
+            "kor-spiritdancer-pump-per-aura",
+            "kor-spiritdancer-only-auras-count"
+          ],
+          "viewerScenarioIds": [
+            "kor-spiritdancer-viewer-aura-cast-draw-and-pump",
+            "kor-spiritdancer-viewer-second-aura-grows-it"
+          ]
+        },
+        {
+          "id": "kor-spiritdancer-aura-draw",
+          "oracleText": "Whenever you cast an Aura spell, you may draw a card.",
+          "implementation": [
+            "interpreted optional triggered ability on you casting a spell filtered to the Aura subtype (CR 205.3h), whose effect draws one card for its controller",
+            "it triggers only for Aura spells you cast: not a non-Aura enchantment, a creature spell, or an opponent's Aura spell; declining the 'may' draws nothing and the Aura spell still resolves"
+          ],
+          "engineTestIds": [
+            "kor-spiritdancer-pinned-oracle-supported",
+            "kor-spiritdancer-cast-aura-draw",
+            "kor-spiritdancer-aura-spells-you-cast-only"
+          ],
+          "viewerScenarioIds": ["kor-spiritdancer-viewer-aura-cast-draw-and-pump"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1651,13 +1927,38 @@
     "c8decfdf-1421-4649-acde-5215e7f08bb9": {
       "name": "Martial Impetus",
       "oracleSha256": "f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "martial-impetus-statics",
+          "oracleText": "Enchanted creature gets +1/+1 and is goaded.",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus two grants on the creature this Aura is attached to (attachedToSource): a layer 7d +1/+1 and a layer 6 goad by the Aura's controller",
+            "a goaded creature must attack each combat if able and attacks a player other than the Aura's controller if able; unenchanted creatures get neither, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "martial-impetus-pinned-oracle-supported",
+            "martial-impetus-buff-and-goad"
+          ],
+          "viewerScenarioIds": [
+            "martial-impetus-viewer-attack-pump",
+            "martial-impetus-viewer-goaded-opponent-attack"
+          ]
+        },
+        {
+          "id": "martial-impetus-attack-pump",
           "oracleText": "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
-          "implementation": ["explicitly unsupported; pumps all creatures in combat"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory attack trigger on the creature this Aura is attached to, with no target, whose effect pumps +1/+1 until end of turn each creature selected by attackingOpponent (attacking a player other than the Aura's controller), excluding the attacking trigger object itself (exceptTriggerObject)",
+            "the enchanted creature itself is not pumped by it, a creature attacking the Aura's controller is not, and a non-attacking creature is not; it does not trigger when only other creatures attack"
+          ],
+          "engineTestIds": [
+            "martial-impetus-pinned-oracle-supported",
+            "martial-impetus-attack-pump",
+            "martial-impetus-own-attackers",
+            "martial-impetus-enchanted-attack-only"
+          ],
+          "viewerScenarioIds": ["martial-impetus-viewer-attack-pump"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1709,13 +2010,39 @@
     "c22e5fc6-9b4e-4197-b472-70d168eb4330": {
       "name": "Redemption Arc",
       "oracleSha256": "c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "redemption-arc-statics",
+          "oracleText": "Enchanted creature has indestructible and is goaded.",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus two layer 6 grants on the creature this Aura is attached to (attachedToSource) and nothing else: the indestructible keyword, so it survives destroy effects and lethal damage, and goad by the Aura's controller",
+            "a goaded creature must attack each combat if able and attacks a player other than the Aura's controller if able; unenchanted creatures have no requirement, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "redemption-arc-pinned-oracle-supported",
+            "redemption-arc-indestructible-enchanted-only",
+            "redemption-arc-goaded"
+          ],
+          "viewerScenarioIds": [
+            "redemption-arc-viewer-exile-enchanted-creature",
+            "redemption-arc-viewer-indestructible-goaded-attack",
+            "redemption-arc-viewer-goaded-opponent-attack"
+          ]
+        },
+        {
+          "id": "redemption-arc-exile",
           "oracleText": "{1}{W}: Exile enchanted creature.",
-          "implementation": ["explicitly unsupported; exile activation omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted activated ability of the Aura at instant speed with a {1}{W} mana cost and no target, whose effect exiles the creature the Aura is attached to (exile attachedToSource): it is not targeted, so hexproof does not stop it, and indestructible does not stop exile",
+            "only the Aura's controller can activate it, and only when {1}{W} is available; the exiled card goes to exile, not the graveyard, and the Aura then has nothing to enchant and is put into its owner's graveyard"
+          ],
+          "engineTestIds": [
+            "redemption-arc-pinned-oracle-supported",
+            "redemption-arc-exile-untargeted",
+            "redemption-arc-activation-controller-mana"
+          ],
+          "viewerScenarioIds": ["redemption-arc-viewer-exile-enchanted-creature"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1723,13 +2050,54 @@
     "d13fc657-c6fc-4394-bc70-691050550226": {
       "name": "Sheltered by Ghosts",
       "oracleSha256": "0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sheltered-by-ghosts-enchant",
+          "oracleText": "Enchant creature you control",
+          "implementation": [
+            "interpreted Aura spell whose one target is a creature its caster controls (enchant creature you control), so an opponent's creature is not offered as a host",
+            "it is also checked as a state-based action while on the battlefield (CR 704.5m): if an opponent gains control of the enchanted creature the Aura is put into the graveyard, and the permanent it exiled returns"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-enchant-your-creature",
+            "sheltered-by-ghosts-control-change"
+          ],
+          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
+        },
+        {
+          "id": "sheltered-by-ghosts-exile",
+          "oracleText": "When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.",
+          "implementation": [
+            "interpreted mandatory enters trigger with one nonland-permanent target controlled by an opponent and an exile that lasts only while this Aura stays on the battlefield (exileUntilSourceLeaves, CR 610.3); the exiled card returns under its owner's control when the Aura leaves",
+            "your own permanents and lands are not offered as targets; if the Aura has left the battlefield before the trigger resolves, nothing is exiled (CR 610.3b)"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-exile-until-leaves",
+            "sheltered-by-ghosts-exile-scope",
+            "sheltered-by-ghosts-control-change"
+          ],
+          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
+        },
+        {
+          "id": "sheltered-by-ghosts-grants",
           "oracleText": "Enchanted creature gets +1/+0 and has lifelink and ward {2}.",
-          "implementation": ["explicitly unsupported; Ward omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted statics on the creature this Aura is attached to (attachedToSource): a layer 7d +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant; the keyword list \"lifelink and ward {2}\" is read as two keywords, the ward keeping its mana cost",
+            "an opponent's spell or ability targeting the enchanted creature triggers ward and is countered unless its controller pays {2}; the Aura's controller and other creatures are unaffected, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-grants",
+            "sheltered-by-ghosts-ward",
+            "sheltered-by-ghosts-ward-scope"
+          ],
+          "viewerScenarioIds": [
+            "sheltered-by-ghosts-viewer-exile-and-lifelink",
+            "sheltered-by-ghosts-viewer-ward-counters-opponent-spell"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1737,13 +2105,37 @@
     "79085dea-8daa-41c0-a975-61e3e6da2e26": {
       "name": "Shielded by Faith",
       "oracleSha256": "d2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "shielded-by-faith-indestructible",
+          "oracleText": "Enchant creature\nEnchanted creature has indestructible.",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent), attaches on resolution",
+            "interpreted static layer 6 indestructible keyword on the creature this Aura is attached to (attachedToSource) and nothing else: the enchanted creature survives destroy effects and lethal damage, other creatures do not, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "shielded-by-faith-pinned-oracle-supported",
+            "shielded-by-faith-indestructible-enchanted-only"
+          ],
+          "viewerScenarioIds": ["shielded-by-faith-viewer-attach-to-entering-creature"]
+        },
+        {
+          "id": "shielded-by-faith-attach",
           "oracleText": "Whenever a creature enters, you may attach this Aura to that creature.",
-          "implementation": ["explicitly unsupported; attach is mandatory"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted optional enters trigger on any creature, yours or an opponent's, with no target, put to the Aura's controller as a yes or no choice; yes runs attach with what source and to triggerObject, which moves the Aura onto the entering creature with a new timestamp (CR 701.3c, 613.7e) so the indestructible moves with it, and no leaves it where it is",
+            "a noncreature permanent entering does not trigger it; an entering creature that left the battlefield before the trigger resolved, or an Aura that is no longer on the battlefield, does not move (CR 701.3b)"
+          ],
+          "engineTestIds": [
+            "shielded-by-faith-pinned-oracle-supported",
+            "shielded-by-faith-attach-any-creature",
+            "shielded-by-faith-cant-attach-or-gone"
+          ],
+          "viewerScenarioIds": [
+            "shielded-by-faith-viewer-attach-to-entering-creature",
+            "shielded-by-faith-viewer-opponent-creature-enters"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2329,13 +2721,39 @@
     "9c54bd34-667d-415c-ad26-82e0eb0ff409": {
       "name": "Killian, Decisive Mentor",
       "oracleSha256": "9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "killian-enchantment-enters",
+          "oracleText": "Whenever an enchantment you control enters, tap up to one target creature and goad it.",
+          "implementation": [
+            "interpreted mandatory enters trigger whose subject is an enchantment you control (an Aura included), with one 'up to one target creature' slot (min 0, max 1) and an effect, tapAndGoadEachChosen, that taps each legal chosen creature and goads it for this ability's controller (CR 701.15a)",
+            "choosing no target is legal and does nothing; a creature, an artifact or an opponent's enchantment entering does not trigger it; the goad makes the creature attack each combat if able and attack a player other than Killian's controller if able, until Killian's controller's next turn"
+          ],
+          "engineTestIds": [
+            "killian-pinned-oracle-supported",
+            "killian-enchantment-tap-goad",
+            "killian-enters-yours-only",
+            "killian-goaded-creature-must-attack"
+          ],
+          "viewerScenarioIds": [
+            "killian-decisive-mentor-viewer-tap-goad-and-attack-draw",
+            "killian-decisive-mentor-viewer-goaded-opponent-attack"
+          ]
+        },
+        {
+          "id": "killian-attack-draw",
           "oracleText": "Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.",
-          "implementation": ["explicitly unsupported; Aura-enchanted attack trigger unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory aggregate attack trigger (one trigger per batch of attackers, CR 603.2c) whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl, read off the attached Auras' controllers), drawing one card",
+            "two such attackers in one attack still draw one card; a creature enchanted only by an opponent's Aura, an unenchanted attacker, or an enchanted creature that stays home does not trigger it; an opponent's creature enchanted by your Aura attacking on their turn does"
+          ],
+          "engineTestIds": [
+            "killian-pinned-oracle-supported",
+            "killian-attack-draw",
+            "killian-attack-draw-your-auras-only"
+          ],
+          "viewerScenarioIds": ["killian-decisive-mentor-viewer-tap-goad-and-attack-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3306,15 +3724,49 @@
     "b410f294-cbb6-4016-981f-808fd9b7bbae": {
       "name": "Resurrection Orb",
       "oracleSha256": "ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "resurrection-orb-lifelink",
+          "oracleText": "Equipped creature has lifelink.",
+          "implementation": [
+            "interpreted layer 6 keyword grant of lifelink to the creature this Equipment is attached to (attachedToSource) only: that creature's damage gains its controller that much life, no other creature gains it, a creature carrying a different Equipment does not, an unattached Orb grants it to nobody, and moving the Orb moves the keyword"
+          ],
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-lifelink-equipped-only"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
+        },
+        {
+          "id": "resurrection-orb-trigger",
           "oracleText": "Whenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.",
           "implementation": [
-            "explicitly unsupported; return is under equipment controller not owner"
+            "interpreted non-optional trigger on dies whose subject is the creature this Equipment is attached to (attachedToSource), not any creature and not one carrying a different Equipment; resolving it remembers the exact graveyard card the creature became (CR 400.7e) in a delayed beginning-of-end-step trigger that lasts until it fires, so the card stays in the graveyard until the next end step to begin, whoever's turn it is (CR 603.7), and an end step that already began is not the next one; at that end step it returns under its OWNER's control (not the Equipment controller's) as a new object that the Orb is not attached to, and nothing returns if the card left the graveyard first or came back as a new object, if it was a token that ceased to exist, or if the creature was exiled or bounced instead of dying"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-dies-trigger-equipped-only",
+            "resurrection-orb-next-end-step",
+            "resurrection-orb-next-end-step-any-turn",
+            "resurrection-orb-returns-under-owner",
+            "resurrection-orb-card-left-graveyard"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
+        },
+        {
+          "id": "resurrection-orb-equip",
+          "oracleText": "Equip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+          "implementation": [
+            "interpreted Equip {4} (CR 702.6a) as a sorcery-speed activated ability whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it; it is offered only in your main phase with an empty stack and four mana available, never targets an opponent's creature, and moving the Orb moves which creature it affects"
+          ],
+          "engineTestIds": [
+            "resurrection-orb-pinned-oracle-supported",
+            "resurrection-orb-equip-sorcery",
+            "resurrection-orb-lifelink-equipped-only",
+            "resurrection-orb-returns-under-owner"
+          ],
+          "viewerScenarioIds": ["resurrection-orb-viewer-lifelink-and-return"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3408,15 +3860,36 @@
     "d6b2c998-a226-426c-a40d-6e6007041bfe": {
       "name": "Mask of Memory",
       "oracleSha256": "cb2782319793f55a873e6e3173ae3b04e5bf04806f7b0eb4b96a490a338f0310",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mask-of-memory-trigger",
           "oracleText": "Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card.",
           "implementation": [
-            "explicitly unsupported; any equipped creature, not this Equipment's creature"
+            "interpreted optional trigger on dealsCombatDamageToPlayer whose subject is the creature this Equipment is attached to (attachedToSource), not any equipped creature and not a creature carrying a different Equipment; accepting the single yes draws two cards and then discards one card of the player's choice from the enlarged hand (the 'if you do' rides on that yes), declining draws and discards nothing; it fires only for combat damage dealt to a player, so damage to a blocking creature and noncombat damage to a player never trigger it, while trample damage assigned to the player does"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mask-of-memory-pinned-oracle-supported",
+            "mask-of-memory-draws-then-discards",
+            "mask-of-memory-decline",
+            "mask-of-memory-only-this-equipments-creature",
+            "mask-of-memory-not-to-creatures",
+            "mask-of-memory-not-noncombat"
+          ],
+          "viewerScenarioIds": ["mask-of-memory-viewer-draw-discard"]
+        },
+        {
+          "id": "mask-of-memory-equip",
+          "oracleText": "Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+          "implementation": [
+            "interpreted Equip {1} (CR 702.6a) as a sorcery-speed activated ability whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it; it is offered only in your main phase with an empty stack, never targets an opponent's creature, and moving the Mask moves which creature triggers it"
+          ],
+          "engineTestIds": [
+            "mask-of-memory-pinned-oracle-supported",
+            "mask-of-memory-equip-sorcery",
+            "mask-of-memory-only-this-equipments-creature"
+          ],
+          "viewerScenarioIds": ["mask-of-memory-viewer-draw-discard"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4309,15 +4782,34 @@
     "fc3e48c9-e303-435c-bdb1-7dc7881a9858": {
       "name": "Karametra's Favor",
       "oracleSha256": "fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature gets +1/+1 and has \"{T}: Add one mana of any color.\"",
+          "id": "karametras-favor-enters-draw",
+          "oracleText": "When this Aura enters, draw a card.",
           "implementation": [
-            "explicitly unsupported; +1/+1 dropped when staticEffects are replaced"
+            "interpreted enters trigger on the Aura itself (self), with no target, that draws one card for its controller; no other permanent entering triggers it"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "karametras-favor-pinned-oracle-supported",
+            "karametras-favor-enters-draw"
+          ],
+          "viewerScenarioIds": ["karametras-favor-viewer-granted-mana-pays-spell"]
+        },
+        {
+          "id": "karametras-favor-mana",
+          "oracleText": "Enchanted creature has \"{T}: Add one mana of any color.\"",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus a layer 6 grant of a mana ability on the creature this Aura is attached to (attachedToSource) and nothing else: no +1/+1, and the Aura itself has no mana ability",
+            "the granted ability is one mana of any of the five colors for tapping that creature, so it pays for a spell of any color through the normal cast path and only while the creature is untapped and not summoning sick (CR 302.6), and it belongs to the creature's controller whoever controls the Aura; an unenchanted creature, or a creature once the Aura leaves it, has no such ability"
+          ],
+          "engineTestIds": [
+            "karametras-favor-pinned-oracle-supported",
+            "karametras-favor-any-color-mana",
+            "karametras-favor-controller-only",
+            "karametras-favor-summoning-sick"
+          ],
+          "viewerScenarioIds": ["karametras-favor-viewer-granted-mana-pays-spell"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4492,13 +4984,51 @@
     "b6689782-08d8-48e1-a05d-cd040dfe85bc": {
       "name": "Curse of Bounty",
       "oracleSha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.",
-          "implementation": ["explicitly unsupported; only the attacking player untaps"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "curse-of-bounty-enchant-player",
+          "oracleText": "Enchant player",
+          "implementation": [
+            "interpreted Aura spell whose one target is a player (enchant player): every player is a legal host, and the Aura enters attached to that player rather than to a permanent (CR 303.4a)",
+            "a player host is checked as a state-based action (CR 303.4d, 704.5m): the Aura is put into the graveyard when the enchanted player leaves the game, and stays while they are in it"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-enchant-player",
+            "curse-of-bounty-leaves-with-player"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
+        },
+        {
+          "id": "curse-of-bounty-controller-untaps",
+          "oracleText": "Whenever enchanted player is attacked, untap all nonland permanents you control.",
+          "implementation": [
+            "interpreted mandatory trigger of the Aura on the enchanted-player-attacked event, queued once for each Aura attached to a defending player as attackers are declared; its first effect untaps every nonland permanent the Aura's controller controls, whoever attacked and whatever the enchanted player did",
+            "lands stay tapped; attacking a player the Curse does not enchant, an attack on a player with no Curse, or no attack at all triggers nothing"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-opponent-attacks",
+            "curse-of-bounty-controller-attacks",
+            "curse-of-bounty-not-enchanted"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
+        },
+        {
+          "id": "curse-of-bounty-attacker-untaps",
+          "oracleText": "Each opponent attacking that player untaps all nonland permanents they control.",
+          "implementation": [
+            "interpreted second effect of the same trigger (attackingOpponentUntapsNonland): the attacking player, the event player, untaps their nonland permanents, including the attacking creatures, only if they are an opponent of the Aura's controller",
+            "when the Aura's controller attacks the enchanted player this effect does nothing, so only the controller's permanents untap, once; lands never untap and no other player's permanents are touched"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-opponent-attacks",
+            "curse-of-bounty-controller-attacks",
+            "curse-of-bounty-not-enchanted"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-opponent-attacks"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4785,15 +5315,50 @@
     "75564721-e4e9-463a-b49e-f0c7cd6f53a7": {
       "name": "Cranial Plating",
       "oracleSha256": "839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Equipped creature gets +1/+0 for each artifact you control.\n{B}{B}: Attach this Equipment to target creature you control.\nEquip {1}",
+          "id": "cranial-plating-pump",
+          "oracleText": "Equipped creature gets +1/+0 for each artifact you control.",
           "implementation": [
-            "explicitly unsupported; Equip {1} is dropped when attach replaces activatedAbilities"
+            "interpreted layer 7d static effect on the creature this Equipment is attached to: power +1 for each artifact its controller controls, counted continuously and including this Equipment itself; toughness is unchanged, an opponent's artifacts are not counted, and an unattached Equipment pumps nothing"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-pump-per-artifact"
+          ],
+          "viewerScenarioIds": ["cranial-plating-viewer-spell-on-stack-artifact-count"]
+        },
+        {
+          "id": "cranial-plating-attach",
+          "oracleText": "{B}{B}: Attach this Equipment to target creature you control.",
+          "implementation": [
+            "interpreted instant-speed activated ability costing {B}{B} (timing any) whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it (CR 701.3); it is offered with a spell on the stack and on an opponent's turn, never targets an opponent's creature, and leaves the Equipment where it was if the target is gone on resolution (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-instant-speed-attach",
+            "cranial-plating-target-you-control",
+            "cranial-plating-target-gone"
+          ],
+          "viewerScenarioIds": [
+            "cranial-plating-viewer-instant-attach",
+            "cranial-plating-viewer-spell-on-stack-artifact-count"
+          ]
+        },
+        {
+          "id": "cranial-plating-equip",
+          "oracleText": "Equip {1}",
+          "implementation": [
+            "interpreted Equip {1} (CR 702.6a) as its own sorcery-speed activated ability beside the {B}{B} attach: it targets a creature you control and attaches only in your main phase with an empty stack, never at instant speed, and fizzles without moving the Equipment if the target is gone on resolution"
+          ],
+          "engineTestIds": [
+            "cranial-plating-pinned-oracle-supported",
+            "cranial-plating-instant-speed-attach",
+            "cranial-plating-target-you-control",
+            "cranial-plating-target-gone"
+          ],
+          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4889,13 +5454,50 @@
     "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50": {
       "name": "Screams from Within",
       "oracleSha256": "603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "screams-from-within-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent, and not a hexproof opponent's creature), attaches on resolution"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-enchant-creature"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
+        },
+        {
+          "id": "screams-from-within-pump",
+          "oracleText": "Enchanted creature gets -1/-1.",
+          "implementation": [
+            "interpreted layer 7d modification of -1/-1 to the creature this Aura is attached to (attachedToSource) only: no other creature gets it, an unattached Aura shrinks nobody, moving the Aura moves the penalty, and a 1/1 it enchants is a 0/0 that dies and sets up the return"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-minus-one-enchanted-only"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
+        },
+        {
+          "id": "screams-from-within-return",
           "oracleText": "When enchanted creature dies, return this card from your graveyard to the battlefield.",
-          "implementation": ["explicitly unsupported; return still requires an attach target"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose returnDepartedSourceToBattlefield effect (fromYourGraveyard) returns exactly the card this permanent became in the graveyard (CR 400.7e) under the trigger controller's control",
+            "the returning Aura's controller chooses a creature to enchant as it enters (CR 303.4f) without targeting it, so a hexproof opponent's creature is a legal choice, and with no creature to enchant it stays in the graveyard (CR 303.4i)",
+            "it returns only from the controller's own graveyard: a card exiled or bounced before the trigger resolves stays put, and an Aura whose owner differs from its controller sits in the owner's graveyard and does not return",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying set up no return"
+          ],
+          "engineTestIds": [
+            "screams-from-within-pinned-oracle-supported",
+            "screams-from-within-returns-from-graveyard",
+            "screams-from-within-hexproof-host",
+            "screams-from-within-no-creature-stays",
+            "screams-from-within-your-graveyard",
+            "screams-from-within-enchanted-dies-only"
+          ],
+          "viewerScenarioIds": ["screams-from-within-viewer-return-and-enchant"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4930,13 +5532,48 @@
     "d1421070-a3cc-4af3-bf91-0f97372f4161": {
       "name": "Sunforger",
       "oracleSha256": "0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
-          "implementation": ["explicitly unsupported; Equip {2} is authored against Equip {3}"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "sunforger-pump",
+          "oracleText": "Equipped creature gets +4/+0.",
+          "implementation": [
+            "interpreted layer 7d power modification of +4 (toughness unchanged) to the creature this Equipment is attached to (attachedToSource) only: no other creature gets it, an unattached Sunforger grants it to nobody, it stacks with another Equipment, and moving or unattaching Sunforger moves or removes the bonus"
+          ],
+          "engineTestIds": ["sunforger-pinned-oracle-supported", "sunforger-pump-equipped-only"],
+          "viewerScenarioIds": ["sunforger-viewer-unattach-search-and-cast"]
+        },
+        {
+          "id": "sunforger-search",
+          "oracleText": "{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.",
+          "implementation": [
+            "interpreted instant-speed activated ability with a {R}{W} mana cost and an unattachSelf cost: it is offered only while Sunforger is attached and only with both red and white mana available, and paying it unattaches Sunforger up front as a cost (it stays on the battlefield unattached and the creature loses +4/+0, even before the ability resolves)",
+            "interpreted searchLibraryCastFree over instant cards that are red or white with mana value 4 or less: the search offers a red instant, a white instant at mana value 4 and a red-and-blue instant, never a blue instant, a red sorcery, a red instant with mana value 5 or a colorless instant, and may always find nothing",
+            "the found card is cast without paying its mana cost, so it goes to the stack as a spell and cast triggers fire; finding nothing casts nothing",
+            "the generic 'then shuffle' sentence is the shuffle op: the library is shuffled once after the search whether a card was cast, nothing was found, or no card matched (then no choice is offered and nothing is cast)"
+          ],
+          "engineTestIds": [
+            "sunforger-pinned-oracle-supported",
+            "sunforger-activation-requires-attached",
+            "sunforger-unattach-is-a-cost",
+            "sunforger-search-filter",
+            "sunforger-free-cast",
+            "sunforger-then-shuffle"
+          ],
+          "viewerScenarioIds": ["sunforger-viewer-unattach-search-and-cast"]
+        },
+        {
+          "id": "sunforger-equip",
+          "oracleText": "Equip {3}",
+          "implementation": [
+            "interpreted Equip {3} (CR 702.6a) as a sorcery-speed activated ability whose one target is a creature you control and whose attachSelfTo effect moves this Equipment onto it; it is offered only in your main phase with an empty stack and three mana available (not the old Equip {2}), never targets an opponent's creature, and moving Sunforger moves the +4/+0"
+          ],
+          "engineTestIds": [
+            "sunforger-pinned-oracle-supported",
+            "sunforger-equip-sorcery",
+            "sunforger-pump-equipped-only"
+          ],
+          "viewerScenarioIds": ["sunforger-viewer-unattach-search-and-cast"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5038,13 +5675,58 @@
     "276eccd6-4a76-46e8-b604-94472e618115": {
       "name": "Ghoulish Impetus",
       "oracleSha256": "b0089bf388f7bbd729e9d11a028905de8849348049dff454e450cbd4183d9fdd",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "ghoulish-impetus-enchant",
+          "oracleText": "Enchant creature",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent, and not a hexproof opponent's creature), attaches on resolution"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-enchant-creature"
+          ],
+          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
+        },
+        {
+          "id": "ghoulish-impetus-statics",
+          "oracleText": "Enchanted creature gets +1/+1, has deathtouch, and is goaded.",
+          "implementation": [
+            "interpreted layer 7d +1/+1, layer 6 deathtouch keyword and layer 6 goad, all applied to the creature this Aura is attached to (attachedToSource) only: no other creature gets any of them, an unattached Aura grants nothing, and moving the Aura moves all three",
+            "deathtouch is real in combat: the enchanted creature kills a blocker it deals any damage to, and an unenchanted creature does not",
+            "the goad is the Aura controller's static goad: the enchanted creature must attack each combat and attacks a player other than the Aura's controller when it can, while the opponent's other creatures are unrestricted"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-buff-enchanted-only",
+            "ghoulish-impetus-deathtouch-combat",
+            "ghoulish-impetus-goaded"
+          ],
+          "viewerScenarioIds": [
+            "ghoulish-impetus-viewer-return-at-end-step",
+            "ghoulish-impetus-viewer-goaded-attack",
+            "ghoulish-impetus-viewer-goaded-opponent-attack"
+          ]
+        },
+        {
+          "id": "ghoulish-impetus-return",
           "oracleText": "When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.",
-          "implementation": ["explicitly unsupported; delayed Aura return does not attach"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted dies trigger on the enchanted creature only (attachedToSource), with no target, whose returnDepartedSourceToBattlefield effect (delay nextEndStep) remembers the exact graveyard card this Aura became (CR 400.7e) and sets up one delayed trigger for the beginning of the next end step to begin (CR 603.7), which lasts through cleanup until it fires; an end step that already began is not the next one, and it is the next end step whoever's turn it is",
+            "when the delayed trigger resolves the Aura enters under the control of the player whose ability returns it (CR 110.2a), who chooses a creature to enchant as it enters (CR 303.4f) without targeting it, and it stays in the graveyard when there is no creature to enchant (CR 303.4i)",
+            "a card that left the graveyard before the end step (exiled, returned to hand, or left and came back as a new object) stays where it went",
+            "another creature dying, the Aura leaving alone, and the enchanted creature leaving without dying set up no return"
+          ],
+          "engineTestIds": [
+            "ghoulish-impetus-pinned-oracle-supported",
+            "ghoulish-impetus-dies-trigger-enchanted-only",
+            "ghoulish-impetus-next-end-step",
+            "ghoulish-impetus-next-end-step-any-turn",
+            "ghoulish-impetus-stays-put",
+            "ghoulish-impetus-returns-under-controller"
+          ],
+          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
         }
       ],
       "gameplayAiScenarioIds": []

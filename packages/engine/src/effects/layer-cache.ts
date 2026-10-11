@@ -100,7 +100,8 @@ function foldCounters(h: number, perm: EnginePermanent): number {
 
 /**
  * Digest of everything `runLayers` reads. `timestamp` is unique per permanent and per
- * until-end-of-turn effect and never changes, so it identifies membership exactly; until-eot
+ * until-end-of-turn effect, so it identifies membership exactly; an Aura or Equipment gets a new
+ * one as it becomes attached (CR 613.7e), which the digest sees like any other change. Until-eot
  * effects are immutable once created, so their timestamp alone covers them.
  */
 export function digestOf(
@@ -122,6 +123,8 @@ export function digestOf(
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = mix(h, perm.faceDown === true ? 1 : 0);
     h = mix(h, perm.transformed ? 1 : 0);
+    // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
+    h = mix(h, perm.bestowed === true ? 1 : 0);
     // A static ability can be conditional on being untapped (Iymrith's ward {4}), so tapping is
     // a layer input like any other. Omitting it meant a query before tapping and a query after
     // it returned the same cached characteristics, and ward is read during targeting/payment.

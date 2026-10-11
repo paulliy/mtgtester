@@ -1669,12 +1669,6 @@
     }
   },
   {
-    "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
-    "name": "Ghoulish Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
@@ -1683,9 +1677,7 @@
   {
     "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
     "name": "Starfield Mystic",
-    "handledLines": [
-      "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -1787,12 +1779,6 @@
     }
   },
   {
-    "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
-    "name": "Kor Spiritdancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "2c0de95f-4269-439c-a1bc-faa11348b185",
     "name": "Necron Overlord",
     "handledLines": [
@@ -1860,12 +1846,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
-    "name": "Gift of Immortality",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "2e2ace5b-4018-43af-8e72-ebafec1a7739",
@@ -2318,12 +2298,6 @@
     "def": {}
   },
   {
-    "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
-    "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
     "name": "Herald of Secret Streams",
     "handledLines": [
@@ -2697,12 +2671,6 @@
     }
   },
   {
-    "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
-    "name": "Eidolon of Countless Battles",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
     "name": "Necron Deathmark",
     "handledLines": [
@@ -2938,12 +2906,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
-    "name": "Fallen Ideal",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
@@ -3448,9 +3410,7 @@
   {
     "oracleId": "5acff7a3-bc84-4251-bd37-80231396ac38",
     "name": "Chains of Custody",
-    "handledLines": [
-      "unrecognized rules text: \"When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -4102,12 +4062,6 @@
     }
   },
   {
-    "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
-    "name": "Forum Filibuster",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
     "handledLines": [],
@@ -4557,12 +4511,6 @@
   {
     "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
-    "name": "Cranial Plating",
     "handledLines": [],
     "def": {}
   },
@@ -5086,12 +5034,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
-    "name": "Shielded by Faith",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
@@ -5639,12 +5581,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
-    "name": "Angelic Destiny",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
@@ -6577,18 +6513,6 @@
     }
   },
   {
-    "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
-    "name": "Killian, Decisive Mentor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
-    "name": "Ajani's Chosen",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -6660,18 +6584,6 @@
   {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
-    "name": "Hateful Eidolon",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
-    "name": "Screams from Within",
     "handledLines": [],
     "def": {}
   },
@@ -7551,20 +7463,8 @@
     }
   },
   {
-    "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
-    "name": "Resurrection Orb",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
     "name": "Armored Skyhunter",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
-    "name": "Curse of Bounty",
     "handledLines": [],
     "def": {}
   },
@@ -8103,20 +8003,8 @@
     }
   },
   {
-    "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
-    "name": "Animate Dead",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
-    "name": "Redemption Arc",
     "handledLines": [],
     "def": {}
   },
@@ -8278,12 +8166,6 @@
   {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
     "name": "Tomb Blade",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
-    "name": "Martial Impetus",
     "handledLines": [],
     "def": {}
   },
@@ -8724,18 +8606,6 @@
     "def": {}
   },
   {
-    "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
-    "name": "Sheltered by Ghosts",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
-    "name": "Sunforger",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
     "name": "Shamanic Revelation",
     "handledLines": [
@@ -9007,12 +8877,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
-    "name": "Mask of Memory",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "d7315b3b-6e5d-4d28-a503-bfae1daf6c43",
@@ -10088,9 +9952,7 @@
   {
     "oracleId": "f08f7814-4585-41dd-b82e-ed2ef5e24242",
     "name": "Transcendent Envoy",
-    "handledLines": [
-      "Aura spells you cast cost {1} less to cast."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -10708,12 +10570,6 @@
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
     "name": "Michiko Konda, Truth Seeker",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
-    "name": "Karametra's Favor",
     "handledLines": [],
     "def": {}
   },
@@ -11660,12 +11516,6 @@
     }
   },
   {
-    "oracleId": "oracle-ajani-s-chosen",
-    "name": "Ajani's Chosen",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-akoum-hellkite",
     "name": "Akoum Hellkite",
     "handledLines": [
@@ -11771,18 +11621,6 @@
   {
     "oracleId": "oracle-angel-s-grace",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-angelic-destiny",
-    "name": "Angelic Destiny",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-animate-dead",
-    "name": "Animate Dead",
     "handledLines": [],
     "def": {}
   },
@@ -12958,9 +12796,7 @@
   {
     "oracleId": "oracle-chains-of-custody",
     "name": "Chains of Custody",
-    "handledLines": [
-      "unrecognized rules text: \"When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -13628,12 +13464,6 @@
     }
   },
   {
-    "oracleId": "oracle-cranial-plating",
-    "name": "Cranial Plating",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-cryptothrall",
     "name": "Cryptothrall",
     "handledLines": [
@@ -13669,12 +13499,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-curse-of-bounty",
-    "name": "Curse of Bounty",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-cut-a-deal",
@@ -14235,12 +14059,6 @@
     "def": {}
   },
   {
-    "oracleId": "oracle-eidolon-of-countless-battles",
-    "name": "Eidolon of Countless Battles",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-eiganjo-dynastorian-replenish",
     "name": "Eiganjo Dynastorian // Replenish",
     "handledLines": [],
@@ -14397,12 +14215,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-eldrazi-conscription",
-    "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-endless-foot-assault",
@@ -14680,12 +14492,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-fallen-ideal",
-    "name": "Fallen Ideal",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-felidar-retreat",
@@ -15159,12 +14965,6 @@
     }
   },
   {
-    "oracleId": "oracle-forum-filibuster",
-    "name": "Forum Filibuster",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-frontier-siege",
     "name": "Frontier Siege",
     "handledLines": [
@@ -15600,18 +15400,6 @@
     }
   },
   {
-    "oracleId": "oracle-ghoulish-impetus",
-    "name": "Ghoulish Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-gift-of-immortality",
-    "name": "Gift of Immortality",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-gisela-blade-of-goldnight",
     "name": "Gisela, Blade of Goldnight",
     "handledLines": [
@@ -15868,12 +15656,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-hateful-eidolon",
-    "name": "Hateful Eidolon",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-herald-of-amity",
@@ -16422,12 +16204,6 @@
     }
   },
   {
-    "oracleId": "oracle-karametra-s-favor",
-    "name": "Karametra's Favor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-kardur-doomscourge",
     "name": "Kardur, Doomscourge",
     "handledLines": [],
@@ -16436,12 +16212,6 @@
   {
     "oracleId": "oracle-keen-duelist",
     "name": "Keen Duelist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-killian-decisive-mentor",
-    "name": "Killian, Decisive Mentor",
     "handledLines": [],
     "def": {}
   },
@@ -16673,12 +16443,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-kor-spiritdancer",
-    "name": "Kor Spiritdancer",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-land-tax",
@@ -17349,18 +17113,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-martial-impetus",
-    "name": "Martial Impetus",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-mask-of-memory",
-    "name": "Mask of Memory",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-master-of-ceremonies",
@@ -19279,23 +19031,11 @@
     }
   },
   {
-    "oracleId": "oracle-redemption-arc",
-    "name": "Redemption Arc",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-reliquary-tower",
     "name": "Reliquary Tower",
     "handledLines": [
       "You have no maximum hand size."
     ],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-resurrection-orb",
-    "name": "Resurrection Orb",
-    "handledLines": [],
     "def": {}
   },
   {
@@ -19635,12 +19375,6 @@
   {
     "oracleId": "oracle-scourge-of-valkas",
     "name": "Scourge of Valkas",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-screams-from-within",
-    "name": "Screams from Within",
     "handledLines": [],
     "def": {}
   },
@@ -20081,18 +19815,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-sheltered-by-ghosts",
-    "name": "Sheltered by Ghosts",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-shielded-by-faith",
-    "name": "Shielded by Faith",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-shineshadow-snarl",
@@ -20558,9 +20280,7 @@
   {
     "oracleId": "oracle-starfield-mystic",
     "name": "Starfield Mystic",
-    "handledLines": [
-      "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -20826,12 +20546,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-sunforger",
-    "name": "Sunforger",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-sweet-gum-recluse",
@@ -21387,9 +21101,7 @@
   {
     "oracleId": "oracle-transcendent-envoy",
     "name": "Transcendent Envoy",
-    "handledLines": [
-      "Aura spells you cast cost {1} less to cast."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {

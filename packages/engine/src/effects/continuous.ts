@@ -98,6 +98,15 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     if (source.faceDown) continue;
     const def = ctx.defs.get(source.oracleId);
     if (def === undefined) continue;
+    // A bestowed Aura "becomes an Aura enchantment" (CR 702.103b): a type-changing effect that
+    // replaces its card types and the creature types that went with them (CR 205.1a), in its
+    // own timestamp order.
+    if (source.bestowed === true)
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: { layer: 4, setTypes: ['Enchantment'], setSubtypes: ['Aura'] },
+        timestamp: source.timestamp,
+      });
     const printedStatics =
       source.transformed && def.backFace !== undefined
         ? def.backFace.staticEffects
@@ -279,11 +288,15 @@ export function candidateOf(
 ): SelectorCandidate {
   let isEnchanted = false;
   let isEquipped = false;
+  const auraControllerIds: string[] = [];
   for (const other of ctx.state.battlefield) {
     if (other.attachedTo === perm.id) {
       const def = ctx.defs.get(other.oracleId);
       if (def !== undefined) {
-        if (def.subtypes.includes('Aura') || def.types.includes('Enchantment')) {
+        // A bestowed permanent is an Aura while bestowed (CR 702.103b), though printed a creature.
+        const isAura = def.subtypes.includes('Aura') || other.bestowed === true;
+        if (isAura) auraControllerIds.push(other.controllerId);
+        if (isAura || def.types.includes('Enchantment')) {
           isEnchanted = true;
         }
         if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) {
@@ -315,6 +328,7 @@ export function candidateOf(
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,
     isEnchanted,
+    ...(auraControllerIds.length === 0 ? {} : { auraControllerIds }),
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
@@ -384,6 +398,15 @@ function scopeOf(
           (candidate) => candidate.perm.id === entry.perm.attachedTo,
         );
         if (attached?.chars.types.includes('Creature') === true) count += 1;
+      }
+      return count;
+    },
+    countAurasAttachedToSource: () => {
+      const host = work.get(source.cardId)?.perm;
+      if (host === undefined) return 0;
+      let count = 0;
+      for (const entry of work.values()) {
+        if (entry.perm.attachedTo === host.id && entry.chars.subtypes.includes('Aura')) count += 1;
       }
       return count;
     },

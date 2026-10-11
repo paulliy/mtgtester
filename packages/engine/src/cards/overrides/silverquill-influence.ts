@@ -39,10 +39,7 @@ const FLICKERING_WARD_DEF = {
 };
 
 export function registerSILVERQUILL_INFLUENCEOverrides(): void {
-  unimplemented('9c54bd34-667d-415c-ad26-82e0eb0ff409', 'Killian, Decisive Mentor', [
-    'Whenever an enchantment you control enters, tap up to one target creature and goad it.',
-    'Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.',
-  ]);
+  // Killian, Decisive Mentor: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('09b7ea91-2620-4c45-af3c-60bbeab89966', 'Eiganjo Dynastorian // Replenish', [
     'unsupported layout "prepare"',
@@ -62,9 +59,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever ~ enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and "Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it\'s attacking one of your opponents. Otherwise, its controller loses 2 life."',
   ]);
 
-  unimplemented('6a9cc11b-a223-46f0-bf58-c1e08ad1253d', 'Forum Filibuster', [
-    'At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.',
-  ]);
+  // Forum Filibuster: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('27c366cf-00d7-47d4-9577-736bfc4a3b81', "Defacing Duskmage // Vandal's Edit", [
     'unsupported layout "prepare"',
@@ -76,17 +71,11 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.',
   ]);
 
-  unimplemented('c22e5fc6-9b4e-4197-b472-70d168eb4330', 'Redemption Arc', [
-    '{1}{W}: Exile enchanted creature.',
-  ]);
+  // Redemption Arc: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('276eccd6-4a76-46e8-b604-94472e618115', 'Ghoulish Impetus', [
-    'When enchanted creature dies, return this card to the battlefield at the beginning of the next end step.',
-  ]);
+  // Ghoulish Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50', 'Screams from Within', [
-    'When enchanted creature dies, return this card from your graveyard to the battlefield.',
-  ]);
+  // Screams from Within: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Raffine's Guidance: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
@@ -108,14 +97,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
   ]);
 
-  unimplemented('a3b39590-34b7-4fd0-877f-748e6df30e88', 'Hateful Eidolon', [
-    'Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.',
-  ]);
+  // Hateful Eidolon: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('c0d8fef4-65f4-4769-982d-b397d2b7e977', 'Animate Dead', [
-    'Enchant creature card in a graveyard',
-    'When this Aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature\'s controller sacrifices it.',
-  ]);
+  // Animate Dead: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Forum of Amity: restored in coverage PR01. The interpreter now models enters-tapped, the
   // {W}/{B} mana ability, and the surveil activation faithfully, so no override is registered.
@@ -135,32 +119,18 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.',
   ]);
 
-  unimplemented('c8decfdf-1421-4649-acde-5215e7f08bb9', 'Martial Impetus', [
-    "Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn.",
-  ]);
+  // Martial Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('d13fc657-c6fc-4394-bc70-691050550226', 'Sheltered by Ghosts', [
-    'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
-    'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
-  ]);
+  // Sheltered by Ghosts: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3', 'Fallen Ideal', [
-    'Enchanted creature has flying and "Sacrifice a creature: ~ gets +2/+1 until end of turn."',
-    "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
-  ]);
+  // Fallen Ideal: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b', 'Gift of Immortality', [
-    "When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at the beginning of the next end step.",
-  ]);
+  // Gift of Immortality: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('79085dea-8daa-41c0-a975-61e3e6da2e26', 'Shielded by Faith', [
-    'Whenever a creature enters, you may attach this Aura to that creature.',
-  ]);
+  // Shielded by Faith: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('441b51b0-ecd0-466d-9ca8-e754eb563aec', 'Eidolon of Countless Battles', [
-    'Bestow {2}{W}{W}',
-    '~ and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.',
-  ]);
+  // Eidolon of Countless Battles: restored in coverage PR05 (see
+  // silverquill-influence-remaining.ts).
 
   // Now handled generically as `attackTax` (`parseRuleStaticLine` in interpret.ts) — see
   // queen-marchesa-queens-gambit-remaining.ts, whose non-empty override for the same oracleId
@@ -170,12 +140,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.',
   ]);
 
-  defineCard(
-    'f08f7814-4585-41dd-b82e-ed2ef5e24242',
-    'Transcendent Envoy',
-    ['Aura spells you cast cost {1} less to cast.'],
-    { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }] },
-  );
+  defineCard('f08f7814-4585-41dd-b82e-ed2ef5e24242', 'Transcendent Envoy', [], {
+    ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }],
+  });
 
   unimplemented('f43f5855-f297-4433-984b-18263b734cfc', 'Eriette of the Charmed Apple', [
     "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
@@ -205,9 +172,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever you cast an Aura spell that targets a modified permanent you control, draw a card.',
   ]);
 
-  unimplemented('9c77eb0a-543a-41db-ba1f-aa0163837ae0', "Ajani's Chosen", [
-    'Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.',
-  ]);
+  // Ajani's Chosen: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('b4dbbf56-d7df-4183-bb48-cfc6b4d0468f', 'Armored Skyhunter', [
     'Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.',
@@ -217,10 +182,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Enchanted creature is an Insect artifact creature with base power and toughness 0/1 and has indestructible, and it loses all other abilities, card types, and creature types.',
   ]);
 
-  unimplemented('2bfc7467-1316-43d3-9ca6-ff36cc2de607', 'Kor Spiritdancer', [
-    '~ gets +2/+2 for each Aura attached to it.',
-    'Whenever you cast an Aura spell, you may draw a card.',
-  ]);
+  // Kor Spiritdancer: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('5acff7a3-bc84-4251-bd37-80231396ac38', 'Chains of Custody', [
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
@@ -261,10 +223,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card.',
   ]);
 
-  unimplemented('3635e4e5-e655-45f4-a444-39756f55129a', 'Eldrazi Conscription', [
-    'unsupported card type "Kindred"',
-    'Enchanted creature gets +10/+10 and has trample and annihilator 2.',
-  ]);
+  // Eldrazi Conscription: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Anguished Unmaking: no override needed — "Exile target X. You lose N life." now parses
   // generically (the existing "exile target …" rule plus the new "you lose N life" sentence),
@@ -296,10 +255,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
   ]);
 
-  unimplemented('8ba36878-0816-44c7-b543-8ebfc28c2ecd', 'Angelic Destiny', [
-    'Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.',
-    "When enchanted creature dies, return this card to its owner's hand.",
-  ]);
+  // Angelic Destiny: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('d11e627b-8a48-411d-a261-2c9a02a758ba', 'Breena, the Demagogue', [
     'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.',

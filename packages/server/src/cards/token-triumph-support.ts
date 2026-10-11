@@ -30,8 +30,4 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
   'Scavenging Ooze',
 ] as const;
 
-export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
-  'Champion of Lambholt',
-  'Curse of Bounty',
-  "Karametra's Favor",
-] as const;
+export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = ['Champion of Lambholt'] as const;

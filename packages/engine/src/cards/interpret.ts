@@ -38,7 +38,11 @@ import type {
 } from './ability';
 import type { Condition } from './condition';
 import { countPermanents } from './condition';
-import { CREATURE_TYPE_BY_LOWER, NONCREATURE_SUBTYPE_BY_LOWER } from './creature-types';
+import {
+  CREATURE_TYPE_BY_LOWER,
+  CREATURE_TYPES,
+  NONCREATURE_SUBTYPE_BY_LOWER,
+} from './creature-types';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
 import type { Selector } from './selector';
@@ -445,7 +449,13 @@ function parseKeywordLine(text: string): ParsedKeywordLine | null {
   const out: ParsedKeywordLine = { keywords: [] };
   // Split on commas only at the top level: " and " is ambiguous, because it also joins the
   // colors inside "protection from white and from black".
-  for (const raw of text.split(',')) {
+  // "lifelink and ward {2}" (Sheltered by Ghosts): a trailing ward joined by " and " is its own
+  // part; its cost is a mana cost, never another keyword, so the split is unambiguous.
+  const parts = text.split(',').flatMap((raw) => {
+    const trailingWard = raw.match(/^(.+) and (ward (?:\{[^}]+\})+)$/);
+    return trailingWard === null ? [raw] : [trailingWard[1] as string, trailingWard[2] as string];
+  });
+  for (const raw of parts) {
     // An Oxford list ("flying, vigilance, and double strike") leaves a leading "and" on the last
     // part. Stripped here rather than by pre-normalizing the whole string, so the " and " INSIDE
     // "protection from white and from black" — which is a conjunction of arguments, not of
@@ -577,6 +587,12 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
 
   if (noun.startsWith('each ')) noun = noun.slice('each '.length);
+  // "creatures that are enchanted by an Aura you control" (Killian, Decisive Mentor).
+  const enchantedByYours = noun.match(/^(.+) that are enchanted by an aura you control$/);
+  if (enchantedByYours !== null) {
+    parts.push({ kind: 'enchantedByAuraYouControl' });
+    noun = enchantedByYours[1] as string;
+  }
   const combat = noun.match(/^(attacking|blocking) (.+)$/);
   if (combat !== null) {
     parts.push({ kind: 'combatRole', role: combat[1] as 'attacking' | 'blocking' });
@@ -791,6 +807,12 @@ function parseEffectSentence(
     triggerObject?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
+    /** Every head is this object going from the battlefield to a graveyard. */
+    departedToGraveyard?: boolean;
+    /** Every head is the creature this Aura or Equipment is attached to dying. */
+    attachedDies?: boolean;
+    /** Every head is this Aura's enchanted player being attacked; the event player attacks. */
+    enchantedPlayerAttacked?: boolean;
     thatMany?: Value;
     allocCount?: CountSlotAllocator;
   } = {},
@@ -854,7 +876,7 @@ function parseEffectSentence(
   // battlefield" (Conclave Tribunal): it returns when the source leaves (CR 610.3).
   {
     const until = s.match(
-      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent)) leaves the battlefield$/,
+      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent|aura)) leaves the battlefield$/,
     );
     const clause = until === null ? null : parseTargetClause(until[1] as string);
     if (clause !== null) {
@@ -1001,10 +1023,55 @@ function parseEffectSentence(
   if (s === 'each creature attacks this turn if able') {
     return [{ op: 'forceAttackEach', selector: { kind: 'type', value: 'Creature' } }];
   }
+  // "Search your library for a red or white instant card with mana value 4 or less and cast that
+  // card without paying its mana cost" (Sunforger): the found card is cast, not moved (CR 608.2g).
   {
-    const m = s.match(/^attach (?:this equipment|~) to target creature an opponent controls$/);
+    const m = s.match(
+      /^search your library for an? ((?:white|blue|black|red|green)(?: or (?:white|blue|black|red|green))*) (instant|sorcery) card with mana value (\d+) or less and cast that card without paying its mana cost$/,
+    );
+    if (m !== null) {
+      const colors = (m[1] as string)
+        .split(' or ')
+        .map((word) => ofColor(COLOR_WORDS[word] as Color));
+      return [
+        {
+          op: 'searchLibraryCastFree',
+          filter: allOf(
+            ofType(m[2] === 'instant' ? 'Instant' : 'Sorcery'),
+            colors.length === 1 ? (colors[0] as Selector) : anyOf(...colors),
+            manaValueAtMost(Number(m[3])),
+          ),
+        },
+      ];
+    }
+  }
+  if (s === 'then shuffle') return [{ op: 'shuffle' }];
+  // "Return up to one target Aura or Equipment card from your graveyard to the battlefield
+  // attached to that token" (Forum Filibuster's reflexive ability).
+  if (
+    s ===
+      'return up to one target aura or equipment card from your graveyard to the battlefield attached to that token' &&
+    opts.allocCount !== undefined
+  ) {
+    const targetSlot = opts.allocCount(
+      'cardInGraveyard',
+      { min: 0, max: 1 },
+      undefined,
+      anyOf(ofSubtype('Aura'), ofSubtype('Equipment')),
+    );
+    return [{ op: 'returnChosenCardsAttachedTo', targetSlot, to: 'triggerObject' }];
+  }
+  {
+    const m = s.match(
+      /^attach (?:this equipment|~) to target creature (you control|an opponent controls)$/,
+    );
     if (m !== null)
-      return [{ op: 'attachSelfTo', target: alloc('creature', undefined, 'opponent') }];
+      return [
+        {
+          op: 'attachSelfTo',
+          target: alloc('creature', undefined, m[1] === 'you control' ? 'you' : 'opponent'),
+        },
+      ];
   }
   if (s === 'it gains haste until end of turn') {
     return opts.triggerObject === true
@@ -1345,6 +1412,65 @@ function parseEffectSentence(
   if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
     return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
   }
+  // "If that enchantment is an Aura, you may attach it to the token" (Ajani's Chosen) and the
+  // optional trigger body "attach this Aura to that creature" (Shielded by Faith).
+  if (opts.triggerObject === true) {
+    if (s === 'if that enchantment is an aura, you may attach it to the token')
+      return [
+        {
+          op: 'attach',
+          what: 'triggerObject',
+          to: 'createdToken',
+          requireAura: true,
+          optional: true,
+        },
+      ];
+    if (s === 'attach this aura to that creature')
+      return [{ op: 'attach', what: 'source', to: 'triggerObject' }];
+  }
+  // "When enchanted creature dies, return that card to the battlefield under its owner's control"
+  // (Gift of Immortality): only a dies head, so "that card" is in a graveyard, where the op looks.
+  if (
+    opts.attachedDies === true &&
+    s === "return that card to the battlefield under its owner's control"
+  ) {
+    return [{ op: 'graveyardToBattlefield', target: 'triggerObject', under: 'owner' }];
+  }
+  // "Return this card [from your graveyard] to the battlefield [attached to that creature] [at the
+  // beginning of the next end step]" (Screams from Within, Ghoulish Impetus, Gift of Immortality).
+  // "This card" is the card the source became, so the head must be the source leaving or the
+  // creature it is attached to dying (which puts an Aura in the graveyard, CR 704.5m).
+  {
+    const m = s.match(
+      /^return this card (from your graveyard )?to the battlefield( attached to that creature)?( at the beginning of the next end step)?$/,
+    );
+    if (
+      m !== null &&
+      (opts.attachedDies === true ||
+        (opts.departedSelf === true &&
+          m[2] === undefined &&
+          // The resolver looks for the card only in a graveyard, so a bare "leaves the
+          // battlefield" head (exile, hand, library) must name the graveyard itself.
+          (m[1] !== undefined || opts.departedToGraveyard === true)))
+    )
+      return [
+        {
+          op: 'returnDepartedSourceToBattlefield',
+          ...(m[1] !== undefined ? { fromYourGraveyard: true as const } : {}),
+          ...(m[3] !== undefined ? { delay: 'nextEndStep' as const } : {}),
+          ...(m[2] !== undefined ? { attachTo: 'triggerObject' as const } : {}),
+        },
+      ];
+  }
+  // "... return that card to the battlefield under its owner's control at the beginning of the
+  // next end step" (Resurrection Orb). Only the owner's form: Marchesa's "under your control"
+  // twin carries a +1/+1-counter subject her reviewed override models.
+  if (
+    opts.attachedDies === true &&
+    s ===
+      "return that card to the battlefield under its owner's control at the beginning of the next end step"
+  )
+    return [{ op: 'returnDiedTriggerObjectAtNextEndStep', returnUnder: 'owner' }];
   // "it gains double strike until end of turn" â€” the trigger's subject (Atarka, World Render).
   if (opts.triggerObject === true) {
     const m = s.match(/^it gains ([a-z ]+) until end of turn$/);
@@ -1363,6 +1489,10 @@ function parseEffectSentence(
   }
   if (s === 'tap enchanted creature' || s === 'tap equipped creature') {
     return [{ op: 'tapTarget', target: 'attachedToSource' }];
+  }
+  // Redemption Arc's "{1}{W}: Exile enchanted creature." — again the attached object, untargeted.
+  if (s === 'exile enchanted creature' || s === 'exile equipped creature') {
+    return [{ op: 'exile', target: 'attachedToSource' }];
   }
   if (s === 'tap target creature that player controls') {
     return [{ op: 'tapTarget', target: alloc('creature', undefined, 'eventPlayer') }];
@@ -1652,6 +1782,24 @@ function parseEffectSentence(
       if (selector === null || count === null) return null;
       return [{ op: 'pumpEachUntilEot', selector, power: count, toughness: count }];
     }
+    // "Whenever enchanted creature attacks, each other creature that's attacking one of your
+    // opponents gets +1/+1 until end of turn" (Martial Impetus): "other" is beside the attacking
+    // creature, and any creature attacking an opponent of this ability's controller counts.
+    {
+      const m = s.match(
+        /^each other creature that's attacking one of your opponents gets \+(\d+)\/\+(\d+) until end of turn$/,
+      );
+      if (m !== null && opts.triggerObject === true)
+        return [
+          {
+            op: 'pumpEachUntilEot',
+            selector: allOf(ofType('Creature'), { kind: 'attackingOpponent' }),
+            power: Number(m[1]),
+            toughness: Number(m[2]),
+            exceptTriggerObject: true,
+          },
+        ];
+    }
     const m = s.match(MASS_UNTIL_EOT_RE);
     if (m) {
       const selector = parseSubject(m[1] as string, card);
@@ -1807,6 +1955,12 @@ function parseEffectSentence(
         { op: 'addMana', amount: constant(symbols.length), colors: [], fixedSymbols: symbols },
       ];
     }
+  }
+  // "tap up to one target creature and goad it" (Killian, Decisive Mentor): the same
+  // variable-count slot; choosing nothing is legal.
+  if (s === 'tap up to one target creature and goad it' && opts.allocCount !== undefined) {
+    const targetSlot = opts.allocCount('creature', { min: 0, max: 1 });
+    return [{ op: 'tapAndGoadEachChosen', targetSlot }];
   }
   // "exile up to one target nonland permanent" (Canoptek Tomb Sentinel) — a variable-count slot:
   // choosing no target is legal, and the ability still resolves (CR 115.1d, 601.2c).
@@ -1988,6 +2142,27 @@ function parseEffectSentence(
       return [{ op: 'handToBattlefield', filter, count: 'one' }];
     }
   }
+  // "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand"
+  // (Fallen Ideal): "it" is the card the departed source became (CR 400.7e), looked for only in the
+  // graveyard when every head puts it there.
+  if (opts.departedSelf === true && s === "return it to its owner's hand")
+    return [
+      {
+        op: 'returnDepartedSourceToHand',
+        ...(opts.departedToGraveyard === true ? { fromGraveyard: true as const } : {}),
+      },
+    ];
+  // "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
+  // Bounty): the attacking player, when that player is an opponent of this ability's controller.
+  if (
+    opts.enchantedPlayerAttacked === true &&
+    s === 'each opponent attacking that player untaps all nonland permanents they control'
+  )
+    return [{ op: 'attackingOpponentUntapsNonland' }];
+  // "When enchanted creature dies, return this card to its owner's hand" (Angelic Destiny): the
+  // Aura card the source became once it followed its creature to the graveyard.
+  if (opts.attachedDies === true && s === "return this card to its owner's hand")
+    return [{ op: 'returnDepartedSourceToHand', fromGraveyard: true }];
   // "put those counters on target creature you control" (Iron Apprentice): every counter the
   // departed source last had (CR 603.10a), each kind and number, through counter-placement
   // replacements.
@@ -2091,6 +2266,13 @@ function parseEffectSentence(
     if (s === 'draw a card for each tapped creature target opponent controls') {
       const target = alloc('player', undefined, 'opponent');
       return [{ op: 'draw', count: { kind: 'tappedCreaturesControlledByTarget', target } }];
+    }
+    // Hateful Eidolon: the dying creature's last-known Auras whose controller is this ability's.
+    if (
+      opts.triggerObject === true &&
+      s === 'draw a card for each aura you controlled that was attached to it'
+    ) {
+      return [{ op: 'draw', count: { kind: 'aurasYouControlledAttachedToTriggerObject' } }];
     }
     if (s === 'draw a card for each attacking creature') {
       return [{ op: 'draw', count: { kind: 'attackingCreatures' } }];
@@ -3749,7 +3931,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -3843,6 +4025,12 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     noun = noun.replace(/^an? /, '');
   }
 
+  // "Whenever an enchanted creature dies" (Hateful Eidolon): any creature with an Aura attached,
+  // read off the leaving creature's last-known facts.
+  if (noun === 'enchanted creature') {
+    parts.push(IS_ENCHANTED);
+    noun = 'creature';
+  }
   // "another **nontoken** Dragon you control" (Miirym). Sits between "another" and the tribe.
   if (noun.startsWith('nontoken ')) {
     parts.push(not(IS_TOKEN));
@@ -4197,6 +4385,8 @@ function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
     return base === null ? null : allOf(base, bound);
   }
   if (noun === 'noncreature') return not(ofType('Creature'));
+  // "Whenever you cast an Aura spell" (Kor Spiritdancer): the spell's subtype (CR 205.3h).
+  if (noun === 'aura') return ofSubtype('Aura');
   // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
   // Electromancer) â€” each side is its own card type, not a tribe the way `parseTriggerSubject`'s
   // "or" handling elsewhere reads alternatives. "And" reads the same as "or" here: the predicate
@@ -4428,8 +4618,26 @@ function parseBlinkChosenBlock(body: string, allocCount: CountSlotAllocator): Ef
  * enters **or attacks**" is two separate triggered abilities with the same effect (CR 603.1),
  * and modeling it as one would make it fire once when it should fire twice.
  */
+/** Animate Dead's enters trigger, as one line (CR 603.4 intervening if, then the swap). */
+const REANIMATE_ATTACH_TRIGGER =
+  'when this aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this aura." return enchanted creature card to the battlefield under your control and attach this aura to it. when this aura leaves the battlefield, that creature\'s controller sacrifices it';
+
 function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   let lower = line.toLowerCase();
+  if (
+    lower.replace(/\.$/, '') === REANIMATE_ATTACH_TRIGGER &&
+    /^enchant creature card in a graveyard$/im.test(card.oracleText)
+  )
+    return [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        optional: false,
+        targets: [],
+        effects: [{ op: 'reanimateEnchantedCardAndAttach' }],
+        description: line,
+      },
+    ];
   // Battalion: "Whenever ~ and at least two other creatures attack" is ~'s own attack trigger
   // with an attacker count on the event; the count is put back on the head below.
   const battalion = lower.match(/^whenever ~ and at least (\w+) other creatures attack, /);
@@ -4762,6 +4970,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
     body = cast[3] as string;
+  } else if (/^whenever enchanted player is attacked, /.test(firstLine)) {
+    // Curse of Bounty: the Aura's own event, queued for each Aura attached to a defending player
+    // as attackers are declared; the event player is the attacking player.
+    heads = [{ when: 'enchantedPlayerAttacked', subject: SELF_SUBJECT }];
+    body = firstLine.slice('whenever enchanted player is attacked, '.length);
   } else {
     const m = firstLine.match(OBJECT_TRIGGER_HEAD_RE);
     if (m === null) return null;
@@ -4780,7 +4993,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         // into ~" there is no entry event to pair it with.
         event === 'transforms into ~'
         ? ['transformsInto']
-        : event === 'leaves the battlefield' || event.endsWith('into exile from the battlefield')
+        : event === 'leaves the battlefield' || event.endsWith('from the battlefield')
           ? ['leavesBattlefield']
           : event === 'dies'
             ? ['dies']
@@ -4810,9 +5023,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     const origin = event.match(/^enters from (a|your) graveyard$/);
     // "is put into a graveyard … or … into exile from the battlefield" / "dies or is put into
     // exile from the battlefield": a leave event narrowed to those destinations.
+    // The bare "is put into a graveyard from the battlefield" (Fallen Ideal) is the same leave
+    // event narrowed to the graveyard alone — "dies" for a permanent that need not be a creature.
     const leavesTo = event.endsWith('into exile from the battlefield')
       ? (['graveyard', 'exile'] as ('graveyard' | 'exile')[])
-      : undefined;
+      : event === 'is put into a graveyard from the battlefield'
+        ? (['graveyard'] as ('graveyard' | 'exile')[])
+        : undefined;
     heads = events.map((when) =>
       leavesTo !== undefined
         ? { when, subject, leavesTo }
@@ -4929,6 +5146,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
           reflexive = [
             { op: 'putCountersOnSourceThenReflexive', counter: put[2] as string, count, then },
           ];
+      } else if (/^create an? .+ token\b/.test(action)) {
+        // "Create a … token. When you do, …" (Forum Filibuster): "that token" is the one created.
+        const created = parseEffectSentence(action, () => -1, card, {});
+        if (created !== null && created.length === 1 && created[0]?.op === 'createToken')
+          reflexive = [created[0], { op: 'reflexiveOnCreatedToken', then }];
       }
     }
   }
@@ -4963,6 +5185,10 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       .replace(/^~ deal\b/, '~ deals');
   } else if (optional) {
     body = body.slice('you may '.length);
+    // "You may draw two cards. If you do, discard a card." (Mask of Memory): accepting the
+    // optional draw is what "if you do" asks about, so the follow-up rides on the same yes.
+    const drawThen = body.match(/^(draw (?:a card|\w+ cards))\. if you do, (.+)$/);
+    if (drawThen !== null) body = `${drawThen[1]}. ${drawThen[2]}`;
   }
   const modalBlock = parseModalSpellBlock(body, card);
 
@@ -5007,6 +5233,24 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         (head.when === 'dies' || head.when === 'leavesBattlefield') &&
         'subject' in head &&
         head.subject.kind === 'self',
+    ),
+    departedToGraveyard: heads.every(
+      (head) =>
+        'subject' in head &&
+        head.subject.kind === 'self' &&
+        (head.when === 'dies' ||
+          (head.when === 'leavesBattlefield' &&
+            'leavesTo' in head &&
+            head.leavesTo?.length === 1 &&
+            head.leavesTo[0] === 'graveyard')),
+    ),
+    enchantedPlayerAttacked: heads.every((head) => head.when === 'enchantedPlayerAttacked'),
+    attachedDies: heads.every(
+      (head) =>
+        head.when === 'dies' &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.subject.selector.kind === 'attachedToSource',
     ),
     allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
@@ -5497,6 +5741,10 @@ function parseActivationCosts(costText: string, card?: OracleCard): AbilityCost[
     }
     if (part === '{t}') {
       costs.push({ kind: 'tap' });
+      continue;
+    }
+    if (part === 'unattach this equipment') {
+      costs.push({ kind: 'unattachSelf' });
       continue;
     }
     const sacrifice = part.match(/^sacrifice (.+)$/);
@@ -6241,7 +6489,11 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
     if (m !== null) {
       const affects =
         (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
-      const count = parseDynamicCountValue('the number of ' + (m[4] as string), card);
+      // "~ gets +2/+2 for each Aura attached to it" (Kor Spiritdancer): "it" is the source.
+      const count: Value | null =
+        (m[1] as string) === '~' && (m[4] as string) === 'aura attached to it'
+          ? { kind: 'aurasAttachedToSource' }
+          : parseDynamicCountValue('the number of ' + (m[4] as string), card);
       if (affects !== null && count !== null) {
         const power = (m[2] as string).toLowerCase().includes('x')
           ? count
@@ -6317,6 +6569,109 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       }
     }
   }
+  // "This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1
+  // for each Aura you control" (Eidolon of Countless Battles): two additive buffs to the same
+  // pair, the source itself and whatever it enchants while bestowed.
+  {
+    const m = lower.match(
+      /^~ and enchanted creature each get \+(\d+)\/\+(\d+) for each creature you control and \+(\d+)\/\+(\d+) for each aura you control$/,
+    );
+    if (m !== null) {
+      const affects = anyOf(SELF, { kind: 'attachedToSource' });
+      const perCreature: Value = {
+        kind: 'countPermanents',
+        selector: ofType('Creature'),
+        scope: 'you',
+      };
+      const perAura: Value = { kind: 'countPermanents', selector: ofSubtype('Aura'), scope: 'you' };
+      const buff = (count: Value, p: string, t: string): StaticEffect => ({
+        affects,
+        op: {
+          layer: 7,
+          sublayer: 'd',
+          power: { kind: 'times', of: count, n: Number(p) },
+          toughness: { kind: 'times', of: count, n: Number(t) },
+        },
+      });
+      return [
+        buff(perCreature, m[1] as string, m[2] as string),
+        buff(perAura, m[3] as string, m[4] as string),
+      ];
+    }
+  }
+  // "Enchanted creature gets +10/+10 and has trample and annihilator 2" (Eldrazi Conscription):
+  // annihilator is a triggered ability (CR 702.86a), granted as one in layer 6.
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature gets ([+-]\d+)\/([+-]\d+) and has ([a-z ,]+?) and annihilator (\d+)$/,
+    );
+    const parsed = m === null ? null : parseKeywordLine(m[4] as string);
+    if (
+      m !== null &&
+      parsed !== null &&
+      parsed.ward === undefined &&
+      parsed.protectionFrom === undefined
+    ) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      const n = Number(m[5]);
+      return [
+        { affects, op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) } },
+        ...parsed.keywords.map((keyword): StaticEffect => ({
+          affects,
+          op: { layer: 6, addKeyword: keyword },
+        })),
+        {
+          affects,
+          op: {
+            layer: 6,
+            addTrigger: {
+              kind: 'triggered',
+              trigger: {
+                when: 'attacks',
+                subject: SELF_SUBJECT,
+                defendingPlayerIsEventPlayer: true,
+              },
+              optional: false,
+              targets: [],
+              effects: [{ op: 'eventPlayerSacrificesPermanents', count: n }],
+              description: `Annihilator ${n}`,
+            },
+          },
+        },
+      ];
+    }
+  }
+  // "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to
+  // its other types" (Angelic Destiny): the creature type is a layer-4 addition (CR 205.1b), the
+  // keywords layer 6 and the stats the same P/T modification sublayer as every attached buff.
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature gets ([+-]\d+)\/([+-]\d+), has ([a-z ]+?), and is an? ([a-z]+) in addition to its other types$/,
+    );
+    if (m !== null) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      const subtype = titleCase(m[5] as string);
+      const parsed = parseKeywordLine(m[4] as string);
+      if (
+        CREATURE_TYPES.includes(subtype) &&
+        parsed !== null &&
+        parsed.keywords.length > 0 &&
+        parsed.ward === undefined &&
+        parsed.protectionFrom === undefined
+      )
+        return [
+          { affects, op: { layer: 4, addSubtypes: [subtype] } },
+          ...parsed.keywords.map((keyword): StaticEffect => ({
+            affects,
+            op: { layer: 6, addKeyword: keyword },
+          })),
+          {
+            affects,
+            op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) },
+          },
+        ];
+    }
+  }
   // Dynamic attached buffs: "Equipped creature gets +1/+0 for each land you control"
   {
     const m = lower.match(
@@ -6346,17 +6701,43 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   }
   // Granted abilities: "Equipped creature has \"{T}: ...\""
   {
-    const m = lower.match(/^(enchanted|equipped) creature has "(.+)"$/);
+    // "Enchanted creature has flying and \"Sacrifice a creature: ...\"" (Fallen Ideal): printed
+    // keywords ahead of the quoted ability are granted alongside it.
+    const m = lower.match(/^(enchanted|equipped) creature has (?:([a-z ,]+?) and )?"(.+)"$/);
     if (m) {
       const affects: Selector = { kind: 'attachedToSource' };
-      const text = (m[2] as string).replace(/\.$/, '');
+      const keywordGrants: StaticEffect[] = [];
+      if (m[2] !== undefined) {
+        const parsed = parseKeywordLine(m[2] as string);
+        if (
+          parsed === null ||
+          parsed.ward !== undefined ||
+          parsed.protectionFrom !== undefined ||
+          parsed.keywords.length === 0
+        )
+          return null;
+        for (const keyword of parsed.keywords)
+          keywordGrants.push({ affects, op: { layer: 6, addKeyword: keyword } });
+      }
+      const text = (m[3] as string).replace(/\.$/, '');
+      // A granted mana ability (Karametra's Favor's "{T}: Add one mana of any color"): the
+      // enchanted creature taps for it, so summoning sickness applies to it (CR 302.6).
+      const mana = parseManaAbilityLines(text, card);
+      if (mana !== null && mana.length === 1)
+        return [
+          ...keywordGrants,
+          { affects, op: { layer: 6, addManaAbility: mana[0] as ManaAbilitySpec } },
+        ];
       const act = parseActivatedLine(text, card);
       if (act !== null) {
-        return [{ affects, op: { layer: 6, addActivatedAbility: act } }];
+        return [...keywordGrants, { affects, op: { layer: 6, addActivatedAbility: act } }];
       }
       const tr = parseTriggerLine(text, card);
       if (tr !== null && tr.length > 0) {
-        return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
+        return [
+          ...keywordGrants,
+          ...tr.map((ability) => ({ affects, op: { layer: 6 as const, addTrigger: ability } })),
+        ];
       }
     }
   }
@@ -7094,7 +7475,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
   ) {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
+  // CR 308.1: a Kindred card is cast and resolves as its other card type; its subtypes are
+  // creature types (CR 308.2), which the subtype list already carries. Only Kindred Auras
+  // (Eldrazi Conscription) are reviewed; Kindred spells with changeling or creature-type spell
+  // effects stay fail-closed until they are.
+  const kindredReviewed = card.types.includes('Enchantment') && card.subtypes.includes('Aura');
   const KNOWN_TYPES = [
+    ...(kindredReviewed ? ['Kindred'] : []),
     'Creature',
     'Artifact',
     'Enchantment',
@@ -7664,6 +8051,22 @@ export function interpretCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // Bestow (CR 702.103a): an alternative cost that casts this creature card as a bestowed Aura.
+    {
+      const m = lower.match(/^bestow ((?:\{[^}]+\})+)$/);
+      if (m && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null) {
+          if (!alternativeCasts) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'bestow',
+            manaCost: cost.cost,
+            description: `Bestow ${m[1]}`,
+          });
+          continue;
+        }
+      }
+    }
     {
       const m = lower.match(/^overload ((?:\{[^}]+\})+)$/);
       if (m) {
@@ -8215,6 +8618,21 @@ export function interpretCard(card: OracleCard): CardDefinition {
           continue;
         } else if (clause === 'artifact') {
           spellTargets.push({ kind: 'artifact' });
+          continue;
+        } else if (clause === 'creature card in a graveyard') {
+          // Animate Dead: an Aura spell targeting a card in any graveyard (CR 303.4a).
+          spellTargets.push({
+            kind: 'cardInGraveyard',
+            filter: ofType('Creature'),
+            graveyardOwnerScope: 'any',
+          });
+          continue;
+        } else if (clause === 'player') {
+          // An Aura can enchant a player (CR 303.4a, 702.5a): its host is that player.
+          spellTargets.push({ kind: 'player' });
+          continue;
+        } else if (clause === 'opponent') {
+          spellTargets.push({ kind: 'player', controller: 'opponent' });
           continue;
         }
       }

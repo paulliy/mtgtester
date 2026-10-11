@@ -65,11 +65,13 @@ import {
   additionalTypedTriggerCopies,
   applyCopy,
   applyTokenCreationReplacements,
+  attachPermanent,
   consumeRegenerationShield,
   createToken,
   changeController,
   createTokens,
   makePermanent,
+  canAttach,
   moveObject,
   moveObjects,
   movePermanentsToGraveyard,
@@ -1125,6 +1127,8 @@ export function* executeAbility(
     return current;
   };
   const controller = playerById(ctx, source.controllerId);
+  // Tokens this resolution created, for "attach it to the token" later in the same ability.
+  const createdThisResolution: EnginePermanent[] = [];
 
   // A modal ability's mode belongs to its announcement (CR 700.2a-b): triggers choose it in
   // `pushTriggerOnStack`, battlefield activations in the option `computePriorityOptions` offers,
@@ -1542,7 +1546,13 @@ export function* executeAbility(
         break;
       }
       case 'pumpEachUntilEot': {
-        const affected = affectedBy(ctx, source, effect.selector, scope.eventPlayerId);
+        const except =
+          effect.exceptTriggerObject === true
+            ? (scope.triggerObjectId ?? scope.eventObjectId)
+            : undefined;
+        const affected = affectedBy(ctx, source, effect.selector, scope.eventPlayerId).filter(
+          (perm) => except === undefined || perm.id !== except,
+        );
         const power = amountOf(effect.power);
         const toughness = amountOf(effect.toughness);
         const clause = `get ${signed(power)}/${signed(toughness)}`;
@@ -1730,6 +1740,17 @@ export function* executeAbility(
           const permanent = findPermanent(ctx, chosen.id);
           if (permanent === undefined) continue;
           yield* destroyPermanent(ctx, source, permanent, false);
+        }
+        break;
+      }
+      case 'tapAndGoadEachChosen': {
+        for (const permanent of legalChosenPermanents(effect.targetSlot)) {
+          if (!permanent.tapped) {
+            permanent.tapped = true;
+            queueTriggersForObject(ctx, 'becomesTapped', permanent);
+          }
+          addGoadRequirement(ctx, permanent, controller.id);
+          emit(ctx, 'goad', { target: permanent.name, source: source.name });
         }
         break;
       }
@@ -3150,6 +3171,34 @@ export function* executeAbility(
         yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
+      case 'eventPlayerSacrificesPermanents': {
+        const player =
+          scope.eventPlayerId === undefined ? undefined : playerById(ctx, scope.eventPlayerId);
+        if (player === undefined || player.hasLost) break;
+        const selected: EnginePermanent[] = [];
+        for (let i = 0; i < effect.count; i++) {
+          const candidates = ctx.state.battlefield.filter(
+            (perm) => perm.controllerId === player.id && !selected.includes(perm),
+          );
+          if (candidates.length === 0) break;
+          // Owing at least as many as they have is no choice at all: all of them go.
+          if (candidates.length <= effect.count - i) {
+            selected.push(...candidates);
+            break;
+          }
+          const chosen = yield* chooseCard(ctx, {
+            player: player.id,
+            prompt: `${source.name}: choose a permanent to sacrifice (${i + 1} of ${effect.count})`,
+            cards: candidates,
+            type: 'sacrifice',
+            verb: 'Sacrifice',
+          });
+          if (chosen === null) break;
+          selected.push(chosen);
+        }
+        yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
+        break;
+      }
       case 'sacrificeAndDrawForPower': {
         const candidates = ctx.state.battlefield.filter(
           (perm) =>
@@ -4022,13 +4071,10 @@ export function* executeAbility(
           (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
         );
         if (t === null || equipment === undefined) break;
-        // CR 702.6b: equipping moves the Equipment; it never leaves the battlefield, so its
-        // timestamp is unchanged and the granted abilities keep their layer position.
-        equipment.attachedTo = t;
-        emit(ctx, 'attach', {
-          equipment: equipment.name,
-          to: findPermanent(ctx, t)?.name ?? t,
-        });
+        const host = findPermanent(ctx, t);
+        // CR 701.3b-c, 613.7e: attaching to a different creature gives it a new timestamp;
+        // attaching to the creature it is already on, or to one it can't equip, does nothing.
+        if (host !== undefined) attachPermanent(ctx, equipment, host);
         break;
       }
       case 'createToken': {
@@ -4054,7 +4100,134 @@ export function* executeAbility(
               }
             : {}),
         };
-        createTokens(ctx, spec, amountOf(effect.count), controller.id, effect.tapped === true);
+        createdThisResolution.push(
+          ...createTokens(ctx, spec, amountOf(effect.count), controller.id, effect.tapped === true),
+        );
+        break;
+      }
+      case 'reflexiveOnCreatedToken': {
+        const tokens = createdThisResolution.filter((token) =>
+          ctx.state.battlefield.includes(token),
+        );
+        if (tokens.length === 0) break;
+        let token = tokens[0] as EnginePermanent;
+        if (tokens.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: choose the token the reflexive ability refers to.`,
+            presentationSource: presentedSource(ctx, source),
+            options: tokens.map((candidate) =>
+              cardOption(ctx, candidate, {
+                type: 'chooseToken',
+                description: `Choose ${candidate.name}`,
+                verb: 'Choose',
+              }),
+            ),
+          };
+          token = tokens[outcome.index] ?? token;
+        }
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability: effect.then,
+          triggerObjectCardId: token.cardId,
+          scope: { eventObjectId: token.id },
+        });
+        break;
+      }
+      case 'returnChosenCardsAttachedTo': {
+        const hostId = ref(effect.to);
+        const host = hostId === null ? undefined : findPermanent(ctx, hostId);
+        for (const cardId of chosenReferents(effect.targetSlot)) {
+          const card = controller.graveyard.find((candidate) => candidate.id === cardId);
+          if (card === undefined) continue;
+          const def = getDefByOracleId(ctx, card.oracleId, card.name);
+          if (def.subtypes.includes('Aura')) {
+            // An undefined host leaves the Aura where it is (CR 303.4i); moveObject also refuses a
+            // host its enchant ability doesn't allow.
+            if (host === undefined) continue;
+            const attached = yield* moveObject(ctx, card, {
+              zone: 'battlefield',
+              controllerId: controller.id,
+              attachedTo: host.id,
+            });
+            if (attached !== null && attached.zone === 'battlefield')
+              emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+            continue;
+          }
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+          // An Equipment enters attached, so its entry already sees it equipping the host; one
+          // that couldn't equip it enters unattached (CR 301.5e): a creature can't be equipped
+          // by an Equipment that is itself a creature or of a color it has protection from.
+          const equips =
+            host !== undefined &&
+            def.subtypes.includes('Equipment') &&
+            !def.types.includes('Creature') &&
+            computeCharacteristics(ctx, host).types.includes('Creature') &&
+            !hasProtectionFrom(ctx, host, def.colors);
+          yield* moveObject(ctx, card, {
+            zone: 'battlefield',
+            controllerId: controller.id,
+            ...(equips ? { attachedTo: host.id } : {}),
+          });
+        }
+        break;
+      }
+      case 'attach': {
+        const attachmentId =
+          effect.what === 'source' ? (sourcePermanent()?.id ?? null) : ref('triggerObject');
+        const attachment = attachmentId === null ? undefined : findPermanent(ctx, attachmentId);
+        if (attachment === undefined) break;
+        if (
+          effect.requireAura === true &&
+          !computeCharacteristics(ctx, attachment).subtypes.includes('Aura')
+        )
+          break;
+        const candidates =
+          effect.to === 'createdToken'
+            ? createdThisResolution
+            : (() => {
+                const id = ref('triggerObject');
+                const perm = id === null ? undefined : findPermanent(ctx, id);
+                return perm === undefined ? [] : [perm];
+              })();
+        const hosts = candidates.filter((host) => canAttach(ctx, attachment, host));
+        if (hosts.length === 0) break;
+        if (effect.optional !== true && hosts.length === 1) {
+          attachPermanent(ctx, attachment, hosts[0] as EnginePermanent);
+          break;
+        }
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: attach ${attachment.name}?`,
+          presentationSource: presentedSource(ctx, source),
+          options: [
+            ...hosts.map((host) =>
+              cardOption(ctx, host, {
+                type: 'attach',
+                description: `Attach ${attachment.name} to ${host.name}`,
+                verb: 'Attach',
+              }),
+            ),
+            ...(effect.optional === true
+              ? [
+                  plainOption({
+                    type: 'decline',
+                    description: `Don't attach ${attachment.name}`,
+                    verb: 'Decline',
+                    role: 'decline',
+                  }),
+                ]
+              : []),
+          ],
+        };
+        const host = hosts[outcome.index];
+        if (host !== undefined) attachPermanent(ctx, attachment, host);
         break;
       }
       case 'createTokenAttacking': {
@@ -4291,6 +4464,71 @@ export function* executeAbility(
           perm.tapped = false;
         }
         break;
+      case 'reanimateEnchantedCardAndAttach': {
+        // Intervening if (CR 603.4): only while this Aura is still on the battlefield.
+        const aura = sourcePermanent();
+        if (aura === undefined) break;
+        const cardId = aura.attachedTo;
+        // It loses "enchant creature card in a graveyard" either way.
+        aura.reanimatedHostId = null;
+        const card =
+          cardId === null
+            ? undefined
+            : ctx.state.players.flatMap((p) => p.graveyard).find((c) => c.id === cardId);
+        if (card === undefined) break;
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        if (!def.types.includes('Creature')) break;
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        const moved = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: controller.id,
+        });
+        const creature =
+          moved === null ? undefined : ctx.state.battlefield.find((p) => p.id === moved.id);
+        if (creature === undefined) break;
+        aura.reanimatedHostId = creature.id;
+        // A creature with protection from the Aura's color returns but can't be enchanted by it
+        // (CR 702.16c): the Aura stays unattached, state-based actions put it into the graveyard
+        // (CR 704.5m), and the leave trigger below makes that creature's controller sacrifice it.
+        if (!hasProtectionFrom(ctx, creature, computeCharacteristics(ctx, aura).colors)) {
+          aura.attachedTo = creature.id;
+          aura.timestamp = ctx.state.nextTimestamp++;
+          emit(ctx, 'attach', { equipment: aura.name, to: creature.name });
+        }
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: aura.cardId,
+          sourceOracleId: aura.oracleId,
+          controllerId: controller.id,
+          targetId: aura.cardId,
+          targetObjectId: aura.id,
+          when: 'leavesBattlefield',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'sacrificeRememberedPermanent', objectId: creature.id }],
+            description: `${creature.name}'s controller sacrifices it`,
+          },
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'sacrificeRememberedPermanent': {
+        const perm = ctx.state.battlefield.find((p) => p.id === effect.objectId);
+        if (perm !== undefined)
+          yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
+        break;
+      }
+      case 'attackingOpponentUntapsNonland': {
+        const attacker = scope.eventPlayerId;
+        if (attacker === undefined || attacker === controller.id) break;
+        for (const perm of ctx.state.battlefield) {
+          if (perm.controllerId !== attacker) continue;
+          if (computeCharacteristics(ctx, perm).types.includes('Land')) continue;
+          perm.tapped = false;
+        }
+        break;
+      }
       case 'untapBoundIf': {
         if (!evaluateCondition(ctx, effect.condition, source)) break;
         for (const cardId of effectBindings.get(effect.binding) ?? []) {
@@ -4341,7 +4579,10 @@ export function* executeAbility(
         // re-checked legality via `graveyardTargets`, so this is the "gone" case, not a bug.
         if (cardObj === undefined) break;
         emit(ctx, 'graveyardToBattlefield', { target: cardObj.name, source: source.name });
-        yield* moveObject(ctx, cardObj, { zone: 'battlefield', controllerId: source.controllerId });
+        yield* moveObject(ctx, cardObj, {
+          zone: 'battlefield',
+          controllerId: effect.under === 'owner' ? cardObj.ownerId : source.controllerId,
+        });
         break;
       }
       case 'reanimateAndLoseLife': {
@@ -5223,6 +5464,21 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryCardsAbove: effect.fromTop - 1 });
         break;
       }
+      case 'returnDepartedSourceToHand': {
+        // Only the card this very permanent became in a graveyard or exile (CR 400.7e).
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = [
+          ...ctx.state.players.flatMap((player) => player.graveyard),
+          ...(effect.fromGraveyard === true ? [] : ctx.state.exile),
+        ].find(
+          (candidate) =>
+            candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+        );
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'hand' });
+        break;
+      }
       case 'exileTargetReturnAtNextEndStep': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);
@@ -5312,6 +5568,110 @@ export function* executeAbility(
           controllerId: source.controllerId,
           entersTapped: true,
         });
+        break;
+      }
+      case 'returnDiedTriggerObjectAtNextEndStep': {
+        // The card the dying subject became in a graveyard (CR 400.7e); a card already gone from
+        // there, or a token that ceased to exist, returns nothing.
+        const remembered = extraScope?.triggerObjectId ?? extraScope?.eventObjectId;
+        if (remembered === undefined) break;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.leftBattlefieldObjectId === remembered);
+        if (card === undefined) break;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: source.controllerId,
+          targetId: card.cardId,
+          targetObjectId: card.id,
+          when: 'endStep',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'returnRememberedGraveyardCard', returnUnder: effect.returnUnder }],
+            description: `Return ${card.name} to the battlefield`,
+          },
+          // An end step that already began (this resolved during it) is not "the next" one.
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'returnRememberedGraveyardCard': {
+        const remembered = extraScope?.triggerObjectId;
+        const card = ctx.state.players
+          .flatMap((player) => player.graveyard)
+          .find((candidate) => candidate.id === remembered);
+        if (card === undefined) break;
+        const host = effect.attachToObjectId;
+        if (host !== undefined && findPermanent(ctx, host) === undefined) break;
+        // Logged only once it lands: moveObject refuses a host the Aura can't enchant.
+        const returned = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
+          ...(host === undefined ? {} : { attachedTo: host }),
+        });
+        if (returned !== null && returned.zone === 'battlefield')
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        break;
+      }
+      case 'returnDepartedSourceToBattlefield': {
+        const departed = source.id;
+        if (departed === undefined) break;
+        const graveyards =
+          effect.fromYourGraveyard === true
+            ? [controller.graveyard]
+            : ctx.state.players.map((player) => player.graveyard);
+        const card = graveyards
+          .flat()
+          .find(
+            (candidate) =>
+              candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+          );
+        if (card === undefined) break;
+        let host: ObjectId | undefined;
+        if (effect.attachTo === 'triggerObject') {
+          // The card the trigger object became, followed through this resolution's own moves:
+          // "return that card ... Return this card ... attached to that creature".
+          const destination = scope.eventObjectDestinationId;
+          const current = destination === undefined ? null : movedReferent(destination);
+          if (current === null || findPermanent(ctx, current) === undefined) break;
+          host = current;
+        }
+        if (effect.delay === 'nextEndStep') {
+          ctx.state.delayedTriggers.push({
+            id: `dt-${ctx.state.nextObjectNum++}`,
+            sourceCardId: source.cardId,
+            sourceOracleId: source.oracleId as never,
+            controllerId: source.controllerId,
+            targetId: card.cardId,
+            targetObjectId: card.id,
+            when: 'endStep',
+            ability: {
+              kind: 'triggered',
+              targets: [],
+              effects: [
+                {
+                  op: 'returnRememberedGraveyardCard',
+                  returnUnder: 'sourceController',
+                  ...(host === undefined ? {} : { attachToObjectId: host }),
+                },
+              ],
+              description: `Return ${card.name} to the battlefield`,
+            },
+            // An end step that already began (this resolved during it) is not "the next" one.
+            expiry: 'onFire',
+          });
+          break;
+        }
+        const returned = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: source.controllerId,
+          ...(host === undefined ? {} : { attachedTo: host }),
+        });
+        if (returned !== null && returned.zone === 'battlefield')
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
         break;
       }
       case 'reanimateEachChosenTapped': {

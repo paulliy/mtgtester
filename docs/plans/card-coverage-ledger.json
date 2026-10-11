@@ -64,6 +64,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
+    "name": "Ajani's Chosen",
+    "package": "PR05.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Aura-enters attach-to-token is omitted from the Cat trigger."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
     "name": "Akroan Horse",
     "package": "W6",
@@ -103,6 +120,40 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+    "name": "Angelic Destiny",
+    "package": "PR05.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Angel type-changing is claimed without a type-changing static."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+    "name": "Animate Dead",
+    "package": "PR05.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard Aura attach and leave-the-battlefield sacrifice are omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
@@ -691,6 +742,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
+    "name": "Cranial Plating",
+    "package": "PR05.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Equip {1} is dropped when the attach activation replaces activatedAbilities."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3c6a8ad8-9b40-4136-9cfd-2b4cf9a9d900",
     "name": "Crescendo of War",
     "package": "W1",
@@ -736,6 +804,23 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
     "snapshotStatus": "interpreter only; no override registration"
+  },
+  {
+    "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+    "name": "Curse of Bounty",
+    "package": "PR05.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Only the attacking player untaps; the curse controller always should."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
@@ -813,6 +898,40 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
+    "name": "Eidolon of Countless Battles",
+    "package": "PR05.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+    "name": "Eldrazi Conscription",
+    "package": "PR05.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Annihilator 2 is claimed without an annihilator implementation."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -903,6 +1022,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
+    "name": "Fallen Ideal",
+    "package": "PR05.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "2fc42640-983a-49ca-9020-7756135077b4",
@@ -1068,6 +1204,23 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
     "snapshotStatus": "interpreter only; no override registration"
+  },
+  {
+    "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
+    "name": "Forum Filibuster",
+    "package": "PR05.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Reflexive Aura/Equipment return attached to the token is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
@@ -1243,6 +1396,40 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "276eccd6-4a76-46e8-b604-94472e618115",
+    "name": "Ghoulish Impetus",
+    "package": "PR05.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Delayed Aura return does not attach, so SBA immediately puts it into the graveyard."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2c11c72f-5b04-47d8-bdf8-8d9d197ebc1b",
+    "name": "Gift of Immortality",
+    "package": "PR05.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Delayed Aura return attached to the creature is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9025b3ce-f6ae-431d-9eb5-02d713b8c9b8",
     "name": "Gleeful Arsonist",
     "package": "PR03.16",
@@ -1396,6 +1583,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+    "name": "Hateful Eidolon",
+    "package": "PR05.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Draws one card instead of one per Aura that was attached."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -1630,6 +1834,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
+    "name": "Karametra's Favor",
+    "package": "PR05.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
     "package": "W6",
@@ -1662,17 +1883,19 @@
   {
     "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
     "name": "Killian, Decisive Mentor",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR05.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
-      "unrecognized rules text: \"Whenever an enchantment you control enters, tap up to one target creature and goad it.\"",
-      "unrecognized rules text: \"Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.\"",
-      "override for \"Killian, Decisive Mentor\" has no executable behavior"
+      "explicitly unsupported: Attack-trigger scoped to creatures enchanted by your Auras is unimplemented."
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
@@ -1723,6 +1946,21 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
+    "name": "Kor Spiritdancer",
+    "package": "PR05.23",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Attached-Aura pump counts all Auras you control."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -1867,6 +2105,40 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
+    "name": "Martial Impetus",
+    "package": "PR05.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Other-attacking-your-opponents pump is implemented as all creatures in combat."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+    "name": "Mask of Memory",
+    "package": "PR05.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Equipped-creature combat damage is implemented as any equipped creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f9bca7af-29b6-46ba-b847-56715d09d1da",
@@ -2407,6 +2679,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "c22e5fc6-9b4e-4197-b472-70d168eb4330",
+    "name": "Redemption Arc",
+    "package": "PR05.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Exile-enchanted-creature activated ability is claimed without an implementation."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
     "name": "Reins of Power",
     "package": "W6",
@@ -2418,6 +2707,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+    "name": "Resurrection Orb",
+    "package": "PR05.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Return is under the equipment controller, not the card's owner."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "aaadfe41-b2be-4183-b45e-a70e53a59d2e",
@@ -2656,6 +2962,23 @@
     "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
+    "name": "Screams from Within",
+    "package": "PR05.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Return is a required attach target; current Oracle returns this Aura untargeted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
     "name": "Scriv, the Obligator",
     "package": "W1",
@@ -2738,6 +3061,36 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+    "name": "Sheltered by Ghosts",
+    "package": "PR05.24",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Ward {2} is claimed without a ward static."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
+    "name": "Shielded by Faith",
+    "package": "PR05.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Optional attach is implemented as mandatory attach."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -2858,6 +3211,21 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+    "name": "Sunforger",
+    "package": "PR05.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Equip {2} is authored; current Oracle is Equip {3}."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8ea10a5a-b698-4f7d-a9c8-520f8d835f34",

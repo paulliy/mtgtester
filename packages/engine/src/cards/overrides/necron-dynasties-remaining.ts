@@ -107,12 +107,6 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Convergence of Dominion: restored in coverage PR02. The interpreter reads the conditional
   // graveyard activation reduction and the mill ability, so no override remains.
-  // Catalog audit necron-remaining-batch-7: Equip is dropped by activatedAbilities replace.
-  unsupportedCard(
-    '75564721-e4e9-463a-b49e-f0c7cd6f53a7',
-    'Cranial Plating',
-    'Equip {1} is dropped when the attach activation replaces activatedAbilities.',
-  );
   // Cryptek: restored in coverage PR03. The interpreter reads the dies-this-turn delayed return,
   // which enters tapped, so no override remains.
   defineCard(
@@ -179,12 +173,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
       ],
     },
   );
-  // Catalog audit necron-remaining-batch-6: any equipped creature, not this equipment's creature.
-  unsupportedCard(
-    'd6b2c998-a226-426c-a40d-6e6007041bfe',
-    'Mask of Memory',
-    'Equipped-creature combat damage is implemented as any equipped creature.',
-  );
+  // Mask of Memory: restored in coverage PR05. The interpreter reads the equipped-creature combat
+  // damage trigger and its optional draw-then-discard, so no override remains.
   // Catalog audit necron-remaining-batch-3: colorless omitted; exile-top is mill.
   unsupportedCard(
     '994bc16d-fdc6-475c-96df-beeb4d5aa03e',
@@ -264,12 +254,8 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
     'Out of the Tombs',
     'Enters-with two eon counters is authored; the card only places counters on upkeep.',
   );
-  // Catalog audit necron-remaining-batch-5: return is not under the owner's control.
-  unsupportedCard(
-    'b410f294-cbb6-4016-981f-808fd9b7bbae',
-    'Resurrection Orb',
-    "Return is under the equipment controller, not the card's owner.",
-  );
+  // Resurrection Orb: restored in coverage PR05. The interpreter reads the equipped-creature dies
+  // trigger and its next-end-step return under the card's owner, so no override remains.
   // Sautekh Immortal: restored in coverage PR04. The interpreter reads the enters-with
   // replacement counted from the creatures that died this turn, so no override remains.
   // Sceptre of Eternal Glory: restored in coverage PR02. The interpreter reads the three-mana
