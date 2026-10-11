@@ -94,6 +94,7 @@ function run(
   const choose = scripted(steps);
   const prompts: string[] = [];
   const offered: string[][] = [];
+  const requests: Array<{ seat: string; request: DecisionRequest }> = [];
   let decisions = 0;
   for (;;) {
     const step = scenario!.engine.advance();
@@ -103,6 +104,7 @@ function run(
     prompts.push(step.request.prompt ?? '');
     offered.push(step.request.legalActions.map((action) => action.description));
     inspect?.(step.request, scenario!);
+    requests.push({ seat: step.request.decidingPlayer, request: step.request });
     // A seat the scenario scripts (an opponent's own turn) answers as in the viewer.
     const override = scenario!.decisionProviderOverrides?.[step.request.decidingPlayer];
     scenario!.engine.submit(
@@ -119,7 +121,7 @@ function run(
   const seat = (id: string) => state.players.find((candidate) => candidate.id === id)!;
   const onBattlefield = (name: string) =>
     state.battlefield.filter((permanent) => permanent.name === name);
-  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered };
+  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered, requests };
 }
 
 function replays(scenarioId: string, steps: Step[]): void {
@@ -1089,6 +1091,52 @@ describe('Angelic Destiny Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('angelic-destiny-viewer-angel-then-return', steps);
+  });
+});
+
+describe('Angelic Destiny combat Card Test Lab scenario', () => {
+  it('angelic-destiny-viewer-flying-first-strike-angel-combat — the Aura makes Lab Green Bear a 7/7 flying first-striking Angel, so only Lab Titan can block and it dies before dealing damage', () => {
+    const steps: Step[] = [
+      { action: 'Cast Angelic Destiny', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield, requests } = run(
+      'angelic-destiny-viewer-flying-first-strike-angel-combat',
+      steps,
+    );
+    // The Bear survived the block; without first strike Lab Titan would have killed it.
+    expect(onBattlefield('Lab Green Bear')).toHaveLength(1);
+    const [bear] = onBattlefield('Lab Green Bear');
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    // +4/+4 and the Angel subtype (Lab Choir's +1/+1 only applies to Angels): 2 + 4 + 1.
+    expect(viewed?.power).toBe(7);
+    expect(viewed?.toughness).toBe(7);
+    expect(viewed?.keywords).toEqual(expect.arrayContaining(['flying', 'first strike']));
+    expect(onBattlefield('Angelic Destiny')[0]?.attachedTo).toBe(bear?.id);
+    // Flying: of P2's two creatures only Lab Titan was offered as a blocker.
+    const blockRequests = requests.filter(
+      ({ seat: who, request }) =>
+        who === 'P2' &&
+        request.legalActions.some((action) => action.description.startsWith('Declare blockers')),
+    );
+    expect(blockRequests).toHaveLength(1);
+    const blockAction = blockRequests[0]!.request.legalActions.find((action) =>
+      action.description.startsWith('Declare blockers'),
+    );
+    expect(blockAction?.targets).toHaveLength(1);
+    expect(blockAction?.targets?.[0]?.options).toContain(bear?.id);
+    // First strike: the Bear's 7 damage killed Lab Titan before it dealt any, and Lab Ox never
+    // blocked or took damage.
+    expect(onBattlefield('Lab Titan')).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Titan']);
+    expect(bear?.damageMarked).toBe(0);
+    expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(0);
+    expect(seat('P2').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('angelic-destiny-viewer-flying-first-strike-angel-combat', steps);
   });
 });
 

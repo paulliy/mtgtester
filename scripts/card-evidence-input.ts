@@ -1970,6 +1970,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink'],
   },
   {

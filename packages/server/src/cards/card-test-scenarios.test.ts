@@ -376,6 +376,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
       'killian-decisive-mentor-viewer-goaded-opponent-attack',
       'angelic-destiny-viewer-angel-then-return',
+      'angelic-destiny-viewer-flying-first-strike-angel-combat',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
       'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
       'eldrazi-conscription-viewer-annihilator',

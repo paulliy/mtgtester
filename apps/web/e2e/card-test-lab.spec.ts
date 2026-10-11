@@ -7531,6 +7531,66 @@ test('Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to 
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText(/flying/i);
+
+  // Cast the Aura on Lab Green Bear: 2/2 + 4/+4 + Lab Choir's +1/+1 for the Angel type = 7/7,
+  // with flying and first strike.
+  const destiny = handCard(page, 'Angelic Destiny');
+  await expect(destiny).toHaveClass(/actionable/, { timeout: 15_000 });
+  const destinyBefore = await page.getByText('Angelic Destiny resolves').count();
+  await destiny.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Angelic Destiny', destinyBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Angelic Destiny')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('7/7');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/flying/i);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/first strike/i);
+
+  // Attack P2. Only the flier Lab Titan can block it; Lab Ox has no flying or reach.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Only Lab Titan could block the flier, and first strike killed it before it hit back: the Bear
+  // is undamaged, Lab Ox is untouched, and nothing reached P2.
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  expect(final.find((p) => p.name === 'Lab Ox')?.damageMarked).toBe(0);
+  await expect(permanent(page, 'Lab Titan')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('7/7');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
 test('Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink', async ({
   page,
 }) => {

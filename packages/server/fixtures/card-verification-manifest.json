@@ -1571,7 +1571,10 @@
             "angelic-destiny-cast-onto-creature",
             "angelic-destiny-enchanted-only"
           ],
-          "viewerScenarioIds": ["angelic-destiny-viewer-angel-then-return"]
+          "viewerScenarioIds": [
+            "angelic-destiny-viewer-angel-then-return",
+            "angelic-destiny-viewer-flying-first-strike-angel-combat"
+          ]
         },
         {
           "id": "angelic-destiny-return",

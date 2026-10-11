@@ -8794,6 +8794,90 @@ function angelicDestinyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** An opponent seat that blocks with every creature it is offered, each on the first attacker offered. */
+const blockWithEverything: DecisionProvider = {
+  decide(request) {
+    const block = request.legalActions.find((action) =>
+      action.description.startsWith('Declare blockers'),
+    );
+    if (block !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: block.id,
+        targets: (block.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.find((option) => option !== '__no_block__') ?? '__no_block__',
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+/**
+ * Angelic Destiny's whole "gets +4/+4, has flying and first strike, and is an Angel" clause. Lab
+ * Choir ("Angels you control get +1/+1") makes the Angel subtype observable, Lab Titan (7/7
+ * flying) is the only legal blocker of a flier, and Lab Ox (no flying or reach) is not offered.
+ */
+function angelicDestinyCombatScenario(gameId: GameId): CardTestScenario {
+  const destiny = pinnedFrom(COVERAGE_PR05, 'Angelic Destiny');
+  const choir = card({
+    oracleId: 'lab-choir',
+    name: 'Lab Choir',
+    typeLine: 'Enchantment',
+    manaCost: '{W}',
+    cmc: 1,
+    colors: ['W'],
+    colorIdentity: ['W'],
+    oracleText: 'Angels you control get +1/+1.',
+  });
+  const titan = card({
+    oracleId: 'lab-titan',
+    name: 'Lab Titan',
+    typeLine: 'Creature — Giant',
+    manaCost: '{5}{U}',
+    cmc: 6,
+    colors: ['U'],
+    colorIdentity: ['U'],
+    power: '7',
+    toughness: '7',
+    oracleText: 'Flying',
+  });
+  return pr01Scenario(gameId, {
+    id: 'angelic-destiny-viewer-flying-first-strike-angel-combat',
+    title:
+      'Angelic Destiny: a 7/7 flying first-striking Angel attacks past Lab Ox and kills Lab Titan unharmed',
+    instructions: [
+      'Angelic Destiny is in your hand. Two Plains, two Swamps, Lab Choir (Angels you control get +1/+1) and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4, no flying or reach) and Lab Titan (7/7, flying) and blocks with every creature it can.',
+      'Cast Angelic Destiny targeting Lab Green Bear and let it resolve: Lab Green Bear is an Angel Bear with flying and first strike, 7/7 (2/2, +4/+4 from the Aura, +1/+1 from Lab Choir because it is now an Angel).',
+      'Attack P2 with Lab Green Bear. Only Lab Titan can block a flier: first strike deals 7 to Lab Titan before it deals any damage.',
+    ],
+    expectedOutcome:
+      'Lab Titan died blocking and is in P2’s graveyard. Lab Green Bear has no damage on it and Lab Ox never blocked, so P2 stays at 40 and Lab Ox is undamaged.',
+    oracleSha256: destiny.sha256,
+    clauseIds: ['angelic-destiny-buff'],
+    decks: {
+      P1: [destiny.card, choir, LAB_GREEN_BEAR, PLAINS, PLAINS, SWAMP, SWAMP],
+      P2: [LAB_OX, titan, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Angelic Destiny'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Choir', 'Lab Green Bear', 'Plains', 'Plains', 'Swamp', 'Swamp'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Titan'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 function shelteredByGhostsScenario(gameId: GameId): CardTestScenario {
   const ghosts = pinnedFrom(COVERAGE_PR05, 'Sheltered by Ghosts');
   return pr01Scenario(gameId, {
@@ -11057,6 +11141,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'killian-decisive-mentor-viewer-goaded-opponent-attack',
   'angelic-destiny-viewer-angel-then-return',
+  'angelic-destiny-viewer-flying-first-strike-angel-combat',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
   'eldrazi-conscription-viewer-annihilator',
@@ -11356,6 +11441,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'killian-decisive-mentor-viewer-goaded-opponent-attack': killianOpponentAttackScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
+  'angelic-destiny-viewer-flying-first-strike-angel-combat': angelicDestinyCombatScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'sheltered-by-ghosts-viewer-ward-counters-opponent-spell': shelteredByGhostsWardScenario,
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
