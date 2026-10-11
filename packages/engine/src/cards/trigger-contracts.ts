@@ -19,6 +19,7 @@ export function triggerEventFamily(
     case 'fights':
     case 'becomesTargeted':
     case 'enchantedPlayerAttacked':
+    case 'attackBetweenControllerAndEnchantedPlayer':
     case 'dealtDamage':
     case 'sacrificed':
     case 'tokenCreated':
@@ -68,6 +69,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
   switch (when) {
     case 'attacks':
     case 'enchantedPlayerAttacked':
+    case 'attackBetweenControllerAndEnchantedPlayer':
     case 'dealsCombatDamageToPlayer':
     case 'castsSpell':
     case 'gainsLife':
@@ -273,7 +275,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         ? ['you', 'each', 'opponent']
         : head['when'] === 'foretells'
           ? ['you']
-          : ['you', 'each']
+          : ['upkeep', 'endStep', 'untapStep', 'drawStep', 'beginningOfCombat'].includes(
+                head['when'] as string,
+              )
+            ? ['you', 'each', 'enchanted']
+            : ['you', 'each']
     ).includes(head['player'] as string)
   )
     issues.push({ path: `${path}.player`, message: 'trigger requires a supported player scope' });

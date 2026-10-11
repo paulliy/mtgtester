@@ -6224,6 +6224,214 @@ describe('Curse of Bounty', () => {
   });
 });
 
+// PR05.26 Tenuous Truce
+// ---------------------------------------------------------------------------------------------
+
+describe('Tenuous Truce', () => {
+  const { card } = pinned('Tenuous Truce');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const hand = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
+  const hands = (ctx: GameContext) => ['P1', 'P2', 'P3', 'P4'].map((id) => hand(ctx, id));
+  const truces = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Tenuous Truce');
+
+  /** P1 controls a Tenuous Truce that is not cast yet; every seat has a Bear to attack with. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const bears = Object.fromEntries(
+      ['P1', 'P2', 'P3', 'P4'].map((id) => [id, spawn(ctx, id as 'P1', BEAR(`Lab ${id} Bear`))]),
+    ) as Record<'P1' | 'P2' | 'P3' | 'P4', EnginePermanent>;
+    return { ctx, bears };
+  }
+
+  /** The Aura on the battlefield, controlled by P1 and attached to `playerId`. */
+  function truce(ctx: GameContext, playerId: string) {
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = playerId;
+    return aura;
+  }
+
+  function turnOf(ctx: GameContext, playerId: string) {
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  }
+
+  /** The active player attacks with `attackers` (permanent id -> defending player), no blocks. */
+  function fight(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** `playerId`'s end step begins and its triggers resolve. */
+  function endStepOf(ctx: GameContext, playerId: string) {
+    turnOf(ctx, playerId);
+    beginEndStep(ctx);
+    settle(ctx);
+  }
+
+  /** P1 casts Tenuous Truce from hand through the normal path and returns the legal hosts. */
+  function castOptions(ctx: GameContext) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, { symbol: 'C' }]);
+    return optionFor(ctx, 'P1', object.id);
+  }
+
+  it('tenuous-truce-pinned-oracle-supported — the interpreter alone models Enchant opponent, the enchanted player’s end step draws and the attack sacrifice', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant opponent: the Aura spell's one target is a player the caster is opposed to.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    expect(def.staticEffects).toEqual([]);
+    expect(def.triggers).toHaveLength(2);
+    const [draws, sacrifice] = def.triggers;
+    // At the beginning of enchanted opponent's end step: each of you and that player draws one.
+    expect(draws!.trigger).toEqual({ when: 'endStep', player: 'enchanted' });
+    expect(draws!.optional).toBe(false);
+    expect(draws!.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 1 }, player: 'eventPlayer' },
+      { op: 'draw', count: { kind: 'const', n: 1 } },
+    ]);
+    // When an attack is declared between the Aura's controller and that player, either way:
+    // sacrifice this Aura. Creatures attack only players here, so the planeswalker halves of the
+    // printed text never occur.
+    expect(sacrifice!.trigger).toEqual({
+      when: 'attackBetweenControllerAndEnchantedPlayer',
+      subject: { kind: 'self' },
+    });
+    expect(sacrifice!.optional).toBe(false);
+    expect(sacrifice!.effects).toEqual([{ op: 'sacrifice', target: 'source' }]);
+  });
+
+  it('tenuous-truce-enchant-opponent — it can only be cast on an opponent, and enters attached to that player', () => {
+    const { ctx } = board('truce-cast');
+    const option = castOptions(ctx);
+    expect(option, 'P1 casts Tenuous Truce').toBeDefined();
+    // Every opponent is a legal host; you are not, and no permanent is.
+    expect([...option!.targets![0]!.options].sort()).toEqual(['P2', 'P3', 'P4']);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, 'P3']]),
+    );
+    resolveTop(ctx);
+    expect(truces(ctx).map((perm) => perm.attachedTo)).toEqual(['P3']);
+    expect(truces(ctx)[0]?.controllerId).toBe('P1');
+    expect(ctx.state.stack).toEqual([]);
+    // Negative: an opponent casting it can enchant P1 or another opponent, but never themselves.
+    const other = board('truce-cast-opponent');
+    turnOf(other.ctx, 'P2');
+    const object = conjure(other.ctx, 'P2', card, 'hand');
+    addMana(playerById(other.ctx, 'P2'), [{ symbol: 'W' }, { symbol: 'C' }]);
+    const theirs = optionFor(other.ctx, 'P2', object.id);
+    expect([...theirs!.targets![0]!.options].sort()).toEqual(['P1', 'P3', 'P4']);
+  });
+
+  it('tenuous-truce-end-step-draw — at the enchanted opponent’s end step you and that player each draw a card', () => {
+    const { ctx } = board('truce-draw');
+    truce(ctx, 'P2');
+    const [p1, p2, p3, p4] = hands(ctx);
+    endStepOf(ctx, 'P2');
+    expect(hands(ctx)).toEqual([p1! + 1, p2! + 1, p3, p4]);
+    // It repeats at each of that player's end steps while the Aura stays.
+    endStepOf(ctx, 'P2');
+    expect(hands(ctx)).toEqual([p1! + 2, p2! + 2, p3, p4]);
+    // The Aura's controller can be a different player than the one whose turn it is: P4's Aura
+    // on P2 still draws for P4 (its controller) at P2's end step.
+    const mixed = board('truce-draw-mixed');
+    const aura = truce(mixed.ctx, 'P2');
+    aura.controllerId = 'P4';
+    const before = hands(mixed.ctx);
+    endStepOf(mixed.ctx, 'P2');
+    expect(hands(mixed.ctx)).toEqual([before[0], before[1]! + 1, before[2], before[3]! + 1]);
+  });
+
+  it('tenuous-truce-end-step-only-enchanted — nobody draws at the end step of you, of a third player, or of anyone once the Aura is gone', () => {
+    const { ctx } = board('truce-scope');
+    const aura = truce(ctx, 'P2');
+    const before = hands(ctx);
+    endStepOf(ctx, 'P1');
+    endStepOf(ctx, 'P3');
+    endStepOf(ctx, 'P4');
+    expect(hands(ctx)).toEqual(before);
+    // Once it is gone, even the enchanted player's end step draws nothing.
+    pump(moveObject(ctx, aura, { zone: 'graveyard' }));
+    endStepOf(ctx, 'P2');
+    expect(hands(ctx)).toEqual(before);
+  });
+
+  it('tenuous-truce-attack-sacrifices — when you attack the enchanted opponent, or they attack you, the Aura is sacrificed and no one draws', () => {
+    // You attack the enchanted opponent.
+    const mine = board('truce-you-attack');
+    truce(mine.ctx, 'P2');
+    fight(mine.ctx, new Map([[mine.bears.P1.id, 'P2']]));
+    expect(truces(mine.ctx)).toEqual([]);
+    expect(playerById(mine.ctx, 'P1').graveyard.map((c) => c.name)).toContain('Tenuous Truce');
+
+    // They attack you.
+    const theirs = board('truce-they-attack');
+    truce(theirs.ctx, 'P2');
+    turnOf(theirs.ctx, 'P2');
+    fight(theirs.ctx, new Map([[theirs.bears.P2.id, 'P1']]));
+    expect(truces(theirs.ctx)).toEqual([]);
+    expect(playerById(theirs.ctx, 'P1').graveyard.map((c) => c.name)).toContain('Tenuous Truce');
+    // The Aura is gone, so their end step draws nothing for either of you.
+    const before = hands(theirs.ctx);
+    endStepOf(theirs.ctx, 'P2');
+    expect(hands(theirs.ctx)).toEqual(before);
+
+    // Attacking several players at once, the enchanted one included, sacrifices it once.
+    const wide = board('truce-wide');
+    truce(wide.ctx, 'P2');
+    const extra = spawn(wide.ctx, 'P1', BEAR('Lab Second Bear'));
+    fight(
+      wide.ctx,
+      new Map([
+        [wide.bears.P1.id, 'P2'],
+        [extra.id, 'P3'],
+      ]),
+    );
+    expect(truces(wide.ctx)).toEqual([]);
+    expect(
+      playerById(wide.ctx, 'P1').graveyard.filter((c) => c.name === 'Tenuous Truce'),
+    ).toHaveLength(1);
+  });
+
+  it('tenuous-truce-attack-elsewhere — you attacking a third player, a third player attacking either of you, or nobody attacking leaves the Aura on the battlefield', () => {
+    const cases: [attacker: 'P1' | 'P2' | 'P3', defender: 'P2' | 'P3' | 'P4' | 'P1'][] = [
+      ['P1', 'P3'],
+      ['P1', 'P4'],
+      ['P2', 'P3'],
+      ['P2', 'P4'],
+      ['P3', 'P1'],
+      ['P3', 'P2'],
+      ['P3', 'P4'],
+    ];
+    for (const [attacker, defender] of cases) {
+      const { ctx, bears } = board(`truce-${attacker}-${defender}`);
+      const aura = truce(ctx, 'P2');
+      turnOf(ctx, attacker);
+      fight(ctx, new Map([[bears[attacker].id, defender]]));
+      expect(truces(ctx), `${attacker} attacks ${defender}`).toEqual([aura]);
+    }
+    // Nobody attacks at all.
+    const quiet = board('truce-quiet');
+    const aura = truce(quiet.ctx, 'P2');
+    fight(quiet.ctx, new Map());
+    expect(truces(quiet.ctx)).toEqual([aura]);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -6338,6 +6546,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Sunforger',
     sha256: '0ae447b31437ff4e3964e1bf8803b551ef7725ee95a31e9d6b168e860bb57b0e',
+    clauseCount: 3,
+  },
+  {
+    name: 'Tenuous Truce',
+    sha256: '95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45',
     clauseCount: 3,
   },
 ];

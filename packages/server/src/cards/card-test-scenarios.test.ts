@@ -372,6 +372,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
       'eldrazi-conscription-viewer-annihilator',
       'curse-of-bounty-viewer-untap-on-attack',
+      'tenuous-truce-viewer-attack-sacrifices',
+      'tenuous-truce-viewer-other-attack-and-end-step',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

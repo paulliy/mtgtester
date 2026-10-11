@@ -7322,3 +7322,94 @@ test('Curse of Bounty: enchant a player, then attacking them untaps your nonland
   await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
   await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
 });
+
+test('Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+
+  // Cast Tenuous Truce targeting P2: only opponents can be enchanted.
+  const truce = handCard(page, 'Tenuous Truce');
+  await expect(truce).toHaveClass(/actionable/, { timeout: 15_000 });
+  await truce.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Tenuous Truce'));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Tenuous Truce')?.attachedTo)
+    .toBe('P2');
+
+  // Attack P2: you attacked the enchanted opponent, so the Aura is sacrificed.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Tenuous Truce')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+});
+
+test('Tenuous Truce: attacking a third player keeps it, and your own end step draws nothing', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Tenuous Truce: attacking a third player keeps it, and your own end step draws nothing',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(0);
+
+  // Cast Tenuous Truce targeting P2 and let it resolve.
+  const truce = handCard(page, 'Tenuous Truce');
+  await expect(truce).toHaveClass(/actionable/, { timeout: 15_000 });
+  await truce.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Tenuous Truce'));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Tenuous Truce')?.attachedTo)
+    .toBe('P2');
+
+  // Attack P3, not the enchanted P2: the Aura stays, and your end step draws nothing.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Tenuous Truce')).toHaveCount(1);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('38');
+});

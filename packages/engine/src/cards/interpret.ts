@@ -813,6 +813,8 @@ function parseEffectSentence(
     attachedDies?: boolean;
     /** Every head is this Aura's enchanted player being attacked; the event player attacks. */
     enchantedPlayerAttacked?: boolean;
+    /** Every head is a step of the player this Aura enchants, who is the event player. */
+    enchantedPlayerStep?: boolean;
     thatMany?: Value;
     allocCount?: CountSlotAllocator;
   } = {},
@@ -2146,6 +2148,16 @@ function parseEffectSentence(
         op: 'returnDepartedSourceToHand',
         ...(opts.departedToGraveyard === true ? { fromGraveyard: true as const } : {}),
       },
+    ];
+  // "... sacrifice this Aura" (Tenuous Truce): the source itself.
+  if (s === 'sacrifice this aura' && opts.triggerObject !== true)
+    return [{ op: 'sacrifice', target: 'source' }];
+  // "At the beginning of enchanted opponent's end step, you and that player each draw a card"
+  // (Tenuous Truce). It is that player's turn, so they draw first (CR 101.4).
+  if (opts.enchantedPlayerStep === true && s === 'you and that player each draw a card')
+    return [
+      { op: 'draw', count: constant(1), player: 'eventPlayer' },
+      { op: 'draw', count: constant(1) },
     ];
   // "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
   // Bounty): the attacking player, when that player is an opponent of this ability's controller.
@@ -4809,6 +4821,20 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     ];
     implicitCondition = { kind: 'notFirstDrawInOwnDrawStep' };
     body = drawExceptFirst[2] as string;
+  } else if (
+    /^when you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, /.test(
+      firstLine,
+    )
+  ) {
+    // Tenuous Truce. Creatures attack only players in this engine, so the planeswalker halves
+    // never occur; the event is either attack between this Aura's controller and that player.
+    heads = [{ when: 'attackBetweenControllerAndEnchantedPlayer', subject: SELF_SUBJECT }];
+    body = firstLine.replace(/^when you attack .+? or a planeswalker you control, /, '');
+  } else if (/^at the beginning of enchanted (?:player|opponent)'s end step, /.test(firstLine)) {
+    // Tenuous Truce: the end step of the player this Aura enchants; that player is the event
+    // player ("that player").
+    heads = [{ when: 'endStep', player: 'enchanted' }];
+    body = firstLine.replace(/^at the beginning of enchanted (?:player|opponent)'s end step, /, '');
   } else if (step !== null) {
     heads = [
       {
@@ -5222,6 +5248,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
             head.leavesTo[0] === 'graveyard')),
     ),
     enchantedPlayerAttacked: heads.every((head) => head.when === 'enchantedPlayerAttacked'),
+    enchantedPlayerStep: heads.every((head) => 'player' in head && head.player === 'enchanted'),
     attachedDies: heads.every(
       (head) =>
         head.when === 'dies' &&

@@ -117,6 +117,7 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
       const source = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,
@@ -146,6 +147,8 @@ export function queueStepTriggers(
         const spec = ability.trigger;
         if (spec === undefined || spec.when !== when || !('player' in spec)) continue;
         if (spec.player === 'you' && emblem.controllerId !== apId) continue;
+        // An emblem enchants no one.
+        if (spec.player === 'enchanted') continue;
         ctx.state.pendingTriggers.push({
           controllerId: emblem.controllerId,
           sourceCardId: emblem.id,

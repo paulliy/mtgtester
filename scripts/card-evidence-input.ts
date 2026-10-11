@@ -1945,6 +1945,16 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Tenuous Truce: attacking a third player keeps it, and your own end step draws nothing',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

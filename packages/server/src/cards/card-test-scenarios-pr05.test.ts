@@ -810,3 +810,45 @@ describe('Curse of Bounty Card Test Lab scenario', () => {
     replays('curse-of-bounty-viewer-untap-on-attack', steps);
   });
 });
+
+describe('Tenuous Truce Card Test Lab scenario', () => {
+  it('tenuous-truce-viewer-attack-sacrifices — the Aura enchants P2, then Lab Green Bear attacking P2 sacrifices it', () => {
+    const steps: Step[] = [
+      { action: 'Cast Tenuous Truce', targets: ['P2'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'tenuous-truce-viewer-attack-sacrifices',
+      steps,
+    );
+    expect(onBattlefield('Tenuous Truce')).toEqual([]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Tenuous Truce']);
+    expect(seat('P2').life).toBe(38);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tenuous-truce-viewer-attack-sacrifices', steps);
+  });
+});
+
+describe('Tenuous Truce Card Test Lab end-step scenario', () => {
+  it('tenuous-truce-viewer-other-attack-and-end-step — attacking P3 keeps the Aura on P2, and your own end step draws nothing', () => {
+    const steps: Step[] = [
+      { action: 'Cast Tenuous Truce', targets: ['P2'] },
+      { action: 'Declare attackers', targets: ['P3'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'tenuous-truce-viewer-other-attack-and-end-step',
+      steps,
+    );
+    const [aura] = onBattlefield('Tenuous Truce');
+    expect(aura?.attachedTo).toBe('P2');
+    expect(seat('P3').life).toBe(38);
+    // Neither the Aura's controller nor the enchanted player drew at P1's end step.
+    expect(seat('P1').hand).toEqual([]);
+    expect(seat('P2').hand).toEqual([]);
+    expect(seat('P1').library[0]?.name).toBe('Lab Ox');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tenuous-truce-viewer-other-attack-and-end-step', steps);
+  });
+});

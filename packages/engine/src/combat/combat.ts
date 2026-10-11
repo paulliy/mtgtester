@@ -538,6 +538,21 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
     }
   }
+  // Tenuous Truce: attackers declared between an Aura's controller and the player it enchants,
+  // in either direction. Creatures attack only players here, so these are all such attacks.
+  if (defendingPlayers.length > 0) {
+    for (const aura of [...ctx.state.battlefield]) {
+      const enchanted = aura.attachedTo;
+      if (enchanted === null || !ctx.state.players.some((p) => p.id === enchanted)) continue;
+      const broken =
+        (aura.controllerId === ap.id && defendingPlayers.includes(enchanted as PlayerId)) ||
+        (enchanted === ap.id && defendingPlayers.includes(aura.controllerId));
+      if (broken)
+        queueTriggersForEvent(ctx, 'attackBetweenControllerAndEnchantedPlayer', [
+          { permanent: aura, playerId: ap.id },
+        ]);
+    }
+  }
   ctx.state.combat = {
     defendingPlayers,
   };

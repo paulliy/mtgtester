@@ -8626,6 +8626,64 @@ function curseOfBountyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function tenuousTruceAttackScenario(gameId: GameId): CardTestScenario {
+  const truce = pinnedFrom(COVERAGE_PR05, 'Tenuous Truce');
+  return pr01Scenario(gameId, {
+    id: 'tenuous-truce-viewer-attack-sacrifices',
+    title: 'Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura',
+    instructions: [
+      'Tenuous Truce is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Tenuous Truce targeting P2. It can enchant only an opponent, so P1 is not offered. It enters attached to P2.',
+      'Attack P2 with Lab Green Bear. You attacked the enchanted opponent, so Tenuous Truce is sacrificed.',
+    ],
+    expectedOutcome:
+      'Tenuous Truce is in your graveyard and no longer on the battlefield. Lab Green Bear hit P2 for 2, leaving P2 at 38.',
+    oracleSha256: truce.sha256,
+    clauseIds: ['tenuous-truce-enchant-opponent', 'tenuous-truce-attack-sacrifices'],
+    decks: {
+      P1: [truce.card, PLAINS, FOREST, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Tenuous Truce'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function tenuousTruceScopeScenario(gameId: GameId): CardTestScenario {
+  const truce = pinnedFrom(COVERAGE_PR05, 'Tenuous Truce');
+  return pr01Scenario(gameId, {
+    id: 'tenuous-truce-viewer-other-attack-and-end-step',
+    title: 'Tenuous Truce: attacking a third player keeps it, and your own end step draws nothing',
+    instructions: [
+      'Tenuous Truce is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield, and Lab Ox is on top of your library.',
+      'Cast Tenuous Truce targeting P2 and let it resolve.',
+      'Attack P3 with Lab Green Bear. P3 is not the enchanted opponent, so Tenuous Truce stays. Then your end step begins: the Aura only draws at the end step of the player it enchants, P2.',
+    ],
+    expectedOutcome:
+      'Tenuous Truce is still attached to P2 and you drew nothing, so Lab Ox is still in your library. Lab Green Bear hit P3 for 2, leaving P3 at 38.',
+    oracleSha256: truce.sha256,
+    clauseIds: ['tenuous-truce-end-step-draw', 'tenuous-truce-attack-sacrifices'],
+    decks: {
+      P1: [truce.card, PLAINS, FOREST, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Tenuous Truce'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10475,6 +10533,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'eldrazi-conscription-viewer-annihilator',
   'curse-of-bounty-viewer-untap-on-attack',
+  'tenuous-truce-viewer-attack-sacrifices',
+  'tenuous-truce-viewer-other-attack-and-end-step',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10761,6 +10821,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
+  'tenuous-truce-viewer-attack-sacrifices': tenuousTruceAttackScenario,
+  'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

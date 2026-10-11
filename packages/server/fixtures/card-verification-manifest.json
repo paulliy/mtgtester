@@ -9441,6 +9441,57 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "f0bf2923-aea2-4bac-b061-64bc84437ef1": {
+      "name": "Tenuous Truce",
+      "oracleSha256": "95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "tenuous-truce-enchant-opponent",
+          "oracleText": "Enchant opponent",
+          "implementation": [
+            "interpreted Aura spell whose one target is a player who is an opponent of its caster (enchant opponent): the caster is not a legal host, every opponent is, and the Aura enters attached to that player rather than to a permanent"
+          ],
+          "engineTestIds": [
+            "tenuous-truce-pinned-oracle-supported",
+            "tenuous-truce-enchant-opponent"
+          ],
+          "viewerScenarioIds": ["tenuous-truce-viewer-attack-sacrifices"]
+        },
+        {
+          "id": "tenuous-truce-end-step-draw",
+          "oracleText": "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+          "implementation": [
+            "interpreted mandatory step trigger scoped to the end step of the player this Aura enchants (player: enchanted): the enchanted player, the event player, draws one card, then the Aura's controller draws one",
+            "it does nothing at the end step of the Aura's controller or of any other player, and nothing once the Aura has left the battlefield; the viewer scenario shows that scope from the controller's own end step, and the draw itself needs the enchanted player's turn, which the Card Test Lab cannot reach, so it is covered by the engine tests"
+          ],
+          "engineTestIds": [
+            "tenuous-truce-pinned-oracle-supported",
+            "tenuous-truce-end-step-draw",
+            "tenuous-truce-end-step-only-enchanted"
+          ],
+          "viewerScenarioIds": ["tenuous-truce-viewer-other-attack-and-end-step"]
+        },
+        {
+          "id": "tenuous-truce-attack-sacrifices",
+          "oracleText": "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.",
+          "implementation": [
+            "interpreted mandatory trigger on a new attack-between event: queued when attackers are declared by this Aura's controller at the player it enchants, or by that player at the Aura's controller; its effect sacrifices the Aura itself, once even if several creatures attack or several players are attacked",
+            "creatures can attack only players in this engine, so the planeswalker halves of the printed text can never occur; an attack on or by a third player, by either of you on a third player, or no attack at all leaves the Aura on the battlefield"
+          ],
+          "engineTestIds": [
+            "tenuous-truce-pinned-oracle-supported",
+            "tenuous-truce-attack-sacrifices",
+            "tenuous-truce-attack-elsewhere"
+          ],
+          "viewerScenarioIds": [
+            "tenuous-truce-viewer-attack-sacrifices",
+            "tenuous-truce-viewer-other-attack-and-end-step"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
