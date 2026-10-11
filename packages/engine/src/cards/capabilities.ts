@@ -1033,7 +1033,6 @@ const families = {
       becomesTargeted: true,
       dealtDamage: true,
       enchantedPlayerAttacked: true,
-      attackBetweenControllerAndEnchantedPlayer: true,
       sacrificed: true,
       tokenCreated: true,
       putIntoGraveyardFromAnywhere: true,

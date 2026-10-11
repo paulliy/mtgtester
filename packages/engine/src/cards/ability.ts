@@ -1500,12 +1500,6 @@ export type ObjectTriggerWhen =
   | 'fights'
   | 'becomesTargeted'
   | 'enchantedPlayerAttacked'
-  /**
-   * "When you attack enchanted opponent ... or when they attack you ..." (Tenuous Truce): this
-   * Aura's controller declares attackers at the player it enchants, or that player declares
-   * attackers at its controller. The event player is the attacking player.
-   */
-  | 'attackBetweenControllerAndEnchantedPlayer'
   | 'dealtDamage'
   | 'sacrificed'
   | 'tokenCreated'
@@ -1608,11 +1602,7 @@ export type TriggerHead =
    */
   | {
       when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat';
-      /**
-       * `enchanted`: the step of the player this Aura enchants ("at the beginning of enchanted
-       * opponent's end step", Tenuous Truce).
-       */
-      player: 'you' | 'each' | 'enchanted';
+      player: 'you' | 'each';
     }
   /**
    * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at

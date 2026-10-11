@@ -83,11 +83,7 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * put onto the battlefield with it (that object's id), or nothing (`null`) if none was.
    */
   reanimatedHostId?: ObjectId | null;
-  /**
-   * Player this creature is attacking, while in combat. Planeswalkers can't be attacked here;
-   * Tenuous Truce's trigger (interpret.ts) drops its planeswalker halves on that basis, so
-   * widening this to planeswalkers must add those halves back.
-   */
+  /** Player this creature is attacking, while in combat. */
   attacking: PlayerId | null;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;

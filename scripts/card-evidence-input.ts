@@ -1972,16 +1972,6 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
-    titlePath: ['Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura'],
-  },
-  {
-    file: 'card-test-lab.spec.ts',
-    titlePath: [
-      'Tenuous Truce: attacking a third player keeps it, and your own end step draws nothing',
-    ],
-  },
-  {
-    file: 'card-test-lab.spec.ts',
     titlePath: [
       'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
     ],
