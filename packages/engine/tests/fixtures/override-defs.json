@@ -5070,12 +5070,6 @@
     }
   },
   {
-    "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
-    "name": "Shielded by Faith",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
     "name": "Blasphemous Act",
     "handledLines": [
@@ -19995,12 +19989,6 @@
   {
     "oracleId": "oracle-sheltered-by-ghosts",
     "name": "Sheltered by Ghosts",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-shielded-by-faith",
-    "name": "Shielded by Faith",
     "handledLines": [],
     "def": {}
   },

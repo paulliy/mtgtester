@@ -27,9 +27,6 @@ const HANDLED_LINE_FIXES: Record<string, string[]> = {
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
     'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
   ],
-  '79085dea-8daa-41c0-a975-61e3e6da2e26': [
-    'Whenever a creature enters, you may attach this Aura to that creature.',
-  ],
   'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': [
     "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
   ],
@@ -355,12 +352,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Sheltered by Ghosts',
     'Ward {2} is claimed without a ward static.',
   );
-  // Catalog audit silverquill-remaining-batch-2: optional attach is mandatory.
-  unsupportedCard(
-    '79085dea-8daa-41c0-a975-61e3e6da2e26',
-    'Shielded by Faith',
-    'Optional attach is implemented as mandatory attach.',
-  );
+  // Shielded by Faith: restored in coverage PR05. The interpreter reads the optional attach to each
+  // entering creature, so no override remains.
   defineCard(
     'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e',
     'Shineshadow Snarl',

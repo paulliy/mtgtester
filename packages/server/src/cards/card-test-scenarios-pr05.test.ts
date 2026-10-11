@@ -450,3 +450,40 @@ describe("Ajani's Chosen Card Test Lab scenario", () => {
     replays('ajanis-chosen-viewer-aura-moves-to-cat', steps);
   });
 });
+
+describe('Shielded by Faith Card Test Lab scenario', () => {
+  it('shielded-by-faith-viewer-attach-to-entering-creature — it moves onto Lab Green Bear when it enters and Lab Doom cannot destroy the Bear', () => {
+    const steps: Step[] = [
+      { action: 'Cast Shielded by Faith', targets: ['Lab Ox'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Green Bear' },
+      { action: 'Pass priority' },
+      { action: 'Yes' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'shielded-by-faith-viewer-attach-to-entering-creature',
+      steps,
+    );
+    const [aura] = onBattlefield('Shielded by Faith');
+    const [bear] = onBattlefield('Lab Green Bear');
+    const [ox] = onBattlefield('Lab Ox');
+    expect(onBattlefield('Shielded by Faith')).toHaveLength(1);
+    expect(bear).toBeDefined();
+    expect(ox).toBeDefined();
+    expect(aura?.attachedTo).toBe(bear?.id);
+    // Asked once, then Lab Doom was cast at the indestructible Bear and did nothing.
+    expect(prompts.filter((prompt) => /use this ability/.test(prompt))).toHaveLength(1);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Shielded by Faith', to: 'Lab Green Bear' }]);
+    expect(
+      state.battlefield.filter((perm) => /Basic Land/.test(perm.typeLine) && perm.tapped),
+    ).toHaveLength(6);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('shielded-by-faith-viewer-attach-to-entering-creature', steps);
+  });
+});

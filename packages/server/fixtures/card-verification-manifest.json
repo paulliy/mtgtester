@@ -1799,13 +1799,34 @@
     "79085dea-8daa-41c0-a975-61e3e6da2e26": {
       "name": "Shielded by Faith",
       "oracleSha256": "d2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "shielded-by-faith-indestructible",
+          "oracleText": "Enchant creature\nEnchanted creature has indestructible.",
+          "implementation": [
+            "interpreted Aura spell: one target creature (never a player or a noncreature permanent), attaches on resolution",
+            "interpreted static layer 6 indestructible keyword on the creature this Aura is attached to (attachedToSource) and nothing else: the enchanted creature survives destroy effects and lethal damage, other creatures do not, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "shielded-by-faith-pinned-oracle-supported",
+            "shielded-by-faith-indestructible-enchanted-only"
+          ],
+          "viewerScenarioIds": ["shielded-by-faith-viewer-attach-to-entering-creature"]
+        },
+        {
+          "id": "shielded-by-faith-attach",
           "oracleText": "Whenever a creature enters, you may attach this Aura to that creature.",
-          "implementation": ["explicitly unsupported; attach is mandatory"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted optional enters trigger on any creature, yours or an opponent's, with no target, put to the Aura's controller as a yes or no choice; yes runs attach with what source and to triggerObject, which moves the Aura onto the entering creature with a new timestamp (CR 701.3c, 613.7e) so the indestructible moves with it, and no leaves it where it is",
+            "a noncreature permanent entering does not trigger it; an entering creature that left the battlefield before the trigger resolved, or an Aura that is no longer on the battlefield, does not move (CR 701.3b)"
+          ],
+          "engineTestIds": [
+            "shielded-by-faith-pinned-oracle-supported",
+            "shielded-by-faith-attach-any-creature",
+            "shielded-by-faith-cant-attach-or-gone"
+          ],
+          "viewerScenarioIds": ["shielded-by-faith-viewer-attach-to-entering-creature"]
         }
       ],
       "gameplayAiScenarioIds": []

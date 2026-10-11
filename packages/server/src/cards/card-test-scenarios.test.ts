@@ -359,6 +359,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ghoulish-impetus-viewer-return-at-end-step',
       'gift-of-immortality-viewer-owner-return-then-aura',
       'ajanis-chosen-viewer-aura-moves-to-cat',
+      'shielded-by-faith-viewer-attach-to-entering-creature',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

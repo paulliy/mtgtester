@@ -2860,6 +2860,21 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
+    "name": "Shielded by Faith",
+    "package": "PR05.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Optional attach is implemented as mandatory attach."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
     "name": "Silver Surfer, Galactus's Herald",
     "package": "W6",

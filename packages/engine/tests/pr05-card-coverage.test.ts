@@ -2673,6 +2673,240 @@ describe('Screams from Within', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.13 Shielded by Faith
+// ---------------------------------------------------------------------------------------------
+
+describe('Shielded by Faith', () => {
+  const { card } = pinned('Shielded by Faith');
+  const CREATURE = (name: string, manaCost = '{0}') =>
+    oracle({ name, typeLine: 'Creature — Secret', manaCost });
+  const SMITE = oracle({
+    name: 'Lab Smite',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'Destroy target creature.',
+  });
+  const BLAST = oracle({
+    name: 'Lab Blast',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'Lab Blast deals 5 damage to target creature.',
+  });
+  const RESPONSE = oracle({
+    name: 'Lab Response',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /** P1 controls Shielded by Faith enchanting Lab Host, plus Lab Other; P2 controls Lab Enemy. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const aura = spawn(ctx, 'P1', card);
+    const host = spawn(ctx, 'P1', CREATURE('Lab Host'));
+    const other = spawn(ctx, 'P1', CREATURE('Lab Other'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    aura.attachedTo = host.id;
+    return { ctx, aura, host, other, enemy };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const alive = (ctx: GameContext, perm: EnginePermanent) => ctx.state.battlefield.includes(perm);
+
+  /** P1 casts an instant at `targetId` through the normal path and lets it resolve. */
+  function castAt(ctx: GameContext, spell: OracleCard, targetId: string) {
+    const object = conjure(ctx, 'P1', spell, 'hand');
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, `P1 casts ${spell.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    resolveTop(ctx);
+    return settle(ctx);
+  }
+
+  /** The "you may attach" prompts put to anyone, answered yes or no. */
+  function asking(choice: 'yes' | 'no') {
+    const asked: { player: string; prompt: string }[] = [];
+    const answer: Answer = (decision) => {
+      if (/use this ability/.test(decision.prompt)) {
+        asked.push({ player: decision.player, prompt: decision.prompt });
+        const wanted = choice === 'yes' ? 'acceptTrigger' : 'declineTrigger';
+        return {
+          index: decision.options.findIndex((option) => option.type === wanted),
+          targets: new Map(),
+        };
+      }
+      return { index: 0, targets: new Map() };
+    };
+    return { asked, answer };
+  }
+
+  /** P1 casts a free creature; its enters trigger resolves with `choice`. */
+  function creatureEnters(ctx: GameContext, name: string, choice: 'yes' | 'no') {
+    const run = asking(choice);
+    castFromHand(ctx, 'P1', CREATURE(name), []);
+    resolveTop(ctx);
+    settle(ctx, run.answer);
+    return run.asked;
+  }
+
+  it('shielded-by-faith-pinned-oracle-supported — the interpreter alone models the indestructible grant and the optional attach to any entering creature', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // Enchanted creature has indestructible: a layer 6 keyword on the creature it is attached to.
+    expect(def.staticEffects).toEqual([
+      { affects: { kind: 'attachedToSource' }, op: { layer: 6, addKeyword: 'indestructible' } },
+    ]);
+    // Any creature entering, yours or not, with a "you may": one optional, untargeted trigger.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'enters',
+      subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+    });
+    expect(trigger!.optional).toBe(true);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([{ op: 'attach', what: 'source', to: 'triggerObject' }]);
+  });
+
+  it('shielded-by-faith-indestructible-enchanted-only — only the enchanted creature is indestructible: it survives destroy and lethal damage, nothing else does', () => {
+    const { ctx, aura, host, other, enemy } = board('shielded-indestructible');
+    expect(hasKeyword(ctx, host, 'indestructible')).toBe(true);
+    expect(hasKeyword(ctx, other, 'indestructible')).toBe(false);
+    expect(hasKeyword(ctx, enemy, 'indestructible')).toBe(false);
+    // The Aura grants it; the Aura itself is not indestructible.
+    expect(hasKeyword(ctx, aura, 'indestructible')).toBe(false);
+
+    // Destroy and five damage each leave the enchanted 2/2 on the battlefield, undamaged by death.
+    castAt(ctx, SMITE, host.id);
+    expect(alive(ctx, host)).toBe(true);
+    castAt(ctx, BLAST, host.id);
+    expect(alive(ctx, host)).toBe(true);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toEqual(['Lab Smite', 'Lab Blast']);
+
+    // The same spells kill creatures it is not on.
+    castAt(ctx, SMITE, other.id);
+    expect(alive(ctx, other)).toBe(false);
+    castAt(ctx, BLAST, enemy.id);
+    expect(alive(ctx, enemy)).toBe(false);
+
+    // Unattached, it grants nothing: the former host dies to the same destroy effect.
+    aura.attachedTo = null;
+    expect(hasKeyword(ctx, host, 'indestructible')).toBe(false);
+    castAt(ctx, SMITE, host.id);
+    expect(alive(ctx, host)).toBe(false);
+  });
+
+  it("shielded-by-faith-attach-any-creature — any creature entering, yours or an opponent's, offers the optional attach; yes moves it with a new timestamp and the indestructible with it, no leaves it", () => {
+    // Yes, for your own creature: the Aura leaves Lab Host and indestructible follows.
+    const mine = board('shielded-yes');
+    const stamp = mine.aura.timestamp;
+    const yes = creatureEnters(mine.ctx, 'Lab Newcomer', 'yes');
+    const [newcomer] = named(mine.ctx, 'Lab Newcomer');
+    expect(yes).toHaveLength(1);
+    expect(yes[0]!.player).toBe('P1');
+    expect(mine.aura.attachedTo).toBe(newcomer?.id);
+    expect(mine.aura.timestamp).toBeGreaterThan(stamp);
+    expect(hasKeyword(mine.ctx, newcomer!, 'indestructible')).toBe(true);
+    expect(hasKeyword(mine.ctx, mine.host, 'indestructible')).toBe(false);
+    expect(mine.ctx.state.stack).toEqual([]);
+    // It really protects the new host: a destroy spell cannot kill it.
+    castAt(mine.ctx, SMITE, newcomer!.id);
+    expect(alive(mine.ctx, newcomer!)).toBe(true);
+
+    // No: nothing moves, and the timestamp is unchanged.
+    const declined = board('shielded-no');
+    const keptStamp = declined.aura.timestamp;
+    const no = creatureEnters(declined.ctx, 'Lab Newcomer', 'no');
+    expect(no).toHaveLength(1);
+    expect(declined.aura.attachedTo).toBe(declined.host.id);
+    expect(declined.aura.timestamp).toBe(keptStamp);
+    expect(hasKeyword(declined.ctx, declined.host, 'indestructible')).toBe(true);
+    expect(
+      hasKeyword(declined.ctx, named(declined.ctx, 'Lab Newcomer')[0]!, 'indestructible'),
+    ).toBe(false);
+
+    // An opponent's creature entering asks the Aura's controller P1, and may move it onto that
+    // creature (it enchants any creature, not only yours).
+    const theirs = board('shielded-opponent');
+    const run = asking('yes');
+    const entering = conjure(theirs.ctx, 'P2', CREATURE('Lab Intruder'), 'hand');
+    pump(moveObject(theirs.ctx, entering, { zone: 'battlefield' }));
+    settle(theirs.ctx, run.answer);
+    const [intruder] = named(theirs.ctx, 'Lab Intruder');
+    expect(run.asked).toHaveLength(1);
+    expect(run.asked[0]!.player).toBe('P1');
+    expect(intruder?.controllerId).toBe('P2');
+    expect(theirs.aura.attachedTo).toBe(intruder?.id);
+    expect(theirs.aura.controllerId).toBe('P1');
+    expect(hasKeyword(theirs.ctx, intruder!, 'indestructible')).toBe(true);
+
+    // Negative: a noncreature permanent entering asks nothing and moves nothing.
+    const plain = board('shielded-noncreature');
+    const quiet = asking('yes');
+    castFromHand(plain.ctx, 'P1', LAB_ARTIFACT('Lab Trinket'), generic(1));
+    resolveTop(plain.ctx);
+    settle(plain.ctx, quiet.answer);
+    expect(named(plain.ctx, 'Lab Trinket')).toHaveLength(1);
+    expect(quiet.asked).toEqual([]);
+    expect(plain.aura.attachedTo).toBe(plain.host.id);
+  });
+
+  it("shielded-by-faith-cant-attach-or-gone — it doesn't move to a creature that left before the trigger resolved, and an Aura that left asks nothing (CR 701.3b)", () => {
+    // The entering creature dies in response to the trigger: the Aura stays on Lab Host.
+    const gone = board('shielded-gone');
+    const newcomer = castFromHand(gone.ctx, 'P1', CREATURE('Lab Newcomer'), []);
+    resolveTop(gone.ctx);
+    const [entered] = named(gone.ctx, 'Lab Newcomer');
+    expect(entered, newcomer.name).toBeDefined();
+    conjure(gone.ctx, 'P1', RESPONSE, 'hand');
+    let responded = false;
+    const run = asking('yes');
+    pump(runPrioritySequence(gone.ctx), (decision, count) => {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0 && !responded && gone.ctx.state.stack.length > 0) {
+        responded = true;
+        kill(gone.ctx, entered!);
+        return { index: pass, targets: new Map() };
+      }
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return run.answer(decision, count);
+    });
+    expect(responded, 'a player held priority with the trigger on the stack').toBe(true);
+    expect(named(gone.ctx, 'Lab Newcomer')).toEqual([]);
+    expect(gone.aura.attachedTo).toBe(gone.host.id);
+    expect(hasKeyword(gone.ctx, gone.host, 'indestructible')).toBe(true);
+
+    // The Aura itself is not on the battlefield (it died earlier): a creature entering asks nothing.
+    const bare = board('shielded-aura-gone');
+    kill(bare.ctx, bare.aura);
+    const quiet = asking('yes');
+    castFromHand(bare.ctx, 'P1', CREATURE('Lab Newcomer'), []);
+    resolveTop(bare.ctx);
+    settle(bare.ctx, quiet.answer);
+    expect(quiet.asked).toEqual([]);
+    expect(playerById(bare.ctx, 'P1').graveyard.map((c) => c.name)).toEqual(['Shielded by Faith']);
+    expect(named(bare.ctx, 'Lab Newcomer')).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.15 Sunforger
 // ---------------------------------------------------------------------------------------------
 
@@ -3172,6 +3406,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Screams from Within',
     sha256: '603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3',
     clauseCount: 3,
+  },
+  {
+    name: 'Shielded by Faith',
+    sha256: 'd2578f1927629d5684b6da7702f4465f5a18d70f92da7acb414b894f52510fc7',
+    clauseCount: 2,
   },
   {
     name: 'Sunforger',

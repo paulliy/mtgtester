@@ -147,9 +147,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Gift of Immortality: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('79085dea-8daa-41c0-a975-61e3e6da2e26', 'Shielded by Faith', [
-    'Whenever a creature enters, you may attach this Aura to that creature.',
-  ]);
+  // Shielded by Faith: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('441b51b0-ecd0-466d-9ca8-e754eb563aec', 'Eidolon of Countless Battles', [
     'Bestow {2}{W}{W}',

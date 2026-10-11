@@ -6636,3 +6636,74 @@ test("Ajani's Chosen: an Aura you cast moves onto the Cat it makes", async ({ pa
   await expect(permanent(page, 'Cat')).toHaveCount(1);
   await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
 });
+
+test('Shielded by Faith: it moves onto a creature that enters and keeps it indestructible', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+
+  // Cast the Aura on Lab Ox and let it resolve.
+  const aura = handCard(page, 'Shielded by Faith');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(oxId);
+
+  // Cast the Bear: the Aura's trigger asks whether to attach it to the new creature.
+  const bear = handCard(page, 'Lab Green Bear');
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bear.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(
+    page.getByText(/Shielded by Faith — Whenever a creature enters/).first(),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(bearId);
+
+  // Destroy the Bear: it is indestructible now, so it survives.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.attachedTo).toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(permanent(page, 'Shielded by Faith')).toHaveCount(1);
+  // Lab Doom is your only graveyard card.
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});

@@ -99,7 +99,6 @@ const REASONS: Record<string, string> = {
   'Redemption Arc':
     'Exile-enchanted-creature activated ability is claimed without an implementation.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
-  'Shielded by Faith': 'Optional attach is implemented as mandatory attach.',
   'Tomik, Wielder of Law':
     'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
   'Combat Calligrapher':
@@ -297,6 +296,7 @@ describe('Marchesa catalog audit containment', () => {
     'Ghoulish Impetus',
     'Gift of Immortality',
     "Ajani's Chosen",
+    'Shielded by Faith',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

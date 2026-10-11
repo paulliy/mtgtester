@@ -129,7 +129,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Martial Impetus',
       'Redemption Arc',
       'Sheltered by Ghosts',
-      'Shielded by Faith',
       'Tomik, Wielder of Law',
       'Combat Calligrapher',
       'Comeuppance',

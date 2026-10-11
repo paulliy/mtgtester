@@ -8193,6 +8193,51 @@ function ajanisChosenScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function shieldedByFaithScenario(gameId: GameId): CardTestScenario {
+  const shielded = pinnedFrom(COVERAGE_PR05, 'Shielded by Faith');
+  return pr01Scenario(gameId, {
+    id: 'shielded-by-faith-viewer-attach-to-entering-creature',
+    title: 'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
+    instructions: [
+      'Shielded by Faith, Lab Green Bear and Lab Doom are in your hand. Two Plains, two Swamps, two Forests and Lab Ox (4/4) are on your battlefield.',
+      'Cast Shielded by Faith targeting Lab Ox and let it resolve: Lab Ox is indestructible.',
+      'Cast Lab Green Bear and let it resolve. Shielded by Faith triggers because a creature entered.',
+      'Choose Yes to attach Shielded by Faith to Lab Green Bear. It leaves Lab Ox, which is no longer indestructible.',
+      'Cast Lab Doom on Lab Green Bear and let it resolve. It is indestructible now, so it survives.',
+    ],
+    expectedOutcome:
+      'Shielded by Faith is on the battlefield attached to Lab Green Bear, which is still on the battlefield after Lab Doom. Lab Doom is in your graveyard and Lab Ox is on the battlefield. All six lands are tapped.',
+    oracleSha256: shielded.sha256,
+    clauseIds: ['shielded-by-faith-indestructible', 'shielded-by-faith-attach'],
+    decks: {
+      P1: [
+        shielded.card,
+        LAB_GREEN_BEAR,
+        LAB_DOOM,
+        PLAINS,
+        PLAINS,
+        SWAMP,
+        SWAMP,
+        FOREST,
+        FOREST,
+        LAB_OX,
+      ],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Shielded by Faith', 'Lab Green Bear', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Plains', 'Plains', 'Swamp', 'Swamp', 'Forest', 'Forest', 'Lab Ox'],
+        },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10029,6 +10074,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ghoulish-impetus-viewer-return-at-end-step',
   'gift-of-immortality-viewer-owner-return-then-aura',
   'ajanis-chosen-viewer-aura-moves-to-cat',
+  'shielded-by-faith-viewer-attach-to-entering-creature',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10302,6 +10348,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
   'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
+  'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

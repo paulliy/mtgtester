@@ -813,7 +813,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "59aeddaf9ed1c6325a3d29a21f08b761db12b8c1d631f8863f67dee0f1978030",
+      "sha256": "dac10874062b91e114c0a6d2a028863151a4118a27d2cb35f5e1da6691020e1b",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {
