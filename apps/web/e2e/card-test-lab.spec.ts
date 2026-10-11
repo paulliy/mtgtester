@@ -6410,6 +6410,7 @@ test('Screams from Within: its creature dies and it returns onto a hexproof oppo
   // Cast the Aura: only creatures you can target are legal, so the hexproof Elf is not.
   const screams = handCard(page, 'Screams from Within');
   await expect(screams).toHaveClass(/actionable/, { timeout: 15_000 });
+  const screamsBefore = await page.getByText('Screams from Within resolves').count();
   await screams.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
@@ -6419,7 +6420,7 @@ test('Screams from Within: its creature dies and it returns onto a hexproof oppo
   await confirm(page);
 
   // Let it resolve: the enchanted Bear is a 1/1 and the Ox is untouched.
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Screams from Within', screamsBefore);
   await expect(permanent(page, 'Lab Green Bear')).toContainText('1/1', { timeout: 15_000 });
   await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
   await expect
@@ -6483,6 +6484,7 @@ test('Ghoulish Impetus: its creature dies and it returns at the next end step', 
   // Cast the Aura on the Bear: the hexproof Elf is not a legal target.
   const impetus = handCard(page, 'Ghoulish Impetus');
   await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Ghoulish Impetus resolves').count();
   await impetus.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
@@ -6492,7 +6494,7 @@ test('Ghoulish Impetus: its creature dies and it returns at the next end step', 
   await confirm(page);
 
   // Let it resolve: the Bear is a 3/3 with deathtouch, goaded by you.
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Ghoulish Impetus', impetusBefore);
   await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3', { timeout: 15_000 });
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
@@ -6555,13 +6557,14 @@ test('Gift of Immortality: the creature returns to its owner, then the Aura retu
   // Cast the Aura on the Bear you control but P2 owns.
   const gift = handCard(page, 'Gift of Immortality');
   await expect(gift).toHaveClass(/actionable/, { timeout: 15_000 });
+  const giftBefore = await page.getByText('Gift of Immortality resolves').count();
   await gift.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Gift of Immortality', giftBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Gift of Immortality')?.attachedTo)
     .toBe(bearId);
@@ -6609,12 +6612,13 @@ test("Ajani's Chosen: an Aura you cast moves onto the Cat it makes", async ({ pa
   // Cast the Aura on the Bear and let it resolve: the Bear is a 4/4.
   const aegis = handCard(page, 'Lab Aegis');
   await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
   await aegis.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
   await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4', { timeout: 15_000 });
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
@@ -6658,12 +6662,13 @@ test('Shielded by Faith: it moves onto a creature that enters and keeps it indes
   // Cast the Aura on Lab Ox and let it resolve.
   const aura = handCard(page, 'Shielded by Faith');
   await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const auraBefore = await page.getByText('Shielded by Faith resolves').count();
   await aura.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Ox').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Shielded by Faith', auraBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
     .toBe(oxId);
@@ -6671,14 +6676,15 @@ test('Shielded by Faith: it moves onto a creature that enters and keeps it indes
   // Cast the Bear: the Aura's trigger asks whether to attach it to the new creature.
   const bear = handCard(page, 'Lab Green Bear');
   await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  const bearBefore = await page.getByText('Lab Green Bear resolves').count();
   await bear.click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Lab Green Bear', bearBefore);
   await expect(
     page.getByText(/Shielded by Faith — Whenever a creature enters/).first(),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await passUntil(page, page.getByRole('button', { name: 'No', exact: true }));
   await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible({
     timeout: 15_000,
   });
@@ -6770,18 +6776,21 @@ test("Karametra's Favor: draw a card, then tap the enchanted creature for mana t
   // Cast the Aura on Lab Green Bear, paying with the Forests, and let it resolve.
   const aura = handCard(page, "Karametra's Favor");
   await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const favorBefore = await page.getByText("Karametra's Favor resolves").count();
+  const drawBefore = await page.getByText('When this Aura enters, draw a card. resolves').count();
   await aura.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, "Karametra's Favor", favorBefore);
+  await awaitResolution(page, 'When this Aura enters, draw a card.', drawBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === "Karametra's Favor")?.attachedTo)
     .toBe(bearId);
 
-  // Its enters trigger draws the Plains.
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  // The enters trigger has resolved and drawn the Plains. A pass here would hit the land-drop
+  // reminder, since the Plains is then a playable land.
   await expect(handCard(page, 'Plains')).toHaveCount(1, { timeout: 15_000 });
   await expect(permanent(page, 'Lab Green Bear')).not.toContainText('TAP');
 
@@ -6797,7 +6806,7 @@ test("Karametra's Favor: draw a card, then tap the enchanted creature for mana t
 
   await expect(page.getByText('Lab Shock resolves')).toBeVisible({ timeout: 15_000 });
   // The drawn Plains is a playable land, so passing asks about the land drop.
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await passUntil(page, page.getByRole('button', { name: 'Pass anyway' }));
   await page.getByRole('button', { name: 'Pass anyway' }).click();
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.tapped).toBe(true);
@@ -6827,12 +6836,13 @@ test('Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no
   // Cast the Aura on Lab Green Bear and let it resolve.
   const arc = handCard(page, 'Redemption Arc');
   await expect(arc).toHaveClass(/actionable/, { timeout: 15_000 });
+  const arcBefore = await page.getByText('Redemption Arc resolves').count();
   await arc.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Redemption Arc', arcBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Redemption Arc')?.attachedTo)
     .toBe(bearId);
@@ -6875,12 +6885,13 @@ test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the
   // Cast the Aura on Lab Green Bear and let it resolve.
   const ideal = handCard(page, 'Fallen Ideal');
   await expect(ideal).toHaveClass(/actionable/, { timeout: 15_000 });
+  const idealBefore = await page.getByText('Fallen Ideal resolves').count();
   await ideal.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Fallen Ideal', idealBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Fallen Ideal')?.attachedTo)
     .toBe(bearId);
@@ -6980,12 +6991,13 @@ test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and y
   // Enchant the opponent's Lab Bird with your Lab Aegis.
   const aegis = handCard(page, 'Lab Aegis');
   await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
   await aegis.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Bird').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
     .toBe(birdId);
@@ -7027,12 +7039,13 @@ test('Martial Impetus: the enchanted creature attacks and pumps your other attac
   // Cast the Aura on Lab Green Bear and let it resolve: a 3/3 that is goaded.
   const impetus = handCard(page, 'Martial Impetus');
   await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Martial Impetus resolves').count();
   await impetus.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Martial Impetus', impetusBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Martial Impetus')?.attachedTo)
     .toBe(bearId);
@@ -7084,12 +7097,13 @@ test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchante
   // Cast the Aura on Lab Green Bear. Entering, it triggers Killian: up to one target creature.
   const aegis = handCard(page, 'Lab Aegis');
   await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
   await aegis.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
     .toBe(bearId);
@@ -7140,12 +7154,13 @@ test('Angelic Destiny: a 6/6 flying Angel, then it dies and the Aura returns to 
   // Cast the Aura on Lab Green Bear: it becomes a 6/6.
   const destiny = handCard(page, 'Angelic Destiny');
   await expect(destiny).toHaveClass(/actionable/, { timeout: 15_000 });
+  const destinyBefore = await page.getByText('Angelic Destiny resolves').count();
   await destiny.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Angelic Destiny', destinyBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Angelic Destiny')?.attachedTo)
     .toBe(bearId);
@@ -7188,12 +7203,13 @@ test('Sheltered by Ghosts: exile an opposing permanent, then attack with lifelin
   // Cast the Aura on Lab Green Bear; it can only enchant a creature you control.
   const ghosts = handCard(page, 'Sheltered by Ghosts');
   await expect(ghosts).toHaveClass(/actionable/, { timeout: 15_000 });
+  const ghostsBefore = await page.getByText('Sheltered by Ghosts resolves').count();
   await ghosts.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Sheltered by Ghosts', ghostsBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Sheltered by Ghosts')?.attachedTo)
     .toBe(bearId);
@@ -7244,12 +7260,13 @@ test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sa
   // Cast the Aura on Lab Green Bear: it becomes a 12/12.
   const conscription = handCard(page, 'Eldrazi Conscription');
   await expect(conscription).toHaveClass(/actionable/, { timeout: 15_000 });
+  const conscriptionBefore = await page.getByText('Eldrazi Conscription resolves').count();
   await conscription.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await permanent(page, 'Lab Green Bear').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Eldrazi Conscription', conscriptionBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Eldrazi Conscription')?.attachedTo)
     .toBe(bearId);
@@ -7292,12 +7309,13 @@ test('Curse of Bounty: enchant a player, then attacking them untaps your nonland
   // Cast the Curse targeting P2: it enchants the player, not a permanent.
   const curse = handCard(page, 'Curse of Bounty');
   await expect(curse).toHaveClass(/actionable/, { timeout: 15_000 });
+  const curseBefore = await page.getByText('Curse of Bounty resolves').count();
   await curse.click();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
   await page.locator('.opponent[data-seat="P2"] > header').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await awaitResolution(page, 'Curse of Bounty', curseBefore);
   await expect
     .poll(() => boards.at(-1)?.find((p) => p.name === 'Curse of Bounty')?.attachedTo)
     .toBe('P2');
