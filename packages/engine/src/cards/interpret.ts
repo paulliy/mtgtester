@@ -4314,6 +4314,8 @@ function parseSpellFilter(phrase: string, card: OracleCard): Selector | null {
     return base === null ? null : allOf(base, bound);
   }
   if (noun === 'noncreature') return not(ofType('Creature'));
+  // "Whenever you cast an Aura spell" (Kor Spiritdancer): the spell's subtype (CR 205.3h).
+  if (noun === 'aura') return ofSubtype('Aura');
   // "an instant or sorcery spell" (Archmage Emeritus) / "Instant and sorcery spells" (Goblin
   // Electromancer) â€” each side is its own card type, not a tribe the way `parseTriggerSubject`'s
   // "or" handling elsewhere reads alternatives. "And" reads the same as "or" here: the predicate
@@ -6392,7 +6394,11 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
     if (m !== null) {
       const affects =
         (m[1] as string) === '~' ? { kind: 'self' as const } : parseSubject(m[1] as string, card);
-      const count = parseDynamicCountValue('the number of ' + (m[4] as string), card);
+      // "~ gets +2/+2 for each Aura attached to it" (Kor Spiritdancer): "it" is the source.
+      const count: Value | null =
+        (m[1] as string) === '~' && (m[4] as string) === 'aura attached to it'
+          ? { kind: 'aurasAttachedToSource' }
+          : parseDynamicCountValue('the number of ' + (m[4] as string), card);
       if (affects !== null && count !== null) {
         const power = (m[2] as string).toLowerCase().includes('x')
           ? count

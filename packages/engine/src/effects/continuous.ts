@@ -387,6 +387,15 @@ function scopeOf(
       }
       return count;
     },
+    countAurasAttachedToSource: () => {
+      const host = work.get(source.cardId)?.perm;
+      if (host === undefined) return 0;
+      let count = 0;
+      for (const entry of work.values()) {
+        if (entry.perm.attachedTo === host.id && entry.chars.subtypes.includes('Aura')) count += 1;
+      }
+      return count;
+    },
   };
 }
 function applyOpTo(

@@ -135,6 +135,7 @@ const valueShapes = {
   countTappedPermanents: { selector: selector, scope: oneOf('you', 'opponents', 'all') },
   countPermanentsControlledByTarget: { target: reference, selector: selector },
   aurasYouControlAttachedToCreatures: {},
+  aurasAttachedToSource: {},
   countCardsInZone: {
     zone: oneOf('graveyard', 'hand', 'library'),
     selector: selector,

@@ -8369,6 +8369,34 @@ function fallenIdealScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function korSpiritdancerScenario(gameId: GameId): CardTestScenario {
+  const kor = pinnedFrom(COVERAGE_PR05, 'Kor Spiritdancer');
+  return pr01Scenario(gameId, {
+    id: 'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+    title: 'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+    instructions: [
+      'Kor Spiritdancer (0/2) and a Plains are on your battlefield, Lab Aegis (an Aura that gives +2/+2) is in your hand, and Lab Green Bear is on top of your library.',
+      'Cast Lab Aegis targeting Kor Spiritdancer. Kor Spiritdancer’s trigger asks whether to draw a card: choose Yes.',
+      'Let the trigger and then Lab Aegis resolve.',
+    ],
+    expectedOutcome:
+      'Lab Aegis is attached to Kor Spiritdancer, which is a 4/6: +2/+2 from Lab Aegis and +2/+2 more for the Aura attached to it. You drew Lab Green Bear, so it is in your hand.',
+    oracleSha256: kor.sha256,
+    clauseIds: ['kor-spiritdancer-pump', 'kor-spiritdancer-aura-draw'],
+    decks: {
+      P1: [kor.card, LAB_AEGIS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kor Spiritdancer', 'Plains'] }],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10210,6 +10238,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'karametras-favor-viewer-granted-mana-pays-spell',
   'redemption-arc-viewer-exile-enchanted-creature',
   'fallen-ideal-viewer-sacrifice-then-return',
+  'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10488,6 +10517,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
+  'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

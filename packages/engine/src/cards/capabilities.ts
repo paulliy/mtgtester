@@ -1110,6 +1110,7 @@ const families = {
       countTappedPermanents: true,
       countPermanentsControlledByTarget: true,
       aurasYouControlAttachedToCreatures: true,
+      aurasAttachedToSource: true,
       countCardsInZone: true,
       colorsAmongPermanents: true,
       colorsAmongPermanentsAndSpellsCastThisTurn: true,

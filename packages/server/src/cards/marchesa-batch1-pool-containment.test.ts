@@ -72,6 +72,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Kambal, Consul of Allocation',
       "Karametra's Favor",
       'Killian, Ink Duelist',
+      'Kor Spiritdancer',
       'Land Tax',
       'Living Death',
       'Loran of the Third Path',

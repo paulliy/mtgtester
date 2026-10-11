@@ -1743,13 +1743,35 @@
     "2bfc7467-1316-43d3-9ca6-ff36cc2de607": {
       "name": "Kor Spiritdancer",
       "oracleSha256": "fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "kor-spiritdancer-pump",
           "oracleText": "This creature gets +2/+2 for each Aura attached to it.",
-          "implementation": ["explicitly unsupported; counts all Auras you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted layer 7d power/toughness modification of this creature, twice the number of Auras attached to the source (value aurasAttachedToSource), recomputed whenever Auras attach, move or leave",
+            "it counts every Aura attached to it whoever controls the Aura (an opponent's Aura on it counts) and does not count Auras attached to other creatures or an Equipment attached to it"
+          ],
+          "engineTestIds": [
+            "kor-spiritdancer-pinned-oracle-supported",
+            "kor-spiritdancer-pump-per-aura",
+            "kor-spiritdancer-only-auras-count"
+          ],
+          "viewerScenarioIds": ["kor-spiritdancer-viewer-aura-cast-draw-and-pump"]
+        },
+        {
+          "id": "kor-spiritdancer-aura-draw",
+          "oracleText": "Whenever you cast an Aura spell, you may draw a card.",
+          "implementation": [
+            "interpreted optional triggered ability on you casting a spell filtered to the Aura subtype (CR 205.3h), whose effect draws one card for its controller",
+            "it triggers only for Aura spells you cast: not a non-Aura enchantment, a creature spell, or an opponent's Aura spell; declining the 'may' draws nothing and the Aura spell still resolves"
+          ],
+          "engineTestIds": [
+            "kor-spiritdancer-pinned-oracle-supported",
+            "kor-spiritdancer-cast-aura-draw",
+            "kor-spiritdancer-aura-spells-you-cast-only"
+          ],
+          "viewerScenarioIds": ["kor-spiritdancer-viewer-aura-cast-draw-and-pump"]
         }
       ],
       "gameplayAiScenarioIds": []

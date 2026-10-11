@@ -601,3 +601,25 @@ describe('Fallen Ideal Card Test Lab scenario', () => {
     replays('fallen-ideal-viewer-sacrifice-then-return', steps);
   });
 });
+
+describe('Kor Spiritdancer Card Test Lab scenario', () => {
+  it('kor-spiritdancer-viewer-aura-cast-draw-and-pump — casting Lab Aegis on it offers the draw and attaches the Aura, and the library card is drawn', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Kor Spiritdancer'] },
+      { action: 'Yes' },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+      steps,
+    );
+    expect(prompts.filter((prompt) => /use this ability/.test(prompt))).toHaveLength(1);
+    const [korPerm] = onBattlefield('Kor Spiritdancer');
+    const [aegis] = onBattlefield('Lab Aegis');
+    expect(aegis?.attachedTo).toBe(korPerm?.id);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Green Bear']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('kor-spiritdancer-viewer-aura-cast-draw-and-pump', steps);
+  });
+});

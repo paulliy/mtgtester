@@ -238,12 +238,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   );
   // Killian, Ink Duelist: restored in coverage PR02. The interpreter reads the target-dependent
   // cost reduction, so no override remains.
-  // Catalog audit silverquill-remaining-batch-2: attached-Aura pump counts all Auras you control.
-  unsupportedCard(
-    '2bfc7467-1316-43d3-9ca6-ff36cc2de607',
-    'Kor Spiritdancer',
-    'Attached-Aura pump counts all Auras you control.',
-  );
+  // Kor Spiritdancer: restored in coverage PR05. The interpreter reads the layer 7d +2/+2 per Aura
+  // attached to this creature (any controller) and the optional draw on casting an Aura spell.
   // Catalog audit silverquill-remaining-batch-3: "you may" and reveal are omitted.
   // Coverage PR01 (was contained by silverquill-remaining-batch-3): an intervening-if upkeep
   // trigger (checked as it triggers and as it resolves, CR 603.4), "you may" on resolution, and a

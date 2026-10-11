@@ -4313,6 +4313,211 @@ describe('Fallen Ideal', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.23 Kor Spiritdancer
+// ---------------------------------------------------------------------------------------------
+
+describe('Kor Spiritdancer', () => {
+  const { card } = pinned('Kor Spiritdancer');
+  const CREATURE = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+  const AURA = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{W}',
+      colors: ['W'],
+      power: null,
+      toughness: null,
+      oracleText: 'Enchant creature',
+    });
+  const SHRINE = oracle({
+    name: 'Lab Shrine',
+    typeLine: 'Enchantment',
+    manaCost: '{W}',
+    colors: ['W'],
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const BLADE = oracle({
+    name: 'Lab Blade',
+    typeLine: 'Artifact — Equipment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const W = [{ symbol: 'W' as const }];
+
+  /** P1 controls Kor Spiritdancer (0/2) and Lab Other; P2 controls Lab Enemy. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const kor = spawn(ctx, 'P1', card);
+    const other = spawn(ctx, 'P1', CREATURE('Lab Other'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    return { ctx, kor, other, enemy };
+  }
+
+  /** `controllerId` has an Aura on the battlefield attached to `host`, put there without casting. */
+  function enchant(ctx: GameContext, controllerId: string, name: string, host: EnginePermanent) {
+    const aura = spawn(ctx, controllerId as 'P1', AURA(name));
+    aura.attachedTo = host.id;
+    return aura;
+  }
+
+  /** `playerId` casts `spell` from hand through the normal path, at `targetId` if it has a target. */
+  function cast(ctx: GameContext, playerId: string, spell: OracleCard, targetId?: string) {
+    const object = conjure(ctx, playerId, spell, 'hand');
+    addMana(playerById(ctx, playerId), W);
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts ${spell.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      targetId === undefined ? new Map() : new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return object;
+  }
+
+  /** Let everything resolve, answering Kor's "may" as told; returns the prompts it asked. */
+  function resolveAll(ctx: GameContext, answer: 'accept' | 'decline' = 'accept') {
+    const asked: string[] = [];
+    settle(ctx, (decision) => {
+      if (/use this ability/.test(decision.prompt)) asked.push(decision.prompt);
+      const wanted = answer === 'accept' ? 'acceptTrigger' : 'declineTrigger';
+      return {
+        index: Math.max(
+          decision.options.findIndex((option) => option.type === wanted),
+          0,
+        ),
+        targets: new Map(),
+      };
+    });
+    return asked;
+  }
+
+  const handSize = (ctx: GameContext, playerId = 'P1') => playerById(ctx, playerId).hand.length;
+
+  it('kor-spiritdancer-pinned-oracle-supported — the interpreter alone models the per-Aura pump and the optional draw on casting an Aura spell', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // +2/+2 for each Aura attached to it: one layer 7d modification of this creature, twice the
+    // number of Auras attached to the source.
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'self' },
+        op: {
+          layer: 7,
+          sublayer: 'd',
+          power: { kind: 'times', of: { kind: 'aurasAttachedToSource' }, n: 2 },
+          toughness: { kind: 'times', of: { kind: 'aurasAttachedToSource' }, n: 2 },
+        },
+      },
+    ]);
+    // Whenever you cast an Aura spell, you may draw a card: one optional, untargeted trigger.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'castsSpell',
+      caster: 'you',
+      filter: { kind: 'subtype', value: 'Aura' },
+    });
+    expect(trigger!.optional).toBe(true);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+    expect(def.activatedAbilities).toEqual([]);
+  });
+
+  it('kor-spiritdancer-pump-per-aura — it gets +2/+2 for each Aura attached to it, whoever controls the Aura, and not for Auras on other creatures', () => {
+    const { ctx, kor, other, enemy } = board('kor-pump');
+    expect(effectivePT(ctx, kor)).toEqual({ power: 0, toughness: 2 });
+    enchant(ctx, 'P1', 'Lab Aura One', kor);
+    expect(effectivePT(ctx, kor)).toEqual({ power: 2, toughness: 4 });
+    // An opponent's Aura on it counts too: the text counts Auras attached, not Auras you control.
+    const theirs = enchant(ctx, 'P2', 'Lab Aura Two', kor);
+    expect(effectivePT(ctx, kor)).toEqual({ power: 4, toughness: 6 });
+    // Auras on other creatures, yours or an opponent's, do not.
+    enchant(ctx, 'P1', 'Lab Aura Three', other);
+    enchant(ctx, 'P1', 'Lab Aura Four', enemy);
+    expect(effectivePT(ctx, kor)).toEqual({ power: 4, toughness: 6 });
+    // The bonus is Kor's alone: the enchanted creatures' own stats are not changed by it.
+    expect(effectivePT(ctx, other)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+
+    // The Aura leaves: the bonus shrinks with it, down to the printed 0/2.
+    kill(ctx, theirs);
+    expect(effectivePT(ctx, kor)).toEqual({ power: 2, toughness: 4 });
+    const left = ctx.state.battlefield.find((perm) => perm.name === 'Lab Aura One')!;
+    left.attachedTo = null;
+    expect(effectivePT(ctx, kor)).toEqual({ power: 0, toughness: 2 });
+    // Moved from another creature onto Kor, an Aura starts counting at once.
+    const moved = ctx.state.battlefield.find((perm) => perm.name === 'Lab Aura Three')!;
+    moved.attachedTo = kor.id;
+    expect(effectivePT(ctx, kor)).toEqual({ power: 2, toughness: 4 });
+  });
+
+  it('kor-spiritdancer-only-auras-count — an Equipment attached to it is not an Aura, and another Kor counts only its own Auras', () => {
+    const { ctx, kor, other } = board('kor-only-auras');
+    const blade = spawn(ctx, 'P1', BLADE);
+    blade.attachedTo = kor.id;
+    expect(effectivePT(ctx, kor)).toEqual({ power: 0, toughness: 2 });
+    // A second Spiritdancer on another creature's side counts the Auras attached to itself.
+    const twin = spawn(ctx, 'P2', card);
+    enchant(ctx, 'P1', 'Lab Aura One', twin);
+    enchant(ctx, 'P1', 'Lab Aura Two', other);
+    expect(effectivePT(ctx, twin)).toEqual({ power: 2, toughness: 4 });
+    expect(effectivePT(ctx, kor)).toEqual({ power: 0, toughness: 2 });
+  });
+
+  it('kor-spiritdancer-cast-aura-draw — casting an Aura spell asks to draw a card; yes draws one, no draws nothing', () => {
+    // Accept: the cast Aura resolves onto Kor, which grows, and one card is drawn.
+    const yes = board('kor-draw-yes');
+    const before = handSize(yes.ctx);
+    cast(yes.ctx, 'P1', AURA('Lab Aura One'), yes.kor.id);
+    const asked = resolveAll(yes.ctx, 'accept');
+    expect(asked).toHaveLength(1);
+    expect(handSize(yes.ctx)).toBe(before + 1);
+    expect(effectivePT(yes.ctx, yes.kor)).toEqual({ power: 2, toughness: 4 });
+
+    // Decline: it asked, nothing is drawn, and the Aura still resolves.
+    const no = board('kor-draw-no');
+    const noBefore = handSize(no.ctx);
+    cast(no.ctx, 'P1', AURA('Lab Aura One'), no.other.id);
+    expect(resolveAll(no.ctx, 'decline')).toHaveLength(1);
+    expect(handSize(no.ctx)).toBe(noBefore);
+    expect(no.ctx.state.battlefield.some((perm) => perm.name === 'Lab Aura One')).toBe(true);
+    expect(effectivePT(no.ctx, no.kor)).toEqual({ power: 0, toughness: 2 });
+  });
+
+  it('kor-spiritdancer-aura-spells-you-cast-only — a non-Aura enchantment, a creature, or an opponent’s Aura spell does not trigger it', () => {
+    const { ctx, kor, other } = board('kor-filter');
+    // Baseline: P1's own Aura spell does ask, so the silences below are the filter's doing.
+    cast(ctx, 'P1', AURA('Lab Aura One'), other.id);
+    expect(resolveAll(ctx, 'decline')).toHaveLength(1);
+    const before = handSize(ctx);
+    cast(ctx, 'P1', SHRINE);
+    expect(resolveAll(ctx)).toEqual([]);
+    cast(ctx, 'P1', CREATURE('Lab Newcomer'));
+    expect(resolveAll(ctx)).toEqual([]);
+    expect(handSize(ctx)).toBe(before);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Lab Shrine')).toBe(true);
+
+    // P2's turn: P2 casts an Aura at P2's own creature; Kor's controller has no draw to take.
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const enemy = ctx.state.battlefield.find((perm) => perm.name === 'Lab Enemy')!;
+    const p2Hand = handSize(ctx, 'P2');
+    cast(ctx, 'P2', AURA('Lab Their Aura'), enemy.id);
+    expect(resolveAll(ctx)).toEqual([]);
+    expect(handSize(ctx)).toBe(before);
+    expect(handSize(ctx, 'P2')).toBe(p2Hand);
+    expect(effectivePT(ctx, kor)).toEqual({ power: 0, toughness: 2 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4356,6 +4561,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: "Karametra's Favor",
     sha256: 'fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683',
+    clauseCount: 2,
+  },
+  {
+    name: 'Kor Spiritdancer',
+    sha256: 'fe2d712f87caa1e7143e351b698500710b9180a57c03e37f5ae721b2e19aeb35',
     clauseCount: 2,
   },
   {

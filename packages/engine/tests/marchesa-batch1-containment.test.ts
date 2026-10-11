@@ -90,7 +90,6 @@ const REASONS: Record<string, string> = {
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Kor Spiritdancer': 'Attached-Aura pump counts all Auras you control.',
   'Martial Impetus':
     'Other-attacking-your-opponents pump is implemented as all creatures in combat.',
   'Sheltered by Ghosts': 'Ward {2} is claimed without a ward static.',
@@ -294,6 +293,7 @@ describe('Marchesa catalog audit containment', () => {
     "Karametra's Favor",
     'Redemption Arc',
     'Fallen Ideal',
+    'Kor Spiritdancer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

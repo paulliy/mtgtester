@@ -1845,6 +1845,21 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
+    "name": "Kor Spiritdancer",
+    "package": "PR05.23",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Attached-Aura pump counts all Auras you control."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3233af43-7826-4895-b67e-03c6102c2cd5",
     "name": "Kutzil, Malamet Exemplar",
     "package": "PR04.13",

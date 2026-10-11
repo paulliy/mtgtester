@@ -364,6 +364,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'karametras-favor-viewer-granted-mana-pays-spell',
       'redemption-arc-viewer-exile-enchanted-creature',
       'fallen-ideal-viewer-sacrifice-then-return',
+      'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

@@ -6911,3 +6911,49 @@ test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the
   await expect(handCard(page, 'Fallen Ideal')).toHaveCount(1);
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+test('Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Kor Spiritdancer')?.id)
+    .toBeTruthy();
+  const korId = boards.at(-1)!.find((p) => p.name === 'Kor Spiritdancer')!.id;
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('0/2');
+
+  // Cast the Aura on Kor Spiritdancer: its trigger goes on the stack above the spell.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Kor Spiritdancer').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The trigger is optional: accept the draw.
+  await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1, { timeout: 15_000 });
+
+  // Lab Aegis resolves onto it: +2/+2 from the Aura and +2/+2 more for the Aura attached to it.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(korId);
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('4/6');
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});

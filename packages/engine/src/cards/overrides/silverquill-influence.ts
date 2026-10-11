@@ -155,12 +155,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.',
   ]);
 
-  defineCard(
-    'f08f7814-4585-41dd-b82e-ed2ef5e24242',
-    'Transcendent Envoy',
-    ['Aura spells you cast cost {1} less to cast.'],
-    { ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }] },
-  );
+  defineCard('f08f7814-4585-41dd-b82e-ed2ef5e24242', 'Transcendent Envoy', [], {
+    ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }],
+  });
 
   unimplemented('f43f5855-f297-4433-984b-18263b734cfc', 'Eriette of the Charmed Apple', [
     "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
@@ -200,10 +197,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Enchanted creature is an Insect artifact creature with base power and toughness 0/1 and has indestructible, and it loses all other abilities, card types, and creature types.',
   ]);
 
-  unimplemented('2bfc7467-1316-43d3-9ca6-ff36cc2de607', 'Kor Spiritdancer', [
-    '~ gets +2/+2 for each Aura attached to it.',
-    'Whenever you cast an Aura spell, you may draw a card.',
-  ]);
+  // Kor Spiritdancer: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('5acff7a3-bc84-4251-bd37-80231396ac38', 'Chains of Custody', [
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',

@@ -1779,12 +1779,6 @@
     }
   },
   {
-    "oracleId": "2bfc7467-1316-43d3-9ca6-ff36cc2de607",
-    "name": "Kor Spiritdancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "2c0de95f-4269-439c-a1bc-faa11348b185",
     "name": "Necron Overlord",
     "handledLines": [
@@ -10014,9 +10008,7 @@
   {
     "oracleId": "f08f7814-4585-41dd-b82e-ed2ef5e24242",
     "name": "Transcendent Envoy",
-    "handledLines": [
-      "Aura spells you cast cost {1} less to cast."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -16553,12 +16545,6 @@
     }
   },
   {
-    "oracleId": "oracle-kor-spiritdancer",
-    "name": "Kor Spiritdancer",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-land-tax",
     "name": "Land Tax",
     "handledLines": [
@@ -21227,9 +21213,7 @@
   {
     "oracleId": "oracle-transcendent-envoy",
     "name": "Transcendent Envoy",
-    "handledLines": [
-      "Aura spells you cast cost {1} less to cast."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
