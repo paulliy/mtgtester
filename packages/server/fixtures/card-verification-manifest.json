@@ -1537,7 +1537,10 @@
             "ajanis-chosen-pinned-oracle-supported",
             "ajanis-chosen-cat-for-enchantment"
           ],
-          "viewerScenarioIds": ["ajanis-chosen-viewer-aura-moves-to-cat"]
+          "viewerScenarioIds": [
+            "ajanis-chosen-viewer-aura-moves-to-cat",
+            "ajanis-chosen-viewer-enchantment-makes-cat"
+          ]
         },
         {
           "id": "ajanis-chosen-attach",

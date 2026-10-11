@@ -581,6 +581,31 @@ describe("Ajani's Chosen Card Test Lab scenario", () => {
   });
 });
 
+describe("Ajani's Chosen enchantment Card Test Lab scenario", () => {
+  it('ajanis-chosen-viewer-enchantment-makes-cat — casting the non-Aura Lab Hex makes one Cat and offers no attach choice', () => {
+    const steps: Step[] = [{ action: 'Cast Lab Hex' }];
+    const { scenario, state, seat, onBattlefield, offered, prompts } = run(
+      'ajanis-chosen-viewer-enchantment-makes-cat',
+      steps,
+    );
+    const cats = onBattlefield('Cat');
+    expect(cats).toHaveLength(1);
+    const view = scenario.engine.view('P1').battlefield;
+    const cat = view.find((perm) => perm.name === 'Cat');
+    expect([cat?.power, cat?.toughness]).toEqual([2, 2]);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    expect(onBattlefield('Lab Hex')[0]?.attachedTo ?? null).toBeNull();
+    expect(onBattlefield("Ajani's Chosen")).toHaveLength(1);
+    // Not an Aura: there is nothing to attach, so no attach choice is ever put to P1.
+    expect(offered.flat().some((action) => /attach/i.test(action))).toBe(false);
+    expect(prompts.some((prompt) => /attach/i.test(prompt))).toBe(false);
+    expect(seat('P1').hand).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ajanis-chosen-viewer-enchantment-makes-cat', steps);
+  });
+});
+
 describe('Shielded by Faith Card Test Lab scenario', () => {
   it('shielded-by-faith-viewer-attach-to-entering-creature — it moves onto Lab Green Bear when it enters and Lab Doom cannot destroy the Bear', () => {
     const steps: Step[] = [

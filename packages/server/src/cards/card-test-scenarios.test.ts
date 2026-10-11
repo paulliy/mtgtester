@@ -361,6 +361,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ghoulish-impetus-viewer-goaded-opponent-attack',
       'gift-of-immortality-viewer-owner-return-then-aura',
       'ajanis-chosen-viewer-aura-moves-to-cat',
+      'ajanis-chosen-viewer-enchantment-makes-cat',
       'shielded-by-faith-viewer-attach-to-entering-creature',
       'forum-filibuster-viewer-inkling-and-aura',
       'karametras-favor-viewer-granted-mana-pays-spell',

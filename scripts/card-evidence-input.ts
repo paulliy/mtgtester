@@ -1893,6 +1893,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Shielded by Faith: it moves onto a creature that enters and keeps it indestructible',
     ],
   },

@@ -6805,6 +6805,34 @@ test("Ajani's Chosen: an Aura you cast moves onto the Cat it makes", async ({ pa
   await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
 });
 
+test("Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+  );
+  await expect(permanent(page, 'Cat')).toHaveCount(0);
+
+  // Cast the enchantment: it is not an Aura, so it has no target.
+  const hex = handCard(page, 'Lab Hex');
+  await expect(hex).toHaveClass(/actionable/, { timeout: 15_000 });
+  const hexBefore = await page.getByText('Lab Hex resolves').count();
+  await hex.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Hex', hexBefore);
+
+  // The trigger resolves on its own and makes the Cat.
+  await expect(permanent(page, 'Cat')).toContainText('2/2', { timeout: 15_000 });
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Cat')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(1);
+  await expect(permanent(page, "Ajani's Chosen")).toContainText('3/3');
+  // There was never an attach choice.
+  await expect(page.getByRole('button', { name: /attach/i })).toHaveCount(0);
+});
+
 test('Shielded by Faith: it moves onto a creature that enters and keeps it indestructible', async ({
   page,
 }) => {

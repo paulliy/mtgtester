@@ -8285,6 +8285,36 @@ function ajanisChosenScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Ajani's Chosen makes a Cat for any enchantment, not only an Aura: Lab Hex has nothing to attach. */
+function ajanisChosenEnchantmentScenario(gameId: GameId): CardTestScenario {
+  const chosen = pinnedFrom(COVERAGE_PR05, "Ajani's Chosen");
+  return pr01Scenario(gameId, {
+    id: 'ajanis-chosen-viewer-enchantment-makes-cat',
+    title: "Ajani's Chosen: a non-Aura enchantment you cast makes a Cat with nothing to attach",
+    instructions: [
+      "Lab Hex (an enchantment that is not an Aura) is in your hand. Ajani's Chosen and three Plains are on your battlefield.",
+      "Cast Lab Hex and let it resolve. Ajani's Chosen triggers because an enchantment you control entered. Let the trigger resolve: a 2/2 white Cat token is created.",
+      'Lab Hex is not an Aura, so you are not asked to attach anything.',
+    ],
+    expectedOutcome:
+      "Lab Hex is on the battlefield and there is exactly one Cat, a 2/2. You were never offered an attach choice. Ajani's Chosen is still a 3/3.",
+    oracleSha256: chosen.sha256,
+    clauseIds: ['ajanis-chosen-cat'],
+    decks: {
+      P1: [chosen.card, LAB_HEX, PLAINS, PLAINS, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Hex'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Ajani's Chosen", 'Plains', 'Plains', 'Plains'] },
+      ],
+    },
+  });
+}
+
 function shieldedByFaithScenario(gameId: GameId): CardTestScenario {
   const shielded = pinnedFrom(COVERAGE_PR05, 'Shielded by Faith');
   return pr01Scenario(gameId, {
@@ -11206,6 +11236,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ghoulish-impetus-viewer-goaded-opponent-attack',
   'gift-of-immortality-viewer-owner-return-then-aura',
   'ajanis-chosen-viewer-aura-moves-to-cat',
+  'ajanis-chosen-viewer-enchantment-makes-cat',
   'shielded-by-faith-viewer-attach-to-entering-creature',
   'forum-filibuster-viewer-inkling-and-aura',
   'karametras-favor-viewer-granted-mana-pays-spell',
@@ -11508,6 +11539,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ghoulish-impetus-viewer-goaded-opponent-attack': ghoulishImpetusOpponentAttackScenario,
   'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
+  'ajanis-chosen-viewer-enchantment-makes-cat': ajanisChosenEnchantmentScenario,
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
