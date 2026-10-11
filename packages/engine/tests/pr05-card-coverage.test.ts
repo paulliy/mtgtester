@@ -176,6 +176,285 @@ const LAB_ARTIFACT = (name: string) =>
   oracle({ name, typeLine: 'Artifact', manaCost: '{1}', power: null, toughness: null });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.01 Ajani's Chosen
+// ---------------------------------------------------------------------------------------------
+
+describe("Ajani's Chosen", () => {
+  const { card } = pinned("Ajani's Chosen");
+  const ENCHANTMENT = oracle({
+    name: 'Lab Ward',
+    typeLine: 'Enchantment',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const AURA = oracle({
+    name: 'Lab Blessing',
+    typeLine: 'Enchantment — Aura',
+    manaCost: '{0}',
+    colors: ['W'],
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant creature\nEnchanted creature gets +1/+1.',
+  });
+  const LAND_AURA = oracle({
+    name: 'Lab Moss',
+    typeLine: 'Enchantment — Aura',
+    manaCost: '{0}',
+    colors: ['G'],
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant land',
+  });
+  const HEX_AURA = oracle({
+    name: 'Lab Hex',
+    typeLine: 'Enchantment — Aura',
+    manaCost: '{0}',
+    colors: ['B'],
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant creature an opponent controls\nEnchanted creature gets -1/-1.',
+  });
+  const RESPONSE = oracle({
+    name: 'Lab Response',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /** P1 controls Ajani's Chosen, Lab Bear and a Forest; P2 controls Lab Enemy. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const chosen = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', LAB_CARD('Lab Bear'));
+    const enemy = spawn(ctx, 'P2', LAB_CARD('Lab Enemy'));
+    const forestPerm = spawn(ctx, 'P1', forest());
+    return { ctx, chosen, bear, enemy, forestPerm };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const cats = (ctx: GameContext) => named(ctx, 'Cat');
+
+  /** Cast an Aura from P1's hand onto `hostId` and resolve the spell; its triggers are pending. */
+  function castAura(ctx: GameContext, aura: OracleCard, hostId: string) {
+    const object = conjure(ctx, 'P1', aura, 'hand');
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, `P1 casts ${aura.name}`).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, hostId]]),
+    );
+    resolveTop(ctx);
+    const [entered] = named(ctx, aura.name);
+    expect(entered, `${aura.name} entered`).toBeDefined();
+    expect(entered!.attachedTo).toBe(hostId);
+    return entered!;
+  }
+
+  /** Answer the optional attach: take the attach option or decline it. */
+  const attachAnswer =
+    (choice: 'attach' | 'decline'): Answer =>
+    (decision) => ({
+      index: Math.max(
+        decision.options.findIndex((option) => option.type === choice),
+        0,
+      ),
+      targets: new Map(),
+    });
+  const attachPrompts = (decisions: PendingDecision[]) =>
+    decisions.filter((decision) => decision.options.some((option) => option.type === 'attach'));
+
+  it('ajanis-chosen-pinned-oracle-supported — the interpreter alone models the Cat token and the optional attach of an entering Aura to it', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.staticEffects).toEqual([]);
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // An enchantment you control entering, and nothing else.
+    expect(trigger!.trigger).toEqual({
+      when: 'enters',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
+      },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      {
+        op: 'createToken',
+        spec: {
+          name: 'Cat',
+          typeLine: 'Creature — Cat',
+          types: ['Creature'],
+          subtypes: ['Cat'],
+          colors: ['W'],
+          power: 2,
+          toughness: 2,
+        },
+        count: { kind: 'const', n: 1 },
+      },
+      // The attach is its own optional step, only for an Aura, onto the token this trigger made.
+      {
+        op: 'attach',
+        what: 'triggerObject',
+        to: 'createdToken',
+        requireAura: true,
+        optional: true,
+      },
+    ]);
+  });
+
+  it("ajanis-chosen-cat-for-enchantment — a Cat for any enchantment you control entering, not an opponent's and not a nonenchantment", () => {
+    const { ctx, chosen } = board('ajani-cat');
+    const first = castFromHand(ctx, 'P1', ENCHANTMENT, []);
+    resolveTop(ctx);
+    const run = settle(ctx);
+    expect(named(ctx, first.name)).toHaveLength(1);
+    const [cat] = cats(ctx);
+    expect(cats(ctx)).toHaveLength(1);
+    expect(cat?.isToken).toBe(true);
+    expect(cat?.controllerId).toBe('P1');
+    expect(effectivePT(ctx, cat!)).toEqual({ power: 2, toughness: 2 });
+    const chars = computeCharacteristics(ctx, cat!);
+    expect(chars.types).toEqual(['Creature']);
+    expect(chars.subtypes).toEqual(['Cat']);
+    expect(chars.colors).toEqual(['W']);
+    // A non-Aura enchantment has nothing to attach: no prompt at all, and it stays unattached.
+    expect(attachPrompts(run.decisions)).toEqual([]);
+    expect(named(ctx, first.name)[0]?.attachedTo ?? null).toBeNull();
+    expect(ctx.state.stack).toEqual([]);
+
+    // An enchantment creature is an enchantment too: a second Cat.
+    const hybrid = oracle({
+      name: 'Lab Spirit',
+      typeLine: 'Enchantment Creature — Spirit',
+      manaCost: '{0}',
+    });
+    castFromHand(ctx, 'P1', hybrid, []);
+    resolveTop(ctx);
+    settle(ctx);
+    expect(cats(ctx)).toHaveLength(2);
+
+    // Negative: an enchantment an opponent controls entering gives you nothing.
+    const opposed = board('ajani-cat-opponent');
+    const theirs = conjure(opposed.ctx, 'P2', ENCHANTMENT, 'hand');
+    pump(moveObject(opposed.ctx, theirs, { zone: 'battlefield' }));
+    settle(opposed.ctx);
+    expect(named(opposed.ctx, 'Lab Ward')).toHaveLength(1);
+    expect(cats(opposed.ctx)).toEqual([]);
+
+    // Negative: your own nonenchantment permanents entering (a creature, an artifact) give nothing.
+    const plain = board('ajani-cat-nonenchantment');
+    castFromHand(plain.ctx, 'P1', LAB_CARD('Lab Newcomer'), []);
+    resolveTop(plain.ctx);
+    castFromHand(plain.ctx, 'P1', LAB_ARTIFACT('Lab Trinket'), generic(1));
+    resolveTop(plain.ctx);
+    settle(plain.ctx);
+    expect(named(plain.ctx, 'Lab Newcomer')).toHaveLength(1);
+    expect(named(plain.ctx, 'Lab Trinket')).toHaveLength(1);
+    expect(cats(plain.ctx)).toEqual([]);
+    // The Cat itself is not an enchantment, so it does not start a chain.
+    expect(chosen.attachedTo ?? null).toBeNull();
+  });
+
+  it('ajanis-chosen-aura-optional-attach — an Aura entering offers the optional attach: yes moves it to the Cat with a new timestamp, no leaves it', () => {
+    const yes = board('ajani-attach-yes');
+    const aura = castAura(yes.ctx, AURA, yes.bear.id);
+    const stamp = aura.timestamp;
+    expect(effectivePT(yes.ctx, yes.bear)).toEqual({ power: 3, toughness: 3 });
+    const run = settle(yes.ctx, attachAnswer('attach'));
+    const [cat] = cats(yes.ctx);
+    expect(cats(yes.ctx)).toHaveLength(1);
+    // One prompt, offering the Cat and a way to decline.
+    const prompts = attachPrompts(run.decisions);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]!.options.map((option) => option.type).sort()).toEqual(['attach', 'decline']);
+    expect(prompts[0]!.options.find((option) => option.type === 'attach')?.description).toMatch(
+      /Cat/,
+    );
+    // The Aura moved: the Cat carries the +1/+1 now, the Bear lost it, and it is a new timestamp.
+    expect(aura.attachedTo).toBe(cat?.id);
+    expect(aura.timestamp).toBeGreaterThan(stamp);
+    expect(effectivePT(yes.ctx, cat!)).toEqual({ power: 3, toughness: 3 });
+    expect(effectivePT(yes.ctx, yes.bear)).toEqual({ power: 2, toughness: 2 });
+    expect(named(yes.ctx, 'Lab Blessing')).toHaveLength(1);
+    expect(yes.ctx.state.stack).toEqual([]);
+
+    // Declining keeps the Aura on its creature at its old timestamp; the Cat is still made.
+    const no = board('ajani-attach-no');
+    const kept = castAura(no.ctx, AURA, no.bear.id);
+    const keptStamp = kept.timestamp;
+    const declined = settle(no.ctx, attachAnswer('decline'));
+    expect(attachPrompts(declined.decisions)).toHaveLength(1);
+    expect(cats(no.ctx)).toHaveLength(1);
+    expect(kept.attachedTo).toBe(no.bear.id);
+    expect(kept.timestamp).toBe(keptStamp);
+    expect(effectivePT(no.ctx, no.bear)).toEqual({ power: 3, toughness: 3 });
+    expect(effectivePT(no.ctx, cats(no.ctx)[0]!)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it("ajanis-chosen-aura-illegal-or-gone — an Aura that can't enchant the Cat, or that left, doesn't move (CR 701.3b)", () => {
+    // "Enchant land": the Cat is not a land, so there is nothing to attach to and nothing to ask.
+    const land = board('ajani-attach-land');
+    const moss = castAura(land.ctx, LAND_AURA, land.forestPerm.id);
+    const mossStamp = moss.timestamp;
+    const landRun = settle(land.ctx, attachAnswer('attach'));
+    expect(attachPrompts(landRun.decisions)).toEqual([]);
+    expect(cats(land.ctx)).toHaveLength(1);
+    expect(moss.attachedTo).toBe(land.forestPerm.id);
+    expect(moss.timestamp).toBe(mossStamp);
+
+    // "Enchant creature an opponent controls": your Cat is not a legal host either.
+    const hex = board('ajani-attach-hex');
+    const hexed = castAura(hex.ctx, HEX_AURA, hex.enemy.id);
+    const hexRun = settle(hex.ctx, attachAnswer('attach'));
+    expect(attachPrompts(hexRun.decisions)).toEqual([]);
+    expect(cats(hex.ctx)).toHaveLength(1);
+    expect(hexed.attachedTo).toBe(hex.enemy.id);
+    expect(effectivePT(hex.ctx, hex.enemy)).toEqual({ power: 1, toughness: 1 });
+    expect(effectivePT(hex.ctx, cats(hex.ctx)[0]!)).toEqual({ power: 2, toughness: 2 });
+
+    // The Aura leaves the battlefield while the trigger is on the stack: the Cat is still made,
+    // the Aura stays in the graveyard, and nothing is asked.
+    const gone = board('ajani-attach-gone');
+    const blessing = castAura(gone.ctx, AURA, gone.bear.id);
+    conjure(gone.ctx, 'P1', RESPONSE, 'hand');
+    let responded = false;
+    const goneDecisions: PendingDecision[] = [];
+    pump(runPrioritySequence(gone.ctx), (decision) => {
+      goneDecisions.push(decision);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0 && !responded && gone.ctx.state.stack.length > 0) {
+        responded = true;
+        kill(gone.ctx, blessing);
+      }
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(responded, 'a player held priority with the trigger on the stack').toBe(true);
+    expect(attachPrompts(goneDecisions)).toEqual([]);
+    expect(cats(gone.ctx)).toHaveLength(1);
+    expect(named(gone.ctx, 'Lab Blessing')).toEqual([]);
+    expect(playerById(gone.ctx, 'P1').graveyard.map((c) => c.name)).toEqual(['Lab Blessing']);
+    expect(effectivePT(gone.ctx, cats(gone.ctx)[0]!)).toEqual({ power: 2, toughness: 2 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.02 Cranial Plating
 // ---------------------------------------------------------------------------------------------
 
@@ -2859,6 +3138,11 @@ interface RestoredCard {
 }
 
 const RESTORED: RestoredCard[] = [
+  {
+    name: "Ajani's Chosen",
+    sha256: 'a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48',
+    clauseCount: 2,
+  },
   {
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',

@@ -8154,6 +8154,45 @@ function giftOfImmortalityScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_AEGIS = card({
+  oracleId: 'lab-aegis',
+  name: 'Lab Aegis',
+  typeLine: 'Enchantment — Aura',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'Enchant creature\nEnchanted creature gets +2/+2.',
+});
+
+function ajanisChosenScenario(gameId: GameId): CardTestScenario {
+  const chosen = pinnedFrom(COVERAGE_PR05, "Ajani's Chosen");
+  return pr01Scenario(gameId, {
+    id: 'ajanis-chosen-viewer-aura-moves-to-cat',
+    title: "Ajani's Chosen: an Aura you cast moves onto the Cat it makes",
+    instructions: [
+      "Lab Aegis is in your hand. Ajani's Chosen, Lab Green Bear (2/2) and a Plains are on your battlefield.",
+      'Cast Lab Aegis targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 4/4.',
+      "Ajani's Chosen triggers because an enchantment you control entered. Let the trigger resolve: a 2/2 white Cat token is created and you are asked whether to attach Lab Aegis to it.",
+      'Choose to attach Lab Aegis to the Cat.',
+    ],
+    expectedOutcome:
+      'Lab Aegis is on the battlefield attached to the Cat token, which is a 4/4, and Lab Green Bear is a 2/2 again. There is exactly one Cat. The Plains is tapped.',
+    oracleSha256: chosen.sha256,
+    clauseIds: ['ajanis-chosen-cat', 'ajanis-chosen-attach'],
+    decks: {
+      P1: [chosen.card, LAB_AEGIS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ["Ajani's Chosen", 'Lab Green Bear', 'Plains'] }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -9989,6 +10028,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'screams-from-within-viewer-return-and-enchant',
   'ghoulish-impetus-viewer-return-at-end-step',
   'gift-of-immortality-viewer-owner-return-then-aura',
+  'ajanis-chosen-viewer-aura-moves-to-cat',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10261,6 +10301,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
   'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
   'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
+  'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

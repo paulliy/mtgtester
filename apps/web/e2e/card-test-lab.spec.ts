@@ -6592,3 +6592,47 @@ test('Gift of Immortality: the creature returns to its owner, then the Aura retu
   // Lab Doom is your only graveyard card.
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
+
+test("Ajani's Chosen: an Aura you cast moves onto the Cat it makes", async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, "Ajani's Chosen: an Aura you cast moves onto the Cat it makes");
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on the Bear and let it resolve: the Bear is a 4/4.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4', { timeout: 15_000 });
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(bearId);
+
+  // The trigger resolves on its own: a Cat is made, and the attach is offered with a way to
+  // decline.
+  await expect(page.getByRole('button', { name: /Don.t attach Lab Aegis/ })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('img', { name: 'Cat', exact: true }).last()).toBeVisible();
+  await page.getByRole('button', { name: 'Attach', exact: true }).click();
+
+  // The Aura moved: the Cat is a 4/4 and the Bear a 2/2 again.
+  await expect(permanent(page, 'Cat')).toContainText('4/4', { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+  const catId = boards.at(-1)!.find((p) => p.name === 'Cat')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Aegis')?.attachedTo).toBe(catId);
+  await expect(permanent(page, 'Cat')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});

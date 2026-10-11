@@ -544,6 +544,7 @@ const effectExpressions = {
   returnDiedTriggerObjectAtNextEndStep: {},
   returnRememberedGraveyardCard: {},
   returnDepartedSourceToBattlefield: {},
+  attach: {},
   reanimateEachChosenTapped: {},
   connive: {},
   exileTopNPlayableUntilEot: { count: numberValue },

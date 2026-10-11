@@ -199,9 +199,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever you cast an Aura spell that targets a modified permanent you control, draw a card.',
   ]);
 
-  unimplemented('9c77eb0a-543a-41db-ba1f-aa0163837ae0', "Ajani's Chosen", [
-    'Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.',
-  ]);
+  // Ajani's Chosen: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('b4dbbf56-d7df-4183-bb48-cfc6b4d0468f', 'Armored Skyhunter', [
     'Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.',

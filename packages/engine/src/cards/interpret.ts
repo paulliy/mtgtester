@@ -1375,6 +1375,22 @@ function parseEffectSentence(
   if (opts.triggerObject === true && s === 'return it to the battlefield under your control') {
     return [{ op: 'graveyardToBattlefield', target: 'triggerObject' }];
   }
+  // "If that enchantment is an Aura, you may attach it to the token" (Ajani's Chosen) and the
+  // optional trigger body "attach this Aura to that creature" (Shielded by Faith).
+  if (opts.triggerObject === true) {
+    if (s === 'if that enchantment is an aura, you may attach it to the token')
+      return [
+        {
+          op: 'attach',
+          what: 'triggerObject',
+          to: 'createdToken',
+          requireAura: true,
+          optional: true,
+        },
+      ];
+    if (s === 'attach this aura to that creature')
+      return [{ op: 'attach', what: 'source', to: 'triggerObject' }];
+  }
   if (
     opts.triggerObject === true &&
     s === "return that card to the battlefield under its owner's control"

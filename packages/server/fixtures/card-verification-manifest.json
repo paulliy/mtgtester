@@ -1422,13 +1422,35 @@
     "9c77eb0a-543a-41db-ba1f-aa0163837ae0": {
       "name": "Ajani's Chosen",
       "oracleSha256": "a9b42ae4f91ea135006bd138f386a48952784159d1076b7493c83a96daef2d48",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.",
-          "implementation": ["explicitly unsupported; Aura attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "ajanis-chosen-cat",
+          "oracleText": "Whenever an enchantment you control enters, create a 2/2 white Cat creature token.",
+          "implementation": [
+            "interpreted enters trigger on a permanent you control with the Enchantment type, with no target, whose first effect creates one 2/2 white Cat creature token under your control: any enchantment you control entering counts (an Aura, a non-Aura, an enchantment creature), but not one an opponent controls and not a nonenchantment permanent such as a creature or an artifact",
+            "the Cat is a token, not an enchantment, so it starts no chain of its own"
+          ],
+          "engineTestIds": [
+            "ajanis-chosen-pinned-oracle-supported",
+            "ajanis-chosen-cat-for-enchantment"
+          ],
+          "viewerScenarioIds": ["ajanis-chosen-viewer-aura-moves-to-cat"]
+        },
+        {
+          "id": "ajanis-chosen-attach",
+          "oracleText": "If that enchantment is an Aura, you may attach it to the token.",
+          "implementation": [
+            "interpreted second effect of the same trigger (attach with what triggerObject, to createdToken, requireAura and optional): only an Aura is asked about, you choose to attach it to the Cat this trigger just made or to leave it where it is; a non-Aura enchantment gets no prompt",
+            "attaching moves the Aura onto the Cat and gives it a new timestamp (CR 701.3c, 613.7e), so its static effect follows it; a no leaves it on its creature at its old timestamp",
+            "an Aura that cannot enchant the Cat (enchant land, enchant creature an opponent controls) or that has left the battlefield does not move and is not offered (CR 701.3b)"
+          ],
+          "engineTestIds": [
+            "ajanis-chosen-pinned-oracle-supported",
+            "ajanis-chosen-aura-optional-attach",
+            "ajanis-chosen-aura-illegal-or-gone"
+          ],
+          "viewerScenarioIds": ["ajanis-chosen-viewer-aura-moves-to-cat"]
         }
       ],
       "gameplayAiScenarioIds": []

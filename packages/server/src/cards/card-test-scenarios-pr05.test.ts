@@ -416,3 +416,37 @@ describe('Gift of Immortality Card Test Lab scenario', () => {
     replays('gift-of-immortality-viewer-owner-return-then-aura', steps);
   });
 });
+
+describe("Ajani's Chosen Card Test Lab scenario", () => {
+  it('ajanis-chosen-viewer-aura-moves-to-cat — the Cat is made and Lab Aegis is attached to it, leaving Lab Green Bear a 2/2', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Attach Lab Aegis to Cat' },
+    ];
+    const { scenario, state, onBattlefield, prompts, offered } = run(
+      'ajanis-chosen-viewer-aura-moves-to-cat',
+      steps,
+    );
+    const [aegis] = onBattlefield('Lab Aegis');
+    const cats = onBattlefield('Cat');
+    expect(onBattlefield('Lab Aegis')).toHaveLength(1);
+    expect(cats).toHaveLength(1);
+    expect(cats[0]?.typeLine).toBe('Creature — Cat');
+    expect(cats[0]?.controllerId).toBe('P1');
+    expect(aegis?.attachedTo).toBe(cats[0]?.id);
+    // Asked once, with the Cat to attach to or the choice not to.
+    expect(prompts.filter((prompt) => /attach Lab Aegis/.test(prompt))).toHaveLength(1);
+    const asked = offered.find((options) =>
+      options.some((option) => /^Attach Lab Aegis/.test(option)),
+    );
+    expect(asked).toEqual(['Attach Lab Aegis to Cat', "Don't attach Lab Aegis"]);
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Lab Aegis', to: 'Cat' }]);
+    expect(onBattlefield('Plains').filter((plains) => plains.tapped)).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ajanis-chosen-viewer-aura-moves-to-cat', steps);
+  });
+});

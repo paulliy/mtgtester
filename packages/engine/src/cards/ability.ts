@@ -844,6 +844,20 @@ export type Effect =
   | { op: 'counterUnlessPays'; cost: WardCost; stackObjectId: string }
   /** Equip (CR 702.6): attach the ability's source to the target permanent. */
   | { op: 'attachSelfTo'; target: EffectRef }
+  /**
+   * "You may attach it to the token" (Ajani's Chosen, `requireAura` for "if that enchantment is
+   * an Aura") / "attach this Aura to that creature" (Shielded by Faith): move an Aura or
+   * Equipment on the battlefield onto a permanent (CR 701.3). It doesn't move where it can't be
+   * attached (CR 701.3b). `createdToken` is a token this ability created; if a replacement made
+   * several, the controller picks one. `optional` asks first, offering only legal hosts.
+   */
+  | {
+      op: 'attach';
+      what: 'source' | 'triggerObject';
+      to: 'triggerObject' | 'createdToken';
+      requireAura?: true;
+      optional?: true;
+    }
   /** "Create a 1/1 black and green Pest creature token …" (CR 111.1). */
   | {
       op: 'createToken';

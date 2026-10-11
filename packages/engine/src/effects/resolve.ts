@@ -71,6 +71,7 @@ import {
   changeController,
   createTokens,
   makePermanent,
+  canAttach,
   moveObject,
   moveObjects,
   movePermanentsToGraveyard,
@@ -1126,6 +1127,8 @@ export function* executeAbility(
     return current;
   };
   const controller = playerById(ctx, source.controllerId);
+  // Tokens this resolution created, for "attach it to the token" later in the same ability.
+  const createdThisResolution: EnginePermanent[] = [];
 
   // A modal ability's mode belongs to its announcement (CR 700.2a-b): triggers choose it in
   // `pushTriggerOnStack`, battlefield activations in the option `computePriorityOptions` offers,
@@ -4052,7 +4055,62 @@ export function* executeAbility(
               }
             : {}),
         };
-        createTokens(ctx, spec, amountOf(effect.count), controller.id, effect.tapped === true);
+        createdThisResolution.push(
+          ...createTokens(ctx, spec, amountOf(effect.count), controller.id, effect.tapped === true),
+        );
+        break;
+      }
+      case 'attach': {
+        const attachmentId =
+          effect.what === 'source' ? (sourcePermanent()?.id ?? null) : ref('triggerObject');
+        const attachment = attachmentId === null ? undefined : findPermanent(ctx, attachmentId);
+        if (attachment === undefined) break;
+        if (
+          effect.requireAura === true &&
+          !computeCharacteristics(ctx, attachment).subtypes.includes('Aura')
+        )
+          break;
+        const candidates =
+          effect.to === 'createdToken'
+            ? createdThisResolution
+            : (() => {
+                const id = ref('triggerObject');
+                const perm = id === null ? undefined : findPermanent(ctx, id);
+                return perm === undefined ? [] : [perm];
+              })();
+        const hosts = candidates.filter((host) => canAttach(ctx, attachment, host));
+        if (hosts.length === 0) break;
+        if (effect.optional !== true && hosts.length === 1) {
+          attachPermanent(ctx, attachment, hosts[0] as EnginePermanent);
+          break;
+        }
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: attach ${attachment.name}?`,
+          presentationSource: presentedSource(ctx, source),
+          options: [
+            ...hosts.map((host) =>
+              cardOption(ctx, host, {
+                type: 'attach',
+                description: `Attach ${attachment.name} to ${host.name}`,
+                verb: 'Attach',
+              }),
+            ),
+            ...(effect.optional === true
+              ? [
+                  plainOption({
+                    type: 'decline',
+                    description: `Don't attach ${attachment.name}`,
+                    verb: 'Decline',
+                    role: 'decline',
+                  }),
+                ]
+              : []),
+          ],
+        };
+        const host = hosts[outcome.index];
+        if (host !== undefined) attachPermanent(ctx, attachment, host);
         break;
       }
       case 'createTokenAttacking': {

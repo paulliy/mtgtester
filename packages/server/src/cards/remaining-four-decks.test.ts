@@ -115,7 +115,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Fallen Ideal',
       'Firemane Commando',
       'Hateful Eidolon',
-      "Ajani's Chosen",
       'Angelic Destiny',
       'Armored Skyhunter',
       "Defacing Duskmage // Vandal's Edit",

@@ -64,6 +64,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
+    "name": "Ajani's Chosen",
+    "package": "PR05.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Aura-enters attach-to-token is omitted from the Cat trigger."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
     "name": "Akroan Horse",
     "package": "W6",

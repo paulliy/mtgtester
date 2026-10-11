@@ -77,12 +77,8 @@ const auraBuff = (
 });
 
 export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
-  // Catalog audit silverquill-remaining-batch-2: Aura attach-to-token omitted.
-  unsupportedCard(
-    '9c77eb0a-543a-41db-ba1f-aa0163837ae0',
-    "Ajani's Chosen",
-    'Aura-enters attach-to-token is omitted from the Cat trigger.',
-  );
+  // Ajani's Chosen: restored in coverage PR05. The interpreter reads the Cat token and the optional
+  // attach of an entering Aura to it, so no override remains.
   // Catalog audit silverquill-remaining-batch-2: Angel type-changing claimed without a static.
   unsupportedCard(
     '8ba36878-0816-44c7-b543-8ebfc28c2ecd',

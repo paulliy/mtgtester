@@ -6565,12 +6565,6 @@
     "def": {}
   },
   {
-    "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
-    "name": "Ajani's Chosen",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -11616,12 +11610,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-ajani-s-chosen",
-    "name": "Ajani's Chosen",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-akoum-hellkite",

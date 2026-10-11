@@ -24,6 +24,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Aether Channeler',
       'Aether Hub',
       'Aetheric Amplifier',
+      "Ajani's Chosen",
       'Anrakyr the Traveller',
       'Arcane Denial',
       'Attune with Aether',

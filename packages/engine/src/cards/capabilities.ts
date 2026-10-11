@@ -309,6 +309,9 @@ const shapes = {
     fromYourGraveyard: leaf,
     delay: leaf,
     attachTo: leaf,
+    what: leaf,
+    requireAura: leaf,
+    optional: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -986,6 +989,7 @@ const families = {
       returnDiedTriggerObjectAtNextEndStep: true,
       returnRememberedGraveyardCard: true,
       returnDepartedSourceToBattlefield: true,
+      attach: true,
       reanimateEachChosenTapped: true,
       connive: true,
       exileTopNPlayableUntilEot: true,
