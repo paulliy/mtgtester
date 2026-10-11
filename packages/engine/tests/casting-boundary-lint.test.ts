@@ -1,6 +1,9 @@
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
+// A cold ESLint start (config load, type info) can exceed the 5s default when files run in parallel.
+const ESLINT_CHILD_TIMEOUT_MS = 60_000;
+
 const eslint = new ESLint();
 async function violations(file: string, code: string) {
   const results = await eslint.lintText(code, { filePath: `packages/engine/src/${file}` });
@@ -142,4 +145,4 @@ it('resolves authorized file identities when ESLint runs from a nested directory
       .flatMap((result) => result.messages)
       .filter((message) => message.ruleId === 'casting-boundary/constructors'),
   ).toEqual([]);
-});
+}, ESLINT_CHILD_TIMEOUT_MS);

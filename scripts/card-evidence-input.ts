@@ -536,6 +536,8 @@ interface DiscoveryState {
   resolutionCache: ts.ModuleResolutionCache;
   installed: Map<string, { path: string; realpath: string }>;
 }
+/** Parsed sources, keyed by repository path and content hash. Bounded by distinct file contents. */
+const parsedSources = new Map<string, ts.SourceFile>();
 function discoveryState(root: string): DiscoveryState {
   return {
     parsed: new Map(),
@@ -625,12 +627,15 @@ function discoverGeneratorSources(
     if (extname(path) === '.json') continue;
     let source = parsed.get(path);
     if (!source) {
-      source = ts.createSourceFile(
-        path,
-        readFileSync(absolute, 'utf8'),
-        ts.ScriptTarget.Latest,
-        true,
-      );
+      // Every discovery pass re-reads the same sources; parsing is the expensive part. Keying on
+      // the bytes keeps drift detection exact: an edited file gets a fresh AST.
+      const text = readFileSync(absolute, 'utf8');
+      const key = `${path}\0${hash(Buffer.from(text))}`;
+      source = parsedSources.get(key);
+      if (!source) {
+        source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+        parsedSources.set(key, source);
+      }
       parsed.set(path, source);
     }
     const ast = source;
