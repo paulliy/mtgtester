@@ -7061,3 +7061,59 @@ test('Martial Impetus: the enchanted creature attacks and pumps your other attac
   await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('35');
   await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
 });
+
+test('Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Bird').locator('.tap-badge')).toHaveCount(0);
+
+  // Cast the Aura on Lab Green Bear. Entering, it triggers Killian: up to one target creature.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBe(bearId);
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Target Lab Bird' }).click();
+
+  // The trigger resolves: Lab Bird is tapped (the goad is asserted in the headless scenario).
+  await expect(permanent(page, 'Lab Bird').locator('.tap-badge')).toHaveText('TAP', {
+    timeout: 15_000,
+  });
+
+  // Attack P2 with the enchanted Lab Green Bear: Killian's attack trigger draws a card.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('36');
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+});

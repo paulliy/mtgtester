@@ -39,10 +39,7 @@ const FLICKERING_WARD_DEF = {
 };
 
 export function registerSILVERQUILL_INFLUENCEOverrides(): void {
-  unimplemented('9c54bd34-667d-415c-ad26-82e0eb0ff409', 'Killian, Decisive Mentor', [
-    'Whenever an enchantment you control enters, tap up to one target creature and goad it.',
-    'Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.',
-  ]);
+  // Killian, Decisive Mentor: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('09b7ea91-2620-4c45-af3c-60bbeab89966', 'Eiganjo Dynastorian // Replenish', [
     'unsupported layout "prepare"',

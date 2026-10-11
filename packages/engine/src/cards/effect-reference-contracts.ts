@@ -248,6 +248,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   untapUpTo: {},
   exileEachChosen: { targetSlot: many(permanent) },
   destroyEachChosen: { targetSlot: many(permanent) },
+  tapAndGoadEachChosen: { targetSlot: many(permanent) },
   blinkEachChosen: { targetSlot: many(permanent) },
   regainControlOfOwnCreatures: {},
   exileTargetGraveyardAndBuffIfCreature: { targetSlot: graveyard },

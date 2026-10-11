@@ -8462,6 +8462,39 @@ function martialImpetusScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function killianDecisiveMentorScenario(gameId: GameId): CardTestScenario {
+  const killian = pinnedFrom(COVERAGE_PR05, 'Killian, Decisive Mentor');
+  return pr01Scenario(gameId, {
+    id: 'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+    title:
+      'Killian, Decisive Mentor: an enchantment taps and goads, then the enchanted attacker draws',
+    instructions: [
+      'Killian, Decisive Mentor, a Plains and Lab Green Bear (2/2) are on your battlefield, and Lab Aegis is in your hand. An opponent controls Lab Bird. Lab Ox is on top of your library.',
+      'Cast Lab Aegis targeting Lab Green Bear and let it resolve. Killian’s enters trigger asks for up to one target creature: choose Lab Bird, which becomes tapped and goaded.',
+      'Attack P2 with Lab Green Bear only. It is enchanted by Lab Aegis, an Aura you control, so Killian’s attack trigger draws you a card.',
+    ],
+    expectedOutcome:
+      'Lab Bird is tapped and goaded by you, and you drew Lab Ox. Lab Aegis is attached to Lab Green Bear, a 4/4 that hit P2 for 4, leaving P2 at 36.',
+    oracleSha256: killian.sha256,
+    clauseIds: ['killian-enchantment-enters', 'killian-attack-draw'],
+    decks: {
+      P1: [killian.card, PLAINS, LAB_GREEN_BEAR, LAB_AEGIS, LAB_OX, FOREST, FOREST],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Killian, Decisive Mentor', 'Plains', 'Lab Green Bear'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Ox'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10306,6 +10339,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
   'martial-impetus-viewer-attack-pump',
+  'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10587,6 +10621,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
+  'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

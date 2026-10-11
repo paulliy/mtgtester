@@ -127,8 +127,6 @@ const REASONS: Record<string, string> = {
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
-  'Killian, Decisive Mentor':
-    'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
   'Promise of Loyalty':
     'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
@@ -293,6 +291,7 @@ describe('Marchesa catalog audit containment', () => {
     'Kor Spiritdancer',
     'Hateful Eidolon',
     'Martial Impetus',
+    'Killian, Decisive Mentor',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

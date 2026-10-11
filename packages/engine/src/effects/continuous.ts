@@ -279,10 +279,12 @@ export function candidateOf(
 ): SelectorCandidate {
   let isEnchanted = false;
   let isEquipped = false;
+  const auraControllerIds: string[] = [];
   for (const other of ctx.state.battlefield) {
     if (other.attachedTo === perm.id) {
       const def = ctx.defs.get(other.oracleId);
       if (def !== undefined) {
+        if (def.subtypes.includes('Aura')) auraControllerIds.push(other.controllerId);
         if (def.subtypes.includes('Aura') || def.types.includes('Enchantment')) {
           isEnchanted = true;
         }
@@ -315,6 +317,7 @@ export function candidateOf(
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,
     isEnchanted,
+    ...(auraControllerIds.length === 0 ? {} : { auraControllerIds }),
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,

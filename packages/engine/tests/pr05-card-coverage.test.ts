@@ -4934,6 +4934,330 @@ describe('Martial Impetus', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.22 Killian, Decisive Mentor
+// ---------------------------------------------------------------------------------------------
+
+describe('Killian, Decisive Mentor', () => {
+  const { card } = pinned('Killian, Decisive Mentor');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const AURA = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{W}',
+      colors: ['W'],
+      power: null,
+      toughness: null,
+      oracleText: 'Enchant creature',
+    });
+  const SHRINE = oracle({
+    name: 'Lab Shrine',
+    typeLine: 'Enchantment',
+    manaCost: '{W}',
+    colors: ['W'],
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const RELIC = oracle({
+    name: 'Lab Relic',
+    typeLine: 'Artifact',
+    manaCost: '{W}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  /** The players currently goading `perm` through an effect (not a static grant). */
+  const goaded = (_ctx: GameContext, perm: EnginePermanent) =>
+    (perm.goadedBy ?? []).map((requirement) => requirement.goaderId);
+  const hand = (ctx: GameContext, playerId = 'P1') => playerById(ctx, playerId).hand.length;
+
+  /** P1 controls Killian and Lab Mine; P2 controls Lab Victim, Lab Other and Lab Third. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const killian = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', BEAR('Lab Mine'));
+    const victim = spawn(ctx, 'P2', BEAR('Lab Victim'));
+    const other = spawn(ctx, 'P2', BEAR('Lab Other'));
+    const third = spawn(ctx, 'P2', BEAR('Lab Third'));
+    return { ctx, killian, mine, victim, other, third };
+  }
+
+  function enchant(ctx: GameContext, controllerId: string, name: string, host: EnginePermanent) {
+    const aura = spawn(ctx, controllerId as 'P1', AURA(name));
+    aura.attachedTo = host.id;
+    return aura;
+  }
+
+  /** Answer the "up to one target" prompt: the named creature, or none when `null`. */
+  const pickTarget =
+    (name: string | null): Answer =>
+    (decision) => {
+      const pattern = name === null ? /no more targets/i : new RegExp(`^Target ${name}$`);
+      const index = decision.options.findIndex((option) => pattern.test(option.description));
+      return { index: Math.max(index, 0), targets: new Map() };
+    };
+
+  /** `playerId` casts `spell` (no target) and lets it resolve; the target prompt goes to `answer`. */
+  function castAndSettle(ctx: GameContext, playerId: string, spell: OracleCard, answer?: Answer) {
+    castFromHand(ctx, playerId, spell, [{ symbol: 'W' }]);
+    resolveTop(ctx);
+    settle(ctx, answer);
+  }
+
+  /** The active player attacks with `attackers` (permanent id -> defending player), no blocks. */
+  function fight(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  function turnOf(ctx: GameContext, playerId: string) {
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  }
+
+  it('killian-pinned-oracle-supported — the interpreter alone models the tap-and-goad enters trigger and the once-per-batch attack draw', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.staticEffects).toEqual([]);
+    expect(def.triggers).toHaveLength(2);
+    const [enters, attacks] = def.triggers;
+    // Whenever an enchantment you control enters, tap up to one target creature and goad it.
+    expect(enters!.trigger).toEqual({
+      when: 'enters',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Enchantment' },
+          ],
+        },
+      },
+    });
+    expect(enters!.optional).toBe(false);
+    expect(enters!.targets).toEqual([{ kind: 'creature', count: { min: 0, max: 1 } }]);
+    expect(enters!.effects).toEqual([{ op: 'tapAndGoadEachChosen', targetSlot: 0 }]);
+    // Whenever one or more creatures that are enchanted by an Aura you control attack: one
+    // aggregated trigger per attack, drawing one card.
+    expect(attacks!.trigger).toEqual({
+      when: 'attacks',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [{ kind: 'enchantedByAuraYouControl' }, { kind: 'type', value: 'Creature' }],
+        },
+      },
+      aggregate: true,
+    });
+    expect(attacks!.optional).toBe(false);
+    expect(attacks!.targets).toEqual([]);
+    expect(attacks!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('killian-enchantment-tap-goad — an enchantment you control entering taps and goads the chosen creature, and choosing none is legal', () => {
+    // Cast an enchantment through the real path and choose Lab Victim.
+    const { ctx, victim, other } = board('killian-tap-goad');
+    expect(victim.tapped).toBe(false);
+    expect(goaded(ctx, victim)).toEqual([]);
+    castAndSettle(ctx, 'P1', SHRINE, pickTarget('Lab Victim'));
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Lab Shrine')).toBe(true);
+    expect(victim.tapped).toBe(true);
+    expect(goaded(ctx, victim)).toEqual(['P1']);
+    // Only the chosen creature: another creature is untouched.
+    expect(other.tapped).toBe(false);
+    expect(goaded(ctx, other)).toEqual([]);
+
+    // Up to one: choosing no target is legal and taps and goads nothing.
+    const none = board('killian-tap-goad-none');
+    castAndSettle(none.ctx, 'P1', SHRINE, pickTarget(null));
+    expect(none.ctx.state.battlefield.some((perm) => perm.name === 'Lab Shrine')).toBe(true);
+    for (const perm of [none.victim, none.other, none.third, none.mine]) {
+      expect(perm.tapped).toBe(false);
+      expect(goaded(none.ctx, perm)).toEqual([]);
+    }
+
+    // An Aura is an enchantment too: cast on Lab Mine, it enters, and the trigger taps and goads
+    // Lab Victim, a creature other than the one it enchants.
+    const aura = board('killian-tap-goad-aura');
+    const object = conjure(aura.ctx, 'P1', AURA('Lab Aura One'), 'hand');
+    addMana(playerById(aura.ctx, 'P1'), [{ symbol: 'W' }]);
+    const option = optionFor(aura.ctx, 'P1', object.id);
+    expect(option, 'P1 casts Lab Aura One').toBeDefined();
+    takeAction(
+      aura.ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, aura.mine.id]]),
+    );
+    resolveTop(aura.ctx);
+    settle(aura.ctx, pickTarget('Lab Victim'));
+    expect(aura.victim.tapped).toBe(true);
+    expect(goaded(aura.ctx, aura.victim)).toEqual(['P1']);
+    expect(aura.mine.tapped).toBe(false);
+  });
+
+  it('killian-enters-yours-only — a creature, an artifact or an opponent’s enchantment entering does not trigger it', () => {
+    // Baseline: P1's own enchantment does trigger it (it asks for a target).
+    const base = board('killian-scope-base');
+    const asked: string[] = [];
+    castFromHand(base.ctx, 'P1', SHRINE, [{ symbol: 'W' }]);
+    resolveTop(base.ctx);
+    settle(base.ctx, (decision) => {
+      asked.push(decision.prompt);
+      return pickTarget(null)(decision, 0);
+    });
+    expect(asked.length).toBeGreaterThan(0);
+
+    const { ctx, victim } = board('killian-scope');
+    const prompts: string[] = [];
+    const answer: Answer = (decision) => {
+      prompts.push(decision.prompt);
+      return pickTarget('Lab Victim')(decision, 0);
+    };
+    // A creature spell and an artifact spell of P1's: no trigger.
+    castFromHand(ctx, 'P1', BEAR('Lab Newcomer'), [{ symbol: 'W' }]);
+    resolveTop(ctx);
+    settle(ctx, answer);
+    castFromHand(ctx, 'P1', RELIC, [{ symbol: 'W' }]);
+    resolveTop(ctx);
+    settle(ctx, answer);
+    // An opponent's enchantment on P2's turn: no trigger for P1.
+    turnOf(ctx, 'P2');
+    castFromHand(ctx, 'P2', SHRINE, [{ symbol: 'W' }]);
+    resolveTop(ctx);
+    settle(ctx, answer);
+    expect(prompts).toEqual([]);
+    expect(victim.tapped).toBe(false);
+    expect(goaded(ctx, victim)).toEqual([]);
+  });
+
+  it('killian-goaded-creature-must-attack — the creature it goads must attack, and not Killian’s controller while another player can be attacked', () => {
+    const { ctx, victim, other } = board('killian-goaded');
+    castAndSettle(ctx, 'P1', SHRINE, pickTarget('Lab Victim'));
+    expect(goaded(ctx, victim)).toEqual(['P1']);
+    // It untaps in its controller's untap step; on P2's turn it is offered as a forced attacker.
+    victim.tapped = false;
+    turnOf(ctx, 'P2');
+    const seen: { name: string; mustAttack: boolean; defenders: string[] }[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          seen.push({
+            name: subject.name,
+            mustAttack: subject.mustAttack,
+            defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+          });
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(seen.find((subject) => subject.name === 'Lab Victim')).toEqual({
+      name: 'Lab Victim',
+      mustAttack: true,
+      defenders: ['P3', 'P4'],
+    });
+    // A creature that was not goaded is free to stay home.
+    expect(seen.find((subject) => subject.name === other.name)?.mustAttack).toBe(false);
+
+    // The goad lasts until Killian's controller's next turn, and then it is over.
+    expect(goaded(ctx, victim)).toEqual(['P1']);
+    ctx.state.turnNumber += 1;
+    turnOf(ctx, 'P1');
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(goaded(ctx, victim)).toEqual([]);
+  });
+
+  it('killian-attack-draw — attacking with a creature enchanted by an Aura you control draws one card, once per attack even with two such attackers', () => {
+    // One enchanted attacker: one card.
+    const one = board('killian-draw-one');
+    const host = one.mine;
+    enchant(one.ctx, 'P1', 'Lab Aura One', host);
+    const before = hand(one.ctx);
+    fight(one.ctx, new Map([[host.id, 'P2']]));
+    expect(hand(one.ctx)).toBe(before + 1);
+
+    // Two enchanted attackers in the same attack: still one card, a single batch.
+    const two = board('killian-draw-two');
+    const second = spawn(two.ctx, 'P1', BEAR('Lab Second'));
+    enchant(two.ctx, 'P1', 'Lab Aura One', two.mine);
+    enchant(two.ctx, 'P1', 'Lab Aura Two', second);
+    const twoBefore = hand(two.ctx);
+    fight(
+      two.ctx,
+      new Map([
+        [two.mine.id, 'P2'],
+        [second.id, 'P3'],
+      ]),
+    );
+    expect(hand(two.ctx)).toBe(twoBefore + 1);
+
+    // An opponent's creature enchanted by your Aura attacking on their turn: you draw.
+    const theirs = board('killian-draw-theirs');
+    enchant(theirs.ctx, 'P1', 'Lab Aura One', theirs.victim);
+    turnOf(theirs.ctx, 'P2');
+    const theirsBefore = hand(theirs.ctx);
+    fight(theirs.ctx, new Map([[theirs.victim.id, 'P3']]));
+    expect(hand(theirs.ctx)).toBe(theirsBefore + 1);
+    expect(hand(theirs.ctx, 'P2')).toBe(0);
+  });
+
+  it('killian-attack-draw-your-auras-only — an unenchanted attacker, or one enchanted only by an opponent’s Aura, draws nothing', () => {
+    // Baseline: your Aura on the attacker draws, so the silences below are the scope's doing.
+    const base = board('killian-scope-draw-base');
+    enchant(base.ctx, 'P1', 'Lab Aura One', base.mine);
+    const baseBefore = hand(base.ctx);
+    fight(base.ctx, new Map([[base.mine.id, 'P2']]));
+    expect(hand(base.ctx)).toBe(baseBefore + 1);
+
+    // Unenchanted attacker: nothing.
+    const bare = board('killian-draw-bare');
+    const bareBefore = hand(bare.ctx);
+    fight(bare.ctx, new Map([[bare.mine.id, 'P2']]));
+    expect(hand(bare.ctx)).toBe(bareBefore);
+
+    // Enchanted only by an opponent's Aura: nothing.
+    const foreign = board('killian-draw-foreign');
+    enchant(foreign.ctx, 'P2', 'Lab Aura One', foreign.mine);
+    const foreignBefore = hand(foreign.ctx);
+    fight(foreign.ctx, new Map([[foreign.mine.id, 'P2']]));
+    expect(hand(foreign.ctx)).toBe(foreignBefore);
+
+    // A creature enchanted by your Aura that does not attack: nothing; and another creature
+    // attacking while the enchanted one stays home: nothing either.
+    const home = board('killian-draw-home');
+    enchant(home.ctx, 'P1', 'Lab Aura One', home.mine);
+    const other = spawn(home.ctx, 'P1', BEAR('Lab Other Mine'));
+    const homeBefore = hand(home.ctx);
+    fight(home.ctx, new Map([[other.id, 'P2']]));
+    expect(hand(home.ctx)).toBe(homeBefore);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4992,6 +5316,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Martial Impetus',
     sha256: 'f5f5804b77e8b1cb8029448db2255e3c2f8173bc1f1d8e31df8262b14c8036c6',
+    clauseCount: 2,
+  },
+  {
+    name: 'Killian, Decisive Mentor',
+    sha256: '9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f',
     clauseCount: 2,
   },
   {

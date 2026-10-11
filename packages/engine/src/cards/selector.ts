@@ -74,6 +74,8 @@ export interface SelectorCandidate {
   ownerId?: string;
   /** Is this permanent enchanted by an Aura? */
   isEnchanted?: boolean;
+  /** The controller of each Aura attached to it, one entry per Aura. */
+  auraControllerIds?: readonly string[];
   /** Is this permanent equipped by an Equipment? */
   isEquipped?: boolean;
   /** EVENT-ONLY: currently attacking or blocking. */
@@ -199,6 +201,8 @@ export type Selector =
   | { kind: 'owner'; who: 'you' }
   | { kind: 'isMonocolored' }
   | { kind: 'isEnchanted' }
+  /** "enchanted by an Aura you control" (Killian, Decisive Mentor). */
+  | { kind: 'enchantedByAuraYouControl' }
   | { kind: 'isEquipped' }
   | { kind: 'inCombat' }
   | { kind: 'combatRole'; role: 'attacking' | 'blocking' }
@@ -304,6 +308,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'owner':
     case 'isMonocolored':
     case 'isEnchanted':
+    case 'enchantedByAuraYouControl':
     case 'isEquipped':
       return false;
     default:
@@ -388,6 +393,8 @@ export function selectMatches(
       return candidate.colors.length === 1;
     case 'isEnchanted':
       return candidate.isEnchanted === true;
+    case 'enchantedByAuraYouControl':
+      return candidate.auraControllerIds?.includes(source.controllerId) === true;
     case 'isEquipped':
       return candidate.isEquipped === true;
     case 'inCombat':

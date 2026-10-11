@@ -1042,6 +1042,11 @@ export type Effect =
    * (possibly none), skipping any that became illegal (CR 608.2b).
    */
   | { op: 'destroyEachChosen'; targetSlot: number }
+  /**
+   * "Tap up to one target creature and goad it" (Killian, Decisive Mentor): each legal chosen
+   * creature becomes tapped and is goaded by this ability's controller (CR 701.15a).
+   */
+  | { op: 'tapAndGoadEachChosen'; targetSlot: number }
   | {
       op: 'blinkEachChosen';
       targetSlot: number;

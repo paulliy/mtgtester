@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 31,
+      "uniqueOracleIds": 30,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 42,
+      "uniqueOracleIds": 41,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6368,6 +6368,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +1/+1 and is goaded as a layer 7d +1/+1 and a layer 6 goad on the creature this Aura is attached to (attachedToSource), and reads Whenever enchanted creature attacks, each other creature that's attacking one of your opponents gets +1/+1 until end of turn as an attack trigger that pumps each creature attacking a player other than the Aura's controller (attackingOpponent), excluding the attacking trigger object. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+      "name": "Killian, Decisive Mentor",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the attack trigger scoped to creatures enchanted by your Auras was unimplemented): the interpreter reads Whenever an enchantment you control enters, tap up to one target creature and goad it as an enters trigger with an up-to-one creature target and a tap-and-goad effect, and reads Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card as one aggregated attack trigger per batch whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+      "name": "Killian, Decisive Mentor",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Whenever an enchantment you control enters, tap up to one target creature and goad it as an enters trigger with an up-to-one creature target and a tap-and-goad effect, and reads Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card as one aggregated attack trigger per batch whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

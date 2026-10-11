@@ -1743,6 +1743,17 @@ export function* executeAbility(
         }
         break;
       }
+      case 'tapAndGoadEachChosen': {
+        for (const permanent of legalChosenPermanents(effect.targetSlot)) {
+          if (!permanent.tapped) {
+            permanent.tapped = true;
+            queueTriggersForObject(ctx, 'becomesTapped', permanent);
+          }
+          addGoadRequirement(ctx, permanent, controller.id);
+          emit(ctx, 'goad', { target: permanent.name, source: source.name });
+        }
+        break;
+      }
       case 'blinkEachChosen': {
         for (const permanent of legalChosenPermanents(effect.targetSlot)) {
           const cardId = permanent.cardId;

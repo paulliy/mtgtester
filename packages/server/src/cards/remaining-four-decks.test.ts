@@ -75,7 +75,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Verrak, Warped Sengir',
       'Wandering Archaic // Explore the Vastlands',
       // Audit: incomplete mechanics must not silently simulate approximate card text.
-      'Killian, Decisive Mentor',
       'Spirit Mantle',
       "Songbirds' Blessing",
       'Promise of Loyalty',

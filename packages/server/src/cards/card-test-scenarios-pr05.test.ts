@@ -670,3 +670,35 @@ describe('Martial Impetus Card Test Lab scenario', () => {
     replays('martial-impetus-viewer-attack-pump', steps);
   });
 });
+
+describe('Killian, Decisive Mentor Card Test Lab scenario', () => {
+  it('killian-decisive-mentor-viewer-tap-goad-and-attack-draw — Lab Aegis entering taps and goads Lab Bird, then the enchanted Lab Green Bear attacks and draws', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Lab Green Bear'] },
+      { action: 'Target Lab Bird' },
+      { action: 'Declare attackers', targets: ['__no_attack__', 'P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
+      steps,
+    );
+    // The enters trigger offered Lab Bird and the choice of none.
+    const asked = offered.find((options) => options.includes('Target Lab Bird'));
+    expect(asked).toBeDefined();
+    expect(asked!.some((option) => /no more targets/i.test(option))).toBe(true);
+    const [bird] = onBattlefield('Lab Bird');
+    expect(bird?.tapped).toBe(true);
+    // The engine's permanent carries the goad requirement; the spectator type does not name it.
+    expect((bird as { goadedBy?: { goaderId: string }[] } | undefined)?.goadedBy).toEqual([
+      expect.objectContaining({ goaderId: 'P1' }),
+    ]);
+    const [aegis] = onBattlefield('Lab Aegis');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(aegis?.attachedTo).toBe(bear?.id);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(seat('P2').life).toBe(36);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('killian-decisive-mentor-viewer-tap-goad-and-attack-draw', steps);
+  });
+});

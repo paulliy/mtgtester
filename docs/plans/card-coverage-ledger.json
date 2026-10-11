@@ -1798,17 +1798,19 @@
   {
     "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
     "name": "Killian, Decisive Mentor",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR05.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
-      "unrecognized rules text: \"Whenever an enchantment you control enters, tap up to one target creature and goad it.\"",
-      "unrecognized rules text: \"Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.\"",
-      "override for \"Killian, Decisive Mentor\" has no executable behavior"
+      "explicitly unsupported: Attack-trigger scoped to creatures enchanted by your Auras is unimplemented."
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",

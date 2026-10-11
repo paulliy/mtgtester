@@ -2541,13 +2541,36 @@
     "9c54bd34-667d-415c-ad26-82e0eb0ff409": {
       "name": "Killian, Decisive Mentor",
       "oracleSha256": "9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "killian-enchantment-enters",
+          "oracleText": "Whenever an enchantment you control enters, tap up to one target creature and goad it.",
+          "implementation": [
+            "interpreted mandatory enters trigger whose subject is an enchantment you control (an Aura included), with one 'up to one target creature' slot (min 0, max 1) and an effect, tapAndGoadEachChosen, that taps each legal chosen creature and goads it for this ability's controller (CR 701.15a)",
+            "choosing no target is legal and does nothing; a creature, an artifact or an opponent's enchantment entering does not trigger it; the goad makes the creature attack each combat if able and attack a player other than Killian's controller if able, until Killian's controller's next turn"
+          ],
+          "engineTestIds": [
+            "killian-pinned-oracle-supported",
+            "killian-enchantment-tap-goad",
+            "killian-enters-yours-only",
+            "killian-goaded-creature-must-attack"
+          ],
+          "viewerScenarioIds": ["killian-decisive-mentor-viewer-tap-goad-and-attack-draw"]
+        },
+        {
+          "id": "killian-attack-draw",
           "oracleText": "Whenever one or more creatures that are enchanted by an Aura you control attack, draw a card.",
-          "implementation": ["explicitly unsupported; Aura-enchanted attack trigger unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory aggregate attack trigger (one trigger per batch of attackers, CR 603.2c) whose subject is a creature enchanted by an Aura you control (enchantedByAuraYouControl, read off the attached Auras' controllers), drawing one card",
+            "two such attackers in one attack still draw one card; a creature enchanted only by an opponent's Aura, an unenchanted attacker, or an enchanted creature that stays home does not trigger it; an opponent's creature enchanted by your Aura attacking on their turn does"
+          ],
+          "engineTestIds": [
+            "killian-pinned-oracle-supported",
+            "killian-attack-draw",
+            "killian-attack-draw-your-auras-only"
+          ],
+          "viewerScenarioIds": ["killian-decisive-mentor-viewer-tap-goad-and-attack-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

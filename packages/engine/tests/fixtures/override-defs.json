@@ -6533,12 +6533,6 @@
     }
   },
   {
-    "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
-    "name": "Killian, Decisive Mentor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -16288,12 +16282,6 @@
   {
     "oracleId": "oracle-keen-duelist",
     "name": "Keen Duelist",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-killian-decisive-mentor",
-    "name": "Killian, Decisive Mentor",
     "handledLines": [],
     "def": {}
   },

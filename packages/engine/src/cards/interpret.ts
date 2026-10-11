@@ -577,6 +577,12 @@ function parseSubject(phrase: string, card: OracleCard): Selector | null {
   if (/^(equipped|enchanted|fortified) /.test(noun)) return { kind: 'attachedToSource' };
 
   if (noun.startsWith('each ')) noun = noun.slice('each '.length);
+  // "creatures that are enchanted by an Aura you control" (Killian, Decisive Mentor).
+  const enchantedByYours = noun.match(/^(.+) that are enchanted by an aura you control$/);
+  if (enchantedByYours !== null) {
+    parts.push({ kind: 'enchantedByAuraYouControl' });
+    noun = enchantedByYours[1] as string;
+  }
   const combat = noun.match(/^(attacking|blocking) (.+)$/);
   if (combat !== null) {
     parts.push({ kind: 'combatRole', role: combat[1] as 'attacking' | 'blocking' });
@@ -1932,6 +1938,12 @@ function parseEffectSentence(
         { op: 'addMana', amount: constant(symbols.length), colors: [], fixedSymbols: symbols },
       ];
     }
+  }
+  // "tap up to one target creature and goad it" (Killian, Decisive Mentor): the same
+  // variable-count slot; choosing nothing is legal.
+  if (s === 'tap up to one target creature and goad it' && opts.allocCount !== undefined) {
+    const targetSlot = opts.allocCount('creature', { min: 0, max: 1 });
+    return [{ op: 'tapAndGoadEachChosen', targetSlot }];
   }
   // "exile up to one target nonland permanent" (Canoptek Tomb Sentinel) — a variable-count slot:
   // choosing no target is legal, and the ability still resolves (CR 115.1d, 601.2c).

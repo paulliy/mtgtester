@@ -227,12 +227,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Keen Duelist',
     'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
   );
-  // Catalog audit silverquill-remaining-batch-3: Aura-enchanted attack trigger is unimplemented.
-  unsupportedCard(
-    '9c54bd34-667d-415c-ad26-82e0eb0ff409',
-    'Killian, Decisive Mentor',
-    'Attack-trigger scoped to creatures enchanted by your Auras is unimplemented.',
-  );
+  // Killian, Decisive Mentor: restored in coverage PR05. The interpreter reads the enchantment-
+  // enters trigger as tap and goad up to one target creature, and the attack trigger as one draw
+  // per batch of attackers that includes a creature enchanted by an Aura you control.
   // Killian, Ink Duelist: restored in coverage PR02. The interpreter reads the target-dependent
   // cost reduction, so no override remains.
   // Kor Spiritdancer: restored in coverage PR05. The interpreter reads the layer 7d +2/+2 per Aura

@@ -549,6 +549,46 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "9fb904773a37d5dfc96613bda4ee5769f97846fda7dc3370f6e501fdf12d4b0f",
+      "card": {
+        "oracleId": "9c54bd34-667d-415c-ad26-82e0eb0ff409",
+        "scryfallId": "76b6c35a-bb92-4ad3-8f85-88b9bafc6266",
+        "name": "Killian, Decisive Mentor",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Warlock",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warlock"
+        ],
+        "oracleText": "Whenever an enchantment you control enters, tap up to one target creature and goad it. (Until your next turn, that creature attacks each combat if able and attacks a player other than you if able.)\nWhenever one or more creatures that are enchanted by an Aura you control attack, draw a card.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }
