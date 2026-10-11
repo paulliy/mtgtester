@@ -3200,6 +3200,26 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
     .toBe(true);
 }
 
+/**
+ * Like `passUntil`, but passes only while something is on the stack: for a wait whose next step
+ * needs the same main phase, where a pass on an empty stack would end it.
+ */
+async function passStackUntil(page: Page, target: Locator): Promise<void> {
+  const empty = page.getByText('empty', { exact: true });
+  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  await expect
+    .poll(
+      async () => {
+        if (await target.isVisible()) return true;
+        if ((await empty.count()) === 0 && (await pass.isEnabled()))
+          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
 /** Wait until the action log shows `resolves` resolving more than `before` times. */
 async function awaitResolution(page: Page, resolves: string, before: number): Promise<void> {
   const resolved = page.getByText(`${resolves} resolves`);
@@ -5691,7 +5711,8 @@ test('Animate Dead: destroy the Aura and the returned creature is sacrificed', a
     .click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await confirm(page);
-  await passUntil(page, permanent(page, 'Lab Ox'));
+  // Lab Uproot is cast in this same main phase, so never pass on an empty stack here.
+  await passStackUntil(page, permanent(page, 'Lab Ox'));
   await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
   await expect
     .poll(() => {
