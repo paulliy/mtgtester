@@ -1237,6 +1237,23 @@ const PERMANENT_TYPES = [
 ] as const;
 
 /**
+ * A card off the battlefield as a cast permission sees it. A permission is checked against the
+ * spell the card would become, so a bestowed card is judged as the Aura enchantment spell it is
+ * cast as, not as the creature card it is (CR 601.3e, 702.103b).
+ */
+function spellZoneCandidate(
+  ctx: GameContext,
+  card: EngineCardObject,
+  ownerId: PlayerId,
+  spellDefinition: CardDefinition | undefined,
+): SelectorCandidate {
+  const candidate = cardZoneCandidate(ctx, card, ownerId);
+  return spellDefinition === undefined
+    ? candidate
+    : { ...candidate, types: spellDefinition.types, subtypes: spellDefinition.subtypes };
+}
+
+/**
  * The currently available permission for a non-hand play. `budgetTypes` is absent for an
  * unlimited permission; otherwise the action must choose one of those still-unused permanent
  * types and consume it. Keeping that choice in the action payload handles multitype cards.
@@ -1246,10 +1263,12 @@ export function playFromZonePermission(
   playerId: PlayerId,
   card: EngineCardObject,
   zone: 'libraryTop' | 'graveyard',
+  /** The spell the card would be cast as (a bestowed Aura), when that differs (CR 601.3e). */
+  spellDefinition?: CardDefinition,
 ): { budgetTypes?: string[] } | null {
   const player = ctx.state.players.find((candidate) => candidate.id === playerId);
   if (player === undefined) return null;
-  const candidate = cardZoneCandidate(ctx, card, playerId);
+  const candidate = spellZoneCandidate(ctx, card, playerId, spellDefinition);
   const source: SelectorSource = { cardId: '', controllerId: playerId };
   const matching = gatherRuleStatics(ctx).filter((entry) => {
     if (entry.static.kind !== 'playFromZone' || entry.static.zone !== zone) return false;
@@ -1322,11 +1341,13 @@ export function canPlayFromZone(
 export function castFromLibraryTopCandidates(
   ctx: GameContext,
   playerId: PlayerId,
+  /** The spell the top card would be cast as (a bestowed Aura), when that differs (CR 601.3e). */
+  spellDefinition?: CardDefinition,
 ): EngineCardObject[] {
   const player = ctx.state.players.find((p) => p.id === playerId);
   const top = player?.library[0];
   if (player === undefined || top === undefined) return [];
-  const candidate = cardZoneCandidate(ctx, top, playerId);
+  const candidate = spellZoneCandidate(ctx, top, playerId, spellDefinition);
   const source: SelectorSource = { cardId: '', controllerId: playerId };
   const eligible = gatherRuleStatics(ctx).some((entry) => {
     if (entry.static.kind !== 'castFromZone' || entry.static.zone !== 'libraryTop') return false;

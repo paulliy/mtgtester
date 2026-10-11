@@ -6444,6 +6444,110 @@ describe('Eidolon of Countless Battles', () => {
     expect(effectivePT(ctx, host)).toEqual({ power: 4, toughness: 4 });
   });
 
+  it('eidolon-of-countless-battles-bestow-from-zone-permission — a graveyard or library-top cast permission also allows bestow (CR 118.9), judged on the bestowed Aura spell (CR 601.3e, 702.103b)', () => {
+    const PERMISSION = (name: string, oracleText: string) =>
+      oracle({
+        name,
+        typeLine: 'Enchantment',
+        manaCost: '{3}',
+        power: null,
+        toughness: null,
+        oracleText,
+      });
+    const MULDROTHA = PERMISSION(
+      'Lab Muldrotha',
+      'During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard.',
+    );
+    const options = (ctx: GameContext, objectId: string) =>
+      priorityOptions(ctx, 'P1').filter((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return 'objectId' in payload && payload.objectId === objectId;
+      });
+    const budgets = (list: ReturnType<typeof options>, bestowed: boolean) =>
+      list
+        .filter((option) => /Bestow/.test(option.description) === bestowed)
+        .map(
+          (option) =>
+            (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>)
+              .zoneBudgetType,
+        )
+        .sort();
+
+    // Muldrotha: the creature card may use either of its types, but the bestowed spell is only an
+    // Aura enchantment, so bestow spends the enchantment budget and never the creature one.
+    const { ctx, host } = board('eidolon-muldrotha-bestow');
+    spawn(ctx, 'P1', MULDROTHA);
+    const object = conjure(ctx, 'P1', card, 'graveyard');
+    addMana(playerById(ctx, 'P1'), BESTOW_MANA);
+    const offered = options(ctx, object.id);
+    expect(budgets(offered, false)).toEqual(['Creature', 'Enchantment']);
+    expect(budgets(offered, true)).toEqual(['Enchantment']);
+    const bestow = offered.find((option) => /Bestow/.test(option.description))!;
+    takeAction(
+      ctx,
+      'P1',
+      bestow.payload as PriorityActionPayload,
+      undefined,
+      new Map([[bestow.targets![0]!.slot, host.id]]),
+    );
+    expect(playerById(ctx, 'P1').playFromZoneTypeUsesThisTurn).toEqual({ Enchantment: 1 });
+    resolveTop(ctx);
+    const eidolon = eidolonOf(ctx)!;
+    expect(eidolon.attachedTo).toBe(host.id);
+    expect(effectivePT(ctx, host)).toEqual({ power: 4, toughness: 4 });
+
+    // With the enchantment budget spent, a second Eidolon may still be cast as a creature but no
+    // longer for bestow.
+    const second = conjure(ctx, 'P1', card, 'graveyard');
+    addMana(playerById(ctx, 'P1'), BESTOW_MANA);
+    const after = options(ctx, second.id);
+    expect(budgets(after, false)).toEqual(['Creature']);
+    expect(budgets(after, true)).toEqual([]);
+
+    // Without a permission the graveyard offers nothing.
+    const none = board('eidolon-graveyard-no-permission');
+    const buried = conjure(none.ctx, 'P1', card, 'graveyard');
+    addMana(playerById(none.ctx, 'P1'), BESTOW_MANA);
+    expect(options(none.ctx, buried.id)).toEqual([]);
+
+    // A library-top permission for permanent cards allows bestow; one for creature spells does not,
+    // since the bestowed spell is not a creature spell.
+    const top = board('eidolon-top-permanents');
+    spawn(
+      top.ctx,
+      'P1',
+      PERMISSION(
+        'Lab Top Permanents',
+        'You may play permanent cards from the top of your library.',
+      ),
+    );
+    const onTop = conjure(top.ctx, 'P1', card, 'library');
+    addMana(playerById(top.ctx, 'P1'), BESTOW_MANA);
+    const fromTop = options(top.ctx, onTop.id);
+    expect(fromTop.some((option) => /Bestow/.test(option.description))).toBe(true);
+    const topBestow = fromTop.find((option) => /Bestow/.test(option.description))!;
+    takeAction(
+      top.ctx,
+      'P1',
+      topBestow.payload as PriorityActionPayload,
+      undefined,
+      new Map([[topBestow.targets![0]!.slot, top.host.id]]),
+    );
+    expect(top.ctx.state.stack[0]?.targets).toEqual([top.host.id]);
+
+    const creatures = board('eidolon-top-creatures');
+    spawn(
+      creatures.ctx,
+      'P1',
+      PERMISSION('Lab Top Creatures', 'You may cast creature spells from the top of your library.'),
+    );
+    const topCreature = conjure(creatures.ctx, 'P1', card, 'library');
+    addMana(playerById(creatures.ctx, 'P1'), BESTOW_MANA);
+    const creatureOnly = options(creatures.ctx, topCreature.id);
+    expect(creatureOnly.some((option) => !/Bestow/.test(option.description))).toBe(true);
+    expect(creatureOnly.some((option) => /Bestow/.test(option.description))).toBe(false);
+  });
+
   it('eidolon-of-countless-battles-bestow-needs-creature — bestow is offered only while there is a creature to enchant, and an Aura-spell cast trigger sees it', () => {
     // No creature anywhere: the plain cast stays available, bestow does not.
     const empty = pod('eidolon-empty');

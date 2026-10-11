@@ -1298,24 +1298,61 @@ export function computePriorityOptions(
       const separatelyCastableFromTop =
         fromLibraryTop &&
         castFromLibraryTopCandidates(ctx, player.id).some((card) => card.id === obj.id);
-      if (permission === null && !separatelyCastableFromTop) {
-        options.splice(normalOptionsStart);
-      } else if (permission?.budgetTypes !== undefined) {
-        const generated = options.splice(normalOptionsStart);
-        for (const budgetType of permission.budgetTypes) {
-          for (const option of generated) {
-            const castPayload = option.payload as Extract<
-              PriorityActionPayload,
-              { kind: 'castSpell' }
-            >;
-            options.push({
-              ...option,
-              description: `${option.description} (using ${budgetType} permission)`,
-              payload: { ...castPayload, zoneBudgetType: budgetType },
-              data: { ...option.data, zoneBudgetType: budgetType },
-            });
+      /** Keep the options generated from `start` only under `permission`, one per budget type. */
+      const applyZonePermission = (
+        start: number,
+        zonePermission: { budgetTypes?: string[] } | null,
+        separatelyCastable: boolean,
+      ): void => {
+        if (zonePermission === null && !separatelyCastable) {
+          options.splice(start);
+        } else if (zonePermission?.budgetTypes !== undefined) {
+          const generated = options.splice(start);
+          for (const budgetType of zonePermission.budgetTypes) {
+            for (const option of generated) {
+              const castPayload = option.payload as Extract<
+                PriorityActionPayload,
+                { kind: 'castSpell' }
+              >;
+              options.push({
+                ...option,
+                description: `${option.description} (using ${budgetType} permission)`,
+                payload: { ...castPayload, zoneBudgetType: budgetType },
+                data: { ...option.data, zoneBudgetType: budgetType },
+              });
+            }
           }
         }
+      };
+      applyZonePermission(normalOptionsStart, permission, separatelyCastableFromTop);
+      // A permission to cast the card also allows its bestow cost (CR 118.9). Whether the
+      // permission applies, and which permanent-type budget it spends, is judged on the bestowed
+      // Aura enchantment spell, not the creature card (CR 601.3e, 702.103b).
+      for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
+        if (alt.kind !== 'bestow') continue;
+        const bestowed = bestowedDefinition(def);
+        const bestowStart = options.length;
+        offerCast(
+          alt.manaCost,
+          spellAdditionalCosts,
+          bestowed,
+          { alternativeCast: alt.kind, altIndex: index },
+          ' via Bestow',
+        );
+        applyZonePermission(
+          bestowStart,
+          playFromZonePermission(
+            ctx,
+            player.id,
+            obj,
+            fromGraveyard ? 'graveyard' : 'libraryTop',
+            bestowed,
+          ),
+          fromLibraryTop &&
+            castFromLibraryTopCandidates(ctx, player.id, bestowed).some(
+              (card) => card.id === obj.id,
+            ),
+        );
       }
     }
     // Adventure's own exile permission allows only the permanent face. A broad temporary
