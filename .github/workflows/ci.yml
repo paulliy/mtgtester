@@ -172,6 +172,7 @@ jobs:
           bun run primitive-promotions --base "$PROMOTION_BASE" --primitive-evidence test-results/primitive-contracts
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: primitive-contract-evidence
           path: |
