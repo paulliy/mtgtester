@@ -42,6 +42,7 @@ import {
   colorsOf,
   damageKeywordsOf,
   getDefByOracleId,
+  hasProtectionFrom,
   opponentsOf,
   tokenCreationMultiplierFor,
   triggersOf,
@@ -639,6 +640,8 @@ export function* moveObject(
     if (def.subtypes.includes('Aura')) {
       const enchant = def.spellAbility?.targets[0];
       const controllerId = target.controllerId ?? obj.ownerId;
+      // Chosen without targeting (CR 303.4f), but protection still forbids being enchanted by
+      // an Aura of that color (CR 702.16d).
       const hosts =
         enchant === undefined
           ? []
@@ -651,7 +654,10 @@ export function* moveObject(
               undefined,
               obj.cardId,
               false,
-            );
+            ).filter((id) => {
+              const host = ctx.state.battlefield.find((perm) => perm.id === id);
+              return host === undefined || !hasProtectionFrom(ctx, host, def.colors);
+            });
       if (target.attachedTo !== undefined) {
         if (!hosts.includes(target.attachedTo)) return null;
       } else {
@@ -1365,24 +1371,38 @@ export function canAttach(
   if (!ctx.state.battlefield.includes(host)) return false;
   const chars = computeCharacteristics(ctx, attachment);
   if (chars.types.includes('Creature')) return false;
-  if (chars.subtypes.includes('Aura')) {
-    const enchant = getDefByOracleId(ctx, attachment.oracleId, attachment.name).spellAbility
-      ?.targets[0];
-    if (enchant === undefined) return false;
-    return computeTargetOptions(
-      ctx,
-      enchant,
-      attachment.controllerId,
-      chars.colors,
-      undefined,
-      undefined,
-      attachment.cardId,
-      false,
-    ).includes(host.id);
-  }
+  // Protection: can't be Enchanted or Equipped by something of that color (CR 702.16d).
+  if (hasProtectionFrom(ctx, host, chars.colors)) return false;
+  if (chars.subtypes.includes('Aura')) return enchantAllows(ctx, attachment, host) === true;
   if (chars.subtypes.includes('Equipment'))
     return computeCharacteristics(ctx, host).types.includes('Creature');
   return false;
+}
+
+/**
+ * Whether an Aura's enchant ability allows `host` for the Aura's current controller, chosen without
+ * targeting (CR 303.4a), and `host` has no protection from the Aura's colors (CR 702.16c). Undefined
+ * when the definition carries no enchant restriction to check.
+ */
+export function enchantAllows(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  host: EnginePermanent,
+): boolean | undefined {
+  const colors = computeCharacteristics(ctx, aura).colors;
+  if (hasProtectionFrom(ctx, host, colors)) return false;
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined) return undefined;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(host.id);
 }
 
 /**

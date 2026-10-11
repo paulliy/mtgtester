@@ -26,6 +26,7 @@ import { GameOverSignal } from '../signals';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
+  enchantAllows,
   moveObject,
   movePermanentsToGraveyard,
   returnExiledUntilLeaves,
@@ -229,12 +230,17 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (!s.battlefield.includes(perm)) continue;
     const chars = computeCharacteristics(ctx, perm);
 
-    // An Aura must remain attached to a permanent allowed by its enchant restriction (CR 704.5m).
+    // An Aura must remain attached to a permanent allowed by its enchant restriction for its
+    // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
     if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined) {
-        debug(ctx, 'sba', `aura ${perm.name} attached to nothing — to graveyard`);
+      if (host === undefined || enchantAllows(ctx, perm, host) === false) {
+        debug(
+          ctx,
+          'sba',
+          `aura ${perm.name} attached to nothing or an illegal host — to graveyard`,
+        );
         emit(ctx, 'sbaAuraDies', { name: perm.name });
         yield* moveObject(ctx, perm, { zone: 'graveyard' });
         return true;

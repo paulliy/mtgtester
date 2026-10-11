@@ -100,7 +100,8 @@ function foldCounters(h: number, perm: EnginePermanent): number {
 
 /**
  * Digest of everything `runLayers` reads. `timestamp` is unique per permanent and per
- * until-end-of-turn effect and never changes, so it identifies membership exactly; until-eot
+ * until-end-of-turn effect, so it identifies membership exactly; an Aura or Equipment gets a new
+ * one as it becomes attached (CR 613.7e), which the digest sees like any other change. Until-eot
  * effects are immutable once created, so their timestamp alone covers them.
  */
 export function digestOf(
