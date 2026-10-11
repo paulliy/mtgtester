@@ -791,6 +791,8 @@ function parseEffectSentence(
     triggerObject?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
+    /** Every head is the creature this Aura or Equipment is attached to dying. */
+    attachedDies?: boolean;
     thatMany?: Value;
     allocCount?: CountSlotAllocator;
   } = {},
@@ -1406,19 +1408,26 @@ function parseEffectSentence(
     if (s === 'attach this aura to that creature')
       return [{ op: 'attach', what: 'source', to: 'triggerObject' }];
   }
+  // "When enchanted creature dies, return that card to the battlefield under its owner's control"
+  // (Gift of Immortality): only a dies head, so "that card" is in a graveyard, where the op looks.
   if (
-    opts.triggerObject === true &&
+    opts.attachedDies === true &&
     s === "return that card to the battlefield under its owner's control"
   ) {
     return [{ op: 'graveyardToBattlefield', target: 'triggerObject', under: 'owner' }];
   }
   // "Return this card [from your graveyard] to the battlefield [attached to that creature] [at the
   // beginning of the next end step]" (Screams from Within, Ghoulish Impetus, Gift of Immortality).
+  // "This card" is the card the source became, so the head must be the source leaving or the
+  // creature it is attached to dying (which puts an Aura in the graveyard, CR 704.5m).
   {
     const m = s.match(
       /^return this card (from your graveyard )?to the battlefield( attached to that creature)?( at the beginning of the next end step)?$/,
     );
-    if (m !== null && (m[2] === undefined || opts.triggerObject === true))
+    if (
+      m !== null &&
+      (opts.attachedDies === true || (opts.departedSelf === true && m[2] === undefined))
+    )
       return [
         {
           op: 'returnDepartedSourceToBattlefield',
@@ -1432,7 +1441,7 @@ function parseEffectSentence(
   // next end step" (Resurrection Orb). Only the owner's form: Marchesa's "under your control"
   // twin carries a +1/+1-counter subject her reviewed override models.
   if (
-    opts.triggerObject === true &&
+    opts.attachedDies === true &&
     s ===
       "return that card to the battlefield under its owner's control at the beginning of the next end step"
   )
@@ -5112,6 +5121,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         (head.when === 'dies' || head.when === 'leavesBattlefield') &&
         'subject' in head &&
         head.subject.kind === 'self',
+    ),
+    attachedDies: heads.every(
+      (head) =>
+        head.when === 'dies' &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.subject.selector.kind === 'attachedToSource',
     ),
     allocCount,
     // What "that many" refers back to. A combat-damage head makes it the damage; an aggregate
