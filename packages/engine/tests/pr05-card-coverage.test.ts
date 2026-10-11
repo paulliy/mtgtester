@@ -4916,6 +4916,29 @@ describe('Martial Impetus', () => {
     expect(effectivePT(ctx, c)).toEqual(BASE);
   });
 
+  it('martial-impetus-pump-fixed-set — the pump applies to the attackers it affected, not to a card that leaves and returns as a new object (CR 400.7, 611.2c)', () => {
+    const { ctx, a, b, c } = board('martial-blink');
+    fight(
+      ctx,
+      new Map([
+        [a.id, 'P3'],
+        [b.id, 'P4'],
+        [c.id, 'P4'],
+      ]),
+    );
+    expect(effectivePT(ctx, b)).toEqual(PLUS);
+    expect(effectivePT(ctx, c)).toEqual(PLUS);
+    // Lab C is exiled and returns the same turn: a new object, without the +1/+1.
+    pump(moveObject(ctx, c, { zone: 'exile' }));
+    const exiled = ctx.state.exile.find((card) => card.name === 'Lab C')!;
+    pump(moveObject(ctx, exiled, { zone: 'battlefield', controllerId: 'P2' }));
+    const back = ctx.state.battlefield.find((perm) => perm.name === 'Lab C')!;
+    expect(back.id).not.toBe(c.id);
+    expect(effectivePT(ctx, back)).toEqual(BASE);
+    // Lab B, which stayed, keeps it.
+    expect(effectivePT(ctx, b)).toEqual(PLUS);
+  });
+
   it('martial-impetus-own-attackers — on the Aura controller’s own turn it pumps their other attackers, and only creatures attacking their opponents', () => {
     const ctx = pod('martial-own');
     const host = spawn(ctx, 'P1', BEAR('Lab Host'));
