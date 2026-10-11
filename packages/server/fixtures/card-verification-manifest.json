@@ -5666,7 +5666,11 @@
             "ghoulish-impetus-deathtouch-combat",
             "ghoulish-impetus-goaded"
           ],
-          "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
+          "viewerScenarioIds": [
+            "ghoulish-impetus-viewer-return-at-end-step",
+            "ghoulish-impetus-viewer-goaded-attack",
+            "ghoulish-impetus-viewer-goaded-opponent-attack"
+          ]
         },
         {
           "id": "ghoulish-impetus-return",

@@ -8118,6 +8118,82 @@ function ghoulishImpetusScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Ghoulish Impetus goads its creature: the attack is mandatory, while an unenchanted one is free. */
+function ghoulishImpetusGoadScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-goaded-attack',
+    title: 'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+    instructions: [
+      'Ghoulish Impetus is in your hand. Three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield. Your opponents control no creatures.',
+      'Cast Ghoulish Impetus targeting Lab Green Bear and let it resolve: Lab Green Bear becomes a 3/3 with deathtouch and is goaded.',
+      'Declare attackers. Lab Green Bear is goaded, so it has no "Stay home" choice; Lab Ox does. Leave Lab Green Bear unassigned and keep Lab Ox at home, then confirm: Lab Green Bear attacks anyway. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear, a 3/3 with deathtouch, attacked P2 although you never chose to attack, and hit for 3, leaving P2 at 37. Lab Ox stayed home untapped. P3 and P4 are untouched.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-statics'],
+    decks: {
+      P1: [impetus.card, ...swamps, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Ghoulish Impetus'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...swamps.map((swamp) => swamp.name), 'Lab Green Bear', 'Lab Ox'],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+/**
+ * Ghoulish Impetus on an opponent's creature: on that opponent's turn the goaded creature cannot
+ * attack the Aura's controller, while an unenchanted creature of theirs can.
+ */
+function ghoulishImpetusOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const impetus = pinnedFrom(COVERAGE_PR05, 'Ghoulish Impetus');
+  return pr01Scenario(gameId, {
+    id: 'ghoulish-impetus-viewer-goaded-opponent-attack',
+    title: 'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    instructions: [
+      'It is P2’s turn. Your Ghoulish Impetus is already attached to P2’s Lab Green Bear, which is a 3/3 with deathtouch and goaded by you. P2 also controls Lab Ox (4/4), which is not enchanted. You control no creatures.',
+      'P2 attacks you with everything it is allowed to. Lab Green Bear is goaded, so it must attack and may not attack you, the Aura’s controller; Lab Ox may attack you or stay home.',
+      'Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Ox attacked you and Lab Green Bear attacked another opponent: you took 4 and are at 36, not 39 or 33. P3 took 3 from Lab Green Bear and is at 37, and P4 is untouched at 40.',
+    oracleSha256: impetus.sha256,
+    clauseIds: ['ghoulish-impetus-statics'],
+    decks: {
+      P1: [impetus.card, FOREST, FOREST],
+      P2: [LAB_GREEN_BEAR, LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Ghoulish Impetus'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Green Bear' },
+        },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', 'Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 function giftOfImmortalityScenario(gameId: GameId): CardTestScenario {
   const gift = pinnedFrom(COVERAGE_PR05, 'Gift of Immortality');
   const swamps = Array.from({ length: 4 }, () => SWAMP);
@@ -10804,6 +10880,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sunforger-viewer-unattach-search-and-cast',
   'screams-from-within-viewer-return-and-enchant',
   'ghoulish-impetus-viewer-return-at-end-step',
+  'ghoulish-impetus-viewer-goaded-attack',
+  'ghoulish-impetus-viewer-goaded-opponent-attack',
   'gift-of-immortality-viewer-owner-return-then-aura',
   'ajanis-chosen-viewer-aura-moves-to-cat',
   'shielded-by-faith-viewer-attach-to-entering-creature',
@@ -11097,6 +11175,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,
   'screams-from-within-viewer-return-and-enchant': screamsFromWithinScenario,
   'ghoulish-impetus-viewer-return-at-end-step': ghoulishImpetusScenario,
+  'ghoulish-impetus-viewer-goaded-attack': ghoulishImpetusGoadScenario,
+  'ghoulish-impetus-viewer-goaded-opponent-attack': ghoulishImpetusOpponentAttackScenario,
   'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,

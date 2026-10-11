@@ -1871,6 +1871,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Gift of Immortality: the creature returns to its owner, then the Aura returns onto it',
     ],
   },

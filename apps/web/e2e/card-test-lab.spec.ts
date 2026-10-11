@@ -6607,6 +6607,98 @@ test('Ghoulish Impetus: its creature dies and it returns at the next end step', 
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: the goaded creature must attack, an unenchanted one may stay home',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve: a 3/3 with deathtouch.
+  const impetus = handCard(page, 'Ghoulish Impetus');
+  await expect(impetus).toHaveClass(/actionable/, { timeout: 15_000 });
+  const impetusBefore = await page.getByText('Ghoulish Impetus resolves').count();
+  await impetus.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Ghoulish Impetus', impetusBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Ox')).toContainText('4/4');
+
+  // Declare attackers: the goaded Bear has no "Stay home" choice and may not attack you; the
+  // unenchanted Ox has one.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  const bearRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Green Bear' });
+  const oxRow = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Ox' });
+  await expect(bearRow).toBeVisible();
+  await expect(bearRow.getByRole('button', { name: 'Stay home' })).toHaveCount(0);
+  await expect(oxRow.getByRole('button', { name: 'Stay home' })).toHaveCount(1);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(bearRow.getByRole('button', { name: seat })).toHaveCount(1);
+  await expect(bearRow.getByRole('button', { name: 'P1' })).toHaveCount(0);
+
+  // Never assign the Bear: it attacks anyway. Ox stays home.
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+  await expect(permanent(page, 'Ghoulish Impetus')).toHaveCount(1);
+});
+
+test('Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Ghoulish Impetus: P2’s goaded creature cannot attack you, their other creature can',
+  );
+  // P2's scripted seat attacks you with everything it may; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Your Aura stays on P2's Lab Green Bear (a 3/3 with deathtouch).
+  const final = boards.at(-1)!;
+  const bear = final.find((p) => p.name === 'Lab Green Bear')!;
+  expect(final.find((p) => p.name === 'Ghoulish Impetus')?.attachedTo).toBe(bear.id);
+  expect(final.find((p) => p.name === 'Ghoulish Impetus')?.controller).toBe('P1');
+  expect(bear.controller).toBe('P2');
+  expect(bear.keywords).toContain('deathtouch');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/3');
+
+  // Only the unenchanted Lab Ox attacked you (4): you are at 36, not 33. The goaded Bear
+  // attacked someone else: P3 took 3 and P4 is untouched.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('37');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+});
+
 test('Gift of Immortality: the creature returns to its owner, then the Aura returns onto it', async ({
   page,
 }) => {

@@ -3,7 +3,7 @@
  * through the same Engine the real viewer session uses. The Playwright spec drives the identical
  * scenarios through the real frontend; this suite pins their authoritative outcomes and replay.
  */
-import type { DecisionRequest } from '@mtg/shared';
+import type { AttackDeclarationSubject, DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { createCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
@@ -83,7 +83,12 @@ function scripted(steps: Step[]) {
   };
 }
 
-function run(scenarioId: string, steps: Step[]) {
+function run(
+  scenarioId: string,
+  steps: Step[],
+  /** Called with each request just before the scripted choice is submitted. */
+  inspect?: (request: DecisionRequest, scenario: CardTestScenario) => void,
+) {
   const scenario = createCardTestScenario(scenarioId, 'card-lab-pr05');
   expect(scenario, scenarioId).not.toBeNull();
   const choose = scripted(steps);
@@ -97,6 +102,7 @@ function run(scenarioId: string, steps: Step[]) {
     decisions++;
     prompts.push(step.request.prompt ?? '');
     offered.push(step.request.legalActions.map((action) => action.description));
+    inspect?.(step.request, scenario!);
     // A seat the scenario scripts (an opponent's own turn) answers as in the viewer.
     const override = scenario!.decisionProviderOverrides?.[step.request.decidingPlayer];
     scenario!.engine.submit(
@@ -363,6 +369,116 @@ describe('Ghoulish Impetus Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('ghoulish-impetus-viewer-return-at-end-step', steps);
+  });
+});
+
+describe('Ghoulish Impetus goad Card Test Lab scenario', () => {
+  it('ghoulish-impetus-viewer-goaded-attack — the goaded Lab Green Bear cannot stay home and attacks P2, while Lab Ox may stay home', () => {
+    const steps: Step[] = [
+      { action: 'Cast Ghoulish Impetus', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2', '__no_attack__'] },
+    ];
+    const declarations: NonNullable<DecisionRequest['presentation']>['attackDeclaration'][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'ghoulish-impetus-viewer-goaded-attack',
+      steps,
+      (request, current) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration === undefined) return;
+        declarations.push(declaration);
+        const action = request.legalActions.find((candidate) =>
+          candidate.description.startsWith('Declare attackers'),
+        )!;
+        // Negative: declining to attack with both creatures is refused, because the goaded one
+        // may not stay home; the state is unchanged and the legal declaration still works.
+        expect(() =>
+          current.engine.submit({
+            requestId: request.requestId,
+            actionId: action.id,
+            targets: declaration.subjects.map((_, slot) => ({ slot, choice: '__no_attack__' })),
+          }),
+        ).toThrow();
+      },
+    );
+    // Exactly one declaration was offered: the goaded Bear must attack, the Ox is optional, and
+    // neither may attack the Aura's controller (P1 is never a defender).
+    expect(declarations).toHaveLength(1);
+    const names = objectNames(scenario);
+    const subjects = declarations[0]!.subjects.map((subject) => ({
+      name: names.get(subject.subjectId) ?? subject.subjectId,
+      mustAttack: subject.mustAttack,
+      defenders: subject.defenders.map((defender) => defender.playerId),
+    }));
+    expect(subjects).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P2', 'P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P2', 'P3', 'P4'] },
+    ]);
+    // The Bear is a 3/3 deathtouch creature under the Aura, attacked P2 for 3, and Lab Ox stayed home.
+    const [impetus] = onBattlefield('Ghoulish Impetus');
+    const [bear] = onBattlefield('Lab Green Bear');
+    const [ox] = onBattlefield('Lab Ox');
+    expect(impetus?.attachedTo).toBe(bear?.id);
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.power).toBe(3);
+    expect(viewed?.toughness).toBe(3);
+    expect(viewed?.keywords).toContain('deathtouch');
+    expect(bear?.tapped).toBe(true);
+    expect(ox?.tapped).toBe(false);
+    expect(seat('P2').life).toBe(37);
+    expect(seat('P3').life).toBe(40);
+    expect(seat('P4').life).toBe(40);
+    expect(seat('P1').life).toBe(40);
+    expect(onBattlefield('Swamp').filter((swamp) => swamp.tapped)).toHaveLength(3);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ghoulish-impetus-viewer-goaded-attack', steps);
+  });
+});
+
+describe('Ghoulish Impetus opponent goad Card Test Lab scenario', () => {
+  it('ghoulish-impetus-viewer-goaded-opponent-attack — P2’s goaded Lab Green Bear cannot attack P1 and must attack, while the unenchanted Lab Ox may attack P1 or stay home', () => {
+    const declarations: Array<{ player: string; subjects: AttackDeclarationSubject[] }> = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'ghoulish-impetus-viewer-goaded-opponent-attack',
+      [],
+      (request) => {
+        const declaration = request.presentation?.attackDeclaration;
+        if (declaration !== undefined)
+          declarations.push({ player: request.decidingPlayer, subjects: declaration.subjects });
+      },
+    );
+    const [impetus] = onBattlefield('Ghoulish Impetus');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(impetus?.attachedTo).toBe(bear?.id);
+    expect(impetus?.controllerId).toBe('P1');
+    expect(bear?.controllerId).toBe('P2');
+    // P2 declared once. The goaded Bear must attack and is never offered P1, the goader; the
+    // unenchanted Ox may stay home and may attack P1.
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0]!.player).toBe('P2');
+    const names = objectNames(scenario);
+    expect(
+      declarations[0]!.subjects.map((subject) => ({
+        name: names.get(subject.subjectId) ?? subject.subjectId,
+        mustAttack: subject.mustAttack,
+        defenders: subject.defenders.map((defender) => defender.playerId).sort(),
+      })),
+    ).toEqual([
+      { name: 'Lab Green Bear', mustAttack: true, defenders: ['P3', 'P4'] },
+      { name: 'Lab Ox', mustAttack: false, defenders: ['P1', 'P3', 'P4'] },
+    ]);
+    // P2's seat attacks P1 whenever P1 is offered: the Ox hit P1 for 4, the Bear (a 3/3) hit
+    // P3 or P4 for 3, and P1 took nothing from the Bear.
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P2').life).toBe(40);
+    expect([seat('P3').life, seat('P4').life].sort()).toEqual([37, 40]);
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ghoulish-impetus-viewer-goaded-opponent-attack', []);
   });
 });
 

@@ -357,6 +357,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sunforger-viewer-unattach-search-and-cast',
       'screams-from-within-viewer-return-and-enchant',
       'ghoulish-impetus-viewer-return-at-end-step',
+      'ghoulish-impetus-viewer-goaded-attack',
+      'ghoulish-impetus-viewer-goaded-opponent-attack',
       'gift-of-immortality-viewer-owner-return-then-aura',
       'ajanis-chosen-viewer-aura-moves-to-cat',
       'shielded-by-faith-viewer-attach-to-entering-creature',
