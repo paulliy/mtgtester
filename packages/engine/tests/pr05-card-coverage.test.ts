@@ -162,7 +162,7 @@ function castFromHand(
 function returnedFromGraveyard(ctx: GameContext): unknown[] {
   return ctx.state.eventLog
     .filter((event) => event.type === 'graveyardToBattlefield')
-    .map((event) => event.payload.target);
+    .map((event) => event.payload['target']);
 }
 
 function kill(ctx: GameContext, perm: EnginePermanent) {
