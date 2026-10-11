@@ -487,10 +487,13 @@ function* proposeCast(
     const freeSpellFace =
       resolutionPermission !== undefined &&
       (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+    // A broad "you may play that card this turn" permission allows a spell face or bestow.
     const temporaryExileSpellFace =
       payload.fromExile === true &&
       obj.playableUntilEotBy === player.id &&
-      (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+      (selectedAlternative.kind === 'adventure' ||
+        selectedAlternative.kind === 'omen' ||
+        selectedAlternative.kind === 'bestow');
     if (
       (!freeSpellFace &&
         (payload.fromLibraryTop === true ||

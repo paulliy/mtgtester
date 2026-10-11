@@ -6624,6 +6624,34 @@ describe('Eidolon of Countless Battles', () => {
     expect(effectivePT(other.ctx, other.host)).toEqual({ power: 2, toughness: 2 });
   });
 
+  it('eidolon-of-countless-battles-bestow-from-exile — a broad "play that card this turn" permission lets it be cast for bestow from exile (CR 118.9); a permission for another player does not', () => {
+    const { ctx, host } = board('eidolon-exile-bestow');
+    const object = conjure(ctx, 'P1', card, 'exile');
+    addMana(playerById(ctx, 'P1'), BESTOW_MANA);
+    // Negative: no permission, or one granted to another player, offers neither cast.
+    expect(castOptions(ctx, object.id)).toEqual({ bestow: undefined, plain: undefined });
+    object.playableUntilEotBy = 'P2';
+    expect(castOptions(ctx, object.id)).toEqual({ bestow: undefined, plain: undefined });
+    object.playableUntilEotBy = 'P1';
+    const { bestow, plain } = castOptions(ctx, object.id);
+    expect(plain, 'the plain cast is offered').toBeDefined();
+    expect(bestow, 'bestow is offered').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      bestow!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[bestow!.targets![0]!.slot, host.id]]),
+    );
+    expect(ctx.state.stack[0]?.targets).toEqual([host.id]);
+    expect(ctx.state.exile.some((c) => c.cardId === object.cardId)).toBe(false);
+    resolveTop(ctx);
+    const eidolon = eidolonOf(ctx)!;
+    expect(eidolon.attachedTo).toBe(host.id);
+    expect(computeCharacteristics(ctx, eidolon).subtypes).toEqual(['Aura']);
+    expect(effectivePT(ctx, host)).toEqual({ power: 4, toughness: 4 });
+  });
+
   it('eidolon-of-countless-battles-bestow-needs-creature — bestow is offered only while there is a creature to enchant, and an Aura-spell cast trigger sees it', () => {
     // No creature anywhere: the plain cast stays available, bestow does not.
     const empty = pod('eidolon-empty');

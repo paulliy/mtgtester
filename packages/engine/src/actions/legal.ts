@@ -1319,10 +1319,12 @@ export function computePriorityOptions(
       }
     }
     // Adventure's own exile permission allows only the permanent face. A broad temporary
-    // play permission also permits choosing a spell face, without granting alternate costs.
+    // play permission also permits choosing a spell face or paying bestow (CR 118.9); other
+    // alternate costs are not offered from exile.
     if ((!fromExile || obj.playableUntilEotBy === player.id) && !fromLibraryTop) {
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
-        if (fromExile && alt.kind !== 'adventure' && alt.kind !== 'omen') continue;
+        if (fromExile && alt.kind !== 'adventure' && alt.kind !== 'omen' && alt.kind !== 'bestow')
+          continue;
         if (fromExile && alt.from === 'hand') continue;
         if (fromCommand && alt.from === 'hand') continue;
         if (
