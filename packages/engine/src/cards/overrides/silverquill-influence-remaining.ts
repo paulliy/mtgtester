@@ -12,7 +12,6 @@ const ENCHANTMENTS = ofType('Enchantment');
 // These aliases track normalized Oracle wording. They do not justify approximate
 // behavior: cards with missing semantics must remain unimplemented.
 const HANDLED_LINE_FIXES: Record<string, string[]> = {
-  'c22e5fc6-9b4e-4197-b472-70d168eb4330': ['{1}{W}: Exile enchanted creature.'],
   'bd92cacd-c7d8-43a2-a261-ea4754fefdc5': [
     "When this Aura enters, draw a card for each Aura you control that's attached to a creature.",
     "Enchanted creature gets +1/+1 for each Aura you control that's attached to a creature.",
