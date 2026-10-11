@@ -1439,12 +1439,20 @@ export function computePriorityOptions(
   for (const obj of player.hand) considerCast(obj, false);
   for (const obj of player.commandZone) considerCast(obj, true);
   const libraryTop = player.library[0];
-  if (
-    libraryTop !== undefined &&
-    (castFromLibraryTopCandidates(ctx, player.id).some((obj) => obj.id === libraryTop.id) ||
-      canPlayFromZone(ctx, player.id, libraryTop, 'libraryTop'))
-  )
-    considerCast(libraryTop, false, true);
+  /** Whether a library-top permission lets `libraryTop` be cast as `spell` (CR 601.3e). */
+  const topCastableAs = (top: EngineCardObject, spell?: CardDefinition): boolean =>
+    castFromLibraryTopCandidates(ctx, player.id, spell).some((obj) => obj.id === top.id) ||
+    playFromZonePermission(ctx, player.id, top, 'libraryTop', spell) !== null;
+  if (libraryTop !== undefined) {
+    const topDef = getDefByOracleId(ctx, libraryTop.oracleId, libraryTop.name);
+    if (
+      topCastableAs(libraryTop) ||
+      // A permission only the bestowed Aura spell satisfies ("Aura spells") still allows bestow.
+      ((topDef.alternativeCasts ?? []).some((alt) => alt.kind === 'bestow') &&
+        topCastableAs(libraryTop, bestowedDefinition(topDef)))
+    )
+      considerCast(libraryTop, false, true);
+  }
   for (const obj of player.graveyard) considerCast(obj, false, false, false, true);
   for (const obj of ctx.state.exile) {
     // One pass per card even when both permissions apply, or every option is offered twice.

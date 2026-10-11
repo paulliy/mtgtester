@@ -6546,6 +6546,20 @@ describe('Eidolon of Countless Battles', () => {
     const creatureOnly = options(creatures.ctx, topCreature.id);
     expect(creatureOnly.some((option) => !/Bestow/.test(option.description))).toBe(true);
     expect(creatureOnly.some((option) => /Bestow/.test(option.description))).toBe(false);
+
+    // The reverse: a permission for Aura spells allows only the bestowed cast, though the card
+    // itself is not an Aura.
+    const auras = board('eidolon-top-auras');
+    spawn(
+      auras.ctx,
+      'P1',
+      PERMISSION('Lab Top Auras', 'You may cast Aura spells from the top of your library.'),
+    );
+    const topAura = conjure(auras.ctx, 'P1', card, 'library');
+    addMana(playerById(auras.ctx, 'P1'), BESTOW_MANA);
+    const auraOnly = options(auras.ctx, topAura.id);
+    expect(auraOnly.some((option) => /Bestow/.test(option.description))).toBe(true);
+    expect(auraOnly.some((option) => !/Bestow/.test(option.description))).toBe(false);
   });
 
   it('eidolon-of-countless-battles-bestow-needs-creature — bestow is offered only while there is a creature to enchant, and an Aura-spell cast trigger sees it', () => {
