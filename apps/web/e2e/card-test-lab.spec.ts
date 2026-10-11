@@ -5668,6 +5668,56 @@ test('Mikey & Leo, Chaos & Order: the first counter you put each turn draws a ca
   await expect(page.locator('.log .line', { hasText: /draws/ })).toHaveCount(1);
 });
 
+test('Animate Dead: destroy the Aura and the returned creature is sacrificed', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Animate Dead: destroy the Aura and the returned creature is sacrificed');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+
+  // Return Lab Ox from P2's graveyard under your control with the Aura attached.
+  const animate = handCard(page, 'Animate Dead');
+  await expect(animate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await animate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Lab Ox'));
+  await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
+  await expect
+    .poll(() => {
+      const board = boards.at(-1);
+      const ox = board?.find((p) => p.name === 'Lab Ox');
+      return ox === undefined
+        ? undefined
+        : board?.find((p) => p.name === 'Animate Dead')?.attachedTo === ox.id;
+    })
+    .toBe(true);
+
+  // Destroy the Aura while Lab Ox is alive: leaving the battlefield sacrifices it.
+  const uproot = handCard(page, 'Lab Uproot');
+  await expect(uproot).toHaveClass(/actionable/, { timeout: 15_000 });
+  await uproot.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Animate Dead').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Animate Dead')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText(/Lab Ox's controller sacrifices it/).first()).toBeVisible();
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
 test('Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s', async ({
   page,
 }) => {

@@ -1304,7 +1304,7 @@
             "animate-dead-card-left",
             "animate-dead-protection"
           ],
-          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
+          "viewerScenarioIds": ["animate-dead-viewer-aura-leaves-sacrifices"]
         },
         {
           "id": "animate-dead-shrink",

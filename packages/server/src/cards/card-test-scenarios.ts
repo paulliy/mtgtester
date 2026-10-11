@@ -8819,7 +8819,7 @@ function animateDeadScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Lab Ox is back in P2’s graveyard and Animate Dead is in yours, together with Lab Doom. Nothing is on the battlefield but your lands.',
     oracleSha256: animate.sha256,
-    clauseIds: ['animate-dead-enchant', 'animate-dead-reanimate-attach', 'animate-dead-shrink'],
+    clauseIds: ['animate-dead-enchant', 'animate-dead-shrink'],
     decks: {
       P1: [animate.card, LAB_DOOM, SWAMP, SWAMP, SWAMP, SWAMP],
       P2: [LAB_OX, ...PR01_FILLER],
@@ -8828,6 +8828,47 @@ function animateDeadScenario(gameId: GameId): CardTestScenario {
     },
     prepared: {
       hand: [{ playerId: 'P1', cardNames: ['Animate Dead', 'Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
+/** A fully interpreted enchantment-removal instant, so an Aura can leave play on a normal spell path. */
+const LAB_UPROOT = card({
+  oracleId: 'lab-uproot',
+  name: 'Lab Uproot',
+  typeLine: 'Instant',
+  manaCost: '{1}{B}',
+  cmc: 2,
+  colors: ['B'],
+  colorIdentity: ['B'],
+  oracleText: 'Destroy target enchantment.',
+});
+
+/** Animate Dead is destroyed while the creature lives: leaving the battlefield sacrifices it. */
+function animateDeadLeavesScenario(gameId: GameId): CardTestScenario {
+  const animate = pinnedFrom(COVERAGE_PR05, 'Animate Dead');
+  return pr01Scenario(gameId, {
+    id: 'animate-dead-viewer-aura-leaves-sacrifices',
+    title: 'Animate Dead: destroy the Aura and the returned creature is sacrificed',
+    instructions: [
+      'Animate Dead and Lab Uproot are in your hand. Four Swamps are on your battlefield. Lab Ox (4/4) is in P2’s graveyard.',
+      'Cast Animate Dead targeting Lab Ox in P2’s graveyard and let it resolve: Lab Ox returns under your control, a 3/4 with the Aura attached.',
+      'Cast Lab Uproot targeting Animate Dead and let it resolve. The Aura is destroyed while Lab Ox is still alive, so its leaves-the-battlefield trigger makes you sacrifice Lab Ox.',
+    ],
+    expectedOutcome:
+      'Animate Dead and Lab Uproot are in your graveyard and Lab Ox is back in P2’s graveyard, sacrificed rather than destroyed. Nothing is on the battlefield but your lands.',
+    oracleSha256: animate.sha256,
+    clauseIds: ['animate-dead-reanimate-attach'],
+    decks: {
+      P1: [animate.card, LAB_UPROOT, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Animate Dead', 'Lab Uproot'] }],
       battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
       graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
     },
@@ -10688,6 +10729,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tenuous-truce-viewer-other-attack-and-end-step',
   'eidolon-of-countless-battles-viewer-bestow',
   'animate-dead-viewer-reanimate',
+  'animate-dead-viewer-aura-leaves-sacrifices',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10979,6 +11021,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,
   'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,
   'animate-dead-viewer-reanimate': animateDeadScenario,
+  'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -964,3 +964,52 @@ describe('Animate Dead Card Test Lab scenario', () => {
     replays('animate-dead-viewer-reanimate', steps);
   });
 });
+
+describe('Animate Dead Aura-leaves Card Test Lab scenario', () => {
+  it('animate-dead-viewer-aura-leaves-sacrifices — destroying the Aura while Lab Ox is alive makes its controller sacrifice Lab Ox', () => {
+    const steps: Step[] = [
+      { action: 'Cast Animate Dead', targets: ['Lab Ox'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Uproot', targets: ['Animate Dead'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'animate-dead-viewer-aura-leaves-sacrifices',
+      steps,
+    );
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(onBattlefield('Animate Dead')).toEqual([]);
+    // The creature went back to its owner's graveyard; the Aura and the spell are P1's.
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Animate Dead', 'Lab Uproot']);
+    // Lab Ox really came back attached to the Aura first, and was alive when the Aura was destroyed.
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Animate Dead', to: 'Lab Ox' }]);
+    const moves = state.eventLog
+      .filter((event) => event.type === 'zoneChange')
+      .map((event) => `${event.payload['name']}:${event.payload['from']}>${event.payload['to']}`);
+    expect(moves.indexOf('Animate Dead:battlefield>graveyard')).toBeGreaterThan(
+      moves.indexOf('Lab Ox:graveyard>battlefield'),
+    );
+    expect(moves.indexOf('Lab Ox:battlefield>graveyard')).toBeGreaterThan(
+      moves.indexOf('Animate Dead:battlefield>graveyard'),
+    );
+    // It was sacrificed by the Aura's leaves-the-battlefield trigger, not killed by damage or a
+    // state-based action.
+    expect(state.eventLog.some((event) => event.type === 'sbaCreatureDies')).toBe(false);
+    expect(
+      state.eventLog.some(
+        (event) =>
+          event.type === 'resolved' &&
+          String(event.payload['description']).includes("Lab Ox's controller sacrifices it"),
+      ),
+    ).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('animate-dead-viewer-aura-leaves-sacrifices', steps);
+  });
+});
