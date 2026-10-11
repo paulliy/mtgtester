@@ -7270,3 +7270,55 @@ test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sa
   await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('28');
   await expect(permanent(page, 'Eldrazi Conscription')).toHaveCount(1);
 });
+
+test('Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+
+  // Cast the Curse targeting P2: it enchants the player, not a permanent.
+  const curse = handCard(page, 'Curse of Bounty');
+  await expect(curse).toHaveClass(/actionable/, { timeout: 15_000 });
+  await curse.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Curse of Bounty')?.attachedTo)
+    .toBe('P2');
+  await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+
+  // Attack P2: the Curse untaps your nonland permanents, but not the lands.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Forest').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
+});

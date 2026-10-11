@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 25,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6424,6 +6424,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +10/+10 and has trample and annihilator 2 as a layer 7d +10/+10, a layer 6 trample grant and a layer 6 grant of an annihilator 2 attack trigger (the defending player sacrifices two permanents of their choice, or all of them if they control two or fewer) on the creature this Aura is attached to (attachedToSource), and accepts the Kindred card type on Auras (CR 308), so it is cast as a Kindred Enchantment — Eldrazi Aura. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+      "name": "Curse of Bounty",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed only the attacking player untaps and the curse controller should always untap): the interpreter reads Enchant player as an Aura spell with a player target whose host is that player (CR 303.4a), and reads Whenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control as an enchanted-player-attacked trigger of the Aura whose effects untap the nonland permanents of the Aura's controller and of the attacking player when that player is an opponent. A player host is checked as a state-based action, so the Aura goes to the graveyard when the enchanted player leaves the game. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

@@ -7475,12 +7475,6 @@
     "def": {}
   },
   {
-    "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
-    "name": "Curse of Bounty",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
     "name": "Keen Duelist",
     "handledLines": [],
@@ -13523,12 +13517,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-curse-of-bounty",
-    "name": "Curse of Bounty",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-cut-a-deal",

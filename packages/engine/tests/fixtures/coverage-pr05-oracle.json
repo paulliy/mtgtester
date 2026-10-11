@@ -692,6 +692,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18",
+      "card": {
+        "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+        "scryfallId": "2f497641-b73a-4399-bc89-5274c42e17cc",
+        "name": "Curse of Bounty",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment — Aura Curse",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura",
+          "Curse"
+        ],
+        "oracleText": "Enchant player\nWhenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

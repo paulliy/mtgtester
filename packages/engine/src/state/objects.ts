@@ -667,10 +667,10 @@ export function* moveObject(
         const outcome = yield {
           decisionType: 'general',
           player: controllerId,
-          prompt: `${obj.name}: choose a permanent to enchant.`,
+          prompt: `${obj.name}: choose ${enchant?.kind === 'player' ? 'a player' : 'a permanent'} to enchant.`,
           options: hosts.map((id) => ({
             type: 'attachAura',
-            description: `Enchant ${ctx.state.battlefield.find((p) => p.id === id)!.name}`,
+            description: `Enchant ${ctx.state.battlefield.find((p) => p.id === id)?.name ?? id}`,
             payload: id,
           })),
         };

@@ -6023,6 +6023,207 @@ describe('Eldrazi Conscription', () => {
   });
 });
 
+// PR05.18 Curse of Bounty
+// ---------------------------------------------------------------------------------------------
+
+describe('Curse of Bounty', () => {
+  const { card } = pinned('Curse of Bounty');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const ROCK = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      power: null,
+      toughness: null,
+      oracleText: '',
+    });
+  const tapped = (perm: EnginePermanent) => perm.tapped;
+
+  /**
+   * Each player controls a Bear (the attacker), a Rock and a Forest, all tapped except the Bears
+   * (and any Bear that attacks becomes tapped by attacking). P1 controls the curse, enchanting P2.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const seats = Object.fromEntries(
+      (['P1', 'P2', 'P3', 'P4'] as const).map((id) => {
+        const bear = spawn(ctx, id, BEAR(`Lab ${id} Bear`));
+        const rock = spawn(ctx, id, ROCK(`Lab ${id} Rock`));
+        const land = spawn(ctx, id, forest());
+        rock.tapped = true;
+        land.tapped = true;
+        return [id, { bear, rock, land }];
+      }),
+    ) as Record<
+      'P1' | 'P2' | 'P3' | 'P4',
+      { bear: EnginePermanent; rock: EnginePermanent; land: EnginePermanent }
+    >;
+    return { ctx, seats };
+  }
+
+  /** The Aura on the battlefield, controlled by P1 and attached to `playerId`. */
+  function curse(ctx: GameContext, playerId: string) {
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = playerId;
+    return aura;
+  }
+
+  function turnOf(ctx: GameContext, playerId: string) {
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  }
+
+  /** The active player attacks with `attackers` (permanent id -> defending player), no blocks. */
+  function fight(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** Whether `id`'s Bear and Rock (the nonland permanents) are tapped. */
+  type Seats = ReturnType<typeof board>['seats'];
+  const nonlandTapped = (seats: Seats, id: keyof Seats) => [
+    tapped(seats[id].bear),
+    tapped(seats[id].rock),
+  ];
+
+  it('curse-of-bounty-pinned-oracle-supported — the interpreter alone models Enchant player and the enchanted-player-attacked trigger', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant player: the Aura spell's one target is a player, and it has no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'player' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    expect(def.staticEffects).toEqual([]);
+    // One mandatory trigger of the Aura itself, run once per attack on the enchanted player.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'enchantedPlayerAttacked',
+      subject: { kind: 'self' },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    // First: untap every nonland permanent the Aura's controller controls. Second: the attacking
+    // player's, only if they are an opponent of the Aura's controller.
+    expect(trigger!.effects).toEqual([
+      {
+        op: 'untapEach',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'not', of: { kind: 'type', value: 'Land' } },
+          ],
+        },
+      },
+      { op: 'attackingOpponentUntapsNonland' },
+    ]);
+  });
+
+  it('curse-of-bounty-enchant-player — cast targeting a player, it enters attached to that player and not to any permanent', () => {
+    const { ctx } = board('curse-cast');
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'G' }, { symbol: 'C' }]);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Curse of Bounty').toBeDefined();
+    // Every player is a legal host, and no permanent is offered.
+    const hosts = option!.targets![0]!.options;
+    expect([...hosts].sort()).toEqual(['P1', 'P2', 'P3', 'P4']);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, 'P3']]),
+    );
+    resolveTop(ctx);
+    const aura = ctx.state.battlefield.find((perm) => perm.name === 'Curse of Bounty');
+    expect(aura?.attachedTo).toBe('P3');
+    expect(aura?.controllerId).toBe('P1');
+    expect(ctx.state.battlefield.some((perm) => perm.attachedTo === 'P2')).toBe(false);
+    // Nothing untaps on entering.
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('curse-of-bounty-opponent-attacks — when an opponent attacks the enchanted player both the curse controller and the attacker untap their nonland permanents, and lands stay tapped', () => {
+    const { ctx, seats } = board('curse-opponent');
+    curse(ctx, 'P2');
+    turnOf(ctx, 'P3');
+    // Before: P1's Rock is tapped; P3's Rock is tapped and its Bear is about to attack.
+    expect(tapped(seats.P1.rock)).toBe(true);
+    expect(tapped(seats.P3.rock)).toBe(true);
+    fight(ctx, new Map([[seats.P3.bear.id, 'P2']]));
+    // P1 (the curse controller) untapped its nonland permanents; its Forest stays tapped.
+    expect(nonlandTapped(seats, 'P1')).toEqual([false, false]);
+    expect(tapped(seats.P1.land)).toBe(true);
+    // P3 (the attacking opponent) untapped too, including the Bear that attacked; Forest stays.
+    expect(nonlandTapped(seats, 'P3')).toEqual([false, false]);
+    expect(tapped(seats.P3.land)).toBe(true);
+    // Nobody else untapped: the enchanted player and the fourth player keep everything tapped.
+    expect(tapped(seats.P2.rock)).toBe(true);
+    expect(tapped(seats.P4.rock)).toBe(true);
+    expect(tapped(seats.P2.land)).toBe(true);
+    expect(tapped(seats.P4.land)).toBe(true);
+  });
+
+  it('curse-of-bounty-controller-attacks — when the curse controller attacks the enchanted player only the controller untaps, once', () => {
+    const { ctx, seats } = board('curse-controller');
+    curse(ctx, 'P2');
+    fight(ctx, new Map([[seats.P1.bear.id, 'P2']]));
+    expect(nonlandTapped(seats, 'P1')).toEqual([false, false]);
+    expect(tapped(seats.P1.land)).toBe(true);
+    for (const id of ['P2', 'P3', 'P4'] as const) {
+      expect(tapped(seats[id].rock), `${id} Rock`).toBe(true);
+      expect(tapped(seats[id].land), `${id} Forest`).toBe(true);
+    }
+  });
+
+  it('curse-of-bounty-not-enchanted — attacking a player the curse does not enchant untaps nothing, for either side', () => {
+    // P3 attacks P4 while the curse is on P2: no trigger.
+    const other = board('curse-other');
+    curse(other.ctx, 'P2');
+    turnOf(other.ctx, 'P3');
+    fight(other.ctx, new Map([[other.seats.P3.bear.id, 'P4']]));
+    for (const id of ['P1', 'P2', 'P4'] as const)
+      expect(tapped(other.seats[id].rock), `${id} Rock`).toBe(true);
+    expect(tapped(other.seats.P3.rock)).toBe(true);
+    // With no Aura on P2 at all, an attack on P2 triggers nothing.
+    const bare = board('curse-bare');
+    turnOf(bare.ctx, 'P3');
+    fight(bare.ctx, new Map([[bare.seats.P3.bear.id, 'P2']]));
+    for (const id of ['P1', 'P2', 'P3', 'P4'] as const)
+      expect(tapped(bare.seats[id].rock), `${id} Rock`).toBe(true);
+    // A turn in which nobody attacks: nothing triggers either.
+    const quiet = board('curse-quiet');
+    curse(quiet.ctx, 'P2');
+    fight(quiet.ctx, new Map());
+    expect(tapped(quiet.seats.P1.rock)).toBe(true);
+  });
+
+  it('curse-of-bounty-leaves-with-player — the curse goes to the graveyard when the enchanted player leaves the game, and stays while they are in it', () => {
+    const stays = board('curse-stays');
+    curse(stays.ctx, 'P2');
+    settle(stays.ctx);
+    expect(stays.ctx.state.battlefield.some((perm) => perm.name === 'Curse of Bounty')).toBe(true);
+
+    const { ctx } = board('curse-leaves');
+    curse(ctx, 'P2');
+    playerById(ctx, 'P2').life = 0;
+    settle(ctx);
+    expect(playerById(ctx, 'P2').hasLost).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Curse of Bounty')).toBe(false);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toContain('Curse of Bounty');
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -6047,6 +6248,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
+    clauseCount: 3,
+  },
+  {
+    name: 'Curse of Bounty',
+    sha256: '138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18',
     clauseCount: 3,
   },
   {

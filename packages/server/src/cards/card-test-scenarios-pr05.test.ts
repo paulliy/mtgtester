@@ -787,3 +787,26 @@ describe('Eldrazi Conscription Card Test Lab scenario', () => {
     replays('eldrazi-conscription-viewer-annihilator', steps);
   });
 });
+
+describe('Curse of Bounty Card Test Lab scenario', () => {
+  it('curse-of-bounty-viewer-untap-on-attack — the Curse enchants P2, then attacking P2 untaps Lab Ox and the attacking Lab Green Bear but not the Forest or the Plains', () => {
+    const steps: Step[] = [
+      { action: 'Cast Curse of Bounty', targets: ['P2'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'curse-of-bounty-viewer-untap-on-attack',
+      steps,
+    );
+    const [aura] = onBattlefield('Curse of Bounty');
+    expect(aura?.attachedTo).toBe('P2');
+    expect(onBattlefield('Lab Ox').map((perm) => perm.tapped)).toEqual([false]);
+    expect(onBattlefield('Lab Green Bear').map((perm) => perm.tapped)).toEqual([false]);
+    expect(onBattlefield('Forest').map((perm) => perm.tapped)).toEqual([true]);
+    expect(onBattlefield('Plains').map((perm) => perm.tapped)).toEqual([true]);
+    expect(seat('P2').life).toBe(38);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('curse-of-bounty-viewer-untap-on-attack', steps);
+  });
+});

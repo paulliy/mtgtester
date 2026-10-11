@@ -166,7 +166,6 @@ const REASONS: Record<string, string> = {
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
-  'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Dark Confidant':
@@ -292,6 +291,7 @@ describe('Marchesa catalog audit containment', () => {
     'Angelic Destiny',
     'Sheltered by Ghosts',
     'Eldrazi Conscription',
+    'Curse of Bounty',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -68,11 +68,10 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   );
   // Karametra's Favor: restored in coverage PR05. The interpreter reads the enters draw and the
   // granted mana ability, so no override remains.
-  unsupportedCard(
-    'b6689782-08d8-48e1-a05d-cd040dfe85bc',
-    'Curse of Bounty',
-    'Only the attacking player untaps; the curse controller always should.',
-  );
+  // Curse of Bounty: restored in coverage PR05. The interpreter reads Enchant player with the
+  // player as the Aura's host, and the enchanted-player-attacked trigger untaps the curse
+  // controller's nonland permanents and those of the attacking player when that player is an
+  // opponent.
   // Coverage PR01: "up to two" is a 0..2 count slot, so the trigger resolves with no target.
   defineCard(
     '761021ce-4559-464e-aa03-85c2fe78e267',

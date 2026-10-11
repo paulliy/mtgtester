@@ -4884,13 +4884,51 @@
     "b6689782-08d8-48e1-a05d-cd040dfe85bc": {
       "name": "Curse of Bounty",
       "oracleSha256": "138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever enchanted player is attacked, untap all nonland permanents you control. Each opponent attacking that player untaps all nonland permanents they control.",
-          "implementation": ["explicitly unsupported; only the attacking player untaps"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "curse-of-bounty-enchant-player",
+          "oracleText": "Enchant player",
+          "implementation": [
+            "interpreted Aura spell whose one target is a player (enchant player): every player is a legal host, and the Aura enters attached to that player rather than to a permanent (CR 303.4a)",
+            "a player host is checked as a state-based action (CR 303.4d, 704.5m): the Aura is put into the graveyard when the enchanted player leaves the game, and stays while they are in it"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-enchant-player",
+            "curse-of-bounty-leaves-with-player"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
+        },
+        {
+          "id": "curse-of-bounty-controller-untaps",
+          "oracleText": "Whenever enchanted player is attacked, untap all nonland permanents you control.",
+          "implementation": [
+            "interpreted mandatory trigger of the Aura on the enchanted-player-attacked event, queued once for each Aura attached to a defending player as attackers are declared; its first effect untaps every nonland permanent the Aura's controller controls, whoever attacked and whatever the enchanted player did",
+            "lands stay tapped; attacking a player the Curse does not enchant, an attack on a player with no Curse, or no attack at all triggers nothing"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-opponent-attacks",
+            "curse-of-bounty-controller-attacks",
+            "curse-of-bounty-not-enchanted"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
+        },
+        {
+          "id": "curse-of-bounty-attacker-untaps",
+          "oracleText": "Each opponent attacking that player untaps all nonland permanents they control.",
+          "implementation": [
+            "interpreted second effect of the same trigger (attackingOpponentUntapsNonland): the attacking player, the event player, untaps their nonland permanents, including the attacking creatures, only if they are an opponent of the Aura's controller",
+            "when the Aura's controller attacks the enchanted player this effect does nothing, so only the controller's permanents untap, once; lands never untap and no other player's permanents are touched"
+          ],
+          "engineTestIds": [
+            "curse-of-bounty-pinned-oracle-supported",
+            "curse-of-bounty-opponent-attacks",
+            "curse-of-bounty-controller-attacks",
+            "curse-of-bounty-not-enchanted"
+          ],
+          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -789,6 +789,23 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
+    "oracleId": "b6689782-08d8-48e1-a05d-cd040dfe85bc",
+    "name": "Curse of Bounty",
+    "package": "PR05.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Only the attacking player untaps; the curse controller always should."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
     "name": "Dollmaker's Shop // Porcelain Gallery",
     "package": "W10",

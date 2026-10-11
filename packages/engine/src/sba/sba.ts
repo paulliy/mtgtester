@@ -31,7 +31,12 @@ import {
   movePermanentsToGraveyard,
   returnExiledUntilLeaves,
 } from '../state/objects';
-import { isCreaturePermanent, playersInApnapOrder, sourceColorsOf } from '../state/queries';
+import {
+  getDefByOracleId,
+  isCreaturePermanent,
+  playersInApnapOrder,
+  sourceColorsOf,
+} from '../state/queries';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -235,7 +240,16 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (chars.subtypes.includes('Aura')) {
       const host =
         perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined || enchantAllows(ctx, perm, host) === false) {
+      // An Aura enchanting a player (Curse of Bounty) stays while that player is still one its
+      // enchant ability allows ("enchant opponent" of its current controller), CR 303.4d.
+      const playerHostLegal =
+        perm.attachedTo !== null &&
+        s.players.some((p) => p.id === perm.attachedTo) &&
+        auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
+      if (
+        (host === undefined && !playerHostLegal) ||
+        (host !== undefined && enchantAllows(ctx, perm, host) === false)
+      ) {
         debug(
           ctx,
           'sba',
@@ -722,4 +736,20 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
     if (sbaActed || placed) anything = true;
     if (!placed && !sbaActed) return anything;
   }
+}
+
+/** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
+function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'player') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(playerId);
 }

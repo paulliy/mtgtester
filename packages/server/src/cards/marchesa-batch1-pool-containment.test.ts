@@ -43,6 +43,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Convergence of Dominion',
       'Cranial Plating',
       'Cryptek',
+      'Curse of Bounty',
       'Dragonkin Berserker',
       'Dread Return',
       'Dream Devourer',

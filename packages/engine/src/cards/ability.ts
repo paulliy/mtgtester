@@ -603,6 +603,12 @@ export type Effect =
    * attack trigger's event player, all at once.
    */
   | { op: 'eventPlayerSacrificesPermanents'; count: number }
+  /**
+   * "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
+   * Bounty): the attacking player (the event player), only if they are an opponent of this
+   * ability's controller.
+   */
+  | { op: 'attackingOpponentUntapsNonland' }
   | {
       op: 'putCounterByPermanentType';
       target: EffectRef;

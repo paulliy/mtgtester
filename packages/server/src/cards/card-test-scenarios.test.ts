@@ -371,6 +371,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'angelic-destiny-viewer-angel-then-return',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
       'eldrazi-conscription-viewer-annihilator',
+      'curse-of-bounty-viewer-untap-on-attack',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

@@ -8591,6 +8591,41 @@ function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function curseOfBountyScenario(gameId: GameId): CardTestScenario {
+  const curse = pinnedFrom(COVERAGE_PR05, 'Curse of Bounty');
+  return pr01Scenario(gameId, {
+    id: 'curse-of-bounty-viewer-untap-on-attack',
+    title: 'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
+    instructions: [
+      'Curse of Bounty is in your hand. A Forest, a Plains, Lab Green Bear (2/2) and a tapped Lab Ox (4/4) are on your battlefield.',
+      'Cast Curse of Bounty targeting P2 and let it resolve: it enters attached to P2, not to a permanent.',
+      'Attack P2 with Lab Green Bear. Whenever the enchanted player is attacked, you untap all nonland permanents you control: Lab Ox and the attacking Lab Green Bear untap, while the Forest and Plains you tapped for the Curse stay tapped.',
+    ],
+    expectedOutcome:
+      'Curse of Bounty stays attached to P2. Lab Ox and Lab Green Bear are untapped, the Forest and the Plains are tapped, and Lab Green Bear hit P2 for 2, leaving P2 at 38.',
+    oracleSha256: curse.sha256,
+    clauseIds: [
+      'curse-of-bounty-enchant-player',
+      'curse-of-bounty-controller-untaps',
+      'curse-of-bounty-attacker-untaps',
+    ],
+    decks: {
+      P1: [curse.card, FOREST, PLAINS, LAB_GREEN_BEAR, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Curse of Bounty'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Plains', 'Lab Green Bear'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10439,6 +10474,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'eldrazi-conscription-viewer-annihilator',
+  'curse-of-bounty-viewer-untap-on-attack',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10724,6 +10760,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
+  'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

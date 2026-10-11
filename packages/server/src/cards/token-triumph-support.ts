@@ -32,6 +32,5 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
 
 export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = [
   'Champion of Lambholt',
-  'Curse of Bounty',
   "Karametra's Favor",
 ] as const;

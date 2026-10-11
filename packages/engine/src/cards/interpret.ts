@@ -811,6 +811,8 @@ function parseEffectSentence(
     departedToGraveyard?: boolean;
     /** Every head is the creature this Aura or Equipment is attached to dying. */
     attachedDies?: boolean;
+    /** Every head is this Aura's enchanted player being attacked; the event player attacks. */
+    enchantedPlayerAttacked?: boolean;
     thatMany?: Value;
     allocCount?: CountSlotAllocator;
   } = {},
@@ -2145,6 +2147,13 @@ function parseEffectSentence(
         ...(opts.departedToGraveyard === true ? { fromGraveyard: true as const } : {}),
       },
     ];
+  // "Each opponent attacking that player untaps all nonland permanents they control" (Curse of
+  // Bounty): the attacking player, when that player is an opponent of this ability's controller.
+  if (
+    opts.enchantedPlayerAttacked === true &&
+    s === 'each opponent attacking that player untaps all nonland permanents they control'
+  )
+    return [{ op: 'attackingOpponentUntapsNonland' }];
   // "When enchanted creature dies, return this card to its owner's hand" (Angelic Destiny): the
   // Aura card the source became once it followed its creature to the graveyard.
   if (opts.attachedDies === true && s === "return this card to its owner's hand")
@@ -4938,6 +4947,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
       },
     ];
     body = cast[3] as string;
+  } else if (/^whenever enchanted player is attacked, /.test(firstLine)) {
+    // Curse of Bounty: the Aura's own event, queued for each Aura attached to a defending player
+    // as attackers are declared; the event player is the attacking player.
+    heads = [{ when: 'enchantedPlayerAttacked', subject: SELF_SUBJECT }];
+    body = firstLine.slice('whenever enchanted player is attacked, '.length);
   } else {
     const m = firstLine.match(OBJECT_TRIGGER_HEAD_RE);
     if (m === null) return null;
@@ -5207,6 +5221,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
             head.leavesTo?.length === 1 &&
             head.leavesTo[0] === 'graveyard')),
     ),
+    enchantedPlayerAttacked: heads.every((head) => head.when === 'enchantedPlayerAttacked'),
     attachedDies: heads.every(
       (head) =>
         head.when === 'dies' &&
@@ -8534,6 +8549,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
           continue;
         } else if (clause === 'artifact') {
           spellTargets.push({ kind: 'artifact' });
+          continue;
+        } else if (clause === 'player') {
+          // An Aura can enchant a player (CR 303.4a, 702.5a): its host is that player.
+          spellTargets.push({ kind: 'player' });
+          continue;
+        } else if (clause === 'opponent') {
+          spellTargets.push({ kind: 'player', controller: 'opponent' });
           continue;
         }
       }

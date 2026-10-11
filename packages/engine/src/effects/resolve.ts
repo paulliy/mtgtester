@@ -4461,6 +4461,16 @@ export function* executeAbility(
           perm.tapped = false;
         }
         break;
+      case 'attackingOpponentUntapsNonland': {
+        const attacker = scope.eventPlayerId;
+        if (attacker === undefined || attacker === controller.id) break;
+        for (const perm of ctx.state.battlefield) {
+          if (perm.controllerId !== attacker) continue;
+          if (computeCharacteristics(ctx, perm).types.includes('Land')) continue;
+          perm.tapped = false;
+        }
+        break;
+      }
       case 'untapBoundIf': {
         if (!evaluateCondition(ctx, effect.condition, source)) break;
         for (const cardId of effectBindings.get(effect.binding) ?? []) {
