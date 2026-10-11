@@ -42,7 +42,9 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
 
   let castButton = playable.getByRole('button', { name: /^Cast / }).first();
   if (!(await castButton.isVisible({ timeout: 1_000 }))) {
-    const sameTurnForest = playable.getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ }).first();
+    const sameTurnForest = playable
+      .getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ })
+      .first();
     if (await sameTurnForest.isVisible({ timeout: 1_000 })) {
       await sameTurnForest.click();
       await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
@@ -53,7 +55,9 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
       const passAnyway = page.getByRole('button', { name: 'Pass anyway' });
       if (await passAnyway.isVisible({ timeout: 1_000 })) await passAnyway.click();
       await expect(page.locator('.turn-badge')).toContainText('Your turn', { timeout: 60_000 });
-      const nextTurnForest = playable.getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ }).first();
+      const nextTurnForest = playable
+        .getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ })
+        .first();
       if (await nextTurnForest.isVisible({ timeout: 1_000 })) {
         await nextTurnForest.click();
         await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
