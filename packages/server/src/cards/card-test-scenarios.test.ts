@@ -352,6 +352,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'the-thing-viewer-counters-and-double',
       'aetheric-amplifier-viewer-double-counters',
       'cranial-plating-viewer-instant-attach',
+      'cranial-plating-viewer-spell-on-stack-artifact-count',
       'mask-of-memory-viewer-draw-discard',
       'resurrection-orb-viewer-lifelink-and-return',
       'sunforger-viewer-unattach-search-and-cast',

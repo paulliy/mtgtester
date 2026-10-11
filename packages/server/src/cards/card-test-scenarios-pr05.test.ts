@@ -171,6 +171,80 @@ describe('Cranial Plating Card Test Lab scenario', () => {
   });
 });
 
+describe('Cranial Plating spell-on-the-stack Card Test Lab scenario', () => {
+  it('cranial-plating-viewer-spell-on-stack-artifact-count — {B}{B} attaches with Lab Token Forge on the stack (no Equip), and the bonus goes +1, +2, +1 as artifacts come and go', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Token Forge' },
+      { action: '{B}{B}: Attach this Equipment', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Servo'] },
+      { action: 'Pass priority' },
+    ];
+    const timeline: Array<{
+      stack: number;
+      plating: string[];
+      bearPower: number | undefined;
+      servos: number;
+    }> = [];
+    const { scenario, state, onBattlefield, seat } = run(
+      'cranial-plating-viewer-spell-on-stack-artifact-count',
+      steps,
+      (request, current) => {
+        const board = current.engine.view('P1').battlefield;
+        timeline.push({
+          stack: current.engine.getState().stack.length,
+          plating: request.legalActions
+            .map((action) => action.description)
+            .filter((description) => /Cranial Plating/.test(description)),
+          bearPower: board.find((perm) => perm.name === 'Lab Green Bear')?.power ?? undefined,
+          servos: board.filter((perm) => perm.name === 'Servo').length,
+        });
+      },
+    );
+    // With an empty stack both abilities are offered: Equip {1} and the {B}{B} attach.
+    expect(timeline[0]?.stack).toBe(0);
+    expect(timeline[0]?.plating).toHaveLength(2);
+    expect(timeline[0]?.plating.some((action) => /Equip \{1\}/.test(action))).toBe(true);
+    expect(timeline[0]?.bearPower).toBe(2);
+    // With Lab Token Forge on the stack Equip {1} is gone but the {B}{B} attach is still offered.
+    const withSpell = timeline.find((entry) => entry.stack === 1 && entry.plating.length > 0);
+    expect(withSpell?.plating).toHaveLength(1);
+    expect(withSpell?.plating[0]).toMatch(/\{B\}\{B\}: Attach this Equipment/);
+    expect(withSpell?.plating[0]).not.toMatch(/Equip \{1\}/);
+    expect(withSpell?.bearPower).toBe(2);
+    // The attach resolves first (it is on top): +1 for Plating alone, and P2's Lab Servo adds
+    // nothing. Then Forge resolves and the Servo token makes it +2. Then Doom takes it back to +1.
+    const afterAttach = timeline.find((entry) => entry.stack === 1 && entry.bearPower === 3);
+    expect(afterAttach?.servos).toBe(0);
+    const afterForge = timeline.find((entry) => entry.servos === 1 && entry.stack === 0);
+    expect(afterForge?.bearPower).toBe(4);
+    expect(Math.max(...timeline.map((entry) => entry.bearPower ?? 0))).toBe(4);
+    const finalBoard = scenario.engine.view('P1').battlefield;
+    expect(finalBoard.find((perm) => perm.name === 'Lab Green Bear')?.power).toBe(3);
+    expect(finalBoard.filter((perm) => perm.name === 'Servo')).toEqual([]);
+    const [plating] = onBattlefield('Cranial Plating');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(plating?.attachedTo).toBe(bear?.id);
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Cranial Plating', to: 'Lab Green Bear' }]);
+    // Lab Doom killed the token and only the token; P2's Lab Servo is untouched.
+    expect(onBattlefield('Servo')).toEqual([]);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Lab Servo')[0]?.controllerId).toBe('P2');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(
+      expect.arrayContaining(['Lab Doom', 'Lab Token Forge']),
+    );
+    expect(
+      state.battlefield.filter((perm) => /Basic Land/.test(perm.typeLine) && perm.tapped),
+    ).toHaveLength(5);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('cranial-plating-viewer-spell-on-stack-artifact-count', steps);
+  });
+});
+
 describe('Mask of Memory Card Test Lab scenario', () => {
   it('mask-of-memory-viewer-draw-discard — Equip {1} onto Lab Green Bear, then its unblocked hit draws two and discards Lab Hex', () => {
     const steps: Step[] = [

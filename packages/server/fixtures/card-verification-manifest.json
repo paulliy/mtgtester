@@ -5324,7 +5324,7 @@
             "cranial-plating-pinned-oracle-supported",
             "cranial-plating-pump-per-artifact"
           ],
-          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
+          "viewerScenarioIds": ["cranial-plating-viewer-spell-on-stack-artifact-count"]
         },
         {
           "id": "cranial-plating-attach",
@@ -5338,7 +5338,10 @@
             "cranial-plating-target-you-control",
             "cranial-plating-target-gone"
           ],
-          "viewerScenarioIds": ["cranial-plating-viewer-instant-attach"]
+          "viewerScenarioIds": [
+            "cranial-plating-viewer-instant-attach",
+            "cranial-plating-viewer-spell-on-stack-artifact-count"
+          ]
         },
         {
           "id": "cranial-plating-equip",

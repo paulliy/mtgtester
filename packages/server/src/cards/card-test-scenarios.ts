@@ -7866,13 +7866,13 @@ function cranialPlatingScenario(gameId: GameId): CardTestScenario {
     title: 'Cranial Plating: equip, then move it with {B}{B}',
     instructions: [
       'Cranial Plating, three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield, and an opponent controls Lab Bird. Plating is not attached to anything.',
-      'Activate Equip {1} targeting Lab Green Bear and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2.',
-      'Activate the {B}{B} ability, which has no timing restriction, targeting Lab Ox, and let it resolve. The rules allow targeting the creature Plating is already attached to, but the move would do nothing (CR 701.3b), so this engine leaves Lab Green Bear out of the targets while it carries Plating. The opponent’s Lab Bird is never offered.',
+      'Activate Equip {1} targeting Lab Green Bear and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2. (How the bonus follows your artifact count is shown in the spell-on-the-stack scenario.)',
+      'Activate the {B}{B} ability, targeting Lab Ox, and let it resolve. The rules allow targeting the creature Plating is already attached to, but the move would do nothing (CR 701.3b), so this engine leaves Lab Green Bear out of the targets while it carries Plating. The opponent’s Lab Bird is never offered. (The instant-speed timing of this ability is shown in the spell-on-the-stack scenario.)',
     ],
     expectedOutcome:
       'Cranial Plating ends attached to Lab Ox, which is a 5/4. Lab Green Bear is back to 2/2. All three Swamps are tapped.',
     oracleSha256: plating.sha256,
-    clauseIds: ['cranial-plating-pump', 'cranial-plating-attach', 'cranial-plating-equip'],
+    clauseIds: ['cranial-plating-attach', 'cranial-plating-equip'],
     decks: {
       P1: [plating.card, LAB_GREEN_BEAR, LAB_OX, ...swamps],
       P2: [LAB_BIRD, ...PR01_FILLER],
@@ -7888,6 +7888,53 @@ function cranialPlatingScenario(gameId: GameId): CardTestScenario {
         { playerId: 'P2', cardNames: ['Lab Bird'] },
       ],
       hand: [],
+    },
+  });
+}
+
+/**
+ * Cranial Plating at instant speed: with a spell on the stack Equip {1} is not offered but the {B}{B}
+ * attach is, and the equipped creature's bonus follows the artifacts its controller controls.
+ */
+function cranialPlatingStackScenario(gameId: GameId): CardTestScenario {
+  const plating = pinnedFrom(COVERAGE_PR05, 'Cranial Plating');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  const forests = Array.from({ length: 2 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'cranial-plating-viewer-spell-on-stack-artifact-count',
+    title:
+      'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+    instructions: [
+      'Cranial Plating, Lab Green Bear (2/2), two Forests and three Swamps are on your battlefield; Lab Token Forge and Lab Doom are in your hand. P2 controls Lab Servo, an artifact. Plating is not attached to anything, so with an empty stack both Equip {1} and the {B}{B} attach are offered.',
+      'Cast Lab Token Forge and leave it on the stack. Equip {1} is a sorcery-speed ability and is no longer offered, but the {B}{B} attach still is.',
+      'Activate the {B}{B} attach targeting Lab Green Bear, with Lab Token Forge still on the stack, and let it resolve: Plating is the only artifact you control, so Lab Green Bear becomes a 3/2. P2’s Lab Servo is not counted.',
+      'Let Lab Token Forge resolve. The Servo artifact token you create is a second artifact you control, so Lab Green Bear becomes a 4/2.',
+      'Cast Lab Doom on the Servo token and let it resolve. You control one artifact again, so Lab Green Bear is back to a 3/2.',
+    ],
+    expectedOutcome:
+      'Cranial Plating is attached to Lab Green Bear, which is a 3/2 (it was a 3/2 with Plating alone, a 4/2 while your Servo token was on the battlefield, and P2’s Lab Servo never counted). The Servo token is gone and Lab Doom is in your graveyard. All five lands are tapped.',
+    oracleSha256: plating.sha256,
+    clauseIds: ['cranial-plating-pump', 'cranial-plating-attach'],
+    decks: {
+      P1: [plating.card, LAB_GREEN_BEAR, LAB_TOKEN_FORGE, LAB_DOOM, ...forests, ...swamps],
+      P2: [LAB_SERVO, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Cranial Plating',
+            'Lab Green Bear',
+            ...forests.map((forest) => forest.name),
+            ...swamps.map((swamp) => swamp.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Lab Token Forge', 'Lab Doom'] }],
     },
   });
 }
@@ -11378,6 +11425,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'the-thing-viewer-counters-and-double',
   'aetheric-amplifier-viewer-double-counters',
   'cranial-plating-viewer-instant-attach',
+  'cranial-plating-viewer-spell-on-stack-artifact-count',
   'mask-of-memory-viewer-draw-discard',
   'resurrection-orb-viewer-lifelink-and-return',
   'sunforger-viewer-unattach-search-and-cast',
@@ -11684,6 +11732,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'the-thing-viewer-counters-and-double': theThingScenario,
   'aetheric-amplifier-viewer-double-counters': aethericAmplifierScenario,
   'cranial-plating-viewer-instant-attach': cranialPlatingScenario,
+  'cranial-plating-viewer-spell-on-stack-artifact-count': cranialPlatingStackScenario,
   'mask-of-memory-viewer-draw-discard': maskOfMemoryScenario,
   'resurrection-orb-viewer-lifelink-and-return': resurrectionOrbScenario,
   'sunforger-viewer-unattach-search-and-cast': sunforgerScenario,

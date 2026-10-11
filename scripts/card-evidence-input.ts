@@ -1844,6 +1844,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Mask of Memory: equip it, connect, then draw two and discard a card'],
   },
   {

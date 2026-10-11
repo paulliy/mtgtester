@@ -6257,6 +6257,90 @@ test('Cranial Plating: equip, then move it with {B}{B}', async ({ page }) => {
   await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
 });
 
+test('Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Cranial Plating: attach it with a spell on the stack, and its bonus tracks your artifacts',
+  );
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo ?? null).toBeNull();
+
+  const plating = permanent(page, 'Cranial Plating');
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  // With an empty stack Plating offers Equip {1} and the {B}{B} attach as two separate actions.
+  await plating.click();
+  await expect(page.getByRole('button', { name: /Equip \{1\}/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Attach this Equipment/ })).toBeVisible();
+
+  // Cast Lab Token Forge and leave it on the stack: it is the spell Plating is activated over.
+  const forge = handCard(page, 'Lab Token Forge');
+  await expect(forge).toHaveClass(/actionable/, { timeout: 15_000 });
+  await forge.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.locator('.stack li').filter({ hasText: 'Lab Token Forge' })).toHaveCount(1, {
+    timeout: 15_000,
+  });
+
+  // Equip is sorcery speed, so it is gone; the {B}{B} attach is Plating's only action now and
+  // clicking Plating goes straight to choosing a creature you control.
+  await expect(plating).toHaveClass(/actionable/, { timeout: 15_000 });
+  await plating.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Equip \{1\}/ })).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Servo')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  // Attach over Forge: both abilities are on the stack and nothing has resolved yet.
+  await expect(page.locator('.stack li')).toHaveCount(2, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear').getByText('2/2')).toBeVisible();
+
+  // One deliberate pass resolves only the attach (it is on top): Plating is the only artifact
+  // you control, so +1 and P2's Lab Servo adds nothing. The Forge is still on the stack.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Lab Green Bear').getByText('3/2')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.stack li').filter({ hasText: 'Lab Token Forge' })).toHaveCount(1);
+  await expect(permanent(page, 'Servo')).toHaveCount(0);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Cranial Plating')?.attachedTo)
+    .toBe(bearId);
+
+  // Forge resolves: the Servo token is a second artifact you control, so +2.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(permanent(page, 'Servo')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear').getByText('4/2')).toBeVisible();
+
+  // Destroy your own Servo token: you control one artifact again, so the bonus falls to +1.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Servo').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear').getByText('3/2')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.name === 'Cranial Plating')?.attachedTo).toBe(bearId);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});
+
 test('Mask of Memory: equip it, connect, then draw two and discard a card', async ({ page }) => {
   const boards: SpectatorPermanent[][] = [];
   page.on('websocket', (socket) =>
