@@ -789,6 +789,56 @@ describe('Sheltered by Ghosts Card Test Lab scenario', () => {
   });
 });
 
+describe('Sheltered by Ghosts ward Card Test Lab scenario', () => {
+  it('sheltered-by-ghosts-viewer-ward-counters-opponent-spell — P2 aims Lab Shock at the enchanted Lab Green Bear, cannot pay ward {2}, and Lab Shock is countered', () => {
+    const steps: Step[] = [{ action: 'Cast Sheltered by Ghosts', targets: ['Lab Green Bear'] }];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
+      steps,
+    );
+    const [aura] = onBattlefield('Sheltered by Ghosts');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(aura?.attachedTo).toBe(bear?.id);
+    // The Aura resolved first and P2 cast Lab Shock at the Bear only afterwards.
+    const events = state.eventLog.map((event) => event.type);
+    const auraResolved = state.eventLog.findIndex(
+      (event) =>
+        event.type === 'resolved' &&
+        (event.payload as { description?: string }).description === 'Sheltered by Ghosts',
+    );
+    const shockCast = state.eventLog.findIndex(
+      (event) =>
+        event.type === 'castSpell' && (event.payload as { name?: string }).name === 'Lab Shock',
+    );
+    expect(auraResolved).toBeGreaterThanOrEqual(0);
+    expect(shockCast).toBeGreaterThan(auraResolved);
+    expect((state.eventLog[shockCast]!.payload as { targets: string[] }).targets).toEqual([
+      bear?.id,
+    ]);
+    // Ward {2} countered it: P2 had one untapped Mountain, which cannot pay {2}, so the
+    // pay-or-counter choice was never even offered and nothing was paid.
+    expect(events.filter((type) => type === 'counterSpell')).toHaveLength(1);
+    expect(events).not.toContain('wardPaid');
+    expect(prompts.filter((prompt) => /pay \{2\}/.test(prompt))).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(state.stack).toEqual([]);
+    // Without the ward the 2 damage would have killed the 3/2 Bear. It is untouched and keeps
+    // the Aura's +1/+0 and lifelink (the view does not list ward; the counter above is its proof).
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.power).toBe(3);
+    expect(viewed?.toughness).toBe(2);
+    expect(viewed?.keywords).toContain('lifelink');
+    expect(bear?.damageMarked).toBe(0);
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P2').life).toBe(40);
+    expect(onBattlefield('Mountain').filter((mountain) => mountain.tapped)).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    replays('sheltered-by-ghosts-viewer-ward-counters-opponent-spell', steps);
+  });
+});
+
 describe('Eldrazi Conscription Card Test Lab scenario', () => {
   it('eldrazi-conscription-viewer-annihilator — Lab Green Bear attacks as a 12/12 trampler and P2 sacrifices both of their permanents', () => {
     const steps: Step[] = [

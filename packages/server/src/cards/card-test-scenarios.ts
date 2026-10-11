@@ -8591,6 +8591,91 @@ function shelteredByGhostsScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * An opponent seat that waits until `aura` is attached to a creature and the stack is empty, then
+ * casts `spell` once at that creature. It declines any optional payment (a ward tax) and otherwise
+ * passes. `engine` is read lazily because the seat is built before the engine it watches.
+ */
+function castAtEnchantedCreature(
+  engine: () => Engine,
+  spell: string,
+  aura: string,
+): DecisionProvider {
+  let cast = false;
+  return {
+    decide(request) {
+      const state = engine().getState();
+      const hostId = state.battlefield.find((perm) => perm.name === aura)?.attachedTo;
+      const action =
+        cast || hostId === undefined || hostId === null || state.stack.length > 0
+          ? undefined
+          : request.legalActions.find((candidate) =>
+              candidate.description.startsWith(`Cast ${spell}`),
+            );
+      if (action !== undefined) {
+        cast = true;
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(hostId as string)
+              ? (hostId as string)
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      const decline = request.legalActions.find((candidate) => candidate.type === 'decline');
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return {
+        requestId: request.requestId,
+        actionId: (decline ?? pass ?? request.legalActions[0]!).id,
+      };
+    },
+  };
+}
+
+/** Sheltered by Ghosts's ward {2}: an opponent's targeted spell is countered when it cannot pay. */
+function shelteredByGhostsWardScenario(gameId: GameId): CardTestScenario {
+  const ghosts = pinnedFrom(COVERAGE_PR05, 'Sheltered by Ghosts');
+  const watched: { engine?: Engine } = {};
+  const scenario = pr01Scenario(gameId, {
+    id: 'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
+    title: 'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+    instructions: [
+      'Sheltered by Ghosts is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield. P2 controls two Mountains and holds Lab Shock; your opponents control no nonland permanents.',
+      'Cast Sheltered by Ghosts targeting Lab Green Bear and let it resolve: Lab Green Bear is a 3/2 with lifelink and ward {2}. Its enters trigger has no target to exile.',
+      'Pass priority with an empty stack. P2 casts Lab Shock at Lab Green Bear, which would be lethal, and ward {2} triggers.',
+      'Let the ward trigger resolve. P2 has only one untapped Mountain, so it cannot pay {2} and Lab Shock is countered.',
+    ],
+    expectedOutcome:
+      'Lab Shock is countered and is in P2’s graveyard. Lab Green Bear is still a 3/2 with no damage on it, with Sheltered by Ghosts attached, and you are still at 40.',
+    oracleSha256: ghosts.sha256,
+    clauseIds: ['sheltered-by-ghosts-grants'],
+    decks: {
+      P1: [ghosts.card, PLAINS, FOREST, LAB_GREEN_BEAR],
+      P2: [LAB_SHOCK, MOUNTAIN, MOUNTAIN],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Sheltered by Ghosts'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Mountain', 'Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: {
+      P2: castAtEnchantedCreature(() => watched.engine!, 'Lab Shock', 'Sheltered by Ghosts'),
+    },
+  });
+  watched.engine = scenario.engine;
+  return scenario;
+}
+
 function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
   const conscription = pinnedFrom(COVERAGE_PR05, 'Eldrazi Conscription');
   const forests = Array.from({ length: 8 }, () => FOREST);
@@ -10791,6 +10876,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
+  'sheltered-by-ghosts-viewer-ward-counters-opponent-spell',
   'eldrazi-conscription-viewer-annihilator',
   'eldrazi-conscription-viewer-trample',
   'curse-of-bounty-viewer-untap-on-attack',
@@ -11085,6 +11171,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
+  'sheltered-by-ghosts-viewer-ward-counters-opponent-spell': shelteredByGhostsWardScenario,
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
   'eldrazi-conscription-viewer-trample': eldraziConscriptionTrampleScenario,
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,

@@ -7317,6 +7317,55 @@ test('Sheltered by Ghosts: exile an opposing permanent, then attack with lifelin
   await expect(permanent(page, 'Sheltered by Ghosts')).toHaveCount(1);
 });
 
+test('Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Aura on Lab Green Bear and let it resolve. Nothing is left for its enters trigger
+  // to exile, so no extra target prompt appears.
+  const ghosts = handCard(page, 'Sheltered by Ghosts');
+  await expect(ghosts).toHaveClass(/actionable/, { timeout: 15_000 });
+  const ghostsBefore = await page.getByText('Sheltered by Ghosts resolves').count();
+  await ghosts.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Sheltered by Ghosts', ghostsBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sheltered by Ghosts')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/2');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/lifelink/i);
+
+  // Pass with an empty stack: P2 casts Lab Shock at the enchanted Bear, which would be lethal.
+  // Ward {2} triggers; P2's only untapped Mountain cannot pay, so Lab Shock is countered.
+  await passUntil(page, page.getByText(/Lab Shock is countered by Lab Green Bear — ward—\{2\}/));
+  await expect(page.getByText('Lab Green Bear — ward—{2} resolves')).toBeVisible();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('3/2');
+  await expect(permanent(page, 'Sheltered by Ghosts')).toHaveCount(1);
+  expect(boards.at(-1)!.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
 test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents', async ({
   page,
 }) => {

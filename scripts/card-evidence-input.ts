@@ -1943,6 +1943,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Sheltered by Ghosts: ward {2} counters an opponent’s Lab Shock aimed at the creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
     ],
   },

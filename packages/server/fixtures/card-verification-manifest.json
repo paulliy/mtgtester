@@ -2066,7 +2066,10 @@
             "sheltered-by-ghosts-ward",
             "sheltered-by-ghosts-ward-scope"
           ],
-          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
+          "viewerScenarioIds": [
+            "sheltered-by-ghosts-viewer-exile-and-lifelink",
+            "sheltered-by-ghosts-viewer-ward-counters-opponent-spell"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
