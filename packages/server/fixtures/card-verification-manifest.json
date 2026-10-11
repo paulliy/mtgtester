@@ -1734,7 +1734,10 @@
             "forum-filibuster-attached-return",
             "forum-filibuster-token-gone-or-illegal"
           ],
-          "viewerScenarioIds": ["forum-filibuster-viewer-inkling-and-aura"]
+          "viewerScenarioIds": [
+            "forum-filibuster-viewer-inkling-and-aura",
+            "forum-filibuster-viewer-equipment-return"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

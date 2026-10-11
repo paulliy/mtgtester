@@ -1919,6 +1919,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
     ],
   },

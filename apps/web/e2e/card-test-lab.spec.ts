@@ -7107,6 +7107,11 @@ test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your gravey
   await expect(page.getByRole('button', { name: 'Target Lab Aegis' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Target Lab Green Bear' })).toHaveCount(0);
   await expect(permanent(page, 'Inkling')).toContainText('2/1');
+  // The token flies: the viewer shows the keyword on the chip and in the board state.
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Inkling')?.keywords)
+    .toEqual(['flying']);
   await page.getByRole('button', { name: 'Target Lab Aegis' }).click();
 
   // It resolves: the Aura is on the Inkling, which is a 4/3, and the creature card stays.
@@ -7120,7 +7125,52 @@ test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your gravey
   expect(back?.attachedTo).toBe(inklingId);
   expect(back?.controller).toBe('P1');
   await expect(permanent(page, 'Inkling')).toHaveCount(1);
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  expect(boards.at(-1)!.find((p) => p.name === 'Inkling')?.keywords).toEqual(['flying']);
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});
+
+test('Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+  );
+  // Your upkeep: the Inkling is made, then the reflexive ability offers the Equipment and the
+  // Aura but not the creature card.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Sunforger' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Aegis' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Green Bear' })).toHaveCount(0);
+  await expect(permanent(page, 'Inkling')).toContainText('2/1');
+  await page.getByRole('button', { name: 'Target Sunforger' }).click();
+
+  // It resolves: the Equipment is attached to the Inkling, which is a 6/1 flier; the Aura stays.
+  await expect(permanent(page, 'Sunforger')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Inkling')).toContainText('6/1');
+  await expect(permanent(page, 'Inkling')).toContainText(/flying/i);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Sunforger')?.attachedTo)
+    .toBeTruthy();
+  const inklingId = boards.at(-1)!.find((p) => p.name === 'Inkling')!.id;
+  const back = boards.at(-1)!.find((p) => p.name === 'Sunforger');
+  expect(back?.attachedTo).toBe(inklingId);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Inkling')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  // Lab Aegis and Lab Green Bear are still in the graveyard.
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
 test("Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell", async ({

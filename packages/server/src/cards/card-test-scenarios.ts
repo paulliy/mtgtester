@@ -8510,7 +8510,7 @@ function forumFilibusterScenario(gameId: GameId): CardTestScenario {
       'Choose Lab Aegis as the target and let the ability resolve.',
     ],
     expectedOutcome:
-      'Lab Aegis returns to the battlefield attached to the Inkling, which is a 4/3 with flying. Lab Green Bear is the only card left in your graveyard.',
+      'Lab Aegis returns to the battlefield attached to the Inkling, which is a 4/3 with flying; the Inkling is white and black. Lab Green Bear is the only card left in your graveyard.',
     oracleSha256: filibuster.sha256,
     clauseIds: ['forum-filibuster-inkling', 'forum-filibuster-reflexive-return'],
     decks: {
@@ -8524,6 +8524,38 @@ function forumFilibusterScenario(gameId: GameId): CardTestScenario {
       hand: [],
       battlefield: [{ playerId: 'P1', cardNames: ['Forum Filibuster'] }],
       graveyard: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Green Bear'] }],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
+/** Forum Filibuster's reflexive return with an Equipment card: it enters attached to the Inkling. */
+function forumFilibusterEquipmentScenario(gameId: GameId): CardTestScenario {
+  const filibuster = pinnedFrom(COVERAGE_PR05, 'Forum Filibuster');
+  const sunforger = pinnedFrom(COVERAGE_PR05, 'Sunforger');
+  return pr01Scenario(gameId, {
+    id: 'forum-filibuster-viewer-equipment-return',
+    title: 'Forum Filibuster: at your upkeep the Inkling gets an Equipment from your graveyard',
+    instructions: [
+      'Forum Filibuster is on your battlefield. Sunforger (an Equipment), Lab Aegis (an Aura) and Lab Green Bear (a creature) are in your graveyard. Pass until your upkeep.',
+      'At the beginning of your upkeep, Forum Filibuster creates a 2/1 white and black Inkling with flying, then its reflexive ability asks for up to one target Aura or Equipment card in your graveyard. Sunforger and Lab Aegis are offered, not Lab Green Bear.',
+      'Choose Sunforger as the target and let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Sunforger returns to the battlefield attached to the Inkling, which is a 6/1 with flying (Sunforger gives +4/+0). Lab Aegis and Lab Green Bear are the only cards left in your graveyard.',
+    oracleSha256: filibuster.sha256,
+    clauseIds: ['forum-filibuster-reflexive-return'],
+    decks: {
+      P1: [filibuster.card, sunforger.card, LAB_AEGIS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forum Filibuster'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Sunforger', 'Lab Aegis', 'Lab Green Bear'] }],
       continueToNextUpkeep: true,
     },
   });
@@ -11475,6 +11507,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'shielded-by-faith-viewer-attach-to-entering-creature',
   'shielded-by-faith-viewer-opponent-creature-enters',
   'forum-filibuster-viewer-inkling-and-aura',
+  'forum-filibuster-viewer-equipment-return',
   'karametras-favor-viewer-granted-mana-pays-spell',
   'redemption-arc-viewer-exile-enchanted-creature',
   'redemption-arc-viewer-indestructible-goaded-attack',
@@ -11782,6 +11815,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
   'shielded-by-faith-viewer-opponent-creature-enters': shieldedByFaithOpponentCreatureScenario,
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
+  'forum-filibuster-viewer-equipment-return': forumFilibusterEquipmentScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
   'redemption-arc-viewer-indestructible-goaded-attack': redemptionArcGrantsScenario,

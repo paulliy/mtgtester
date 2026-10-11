@@ -5,6 +5,8 @@
  */
 import type { AttackDeclarationSubject, DecisionRequest } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
+import { computeCharacteristics } from '../../../engine/src/effects/continuous';
+import type { EnginePermanent, GameContext } from '../../../engine/src/state/types';
 import { createCardTestScenario } from './card-test-scenarios';
 import type { CardTestScenario } from './card-test-scenarios';
 
@@ -783,6 +785,18 @@ describe('Forum Filibuster Card Test Lab scenario', () => {
     expect(inkling?.controllerId).toBe('P1');
     expect(aegis?.controllerId).toBe('P1');
     expect(aegis?.attachedTo).toBe(inkling?.id);
+    // The token is the 2/1 white and black flier the Oracle text promises (authoritative state,
+    // and the keyword the viewer shows), and the Aura then makes it a 4/3.
+    const chars = computeCharacteristics(
+      (scenario.engine as unknown as { ctx: GameContext }).ctx,
+      inkling as unknown as EnginePermanent,
+    );
+    expect([...chars.colors].sort()).toEqual(['B', 'W']);
+    expect(chars.keywords).toContain('flying');
+    expect(chars.subtypes).toEqual(['Inkling']);
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Inkling'),
+    ).toMatchObject({ keywords: ['flying'], power: 4, toughness: 3 });
     // The target prompt offered the Aura and nothing else from the graveyard.
     const targeting = offered.find((options) => options.some((option) => /^Target /.test(option)));
     expect(targeting?.filter((option) => /^Target /.test(option))).toEqual(['Target Lab Aegis']);
@@ -792,6 +806,47 @@ describe('Forum Filibuster Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('forum-filibuster-viewer-inkling-and-aura', steps);
+  });
+});
+
+describe('Forum Filibuster Equipment Card Test Lab scenario', () => {
+  it('forum-filibuster-viewer-equipment-return — Sunforger and Lab Aegis are both offered, and Sunforger returns attached to the Inkling', () => {
+    const steps: Step[] = [{ action: 'Target Sunforger' }];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'forum-filibuster-viewer-equipment-return',
+      steps,
+    );
+    const [inkling] = onBattlefield('Inkling');
+    const [sunforger] = onBattlefield('Sunforger');
+    expect(onBattlefield('Inkling')).toHaveLength(1);
+    expect(sunforger?.controllerId).toBe('P1');
+    expect(sunforger?.attachedTo).toBe(inkling?.id);
+    // It came back through the reflexive ability, not by an Equip activation.
+    expect(state.eventLog.filter((event) => event.type === 'activateAbility')).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'graveyardToBattlefield')).toHaveLength(
+      1,
+    );
+    // Sunforger's +4/+0 reaches the Inkling, which keeps its flying.
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Inkling'),
+    ).toMatchObject({ keywords: ['flying'], power: 6, toughness: 1 });
+    // The target prompt offered the Equipment and the Aura, never the creature card.
+    const targeting = offered.find((options) => options.some((option) => /^Target /.test(option)));
+    expect(targeting?.filter((option) => /^Target /.test(option)).sort()).toEqual([
+      'Target Lab Aegis',
+      'Target Sunforger',
+    ]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Aegis', 'Lab Green Bear']);
+    expect(onBattlefield('Lab Aegis')).toEqual([]);
+    expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
+    expect(state.step).toBe('upkeep');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('forum-filibuster-viewer-equipment-return', steps);
   });
 });
 
