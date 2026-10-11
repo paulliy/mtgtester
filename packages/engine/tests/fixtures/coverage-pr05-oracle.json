@@ -763,6 +763,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756",
+      "card": {
+        "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
+        "scryfallId": "4ad6fcb1-7c35-4111-8f1e-d18a2fae5638",
+        "name": "Eidolon of Countless Battles",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Bestow {2}{W}{W} (If you cast this card for its bestow cost, it's an Aura spell with enchant creature. It becomes a creature again if it's not attached.)\nThis creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.",
+        "power": "0",
+        "toughness": "0",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Bestow"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

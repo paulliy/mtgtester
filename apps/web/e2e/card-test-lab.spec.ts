@@ -7413,3 +7413,58 @@ test('Tenuous Truce: attacking a third player keeps it, and your own end step dr
   await expect(handCard(page, 'Lab Ox')).toHaveCount(0);
   await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('38');
 });
+
+test('Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Cast the Eidolon with its bestow cost: it is an Aura spell that targets Lab Green Bear.
+  const eidolon = handCard(page, 'Eidolon of Countless Battles');
+  await expect(eidolon).toHaveClass(/actionable/, { timeout: 15_000 });
+  await eidolon.click();
+  const actions = page.locator('.source-actions .source-action-row button');
+  await expect(actions).toHaveCount(2);
+  await actions.filter({ hasText: /bestow/i }).click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Eidolon of Countless Battles'));
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBe(bearId);
+  // +1/+1 for the one creature and +1/+1 for the one Aura you control.
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+
+  // Destroy the Bear: the Eidolon stays on the battlefield as a creature again.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Eidolon of Countless Battles')).toHaveCount(1);
+  await expect(permanent(page, 'Eidolon of Countless Battles')).toContainText('1/1');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBeFalsy();
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

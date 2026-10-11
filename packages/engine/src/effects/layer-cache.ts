@@ -123,6 +123,8 @@ export function digestOf(
     h = mix(h, (perm.toughness ?? 0) + 0x10000);
     h = mix(h, perm.faceDown === true ? 1 : 0);
     h = mix(h, perm.transformed ? 1 : 0);
+    // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
+    h = mix(h, perm.bestowed === true ? 1 : 0);
     // A static ability can be conditional on being untapped (Iymrith's ward {4}), so tapping is
     // a layer input like any other. Omitting it meant a query before tapping and a query after
     // it returned the same cached characteristics, and ward is read during targeting/payment.

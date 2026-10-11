@@ -460,7 +460,7 @@ function* proposeCast(
   }
   if (
     payload.alternativeCast !== undefined &&
-    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen'].includes(
+    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen', 'bestow'].includes(
       payload.alternativeCast,
     )
   )
@@ -469,7 +469,8 @@ function* proposeCast(
     payload.alternativeCast === 'nonMana' ||
     payload.alternativeCast === 'overload' ||
     payload.alternativeCast === 'adventure' ||
-    payload.alternativeCast === 'omen';
+    payload.alternativeCast === 'omen' ||
+    payload.alternativeCast === 'bestow';
   if (payload.altIndex !== undefined && !authoredAlternative) {
     throw new Error('unexpected alternative index');
   }
@@ -698,6 +699,13 @@ function* proposeCast(
       ...def,
       spellAbility: alt.ability,
     };
+  } else if (payload.alternativeCast === 'bestow') {
+    // CR 702.103a-b: the bestow cost replaces the mana cost, and the spell is the bestowed Aura
+    // that `selectedSpellDefinition` describes.
+    const alt = selectedAlternative;
+    if (alt?.kind !== 'bestow') throw new Error('missing bestow cost');
+    cost = alt.manaCost;
+    abilityDef = printedSpellDef;
   } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
     const alt = selectedAlternative;
     if (alt?.kind !== payload.alternativeCast)

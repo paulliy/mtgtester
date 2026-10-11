@@ -6573,6 +6573,36 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       }
     }
   }
+  // "This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1
+  // for each Aura you control" (Eidolon of Countless Battles): two additive buffs to the same
+  // pair, the source itself and whatever it enchants while bestowed.
+  {
+    const m = lower.match(
+      /^~ and enchanted creature each get \+(\d+)\/\+(\d+) for each creature you control and \+(\d+)\/\+(\d+) for each aura you control$/,
+    );
+    if (m !== null) {
+      const affects = anyOf(SELF, { kind: 'attachedToSource' });
+      const perCreature: Value = {
+        kind: 'countPermanents',
+        selector: ofType('Creature'),
+        scope: 'you',
+      };
+      const perAura: Value = { kind: 'countPermanents', selector: ofSubtype('Aura'), scope: 'you' };
+      const buff = (count: Value, p: string, t: string): StaticEffect => ({
+        affects,
+        op: {
+          layer: 7,
+          sublayer: 'd',
+          power: { kind: 'times', of: count, n: Number(p) },
+          toughness: { kind: 'times', of: count, n: Number(t) },
+        },
+      });
+      return [
+        buff(perCreature, m[1] as string, m[2] as string),
+        buff(perAura, m[3] as string, m[4] as string),
+      ];
+    }
+  }
   // "Enchanted creature gets +10/+10 and has trample and annihilator 2" (Eldrazi Conscription):
   // annihilator is a triggered ability (CR 702.86a), granted as one in layer 6.
   {
@@ -8023,6 +8053,22 @@ export function interpretCard(card: OracleCard): CardDefinition {
           },
         });
         continue;
+      }
+    }
+    // Bestow (CR 702.103a): an alternative cost that casts this creature card as a bestowed Aura.
+    {
+      const m = lower.match(/^bestow ((?:\{[^}]+\})+)$/);
+      if (m && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null) {
+          if (!alternativeCasts) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'bestow',
+            manaCost: cost.cost,
+            description: `Bestow ${m[1]}`,
+          });
+          continue;
+        }
       }
     }
     {

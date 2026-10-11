@@ -2671,12 +2671,6 @@
     }
   },
   {
-    "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
-    "name": "Eidolon of Countless Battles",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
     "name": "Necron Deathmark",
     "handledLines": [
@@ -14073,12 +14067,6 @@
   {
     "oracleId": "oracle-duplicant",
     "name": "Duplicant",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-eidolon-of-countless-battles",
-    "name": "Eidolon of Countless Battles",
     "handledLines": [],
     "def": {}
   },

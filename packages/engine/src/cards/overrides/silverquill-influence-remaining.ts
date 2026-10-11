@@ -150,12 +150,10 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // without it, `applyOverride`'s shallow merge leaves the interpreted activated ability sitting
   // alongside this override's mana ability, offering the land's mana twice (once uncounterable,
   // once respondable) for one printed line.
-  // Catalog audit silverquill-remaining-batch-2: Bestow claimed; Aura-count buff overwritten.
-  unsupportedCard(
-    '441b51b0-ecd0-466d-9ca8-e754eb563aec',
-    'Eidolon of Countless Battles',
-    'Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.',
-  );
+  // Eidolon of Countless Battles: restored in coverage PR05. The interpreter reads Bestow as an
+  // alternative cost that casts it as a bestowed Aura (CR 702.103), and the buff as two additive
+  // statics on this creature and the enchanted creature: +1/+1 per creature you control and +1/+1
+  // per Aura you control.
   // Catalog audit silverquill-remaining-batch-2: Prepare claimed as a self-attack pump.
   unsupportedCard(
     '09b7ea91-2620-4c45-af3c-60bbeab89966',

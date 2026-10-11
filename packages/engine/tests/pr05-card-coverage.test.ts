@@ -6432,6 +6432,346 @@ describe('Tenuous Truce', () => {
   });
 });
 
+// PR05.19 Eidolon of Countless Battles
+// ---------------------------------------------------------------------------------------------
+
+describe('Eidolon of Countless Battles', () => {
+  const { card } = pinned('Eidolon of Countless Battles');
+  const BEAR = (name: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2', oracleText: text });
+  const AURA = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{W}',
+      colors: ['W'],
+      power: null,
+      toughness: null,
+      oracleText: 'Enchant creature',
+    });
+  const BESTOW_MANA = [
+    { symbol: 'C' as const },
+    { symbol: 'C' as const },
+    { symbol: 'W' as const },
+    { symbol: 'W' as const },
+  ];
+  const NORMAL_MANA = [
+    { symbol: 'C' as const },
+    { symbol: 'W' as const },
+    { symbol: 'W' as const },
+  ];
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const eidolonOf = (ctx: GameContext) => named(ctx, 'Eidolon of Countless Battles')[0];
+  const hand = (ctx: GameContext, playerId = 'P1') => playerById(ctx, playerId).hand.length;
+
+  /** The options P1 has for casting the Eidolon `object`: the bestow cast and the plain cast. */
+  function castOptions(ctx: GameContext, objectId: string) {
+    const all = priorityOptions(ctx, 'P1').filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return 'objectId' in payload && payload.objectId === objectId;
+    });
+    return {
+      bestow: all.find((option) => /Bestow/.test(option.description)),
+      plain: all.find((option) => !/Bestow/.test(option.description)),
+    };
+  }
+
+  /** P1 casts the Eidolon from hand for bestow onto `host`, leaving the Aura spell on the stack. */
+  function bestowOnto(ctx: GameContext, host: EnginePermanent) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), BESTOW_MANA);
+    const { bestow } = castOptions(ctx, object.id);
+    expect(bestow, 'bestow is offered').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      bestow!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[bestow!.targets![0]!.slot, host.id]]),
+    );
+    return object;
+  }
+
+  /** Cast bestowed onto `host` and let it resolve and settle. */
+  function bestowAndResolve(ctx: GameContext, host: EnginePermanent, answer?: Answer) {
+    bestowOnto(ctx, host);
+    resolveTop(ctx);
+    settle(ctx, answer);
+    return eidolonOf(ctx)!;
+  }
+
+  /** P1 casts the Eidolon from hand as a plain creature spell and resolves it. */
+  function castPlain(ctx: GameContext) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), NORMAL_MANA);
+    const { plain } = castOptions(ctx, object.id);
+    expect(plain, 'the plain cast is offered').toBeDefined();
+    takeAction(ctx, 'P1', plain!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    return eidolonOf(ctx)!;
+  }
+
+  /** P1 controls Lab Host; P2 controls Lab Theirs. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const host = spawn(ctx, 'P1', BEAR('Lab Host'));
+    const theirs = spawn(ctx, 'P2', BEAR('Lab Theirs'));
+    return { ctx, host, theirs };
+  }
+
+  /** Killian asks for a creature to tap and goad whenever an enchantment enters: choose none. */
+  const noTarget: Answer = (decision) => {
+    const index = decision.options.findIndex((option) =>
+      /no more targets/i.test(option.description),
+    );
+    return { index: Math.max(index, 0), targets: new Map() };
+  };
+
+  it('eidolon-of-countless-battles-pinned-oracle-supported — the interpreter alone models bestow as an alternative cost and the two additive buffs', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Bestow {2}{W}{W} (CR 702.103a): one alternative cost, the card's creature spell otherwise.
+    expect(def.alternativeCasts).toHaveLength(1);
+    const [bestow] = def.alternativeCasts!;
+    expect(bestow!.kind).toBe('bestow');
+    expect(bestow!.manaCost).toMatchObject({ generic: 2, colored: { W: 2 } });
+    expect(def.spellAbility).toBeNull();
+    expect(def.types).toEqual(['Enchantment', 'Creature']);
+    // Two additive layer 7d buffs to this permanent and what it enchants: +1/+1 for each creature
+    // you control, and +1/+1 for each Aura you control.
+    const affects = {
+      kind: 'anyOf',
+      of: [{ kind: 'self' }, { kind: 'attachedToSource' }],
+    };
+    const perCreature = {
+      kind: 'times',
+      of: { kind: 'countPermanents', selector: { kind: 'type', value: 'Creature' }, scope: 'you' },
+      n: 1,
+    };
+    const perAura = {
+      kind: 'times',
+      of: { kind: 'countPermanents', selector: { kind: 'subtype', value: 'Aura' }, scope: 'you' },
+      n: 1,
+    };
+    expect(def.staticEffects).toEqual([
+      { affects, op: { layer: 7, sublayer: 'd', power: perCreature, toughness: perCreature } },
+      { affects, op: { layer: 7, sublayer: 'd', power: perAura, toughness: perAura } },
+    ]);
+    expect(def.triggers).toEqual([]);
+  });
+
+  it('eidolon-of-countless-battles-normal-cast — cast for its mana cost it is a creature that buffs only itself', () => {
+    const { ctx, host } = board('eidolon-normal');
+    const eidolon = castPlain(ctx);
+    expect(eidolon.attachedTo).toBeNull();
+    expect(computeCharacteristics(ctx, eidolon).types).toEqual(
+      expect.arrayContaining(['Creature', 'Enchantment']),
+    );
+    expect(computeCharacteristics(ctx, eidolon).subtypes).not.toContain('Aura');
+    // 0/0 plus one for each creature you control: itself and Lab Host. Nothing else is buffed.
+    expect(effectivePT(ctx, eidolon)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, host)).toEqual({ power: 2, toughness: 2 });
+
+    // With only {1}{W}{W} the bestow cost cannot be paid, so only the plain cast is offered; with
+    // {2}{W}{W} both are.
+    const poor = board('eidolon-poor');
+    const a = conjure(poor.ctx, 'P1', card, 'hand');
+    addMana(playerById(poor.ctx, 'P1'), NORMAL_MANA);
+    expect(castOptions(poor.ctx, a.id).bestow).toBeUndefined();
+    expect(castOptions(poor.ctx, a.id).plain).toBeDefined();
+    const rich = board('eidolon-rich');
+    const b = conjure(rich.ctx, 'P1', card, 'hand');
+    addMana(playerById(rich.ctx, 'P1'), BESTOW_MANA);
+    expect(castOptions(rich.ctx, b.id).bestow).toBeDefined();
+    expect(castOptions(rich.ctx, b.id).plain).toBeDefined();
+  });
+
+  it('eidolon-of-countless-battles-bestow-cast — cast for bestow it is an Aura spell that targets a creature and enters attached as a noncreature Enchantment — Aura', () => {
+    const { ctx, host, theirs } = board('eidolon-bestow');
+    const object = bestowOnto(ctx, host);
+    // On the stack it is an Aura spell: it targets the creature it will enchant (CR 702.103b).
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(ctx.state.stack[0]?.targets).toEqual([host.id]);
+    expect(ctx.state.stack[0]?.card?.cardId).toBe(object.cardId);
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+    resolveTop(ctx);
+    const eidolon = eidolonOf(ctx)!;
+    expect(eidolon.attachedTo).toBe(host.id);
+    const chars = computeCharacteristics(ctx, eidolon);
+    expect(chars.types).toEqual(['Enchantment']);
+    expect(chars.subtypes).toEqual(['Aura']);
+    // It buffs the creature it enchants: one creature (Lab Host) plus one Aura (itself) is +2/+2.
+    expect(effectivePT(ctx, host)).toEqual({ power: 4, toughness: 4 });
+    // Negative: another creature is untouched, and an opponent's creature can be the host too.
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 2, toughness: 2 });
+    const other = board('eidolon-bestow-theirs');
+    const stolen = bestowAndResolve(other.ctx, other.theirs);
+    expect(stolen.attachedTo).toBe(other.theirs.id);
+    expect(effectivePT(other.ctx, other.host)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('eidolon-of-countless-battles-bestow-needs-creature — bestow is offered only while there is a creature to enchant, and an Aura-spell cast trigger sees it', () => {
+    // No creature anywhere: the plain cast stays available, bestow does not.
+    const empty = pod('eidolon-empty');
+    const object = conjure(empty, 'P1', card, 'hand');
+    addMana(playerById(empty, 'P1'), BESTOW_MANA);
+    expect(castOptions(empty, object.id).bestow).toBeUndefined();
+    expect(castOptions(empty, object.id).plain).toBeDefined();
+
+    // Kor Spiritdancer: "whenever you cast an Aura spell, you may draw a card". A bestowed cast is
+    // an Aura spell, so it asks; the plain creature cast does not.
+    const answerYes: Answer = (decision) => {
+      const index = decision.options.findIndex((option) => /yes/i.test(option.description));
+      return { index: Math.max(index, 0), targets: new Map() };
+    };
+    const kor = board('eidolon-kor');
+    spawn(kor.ctx, 'P1', pinned('Kor Spiritdancer').card);
+    const before = hand(kor.ctx);
+    bestowOnto(kor.ctx, kor.host);
+    settle(kor.ctx, answerYes);
+    // The Eidolon came from the hand to the stack, and one card was drawn.
+    expect(hand(kor.ctx)).toBe(before + 1);
+    const plain = board('eidolon-kor-plain');
+    spawn(plain.ctx, 'P1', pinned('Kor Spiritdancer').card);
+    const plainBefore = hand(plain.ctx);
+    castPlain(plain.ctx);
+    settle(plain.ctx, answerYes);
+    expect(hand(plain.ctx)).toBe(plainBefore);
+    // The plain cast drew nothing, so the hand is still the starting hand (the Eidolon left it).
+    expect(playerById(plain.ctx, 'P1').hand.map((c) => c.name)).not.toContain(
+      'Eidolon of Countless Battles',
+    );
+  });
+
+  it('eidolon-of-countless-battles-illegal-target — if the target is illegal on resolution it resolves as a creature (CR 702.103e)', () => {
+    const { ctx, host } = board('eidolon-fizzle');
+    bestowOnto(ctx, host);
+    kill(ctx, host);
+    resolveTop(ctx);
+    const eidolon = eidolonOf(ctx);
+    expect(eidolon).toBeDefined();
+    expect(eidolon!.attachedTo).toBeNull();
+    expect(computeCharacteristics(ctx, eidolon!).types).toContain('Creature');
+    expect(computeCharacteristics(ctx, eidolon!).subtypes).not.toContain('Aura');
+    // A creature again, it counts itself: 0/0 plus one.
+    expect(effectivePT(ctx, eidolon!)).toEqual({ power: 1, toughness: 1 });
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).not.toContain(
+      'Eidolon of Countless Battles',
+    );
+
+    // Negative: a legal target on resolution leaves it a bestowed Aura.
+    const fine = board('eidolon-fine');
+    bestowOnto(fine.ctx, fine.host);
+    resolveTop(fine.ctx);
+    expect(eidolonOf(fine.ctx)!.attachedTo).toBe(fine.host.id);
+  });
+
+  it('eidolon-of-countless-battles-host-leaves — when the enchanted creature leaves, Eidolon stays as a creature instead of going to the graveyard (CR 702.103f)', () => {
+    const { ctx, host, theirs } = board('eidolon-leaves');
+    const eidolon = bestowAndResolve(ctx, host);
+    // Negative first: an unrelated creature leaving changes nothing about the bestowed Aura.
+    kill(ctx, theirs);
+    settle(ctx);
+    expect(eidolon.attachedTo).toBe(host.id);
+    expect(computeCharacteristics(ctx, eidolon).types).toEqual(['Enchantment']);
+    // The enchanted creature dies: the Eidolon is not put into the graveyard.
+    kill(ctx, host);
+    pump(priorityCheckpoint(ctx));
+    const after = eidolonOf(ctx);
+    expect(after).toBeDefined();
+    expect(after!.attachedTo).toBeNull();
+    expect(computeCharacteristics(ctx, after!).types).toContain('Creature');
+    expect(effectivePT(ctx, after!)).toEqual({ power: 1, toughness: 1 });
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).not.toContain(
+      'Eidolon of Countless Battles',
+    );
+  });
+
+  it('eidolon-of-countless-battles-protection — a bestowed Eidolon whose host has protection from white becomes an unattached creature', () => {
+    const { ctx, host } = board('eidolon-protection');
+    const eidolon = bestowAndResolve(ctx, host);
+    expect(eidolon.attachedTo).toBe(host.id);
+    const protectedBear = spawn(ctx, 'P1', BEAR('Lab Pro White', 'Protection from white'));
+    // Moved onto a creature it may not enchant, it stays on the battlefield as a creature.
+    eidolon.attachedTo = protectedBear.id;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.battlefield.includes(eidolon)).toBe(true);
+    expect(eidolon.attachedTo).toBeNull();
+    expect(computeCharacteristics(ctx, eidolon).types).toContain('Creature');
+    // Negative: attached to an ordinary creature it is still bestowed.
+    const fine = board('eidolon-protection-fine');
+    const stays = bestowAndResolve(fine.ctx, fine.host);
+    pump(priorityCheckpoint(fine.ctx));
+    expect(stays.attachedTo).toBe(fine.host.id);
+  });
+
+  it('eidolon-of-countless-battles-buff-counts — the buff is +1/+1 for each creature plus +1/+1 for each Aura you control, and opponents’ creatures and Auras do not count', () => {
+    const { ctx, host, theirs } = board('eidolon-counts');
+    const second = spawn(ctx, 'P1', BEAR('Lab Second'));
+    const aura = spawn(ctx, 'P1', AURA('Lab Aura'));
+    aura.attachedTo = second.id;
+    // An opponent's Aura and creature are not counted.
+    const foreignAura = spawn(ctx, 'P2', AURA('Lab Foreign Aura'));
+    foreignAura.attachedTo = theirs.id;
+    const eidolon = bestowAndResolve(ctx, host);
+    // You control creatures: Lab Host and Lab Second (2); Auras: Lab Aura and the bestowed
+    // Eidolon (2). Lab Host gets +2/+2 and +2/+2 on top of 2/2.
+    expect(effectivePT(ctx, host)).toEqual({ power: 6, toughness: 6 });
+    expect(effectivePT(ctx, second)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 2, toughness: 2 });
+    // A third creature of yours adds one more; one of the opponent's adds nothing.
+    spawn(ctx, 'P1', BEAR('Lab Third'));
+    spawn(ctx, 'P2', BEAR('Lab Fourth'));
+    expect(effectivePT(ctx, host)).toEqual({ power: 7, toughness: 7 });
+    // Unattached, the Eidolon is itself a creature and buffs only itself.
+    eidolon.attachedTo = null;
+    delete eidolon.bestowed;
+    expect(effectivePT(ctx, host)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, eidolon)).toEqual({ power: 5, toughness: 5 });
+  });
+
+  it('eidolon-of-countless-battles-counts-as-aura — a bestowed Eidolon is an Aura you control for “enchanted by an Aura you control”, so Killian draws when its host attacks', () => {
+    const { ctx, host } = board('eidolon-killian');
+    spawn(ctx, 'P1', pinned('Killian, Decisive Mentor').card);
+    bestowAndResolve(ctx, host, noTarget);
+    const before = hand(ctx);
+    const life = playerById(ctx, 'P2').life;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === host.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    // 2 base power, plus one creature each for Lab Host and Killian, plus the bestowed Aura.
+    expect(playerById(ctx, 'P2').life).toBe(life - 5);
+    expect(hand(ctx)).toBe(before + 1);
+
+    // Negative: the same Eidolon cast as a creature is not an Aura, so a plain attacker draws
+    // nothing for it.
+    const plain = board('eidolon-killian-plain');
+    spawn(plain.ctx, 'P1', pinned('Killian, Decisive Mentor').card);
+    castPlain(plain.ctx);
+    settle(plain.ctx, noTarget);
+    const plainBefore = hand(plain.ctx);
+    const plainLife = playerById(plain.ctx, 'P2').life;
+    pump(runCombatAndExtraCombats(plain.ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === plain.host.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    // The Bear really attacked (2 damage), yet nothing was drawn.
+    expect(playerById(plain.ctx, 'P2').life).toBe(plainLife - 2);
+    expect(hand(plain.ctx)).toBe(plainBefore);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -6462,6 +6802,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Curse of Bounty',
     sha256: '138e84680c701ef319c07022067fb1476e248e7bde9df9becb5039cf835a0e18',
     clauseCount: 3,
+  },
+  {
+    name: 'Eidolon of Countless Battles',
+    sha256: '9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756',
+    clauseCount: 2,
   },
   {
     name: 'Eldrazi Conscription',

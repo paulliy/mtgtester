@@ -92,7 +92,7 @@ export type AbilityCost =
   | { kind: 'unattachSelf' };
 
 export interface AlternativeCast {
-  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana';
+  kind: 'overload' | 'adventure' | 'omen' | 'mdfc' | 'nonMana' | 'bestow';
   /** Explicit zone restriction/permission. Omitted alternatives use normal casting permissions. */
   from?: 'hand' | 'graveyard' | 'exile';
   manaCost: ParsedManaCost;

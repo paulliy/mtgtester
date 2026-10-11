@@ -852,3 +852,36 @@ describe('Tenuous Truce Card Test Lab end-step scenario', () => {
     replays('tenuous-truce-viewer-other-attack-and-end-step', steps);
   });
 });
+
+describe('Eidolon of Countless Battles Card Test Lab scenario', () => {
+  it('eidolon-of-countless-battles-viewer-bestow — bestowed onto Lab Green Bear it makes a 4/4, and when Lab Doom kills the Bear the Eidolon stays as a creature', () => {
+    const steps: Step[] = [
+      { action: 'via Bestow', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'eidolon-of-countless-battles-viewer-bestow',
+      steps,
+    );
+    // Both casts were offered: the plain creature spell and the bestow cost.
+    const first = offered[0] ?? [];
+    expect(first.filter((action) => /Cast Eidolon of Countless Battles/.test(action))).toHaveLength(
+      2,
+    );
+    expect(first.some((action) => /via Bestow/.test(action))).toBe(true);
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    const [eidolonPermanent] = onBattlefield('Eidolon of Countless Battles');
+    expect(eidolonPermanent?.attachedTo ?? null).toBeNull();
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Doom', 'Lab Green Bear']);
+    expect(seat('P1').hand).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eidolon-of-countless-battles-viewer-bestow', steps);
+  });
+});

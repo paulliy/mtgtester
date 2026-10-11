@@ -8684,6 +8684,39 @@ function tenuousTruceScopeScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function eidolonOfCountlessBattlesScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Eidolon of Countless Battles');
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'eidolon-of-countless-battles-viewer-bestow',
+    title: 'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+    instructions: [
+      'Eidolon of Countless Battles and Lab Doom are in your hand. Two Plains, four Swamps and Lab Green Bear (2/2) are on your battlefield.',
+      'Cast Eidolon of Countless Battles for its bestow cost targeting Lab Green Bear and let it resolve: it enters as an Aura attached to Lab Green Bear, which gets +1/+1 for the one creature you control and +1/+1 for the one Aura you control and becomes a 4/4.',
+      'Cast Lab Doom targeting Lab Green Bear and let it resolve. Lab Green Bear dies, and Eidolon of Countless Battles stays on the battlefield as a creature again, a 1/1.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear and Lab Doom are in your graveyard. Eidolon of Countless Battles is still on the battlefield, not attached to anything, and is a creature.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['eidolon-of-countless-battles-bestow', 'eidolon-of-countless-battles-buff'],
+    decks: {
+      P1: [eidolon.card, LAB_DOOM, LAB_GREEN_BEAR, PLAINS, PLAINS, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Eidolon of Countless Battles', 'Lab Doom'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Plains', 'Plains', ...swamps.map((swamp) => swamp.name)],
+        },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10535,6 +10568,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'curse-of-bounty-viewer-untap-on-attack',
   'tenuous-truce-viewer-attack-sacrifices',
   'tenuous-truce-viewer-other-attack-and-end-step',
+  'eidolon-of-countless-battles-viewer-bestow',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10823,6 +10857,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
   'tenuous-truce-viewer-attack-sacrifices': tenuousTruceAttackScenario,
   'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,
+  'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

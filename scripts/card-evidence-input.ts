@@ -1955,6 +1955,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eidolon of Countless Battles: bestow onto a creature, then it becomes a creature again',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

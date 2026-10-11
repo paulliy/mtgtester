@@ -73,6 +73,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   controlChanges?: PlayerId[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
+  /**
+   * A bestowed Aura (CR 702.103b): an Aura enchantment with enchant creature, not a creature,
+   * until it becomes unattached or attached to an illegal object (CR 702.103f).
+   */
+  bestowed?: boolean;
   /** Player this creature is attacking, while in combat. */
   attacking: PlayerId | null;
   /** Attacker this creature is blocking, while in combat. */
@@ -277,7 +282,14 @@ export interface EngineStackObject extends StackObject {
   sourceDamageKeywords?: DamageKeyword[];
   /** Kind of alternative cast used, if any (overload, adventure, omen). */
   alternativeCastKind?:
-    'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
+    | 'overload'
+    | 'adventure'
+    | 'omen'
+    | 'nonMana'
+    | 'energy'
+    | 'commanderFree'
+    | 'faceDown'
+    | 'bestow';
   altIndex?: number;
   /** Triggered abilities: the object whose event fired this — the `'triggerObject'` referent. */
   triggerObjectCardId?: CardId;

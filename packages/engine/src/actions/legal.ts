@@ -1,7 +1,7 @@
 import { UnmodeledCardError } from '../errors';
 import type { ObjectFacts } from '../cards/source-identity';
 import { supportsAdditionalXAnnouncement } from '../cards/cost-contracts';
-import { selectedSpellDefinition } from '../cards/spell-faces';
+import { bestowedDefinition, selectedSpellDefinition } from '../cards/spell-faces';
 import { assertNever } from '../utils/assert-never';
 import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
@@ -122,7 +122,14 @@ export type PriorityActionPayload =
       /** Number of times the card's optional additional cost was paid. */
       optionalCostCount?: number;
       alternativeCast?:
-        'overload' | 'adventure' | 'omen' | 'nonMana' | 'energy' | 'commanderFree' | 'faceDown';
+        | 'overload'
+        | 'adventure'
+        | 'omen'
+        | 'nonMana'
+        | 'energy'
+        | 'commanderFree'
+        | 'faceDown'
+        | 'bestow';
       altIndex?: number;
       /**
        * The option priced with target-dependent reductions (Killian): the target slot that must
@@ -1371,6 +1378,15 @@ export function computePriorityOptions(
             );
             break;
           }
+          case 'bestow':
+            offerCast(
+              alt.manaCost,
+              spellAdditionalCosts,
+              bestowedDefinition(def),
+              { alternativeCast: alt.kind, altIndex: index },
+              ' via Bestow',
+            );
+            break;
           case 'mdfc':
             // The supported alternate face is a land play, already offered above.
             break;

@@ -235,6 +235,21 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
     if (!s.battlefield.includes(perm)) continue;
     const chars = computeCharacteristics(ctx, perm);
 
+    // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
+    // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
+    // battlefield as the creature it is printed as (CR 702.103f, an exception to 704.5m).
+    if (perm.bestowed === true) {
+      const host =
+        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
+      if (host === undefined || enchantAllows(ctx, perm, host) !== true) {
+        debug(ctx, 'sba', `bestowed ${perm.name} unattached — it is a creature again`);
+        emit(ctx, 'bestowEnded', { name: perm.name });
+        perm.attachedTo = null;
+        delete perm.bestowed;
+        return true;
+      }
+    }
+
     // An Aura must remain attached to a permanent allowed by its enchant restriction for its
     // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
     if (chars.subtypes.includes('Aura')) {

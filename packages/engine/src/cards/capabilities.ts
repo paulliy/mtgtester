@@ -708,6 +708,7 @@ const families = {
       omen: true,
       mdfc: true,
       nonMana: true,
+      bestow: true,
     } satisfies Record<Extract<AlternativeCast['kind'], string | number>, true>,
   },
   MdfcLandFace: { prefix: 'MdfcLandFace', discriminator: undefined, tags: {} },

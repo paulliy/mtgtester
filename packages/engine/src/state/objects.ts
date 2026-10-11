@@ -13,6 +13,7 @@ import { spellDefinitionOf } from './queries';
 
 import type { ObjectId, OracleId, PlayerId, Zone } from '@mtg/shared';
 import { computeTargetOptions } from '../actions/legal';
+import { BESTOW_ENCHANT } from '../cards/spell-faces';
 import type {
   Ability,
   KeywordAbility,
@@ -84,6 +85,8 @@ export interface MoveDestination {
   controllerId?: PlayerId;
   /** Aura host chosen when casting, attached before entry triggers are collected. */
   attachedTo?: ObjectId;
+  /** Battlefield only: it enters as a bestowed Aura (CR 702.103b), attached to `attachedTo`. */
+  bestowed?: true;
   /** Battlefield only: choose the back face of an MDFC land // spell. */
   face?: 'front' | 'back';
   /**
@@ -745,6 +748,7 @@ export function* moveObject(
       target.withCounters,
     );
     perm.attachedTo = target.attachedTo ?? null;
+    if (target.bestowed === true && perm.attachedTo !== null) perm.bestowed = true;
     ctx.state.battlefield.push(perm);
     next = perm;
 
@@ -1391,7 +1395,11 @@ export function enchantAllows(
 ): boolean | undefined {
   const colors = computeCharacteristics(ctx, aura).colors;
   if (hasProtectionFrom(ctx, host, colors)) return false;
-  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  // A bestowed Aura has "enchant creature" (CR 702.103b).
+  const enchant =
+    aura.bestowed === true
+      ? BESTOW_ENCHANT
+      : getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
   if (enchant === undefined) return undefined;
   return computeTargetOptions(
     ctx,

@@ -38,6 +38,8 @@ function variantLabel(action: LegalAction, variant: string): string {
     }
     case 'overload':
       return 'Cast with overload';
+    case 'bestow':
+      return 'Cast with bestow';
     case 'adventure':
       return name === null ? 'Cast adventure' : `Cast ${name} (adventure)`;
     case 'omen':

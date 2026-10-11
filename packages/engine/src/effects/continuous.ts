@@ -98,6 +98,15 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
     if (source.faceDown) continue;
     const def = ctx.defs.get(source.oracleId);
     if (def === undefined) continue;
+    // A bestowed Aura "becomes an Aura enchantment" (CR 702.103b): a type-changing effect that
+    // replaces its card types and the creature types that went with them (CR 205.1a), in its
+    // own timestamp order.
+    if (source.bestowed === true)
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: { layer: 4, setTypes: ['Enchantment'], setSubtypes: ['Aura'] },
+        timestamp: source.timestamp,
+      });
     const printedStatics =
       source.transformed && def.backFace !== undefined
         ? def.backFace.staticEffects
@@ -284,8 +293,10 @@ export function candidateOf(
     if (other.attachedTo === perm.id) {
       const def = ctx.defs.get(other.oracleId);
       if (def !== undefined) {
-        if (def.subtypes.includes('Aura')) auraControllerIds.push(other.controllerId);
-        if (def.subtypes.includes('Aura') || def.types.includes('Enchantment')) {
+        // A bestowed permanent is an Aura while bestowed (CR 702.103b), though printed a creature.
+        const isAura = def.subtypes.includes('Aura') || other.bestowed === true;
+        if (isAura) auraControllerIds.push(other.controllerId);
+        if (isAura || def.types.includes('Enchantment')) {
           isEnchanted = true;
         }
         if (def.subtypes.includes('Equipment') || def.types.includes('Artifact')) {

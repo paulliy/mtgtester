@@ -75,8 +75,6 @@ const REASONS: Record<string, string> = {
   'Armored Skyhunter': 'Equipment filter is any artifact, and attach is omitted.',
   "Defacing Duskmage // Vandal's Edit":
     'Prepare is implemented as a pump trigger on any draw step.',
-  'Eidolon of Countless Battles':
-    'Bestow is claimed, and the Aura-count buff is overwritten by a creature-count self pump.',
   'Eiganjo Dynastorian // Replenish':
     'Prepare is implemented as a pump trigger when this creature attacks.',
   'Etali, Primal Conqueror // Etali, Primal Sickness':
@@ -292,6 +290,7 @@ describe('Marchesa catalog audit containment', () => {
     'Sheltered by Ghosts',
     'Eldrazi Conscription',
     'Curse of Bounty',
+    'Eidolon of Countless Battles',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

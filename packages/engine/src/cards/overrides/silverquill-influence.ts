@@ -132,10 +132,8 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Shielded by Faith: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('441b51b0-ecd0-466d-9ca8-e754eb563aec', 'Eidolon of Countless Battles', [
-    'Bestow {2}{W}{W}',
-    '~ and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.',
-  ]);
+  // Eidolon of Countless Battles: restored in coverage PR05 (see
+  // silverquill-influence-remaining.ts).
 
   // Now handled generically as `attackTax` (`parseRuleStaticLine` in interpret.ts) — see
   // queen-marchesa-queens-gambit-remaining.ts, whose non-empty override for the same oracleId

@@ -1586,13 +1586,41 @@
     "441b51b0-ecd0-466d-9ca8-e754eb563aec": {
       "name": "Eidolon of Countless Battles",
       "oracleSha256": "9521b9cb47cf5c1b8466cdae9cf1cc77d457c42d819d64e88186423acd12a756",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "eidolon-of-countless-battles-bestow",
           "oracleText": "Bestow {2}{W}{W}",
-          "implementation": ["explicitly unsupported; Bestow and Aura-count buff omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted bestow alternative cost (CR 702.103a): a second way to cast the card, offered only when its cost can be paid and a creature can be enchanted, whose spell is an Aura spell with enchant creature (CR 702.103b) that targets the creature it will enchant, so Aura-spell cast triggers see it; cast for its mana cost it is an ordinary creature spell",
+            "a bestowed Eidolon enters attached as a noncreature Enchantment — Aura through a type-changing effect; if its target is illegal on resolution it resolves as a creature (CR 702.103e), and when the enchanted creature leaves or the host is one it may not enchant, such as a creature with protection from white, it becomes an unattached creature instead of going to the graveyard (CR 702.103f)"
+          ],
+          "engineTestIds": [
+            "eidolon-of-countless-battles-pinned-oracle-supported",
+            "eidolon-of-countless-battles-normal-cast",
+            "eidolon-of-countless-battles-bestow-cast",
+            "eidolon-of-countless-battles-bestow-needs-creature",
+            "eidolon-of-countless-battles-illegal-target",
+            "eidolon-of-countless-battles-host-leaves",
+            "eidolon-of-countless-battles-protection"
+          ],
+          "viewerScenarioIds": ["eidolon-of-countless-battles-viewer-bestow"]
+        },
+        {
+          "id": "eidolon-of-countless-battles-buff",
+          "oracleText": "This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control.",
+          "implementation": [
+            "interpreted as two additive layer 7d statics on this permanent and the creature it is attached to (self or attachedToSource): +1/+1 for each creature you control, and +1/+1 for each Aura you control; cast normally it is a creature buffed by itself, bestowed it buffs the creature it enchants",
+            "only permanents you control are counted, a bestowed Eidolon counts as an Aura you control but not as a creature, and opponents' creatures and Auras add nothing; it is an Aura you control for effects such as Killian, Decisive Mentor's attack trigger"
+          ],
+          "engineTestIds": [
+            "eidolon-of-countless-battles-pinned-oracle-supported",
+            "eidolon-of-countless-battles-normal-cast",
+            "eidolon-of-countless-battles-bestow-cast",
+            "eidolon-of-countless-battles-buff-counts",
+            "eidolon-of-countless-battles-counts-as-aura"
+          ],
+          "viewerScenarioIds": ["eidolon-of-countless-battles-viewer-bestow"]
         }
       ],
       "gameplayAiScenarioIds": []
