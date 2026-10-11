@@ -158,6 +158,13 @@ function castFromHand(
 }
 
 /** Put `perm` into its owner's graveyard through the normal single-permanent zone change. */
+// The cards logged as returning from a graveyard: logged only once they land (CR 303.4i).
+function returnedFromGraveyard(ctx: GameContext): unknown[] {
+  return ctx.state.eventLog
+    .filter((event) => event.type === 'graveyardToBattlefield')
+    .map((event) => event.payload.target);
+}
+
 function kill(ctx: GameContext, perm: EnginePermanent) {
   return pump(moveObject(ctx, perm, { zone: 'graveyard' }));
 }
@@ -925,6 +932,7 @@ describe('Forum Filibuster', () => {
     expect(named(aura.ctx, 'Inkling')).toEqual([]);
     expect(named(aura.ctx, 'Lab Blessing')).toEqual([]);
     expect(yard(aura.ctx, 'P1')).toContain('Lab Blessing');
+    expect(returnedFromGraveyard(aura.ctx)).toEqual([]);
 
     // The Equipment still enters, unattached.
     const equipment = board('forum-gone-equipment');
@@ -934,6 +942,7 @@ describe('Forum Filibuster', () => {
     expect(blade?.controllerId).toBe('P1');
     expect(blade?.attachedTo ?? null).toBeNull();
     expect(yard(equipment.ctx, 'P1')).not.toContain('Lab Blade');
+    expect(returnedFromGraveyard(equipment.ctx)).toEqual(['Lab Blade']);
 
     // An Aura that cannot enchant a creature ("enchant land") is a legal target but stays in the
     // graveyard; the Inkling is still made.
@@ -942,6 +951,7 @@ describe('Forum Filibuster', () => {
     expect(named(land.ctx, 'Inkling')).toHaveLength(1);
     expect(named(land.ctx, 'Lab Moss')).toEqual([]);
     expect(yard(land.ctx, 'P1')).toContain('Lab Moss');
+    expect(returnedFromGraveyard(land.ctx)).toEqual([]);
   });
 });
 
@@ -1309,6 +1319,7 @@ describe('Ghoulish Impetus', () => {
     expect(offered).toEqual([]);
     expect(named(lonely, 'Ghoulish Impetus')).toEqual([]);
     expect(graveyardOf(lonely, 'P1').sort()).toEqual(['Ghoulish Impetus', 'Lab Bear']);
+    expect(returnedFromGraveyard(lonely)).toEqual([]);
 
     // A creature that appears before the end step gives it a host after all.
     const late = pod('impetus-late-creature');
@@ -1319,6 +1330,7 @@ describe('Ghoulish Impetus', () => {
     const newcomer = spawn(late, 'P2', CREATURE('Lab Newcomer'));
     endStep(late, 'Lab Newcomer');
     expect(named(late, 'Ghoulish Impetus')[0]?.attachedTo).toBe(newcomer.id);
+    expect(returnedFromGraveyard(late)).toEqual(['Ghoulish Impetus']);
 
     const died = (seed: string) => {
       const b = board(seed);

@@ -4150,12 +4150,13 @@ export function* executeAbility(
             // An undefined host leaves the Aura where it is (CR 303.4i); moveObject also refuses a
             // host its enchant ability doesn't allow.
             if (host === undefined) continue;
-            emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
-            yield* moveObject(ctx, card, {
+            const attached = yield* moveObject(ctx, card, {
               zone: 'battlefield',
               controllerId: controller.id,
               attachedTo: host.id,
             });
+            if (attached !== null && attached.zone === 'battlefield')
+              emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
             continue;
           }
           emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
@@ -5603,12 +5604,14 @@ export function* executeAbility(
         if (card === undefined) break;
         const host = effect.attachToObjectId;
         if (host !== undefined && findPermanent(ctx, host) === undefined) break;
-        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
-        yield* moveObject(ctx, card, {
+        // Logged only once it lands: moveObject refuses a host the Aura can't enchant.
+        const returned = yield* moveObject(ctx, card, {
           zone: 'battlefield',
           controllerId: effect.returnUnder === 'owner' ? card.ownerId : source.controllerId,
           ...(host === undefined ? {} : { attachedTo: host }),
         });
+        if (returned !== null && returned.zone === 'battlefield')
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
         break;
       }
       case 'returnDepartedSourceToBattlefield': {
@@ -5660,12 +5663,13 @@ export function* executeAbility(
           });
           break;
         }
-        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
-        yield* moveObject(ctx, card, {
+        const returned = yield* moveObject(ctx, card, {
           zone: 'battlefield',
           controllerId: source.controllerId,
           ...(host === undefined ? {} : { attachedTo: host }),
         });
+        if (returned !== null && returned.zone === 'battlefield')
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
         break;
       }
       case 'reanimateEachChosenTapped': {
