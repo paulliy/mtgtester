@@ -8537,6 +8537,43 @@ function fallenIdealScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * Fallen Ideal's flying: the enchanted Lab Green Bear attacks and the opposing Lab Ox, which has
+ * neither flying nor reach, is not offered as a blocker, so P2 is never asked to declare blocks.
+ */
+function fallenIdealFlyingScenario(gameId: GameId): CardTestScenario {
+  const ideal = pinnedFrom(COVERAGE_PR05, 'Fallen Ideal');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'fallen-ideal-viewer-flying-attack',
+    title: 'Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked',
+    instructions: [
+      'Fallen Ideal is in your hand. Three Swamps and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4, no flying or reach) and blocks with every creature it can.',
+      'Cast Fallen Ideal targeting Lab Green Bear and let it resolve: Lab Green Bear has flying.',
+      'Attack P2 with Lab Green Bear. Lab Ox cannot block a flier, so nobody can block it.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is unblocked and survives, hitting P2 for 2, leaving P2 at 38. Lab Ox is undamaged.',
+    oracleSha256: ideal.sha256,
+    clauseIds: ['fallen-ideal-grants'],
+    decks: {
+      P1: [ideal.card, LAB_GREEN_BEAR, ...swamps],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Fallen Ideal'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', ...swamps.map((s) => s.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 function korSpiritdancerScenario(gameId: GameId): CardTestScenario {
   const kor = pinnedFrom(COVERAGE_PR05, 'Kor Spiritdancer');
   return pr01Scenario(gameId, {
@@ -11176,6 +11213,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'redemption-arc-viewer-indestructible-goaded-attack',
   'redemption-arc-viewer-goaded-opponent-attack',
   'fallen-ideal-viewer-sacrifice-then-return',
+  'fallen-ideal-viewer-flying-attack',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'kor-spiritdancer-viewer-second-aura-grows-it',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
@@ -11477,6 +11515,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'redemption-arc-viewer-indestructible-goaded-attack': redemptionArcGrantsScenario,
   'redemption-arc-viewer-goaded-opponent-attack': redemptionArcOpponentAttackScenario,
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
+  'fallen-ideal-viewer-flying-attack': fallenIdealFlyingScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'kor-spiritdancer-viewer-second-aura-grows-it': korSpiritdancerSecondAuraScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,

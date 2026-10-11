@@ -1452,7 +1452,10 @@
             "fallen-ideal-sacrifice-itself",
             "fallen-ideal-activation-controller"
           ],
-          "viewerScenarioIds": ["fallen-ideal-viewer-sacrifice-then-return"]
+          "viewerScenarioIds": [
+            "fallen-ideal-viewer-sacrifice-then-return",
+            "fallen-ideal-viewer-flying-attack"
+          ]
         },
         {
           "id": "fallen-ideal-return",

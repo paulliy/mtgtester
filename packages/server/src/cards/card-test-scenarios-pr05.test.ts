@@ -850,6 +850,38 @@ describe('Fallen Ideal Card Test Lab scenario', () => {
   });
 });
 
+describe('Fallen Ideal flying Card Test Lab scenario', () => {
+  it('fallen-ideal-viewer-flying-attack — the enchanted Lab Green Bear has flying, so Lab Ox cannot block it and P2 is never asked to block', () => {
+    const steps: Step[] = [
+      { action: 'Cast Fallen Ideal', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield, requests } = run(
+      'fallen-ideal-viewer-flying-attack',
+      steps,
+    );
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Lab Green Bear');
+    expect(viewed?.keywords ?? []).toContain('flying');
+    expect(
+      scenario.engine.view('P2').battlefield.find((perm) => perm.name === 'Lab Ox')?.keywords ?? [],
+    ).not.toContain('flying');
+    // Lab Ox cannot block a flier, so P2 had no eligible blocker and was never offered a block.
+    expect(
+      requests.filter(({ request }) =>
+        request.legalActions.some((action) => action.type === 'blockDeclaration'),
+      ),
+    ).toEqual([]);
+    expect(onBattlefield('Lab Green Bear')[0]?.damageMarked).toBe(0);
+    expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(0);
+    expect(seat('P2').life).toBe(38);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('fallen-ideal-viewer-flying-attack', steps);
+  });
+});
+
 describe('Kor Spiritdancer Card Test Lab scenario', () => {
   it('kor-spiritdancer-viewer-aura-cast-draw-and-pump — casting Lab Aegis on it offers the draw and attaches the Aura, and the library card is drawn', () => {
     const steps: Step[] = [

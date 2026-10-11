@@ -1928,6 +1928,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: [
       'Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura',
     ],

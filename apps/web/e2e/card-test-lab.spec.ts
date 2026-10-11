@@ -7191,6 +7191,60 @@ test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Fallen Ideal: the enchanted creature flies over Lab Ox and attacks unblocked',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText(/flying/i);
+
+  // Cast the Aura on Lab Green Bear: it gains flying.
+  const ideal = handCard(page, 'Fallen Ideal');
+  await expect(ideal).toHaveClass(/actionable/, { timeout: 15_000 });
+  const idealBefore = await page.getByText('Fallen Ideal resolves').count();
+  await ideal.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Fallen Ideal', idealBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Fallen Ideal')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/flying/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/flying/i);
+
+  // Attack P2: Lab Ox cannot block a flier, so the Bear connects and survives.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // The enchanted creature has an activated ability, so you are given priority in each step.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.id === bearId)?.damageMarked).toBe(0);
+  expect(final.find((p) => p.name === 'Lab Ox')?.damageMarked).toBe(0);
+});
+
 test('Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 for the Aura', async ({
   page,
 }) => {
