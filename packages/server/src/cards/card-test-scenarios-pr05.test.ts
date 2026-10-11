@@ -858,6 +858,61 @@ describe('Curse of Bounty Card Test Lab scenario', () => {
   });
 });
 
+describe('Curse of Bounty opponent-attack Card Test Lab scenario', () => {
+  const tappedBy = (state: ReturnType<typeof run>['state']) => (name: string) =>
+    state.battlefield.filter((perm) => perm.name === name).map((perm) => perm.tapped);
+
+  it('curse-of-bounty-viewer-opponent-attacks — P3 attacking the enchanted P2 untaps P3’s nonland permanents and P1’s, but no lands and nobody else’s', () => {
+    // Start: every permanent that matters is tapped except P3's attacker.
+    const start = createCardTestScenario(
+      'curse-of-bounty-viewer-opponent-attacks',
+      'card-lab-pr05',
+    );
+    const before = tappedBy(start!.engine.getState());
+    const startState = start!.engine.getState();
+    expect(startState.turnOrder[startState.activePlayerIndex]).toBe('P3');
+    expect(
+      start!.engine.getState().battlefield.find((perm) => perm.name === 'Curse of Bounty'),
+    ).toMatchObject({ attachedTo: 'P2', controllerId: 'P1' });
+    for (const name of [
+      'Lab Ox',
+      'Forest',
+      'Lab Servo',
+      'Lab Thrull',
+      'Plains',
+      'Lab Bird',
+      'Swamp',
+    ])
+      expect(before(name), name).toEqual([true]);
+    expect(before('Lab Green Bear')).toEqual([false]);
+
+    const { scenario, state, seat } = run('curse-of-bounty-viewer-opponent-attacks', []);
+    const after = tappedBy(state);
+    // The attack went to the enchanted player P2.
+    expect(
+      state.eventLog.filter((event) => event.type === 'attack').map((event) => event.payload),
+    ).toEqual([expect.objectContaining({ attacker: 'Lab Green Bear', defender: 'P2' })]);
+    expect(seat('P2').life).toBe(38);
+    // The attacking opponent's nonland permanents untapped, including the attacker itself.
+    expect(after('Lab Green Bear')).toEqual([false]);
+    expect(after('Lab Thrull')).toEqual([false]);
+    // The Curse's controller untapped its own nonland permanent.
+    expect(after('Lab Ox')).toEqual([false]);
+    // Lands stay tapped, and neither the enchanted player nor the bystander untapped anything.
+    for (const name of ['Forest', 'Plains', 'Lab Servo', 'Lab Bird', 'Swamp'])
+      expect(after(name), name).toEqual([true]);
+    expect(
+      state.eventLog.filter(
+        (event) =>
+          event.type === 'resolved' && /Curse of Bounty/.test(String(event.payload['description'])),
+      ),
+    ).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('curse-of-bounty-viewer-opponent-attacks', []);
+  });
+});
+
 describe('Tenuous Truce Card Test Lab scenario', () => {
   it('tenuous-truce-viewer-attack-sacrifices — the Aura enchants P2, then Lab Green Bear attacking P2 sacrifices it', () => {
     const steps: Step[] = [

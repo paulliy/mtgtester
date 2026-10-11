@@ -373,6 +373,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'eldrazi-conscription-viewer-annihilator',
       'eldrazi-conscription-viewer-trample',
       'curse-of-bounty-viewer-untap-on-attack',
+      'curse-of-bounty-viewer-opponent-attacks',
       'tenuous-truce-viewer-attack-sacrifices',
       'tenuous-truce-viewer-other-attack-and-end-step',
       'eidolon-of-countless-battles-viewer-bestow',

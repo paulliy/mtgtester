@@ -1956,6 +1956,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura'],
   },
   {

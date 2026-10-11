@@ -5476,25 +5476,29 @@ function sweetGumRecluseFlashCascadeScenario(gameId: GameId): CardTestScenario {
 }
 
 /** P2's seat in the reach scenario: attack P1 with every creature, otherwise pass. */
-const attackP1WithEverything: DecisionProvider = {
-  decide(request) {
-    const attack = request.legalActions.find((action) =>
-      action.description.startsWith('Declare attackers'),
-    );
-    if (attack !== undefined) {
-      return {
-        requestId: request.requestId,
-        actionId: attack.id,
-        targets: (attack.targets ?? []).map((slot) => ({
-          slot: slot.slot,
-          choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
-        })),
-      };
-    }
-    const pass = request.legalActions.find((action) => action.type === 'pass');
-    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
-  },
-};
+/** An opponent's seat that attacks `defender` with every creature, otherwise passes. */
+function attackPlayerWithEverything(defender: PlayerId): DecisionProvider {
+  return {
+    decide(request) {
+      const attack = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (attack !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: attack.id,
+          targets: (attack.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(defender) ? defender : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+const attackP1WithEverything = attackPlayerWithEverything('P1');
 
 function sweetGumRecluseReachScenario(gameId: GameId): CardTestScenario {
   const recluse = pinnedFrom(COVERAGE_PR01, 'Sweet-Gum Recluse');
@@ -8693,11 +8697,7 @@ function curseOfBountyScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Curse of Bounty stays attached to P2. Lab Ox and Lab Green Bear are untapped, the Forest and the Plains are tapped, and Lab Green Bear hit P2 for 2, leaving P2 at 38.',
     oracleSha256: curse.sha256,
-    clauseIds: [
-      'curse-of-bounty-enchant-player',
-      'curse-of-bounty-controller-untaps',
-      'curse-of-bounty-attacker-untaps',
-    ],
+    clauseIds: ['curse-of-bounty-enchant-player', 'curse-of-bounty-controller-untaps'],
     decks: {
       P1: [curse.card, FOREST, PLAINS, LAB_GREEN_BEAR, LAB_OX],
       P2: PR01_FILLER,
@@ -8712,6 +8712,45 @@ function curseOfBountyScenario(gameId: GameId): CardTestScenario {
       ],
       continueThroughCombat: true,
     },
+  });
+}
+
+/** An opponent of the Curse's controller attacks the enchanted player: the attacker untaps too. */
+function curseOfBountyOpponentAttackScenario(gameId: GameId): CardTestScenario {
+  const curse = pinnedFrom(COVERAGE_PR05, 'Curse of Bounty');
+  return pr01Scenario(gameId, {
+    id: 'curse-of-bounty-viewer-opponent-attacks',
+    title:
+      'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+    instructions: [
+      "It is P3's turn. Your Curse of Bounty already enchants P2. Your Lab Ox and Forest are tapped; P2's Lab Servo, P3's Lab Thrull and Plains, and P4's Lab Bird and Swamp are tapped too. P3's Lab Green Bear is untapped.",
+      'P3 attacks P2 with Lab Green Bear. The Curse triggers: you untap all nonland permanents you control, and P3, an opponent attacking the enchanted player, untaps all nonland permanents they control, including the attacking Lab Green Bear.',
+      'Lands stay tapped, and neither P2 (the enchanted player) nor P4 untaps anything.',
+    ],
+    expectedOutcome:
+      'Your Lab Ox and P3’s Lab Green Bear and Lab Thrull are untapped. Your Forest, P3’s Plains, P2’s Lab Servo and P4’s Lab Bird and Swamp stay tapped. Lab Green Bear hit P2 for 2, leaving P2 at 38.',
+    oracleSha256: curse.sha256,
+    clauseIds: ['curse-of-bounty-attacker-untaps'],
+    decks: {
+      P1: [curse.card, LAB_OX, FOREST, FOREST],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: [LAB_GREEN_BEAR, LAB_THRULL, PLAINS, FOREST],
+      P4: [LAB_BIRD, SWAMP, FOREST, FOREST],
+    },
+    prepared: {
+      currentTurnPlayer: 'P3',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Curse of Bounty'], enchantedPlayerId: 'P2' },
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Servo'], tapped: true },
+        { playerId: 'P3', cardNames: ['Lab Green Bear'] },
+        { playerId: 'P3', cardNames: ['Lab Thrull', 'Plains'], tapped: true },
+        { playerId: 'P4', cardNames: ['Lab Bird', 'Swamp'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P3: attackPlayerWithEverything('P2') },
   });
 }
 
@@ -10725,6 +10764,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'eldrazi-conscription-viewer-annihilator',
   'eldrazi-conscription-viewer-trample',
   'curse-of-bounty-viewer-untap-on-attack',
+  'curse-of-bounty-viewer-opponent-attacks',
   'tenuous-truce-viewer-attack-sacrifices',
   'tenuous-truce-viewer-other-attack-and-end-step',
   'eidolon-of-countless-battles-viewer-bestow',
@@ -11017,6 +11057,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
   'eldrazi-conscription-viewer-trample': eldraziConscriptionTrampleScenario,
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
+  'curse-of-bounty-viewer-opponent-attacks': curseOfBountyOpponentAttackScenario,
   'tenuous-truce-viewer-attack-sacrifices': tenuousTruceAttackScenario,
   'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,
   'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,

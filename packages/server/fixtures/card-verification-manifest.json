@@ -4991,7 +4991,7 @@
             "curse-of-bounty-controller-attacks",
             "curse-of-bounty-not-enchanted"
           ],
-          "viewerScenarioIds": ["curse-of-bounty-viewer-untap-on-attack"]
+          "viewerScenarioIds": ["curse-of-bounty-viewer-opponent-attacks"]
         }
       ],
       "gameplayAiScenarioIds": []

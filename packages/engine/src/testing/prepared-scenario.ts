@@ -18,6 +18,11 @@ export interface PreparedScenarioSpec {
     tapped?: boolean;
     controllerId?: PlayerId;
     counters?: Record<string, number>;
+    /**
+     * Arrange each named Aura as already enchanting this player (CR 303.4a, "enchant player"), as
+     * if it had been cast on an earlier turn; the position the Aura's own triggers act from.
+     */
+    enchantedPlayerId?: PlayerId;
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /**
@@ -106,6 +111,13 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       const card = takeNamedCard(ctx, entry.playerId, name, true);
       const permanent = makePermanent(ctx, card, entry.controllerId ?? entry.playerId);
       if (entry.counters !== undefined) permanent.counters = { ...entry.counters };
+      if (entry.enchantedPlayerId !== undefined) {
+        if (!ctx.state.players.some((candidate) => candidate.id === entry.enchantedPlayerId))
+          throw new Error(
+            `prepared scenario has unknown enchanted player ${entry.enchantedPlayerId}`,
+          );
+        permanent.attachedTo = entry.enchantedPlayerId;
+      }
       // The arranged position stands in for a settled mid-game board: arranged permanents have
       // been under the player's control since before this turn, so they are neither summoning
       // sick nor "entered this turn".

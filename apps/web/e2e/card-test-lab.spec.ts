@@ -7435,6 +7435,44 @@ test('Curse of Bounty: enchant a player, then attacking them untaps your nonland
   await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
 });
 
+test('Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Curse of Bounty: an opponent attacking the enchanted player untaps their nonland permanents',
+  );
+  // P3 attacks P2, the player your Curse enchants; the scenario then plays out on its own.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+
+  // Before the attack, everything that matters was tapped except P3's Lab Green Bear.
+  const tappedBefore = (name: string) =>
+    boards.some((board) => board.find((p) => p.name === name)?.tapped === true);
+  for (const name of ['Lab Ox', 'Forest', 'Lab Servo', 'Lab Thrull', 'Plains', 'Lab Bird', 'Swamp'])
+    expect(tappedBefore(name), `${name} started tapped`).toBe(true);
+
+  // The attacking opponent untapped their nonland permanents, the attacker included.
+  for (const name of ['Lab Green Bear', 'Lab Thrull', 'Lab Ox'])
+    await expect(permanent(page, name)).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Thrull').locator('.tap-badge')).toHaveCount(0);
+  // The Curse's controller untapped its own nonland permanent.
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+  // Lands stay tapped, and the enchanted player and the bystander untapped nothing.
+  for (const name of ['Forest', 'Plains', 'Lab Servo', 'Lab Bird', 'Swamp'])
+    await expect(permanent(page, name).locator('.tap-badge'), name).toHaveText('TAP');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('38');
+  await expect(permanent(page, 'Curse of Bounty')).toHaveCount(1);
+});
+
 test('Tenuous Truce: enchant an opponent, then attacking them sacrifices the Aura', async ({
   page,
 }) => {
