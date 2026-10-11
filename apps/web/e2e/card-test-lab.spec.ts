@@ -6746,3 +6746,62 @@ test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your gravey
   await expect(permanent(page, 'Inkling')).toHaveCount(1);
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
+
+test("Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell", async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  // Before the Aura the Bear has no mana ability: with the Forests tapped nothing could pay {R}.
+  await expect(handCard(page, 'Lab Shock')).not.toHaveClass(/actionable/);
+
+  // Cast the Aura on Lab Green Bear, paying with the Forests, and let it resolve.
+  const aura = handCard(page, "Karametra's Favor");
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === "Karametra's Favor")?.attachedTo)
+    .toBe(bearId);
+
+  // Its enters trigger draws the Plains.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect(handCard(page, 'Plains')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Lab Green Bear')).not.toContainText('TAP');
+
+  // Both Forests are tapped, yet Lab Shock is castable: the enchanted Bear taps for {R}.
+  const shock = handCard(page, 'Lab Shock');
+  await expect(shock).toHaveClass(/actionable/, { timeout: 15_000 });
+  await shock.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await expect(page.getByText('Lab Shock resolves')).toBeVisible({ timeout: 15_000 });
+  // The drawn Plains is a playable land, so passing asks about the land drop.
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')?.tapped).toBe(true);
+  expect(boards.at(-1)!.find((p) => p.name === "Karametra's Favor")?.attachedTo).toBe(bearId);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await expect(permanent(page, "Karametra's Favor")).toHaveCount(1);
+});

@@ -6455,6 +6455,11 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
     if (m) {
       const affects: Selector = { kind: 'attachedToSource' };
       const text = (m[2] as string).replace(/\.$/, '');
+      // A granted mana ability (Karametra's Favor's "{T}: Add one mana of any color"): the
+      // enchanted creature taps for it, so summoning sickness applies to it (CR 302.6).
+      const mana = parseManaAbilityLines(text, card);
+      if (mana !== null && mana.length === 1)
+        return [{ affects, op: { layer: 6, addManaAbility: mana[0] as ManaAbilitySpec } }];
       const act = parseActivatedLine(text, card);
       if (act !== null) {
         return [{ affects, op: { layer: 6, addActivatedAbility: act } }];

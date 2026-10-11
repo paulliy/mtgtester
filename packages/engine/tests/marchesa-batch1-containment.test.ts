@@ -178,8 +178,6 @@ const REASONS: Record<string, string> = {
   'Atarka Monument': 'The animation does not make it red and green.',
   'Scourge of Valkas':
     'The entering Dragon is the damage source, implemented as damage from this creature.',
-  "Karametra's Favor":
-    'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Curse of Bounty': 'Only the attacking player untaps; the curse controller always should.',
   'Druid of Purification':
@@ -297,6 +295,7 @@ describe('Marchesa catalog audit containment', () => {
     "Ajani's Chosen",
     'Shielded by Faith',
     'Forum Filibuster',
+    "Karametra's Favor",
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

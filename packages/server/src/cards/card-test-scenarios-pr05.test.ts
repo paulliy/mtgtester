@@ -512,3 +512,30 @@ describe('Forum Filibuster Card Test Lab scenario', () => {
     replays('forum-filibuster-viewer-inkling-and-aura', steps);
   });
 });
+
+describe("Karametra's Favor Card Test Lab scenario", () => {
+  it('karametras-favor-viewer-granted-mana-pays-spell — the enters draw gives the Plains, then the tapped Lab Green Bear pays {R} for Lab Shock', () => {
+    const steps: Step[] = [
+      { action: "Cast Karametra's Favor", targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Shock', targets: ['P2'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'karametras-favor-viewer-granted-mana-pays-spell',
+      steps,
+    );
+    const [favor] = onBattlefield("Karametra's Favor");
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(favor?.attachedTo).toBe(bear?.id);
+    // Lab Green Bear paid for the Shock: the Forests paid for the Aura.
+    expect(bear?.tapped).toBe(true);
+    expect(onBattlefield('Forest').filter((forest) => forest.tapped)).toHaveLength(2);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Plains']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(seat('P2').life).toBe(38);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('karametras-favor-viewer-granted-mana-pays-spell', steps);
+  });
+});

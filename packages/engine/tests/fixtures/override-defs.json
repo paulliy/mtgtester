@@ -10652,12 +10652,6 @@
     "def": {}
   },
   {
-    "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
-    "name": "Karametra's Favor",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "fd03f20a-d365-48fb-8b2a-ad4b502a0045",
     "name": "Lokhust Heavy Destroyer",
     "handledLines": [
@@ -16330,12 +16324,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-karametra-s-favor",
-    "name": "Karametra's Favor",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-kardur-doomscourge",

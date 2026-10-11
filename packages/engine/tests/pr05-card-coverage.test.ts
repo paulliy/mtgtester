@@ -1774,6 +1774,187 @@ describe('Gift of Immortality', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.07 Karametra's Favor
+// ---------------------------------------------------------------------------------------------
+
+describe("Karametra's Favor", () => {
+  const { card } = pinned("Karametra's Favor");
+  const CREATURE = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+  const SPELL = (name: string, cost: string) =>
+    oracle({
+      name,
+      typeLine: 'Instant',
+      manaCost: cost,
+      power: null,
+      toughness: null,
+      oracleText: 'You gain 1 life.',
+    });
+  const BY_COLOR = [
+    ['W', SPELL('Lab White Spell', '{W}')],
+    ['U', SPELL('Lab Blue Spell', '{U}')],
+    ['B', SPELL('Lab Black Spell', '{B}')],
+    ['R', SPELL('Lab Red Spell', '{R}')],
+    ['G', SPELL('Lab Green Spell', '{G}')],
+  ] as const;
+  const RED = SPELL('Lab Red Spell', '{R}');
+
+  /** P1 controls Karametra's Favor on Lab Host, plus Lab Other; P2 controls Lab Enemy. */
+  function board(seed: string, host: { summoningSick?: boolean } = {}) {
+    const ctx = pod(seed);
+    const aura = spawn(ctx, 'P1', card);
+    const hostPerm = spawn(ctx, 'P1', CREATURE('Lab Host'), host);
+    const other = spawn(ctx, 'P1', CREATURE('Lab Other'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    aura.attachedTo = hostPerm.id;
+    return { ctx, aura, host: hostPerm, other, enemy };
+  }
+
+  /** The cast option for `spell` from `playerId`'s hand with an empty mana pool, if offered. */
+  function castOption(ctx: GameContext, playerId: string, spell: OracleCard) {
+    const object = conjure(ctx, playerId, spell, 'hand');
+    return { object, option: optionFor(ctx, playerId, object.id) };
+  }
+
+  it('karametras-favor-pinned-oracle-supported — the interpreter alone models the enters draw and the granted any-color mana ability', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // "When this Aura enters, draw a card": one untargeted trigger on the Aura itself.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+    // The Aura grants a mana ability, a layer 6 grant on the enchanted creature, and no stats: the
+    // printed text has no +1/+1, and the Aura has no mana ability of its own.
+    expect(def.manaAbilities ?? []).toEqual([]);
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 6, addManaAbility: { units: [['W', 'U', 'B', 'R', 'G']] } },
+      },
+    ]);
+  });
+
+  it('karametras-favor-enters-draw — the Aura entering draws one card for its controller, and nothing else does', () => {
+    const ctx = pod('karametra-draw');
+    const host = spawn(ctx, 'P1', CREATURE('Lab Host'));
+    const p1 = playerById(ctx, 'P1');
+    const handBefore = p1.hand.length;
+    const libraryBefore = p1.library.length;
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(p1, [{ symbol: 'G' }, ...generic(1)]);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, host.id]]),
+    );
+    resolveTop(ctx);
+    // The Aura is on the battlefield enchanting Lab Host and has not drawn yet (the trigger waits).
+    const aura = ctx.state.battlefield.find((perm) => perm.name === "Karametra's Favor");
+    expect(aura?.attachedTo).toBe(host.id);
+    settle(ctx);
+    // One card came off the library; the Aura itself left the hand and nothing else drew.
+    expect(p1.library).toHaveLength(libraryBefore - 1);
+    expect(p1.hand).toHaveLength(handBefore + 1);
+    expect(playerById(ctx, 'P2').hand).toHaveLength(0);
+    expect(ctx.state.stack).toEqual([]);
+
+    // Negative: an Aura already on the battlefield draws nothing when other permanents enter, and a
+    // second Aura entering draws only for itself.
+    const quiet = board('karametra-draw-quiet');
+    const quietHand = playerById(quiet.ctx, 'P1').hand.length;
+    castFromHand(quiet.ctx, 'P1', CREATURE('Lab Newcomer'), generic(1));
+    resolveTop(quiet.ctx);
+    settle(quiet.ctx);
+    expect(playerById(quiet.ctx, 'P1').hand).toHaveLength(quietHand);
+  });
+
+  it('karametras-favor-any-color-mana — the enchanted creature taps for one mana of any color, and only it does', () => {
+    // Every color pays for a spell of that color, with nothing in the pool and no other source.
+    for (const [color, spell] of BY_COLOR) {
+      const { ctx, host } = board(`karametra-color-${color}`);
+      const { option } = castOption(ctx, 'P1', spell);
+      expect(option, `${color} spell is castable with the enchanted creature`).toBeDefined();
+      takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+      // The creature tapped to pay, and the spell is on the stack.
+      expect(host.tapped).toBe(true);
+      expect(ctx.state.stack).toHaveLength(1);
+      resolveTop(ctx);
+      expect(playerById(ctx, 'P1').life).toBe(41);
+    }
+
+    // One mana only: a {R}{R} spell is not castable with a single enchanted creature.
+    const single = board('karametra-one-mana');
+    expect(castOption(single.ctx, 'P1', SPELL('Lab Double Red', '{R}{R}')).option).toBeUndefined();
+
+    // Negative: with the Aura unattached, or for a creature it is not on, nothing pays.
+    const bare = board('karametra-unattached');
+    bare.aura.attachedTo = null;
+    expect(castOption(bare.ctx, 'P1', RED).option).toBeUndefined();
+    const elsewhere = board('karametra-elsewhere');
+    elsewhere.aura.attachedTo = elsewhere.other.id;
+    // Lab Host no longer pays; Lab Other, now enchanted, does.
+    const paid = castOption(elsewhere.ctx, 'P1', RED);
+    expect(paid.option).toBeDefined();
+    takeAction(elsewhere.ctx, 'P1', paid.option!.payload as PriorityActionPayload);
+    expect(elsewhere.other.tapped).toBe(true);
+    expect(elsewhere.host.tapped).toBe(false);
+    // The creature has no stats from the Aura: its power and toughness are unchanged.
+    expect(effectivePT(elsewhere.ctx, elsewhere.other)).toEqual({ power: 2, toughness: 2 });
+    // Once tapped it cannot pay again.
+    expect(castOption(elsewhere.ctx, 'P1', RED).option).toBeUndefined();
+  });
+
+  it("karametras-favor-controller-only — the mana ability belongs to the creature's controller, even when the Aura's controller is someone else", () => {
+    const { ctx, aura, enemy } = board('karametra-controller');
+    // P1's Aura enchants P2's creature: P2 can tap it for mana, P1 cannot.
+    aura.attachedTo = enemy.id;
+    expect(castOption(ctx, 'P1', RED).option).toBeUndefined();
+    const theirs = castOption(ctx, 'P2', RED);
+    expect(theirs.option).toBeDefined();
+    takeAction(ctx, 'P2', theirs.option!.payload as PriorityActionPayload);
+    expect(enemy.tapped).toBe(true);
+  });
+
+  it('karametras-favor-summoning-sick — a creature that came under your control this turn cannot tap for the granted mana (CR 302.6)', () => {
+    const sick = board('karametra-sick', { summoningSick: true });
+    expect(castOption(sick.ctx, 'P1', RED).option).toBeUndefined();
+    expect(sick.host.tapped).toBe(false);
+    // Once it has been under your control since the turn began, it can.
+    sick.host.summoningSick = false;
+    const ready = castOption(sick.ctx, 'P1', RED);
+    expect(ready.option).toBeDefined();
+    takeAction(sick.ctx, 'P1', ready.option!.payload as PriorityActionPayload);
+    expect(sick.host.tapped).toBe(true);
+    // A haste creature is not bound by it.
+    const hasty = pod('karametra-haste');
+    const aura = spawn(hasty, 'P1', card);
+    const fast = spawn(
+      hasty,
+      'P1',
+      oracle({
+        name: 'Lab Hasty',
+        typeLine: 'Creature — Secret',
+        oracleText: 'Haste',
+        keywords: ['Haste'],
+      }),
+      { summoningSick: true },
+    );
+    aura.attachedTo = fast.id;
+    expect(castOption(hasty, 'P1', RED).option).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR05.09 Mask of Memory
 // ---------------------------------------------------------------------------------------------
 
@@ -3672,6 +3853,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Gift of Immortality',
     sha256: '668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781',
     clauseCount: 3,
+  },
+  {
+    name: "Karametra's Favor",
+    sha256: 'fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683',
+    clauseCount: 2,
   },
   {
     name: 'Mask of Memory',

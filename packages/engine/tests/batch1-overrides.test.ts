@@ -21,20 +21,26 @@ describe('Batch 1 card overrides', () => {
     });
   });
 
-  it('is catalog-contained because +1/+1 is dropped when staticEffects are replaced', () => {
+  it("models Karametra's Favor's enters draw and granted mana ability with no override (coverage PR05)", () => {
     const card = oracle({
       oracleId: 'fc3e48c9-e303-435c-bdb1-7dc7881a9858',
       name: "Karametra's Favor",
       typeLine: 'Enchantment — Aura',
       manaCost: '{1}{G}',
       oracleText:
-        'Enchant creature\nWhen Karametra\'s Favor enters, draw a card.\nEnchanted creature gets +1/+1 and has "{T}: Add one mana of any color."',
+        'Enchant creature\nWhen this Aura enters, draw a card.\nEnchanted creature has "{T}: Add one mana of any color."',
     });
     const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
-    );
+    expect(def.modeled).toBe(true);
+    expect(def.unmodeledReasons).toEqual([]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]?.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+    expect(def.staticEffects).toEqual([
+      {
+        affects: { kind: 'attachedToSource' },
+        op: { layer: 6, addManaAbility: { units: [['W', 'U', 'B', 'R', 'G']] } },
+      },
+    ]);
   });
 
   it('models Leafkin Druid with conditional mana ability', () => {

@@ -4469,15 +4469,34 @@
     "fc3e48c9-e303-435c-bdb1-7dc7881a9858": {
       "name": "Karametra's Favor",
       "oracleSha256": "fe49fa4bdb3ce143c1061103384fabaa3040916d9ca134f94284c26687062683",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature gets +1/+1 and has \"{T}: Add one mana of any color.\"",
+          "id": "karametras-favor-enters-draw",
+          "oracleText": "When this Aura enters, draw a card.",
           "implementation": [
-            "explicitly unsupported; +1/+1 dropped when staticEffects are replaced"
+            "interpreted enters trigger on the Aura itself (self), with no target, that draws one card for its controller; no other permanent entering triggers it"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "karametras-favor-pinned-oracle-supported",
+            "karametras-favor-enters-draw"
+          ],
+          "viewerScenarioIds": ["karametras-favor-viewer-granted-mana-pays-spell"]
+        },
+        {
+          "id": "karametras-favor-mana",
+          "oracleText": "Enchanted creature has \"{T}: Add one mana of any color.\"",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus a layer 6 grant of a mana ability on the creature this Aura is attached to (attachedToSource) and nothing else: no +1/+1, and the Aura itself has no mana ability",
+            "the granted ability is one mana of any of the five colors for tapping that creature, so it pays for a spell of any color through the normal cast path and only while the creature is untapped and not summoning sick (CR 302.6), and it belongs to the creature's controller whoever controls the Aura; an unenchanted creature, or a creature once the Aura leaves it, has no such ability"
+          ],
+          "engineTestIds": [
+            "karametras-favor-pinned-oracle-supported",
+            "karametras-favor-any-color-mana",
+            "karametras-favor-controller-only",
+            "karametras-favor-summoning-sick"
+          ],
+          "viewerScenarioIds": ["karametras-favor-viewer-granted-mana-pays-spell"]
         }
       ],
       "gameplayAiScenarioIds": []

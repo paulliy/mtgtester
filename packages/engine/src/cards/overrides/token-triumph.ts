@@ -66,11 +66,8 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
       }),
     },
   );
-  unsupportedCard(
-    'fc3e48c9-e303-435c-bdb1-7dc7881a9858',
-    "Karametra's Favor",
-    'The enchanted-creature +1/+1 is dropped when the mana ability replaces staticEffects.',
-  );
+  // Karametra's Favor: restored in coverage PR05. The interpreter reads the enters draw and the
+  // granted mana ability, so no override remains.
   unsupportedCard(
     'b6689782-08d8-48e1-a05d-cd040dfe85bc',
     'Curse of Bounty',

@@ -8268,6 +8268,40 @@ function forumFilibusterScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function karametrasFavorScenario(gameId: GameId): CardTestScenario {
+  const favor = pinnedFrom(COVERAGE_PR05, "Karametra's Favor");
+  const forests = Array.from({ length: 2 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'karametras-favor-viewer-granted-mana-pays-spell',
+    title:
+      "Karametra's Favor: draw a card, then tap the enchanted creature for mana to cast a spell",
+    instructions: [
+      "Karametra's Favor and Lab Shock are in your hand. Two Forests and Lab Green Bear (2/2) are on your battlefield, and a Plains is on top of your library.",
+      "Cast Karametra's Favor targeting Lab Green Bear, paying with the two Forests, and let it resolve.",
+      'Its enters trigger resolves: you draw the Plains.',
+      'Cast Lab Shock at P2. Both Forests are tapped, so the only mana source left is Lab Green Bear, which now has "{T}: Add one mana of any color": it pays {R}.',
+      'Let Lab Shock resolve.',
+    ],
+    expectedOutcome:
+      "Karametra's Favor is attached to Lab Green Bear, which is tapped and still a 2/2. You drew the Plains, so it is in your hand. Lab Shock is in your graveyard and P2 took 2, so P2 is at 38.",
+    oracleSha256: favor.sha256,
+    clauseIds: ['karametras-favor-enters-draw', 'karametras-favor-mana'],
+    decks: {
+      P1: [favor.card, LAB_SHOCK, ...forests, LAB_GREEN_BEAR, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ["Karametra's Favor", 'Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: [...forests.map((forest) => forest.name), 'Lab Green Bear'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Plains'] }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10106,6 +10140,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ajanis-chosen-viewer-aura-moves-to-cat',
   'shielded-by-faith-viewer-attach-to-entering-creature',
   'forum-filibuster-viewer-inkling-and-aura',
+  'karametras-favor-viewer-granted-mana-pays-spell',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10381,6 +10416,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
+  'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

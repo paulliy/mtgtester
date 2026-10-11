@@ -5621,7 +5621,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 25,
       "reviewedOracleIds": 31,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6291,6 +6291,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying as an upkeep trigger for its controller, then reads When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token as a reflexive ability (CR 603.12) with up to one target Aura or Equipment card in the controller's own graveyard, which returns the chosen card under the controller attached to the Inkling, leaving an Aura in the graveyard when the Inkling is gone or cannot be enchanted (CR 303.4i) and putting an Equipment onto the battlefield unattached when the Inkling is gone (CR 301.5e). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "fc3e48c9-e303-435c-bdb1-7dc7881a9858",
+      "name": "Karametra's Favor",
+      "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that dropped the enchanted creature's printed statics when its mana ability replaced them): the interpreter reads When this Aura enters, draw a card as an enters trigger on the Aura itself, and reads Enchanted creature has \"{T}: Add one mana of any color.\" as a layer 6 grant of a one-mana any-color mana ability to the creature this Aura is attached to (attachedToSource), so that creature taps for mana through the normal cast path and is bound by summoning sickness (CR 302.6). Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }
