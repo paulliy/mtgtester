@@ -1413,7 +1413,7 @@
             "eldrazi-conscription-kindred-aura-only",
             "eldrazi-conscription-buff"
           ],
-          "viewerScenarioIds": ["eldrazi-conscription-viewer-annihilator"]
+          "viewerScenarioIds": ["eldrazi-conscription-viewer-trample"]
         },
         {
           "id": "eldrazi-conscription-annihilator",

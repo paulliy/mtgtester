@@ -8573,7 +8573,7 @@ function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Lab Bird and Lab Hex are in P2’s graveyard and P2 controls nothing. P3 and P4 are untouched. Lab Green Bear dealt 12 to P2, leaving P2 at 28, and Eldrazi Conscription stays on Lab Green Bear.',
     oracleSha256: conscription.sha256,
-    clauseIds: ['eldrazi-conscription-buff', 'eldrazi-conscription-annihilator'],
+    clauseIds: ['eldrazi-conscription-annihilator'],
     decks: {
       P1: [conscription.card, LAB_GREEN_BEAR, ...forests],
       P2: [LAB_BIRD, LAB_HEX, ...PR01_FILLER],
@@ -8589,6 +8589,95 @@ function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
       continueThroughCombat: true,
     },
   });
+}
+
+/**
+ * Eldrazi Conscription's trample is observed by a real block: P2 enchants its own Lab Green Bear and
+ * attacks you; annihilator takes two of your Forests, Lab Ox blocks, and only the excess damage
+ * tramples over to you. The viewer cannot split an attacker's damage, so P2's seat divides it.
+ */
+function eldraziConscriptionTrampleScenario(gameId: GameId): CardTestScenario {
+  const conscription = pinnedFrom(COVERAGE_PR05, 'Eldrazi Conscription');
+  const forests = Array.from({ length: 8 }, () => FOREST);
+  const seated: { engine?: Engine } = {};
+  const nameOf = (id: string): string | undefined =>
+    seated.engine?.getState().battlefield.find((perm) => perm.id === id)?.name;
+  const attackerSeat: DecisionProvider = {
+    decide(request) {
+      const cast = request.legalActions.find((action) =>
+        action.description.startsWith('Cast Eldrazi Conscription'),
+      );
+      if (cast !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: cast.id,
+          targets: (cast.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.find((id) => nameOf(id) === 'Lab Green Bear') ?? slot.options[0]!,
+          })),
+        };
+      }
+      const attack = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (attack !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: attack.id,
+          targets: (attack.targets ?? []).map((slot) => ({ slot: slot.slot, choice: 'P1' })),
+        };
+      }
+      const division = request.combatDamageSplit;
+      if (division !== undefined && seated.engine !== undefined) {
+        // Lethal damage to the blocker, the rest to the defending player (CR 702.19b).
+        const [blockerId, ...rest] = division.targets;
+        const blocker = seated.engine.getState().battlefield.find((perm) => perm.id === blockerId);
+        const toughness = seated.engine
+          .view('P2')
+          .battlefield.find((perm) => perm.id === blockerId)?.toughness;
+        const lethal = Number(toughness ?? 0) - (blocker?.damageMarked ?? 0);
+        return {
+          requestId: request.requestId,
+          actionId: request.legalActions[0]!.id,
+          combatDamageSplit: { [blockerId!]: lethal, [rest.at(-1)!]: division.amount - lethal },
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+  const scenario = pr01Scenario(gameId, {
+    id: 'eldrazi-conscription-viewer-trample',
+    title: 'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+    instructions: [
+      "It is P2's turn. P2 controls Lab Green Bear (2/2) and eight Forests, with Eldrazi Conscription in hand. You control Lab Ox (4/4) and three Forests.",
+      'P2 casts Eldrazi Conscription on Lab Green Bear and attacks you with it, a 12/12 with trample and annihilator 2. Let the Aura resolve.',
+      'Annihilator 2 triggers: choose two Forests to sacrifice, keeping Lab Ox.',
+      'Block Lab Green Bear with Lab Ox. It assigns lethal damage (4) to Lab Ox and, because of trample, the other 8 to you.',
+    ],
+    expectedOutcome:
+      'Lab Ox and two Forests are in your graveyard and you keep one Forest. Lab Green Bear survived and, trampling over Lab Ox, dealt 8 to you, leaving you at 32.',
+    oracleSha256: conscription.sha256,
+    clauseIds: ['eldrazi-conscription-buff'],
+    decks: {
+      P1: [LAB_OX, FOREST, FOREST, FOREST],
+      P2: [conscription.card, LAB_GREEN_BEAR, ...forests],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Eldrazi Conscription'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Forest', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Green Bear', ...forests.map((forest) => forest.name)] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackerSeat },
+  });
+  seated.engine = scenario.engine;
+  return scenario;
 }
 
 function curseOfBountyScenario(gameId: GameId): CardTestScenario {
@@ -10593,6 +10682,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'eldrazi-conscription-viewer-annihilator',
+  'eldrazi-conscription-viewer-trample',
   'curse-of-bounty-viewer-untap-on-attack',
   'tenuous-truce-viewer-attack-sacrifices',
   'tenuous-truce-viewer-other-attack-and-end-step',
@@ -10883,6 +10973,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
+  'eldrazi-conscription-viewer-trample': eldraziConscriptionTrampleScenario,
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
   'tenuous-truce-viewer-attack-sacrifices': tenuousTruceAttackScenario,
   'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,

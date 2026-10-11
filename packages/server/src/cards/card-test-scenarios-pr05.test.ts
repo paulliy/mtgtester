@@ -97,10 +97,13 @@ function run(scenarioId: string, steps: Step[]) {
     decisions++;
     prompts.push(step.request.prompt ?? '');
     offered.push(step.request.legalActions.map((action) => action.description));
-    scenario!.engine.submit({
-      requestId: step.request.requestId,
-      ...choose(step.request, scenario!),
-    });
+    // A seat the scenario scripts (an opponent's own turn) answers as in the viewer.
+    const override = scenario!.decisionProviderOverrides?.[step.request.decidingPlayer];
+    scenario!.engine.submit(
+      override === undefined
+        ? { requestId: step.request.requestId, ...choose(step.request, scenario!) }
+        : override.decide(step.request),
+    );
     if (decisions > 60) throw new Error(`${scenarioId} did not terminate`);
   }
   // A clean lab run ends after its priority window; an engine halt (an unmodeled card reached
@@ -785,6 +788,50 @@ describe('Eldrazi Conscription Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('eldrazi-conscription-viewer-annihilator', steps);
+  });
+});
+
+describe('Eldrazi Conscription trample Card Test Lab scenario', () => {
+  it('eldrazi-conscription-viewer-trample — P2’s 12/12 Lab Green Bear is blocked by Lab Ox and tramples the other 8 damage over to P1', () => {
+    // P2's seat casts the Aura, attacks P1 and divides the damage; these are P1's decisions.
+    const steps: Step[] = [
+      { action: 'Sacrifice Forest' },
+      { action: 'Sacrifice Forest' },
+      { action: 'Declare blockers', targets: ['Lab Green Bear'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'eldrazi-conscription-viewer-trample',
+      steps,
+    );
+    const [aura] = onBattlefield('Eldrazi Conscription');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(aura?.attachedTo).toBe(bear?.id);
+    const viewed = scenario.engine.view('P1').battlefield.find((perm) => perm.id === bear?.id);
+    expect(viewed?.power).toBe(12);
+    expect(viewed?.toughness).toBe(12);
+    expect(viewed?.keywords).toContain('trample');
+    // Annihilator took two Forests; Lab Ox then blocked and died to exactly its lethal 4.
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Forest', 'Forest', 'Lab Ox']);
+    expect(onBattlefield('Forest').filter((perm) => perm.controllerId === 'P1')).toHaveLength(1);
+    // Trample sent the excess (12 - 4) to P1; without it the block would have absorbed all 12.
+    expect(seat('P1').life).toBe(32);
+    expect(bear?.damageMarked).toBe(4);
+    const damage = state.eventLog
+      .filter((event) => event.type === 'damage' && event.payload['source'] === 'Lab Green Bear')
+      .map((event) => [event.payload['target'], event.payload['amount']]);
+    expect(damage).toEqual([
+      ['Lab Ox', 4],
+      ['P1', 8],
+    ]);
+    expect(seat('P2').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eldrazi-conscription-viewer-trample', steps);
   });
 });
 

@@ -371,6 +371,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'angelic-destiny-viewer-angel-then-return',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
       'eldrazi-conscription-viewer-annihilator',
+      'eldrazi-conscription-viewer-trample',
       'curse-of-bounty-viewer-untap-on-attack',
       'tenuous-truce-viewer-attack-sacrifices',
       'tenuous-truce-viewer-other-attack-and-end-step',

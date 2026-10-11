@@ -1945,6 +1945,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents',
     ],
   },

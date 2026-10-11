@@ -7289,6 +7289,49 @@ test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sa
   await expect(permanent(page, 'Eldrazi Conscription')).toHaveCount(1);
 });
 
+test('Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defending player',
+  );
+  // P2 casts the Aura on its Lab Green Bear and attacks you; let the Aura resolve.
+  await awaitResolution(page, 'Eldrazi Conscription', 0);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('12/12');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText(/trample/i);
+
+  // Annihilator 2: sacrifice two Forests, keeping Lab Ox to block. Each prompt lists Lab Ox first,
+  // so the second "Sacrifice" button is a Forest (a missing block below would expose a mistake).
+  const prompt = (position: string) =>
+    page
+      .getByRole('complementary')
+      .filter({ hasText: `choose a permanent to sacrifice (${position})` });
+  await expect(prompt('1 of 2').last()).toBeVisible({ timeout: 15_000 });
+  await prompt('1 of 2').last().getByRole('button', { name: 'Sacrifice' }).nth(1).click();
+  await expect(prompt('2 of 2').last()).toBeVisible({ timeout: 15_000 });
+  await prompt('2 of 2').last().getByRole('button', { name: 'Sacrifice' }).nth(1).click();
+
+  // Block the trampler with Lab Ox.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'Lab Green Bear' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  // P2 assigns lethal (4) to Lab Ox and tramples the other 8 over to you: 40 - 8 = 32.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.locator('.human-zone .life-badge, .seat[data-seat="P1"] .life-badge'),
+  ).toHaveText('32');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+  await expect(permanent(page, 'Lab Green Bear')).toBeVisible();
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('40');
+});
+
 test('Curse of Bounty: enchant a player, then attacking them untaps your nonland permanents', async ({
   page,
 }) => {
