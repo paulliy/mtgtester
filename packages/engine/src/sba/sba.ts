@@ -389,6 +389,11 @@ function* placePendingTriggers(ctx: GameContext): GameGen<boolean> {
 function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   const perm = ctx.state.battlefield.find((p) => p.id === id);
   if (perm !== undefined) return perm.name;
+  // A card target in a graveyard or exile (Victimize, Forum Filibuster) is named, not its id.
+  const card = [...ctx.state.players.flatMap((p) => p.graveyard), ...ctx.state.exile].find(
+    (candidate) => candidate.id === id,
+  );
+  if (card !== undefined) return card.name;
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 

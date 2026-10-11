@@ -21,7 +21,12 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { beginEndStep, runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
+import {
+  beginEndStep,
+  queueStepTriggers,
+  runCombatAndExtraCombats,
+  runTurn,
+} from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { effectivePT, hasKeyword } from '../src/state/queries';
@@ -665,6 +670,277 @@ describe('Cranial Plating', () => {
     kill(other.ctx, other.first);
     resolveTop(other.ctx);
     expect(other.plating.attachedTo ?? null).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// PR05.03 Forum Filibuster
+// ---------------------------------------------------------------------------------------------
+
+describe('Forum Filibuster', () => {
+  const { card } = pinned('Forum Filibuster');
+  const AURA = (name: string, enchant = 'creature') =>
+    oracle({
+      name,
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{0}',
+      colors: ['W'],
+      power: null,
+      toughness: null,
+      oracleText: `Enchant ${enchant}\nEnchanted ${enchant} gets +1/+1.`,
+    });
+  const BLESSING = AURA('Lab Blessing');
+  const MOSS = oracle({
+    name: 'Lab Moss',
+    typeLine: 'Enchantment — Aura',
+    manaCost: '{0}',
+    colors: ['G'],
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant land',
+  });
+  const BLADE = oracle({
+    name: 'Lab Blade',
+    typeLine: 'Artifact — Equipment',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Equipped creature gets +2/+0.\nEquip {1}',
+  });
+  const WARD = oracle({
+    name: 'Lab Ward',
+    typeLine: 'Enchantment',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const RESPONSE = oracle({
+    name: 'Lab Response',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'You gain 1 life.',
+  });
+
+  /** P1 controls Forum Filibuster; its graveyard holds every kind of card, P2's holds an Aura. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const filibuster = spawn(ctx, 'P1', card);
+    const mine = {
+      blessing: conjure(ctx, 'P1', BLESSING, 'graveyard'),
+      moss: conjure(ctx, 'P1', MOSS, 'graveyard'),
+      blade: conjure(ctx, 'P1', BLADE, 'graveyard'),
+      ward: conjure(ctx, 'P1', WARD, 'graveyard'),
+      corpse: conjure(ctx, 'P1', LAB_CARD('Lab Corpse'), 'graveyard'),
+    };
+    const theirs = conjure(ctx, 'P2', AURA('Lab Enemy Aura'), 'graveyard');
+    return { ctx, filibuster, mine, theirs };
+  }
+
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const yard = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  interface Run {
+    /** The "Target …" options each target-choice prompt offered. */
+    offered: string[][];
+  }
+
+  /** Begin `playerId`'s upkeep and run the priority loop, choosing `pick` for the Filibuster. */
+  function upkeep(
+    ctx: GameContext,
+    pick: string | null,
+    opts: { playerId?: string; meanwhile?: (token: EnginePermanent) => void } = {},
+  ): Run {
+    const playerId = opts.playerId ?? 'P1';
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'upkeep';
+    queueStepTriggers(ctx, 'upkeep');
+    const run: Run = { offered: [] };
+    let responded = false;
+    if (opts.meanwhile !== undefined) conjure(ctx, 'P1', RESPONSE, 'hand');
+    pump(runPrioritySequence(ctx), (decision) => {
+      const targets = decision.options.filter((option) => option.type === 'pickTarget');
+      if (targets.length > 0) {
+        run.offered.push(targets.map((option) => option.description.replace(/^Target /, '')));
+        const index = decision.options.findIndex(
+          (option) => option.type === 'pickTarget' && option.description === `Target ${pick}`,
+        );
+        if (index >= 0) return { index, targets: new Map() };
+        return {
+          index: decision.options.findIndex((option) => option.type === 'decline'),
+          targets: new Map(),
+        };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) {
+        // The reflexive trigger is on the stack above the token: the token dies in response.
+        const token = named(ctx, 'Inkling')[0];
+        if (
+          opts.meanwhile !== undefined &&
+          !responded &&
+          token !== undefined &&
+          ctx.state.stack.length > 0
+        ) {
+          responded = true;
+          opts.meanwhile(token);
+        }
+        return { index: pass, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    if (opts.meanwhile !== undefined)
+      expect(responded, 'a player held priority with the reflexive trigger on the stack').toBe(
+        true,
+      );
+    return run;
+  }
+
+  it('forum-filibuster-pinned-oracle-supported — the interpreter alone models the Inkling and its reflexive Aura or Equipment return', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.staticEffects).toEqual([]);
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // Your upkeep only, with no target of its own.
+    expect(trigger!.trigger).toEqual({ when: 'upkeep', player: 'you' });
+    expect(trigger!.targets).toEqual([]);
+    const [create, reflexive] = trigger!.effects;
+    expect(create).toEqual({
+      op: 'createToken',
+      spec: {
+        name: 'Inkling',
+        typeLine: 'Creature — Inkling',
+        types: ['Creature'],
+        subtypes: ['Inkling'],
+        colors: ['W', 'B'],
+        power: 2,
+        toughness: 1,
+        keywords: ['flying'],
+      },
+      count: { kind: 'const', n: 1 },
+    });
+    expect(trigger!.effects).toHaveLength(2);
+    // "When you do": a reflexive ability (CR 603.12) with up to one Aura or Equipment card target.
+    expect(reflexive).toMatchObject({ op: 'reflexiveOnCreatedToken' });
+    const then = (reflexive as { then: { targets: unknown[]; effects: unknown[] } }).then;
+    expect(then.targets).toEqual([
+      {
+        kind: 'cardInGraveyard',
+        count: { min: 0, max: 1 },
+        filter: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'subtype', value: 'Aura' },
+            { kind: 'subtype', value: 'Equipment' },
+          ],
+        },
+      },
+    ]);
+    expect(then.effects).toEqual([
+      { op: 'returnChosenCardsAttachedTo', targetSlot: 0, to: 'triggerObject' },
+    ]);
+  });
+
+  it('forum-filibuster-upkeep-token — only your upkeep creates a 2/1 white and black flying Inkling', () => {
+    const { ctx } = board('forum-token');
+    upkeep(ctx, null);
+    const [inkling] = named(ctx, 'Inkling');
+    expect(named(ctx, 'Inkling')).toHaveLength(1);
+    expect(inkling?.controllerId).toBe('P1');
+    expect(effectivePT(ctx, inkling!)).toEqual({ power: 2, toughness: 1 });
+    expect(hasKeyword(ctx, inkling!, 'flying')).toBe(true);
+    const chars = computeCharacteristics(ctx, inkling!);
+    expect([...chars.colors].sort()).toEqual(['B', 'W']);
+    expect(chars.subtypes).toEqual(['Inkling']);
+
+    // Negative: an opponent's upkeep makes nothing for you, and it asks about nothing.
+    const other = board('forum-token-opponent');
+    const run = upkeep(other.ctx, 'Lab Blessing', { playerId: 'P2' });
+    expect(named(other.ctx, 'Inkling')).toEqual([]);
+    expect(run.offered).toEqual([]);
+    expect(yard(other.ctx, 'P1')).toContain('Lab Blessing');
+  });
+
+  it('forum-filibuster-reflexive-targets — it targets up to one Aura or Equipment card in your graveyard only, and choosing none is legal', () => {
+    const { ctx, mine } = board('forum-targets');
+    const run = upkeep(ctx, null);
+    // Exactly the Auras and the Equipment in P1's graveyard: not P2's Aura, not a non-Aura
+    // enchantment, not a creature card.
+    expect(run.offered).toHaveLength(1);
+    expect([...run.offered[0]!].sort()).toEqual(['Lab Blade', 'Lab Blessing', 'Lab Moss']);
+    // Choosing none returns nothing: the Inkling is still made and the graveyards are untouched.
+    expect(named(ctx, 'Inkling')).toHaveLength(1);
+    expect(yard(ctx, 'P1').sort()).toEqual(
+      [mine.blessing, mine.moss, mine.blade, mine.ward, mine.corpse].map((c) => c.name).sort(),
+    );
+    expect(yard(ctx, 'P2')).toEqual(['Lab Enemy Aura']);
+    expect(ctx.state.stack).toEqual([]);
+
+    // With no Aura or Equipment card to choose, nothing is asked and the Inkling still arrives.
+    const bare = pod('forum-targets-empty');
+    spawn(bare, 'P1', card);
+    conjure(bare, 'P1', WARD, 'graveyard');
+    const none = upkeep(bare, null);
+    expect(none.offered).toEqual([]);
+    expect(named(bare, 'Inkling')).toHaveLength(1);
+  });
+
+  it('forum-filibuster-attached-return — an Aura returns attached to the Inkling and an Equipment returns and is attached to it', () => {
+    const aura = board('forum-aura');
+    upkeep(aura.ctx, 'Lab Blessing');
+    const [inkling] = named(aura.ctx, 'Inkling');
+    const [blessing] = named(aura.ctx, 'Lab Blessing');
+    expect(blessing?.controllerId).toBe('P1');
+    expect(blessing?.attachedTo).toBe(inkling?.id);
+    expect(effectivePT(aura.ctx, inkling!)).toEqual({ power: 3, toughness: 2 });
+    expect(yard(aura.ctx, 'P1')).not.toContain('Lab Blessing');
+    // Only the chosen card moved.
+    expect(yard(aura.ctx, 'P1')).toContain('Lab Blade');
+    expect(named(aura.ctx, 'Lab Blade')).toEqual([]);
+    expect(yard(aura.ctx, 'P2')).toEqual(['Lab Enemy Aura']);
+
+    const equipment = board('forum-equipment');
+    upkeep(equipment.ctx, 'Lab Blade');
+    const [token] = named(equipment.ctx, 'Inkling');
+    const [blade] = named(equipment.ctx, 'Lab Blade');
+    expect(blade?.controllerId).toBe('P1');
+    expect(blade?.attachedTo).toBe(token?.id);
+    expect(effectivePT(equipment.ctx, token!)).toEqual({ power: 4, toughness: 1 });
+    expect(named(equipment.ctx, 'Lab Blessing')).toEqual([]);
+    expect(equipment.ctx.state.stack).toEqual([]);
+  });
+
+  it("forum-filibuster-token-gone-or-illegal — an Aura stays in the graveyard if the token is gone (CR 303.4i) or can't be enchanted, an Equipment enters unattached (CR 301.5e)", () => {
+    // The Inkling dies while the reflexive trigger is on the stack: the Aura stays put.
+    const aura = board('forum-gone-aura');
+    upkeep(aura.ctx, 'Lab Blessing', { meanwhile: (token) => kill(aura.ctx, token) });
+    expect(named(aura.ctx, 'Inkling')).toEqual([]);
+    expect(named(aura.ctx, 'Lab Blessing')).toEqual([]);
+    expect(yard(aura.ctx, 'P1')).toContain('Lab Blessing');
+
+    // The Equipment still enters, unattached.
+    const equipment = board('forum-gone-equipment');
+    upkeep(equipment.ctx, 'Lab Blade', { meanwhile: (token) => kill(equipment.ctx, token) });
+    const [blade] = named(equipment.ctx, 'Lab Blade');
+    expect(blade).toBeDefined();
+    expect(blade?.controllerId).toBe('P1');
+    expect(blade?.attachedTo ?? null).toBeNull();
+    expect(yard(equipment.ctx, 'P1')).not.toContain('Lab Blade');
+
+    // An Aura that cannot enchant a creature ("enchant land") is a legal target but stays in the
+    // graveyard; the Inkling is still made.
+    const land = board('forum-illegal');
+    upkeep(land.ctx, 'Lab Moss');
+    expect(named(land.ctx, 'Inkling')).toHaveLength(1);
+    expect(named(land.ctx, 'Lab Moss')).toEqual([]);
+    expect(yard(land.ctx, 'P1')).toContain('Lab Moss');
   });
 });
 
@@ -3381,6 +3657,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
     clauseCount: 3,
+  },
+  {
+    name: 'Forum Filibuster',
+    sha256: '0ba03edb28796d0bf9c9db05a772b35e3a219d24ff8a81648d9a440a2fd35cb2',
+    clauseCount: 2,
   },
   {
     name: 'Ghoulish Impetus',

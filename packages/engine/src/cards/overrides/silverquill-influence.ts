@@ -62,9 +62,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever ~ enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and "Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it\'s attacking one of your opponents. Otherwise, its controller loses 2 life."',
   ]);
 
-  unimplemented('6a9cc11b-a223-46f0-bf58-c1e08ad1253d', 'Forum Filibuster', [
-    'At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying. When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.',
-  ]);
+  // Forum Filibuster: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('27c366cf-00d7-47d4-9577-736bfc4a3b81', "Defacing Duskmage // Vandal's Edit", [
     'unsupported layout "prepare"',

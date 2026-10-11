@@ -1024,6 +1024,21 @@ function parseEffectSentence(
     }
   }
   if (s === 'then shuffle') return [{ op: 'shuffle' }];
+  // "Return up to one target Aura or Equipment card from your graveyard to the battlefield
+  // attached to that token" (Forum Filibuster's reflexive ability).
+  if (
+    s ===
+      'return up to one target aura or equipment card from your graveyard to the battlefield attached to that token' &&
+    opts.allocCount !== undefined
+  ) {
+    const targetSlot = opts.allocCount(
+      'cardInGraveyard',
+      { min: 0, max: 1 },
+      undefined,
+      anyOf(ofSubtype('Aura'), ofSubtype('Equipment')),
+    );
+    return [{ op: 'returnChosenCardsAttachedTo', targetSlot, to: 'triggerObject' }];
+  }
   {
     const m = s.match(
       /^attach (?:this equipment|~) to target creature (you control|an opponent controls)$/,
@@ -5006,6 +5021,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
           reflexive = [
             { op: 'putCountersOnSourceThenReflexive', counter: put[2] as string, count, then },
           ];
+      } else if (/^create an? .+ token\b/.test(action)) {
+        // "Create a … token. When you do, …" (Forum Filibuster): "that token" is the one created.
+        const created = parseEffectSentence(action, () => -1, card, {});
+        if (created !== null && created.length === 1 && created[0]?.op === 'createToken')
+          reflexive = [created[0], { op: 'reflexiveOnCreatedToken', then }];
       }
     }
   }

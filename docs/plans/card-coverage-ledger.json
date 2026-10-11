@@ -1104,6 +1104,23 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
+    "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
+    "name": "Forum Filibuster",
+    "package": "PR05.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Reflexive Aura/Equipment return attached to the token is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
     "name": "Forum of Amity",
     "package": "PR01.01",

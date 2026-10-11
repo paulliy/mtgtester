@@ -6707,3 +6707,42 @@ test('Shielded by Faith: it moves onto a creature that enters and keeps it indes
   // Lab Doom is your only graveyard card.
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
+
+test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard',
+  );
+  // Your upkeep: the Inkling is made, then the reflexive ability asks for up to one target. Only
+  // the Aura is offered, not the creature card, and choosing none is a button of its own.
+  await expect(page.getByRole('button', { name: 'Choose no more targets' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('button', { name: 'Target Lab Aegis' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Target Lab Green Bear' })).toHaveCount(0);
+  await expect(permanent(page, 'Inkling')).toContainText('2/1');
+  await page.getByRole('button', { name: 'Target Lab Aegis' }).click();
+
+  // It resolves: the Aura is on the Inkling, which is a 4/3, and the creature card stays.
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1, { timeout: 15_000 });
+  await expect(permanent(page, 'Inkling')).toContainText('4/3');
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Aegis')?.attachedTo)
+    .toBeTruthy();
+  const inklingId = boards.at(-1)!.find((p) => p.name === 'Inkling')!.id;
+  const back = boards.at(-1)!.find((p) => p.name === 'Lab Aegis');
+  expect(back?.attachedTo).toBe(inklingId);
+  expect(back?.controller).toBe('P1');
+  await expect(permanent(page, 'Inkling')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+});

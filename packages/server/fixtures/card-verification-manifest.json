@@ -1542,13 +1542,35 @@
     "6a9cc11b-a223-46f0-bf58-c1e08ad1253d": {
       "name": "Forum Filibuster",
       "oracleSha256": "0ba03edb28796d0bf9c9db05a772b35e3a219d24ff8a81648d9a440a2fd35cb2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "forum-filibuster-inkling",
+          "oracleText": "At the beginning of your upkeep, create a 2/1 white and black Inkling creature token with flying.",
+          "implementation": [
+            "interpreted upkeep trigger for its controller only (player you), with no target of its own, whose first effect creates one 2/1 white and black Inkling creature token with flying under your control; an opponent's upkeep makes nothing"
+          ],
+          "engineTestIds": [
+            "forum-filibuster-pinned-oracle-supported",
+            "forum-filibuster-upkeep-token"
+          ],
+          "viewerScenarioIds": ["forum-filibuster-viewer-inkling-and-aura"]
+        },
+        {
+          "id": "forum-filibuster-reflexive-return",
           "oracleText": "When you do, return up to one target Aura or Equipment card from your graveyard to the battlefield attached to that token.",
-          "implementation": ["explicitly unsupported; reflexive attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted reflexive ability (reflexiveOnCreatedToken, CR 603.12) that goes on the stack only if the token was created and remembers that token: its target is up to one Aura or Equipment card in the controller's own graveyard (not an opponent's graveyard, a non-Aura enchantment or a creature card), choosing none is legal, and with no such card nothing is asked",
+            "returnChosenCardsAttachedTo puts the chosen card onto the battlefield under the controller attached to the Inkling: an Aura enters enchanting it (and stays in the graveyard if it cannot enchant the Inkling), an Equipment enters and is attached to it",
+            "if the Inkling is gone by resolution an Aura stays in the graveyard (CR 303.4i) and an Equipment enters unattached (CR 301.5e)"
+          ],
+          "engineTestIds": [
+            "forum-filibuster-pinned-oracle-supported",
+            "forum-filibuster-reflexive-targets",
+            "forum-filibuster-attached-return",
+            "forum-filibuster-token-gone-or-illegal"
+          ],
+          "viewerScenarioIds": ["forum-filibuster-viewer-inkling-and-aura"]
         }
       ],
       "gameplayAiScenarioIds": []

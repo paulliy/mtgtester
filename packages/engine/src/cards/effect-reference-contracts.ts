@@ -331,6 +331,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   returnRememberedGraveyardCard: {},
   returnDepartedSourceToBattlefield: {},
   attach: {},
+  reflexiveOnCreatedToken: {},
+  returnChosenCardsAttachedTo: { targetSlot: many(graveyard) },
   reanimateEachChosenTapped: { targetSlot: many(graveyard) },
   connive: {},
   exileTopNPlayableUntilEot: {},

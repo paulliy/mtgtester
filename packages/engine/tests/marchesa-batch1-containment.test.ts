@@ -87,7 +87,6 @@ const REASONS: Record<string, string> = {
   'Etali, Primal Conqueror // Etali, Primal Sickness':
     'Exile splices library cards without a zone-change, so leave-library events are skipped.',
   'Eriette of the Charmed Apple': 'Cannot-attack-you static is claimed without an implementation.',
-  'Forum Filibuster': 'Reflexive Aura/Equipment return attached to the token is omitted.',
   'Herald of Amity':
     'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
   'Intermediate Chirography':
@@ -297,6 +296,7 @@ describe('Marchesa catalog audit containment', () => {
     'Gift of Immortality',
     "Ajani's Chosen",
     'Shielded by Faith',
+    'Forum Filibuster',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

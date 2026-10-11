@@ -4090,12 +4090,6 @@
     }
   },
   {
-    "oracleId": "6a9cc11b-a223-46f0-bf58-c1e08ad1253d",
-    "name": "Forum Filibuster",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
     "handledLines": [],
@@ -15091,12 +15085,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "oracle-forum-filibuster",
-    "name": "Forum Filibuster",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-frontier-siege",

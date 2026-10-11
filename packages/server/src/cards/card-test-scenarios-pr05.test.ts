@@ -487,3 +487,28 @@ describe('Shielded by Faith Card Test Lab scenario', () => {
     replays('shielded-by-faith-viewer-attach-to-entering-creature', steps);
   });
 });
+
+describe('Forum Filibuster Card Test Lab scenario', () => {
+  it('forum-filibuster-viewer-inkling-and-aura — the Inkling is made and Lab Aegis returns attached to it, with Lab Green Bear never offered', () => {
+    const steps: Step[] = [{ action: 'Target Lab Aegis' }];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'forum-filibuster-viewer-inkling-and-aura',
+      steps,
+    );
+    const [inkling] = onBattlefield('Inkling');
+    const [aegis] = onBattlefield('Lab Aegis');
+    expect(onBattlefield('Inkling')).toHaveLength(1);
+    expect(inkling?.controllerId).toBe('P1');
+    expect(aegis?.controllerId).toBe('P1');
+    expect(aegis?.attachedTo).toBe(inkling?.id);
+    // The target prompt offered the Aura and nothing else from the graveyard.
+    const targeting = offered.find((options) => options.some((option) => /^Target /.test(option)));
+    expect(targeting?.filter((option) => /^Target /.test(option))).toEqual(['Target Lab Aegis']);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Lab Green Bear']);
+    expect(state.turnOrder[state.activePlayerIndex]).toBe('P1');
+    expect(state.step).toBe('upkeep');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('forum-filibuster-viewer-inkling-and-aura', steps);
+  });
+});

@@ -206,12 +206,8 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Firemane Commando',
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
   );
-  // Catalog audit silverquill-remaining-batch-2: reflexive attach-from-graveyard omitted.
-  unsupportedCard(
-    '6a9cc11b-a223-46f0-bf58-c1e08ad1253d',
-    'Forum Filibuster',
-    'Reflexive Aura/Equipment return attached to the token is omitted.',
-  );
+  // Forum Filibuster: restored in coverage PR05. The interpreter reads the Inkling token and its
+  // reflexive return of an Aura or Equipment card attached to that token, so no override remains.
   // Ghoulish Impetus: restored in coverage PR05. The interpreter reads the +1/+1, deathtouch and
   // goad on the enchanted creature, and its dies trigger as returning this card to the battlefield
   // at the beginning of the next end step, choosing a creature to enchant as it enters.

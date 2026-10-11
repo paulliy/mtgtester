@@ -990,6 +990,8 @@ const families = {
       returnRememberedGraveyardCard: true,
       returnDepartedSourceToBattlefield: true,
       attach: true,
+      reflexiveOnCreatedToken: true,
+      returnChosenCardsAttachedTo: true,
       reanimateEachChosenTapped: true,
       connive: true,
       exileTopNPlayableUntilEot: true,

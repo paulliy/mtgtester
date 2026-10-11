@@ -8238,6 +8238,36 @@ function shieldedByFaithScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function forumFilibusterScenario(gameId: GameId): CardTestScenario {
+  const filibuster = pinnedFrom(COVERAGE_PR05, 'Forum Filibuster');
+  return pr01Scenario(gameId, {
+    id: 'forum-filibuster-viewer-inkling-and-aura',
+    title: 'Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard',
+    instructions: [
+      'Forum Filibuster is on your battlefield. Lab Aegis (an Aura) and Lab Green Bear (a creature) are in your graveyard. Pass until your upkeep.',
+      'At the beginning of your upkeep, Forum Filibuster creates a 2/1 white and black Inkling with flying, then its reflexive ability asks for up to one target Aura or Equipment card in your graveyard. Only Lab Aegis is offered, not Lab Green Bear.',
+      'Choose Lab Aegis as the target and let the ability resolve.',
+    ],
+    expectedOutcome:
+      'Lab Aegis returns to the battlefield attached to the Inkling, which is a 4/3 with flying. Lab Green Bear is the only card left in your graveyard.',
+    oracleSha256: filibuster.sha256,
+    clauseIds: ['forum-filibuster-inkling', 'forum-filibuster-reflexive-return'],
+    decks: {
+      P1: [filibuster.card, LAB_AEGIS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P4',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Forum Filibuster'] }],
+      graveyard: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Green Bear'] }],
+      continueToNextUpkeep: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10075,6 +10105,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'gift-of-immortality-viewer-owner-return-then-aura',
   'ajanis-chosen-viewer-aura-moves-to-cat',
   'shielded-by-faith-viewer-attach-to-entering-creature',
+  'forum-filibuster-viewer-inkling-and-aura',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10349,6 +10380,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'gift-of-immortality-viewer-owner-return-then-aura': giftOfImmortalityScenario,
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
+  'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

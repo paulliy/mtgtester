@@ -845,6 +845,20 @@ export type Effect =
   /** Equip (CR 702.6): attach the ability's source to the target permanent. */
   | { op: 'attachSelfTo'; target: EffectRef }
   /**
+   * "Create a … token. When you do, …" (Forum Filibuster): the reflexive trigger (CR 603.12)
+   * fires only if a token was created, and "that token" is the one this ability just created
+   * (its controller picks one if a replacement made several).
+   */
+  | { op: 'reflexiveOnCreatedToken'; then: Ability }
+  /**
+   * "Return up to one target Aura or Equipment card from your graveyard to the battlefield
+   * attached to that token" (Forum Filibuster): each chosen card still in the graveyard enters
+   * under the ability's controller attached to the trigger object. An Aura that can't enchant it,
+   * or finds it gone, stays in the graveyard (CR 303.4i); an Equipment that can't equip it enters
+   * unattached (CR 301.5e).
+   */
+  | { op: 'returnChosenCardsAttachedTo'; targetSlot: number; to: 'triggerObject' }
+  /**
    * "You may attach it to the token" (Ajani's Chosen, `requireAura` for "if that enchantment is
    * an Aura") / "attach this Aura to that creature" (Shielded by Faith): move an Aura or
    * Equipment on the battlefield onto a permanent (CR 701.3). It doesn't move where it can't be

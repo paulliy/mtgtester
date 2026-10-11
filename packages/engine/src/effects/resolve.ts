@@ -4060,6 +4060,75 @@ export function* executeAbility(
         );
         break;
       }
+      case 'reflexiveOnCreatedToken': {
+        const tokens = createdThisResolution.filter((token) =>
+          ctx.state.battlefield.includes(token),
+        );
+        if (tokens.length === 0) break;
+        let token = tokens[0] as EnginePermanent;
+        if (tokens.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: choose the token the reflexive ability refers to.`,
+            presentationSource: presentedSource(ctx, source),
+            options: tokens.map((candidate) =>
+              cardOption(ctx, candidate, {
+                type: 'chooseToken',
+                description: `Choose ${candidate.name}`,
+                verb: 'Choose',
+              }),
+            ),
+          };
+          token = tokens[outcome.index] ?? token;
+        }
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ability: effect.then,
+          triggerObjectCardId: token.cardId,
+          scope: { eventObjectId: token.id },
+        });
+        break;
+      }
+      case 'returnChosenCardsAttachedTo': {
+        const hostId = ref(effect.to);
+        const host = hostId === null ? undefined : findPermanent(ctx, hostId);
+        for (const cardId of chosenReferents(effect.targetSlot)) {
+          const card = controller.graveyard.find((candidate) => candidate.id === cardId);
+          if (card === undefined) continue;
+          const def = getDefByOracleId(ctx, card.oracleId, card.name);
+          if (def.subtypes.includes('Aura')) {
+            // An undefined host leaves the Aura where it is (CR 303.4i); moveObject also refuses a
+            // host its enchant ability doesn't allow.
+            if (host === undefined) continue;
+            emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+            yield* moveObject(ctx, card, {
+              zone: 'battlefield',
+              controllerId: controller.id,
+              attachedTo: host.id,
+            });
+            continue;
+          }
+          emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+          const entered = yield* moveObject(ctx, card, {
+            zone: 'battlefield',
+            controllerId: controller.id,
+          });
+          // An Equipment enters attached only to something it could equip (CR 301.5e).
+          if (
+            entered !== null &&
+            entered.zone === 'battlefield' &&
+            host !== undefined &&
+            canAttach(ctx, entered as EnginePermanent, host)
+          )
+            (entered as EnginePermanent).attachedTo = host.id;
+        }
+        break;
+      }
       case 'attach': {
         const attachmentId =
           effect.what === 'source' ? (sourcePermanent()?.id ?? null) : ref('triggerObject');

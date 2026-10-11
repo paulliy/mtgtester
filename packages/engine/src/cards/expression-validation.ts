@@ -545,6 +545,8 @@ const effectExpressions = {
   returnRememberedGraveyardCard: {},
   returnDepartedSourceToBattlefield: {},
   attach: {},
+  reflexiveOnCreatedToken: {},
+  returnChosenCardsAttachedTo: {},
   reanimateEachChosenTapped: {},
   connive: {},
   exileTopNPlayableUntilEot: { count: numberValue },

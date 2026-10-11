@@ -121,7 +121,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Eidolon of Countless Battles',
       'Eiganjo Dynastorian // Replenish',
       'Eriette of the Charmed Apple',
-      'Forum Filibuster',
       'Herald of Amity',
       'Intermediate Chirography',
       'Keen Duelist',
