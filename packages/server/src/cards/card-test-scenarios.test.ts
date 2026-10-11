@@ -369,6 +369,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'redemption-arc-viewer-goaded-opponent-attack',
       'fallen-ideal-viewer-sacrifice-then-return',
       'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+      'kor-spiritdancer-viewer-second-aura-grows-it',
       'hateful-eidolon-viewer-enchanted-creature-dies-draw',
       'hateful-eidolon-viewer-combat-lifelink',
       'martial-impetus-viewer-attack-pump',

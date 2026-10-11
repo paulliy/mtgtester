@@ -1887,7 +1887,10 @@
             "kor-spiritdancer-pump-per-aura",
             "kor-spiritdancer-only-auras-count"
           ],
-          "viewerScenarioIds": ["kor-spiritdancer-viewer-aura-cast-draw-and-pump"]
+          "viewerScenarioIds": [
+            "kor-spiritdancer-viewer-aura-cast-draw-and-pump",
+            "kor-spiritdancer-viewer-second-aura-grows-it"
+          ]
         },
         {
           "id": "kor-spiritdancer-aura-draw",

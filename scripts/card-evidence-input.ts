@@ -1934,6 +1934,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw'],
   },
   {

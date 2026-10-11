@@ -7237,6 +7237,55 @@ test('Kor Spiritdancer: cast an Aura on it, draw a card, and it grows by +2/+2 f
   await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
 });
 
+test('Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump',
+  );
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Kor Spiritdancer')?.id)
+    .toBeTruthy();
+  const korId = boards.at(-1)!.find((p) => p.name === 'Kor Spiritdancer')!.id;
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('0/2');
+
+  // Cast each Aura on Kor Spiritdancer, declining its optional draw, and let it resolve.
+  const castAura = async (aura: string, size: string) => {
+    const card = handCard(page, aura);
+    await expect(card).toHaveClass(/actionable/, { timeout: 15_000 });
+    const before = await page.getByText(`${aura} resolves`).count();
+    await card.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Kor Spiritdancer').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'No', exact: true }).click();
+    await awaitResolution(page, aura, before);
+    await expect.poll(() => boards.at(-1)?.find((p) => p.name === aura)?.attachedTo).toBe(korId);
+    await expect(permanent(page, 'Kor Spiritdancer')).toContainText(size);
+  };
+  // One Aura: +2/+2 from Lab Aegis and +2/+2 for the Aura attached to it.
+  await castAura('Lab Aegis', '4/6');
+  // Two Auras: +2/+2 and +1/+1 from them, and +4/+4 for the two attached to it.
+  await castAura('Lab Mantle', '7/9');
+
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Kor Spiritdancer')).toContainText('7/9');
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Mantle')).toHaveCount(1);
+  await expect(page.locator('.hand-card')).toHaveCount(0);
+});
+
 test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw', async ({
   page,
 }) => {

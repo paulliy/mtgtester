@@ -95,6 +95,8 @@ function run(
   const prompts: string[] = [];
   const offered: string[][] = [];
   const requests: Array<{ seat: string; request: DecisionRequest }> = [];
+  /** P1's view of its battlefield (name and effective P/T) at every decision. */
+  const views: Array<Array<{ name: string; power: number | null; toughness: number | null }>> = [];
   let decisions = 0;
   for (;;) {
     const step = scenario!.engine.advance();
@@ -105,6 +107,13 @@ function run(
     offered.push(step.request.legalActions.map((action) => action.description));
     inspect?.(step.request, scenario!);
     requests.push({ seat: step.request.decidingPlayer, request: step.request });
+    views.push(
+      scenario!.engine.view('P1').battlefield.map((perm) => ({
+        name: perm.name,
+        power: perm.power ?? null,
+        toughness: perm.toughness ?? null,
+      })),
+    );
     // A seat the scenario scripts (an opponent's own turn) answers as in the viewer.
     const override = scenario!.decisionProviderOverrides?.[step.request.decidingPlayer];
     scenario!.engine.submit(
@@ -121,7 +130,7 @@ function run(
   const seat = (id: string) => state.players.find((candidate) => candidate.id === id)!;
   const onBattlefield = (name: string) =>
     state.battlefield.filter((permanent) => permanent.name === name);
-  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered, requests };
+  return { scenario: scenario!, state, seat, onBattlefield, prompts, offered, requests, views };
 }
 
 function replays(scenarioId: string, steps: Step[]): void {
@@ -860,6 +869,48 @@ describe('Kor Spiritdancer Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('kor-spiritdancer-viewer-aura-cast-draw-and-pump', steps);
+  });
+});
+
+describe('Kor Spiritdancer second Aura Card Test Lab scenario', () => {
+  it('kor-spiritdancer-viewer-second-aura-grows-it — one Aura makes Kor Spiritdancer a 4/6 and a second makes it a 7/9', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Kor Spiritdancer'] },
+      { action: 'No' },
+      { action: 'Cast Lab Mantle', targets: ['Kor Spiritdancer'] },
+      { action: 'No' },
+    ];
+    const { scenario, state, seat, onBattlefield, views } = run(
+      'kor-spiritdancer-viewer-second-aura-grows-it',
+      steps,
+    );
+    const sizeOf = (
+      battlefield: Array<{ name: string; power: number | null; toughness: number | null }>,
+    ) => {
+      const kor = battlefield.find((perm) => perm.name === 'Kor Spiritdancer');
+      return `${kor?.power}/${kor?.toughness}`;
+    };
+    // 0/2 bare, 4/6 with Lab Aegis (+2/+2 and +2/+2 for one Aura), 7/9 with Lab Mantle as well
+    // (+2/+2, +1/+1 and +4/+4 for two Auras).
+    const sizes = [...views, scenario.engine.view('P1').battlefield].map((battlefield) =>
+      sizeOf(
+        battlefield.map((perm) => ({
+          name: perm.name,
+          power: perm.power ?? null,
+          toughness: perm.toughness ?? null,
+        })),
+      ),
+    );
+    expect(sizes.filter((size, index) => size !== sizes[index - 1])).toEqual(['0/2', '4/6', '7/9']);
+    const [kor] = onBattlefield('Kor Spiritdancer');
+    expect(onBattlefield('Lab Aegis')[0]?.attachedTo).toBe(kor?.id);
+    expect(onBattlefield('Lab Mantle')[0]?.attachedTo).toBe(kor?.id);
+    // Both draws were declined.
+    expect(seat('P1').hand).toEqual([]);
+    expect(state.eventLog.filter((event) => event.type === 'draw')).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('kor-spiritdancer-viewer-second-aura-grows-it', steps);
   });
 });
 

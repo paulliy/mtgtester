@@ -8245,6 +8245,18 @@ const LAB_AEGIS = card({
   oracleText: 'Enchant creature\nEnchanted creature gets +2/+2.',
 });
 
+/** A second Aura beside Lab Aegis, so a scenario can attach a different number of Auras. */
+const LAB_MANTLE = card({
+  oracleId: 'lab-mantle',
+  name: 'Lab Mantle',
+  typeLine: 'Enchantment — Aura',
+  manaCost: '{W}',
+  cmc: 1,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  oracleText: 'Enchant creature\nEnchanted creature gets +1/+1.',
+});
+
 function ajanisChosenScenario(gameId: GameId): CardTestScenario {
   const chosen = pinnedFrom(COVERAGE_PR05, "Ajani's Chosen");
   return pr01Scenario(gameId, {
@@ -8549,6 +8561,37 @@ function korSpiritdancerScenario(gameId: GameId): CardTestScenario {
       hand: [{ playerId: 'P1', cardNames: ['Lab Aegis'] }],
       battlefield: [{ playerId: 'P1', cardNames: ['Kor Spiritdancer', 'Plains'] }],
       libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
+/**
+ * Kor Spiritdancer's pump counts every attached Aura: a second Aura adds another +2/+2 on top of
+ * its own bonus. Both draw triggers are declined, so the only change is the Auras'.
+ */
+function korSpiritdancerSecondAuraScenario(gameId: GameId): CardTestScenario {
+  const kor = pinnedFrom(COVERAGE_PR05, 'Kor Spiritdancer');
+  return pr01Scenario(gameId, {
+    id: 'kor-spiritdancer-viewer-second-aura-grows-it',
+    title: 'Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump',
+    instructions: [
+      'Kor Spiritdancer (0/2) and two Plains are on your battlefield. Lab Aegis (an Aura that gives +2/+2) and Lab Mantle (an Aura that gives +1/+1) are in your hand.',
+      'Cast Lab Aegis targeting Kor Spiritdancer. Kor Spiritdancer’s trigger asks whether to draw a card: choose No. Let Lab Aegis resolve: Kor Spiritdancer is a 4/6 (+2/+2 from Lab Aegis and +2/+2 for the one Aura attached to it).',
+      'Cast Lab Mantle targeting Kor Spiritdancer, choose No again and let it resolve: with two Auras attached, Kor Spiritdancer is a 7/9 (+2/+2 and +1/+1 from the Auras, and +4/+4 for the two of them).',
+    ],
+    expectedOutcome:
+      'Lab Aegis and Lab Mantle are both attached to Kor Spiritdancer, a 7/9. You declined both draws, so your hand is empty.',
+    oracleSha256: kor.sha256,
+    clauseIds: ['kor-spiritdancer-pump'],
+    decks: {
+      P1: [kor.card, LAB_AEGIS, LAB_MANTLE, PLAINS, PLAINS, LAB_GREEN_BEAR],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Mantle'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Kor Spiritdancer', 'Plains', 'Plains'] }],
     },
   });
 }
@@ -11134,6 +11177,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'redemption-arc-viewer-goaded-opponent-attack',
   'fallen-ideal-viewer-sacrifice-then-return',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+  'kor-spiritdancer-viewer-second-aura-grows-it',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
   'hateful-eidolon-viewer-combat-lifelink',
   'martial-impetus-viewer-attack-pump',
@@ -11434,6 +11478,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'redemption-arc-viewer-goaded-opponent-attack': redemptionArcOpponentAttackScenario,
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
+  'kor-spiritdancer-viewer-second-aura-grows-it': korSpiritdancerSecondAuraScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
   'hateful-eidolon-viewer-combat-lifelink': hatefulEidolonLifelinkScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
