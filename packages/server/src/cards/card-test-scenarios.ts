@@ -8694,6 +8694,49 @@ function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Hateful Eidolon draws one card per attached Aura you control, so two Auras draw two cards. */
+function hatefulEidolonTwoAurasScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-two-auras-draw-two',
+    title: 'Hateful Eidolon: two of your Auras on a creature that dies draw you two cards',
+    instructions: [
+      'Hateful Eidolon, two Plains and two Swamps are on your battlefield. Lab Aegis, Lab Mantle and Lab Doom are in your hand, an opponent controls Lab Bird (1/1), and Lab Green Bear and then Lab Ox are on top of your library.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve, then cast Lab Mantle targeting Lab Bird and let it resolve: Lab Bird is enchanted by two Auras you control.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies, so Hateful Eidolon’s trigger draws a card for each Aura you controlled that was attached to it.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in its owner’s graveyard and Lab Aegis and Lab Mantle are in yours. You drew exactly two cards, Lab Green Bear and Lab Ox, one for each Aura you controlled that was attached to Lab Bird.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-draw'],
+    decks: {
+      P1: [
+        eidolon.card,
+        LAB_AEGIS,
+        LAB_MANTLE,
+        LAB_DOOM,
+        PLAINS,
+        PLAINS,
+        SWAMP,
+        SWAMP,
+        LAB_GREEN_BEAR,
+        LAB_OX,
+      ],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Mantle', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hateful Eidolon', 'Plains', 'Plains', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear', 'Lab Ox'] }],
+    },
+  });
+}
+
 /** Hateful Eidolon's lifelink: its own combat damage gains life, and another attacker's does not. */
 function hatefulEidolonLifelinkScenario(gameId: GameId): CardTestScenario {
   const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
@@ -11248,6 +11291,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'kor-spiritdancer-viewer-second-aura-grows-it',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+  'hateful-eidolon-viewer-two-auras-draw-two',
   'hateful-eidolon-viewer-combat-lifelink',
   'martial-impetus-viewer-attack-pump',
   'martial-impetus-viewer-goaded-opponent-attack',
@@ -11551,6 +11595,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'kor-spiritdancer-viewer-second-aura-grows-it': korSpiritdancerSecondAuraScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
+  'hateful-eidolon-viewer-two-auras-draw-two': hatefulEidolonTwoAurasScenario,
   'hateful-eidolon-viewer-combat-lifelink': hatefulEidolonLifelinkScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'martial-impetus-viewer-goaded-opponent-attack': martialImpetusOpponentAttackScenario,

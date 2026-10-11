@@ -7416,6 +7416,59 @@ test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and y
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Hateful Eidolon: two of your Auras on a creature that dies draw you two cards', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Hateful Eidolon: two of your Auras on a creature that dies draw you two cards',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Bird')?.id).toBeTruthy();
+  const birdId = boards.at(-1)!.find((p) => p.name === 'Lab Bird')!.id;
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(0);
+
+  // Enchant the opponent's Lab Bird with both of your Auras.
+  for (const aura of ['Lab Aegis', 'Lab Mantle']) {
+    const card = handCard(page, aura);
+    await expect(card).toHaveClass(/actionable/, { timeout: 15_000 });
+    const before = await page.getByText(`${aura} resolves`).count();
+    await card.click();
+    await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+    await permanent(page, 'Lab Bird').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+    await awaitResolution(page, aura, before);
+    await expect.poll(() => boards.at(-1)?.find((p) => p.name === aura)?.attachedTo).toBe(birdId);
+  }
+
+  // Destroy it: Lab Bird dies carrying two Auras you control, so two cards are drawn.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Mantle')).toHaveCount(0);
+  await expect(handCard(page, 'Lab Green Bear')).toHaveCount(1);
+  await expect(handCard(page, 'Lab Ox')).toHaveCount(1);
+  await expect(page.locator('.hand-card')).toHaveCount(2);
+  // Lab Aegis, Lab Mantle and Lab Doom are in your graveyard.
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+});
+
 test('Hateful Eidolon: its combat damage gains life, Lab Ox’s does not', async ({ page }) => {
   await runScenario(page, 'Hateful Eidolon: its combat damage gains life, Lab Ox’s does not');
   await expect(permanent(page, 'Hateful Eidolon')).toContainText(/lifelink/i);

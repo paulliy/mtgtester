@@ -373,6 +373,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
       'kor-spiritdancer-viewer-second-aura-grows-it',
       'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+      'hateful-eidolon-viewer-two-auras-draw-two',
       'hateful-eidolon-viewer-combat-lifelink',
       'martial-impetus-viewer-attack-pump',
       'martial-impetus-viewer-goaded-opponent-attack',

@@ -995,6 +995,39 @@ describe('Hateful Eidolon Card Test Lab scenario', () => {
   });
 });
 
+describe('Hateful Eidolon two-Aura Card Test Lab scenario', () => {
+  it('hateful-eidolon-viewer-two-auras-draw-two — Lab Aegis and Lab Mantle on Lab Bird, then Lab Doom kills it and two cards are drawn', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Mantle', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Bird'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'hateful-eidolon-viewer-two-auras-draw-two',
+      steps,
+    );
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(onBattlefield('Lab Aegis')).toEqual([]);
+    expect(onBattlefield('Lab Mantle')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Aegis', 'Lab Doom', 'Lab Mantle']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Bird']);
+    // One card per Aura you controlled that was attached to it: two, in library order.
+    expect(
+      state.eventLog.filter((event) => event.type === 'draw').map((event) => event.payload['name']),
+    ).toEqual(['Lab Green Bear', 'Lab Ox']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Green Bear', 'Lab Ox']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('hateful-eidolon-viewer-two-auras-draw-two', steps);
+  });
+});
+
 describe('Hateful Eidolon lifelink Card Test Lab scenario', () => {
   it('hateful-eidolon-viewer-combat-lifelink — Hateful Eidolon hits P2 for 1 and gains 1, while Lab Ox hits P3 for 4 and gains nothing', () => {
     const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2', 'P3'] }];

@@ -1516,7 +1516,10 @@
             "hateful-eidolon-enchanted-only",
             "hateful-eidolon-last-known-auras"
           ],
-          "viewerScenarioIds": ["hateful-eidolon-viewer-enchanted-creature-dies-draw"]
+          "viewerScenarioIds": [
+            "hateful-eidolon-viewer-enchanted-creature-dies-draw",
+            "hateful-eidolon-viewer-two-auras-draw-two"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

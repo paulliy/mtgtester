@@ -1952,6 +1952,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: two of your Auras on a creature that dies draw you two cards'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Hateful Eidolon: its combat damage gains life, Lab Ox’s does not'],
   },
   {
