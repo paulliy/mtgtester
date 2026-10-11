@@ -136,10 +136,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
   ]);
 
-  unimplemented('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3', 'Fallen Ideal', [
-    'Enchanted creature has flying and "Sacrifice a creature: ~ gets +2/+1 until end of turn."',
-    "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
-  ]);
+  // Fallen Ideal: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Gift of Immortality: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 

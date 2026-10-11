@@ -1897,6 +1897,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

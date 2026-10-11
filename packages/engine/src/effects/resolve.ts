@@ -5351,6 +5351,21 @@ export function* executeAbility(
         yield* moveObject(ctx, card, { zone: 'library', libraryCardsAbove: effect.fromTop - 1 });
         break;
       }
+      case 'returnDepartedSourceToHand': {
+        // Only the card this very permanent became in a graveyard or exile (CR 400.7e).
+        const departed = source.id;
+        if (departed === undefined) break;
+        const card = [
+          ...ctx.state.players.flatMap((player) => player.graveyard),
+          ...(effect.fromGraveyard === true ? [] : ctx.state.exile),
+        ].find(
+          (candidate) =>
+            candidate.cardId === source.cardId && candidate.leftBattlefieldObjectId === departed,
+        );
+        if (card === undefined) break;
+        yield* moveObject(ctx, card, { zone: 'hand' });
+        break;
+      }
       case 'exileTargetReturnAtNextEndStep': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);

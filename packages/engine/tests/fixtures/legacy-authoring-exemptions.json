@@ -793,7 +793,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "sha256": "82fa4a234b933cc01fdb9bdcf0b016807e225f8d8e6363d1fa2ee51dfa69d52d",
+      "sha256": "3f691e3976bcb06ed94036202873e89ee8ce1c83f6a1f521b5a1ff97cb3a1542",
       "description": "Starfield Mystic"
     },
     {
@@ -813,7 +813,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "682aa9dc0bf4a085deb5b89555cc78ff6a0f1af234f63ad295382209fcac23d8",
+      "sha256": "44b23c975eb25a13fabbc1ce52313d2048cbddc0aa105ce8f6375e1982f555dc",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

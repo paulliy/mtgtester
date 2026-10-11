@@ -569,3 +569,35 @@ describe('Redemption Arc Card Test Lab scenario', () => {
     replays('redemption-arc-viewer-exile-enchanted-creature', steps);
   });
 });
+
+describe('Fallen Ideal Card Test Lab scenario', () => {
+  it('fallen-ideal-viewer-sacrifice-then-return — the Aura goes on Lab Green Bear, a sacrifice pumps it, then sacrificing the creature itself returns the Aura to hand', () => {
+    const steps: Step[] = [
+      { action: 'Cast Fallen Ideal', targets: ['Lab Green Bear'] },
+      { action: 'sacrifice a creature' },
+      { action: 'Lab Ox' },
+      { action: 'Pass priority' },
+      { action: 'sacrifice a creature' },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'fallen-ideal-viewer-sacrifice-then-return',
+      steps,
+    );
+    expect(
+      offered.some((options) => options.some((option) => /sacrifice a creature/.test(option))),
+    ).toBe(true);
+    expect(onBattlefield('Lab Green Bear')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(onBattlefield('Fallen Ideal')).toEqual([]);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Fallen Ideal']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Green Bear', 'Lab Ox']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('fallen-ideal-viewer-sacrifice-then-return', steps);
+  });
+});

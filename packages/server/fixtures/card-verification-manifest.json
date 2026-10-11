@@ -1378,15 +1378,37 @@
     "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3": {
       "name": "Fallen Ideal",
       "oracleSha256": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature has flying and \"Sacrifice a creature: this creature gets +2/+1 until end of turn.\"",
+          "id": "fallen-ideal-grants",
+          "oracleText": "Enchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\"",
           "implementation": [
-            "explicitly unsupported; granted sacrifice ability authored on the Aura"
+            "interpreted Aura spell (enchant creature) plus two layer 6 grants on the creature this Aura is attached to (attachedToSource): the flying keyword and an activated ability with no mana cost whose cost is sacrificing a creature you control, the enchanted creature itself included",
+            "the creature's controller activates it (not the Aura's controller unless they are the same); its effect pumps the creature that has the ability, +2/+1 until end of turn, once per activation, and the Aura grants nothing when unattached"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "fallen-ideal-pinned-oracle-supported",
+            "fallen-ideal-flying-enchanted-only",
+            "fallen-ideal-sacrifice-pump",
+            "fallen-ideal-sacrifice-itself",
+            "fallen-ideal-activation-controller"
+          ],
+          "viewerScenarioIds": ["fallen-ideal-viewer-sacrifice-then-return"]
+        },
+        {
+          "id": "fallen-ideal-return",
+          "oracleText": "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+          "implementation": [
+            "interpreted triggered ability of the Aura: a leave-the-battlefield trigger narrowed to the graveyard (the bare 'is put into a graveyard from the battlefield' head) whose effect returns the card this permanent became in a graveyard to its owner's hand (returnDepartedSourceToHand, graveyard only)",
+            "it returns to its owner's hand whichever creature it was on and whoever controlled it; exiled from the battlefield it does not trigger, and a card that left the graveyard before the trigger resolves is not returned (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "fallen-ideal-pinned-oracle-supported",
+            "fallen-ideal-return-to-owner-hand",
+            "fallen-ideal-return-only-from-graveyard"
+          ],
+          "viewerScenarioIds": ["fallen-ideal-viewer-sacrifice-then-return"]
         }
       ],
       "gameplayAiScenarioIds": []

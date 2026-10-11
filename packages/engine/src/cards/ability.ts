@@ -1307,6 +1307,13 @@ export type Effect =
    */
   | { op: 'putDepartedSourceIntoLibrary'; fromTop: number }
   /**
+   * "Return it to its owner's hand" after the source left the battlefield (Fallen Ideal): "it" is
+   * the card the source became in a graveyard or exile (CR 400.7e); if that card has left that
+   * zone, nothing moves. `fromGraveyard` looks only in graveyards, for a trigger whose event puts
+   * the source there.
+   */
+  | { op: 'returnDepartedSourceToHand'; fromGraveyard?: true }
+  /**
    * "Exile <target>. Return that card to the battlefield under its owner's control at the
    * beginning of the next end step" (Flickerwisp; Venser, the Sojourner returns it under "your"
    * control). The delayed return remembers the exact card in exile (CR 400.7): a token ceases to

@@ -408,6 +408,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
+      "card": {
+        "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
+        "scryfallId": "f54acc9f-d128-49d4-b1a9-47a7ece13833",
+        "name": "Fallen Ideal",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature has flying and \"Sacrifice a creature: This creature gets +2/+1 until end of turn.\"\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

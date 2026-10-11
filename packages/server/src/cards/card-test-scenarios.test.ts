@@ -363,6 +363,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'forum-filibuster-viewer-inkling-and-aura',
       'karametras-favor-viewer-granted-mana-pays-spell',
       'redemption-arc-viewer-exile-enchanted-creature',
+      'fallen-ideal-viewer-sacrifice-then-return',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

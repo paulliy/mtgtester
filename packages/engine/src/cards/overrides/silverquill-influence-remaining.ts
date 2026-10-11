@@ -32,11 +32,6 @@ const HANDLED_LINE_FIXES: Record<string, string[]> = {
   '2598294c-a9a7-4bef-a562-23f297a80536': [
     "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
   ],
-  // "Enchantment spells you cast cost {1} less to cast." now parses generically; only the
-  // dies-trigger line is still something the raw parser can't do on its own.
-  '2975590d-6a5b-41e5-8a3b-e9325e71226a': [
-    'Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature.',
-  ],
   'eb735501-19e7-4910-aa6a-6667fff6f4e5': [
     'unsupported mana production: "{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it\'s been cast from the command zone this game."',
   ],
@@ -193,12 +188,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Eriette of the Charmed Apple',
     'Cannot-attack-you static is claimed without an implementation.',
   );
-  // Catalog audit silverquill-remaining-batch-1: granted sac ability authored on the Aura.
-  unsupportedCard(
-    '4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3',
-    'Fallen Ideal',
-    'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
-  );
+  // Fallen Ideal: restored in coverage PR05. Grants flying and the sacrifice ability to the
+  // enchanted creature, which may sacrifice itself; returns this card to its owner's hand from the
+  // graveyard.
   // Catalog audit silverquill-remaining-batch-1: both triggers make you draw.
   unsupportedCard(
     'ac675899-25bb-4f06-9c8c-bf188024495f',
@@ -390,30 +382,24 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       ],
     },
   );
-  // "Enchantment spells you cast cost {1} less to cast." now parses generically; only the
-  // dies-trigger line is still something the raw parser can't do on its own.
-  defineCard(
-    '2975590d-6a5b-41e5-8a3b-e9325e71226a',
-    'Starfield Mystic',
-    [
-      'unrecognized rules text: "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on Starfield Mystic."',
-    ],
-    {
-      ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ENCHANTMENTS }],
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'dies',
-            subject: { kind: 'permanent', selector: allOf(ENCHANTMENTS, YOURS) },
-          },
-          targets: [],
-          effects: [{ op: 'putCounters', counter: '+1/+1', count: constant(1), target: 'source' }],
-          description: 'When your enchantment dies, put a +1/+1 counter on Starfield Mystic',
+  // Starfield Mystic: the interpreter now reads both the cost-reduction line and the bare
+  // "is put into a graveyard from the battlefield" head; the reviewed definition below stays as
+  // the authored behavior and claims no raw-parser lines.
+  defineCard('2975590d-6a5b-41e5-8a3b-e9325e71226a', 'Starfield Mystic', [], {
+    ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ENCHANTMENTS }],
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: {
+          when: 'dies',
+          subject: { kind: 'permanent', selector: allOf(ENCHANTMENTS, YOURS) },
         },
-      ],
-    },
-  );
+        targets: [],
+        effects: [{ op: 'putCounters', counter: '+1/+1', count: constant(1), target: 'source' }],
+        description: 'When your enchantment dies, put a +1/+1 counter on Starfield Mystic',
+      },
+    ],
+  });
   // Catalog audit silverquill-remaining-batch-2: current Oracle is affinity + opponent-attacks.
   unsupportedCard(
     '2ef0961a-0543-4371-8c2a-333881b735e5',

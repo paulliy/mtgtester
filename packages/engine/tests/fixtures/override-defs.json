@@ -1677,9 +1677,7 @@
   {
     "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
     "name": "Starfield Mystic",
-    "handledLines": [
-      "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {
@@ -2926,12 +2924,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
-    "name": "Fallen Ideal",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
@@ -14598,12 +14590,6 @@
     }
   },
   {
-    "oracleId": "oracle-fallen-ideal",
-    "name": "Fallen Ideal",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-felidar-retreat",
     "name": "Felidar Retreat",
     "handledLines": [
@@ -20420,9 +20406,7 @@
   {
     "oracleId": "oracle-starfield-mystic",
     "name": "Starfield Mystic",
-    "handledLines": [
-      "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
-    ],
+    "handledLines": [],
     "def": {
       "ruleStatics": [
         {

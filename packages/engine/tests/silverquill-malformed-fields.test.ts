@@ -28,10 +28,9 @@ describe('Darksteel Mutation', () => {
 });
 
 describe('Fallen Ideal', () => {
-  it('stays explicitly unsupported while its sacrifice ability is attached to the wrong object', () => {
-    const override = getOverride('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3');
-    expect(override?.unsupportedReason).toContain('Granted sacrifice ability');
-    expect(override?.def.activatedAbilities).toBeUndefined();
+  it('has no override left: the interpreter grants the sacrifice ability to the enchanted creature', () => {
+    // Restored in coverage PR05; its behavior is covered in pr05-card-coverage.test.ts.
+    expect(getOverride('4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3')).toBeUndefined();
   });
 });
 

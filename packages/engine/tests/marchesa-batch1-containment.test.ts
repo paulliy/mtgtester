@@ -71,8 +71,6 @@ const REASONS: Record<string, string> = {
   'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
   'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
-  'Fallen Ideal':
-    'Granted sacrifice ability is authored on the Aura, and sacrificeOther cannot sacrifice the enchanted creature.',
   'Firemane Commando':
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
   'Hateful Eidolon': 'Draws one card instead of one per Aura that was attached.',
@@ -295,6 +293,7 @@ describe('Marchesa catalog audit containment', () => {
     'Forum Filibuster',
     "Karametra's Favor",
     'Redemption Arc',
+    'Fallen Ideal',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

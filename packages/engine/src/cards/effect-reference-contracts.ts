@@ -323,6 +323,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: {},
   putDepartedSourceIntoLibrary: {},
+  returnDepartedSourceToHand: {},
   exileTargetReturnAtNextEndStep: { target: permanent },
   returnExiledTriggerObject: {},
   reanimateTargetHasteExileAtYourNextEndStep: { target: graveyard },

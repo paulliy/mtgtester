@@ -6853,3 +6853,61 @@ test('Redemption Arc: enchant your creature, then pay {1}{W} to exile it with no
   await expect(page.getByText('Exile (1)')).toBeVisible();
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
+
+test('Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+
+  // Cast the Aura on Lab Green Bear and let it resolve.
+  const ideal = handCard(page, 'Fallen Ideal');
+  await expect(ideal).toHaveClass(/actionable/, { timeout: 15_000 });
+  await ideal.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Fallen Ideal')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Sacrifice Lab Ox to the granted ability: the cost is paid at once, and the pump follows.
+  const bear = permanent(page, 'Lab Green Bear');
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bear.click();
+  // The ability has no mana cost, so there is no payment to configure; the sacrifice is chosen
+  // from your creatures, the enchanted one included.
+  await confirm(page);
+  await expect(page.getByText(/choose permanent 1 of 1 to sacrifice/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText('Sacrifice Lab Ox')).toBeVisible();
+  await confirm(page);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (1)')).toBeVisible();
+  await passUntil(page, permanent(page, 'Lab Green Bear').filter({ hasText: '4/3' }));
+
+  // Sacrifice the enchanted creature itself: the Aura goes to the graveyard and back to hand.
+  await expect(bear).toHaveClass(/actionable/, { timeout: 15_000 });
+  await bear.click();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Green Bear')).toHaveCount(0);
+  await expect(permanent(page, 'Fallen Ideal')).toHaveCount(0);
+  await expect(handCard(page, 'Fallen Ideal')).toHaveCount(1);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

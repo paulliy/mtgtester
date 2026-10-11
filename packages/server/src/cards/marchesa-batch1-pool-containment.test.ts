@@ -47,6 +47,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Dream Devourer',
       'Endless Atlas',
       'Fabled Passage',
+      'Fallen Ideal',
       'Flare of Denial',
       'Flare of Malice',
       'Flayer of the Hatebound',

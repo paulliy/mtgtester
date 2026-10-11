@@ -19,6 +19,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { addMana } from '../src/mana/pool';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import {
@@ -4063,6 +4064,255 @@ describe('Sunforger', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.21 Fallen Ideal
+// ---------------------------------------------------------------------------------------------
+
+describe('Fallen Ideal', () => {
+  const { card } = pinned('Fallen Ideal');
+  const CREATURE = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+  const SACRIFICE = /sacrifice a creature/;
+
+  /** P1 controls Fallen Ideal on Lab Host plus Lab Fodder and Lab Spare; P2 controls Lab Enemy. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const aura = spawn(ctx, 'P1', card);
+    const host = spawn(ctx, 'P1', CREATURE('Lab Host'));
+    const fodder = spawn(ctx, 'P1', CREATURE('Lab Fodder'));
+    const spare = spawn(ctx, 'P1', CREATURE('Lab Spare'));
+    const enemy = spawn(ctx, 'P2', CREATURE('Lab Enemy'));
+    aura.attachedTo = host.id;
+    return { ctx, aura, host, fodder, spare, enemy };
+  }
+
+  /** Answer every decision with the option whose description matches `pattern`. */
+  const choose =
+    (pattern: RegExp): Answer =>
+    (decision) => {
+      const index = decision.options.findIndex((option) => pattern.test(option.description));
+      return { index: Math.max(index, 0), targets: new Map() };
+    };
+
+  /** `playerId` activates the granted ability, paying by sacrificing the creature `pattern` names. */
+  function sacrifice(
+    ctx: GameContext,
+    playerId: string,
+    source: EnginePermanent,
+    pattern: RegExp,
+    prompts: string[] = [],
+  ) {
+    const option = optionFor(ctx, playerId, source.id, SACRIFICE);
+    expect(option, `${playerId} activates ${source.name}`).toBeDefined();
+    takeAction(ctx, playerId, option!.payload as PriorityActionPayload, (decision) => {
+      prompts.push(decision.options.map((candidate) => candidate.description).join(' | '));
+      return choose(pattern)(decision, 0);
+    });
+  }
+
+  const alive = (ctx: GameContext, perm: EnginePermanent) => ctx.state.battlefield.includes(perm);
+  const inHand = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).hand.map((c) => c.name);
+  const inGraveyard = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  /** Run the checkpoint so pending triggers are on the stack, without resolving anything. */
+  const checkpoint = (ctx: GameContext) => pump(priorityCheckpoint(ctx));
+
+  it('fallen-ideal-pinned-oracle-supported — the interpreter alone models the granted flying and sacrifice ability and the return to hand', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // Two layer 6 grants on the creature this Aura is attached to: flying, then the ability.
+    expect(def.staticEffects).toHaveLength(2);
+    expect(def.staticEffects[0]).toEqual({
+      affects: { kind: 'attachedToSource' },
+      op: { layer: 6, addKeyword: 'flying' },
+    });
+    const grant = def.staticEffects[1]!;
+    expect(grant.affects).toEqual({ kind: 'attachedToSource' });
+    const granted = (grant.op as { addActivatedAbility: { costs: unknown[]; timing: string } })
+      .addActivatedAbility;
+    // Cost: sacrifice a creature you control, the enchanted creature itself included. No mana.
+    expect(granted.timing).toBe('any');
+    expect(granted.costs).toEqual([
+      {
+        kind: 'sacrificeOther',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'type', value: 'Creature' },
+          ],
+        },
+        allowSelf: true,
+      },
+    ]);
+    // Effect: the creature that has the ability (not the Aura) gets +2/+1 until end of turn.
+    expect(
+      (grant.op as { addActivatedAbility: { ability: { effects: unknown[] } } }).addActivatedAbility
+        .ability.effects,
+    ).toEqual([{ op: 'pumpEachUntilEot', selector: { kind: 'self' }, power: 2, toughness: 1 }]);
+    // The Aura has no activated ability of its own.
+    expect(def.activatedAbilities).toEqual([]);
+    // When this Aura is put into a graveyard from the battlefield: one mandatory return, which
+    // looks only in the graveyard the Aura went to.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'leavesBattlefield',
+      subject: { kind: 'self' },
+      leavesTo: ['graveyard'],
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.effects).toEqual([{ op: 'returnDepartedSourceToHand', fromGraveyard: true }]);
+  });
+
+  it('fallen-ideal-flying-enchanted-only — only the enchanted creature has flying, and it follows the Aura', () => {
+    const { ctx, aura, host, fodder, enemy } = board('fallen-flying');
+    expect(hasKeyword(ctx, host, 'flying')).toBe(true);
+    for (const perm of [fodder, enemy]) expect(hasKeyword(ctx, perm, 'flying')).toBe(false);
+    // Moved to another creature, the flying goes with it; unattached, nobody has it.
+    aura.attachedTo = enemy.id;
+    expect(hasKeyword(ctx, enemy, 'flying')).toBe(true);
+    expect(hasKeyword(ctx, host, 'flying')).toBe(false);
+    aura.attachedTo = null;
+    expect(hasKeyword(ctx, enemy, 'flying')).toBe(false);
+    // The ability goes with it too: the unenchanted creatures are offered nothing.
+    const bare = board('fallen-flying-bare');
+    expect(optionFor(bare.ctx, 'P1', bare.host.id, SACRIFICE)).toBeDefined();
+    for (const perm of [bare.fodder, bare.spare, bare.enemy])
+      expect(optionFor(bare.ctx, 'P1', perm.id, SACRIFICE)).toBeUndefined();
+    bare.aura.attachedTo = null;
+    expect(optionFor(bare.ctx, 'P1', bare.host.id, SACRIFICE)).toBeUndefined();
+  });
+
+  it('fallen-ideal-sacrifice-pump — sacrificing another creature as the cost gives the enchanted creature +2/+1 until end of turn, once per sacrifice', () => {
+    const { ctx, host, fodder, spare, enemy } = board('fallen-pump');
+    expect(effectivePT(ctx, host)).toEqual({ power: 2, toughness: 2 });
+    const prompts: string[] = [];
+    sacrifice(ctx, 'P1', host, /Lab Fodder/, prompts);
+    // The cost is paid on activation: the creature is gone while the ability waits on the stack.
+    expect(alive(ctx, fodder)).toBe(false);
+    expect(inGraveyard(ctx, 'P1')).toContain('Lab Fodder');
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(effectivePT(ctx, host)).toEqual({ power: 2, toughness: 2 });
+    // The choice offered only your own creatures, the enchanted one included.
+    expect(prompts.join('\n')).toContain('Lab Host');
+    expect(prompts.join('\n')).toContain('Lab Spare');
+    expect(prompts.join('\n')).not.toContain('Lab Enemy');
+    resolveTop(ctx);
+    expect(effectivePT(ctx, host)).toEqual({ power: 4, toughness: 3 });
+    // A second sacrifice stacks another +2/+1; nothing else is pumped, and the Aura stays on.
+    sacrifice(ctx, 'P1', host, /Lab Spare/);
+    resolveTop(ctx);
+    expect(alive(ctx, spare)).toBe(false);
+    expect(effectivePT(ctx, host)).toEqual({ power: 6, toughness: 4 });
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 2, toughness: 2 });
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Fallen Ideal')).toBe(true);
+    // Negative: the pump lasts until end of turn only.
+    beginEndStep(ctx);
+    settle(ctx);
+    expect(effectivePT(ctx, host)).toEqual({ power: 6, toughness: 4 });
+    ctx.state.currentTurnPlayer = 'P1';
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(effectivePT(ctx, host)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('fallen-ideal-sacrifice-itself — the enchanted creature may be sacrificed to its own ability, and with no other creature that is the only choice', () => {
+    const { ctx, aura, host, fodder, spare } = board('fallen-self');
+    for (const perm of [fodder, spare]) pump(moveObject(ctx, perm, { zone: 'graveyard' }));
+    const option = optionFor(ctx, 'P1', host.id, SACRIFICE);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    // Lab Host was the only creature to sacrifice, so it paid for its own ability.
+    expect(alive(ctx, host)).toBe(false);
+    expect(inGraveyard(ctx, 'P1')).toContain('Lab Host');
+    // The ability still resolves (there is nothing left to pump) and the Aura was put into the
+    // graveyard as a state-based action.
+    settle(ctx);
+    expect(alive(ctx, aura)).toBe(false);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('fallen-ideal-activation-controller — the creature’s controller activates it, whoever controls the Aura', () => {
+    const { ctx, aura, enemy } = board('fallen-controller');
+    spawn(ctx, 'P2', CREATURE('Lab Enemy Fodder'));
+    aura.attachedTo = enemy.id;
+    // P1's Aura on P2's creature: P1 is offered nothing; P2 sacrifices P2's creature and pumps it.
+    expect(optionFor(ctx, 'P1', enemy.id, SACRIFICE)).toBeUndefined();
+    const prompts: string[] = [];
+    sacrifice(ctx, 'P2', enemy, /Lab Enemy Fodder/, prompts);
+    expect(prompts.join('\n')).not.toContain('Lab Spare');
+    resolveTop(ctx);
+    expect(effectivePT(ctx, enemy)).toEqual({ power: 4, toughness: 3 });
+    expect(inGraveyard(ctx, 'P2')).toEqual(['Lab Enemy Fodder']);
+    // None of P1's creatures was touched.
+    expect(inGraveyard(ctx, 'P1')).toEqual([]);
+  });
+
+  it('fallen-ideal-return-to-owner-hand — when the Aura goes to a graveyard from the battlefield it returns to its owner’s hand, whichever creature it was on', () => {
+    // The host dies: the Aura falls off, goes to the graveyard and comes back to P1's hand.
+    const { ctx, host } = board('fallen-return-mine');
+    kill(ctx, host);
+    settle(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Fallen Ideal')).toBe(false);
+    expect(inHand(ctx, 'P1')).toContain('Fallen Ideal');
+    expect(inGraveyard(ctx, 'P1')).not.toContain('Fallen Ideal');
+
+    // On an opponent's creature it returns to P1's hand, not P2's, when that creature dies.
+    const theirs = board('fallen-return-theirs');
+    theirs.aura.attachedTo = theirs.enemy.id;
+    kill(theirs.ctx, theirs.enemy);
+    settle(theirs.ctx);
+    expect(inHand(theirs.ctx, 'P1')).toContain('Fallen Ideal');
+    expect(inHand(theirs.ctx, 'P2')).not.toContain('Fallen Ideal');
+    expect(inGraveyard(theirs.ctx, 'P2')).not.toContain('Fallen Ideal');
+
+    // The Aura itself going to the graveyard (destroyed) returns it as well, with its creature safe.
+    const direct = board('fallen-return-destroyed');
+    kill(direct.ctx, direct.aura);
+    settle(direct.ctx);
+    expect(alive(direct.ctx, direct.host)).toBe(true);
+    expect(inHand(direct.ctx, 'P1')).toContain('Fallen Ideal');
+  });
+
+  it('fallen-ideal-return-only-from-graveyard — exiled from the battlefield it does not return, and a card that left the graveyard before the trigger resolved stays gone', () => {
+    // Exiled from the battlefield: not a graveyard move, so nothing triggers.
+    const exiled = board('fallen-exiled');
+    pump(moveObject(exiled.ctx, exiled.aura, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(inHand(exiled.ctx, 'P1')).not.toContain('Fallen Ideal');
+    expect(exiled.ctx.state.exile.map((c) => c.name)).toEqual(['Fallen Ideal']);
+
+    // Put into the graveyard, then exiled from there with the trigger on the stack: no return.
+    const gone = board('fallen-graveyard-exiled');
+    kill(gone.ctx, gone.host);
+    checkpoint(gone.ctx);
+    expect(gone.ctx.state.stack).toHaveLength(1);
+    const inYard = playerById(gone.ctx, 'P1').graveyard.find((c) => c.name === 'Fallen Ideal')!;
+    pump(moveObject(gone.ctx, inYard, { zone: 'exile' }));
+    resolveTop(gone.ctx);
+    expect(inHand(gone.ctx, 'P1')).not.toContain('Fallen Ideal');
+    expect(gone.ctx.state.exile.map((c) => c.name)).toEqual(['Fallen Ideal']);
+
+    // A creature dying with no Aura on it returns nothing.
+    const bare = board('fallen-bare');
+    kill(bare.ctx, bare.fodder);
+    settle(bare.ctx);
+    expect(inHand(bare.ctx, 'P1')).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4082,6 +4332,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
     clauseCount: 3,
+  },
+  {
+    name: 'Fallen Ideal',
+    sha256: '3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950',
+    clauseCount: 2,
   },
   {
     name: 'Forum Filibuster',

@@ -112,7 +112,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Animate Dead',
       'Arcane Lighthouse',
       'Eldrazi Conscription',
-      'Fallen Ideal',
       'Firemane Commando',
       'Hateful Eidolon',
       'Angelic Destiny',

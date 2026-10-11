@@ -537,6 +537,7 @@ const effectExpressions = {
   returnSelfFromGraveyardToHand: {},
   returnDiedSourceToBattlefield: { counter: text },
   putDepartedSourceIntoLibrary: { fromTop: finite },
+  returnDepartedSourceToHand: {},
   exileTargetReturnAtNextEndStep: { returnUnder: oneOf('owner', 'sourceController') },
   returnExiledTriggerObject: { returnUnder: oneOf('owner', 'sourceController') },
   reanimateTargetHasteExileAtYourNextEndStep: {},

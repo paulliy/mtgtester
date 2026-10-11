@@ -791,6 +791,8 @@ function parseEffectSentence(
     triggerObject?: boolean;
     /** Every head is this object leaving the battlefield: its last-known facts are the event's. */
     departedSelf?: boolean;
+    /** Every head is this object going from the battlefield to a graveyard. */
+    departedToGraveyard?: boolean;
     /** Every head is the creature this Aura or Equipment is attached to dying. */
     attachedDies?: boolean;
     thatMany?: Value;
@@ -2093,6 +2095,16 @@ function parseEffectSentence(
       return [{ op: 'handToBattlefield', filter, count: 'one' }];
     }
   }
+  // "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand"
+  // (Fallen Ideal): "it" is the card the departed source became (CR 400.7e), looked for only in the
+  // graveyard when every head puts it there.
+  if (opts.departedSelf === true && s === "return it to its owner's hand")
+    return [
+      {
+        op: 'returnDepartedSourceToHand',
+        ...(opts.departedToGraveyard === true ? { fromGraveyard: true as const } : {}),
+      },
+    ];
   // "put those counters on target creature you control" (Iron Apprentice): every counter the
   // departed source last had (CR 603.10a), each kind and number, through counter-placement
   // replacements.
@@ -3854,7 +3866,7 @@ function parseSearchDestinations(phrase: string): SearchDestination[] | null {
  * they are the same event seen from two vantage points (see `TriggerSubject`).
  */
 const OBJECT_TRIGGER_HEAD_RE =
-  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
+  /^when(?:ever)? (.+?) (enters from (?:a|your) graveyard|enters or leaves the battlefield|enters(?: the battlefield)?(?: or attacks| or transforms into ~)?|transforms into ~|leaves the battlefield|is put into a graveyard from the battlefield or is put into exile from the battlefield|is put into a graveyard from the battlefield|dies or is put into exile from the battlefield|dies|attacks|becomes tapped|becomes crewed|deals combat damage to a player), (.*)$/;
 const STEP_TRIGGER_HEAD_RE =
   /^at the beginning of (your|each(?: player's)?) (upkeep|end step|combat|first main phase|precombat main phase), (.*)$/;
 /**
@@ -4885,7 +4897,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         // into ~" there is no entry event to pair it with.
         event === 'transforms into ~'
         ? ['transformsInto']
-        : event === 'leaves the battlefield' || event.endsWith('into exile from the battlefield')
+        : event === 'leaves the battlefield' || event.endsWith('from the battlefield')
           ? ['leavesBattlefield']
           : event === 'dies'
             ? ['dies']
@@ -4915,9 +4927,13 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     const origin = event.match(/^enters from (a|your) graveyard$/);
     // "is put into a graveyard … or … into exile from the battlefield" / "dies or is put into
     // exile from the battlefield": a leave event narrowed to those destinations.
+    // The bare "is put into a graveyard from the battlefield" (Fallen Ideal) is the same leave
+    // event narrowed to the graveyard alone — "dies" for a permanent that need not be a creature.
     const leavesTo = event.endsWith('into exile from the battlefield')
       ? (['graveyard', 'exile'] as ('graveyard' | 'exile')[])
-      : undefined;
+      : event === 'is put into a graveyard from the battlefield'
+        ? (['graveyard'] as ('graveyard' | 'exile')[])
+        : undefined;
     heads = events.map((when) =>
       leavesTo !== undefined
         ? { when, subject, leavesTo }
@@ -5121,6 +5137,16 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
         (head.when === 'dies' || head.when === 'leavesBattlefield') &&
         'subject' in head &&
         head.subject.kind === 'self',
+    ),
+    departedToGraveyard: heads.every(
+      (head) =>
+        'subject' in head &&
+        head.subject.kind === 'self' &&
+        (head.when === 'dies' ||
+          (head.when === 'leavesBattlefield' &&
+            'leavesTo' in head &&
+            head.leavesTo?.length === 1 &&
+            head.leavesTo[0] === 'graveyard')),
     ),
     attachedDies: heads.every(
       (head) =>
@@ -6471,22 +6497,43 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
   }
   // Granted abilities: "Equipped creature has \"{T}: ...\""
   {
-    const m = lower.match(/^(enchanted|equipped) creature has "(.+)"$/);
+    // "Enchanted creature has flying and \"Sacrifice a creature: ...\"" (Fallen Ideal): printed
+    // keywords ahead of the quoted ability are granted alongside it.
+    const m = lower.match(/^(enchanted|equipped) creature has (?:([a-z ,]+?) and )?"(.+)"$/);
     if (m) {
       const affects: Selector = { kind: 'attachedToSource' };
-      const text = (m[2] as string).replace(/\.$/, '');
+      const keywordGrants: StaticEffect[] = [];
+      if (m[2] !== undefined) {
+        const parsed = parseKeywordLine(m[2] as string);
+        if (
+          parsed === null ||
+          parsed.ward !== undefined ||
+          parsed.protectionFrom !== undefined ||
+          parsed.keywords.length === 0
+        )
+          return null;
+        for (const keyword of parsed.keywords)
+          keywordGrants.push({ affects, op: { layer: 6, addKeyword: keyword } });
+      }
+      const text = (m[3] as string).replace(/\.$/, '');
       // A granted mana ability (Karametra's Favor's "{T}: Add one mana of any color"): the
       // enchanted creature taps for it, so summoning sickness applies to it (CR 302.6).
       const mana = parseManaAbilityLines(text, card);
       if (mana !== null && mana.length === 1)
-        return [{ affects, op: { layer: 6, addManaAbility: mana[0] as ManaAbilitySpec } }];
+        return [
+          ...keywordGrants,
+          { affects, op: { layer: 6, addManaAbility: mana[0] as ManaAbilitySpec } },
+        ];
       const act = parseActivatedLine(text, card);
       if (act !== null) {
-        return [{ affects, op: { layer: 6, addActivatedAbility: act } }];
+        return [...keywordGrants, { affects, op: { layer: 6, addActivatedAbility: act } }];
       }
       const tr = parseTriggerLine(text, card);
       if (tr !== null && tr.length > 0) {
-        return tr.map((ability) => ({ affects, op: { layer: 6, addTrigger: ability } }));
+        return [
+          ...keywordGrants,
+          ...tr.map((ability) => ({ affects, op: { layer: 6 as const, addTrigger: ability } })),
+        ];
       }
     }
   }

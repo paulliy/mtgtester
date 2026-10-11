@@ -8335,6 +8335,40 @@ function redemptionArcScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function fallenIdealScenario(gameId: GameId): CardTestScenario {
+  const ideal = pinnedFrom(COVERAGE_PR05, 'Fallen Ideal');
+  const swamps = Array.from({ length: 3 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'fallen-ideal-viewer-sacrifice-then-return',
+    title: 'Fallen Ideal: sacrifice for a pump, then sacrifice the creature to get the Aura back',
+    instructions: [
+      'Fallen Ideal is in your hand. Three Swamps, Lab Green Bear (2/2) and Lab Ox (4/4) are on your battlefield.',
+      'Cast Fallen Ideal targeting Lab Green Bear and let it resolve: Lab Green Bear has flying and the Aura’s sacrifice ability.',
+      'Activate the sacrifice ability, sacrificing Lab Ox, and let it resolve: Lab Green Bear gets +2/+1 until end of turn.',
+      'Activate the sacrifice ability again, sacrificing Lab Green Bear itself, and let it resolve. Fallen Ideal is put into your graveyard and returns to your hand.',
+    ],
+    expectedOutcome:
+      'Fallen Ideal is back in your hand, not your graveyard. Lab Green Bear and Lab Ox are in your graveyard, and the battlefield holds only your lands.',
+    oracleSha256: ideal.sha256,
+    clauseIds: ['fallen-ideal-grants', 'fallen-ideal-return'],
+    decks: {
+      P1: [ideal.card, LAB_GREEN_BEAR, LAB_OX, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Fallen Ideal'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Green Bear', 'Lab Ox', ...swamps.map((s) => s.name)],
+        },
+      ],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10175,6 +10209,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'forum-filibuster-viewer-inkling-and-aura',
   'karametras-favor-viewer-granted-mana-pays-spell',
   'redemption-arc-viewer-exile-enchanted-creature',
+  'fallen-ideal-viewer-sacrifice-then-return',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10452,6 +10487,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
+  'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
