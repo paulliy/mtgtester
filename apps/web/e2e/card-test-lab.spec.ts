@@ -6906,6 +6906,62 @@ test('Shielded by Faith: it moves onto a creature that enters and keeps it indes
   await expect(page.getByText('Graveyard (1)')).toBeVisible();
 });
 
+test('Shielded by Faith: an opponent’s creature entering offers you the attach', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Shielded by Faith: an opponent’s creature entering offers you the attach',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Ox')?.id).toBeTruthy();
+  const oxId = boards.at(-1)!.find((p) => p.name === 'Lab Ox')!.id;
+  await expect(permanent(page, 'Lab Flash Wolf')).toHaveCount(0);
+
+  // Cast the Aura on Lab Ox and let it resolve: Lab Ox is indestructible.
+  const aura = handCard(page, 'Shielded by Faith');
+  await expect(aura).toHaveClass(/actionable/, { timeout: 15_000 });
+  const auraBefore = await page.getByText('Shielded by Faith resolves').count();
+  await aura.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Shielded by Faith', auraBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Shielded by Faith')?.attachedTo)
+    .toBe(oxId);
+  await expect(permanent(page, 'Lab Ox')).toContainText(/indestructible/i);
+
+  // Pass: P2 flashes in Lab Flash Wolf, and Shielded by Faith asks you, not P2, about attaching.
+  await passUntil(page, page.getByRole('button', { name: 'No', exact: true }));
+  await expect(
+    page.getByText(/Shielded by Faith — Whenever a creature enters/).first(),
+  ).toBeVisible();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Flash Wolf')?.controller)
+    .toBe('P2');
+  await expect(permanent(page, 'Lab Flash Wolf')).not.toContainText(/indestructible/i);
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+
+  // The Aura moved onto P2's creature, taking the indestructible with it.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  const wolfId = boards.at(-1)!.find((p) => p.name === 'Lab Flash Wolf')!.id;
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.attachedTo).toBe(wolfId);
+  expect(final.find((p) => p.name === 'Shielded by Faith')?.controller).toBe('P1');
+  await expect(permanent(page, 'Lab Flash Wolf')).toContainText(/indestructible/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/indestructible/i);
+  await expect(permanent(page, 'Shielded by Faith')).toHaveCount(1);
+});
+
 test('Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard', async ({
   page,
 }) => {

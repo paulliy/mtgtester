@@ -643,6 +643,35 @@ describe('Shielded by Faith Card Test Lab scenario', () => {
   });
 });
 
+describe('Shielded by Faith opponent creature Card Test Lab scenario', () => {
+  it('shielded-by-faith-viewer-opponent-creature-enters — P2’s Lab Flash Wolf entering offers P1 the attach, and Yes moves the Aura onto it', () => {
+    const steps: Step[] = [
+      { action: 'Cast Shielded by Faith', targets: ['Lab Ox'] },
+      { action: 'Yes' },
+    ];
+    const { scenario, state, onBattlefield, requests } = run(
+      'shielded-by-faith-viewer-opponent-creature-enters',
+      steps,
+    );
+    // The optional trigger was put to P1, once, for a creature P2 controls.
+    const offers = requests.filter(({ request }) => /use this ability/.test(request.prompt ?? ''));
+    expect(offers.map(({ seat }) => seat)).toEqual(['P1']);
+    const [wolf] = onBattlefield('Lab Flash Wolf');
+    expect(wolf?.controllerId).toBe('P2');
+    const [aura] = onBattlefield('Shielded by Faith');
+    expect(aura?.attachedTo).toBe(wolf?.id);
+    expect(aura?.controllerId).toBe('P1');
+    // The indestructible moved with it.
+    const keywordsOf = (name: string) =>
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === name)?.keywords ?? [];
+    expect(keywordsOf('Lab Flash Wolf')).toContain('indestructible');
+    expect(keywordsOf('Lab Ox')).not.toContain('indestructible');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('shielded-by-faith-viewer-opponent-creature-enters', steps);
+  });
+});
+
 describe('Forum Filibuster Card Test Lab scenario', () => {
   it('forum-filibuster-viewer-inkling-and-aura — the Inkling is made and Lab Aegis returns attached to it, with Lab Green Bear never offered', () => {
     const steps: Step[] = [{ action: 'Target Lab Aegis' }];

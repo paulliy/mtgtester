@@ -363,6 +363,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ajanis-chosen-viewer-aura-moves-to-cat',
       'ajanis-chosen-viewer-enchantment-makes-cat',
       'shielded-by-faith-viewer-attach-to-entering-creature',
+      'shielded-by-faith-viewer-opponent-creature-enters',
       'forum-filibuster-viewer-inkling-and-aura',
       'karametras-favor-viewer-granted-mana-pays-spell',
       'redemption-arc-viewer-exile-enchanted-creature',

@@ -1904,6 +1904,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Shielded by Faith: an opponent’s creature entering offers you the attach'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Forum Filibuster: at your upkeep the Inkling gets an Aura from your graveyard'],
   },
   {

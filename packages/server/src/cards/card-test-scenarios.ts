@@ -8360,6 +8360,62 @@ function shieldedByFaithScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * Shielded by Faith's "whenever a creature enters" is not limited to your creatures: after the
+ * Aura is on Lab Ox, P2 flashes in Lab Flash Wolf and you are offered the attach.
+ */
+function shieldedByFaithOpponentCreatureScenario(gameId: GameId): CardTestScenario {
+  const shielded = pinnedFrom(COVERAGE_PR05, 'Shielded by Faith');
+  const wolf = card({
+    oracleId: 'lab-flash-wolf',
+    name: 'Lab Flash Wolf',
+    typeLine: 'Creature — Wolf',
+    manaCost: '{1}{G}',
+    cmc: 2,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flash',
+  });
+  const watched: { engine?: Engine } = {};
+  const scenario = pr01Scenario(gameId, {
+    id: 'shielded-by-faith-viewer-opponent-creature-enters',
+    title: 'Shielded by Faith: an opponent’s creature entering offers you the attach',
+    instructions: [
+      'Shielded by Faith is in your hand. Two Plains, a Swamp and Lab Ox (4/4) are on your battlefield. P2 holds Lab Flash Wolf (2/2 with flash) and has two Forests.',
+      'Cast Shielded by Faith targeting Lab Ox and let it resolve: Lab Ox is indestructible.',
+      'Pass priority with an empty stack. P2 casts Lab Flash Wolf. Let it resolve: a creature entered under P2’s control, and Shielded by Faith asks you whether to attach it.',
+      'Choose Yes to attach Shielded by Faith to P2’s Lab Flash Wolf. It leaves Lab Ox.',
+    ],
+    expectedOutcome:
+      'Shielded by Faith, which you still control, is attached to P2’s Lab Flash Wolf, which is indestructible. Lab Ox is no longer indestructible.',
+    oracleSha256: shielded.sha256,
+    clauseIds: ['shielded-by-faith-attach'],
+    decks: {
+      P1: [shielded.card, PLAINS, PLAINS, SWAMP, LAB_OX],
+      P2: [wolf, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Shielded by Faith'] },
+        { playerId: 'P2', cardNames: ['Lab Flash Wolf'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Plains', 'Plains', 'Swamp', 'Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest'] },
+      ],
+    },
+    decisionProviderOverrides: {
+      P2: castAtEnchantedCreature(() => watched.engine!, 'Lab Flash Wolf', 'Shielded by Faith'),
+    },
+  });
+  watched.engine = scenario.engine;
+  return scenario;
+}
+
 function forumFilibusterScenario(gameId: GameId): CardTestScenario {
   const filibuster = pinnedFrom(COVERAGE_PR05, 'Forum Filibuster');
   return pr01Scenario(gameId, {
@@ -11281,6 +11337,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ajanis-chosen-viewer-aura-moves-to-cat',
   'ajanis-chosen-viewer-enchantment-makes-cat',
   'shielded-by-faith-viewer-attach-to-entering-creature',
+  'shielded-by-faith-viewer-opponent-creature-enters',
   'forum-filibuster-viewer-inkling-and-aura',
   'karametras-favor-viewer-granted-mana-pays-spell',
   'redemption-arc-viewer-exile-enchanted-creature',
@@ -11585,6 +11642,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'ajanis-chosen-viewer-aura-moves-to-cat': ajanisChosenScenario,
   'ajanis-chosen-viewer-enchantment-makes-cat': ajanisChosenEnchantmentScenario,
   'shielded-by-faith-viewer-attach-to-entering-creature': shieldedByFaithScenario,
+  'shielded-by-faith-viewer-opponent-creature-enters': shieldedByFaithOpponentCreatureScenario,
   'forum-filibuster-viewer-inkling-and-aura': forumFilibusterScenario,
   'karametras-favor-viewer-granted-mana-pays-spell': karametrasFavorScenario,
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,

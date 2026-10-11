@@ -2126,7 +2126,10 @@
             "shielded-by-faith-attach-any-creature",
             "shielded-by-faith-cant-attach-or-gone"
           ],
-          "viewerScenarioIds": ["shielded-by-faith-viewer-attach-to-entering-creature"]
+          "viewerScenarioIds": [
+            "shielded-by-faith-viewer-attach-to-entering-creature",
+            "shielded-by-faith-viewer-opponent-creature-enters"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
