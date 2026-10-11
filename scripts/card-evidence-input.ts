@@ -1918,6 +1918,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Hateful Eidolon: its combat damage gains life, Lab Ox’s does not'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Martial Impetus: the enchanted creature attacks and pumps your other attacker'],
   },
   {

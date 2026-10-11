@@ -651,6 +651,34 @@ describe('Hateful Eidolon Card Test Lab scenario', () => {
   });
 });
 
+describe('Hateful Eidolon lifelink Card Test Lab scenario', () => {
+  it('hateful-eidolon-viewer-combat-lifelink — Hateful Eidolon hits P2 for 1 and gains 1, while Lab Ox hits P3 for 4 and gains nothing', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2', 'P3'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'hateful-eidolon-viewer-combat-lifelink',
+      steps,
+    );
+    expect(onBattlefield('Hateful Eidolon')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    const viewed = scenario.engine
+      .view('P1')
+      .battlefield.find((perm) => perm.name === 'Hateful Eidolon');
+    expect(viewed?.keywords).toContain('lifelink');
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Lab Ox')?.keywords ?? [],
+    ).not.toContain('lifelink');
+    // Only the Eidolon's 1 damage gained life: 40 + 1, not 40 + 1 + 4.
+    expect(seat('P1').life).toBe(41);
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P3').life).toBe(36);
+    expect(seat('P4').life).toBe(40);
+    expect(state.eventLog.filter((event) => event.type === 'lifeGain')).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('hateful-eidolon-viewer-combat-lifelink', steps);
+  });
+});
+
 describe('Martial Impetus Card Test Lab scenario', () => {
   it('martial-impetus-viewer-attack-pump — Lab Green Bear attacks P2 and Lab Ox attacks P3, so the Aura pumps Lab Ox and P3 takes 5', () => {
     const steps: Step[] = [

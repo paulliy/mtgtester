@@ -7068,6 +7068,35 @@ test('Hateful Eidolon: your Aura on an opponent’s creature, then it dies and y
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Hateful Eidolon: its combat damage gains life, Lab Ox’s does not', async ({ page }) => {
+  await runScenario(page, 'Hateful Eidolon: its combat damage gains life, Lab Ox’s does not');
+  await expect(permanent(page, 'Hateful Eidolon')).toContainText(/lifelink/i);
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/lifelink/i);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+
+  // Attack P2 with the lifelinker and P3 with the Ox.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Hateful Eidolon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Only the Eidolon's 1 damage gains life: 41, not 45.
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('39');
+  await expect(page.locator('.opponent[data-seat="P3"]')).toContainText('36');
+  await expect(page.locator('.opponent[data-seat="P4"]')).toContainText('40');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+});
+
 test('Martial Impetus: the enchanted creature attacks and pumps your other attacker', async ({
   page,
 }) => {

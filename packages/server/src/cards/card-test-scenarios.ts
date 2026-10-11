@@ -8414,7 +8414,7 @@ function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
     expectedOutcome:
       'Lab Bird is in its owner’s graveyard and Lab Aegis is in yours. You drew exactly one card, Lab Green Bear, because one Aura you controlled was attached to Lab Bird.',
     oracleSha256: eidolon.sha256,
-    clauseIds: ['hateful-eidolon-lifelink', 'hateful-eidolon-draw'],
+    clauseIds: ['hateful-eidolon-draw'],
     decks: {
       P1: [eidolon.card, LAB_AEGIS, LAB_DOOM, PLAINS, SWAMP, SWAMP, LAB_GREEN_BEAR],
       P2: [LAB_BIRD, ...PR01_FILLER],
@@ -8428,6 +8428,35 @@ function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
         { playerId: 'P2', cardNames: ['Lab Bird'] },
       ],
       libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
+/** Hateful Eidolon's lifelink: its own combat damage gains life, and another attacker's does not. */
+function hatefulEidolonLifelinkScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-combat-lifelink',
+    title: 'Hateful Eidolon: its combat damage gains life, Lab Ox’s does not',
+    instructions: [
+      'Hateful Eidolon (1/2 with lifelink) and Lab Ox (4/4, no lifelink) are on your battlefield. Your opponents control no creatures.',
+      'Attack P2 with Hateful Eidolon and P3 with Lab Ox. Nobody blocks.',
+      'Let combat damage be dealt.',
+    ],
+    expectedOutcome:
+      'Hateful Eidolon dealt 1 damage to P2, leaving P2 at 39, and lifelink raised you from 40 to 41. Lab Ox dealt 4 to P3, leaving P3 at 36, and gained you nothing. P4 is untouched.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-lifelink'],
+    decks: {
+      P1: [eidolon.card, LAB_OX],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Hateful Eidolon', 'Lab Ox'] }],
+      continueThroughCombat: true,
     },
   });
 }
@@ -10757,6 +10786,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'fallen-ideal-viewer-sacrifice-then-return',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
   'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+  'hateful-eidolon-viewer-combat-lifelink',
   'martial-impetus-viewer-attack-pump',
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'angelic-destiny-viewer-angel-then-return',
@@ -11050,6 +11080,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
   'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
+  'hateful-eidolon-viewer-combat-lifelink': hatefulEidolonLifelinkScenario,
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,

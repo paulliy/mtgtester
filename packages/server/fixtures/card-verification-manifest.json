@@ -1498,7 +1498,7 @@
             "no other creature has lifelink from it, and the card has no other static ability"
           ],
           "engineTestIds": ["hateful-eidolon-pinned-oracle-supported", "hateful-eidolon-lifelink"],
-          "viewerScenarioIds": ["hateful-eidolon-viewer-enchanted-creature-dies-draw"]
+          "viewerScenarioIds": ["hateful-eidolon-viewer-combat-lifelink"]
         },
         {
           "id": "hateful-eidolon-draw",
