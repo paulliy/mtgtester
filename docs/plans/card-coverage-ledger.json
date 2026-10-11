@@ -1501,6 +1501,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+    "name": "Hateful Eidolon",
+    "package": "PR05.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Draws one card instead of one per Aura that was attached."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
     "name": "Hour of Reckoning",
     "package": "PR02.14",

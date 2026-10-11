@@ -8397,6 +8397,37 @@ function korSpiritdancerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function hatefulEidolonScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Hateful Eidolon');
+  return pr01Scenario(gameId, {
+    id: 'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+    title: 'Hateful Eidolon: your Aura on an opponent’s creature, then it dies and you draw',
+    instructions: [
+      'Hateful Eidolon, a Plains and two Swamps are on your battlefield. Lab Aegis and Lab Doom are in your hand, an opponent controls Lab Bird (1/1), and Lab Green Bear is on top of your library.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve: Lab Bird is enchanted by an Aura you control.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies, so Hateful Eidolon’s trigger draws a card for each Aura you controlled that was attached to it.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in its owner’s graveyard and Lab Aegis is in yours. You drew exactly one card, Lab Green Bear, because one Aura you controlled was attached to Lab Bird.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['hateful-eidolon-lifelink', 'hateful-eidolon-draw'],
+    decks: {
+      P1: [eidolon.card, LAB_AEGIS, LAB_DOOM, PLAINS, SWAMP, SWAMP, LAB_GREEN_BEAR],
+      P2: [LAB_BIRD, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Aegis', 'Lab Doom'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hateful Eidolon', 'Plains', 'Swamp', 'Swamp'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      libraryTop: [{ playerId: 'P1', cardNames: ['Lab Green Bear'] }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10239,6 +10270,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'redemption-arc-viewer-exile-enchanted-creature',
   'fallen-ideal-viewer-sacrifice-then-return',
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump',
+  'hateful-eidolon-viewer-enchanted-creature-dies-draw',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10518,6 +10550,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'redemption-arc-viewer-exile-enchanted-creature': redemptionArcScenario,
   'fallen-ideal-viewer-sacrifice-then-return': fallenIdealScenario,
   'kor-spiritdancer-viewer-aura-cast-draw-and-pump': korSpiritdancerScenario,
+  'hateful-eidolon-viewer-enchanted-creature-dies-draw': hatefulEidolonScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

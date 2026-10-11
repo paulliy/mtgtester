@@ -2209,6 +2209,13 @@ function parseEffectSentence(
       const target = alloc('player', undefined, 'opponent');
       return [{ op: 'draw', count: { kind: 'tappedCreaturesControlledByTarget', target } }];
     }
+    // Hateful Eidolon: the dying creature's last-known Auras whose controller is this ability's.
+    if (
+      opts.triggerObject === true &&
+      s === 'draw a card for each aura you controlled that was attached to it'
+    ) {
+      return [{ op: 'draw', count: { kind: 'aurasYouControlledAttachedToTriggerObject' } }];
+    }
     if (s === 'draw a card for each attacking creature') {
       return [{ op: 'draw', count: { kind: 'attackingCreatures' } }];
     }
@@ -3960,6 +3967,12 @@ function parseTriggerSubject(phrase: string, card: OracleCard): Selector | null 
     noun = noun.replace(/^an? /, '');
   }
 
+  // "Whenever an enchanted creature dies" (Hateful Eidolon): any creature with an Aura attached,
+  // read off the leaving creature's last-known facts.
+  if (noun === 'enchanted creature') {
+    parts.push(IS_ENCHANTED);
+    noun = 'creature';
+  }
   // "another **nontoken** Dragon you control" (Miirym). Sits between "another" and the tribe.
   if (noun.startsWith('nontoken ')) {
     parts.push(not(IS_TOKEN));

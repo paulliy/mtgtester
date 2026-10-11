@@ -100,9 +100,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
   ]);
 
-  unimplemented('a3b39590-34b7-4fd0-877f-748e6df30e88', 'Hateful Eidolon', [
-    'Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.',
-  ]);
+  // Hateful Eidolon: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   unimplemented('c0d8fef4-65f4-4769-982d-b397d2b7e977', 'Animate Dead', [
     'Enchant creature card in a graveyard',

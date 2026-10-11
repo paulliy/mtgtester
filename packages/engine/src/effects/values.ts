@@ -164,6 +164,10 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     }
     case 'damageDealt':
       return scope.damageDealt ?? 0;
+    case 'aurasYouControlledAttachedToTriggerObject':
+      return (scope.triggerObjectFacts?.attachedAuraControllerIds ?? []).filter(
+        (controllerId) => controllerId === scope.controllerId,
+      ).length;
     case 'triggerCount':
       // An aggregate trigger always fired because at least one object matched, so the absent
       // case is a scope that was never populated — 1 is the honest floor, not 0.

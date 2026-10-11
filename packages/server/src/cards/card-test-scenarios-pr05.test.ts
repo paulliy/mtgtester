@@ -623,3 +623,27 @@ describe('Kor Spiritdancer Card Test Lab scenario', () => {
     replays('kor-spiritdancer-viewer-aura-cast-draw-and-pump', steps);
   });
 });
+
+describe('Hateful Eidolon Card Test Lab scenario', () => {
+  it('hateful-eidolon-viewer-enchanted-creature-dies-draw — Lab Aegis on Lab Bird, then Lab Doom kills it and one card is drawn for the Aura', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Aegis', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'hateful-eidolon-viewer-enchanted-creature-dies-draw',
+      steps,
+    );
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(onBattlefield('Lab Aegis')).toEqual([]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toContain('Lab Aegis');
+    expect(seat('P1').graveyard.map((card) => card.name)).toContain('Lab Doom');
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Bird']);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Green Bear']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('hateful-eidolon-viewer-enchanted-creature-dies-draw', steps);
+  });
+});

@@ -154,6 +154,7 @@ const valueShapes = {
   optionalCostCount: { mechanic: oneOf('kicker', 'squad', 'offspring') },
   damageDealt: {},
   triggerCount: {},
+  aurasYouControlledAttachedToTriggerObject: {},
   spellManaValue: {},
   spellColorCount: {},
   manaSpent: {},

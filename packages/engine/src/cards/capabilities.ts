@@ -1125,6 +1125,7 @@ const families = {
       optionalCostCount: true,
       damageDealt: true,
       triggerCount: true,
+      aurasYouControlledAttachedToTriggerObject: true,
       spellManaValue: true,
       spellColorCount: true,
       manaSpent: true,

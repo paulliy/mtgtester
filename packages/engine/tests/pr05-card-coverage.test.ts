@@ -29,7 +29,7 @@ import {
   runTurn,
 } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
-import { moveObject, playerById } from '../src/state/objects';
+import { moveObject, movePermanentsToGraveyard, playerById } from '../src/state/objects';
 import { effectivePT, hasKeyword } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -4518,6 +4518,217 @@ describe('Kor Spiritdancer', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR05.06 Hateful Eidolon
+// ---------------------------------------------------------------------------------------------
+
+describe('Hateful Eidolon', () => {
+  const { card } = pinned('Hateful Eidolon');
+  const CREATURE = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
+  const AURA = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Enchantment — Aura',
+      manaCost: '{W}',
+      colors: ['W'],
+      power: null,
+      toughness: null,
+      oracleText: 'Enchant creature',
+    });
+  const SMITE = oracle({
+    name: 'Lab Smite',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+    oracleText: 'Destroy target creature.',
+  });
+
+  /** P1 controls Hateful Eidolon and Lab Mine; P2 controls Lab Victim and Lab Plain. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const eidolon = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', CREATURE('Lab Mine'));
+    const victim = spawn(ctx, 'P2', CREATURE('Lab Victim'));
+    const plain = spawn(ctx, 'P2', CREATURE('Lab Plain'));
+    return { ctx, eidolon, mine, victim, plain };
+  }
+
+  function enchant(ctx: GameContext, controllerId: string, name: string, host: EnginePermanent) {
+    const aura = spawn(ctx, controllerId as 'P1', AURA(name));
+    aura.attachedTo = host.id;
+    return aura;
+  }
+
+  /** P1 casts Lab Smite at `targetId` through the normal path and lets everything resolve. */
+  function smite(ctx: GameContext, targetId: string) {
+    const object = conjure(ctx, 'P1', SMITE, 'hand');
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Lab Smite').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    resolveTop(ctx);
+    settle(ctx);
+  }
+
+  const hand = (ctx: GameContext, playerId = 'P1') => playerById(ctx, playerId).hand.length;
+  const alive = (ctx: GameContext, perm: EnginePermanent) => ctx.state.battlefield.includes(perm);
+
+  /** P1 attacks P2 with the named creatures, unblocked, in the real combat. */
+  function attack(ctx: GameContext, attackers: EnginePermanent[]) {
+    const ids = attackers.map((perm) => perm.id);
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (ids.includes(subjectId) ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('hateful-eidolon-pinned-oracle-supported — the interpreter alone models lifelink and the per-Aura draw on any enchanted creature dying', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Lifelink is its printed keyword; nothing else is static.
+    expect(def.keywords).toEqual(['lifelink']);
+    expect(def.staticEffects).toEqual([]);
+    // Whenever an enchanted creature dies: any creature with an Aura attached, mandatory, and the
+    // draw counts the Auras this ability's controller controlled that were attached to it.
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'dies',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [{ kind: 'isEnchanted' }, { kind: 'type', value: 'Creature' }],
+        },
+      },
+    });
+    expect(trigger!.optional).toBe(false);
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'draw', count: { kind: 'aurasYouControlledAttachedToTriggerObject' } },
+    ]);
+  });
+
+  it('hateful-eidolon-lifelink — damage dealt by Hateful Eidolon gains its controller that much life, and no other creature’s does', () => {
+    const { ctx, eidolon, mine } = board('hateful-lifelink');
+    expect(hasKeyword(ctx, eidolon, 'lifelink')).toBe(true);
+    expect(hasKeyword(ctx, mine, 'lifelink')).toBe(false);
+    attack(ctx, [eidolon]);
+    // It is a 1/2: one damage to P2, one life to P1.
+    expect(playerById(ctx, 'P2').life).toBe(39);
+    expect(playerById(ctx, 'P1').life).toBe(41);
+
+    // Negative: an ordinary creature of the same controller attacking gains nothing.
+    const plain = board('hateful-lifelink-other');
+    attack(plain.ctx, [plain.mine]);
+    expect(playerById(plain.ctx, 'P2').life).toBe(38);
+    expect(playerById(plain.ctx, 'P1').life).toBe(40);
+  });
+
+  it('hateful-eidolon-draw-per-aura-you-controlled — any enchanted creature dying, yours or an opponent’s, draws one card for each Aura you controlled on it and none for others’', () => {
+    // An opponent's creature with two of P1's Auras and one of P2's: P1 draws two, P2 none.
+    const { ctx, victim } = board('hateful-draw');
+    enchant(ctx, 'P1', 'Lab Aura One', victim);
+    enchant(ctx, 'P1', 'Lab Aura Two', victim);
+    enchant(ctx, 'P2', 'Lab Aura Three', victim);
+    const before = hand(ctx);
+    const p2Before = hand(ctx, 'P2');
+    smite(ctx, victim.id);
+    expect(alive(ctx, victim)).toBe(false);
+    expect(hand(ctx)).toBe(before + 2);
+    expect(hand(ctx, 'P2')).toBe(p2Before);
+
+    // Your own creature carrying one of your Auras and one of an opponent's: one card.
+    const mine = board('hateful-draw-mine');
+    enchant(mine.ctx, 'P1', 'Lab Aura One', mine.mine);
+    enchant(mine.ctx, 'P2', 'Lab Aura Two', mine.mine);
+    const mineBefore = hand(mine.ctx);
+    smite(mine.ctx, mine.mine.id);
+    expect(hand(mine.ctx)).toBe(mineBefore + 1);
+
+    // Only an opponent's Auras on it: it is an enchanted creature, so the trigger happens, but
+    // there is no Aura you controlled, so nothing is drawn.
+    const theirs = board('hateful-draw-theirs');
+    enchant(theirs.ctx, 'P2', 'Lab Aura One', theirs.victim);
+    const theirsBefore = hand(theirs.ctx);
+    smite(theirs.ctx, theirs.victim.id);
+    expect(alive(theirs.ctx, theirs.victim)).toBe(false);
+    expect(hand(theirs.ctx)).toBe(theirsBefore);
+  });
+
+  it('hateful-eidolon-enchanted-only — an unenchanted creature dying draws nothing, and neither does an enchanted creature leaving without dying or an Aura going away alone', () => {
+    // Baseline: an enchanted creature dying does draw, so the silences below are the filter's doing.
+    const base = board('hateful-baseline');
+    enchant(base.ctx, 'P1', 'Lab Aura One', base.victim);
+    const baseBefore = hand(base.ctx);
+    smite(base.ctx, base.victim.id);
+    expect(hand(base.ctx)).toBe(baseBefore + 1);
+
+    const { ctx, victim, plain } = board('hateful-unenchanted');
+    const aura = enchant(ctx, 'P1', 'Lab Aura One', victim);
+    const before = hand(ctx);
+    // An unenchanted creature dies: no draw.
+    smite(ctx, plain.id);
+    expect(alive(ctx, plain)).toBe(false);
+    expect(hand(ctx)).toBe(before);
+    // The Aura alone goes to the graveyard: it is not a creature dying.
+    kill(ctx, aura);
+    settle(ctx);
+    expect(hand(ctx)).toBe(before);
+    // The creature, now unenchanted, dies: still no draw.
+    smite(ctx, victim.id);
+    expect(alive(ctx, victim)).toBe(false);
+    expect(hand(ctx)).toBe(before);
+
+    // An enchanted creature exiled rather than dying: no trigger.
+    const exiled = board('hateful-exiled');
+    enchant(exiled.ctx, 'P1', 'Lab Aura One', exiled.victim);
+    const exiledBefore = hand(exiled.ctx);
+    pump(moveObject(exiled.ctx, exiled.victim, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(hand(exiled.ctx)).toBe(exiledBefore);
+  });
+
+  it('hateful-eidolon-last-known-auras — the creature and its Aura dying together still counts that Aura, and Hateful Eidolon enchanted and dying counts its own (CR 603.10a)', () => {
+    // Creature and Aura go to the graveyard in one event: the Aura was still attached when the
+    // creature died, so it counts.
+    const { ctx, victim } = board('hateful-simultaneous');
+    const aura = enchant(ctx, 'P1', 'Lab Aura One', victim);
+    const before = hand(ctx);
+    pump(movePermanentsToGraveyard(ctx, [victim, aura]));
+    settle(ctx);
+    expect(hand(ctx)).toBe(before + 1);
+
+    // Hateful Eidolon is itself a creature: enchanted by one of your Auras, its own death draws one.
+    const own = board('hateful-own-death');
+    enchant(own.ctx, 'P1', 'Lab Aura One', own.eidolon);
+    const ownBefore = hand(own.ctx);
+    kill(own.ctx, own.eidolon);
+    settle(own.ctx);
+    expect(hand(own.ctx)).toBe(ownBefore + 1);
+
+    // Without Hateful Eidolon on the battlefield nothing draws for an enchanted creature dying.
+    const none = board('hateful-absent');
+    pump(moveObject(none.ctx, none.eidolon, { zone: 'graveyard' }));
+    enchant(none.ctx, 'P1', 'Lab Aura One', none.victim);
+    const noneBefore = hand(none.ctx);
+    kill(none.ctx, none.victim);
+    settle(none.ctx);
+    expect(hand(none.ctx)).toBe(noneBefore);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4557,6 +4768,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Gift of Immortality',
     sha256: '668461ed4abe26b27771a49c7c5347b67dc7fddf9aa4e4ff49d3373b1936c781',
     clauseCount: 3,
+  },
+  {
+    name: 'Hateful Eidolon',
+    sha256: 'e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72',
+    clauseCount: 2,
   },
   {
     name: "Karametra's Favor",

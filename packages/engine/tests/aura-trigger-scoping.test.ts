@@ -126,12 +126,12 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
     expect(def.unmodeledReasons.join(' ')).toContain('explicitly unsupported:');
   });
 
-  it('keeps Hateful Eidolon contained until its per-Aura draw count is modeled', () => {
+  it('models Hateful Eidolon: any enchanted creature dying draws per Aura you controlled on it', () => {
     const def = interpretCard(
       oracle({
         oracleId: 'a3b39590-34b7-4fd0-877f-748e6df30e88',
         name: 'Hateful Eidolon',
-        typeLine: 'Enchantment Creature ? Spirit',
+        typeLine: 'Enchantment Creature — Spirit',
         manaCost: '{B}',
         power: '1',
         toughness: '1',
@@ -139,7 +139,12 @@ describe('Aura "enchanted creature" triggers are scoped to their own host', () =
           'Lifelink\nWhenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.',
       }),
     );
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join(' ')).toContain('explicitly unsupported:');
+    // Restored in coverage PR05: the draw count is the dying creature's last-known Auras that the
+    // trigger's controller controlled, not a flat one card.
+    expect(def.unmodeledReasons).toEqual([]);
+    expect(def.modeled).toBe(true);
+    expect(def.triggers[0]?.effects).toEqual([
+      { op: 'draw', count: { kind: 'aurasYouControlledAttachedToTriggerObject' } },
+    ]);
   });
 });

@@ -206,12 +206,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // returning that creature card under its owner's control, then returning this Aura card at the
   // beginning of the next end step attached to that creature, staying put if the creature is gone
   // or it can't be attached.
-  // Catalog audit silverquill-remaining-batch-1: draws one instead of one per attached Aura.
-  unsupportedCard(
-    'a3b39590-34b7-4fd0-877f-748e6df30e88',
-    'Hateful Eidolon',
-    'Draws one card instead of one per Aura that was attached.',
-  );
+  // Hateful Eidolon: restored in coverage PR05. The interpreter reads the dies trigger on any
+  // enchanted creature and draws one card per Aura you controlled that was attached to it, from the
+  // creature's last-known facts.
   // Catalog audit silverquill-remaining-batch-2: exile-and-cast authored as look-and-put.
   unsupportedCard(
     '6c25c6b5-d98c-4eb4-aacd-b6960a8779a9',

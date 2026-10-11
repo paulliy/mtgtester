@@ -1430,13 +1430,32 @@
     "a3b39590-34b7-4fd0-877f-748e6df30e88": {
       "name": "Hateful Eidolon",
       "oracleSha256": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "hateful-eidolon-lifelink",
+          "oracleText": "Lifelink",
+          "implementation": [
+            "interpreted printed lifelink keyword on the creature; damage it deals gains its controller that much life (CR 702.15)",
+            "no other creature has lifelink from it, and the card has no other static ability"
+          ],
+          "engineTestIds": ["hateful-eidolon-pinned-oracle-supported", "hateful-eidolon-lifelink"],
+          "viewerScenarioIds": ["hateful-eidolon-viewer-enchanted-creature-dies-draw"]
+        },
+        {
+          "id": "hateful-eidolon-draw",
           "oracleText": "Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.",
-          "implementation": ["explicitly unsupported; draws one instead of one per Aura"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted mandatory dies trigger whose subject is any creature with an Aura attached (isEnchanted and Creature), yours or an opponent's, whose effect draws aurasYouControlledAttachedToTriggerObject cards",
+            "the count is read from the dying creature's last-known facts (CR 603.10a): one card for each attached Aura whose controller was this ability's controller, so Auras controlled by opponents add nothing, an Aura going to the graveyard in the same event still counts, and a creature with no Aura on it, or one that left without dying, draws nothing"
+          ],
+          "engineTestIds": [
+            "hateful-eidolon-pinned-oracle-supported",
+            "hateful-eidolon-draw-per-aura-you-controlled",
+            "hateful-eidolon-enchanted-only",
+            "hateful-eidolon-last-known-auras"
+          ],
+          "viewerScenarioIds": ["hateful-eidolon-viewer-enchanted-creature-dies-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

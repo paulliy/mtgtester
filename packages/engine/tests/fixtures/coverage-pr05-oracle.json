@@ -477,6 +477,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
+      "card": {
+        "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
+        "scryfallId": "ff028d0b-066a-4769-89bc-f267d15eb707",
+        "name": "Hateful Eidolon",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Lifelink\nWhenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

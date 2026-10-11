@@ -6614,12 +6614,6 @@
     "def": {}
   },
   {
-    "oracleId": "a3b39590-34b7-4fd0-877f-748e6df30e88",
-    "name": "Hateful Eidolon",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "a3da7d5b-2c2b-45fe-b9c5-413b8c8fc0a2",
     "name": "Academy Ruins",
     "handledLines": [
@@ -15744,12 +15738,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-hateful-eidolon",
-    "name": "Hateful Eidolon",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-herald-of-amity",

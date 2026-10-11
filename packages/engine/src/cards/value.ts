@@ -193,6 +193,11 @@ export type Value =
   | { kind: 'damageDealt' }
   /** "that many" where the trigger aggregated several objects (CR 603.2c). */
   | { kind: 'triggerCount' }
+  /**
+   * "for each Aura you controlled that was attached to it" (Hateful Eidolon): the trigger
+   * object's last-known attached Auras whose controller was this ability's controller.
+   */
+  | { kind: 'aurasYouControlledAttachedToTriggerObject' }
   /** "equal to that spell's mana value" — the spell that fired a `castsSpell` trigger. */
   | { kind: 'spellManaValue' }
   /** "X is the number of colors that spell is" — read from the trigger's cast event. */
@@ -278,6 +283,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':
@@ -340,6 +346,7 @@ export function needsScope(value: Value): boolean {
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':
@@ -490,6 +497,7 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'optionalCostCount':
     case 'damageDealt':
     case 'triggerCount':
+    case 'aurasYouControlledAttachedToTriggerObject':
     case 'spellManaValue':
     case 'spellColorCount':
     case 'manaSpent':
