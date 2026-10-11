@@ -22,10 +22,6 @@ const HANDLED_LINE_FIXES: Record<string, string[]> = {
   '0a7d6489-b239-4ce8-aea3-7b5d0e436f70': [
     'unrecognized rules text: "Enchanted creature gets +1/+1 and has vigilance."',
   ],
-  'd13fc657-c6fc-4394-bc70-691050550226': [
-    'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
-    'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
-  ],
   'c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e': [
     "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
   ],
@@ -91,24 +87,17 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Armored Skyhunter',
     'Equipment filter is any artifact, and attach is omitted.',
   );
-  defineCard(
-    '5acff7a3-bc84-4251-bd37-80231396ac38',
-    'Chains of Custody',
-    [
-      'unrecognized rules text: "When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield."',
+  defineCard('5acff7a3-bc84-4251-bd37-80231396ac38', 'Chains of Custody', [], {
+    triggers: [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
+        effects: [{ op: 'exileUntilSourceLeaves', targetSlot: 0 }],
+        description: 'Exile target opposing nonland permanent until Chains of Custody leaves',
+      },
     ],
-    {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: { when: 'enters', subject: { kind: 'self' } },
-          targets: [{ kind: 'nonlandPermanent', controller: 'opponent' }],
-          effects: [{ op: 'exileUntilSourceLeaves', targetSlot: 0 }],
-          description: 'Exile target opposing nonland permanent until Chains of Custody leaves',
-        },
-      ],
-    },
-  );
+  });
   defineCard('dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9', 'Coercive Impetus', [], {
     ...auraBuff(1, 1, [], true),
     triggers: [
@@ -313,12 +302,9 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // to enchant as it enters (CR 303.4f) and staying in the graveyard if there is none.
   // Current Oracle text creates Contract Auras; the Inkling approximation is incorrect.
   unimplemented('64c986f0-e786-419c-9b51-8c316c8fae0e', 'Scriv, the Obligator', []);
-  // Catalog audit silverquill-remaining-batch-2: Ward {2} claimed without a ward static.
-  unsupportedCard(
-    'd13fc657-c6fc-4394-bc70-691050550226',
-    'Sheltered by Ghosts',
-    'Ward {2} is claimed without a ward static.',
-  );
+  // Sheltered by Ghosts: restored in coverage PR05. The interpreter reads the enters trigger as
+  // exile target nonland permanent an opponent controls until this Aura leaves the battlefield, and
+  // grants +1/+0, lifelink and ward {2} to the enchanted creature.
   // Shielded by Faith: restored in coverage PR05. The interpreter reads the optional attach to each
   // entering creature, so no override remains.
   defineCard(

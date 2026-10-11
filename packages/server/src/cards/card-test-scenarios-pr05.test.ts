@@ -728,3 +728,32 @@ describe('Angelic Destiny Card Test Lab scenario', () => {
     replays('angelic-destiny-viewer-angel-then-return', steps);
   });
 });
+
+describe('Sheltered by Ghosts Card Test Lab scenario', () => {
+  it('sheltered-by-ghosts-viewer-exile-and-lifelink — the Aura exiles Lab Bird until it leaves, and Lab Green Bear attacks as a 3/2 lifelinker', () => {
+    const steps: Step[] = [
+      { action: 'Cast Sheltered by Ghosts', targets: ['Lab Green Bear'] },
+      { action: 'Targets for Sheltered by Ghosts', targets: ['Lab Bird'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'sheltered-by-ghosts-viewer-exile-and-lifelink',
+      steps,
+    );
+    // The trigger offered only opposing nonland permanents: never the Forests or your own cards.
+    expect(offered.some((options) => options.includes('Targets for Sheltered by Ghosts'))).toBe(
+      true,
+    );
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(state.exile.map((card) => card.name)).toEqual(['Lab Bird']);
+    expect(onBattlefield('Lab Hex')).toHaveLength(1);
+    const [aura] = onBattlefield('Sheltered by Ghosts');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(aura?.attachedTo).toBe(bear?.id);
+    expect(seat('P2').life).toBe(37);
+    expect(seat('P1').life).toBe(43);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('sheltered-by-ghosts-viewer-exile-and-lifelink', steps);
+  });
+});

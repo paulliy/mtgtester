@@ -5440,6 +5440,352 @@ describe('Angelic Destiny', () => {
   });
 });
 
+// PR05.24 Sheltered by Ghosts
+// ---------------------------------------------------------------------------------------------
+
+describe('Sheltered by Ghosts', () => {
+  const { card } = pinned('Sheltered by Ghosts');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const ROCK = oracle({
+    name: 'Lab Rock',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const SHRINE = oracle({
+    name: 'Lab Shrine',
+    typeLine: 'Enchantment',
+    manaCost: '{W}',
+    colors: ['W'],
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const ZAP = oracle({
+    name: 'Lab Zap',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    power: null,
+    toughness: null,
+    oracleText: 'Lab Zap deals 1 damage to target creature.',
+  });
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const life = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).life;
+
+  /**
+   * P1 controls Lab Mine, Lab Spare and Lab Shrine; P2 controls Lab Theirs, Lab Rock and a Forest.
+   * Sheltered by Ghosts is not cast yet.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mine = spawn(ctx, 'P1', BEAR('Lab Mine'));
+    const spare = spawn(ctx, 'P1', BEAR('Lab Spare'));
+    const shrine = spawn(ctx, 'P1', SHRINE);
+    const theirs = spawn(ctx, 'P2', BEAR('Lab Theirs'));
+    const rock = spawn(ctx, 'P2', ROCK);
+    const theirLand = spawn(ctx, 'P2', forest());
+    return { ctx, mine, spare, shrine, theirs, rock, theirLand };
+  }
+
+  /** Answer the enters trigger's target prompt with `name`, recording the names offered. */
+  const pickExile =
+    (ctx: GameContext, name: string, offered: string[] = []): Answer =>
+    (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot === undefined) return { index: 0, targets: new Map() };
+      const names = slot.options.map(
+        (id) => ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? id,
+      );
+      offered.push(...names);
+      const chosen = slot.options.find((_id, position) => names[position] === name);
+      return { index: 0, targets: new Map(chosen === undefined ? [] : [[slot.slot, chosen]]) };
+    };
+
+  /** The legal host targets offered for casting Sheltered by Ghosts from `playerId`'s hand. */
+  function hostOptions(ctx: GameContext, playerId: string) {
+    const object = conjure(ctx, playerId, card, 'hand');
+    addMana(playerById(ctx, playerId), [{ symbol: 'W' }, { symbol: 'C' }]);
+    return { object, option: optionFor(ctx, playerId, object.id) };
+  }
+
+  /** `playerId` casts Sheltered by Ghosts onto `host` through the normal path and resolves it. */
+  function castOnto(
+    ctx: GameContext,
+    playerId: string,
+    host: EnginePermanent,
+    exiled = 'Lab Rock',
+    offered: string[] = [],
+  ) {
+    const { option } = hostOptions(ctx, playerId);
+    expect(option, `${playerId} casts Sheltered by Ghosts`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, host.id]]),
+    );
+    resolveTop(ctx);
+    settle(ctx, pickExile(ctx, exiled, offered));
+  }
+
+  function turnOf(ctx: GameContext, playerId: string) {
+    ctx.state.currentTurnPlayer = playerId;
+    ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(playerId);
+  }
+
+  /** `playerId` casts Lab Zap at `targetId` with `spare` extra generic mana, leaving it on the stack. */
+  function zap(ctx: GameContext, playerId: string, targetId: string, spare: number) {
+    const object = conjure(ctx, playerId, ZAP, 'hand');
+    addMana(playerById(ctx, playerId), [{ symbol: 'R' }, ...generic(spare)]);
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Zap`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+  }
+
+  /** Pay ward when asked, or let the spell be countered. */
+  const wardChoice =
+    (pay: boolean): Answer =>
+    (decision) => {
+      const index = decision.options.findIndex((option) =>
+        pay ? /^Pay /.test(option.description) : /be countered$/.test(option.description),
+      );
+      return { index: Math.max(index, 0), targets: new Map() };
+    };
+
+  /** The active player attacks with `attackers` (permanent id -> defending player), no blocks. */
+  function fight(ctx: GameContext, attackers: Map<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('sheltered-by-ghosts-pinned-oracle-supported — the interpreter alone models the enchant restriction, the linked exile and the three grants', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature you control: the Aura spell's one target is a creature of yours.
+    expect(def.spellAbility?.targets).toHaveLength(1);
+    expect(JSON.stringify(def.spellAbility?.targets)).toContain('"you"');
+    expect(def.spellAbility?.effects).toEqual([]);
+    // When this Aura enters: one mandatory trigger exiling an opponent's nonland permanent until
+    // this Aura leaves the battlefield (CR 610.3).
+    expect(def.triggers).toHaveLength(1);
+    const [enters] = def.triggers;
+    expect(enters!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(enters!.optional).toBe(false);
+    expect(enters!.targets).toEqual([{ kind: 'nonlandPermanent', controller: 'opponent' }]);
+    expect(enters!.effects).toEqual([{ op: 'exileUntilSourceLeaves', targetSlot: 0 }]);
+    // Three statics on the creature this Aura is attached to: +1/+0, lifelink and ward {2}.
+    const affects = { kind: 'attachedToSource' };
+    expect(def.staticEffects).toHaveLength(3);
+    for (const effect of def.staticEffects) expect(effect.affects).toEqual(affects);
+    expect(def.staticEffects).toEqual(
+      expect.arrayContaining([
+        { affects, op: { layer: 6, addKeyword: 'lifelink' } },
+        { affects, op: { layer: 7, sublayer: 'd', power: 1, toughness: 0 } },
+      ]),
+    );
+    const ward = def.staticEffects.find((effect) => 'addWard' in effect.op);
+    expect(JSON.stringify(ward?.op)).toContain('"generic":2');
+  });
+
+  it('sheltered-by-ghosts-enchant-your-creature — it can be cast onto a creature you control, and an opponent’s creature is not a legal host', () => {
+    const { ctx, mine, spare, theirs } = board('sheltered-enchant');
+    const { option } = hostOptions(ctx, 'P1');
+    expect(option).toBeDefined();
+    const hosts = option!.targets![0]!.options;
+    expect(hosts).toContain(mine.id);
+    expect(hosts).toContain(spare.id);
+    expect(hosts).not.toContain(theirs.id);
+    // With only an opponent's creature on the battlefield, the Aura cannot be cast at all.
+    const bare = pod('sheltered-enchant-none');
+    spawn(bare, 'P2', BEAR('Lab Theirs'));
+    expect(hostOptions(bare, 'P1').option).toBeUndefined();
+    // Cast through the real path onto Lab Mine, it enters attached there.
+    castOnto(ctx, 'P1', mine, 'Lab Theirs');
+    const [aura] = named(ctx, 'Sheltered by Ghosts');
+    expect(aura?.attachedTo).toBe(mine.id);
+  });
+
+  it('sheltered-by-ghosts-exile-until-leaves — the enters trigger exiles an opponent’s nonland permanent, and it returns when the Aura leaves the battlefield', () => {
+    const { ctx, mine, theirs, rock } = board('sheltered-exile');
+    const offered: string[] = [];
+    castOnto(ctx, 'P1', mine, 'Lab Theirs', offered);
+    // Only opposing nonland permanents were offered; Lab Theirs went to exile.
+    expect(offered.some((option) => /Lab Theirs/.test(option))).toBe(true);
+    expect(offered.some((option) => /Lab Rock/.test(option))).toBe(true);
+    expect(ctx.state.battlefield.includes(theirs)).toBe(false);
+    expect(ctx.state.exile.map((exiled) => exiled.name)).toEqual(['Lab Theirs']);
+    expect(ctx.state.battlefield.includes(rock)).toBe(true);
+    // The Aura leaves (destroyed): the exiled creature comes back under its owner's control.
+    const [aura] = named(ctx, 'Sheltered by Ghosts');
+    kill(ctx, aura!);
+    settle(ctx);
+    expect(ctx.state.exile).toEqual([]);
+    const [back] = named(ctx, 'Lab Theirs');
+    expect(back?.controllerId).toBe('P2');
+    // The enchanted creature is untouched and no longer buffed.
+    expect(ctx.state.battlefield.includes(mine)).toBe(true);
+    expect(effectivePT(ctx, mine)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('sheltered-by-ghosts-exile-scope — your own permanents and lands are not offered, and the exile does not happen if the Aura left before the trigger resolved', () => {
+    const { ctx, mine, spare, shrine, theirs, rock, theirLand } = board('sheltered-scope');
+    const offered: string[] = [];
+    castOnto(ctx, 'P1', mine, 'Lab Rock', offered);
+    expect(offered.join('\n')).not.toMatch(/Lab Mine|Lab Spare|Lab Shrine|Forest/);
+    expect(offered.join('\n')).toMatch(/Lab Theirs/);
+    expect(ctx.state.battlefield.includes(rock)).toBe(false);
+    for (const kept of [mine, spare, shrine, theirs, theirLand])
+      expect(ctx.state.battlefield.includes(kept)).toBe(true);
+
+    // The Aura leaves with the trigger on the stack: nothing is exiled (CR 610.3b).
+    const gone = board('sheltered-gone');
+    const object = conjure(gone.ctx, 'P1', card, 'hand');
+    addMana(playerById(gone.ctx, 'P1'), [{ symbol: 'W' }, { symbol: 'C' }]);
+    const option = optionFor(gone.ctx, 'P1', object.id);
+    takeAction(
+      gone.ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, gone.mine.id]]),
+    );
+    resolveTop(gone.ctx);
+    pump(priorityCheckpoint(gone.ctx), pickExile(gone.ctx, 'Lab Theirs'));
+    expect(gone.ctx.state.stack).toHaveLength(1);
+    const [aura] = named(gone.ctx, 'Sheltered by Ghosts');
+    kill(gone.ctx, aura!);
+    resolveTop(gone.ctx);
+    settle(gone.ctx);
+    expect(gone.ctx.state.battlefield.includes(gone.theirs)).toBe(true);
+    expect(gone.ctx.state.exile).toEqual([]);
+  });
+
+  it('sheltered-by-ghosts-grants — the enchanted creature gets +1/+0 and lifelink, and nothing else does', () => {
+    const { ctx, mine, spare, theirs } = board('sheltered-grants');
+    castOnto(ctx, 'P1', mine, 'Lab Rock');
+    expect(effectivePT(ctx, mine)).toEqual({ power: 3, toughness: 2 });
+    expect(hasKeyword(ctx, mine, 'lifelink')).toBe(true);
+    for (const other of [spare, theirs]) {
+      expect(effectivePT(ctx, other)).toEqual({ power: 2, toughness: 2 });
+      expect(hasKeyword(ctx, other, 'lifelink')).toBe(false);
+    }
+    // In combat the lifelink works: the 3 damage dealt to P2 also gains P1 3 life.
+    const p1 = life(ctx, 'P1');
+    const p2 = life(ctx, 'P2');
+    fight(ctx, new Map([[mine.id, 'P2']]));
+    expect(life(ctx, 'P2')).toBe(p2 - 3);
+    expect(life(ctx, 'P1')).toBe(p1 + 3);
+    // An unenchanted attacker of the same size neither gains life nor deals the extra point.
+    const bare = board('sheltered-grants-bare');
+    const bareLife = life(bare.ctx, 'P1');
+    fight(bare.ctx, new Map([[bare.mine.id, 'P2']]));
+    expect(life(bare.ctx, 'P2')).toBe(life(ctx, 'P2') + 1);
+    expect(life(bare.ctx, 'P1')).toBe(bareLife);
+  });
+
+  it('sheltered-by-ghosts-ward — an opponent targeting the enchanted creature must pay {2} or the spell is countered', () => {
+    const countered = (ctx: GameContext) =>
+      ctx.state.eventLog.some((event) => event.type === 'counterSpell');
+    // Cannot pay: the spell is countered and the creature takes no damage.
+    const broke = board('sheltered-ward-broke');
+    castOnto(broke.ctx, 'P1', broke.mine, 'Lab Rock');
+    turnOf(broke.ctx, 'P2');
+    zap(broke.ctx, 'P2', broke.mine.id, 0);
+    settle(broke.ctx);
+    expect(countered(broke.ctx)).toBe(true);
+    expect(broke.mine.damageMarked).toBe(0);
+
+    // Can pay and does: ward {2} is paid and the spell resolves.
+    const paid = board('sheltered-ward-paid');
+    castOnto(paid.ctx, 'P1', paid.mine, 'Lab Rock');
+    turnOf(paid.ctx, 'P2');
+    const prompts: string[] = [];
+    zap(paid.ctx, 'P2', paid.mine.id, 2);
+    settle(paid.ctx, (decision, count) => {
+      prompts.push(decision.prompt);
+      return wardChoice(true)(decision, count);
+    });
+    expect(prompts.some((prompt) => /pay \{2\}/.test(prompt))).toBe(true);
+    expect(countered(paid.ctx)).toBe(false);
+    expect(paid.mine.damageMarked).toBe(1);
+    expect(playerById(paid.ctx, 'P2').manaEntries).toHaveLength(0);
+
+    // Can pay but declines: countered all the same.
+    const declined = board('sheltered-ward-declined');
+    castOnto(declined.ctx, 'P1', declined.mine, 'Lab Rock');
+    turnOf(declined.ctx, 'P2');
+    zap(declined.ctx, 'P2', declined.mine.id, 2);
+    settle(declined.ctx, wardChoice(false));
+    expect(countered(declined.ctx)).toBe(true);
+    expect(declined.mine.damageMarked).toBe(0);
+  });
+
+  it('sheltered-by-ghosts-ward-scope — you are never taxed for targeting your own creature, and an unenchanted creature has no ward', () => {
+    const { ctx, mine, spare, theirs } = board('sheltered-ward-scope');
+    castOnto(ctx, 'P1', mine, 'Lab Rock');
+    expect(ctx.state.eventLog.some((event) => event.type === 'wardPaid')).toBe(false);
+    // The controller's own spell on the enchanted creature: no ward decision, it resolves.
+    const asked: string[] = [];
+    zap(ctx, 'P1', mine.id, 0);
+    settle(ctx, (decision, count) => {
+      asked.push(decision.prompt);
+      return wardChoice(false)(decision, count);
+    });
+    expect(asked.filter((prompt) => /pay/i.test(prompt))).toEqual([]);
+    expect(mine.damageMarked).toBe(1);
+    // An opponent's spell on an unenchanted creature of yours: no tax either.
+    turnOf(ctx, 'P2');
+    zap(ctx, 'P2', spare.id, 0);
+    settle(ctx, (decision, count) => {
+      asked.push(decision.prompt);
+      return wardChoice(false)(decision, count);
+    });
+    expect(asked.filter((prompt) => /pay/i.test(prompt))).toEqual([]);
+    expect(spare.damageMarked).toBe(1);
+    expect(ctx.state.eventLog.some((event) => event.type === 'counterSpell')).toBe(false);
+    expect(theirs.damageMarked).toBe(0);
+  });
+
+  it('sheltered-by-ghosts-control-change — when an opponent gains control of the enchanted creature the Aura is put into the graveyard and the exiled permanent returns', () => {
+    const { ctx, mine, rock } = board('sheltered-control');
+    castOnto(ctx, 'P1', mine, 'Lab Rock');
+    expect(ctx.state.battlefield.includes(rock)).toBe(false);
+    expect(named(ctx, 'Sheltered by Ghosts')).toHaveLength(1);
+    // Enchant creature you control (CR 303.4, 704.5m): once it is P2's, the Aura is illegal.
+    mine.controllerId = 'P2';
+    settle(ctx);
+    expect(named(ctx, 'Sheltered by Ghosts')).toEqual([]);
+    expect(playerById(ctx, 'P1').graveyard.map((c) => c.name)).toContain('Sheltered by Ghosts');
+    expect(ctx.state.exile).toEqual([]);
+    expect(named(ctx, 'Lab Rock')).toHaveLength(1);
+    // Negative: while P1 still controls the creature, the Aura stays.
+    const stays = board('sheltered-control-stays');
+    castOnto(stays.ctx, 'P1', stays.mine, 'Lab Rock');
+    settle(stays.ctx);
+    expect(named(stays.ctx, 'Sheltered by Ghosts')).toHaveLength(1);
+    expect(stays.ctx.state.exile.map((c) => c.name)).toEqual(['Lab Rock']);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -5529,6 +5875,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Screams from Within',
     sha256: '603a5285b42120672628369f049af0996b854d4928aab8bbaed3f809d63324a3',
+    clauseCount: 3,
+  },
+  {
+    name: 'Sheltered by Ghosts',
+    sha256: '0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31',
     clauseCount: 3,
   },
   {

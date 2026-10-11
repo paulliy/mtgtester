@@ -124,10 +124,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Martial Impetus: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('d13fc657-c6fc-4394-bc70-691050550226', 'Sheltered by Ghosts', [
-    'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
-    'Enchanted creature gets +1/+0 and has lifelink and ward {2}.',
-  ]);
+  // Sheltered by Ghosts: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Fallen Ideal: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 

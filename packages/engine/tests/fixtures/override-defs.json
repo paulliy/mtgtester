@@ -3422,9 +3422,7 @@
   {
     "oracleId": "5acff7a3-bc84-4251-bd37-80231396ac38",
     "name": "Chains of Custody",
-    "handledLines": [
-      "unrecognized rules text: \"When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -8632,12 +8630,6 @@
     "def": {}
   },
   {
-    "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
-    "name": "Sheltered by Ghosts",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
     "name": "Shamanic Revelation",
     "handledLines": [
@@ -12834,9 +12826,7 @@
   {
     "oracleId": "oracle-chains-of-custody",
     "name": "Chains of Custody",
-    "handledLines": [
-      "unrecognized rules text: \"When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\""
-    ],
+    "handledLines": [],
     "def": {
       "triggers": [
         {
@@ -19873,12 +19863,6 @@
         "targets": []
       }
     }
-  },
-  {
-    "oracleId": "oracle-sheltered-by-ghosts",
-    "name": "Sheltered by Ghosts",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-shineshadow-snarl",

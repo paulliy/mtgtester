@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 29,
+      "uniqueOracleIds": 28,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 40,
+      "uniqueOracleIds": 39,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6396,6 +6396,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types as a layer 4 Angel subtype addition, layer 6 flying and first strike grants and a layer 7d +4/+4 on the creature this Aura is attached to (attachedToSource), and reads When enchanted creature dies, return this card to its owner's hand as an attached-creature dies trigger that returns the Aura card from the graveyard to its owner's hand. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+      "name": "Sheltered by Ghosts",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed Ward {2} was claimed without a ward static): the interpreter reads When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield as an enters trigger with an opponent-controlled nonland permanent target whose exile lasts only while this Aura stays on the battlefield, and reads Enchanted creature gets +1/+0 and has lifelink and ward {2} as a layer 7c +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant on the creature this Aura is attached to (attachedToSource). The same until-this-Aura-leaves wording also makes the interpreter read Chains of Custody's enters line, so that card's handled-lines entry was dropped and the unused Sheltered by Ghosts handled-lines fix removed, with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+      "name": "Sheltered by Ghosts",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield as an enters trigger with an opponent-controlled nonland permanent target whose exile lasts only while this Aura stays on the battlefield, and reads Enchanted creature gets +1/+0 and has lifelink and ward {2} as a layer 7c +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant on the creature this Aura is attached to (attachedToSource). The same until-this-Aura-leaves wording also makes the interpreter read Chains of Custody's enters line, so that card's handled-lines entry was dropped and the unused Sheltered by Ghosts handled-lines fix removed, with no behavior change. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }

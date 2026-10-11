@@ -1929,6 +1929,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: ['Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

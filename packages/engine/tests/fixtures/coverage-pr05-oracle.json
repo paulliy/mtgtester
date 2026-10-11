@@ -624,6 +624,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31",
+      "card": {
+        "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+        "scryfallId": "8e8a5cfe-1b3f-4414-b9a4-078bdb4072a7",
+        "name": "Sheltered by Ghosts",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature you control\nWhen this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.\nEnchanted creature gets +1/+0 and has lifelink and ward {2}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -106,6 +106,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Screams from Within',
       'Shard of the Nightbringer',
       'Shard of the Void Dragon',
+      'Sheltered by Ghosts',
       'Shielded by Faith',
       'Smothering Tithe',
       'Solar Transformer',

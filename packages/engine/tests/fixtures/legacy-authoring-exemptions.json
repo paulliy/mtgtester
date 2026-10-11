@@ -768,7 +768,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "sha256": "474cad903edc65305b599300fc1eb5bedcd115f99003f3d7823bc619167e2bf8",
+      "sha256": "4290eb144a0f834e68bc60bc1986eba3bce058cf941acf5443a177f2cb09dc31",
       "description": "Chains of Custody"
     },
     {
@@ -813,7 +813,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "2844144358ff00d7ff8374dff611abb482730b418ba445b150f98c51a61f6520",
+      "sha256": "74b09e0bfd93bad24a5782fe6f011667c2b9fae7bc84b6084e947f7a52536311",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

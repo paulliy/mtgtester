@@ -1936,13 +1936,51 @@
     "d13fc657-c6fc-4394-bc70-691050550226": {
       "name": "Sheltered by Ghosts",
       "oracleSha256": "0f47521a0404408a94ad60265ffa991a08488638a84a911663414fa1e2796d31",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "sheltered-by-ghosts-enchant",
+          "oracleText": "Enchant creature you control",
+          "implementation": [
+            "interpreted Aura spell whose one target is a creature its caster controls (enchant creature you control), so an opponent's creature is not offered as a host",
+            "it is also checked as a state-based action while on the battlefield (CR 704.5m): if an opponent gains control of the enchanted creature the Aura is put into the graveyard, and the permanent it exiled returns"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-enchant-your-creature",
+            "sheltered-by-ghosts-control-change"
+          ],
+          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
+        },
+        {
+          "id": "sheltered-by-ghosts-exile",
+          "oracleText": "When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.",
+          "implementation": [
+            "interpreted mandatory enters trigger with one nonland-permanent target controlled by an opponent and an exile that lasts only while this Aura stays on the battlefield (exileUntilSourceLeaves, CR 610.3); the exiled card returns under its owner's control when the Aura leaves",
+            "your own permanents and lands are not offered as targets; if the Aura has left the battlefield before the trigger resolves, nothing is exiled (CR 610.3b)"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-exile-until-leaves",
+            "sheltered-by-ghosts-exile-scope",
+            "sheltered-by-ghosts-control-change"
+          ],
+          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
+        },
+        {
+          "id": "sheltered-by-ghosts-grants",
           "oracleText": "Enchanted creature gets +1/+0 and has lifelink and ward {2}.",
-          "implementation": ["explicitly unsupported; Ward omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted statics on the creature this Aura is attached to (attachedToSource): a layer 7d +1/+0, a layer 6 lifelink grant and a layer 6 ward {2} grant; the keyword list \"lifelink and ward {2}\" is read as two keywords, the ward keeping its mana cost",
+            "an opponent's spell or ability targeting the enchanted creature triggers ward and is countered unless its controller pays {2}; the Aura's controller and other creatures are unaffected, and an unattached Aura grants nothing"
+          ],
+          "engineTestIds": [
+            "sheltered-by-ghosts-pinned-oracle-supported",
+            "sheltered-by-ghosts-grants",
+            "sheltered-by-ghosts-ward",
+            "sheltered-by-ghosts-ward-scope"
+          ],
+          "viewerScenarioIds": ["sheltered-by-ghosts-viewer-exile-and-lifelink"]
         }
       ],
       "gameplayAiScenarioIds": []

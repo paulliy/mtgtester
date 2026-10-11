@@ -449,7 +449,13 @@ function parseKeywordLine(text: string): ParsedKeywordLine | null {
   const out: ParsedKeywordLine = { keywords: [] };
   // Split on commas only at the top level: " and " is ambiguous, because it also joins the
   // colors inside "protection from white and from black".
-  for (const raw of text.split(',')) {
+  // "lifelink and ward {2}" (Sheltered by Ghosts): a trailing ward joined by " and " is its own
+  // part; its cost is a mana cost, never another keyword, so the split is unambiguous.
+  const parts = text.split(',').flatMap((raw) => {
+    const trailingWard = raw.match(/^(.+) and (ward (?:\{[^}]+\})+)$/);
+    return trailingWard === null ? [raw] : [trailingWard[1] as string, trailingWard[2] as string];
+  });
+  for (const raw of parts) {
     // An Oxford list ("flying, vigilance, and double strike") leaves a leading "and" on the last
     // part. Stripped here rather than by pre-normalizing the whole string, so the " and " INSIDE
     // "protection from white and from black" — which is a conjunction of arguments, not of
@@ -868,7 +874,7 @@ function parseEffectSentence(
   // battlefield" (Conclave Tribunal): it returns when the source leaves (CR 610.3).
   {
     const until = s.match(
-      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent)) leaves the battlefield$/,
+      /^exile target (.+) until (?:~|this (?:enchantment|artifact|creature|permanent|aura)) leaves the battlefield$/,
     );
     const clause = until === null ? null : parseTargetClause(until[1] as string);
     if (clause !== null) {

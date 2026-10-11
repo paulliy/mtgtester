@@ -8527,6 +8527,37 @@ function angelicDestinyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function shelteredByGhostsScenario(gameId: GameId): CardTestScenario {
+  const ghosts = pinnedFrom(COVERAGE_PR05, 'Sheltered by Ghosts');
+  return pr01Scenario(gameId, {
+    id: 'sheltered-by-ghosts-viewer-exile-and-lifelink',
+    title: 'Sheltered by Ghosts: exile an opposing permanent, then attack with lifelink',
+    instructions: [
+      'Sheltered by Ghosts is in your hand. A Plains, a Forest and Lab Green Bear (2/2) are on your battlefield. An opponent controls Lab Bird, Lab Hex and a Forest.',
+      'Cast Sheltered by Ghosts targeting Lab Green Bear and let it resolve. Its enters trigger asks for a target nonland permanent an opponent controls: choose Lab Bird, which is exiled until Sheltered by Ghosts leaves the battlefield.',
+      'Attack P2 with Lab Green Bear, now a 3/2 with lifelink and ward {2}. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Bird is in exile while Lab Hex and the Forest stay on the battlefield. Lab Green Bear hit P2 for 3, leaving P2 at 37, and lifelink raised you to 43.',
+    oracleSha256: ghosts.sha256,
+    clauseIds: ['sheltered-by-ghosts-exile', 'sheltered-by-ghosts-grants'],
+    decks: {
+      P1: [ghosts.card, PLAINS, FOREST, LAB_GREEN_BEAR, FOREST],
+      P2: [LAB_BIRD, LAB_HEX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Sheltered by Ghosts'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', 'Plains', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Bird', 'Lab Hex', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10373,6 +10404,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'martial-impetus-viewer-attack-pump',
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'angelic-destiny-viewer-angel-then-return',
+  'sheltered-by-ghosts-viewer-exile-and-lifelink',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10656,6 +10688,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'martial-impetus-viewer-attack-pump': martialImpetusScenario,
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
+  'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -2996,6 +2996,21 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "d13fc657-c6fc-4394-bc70-691050550226",
+    "name": "Sheltered by Ghosts",
+    "package": "PR05.24",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Ward {2} is claimed without a ward static."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "79085dea-8daa-41c0-a975-61e3e6da2e26",
     "name": "Shielded by Faith",
     "package": "PR05.13",
