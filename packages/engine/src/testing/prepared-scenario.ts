@@ -2,7 +2,7 @@ import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { makePermanent, transformPermanent } from '../state/objects';
 import { subtractGeneric } from '../mana/cost';
 import { preparedScenarioSpell } from '../casting/preview';
-import type { EngineCardObject, GameContext } from '../state/types';
+import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 
 export interface PreparedScenarioSpec {
   currentTurnPlayer: PlayerId;
@@ -23,6 +23,13 @@ export interface PreparedScenarioSpec {
      * if it had been cast on an earlier turn; the position the Aura's own triggers act from.
      */
     enchantedPlayerId?: PlayerId;
+    /**
+     * Arrange each named Aura or Equipment as already attached to the named permanent that
+     * `playerId` controls on the battlefield (it may be listed later in `battlefield`). Only the
+     * position is arranged: whether the attachment is legal is still decided by the state-based
+     * actions, so an illegal arrangement falls off exactly as in a real game.
+     */
+    attachedToCard?: { playerId: PlayerId; cardName: string };
   }>;
   graveyard?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /**
@@ -106,6 +113,10 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
     }
   }
 
+  const pendingAttachments: Array<{
+    permanent: EnginePermanent;
+    host: { playerId: PlayerId; cardName: string };
+  }> = [];
   for (const entry of spec.battlefield) {
     for (const name of entry.cardNames) {
       const card = takeNamedCard(ctx, entry.playerId, name, true);
@@ -127,10 +138,28 @@ export function prepareScenario(ctx: GameContext, spec: PreparedScenarioSpec): v
       // Nor did they arrive from the library the scenario drew them out of.
       delete permanent.enteredFromZone;
       ctx.state.battlefield.push(permanent);
+      if (entry.attachedToCard !== undefined) {
+        pendingAttachments.push({ permanent, host: entry.attachedToCard });
+      }
       if (entry.transformed && !transformPermanent(ctx, permanent)) {
         throw new Error(`prepared scenario cannot transform ${name}`);
       }
     }
+  }
+  // Resolved once the whole battlefield exists, so the host may be listed after its attachment.
+  for (const { permanent, host } of pendingAttachments) {
+    const target = ctx.state.battlefield.find(
+      (candidate) =>
+        candidate !== permanent &&
+        candidate.name === host.cardName &&
+        candidate.controllerId === host.playerId,
+    );
+    if (target === undefined) {
+      throw new Error(
+        `prepared scenario cannot attach ${permanent.name}: ${host.playerId} controls no ${host.cardName} on the battlefield`,
+      );
+    }
+    permanent.attachedTo = target.id;
   }
 
   for (const entry of spec.energy ?? []) {
