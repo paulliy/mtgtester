@@ -162,12 +162,10 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
     'Eiganjo Dynastorian // Replenish',
     'Prepare is implemented as a pump trigger when this creature attacks.',
   );
-  // Catalog audit silverquill-remaining-batch-1: annihilator claimed as a trample aura only.
-  unsupportedCard(
-    '3635e4e5-e655-45f4-a444-39756f55129a',
-    'Eldrazi Conscription',
-    'Annihilator 2 is claimed without an annihilator implementation.',
-  );
+  // Eldrazi Conscription: restored in coverage PR05. The interpreter accepts the Kindred card type
+  // (CR 308) and grants +10/+10, trample and annihilator 2 to the enchanted creature, the
+  // annihilator as an attack trigger whose defending player sacrifices two permanents of their
+  // choice.
   // Catalog audit silverquill-remaining-batch-2: cannot-attack-you static omitted.
   unsupportedCard(
     'f43f5855-f297-4433-984b-18263b734cfc',

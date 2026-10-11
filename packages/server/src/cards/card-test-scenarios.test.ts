@@ -370,6 +370,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
       'angelic-destiny-viewer-angel-then-return',
       'sheltered-by-ghosts-viewer-exile-and-lifelink',
+      'eldrazi-conscription-viewer-annihilator',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

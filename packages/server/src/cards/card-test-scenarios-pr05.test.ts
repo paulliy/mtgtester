@@ -757,3 +757,33 @@ describe('Sheltered by Ghosts Card Test Lab scenario', () => {
     replays('sheltered-by-ghosts-viewer-exile-and-lifelink', steps);
   });
 });
+
+describe('Eldrazi Conscription Card Test Lab scenario', () => {
+  it('eldrazi-conscription-viewer-annihilator — Lab Green Bear attacks as a 12/12 trampler and P2 sacrifices both of their permanents', () => {
+    const steps: Step[] = [
+      { action: 'Cast Eldrazi Conscription', targets: ['Lab Green Bear'] },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'eldrazi-conscription-viewer-annihilator',
+      steps,
+    );
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(onBattlefield('Lab Hex')).toEqual([]);
+    expect(
+      seat('P2')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Bird', 'Lab Hex']);
+    const [aura] = onBattlefield('Eldrazi Conscription');
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(aura?.attachedTo).toBe(bear?.id);
+    expect(seat('P2').life).toBe(28);
+    // Only the defending player lost permanents.
+    expect(seat('P3').graveyard).toEqual([]);
+    expect(seat('P4').graveyard).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eldrazi-conscription-viewer-annihilator', steps);
+  });
+});

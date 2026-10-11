@@ -228,10 +228,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card.',
   ]);
 
-  unimplemented('3635e4e5-e655-45f4-a444-39756f55129a', 'Eldrazi Conscription', [
-    'unsupported card type "Kindred"',
-    'Enchanted creature gets +10/+10 and has trample and annihilator 2.',
-  ]);
+  // Eldrazi Conscription: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Anguished Unmaking: no override needed — "Exile target X. You lose N life." now parses
   // generically (the existing "exile target …" rule plus the new "you lose N life" sentence),

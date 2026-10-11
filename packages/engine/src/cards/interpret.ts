@@ -6531,6 +6531,48 @@ function parseStaticLine(lower: string, card: OracleCard): StaticEffect[] | null
       }
     }
   }
+  // "Enchanted creature gets +10/+10 and has trample and annihilator 2" (Eldrazi Conscription):
+  // annihilator is a triggered ability (CR 702.86a), granted as one in layer 6.
+  {
+    const m = lower.match(
+      /^(enchanted|equipped) creature gets ([+-]\d+)\/([+-]\d+) and has ([a-z ,]+?) and annihilator (\d+)$/,
+    );
+    const parsed = m === null ? null : parseKeywordLine(m[4] as string);
+    if (
+      m !== null &&
+      parsed !== null &&
+      parsed.ward === undefined &&
+      parsed.protectionFrom === undefined
+    ) {
+      const affects: Selector = { kind: 'attachedToSource' };
+      const n = Number(m[5]);
+      return [
+        { affects, op: { layer: 7, sublayer: 'd', power: Number(m[2]), toughness: Number(m[3]) } },
+        ...parsed.keywords.map((keyword): StaticEffect => ({
+          affects,
+          op: { layer: 6, addKeyword: keyword },
+        })),
+        {
+          affects,
+          op: {
+            layer: 6,
+            addTrigger: {
+              kind: 'triggered',
+              trigger: {
+                when: 'attacks',
+                subject: SELF_SUBJECT,
+                defendingPlayerIsEventPlayer: true,
+              },
+              optional: false,
+              targets: [],
+              effects: [{ op: 'eventPlayerSacrificesPermanents', count: n }],
+              description: `Annihilator ${n}`,
+            },
+          },
+        },
+      ];
+    }
+  }
   // "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to
   // its other types" (Angelic Destiny): the creature type is a layer-4 addition (CR 205.1b), the
   // keywords layer 6 and the stats the same P/T modification sublayer as every attached buff.
@@ -7365,7 +7407,13 @@ export function interpretCard(card: OracleCard): CardDefinition {
   ) {
     reasons.push(`unsupported layout "${card.layout}"`);
   }
+  // CR 308.1: a Kindred card is cast and resolves as its other card type; its subtypes are
+  // creature types (CR 308.2), which the subtype list already carries. Only Kindred Auras
+  // (Eldrazi Conscription) are reviewed; Kindred spells with changeling or creature-type spell
+  // effects stay fail-closed until they are.
+  const kindredReviewed = card.types.includes('Enchantment') && card.subtypes.includes('Aura');
   const KNOWN_TYPES = [
+    ...(kindredReviewed ? ['Kindred'] : []),
     'Creature',
     'Artifact',
     'Enchantment',

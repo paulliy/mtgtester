@@ -110,7 +110,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       "Tibalt's Trickery",
       'Animate Dead',
       'Arcane Lighthouse',
-      'Eldrazi Conscription',
       'Firemane Commando',
       'Armored Skyhunter',
       "Defacing Duskmage // Vandal's Edit",

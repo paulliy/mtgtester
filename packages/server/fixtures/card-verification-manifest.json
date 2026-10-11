@@ -1364,13 +1364,36 @@
     "3635e4e5-e655-45f4-a444-39756f55129a": {
       "name": "Eldrazi Conscription",
       "oracleSha256": "89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Enchanted creature gets +10/+10 and has trample and annihilator 2.",
-          "implementation": ["explicitly unsupported; Annihilator is omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "eldrazi-conscription-buff",
+          "oracleText": "Enchanted creature gets +10/+10 and has trample",
+          "implementation": [
+            "interpreted Aura spell (enchant creature) plus a layer 7d +10/+10 and a layer 6 trample grant on the creature this Aura is attached to (attachedToSource); only the enchanted creature changes and an unattached Aura grants nothing",
+            "the Kindred card type (CR 308) is accepted only on Auras, so Eldrazi Conscription is cast and resolves as a Kindred Enchantment — Eldrazi Aura, while another Kindred card, such as a Kindred instant, stays unmodeled"
+          ],
+          "engineTestIds": [
+            "eldrazi-conscription-pinned-oracle-supported",
+            "eldrazi-conscription-kindred-aura-only",
+            "eldrazi-conscription-buff"
+          ],
+          "viewerScenarioIds": ["eldrazi-conscription-viewer-annihilator"]
+        },
+        {
+          "id": "eldrazi-conscription-annihilator",
+          "oracleText": "annihilator 2. (Whenever it attacks, defending player sacrifices two permanents of their choice.)",
+          "implementation": [
+            "interpreted layer 6 grant of a triggered ability to the enchanted creature (annihilator, CR 702.86a): whenever it attacks, a mandatory trigger makes its defending player, the event player of the attack, sacrifice two permanents of their choice, all of them when they control two or fewer",
+            "only the player that creature attacks sacrifices anything; an attack by another creature, or no attack, triggers nothing"
+          ],
+          "engineTestIds": [
+            "eldrazi-conscription-pinned-oracle-supported",
+            "eldrazi-conscription-defender-sacrifices-two",
+            "eldrazi-conscription-defender-only",
+            "eldrazi-conscription-two-or-fewer"
+          ],
+          "viewerScenarioIds": ["eldrazi-conscription-viewer-annihilator"]
         }
       ],
       "gameplayAiScenarioIds": []

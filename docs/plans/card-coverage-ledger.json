@@ -867,6 +867,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+    "name": "Eldrazi Conscription",
+    "package": "PR05.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Annihilator 2 is claimed without an annihilator implementation."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
     "name": "Elite Scaleguard",
     "package": "PR04.20",

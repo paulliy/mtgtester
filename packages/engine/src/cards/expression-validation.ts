@@ -331,6 +331,7 @@ const effectExpressions = {
   dealDamageNonbasicLands: {},
   sacrificeOneEachOpponent: { filter: selectorOr('creature', 'nonland') },
   sacrificeEachPlayer: {},
+  eventPlayerSacrificesPermanents: { count: finite },
   putCounterByPermanentType: { count: numericExpression },
   drawRevealTopLoseManaValue: {},
   goadEachOpponent: {},

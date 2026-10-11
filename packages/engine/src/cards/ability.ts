@@ -598,6 +598,11 @@ export type Effect =
   | { op: 'dealDamageNonbasicLands'; target: EffectRef }
   | { op: 'sacrificeOneEachOpponent'; filter: 'creature' | 'nonland' | Selector }
   | { op: 'sacrificeEachPlayer'; count: number; filter: 'creature' | 'any' }
+  /**
+   * Annihilator N (CR 702.86a): "defending player sacrifices N permanents" of their choice — the
+   * attack trigger's event player, all at once.
+   */
+  | { op: 'eventPlayerSacrificesPermanents'; count: number }
   | {
       op: 'putCounterByPermanentType';
       target: EffectRef;

@@ -2298,12 +2298,6 @@
     "def": {}
   },
   {
-    "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
-    "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "366a218e-84d3-4cf9-bbc8-f2f8ecce92a3",
     "name": "Herald of Secret Streams",
     "handledLines": [
@@ -14257,12 +14251,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-eldrazi-conscription",
-    "name": "Eldrazi Conscription",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-endless-foot-assault",

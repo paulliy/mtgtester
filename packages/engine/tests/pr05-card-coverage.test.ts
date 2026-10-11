@@ -5786,6 +5786,243 @@ describe('Sheltered by Ghosts', () => {
   });
 });
 
+// PR05.20 Eldrazi Conscription
+// ---------------------------------------------------------------------------------------------
+
+describe('Eldrazi Conscription', () => {
+  const { card } = pinned('Eldrazi Conscription');
+  const BEAR = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+  const ROCK = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      power: null,
+      toughness: null,
+      oracleText: '',
+    });
+  const KINDRED_INSTANT = oracle({
+    name: 'Lab Kindred Instant',
+    typeLine: 'Kindred Instant — Rogue',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Draw a card.',
+  });
+  const names = (list: EnginePermanent[]) => list.map((perm) => perm.name).sort();
+  const controlled = (ctx: GameContext, playerId: string) =>
+    names(ctx.state.battlefield.filter((perm) => perm.controllerId === playerId));
+
+  /**
+   * P1 controls Lab Mine and Lab Spare; P2 controls Lab Theirs, Lab Rock A, Lab Rock B and Lab Rock
+   * C; P3 controls Lab Third and Lab Rock D. Eldrazi Conscription is not cast yet.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mine = spawn(ctx, 'P1', BEAR('Lab Mine'));
+    const spare = spawn(ctx, 'P1', BEAR('Lab Spare'));
+    const theirs = spawn(ctx, 'P2', BEAR('Lab Theirs'));
+    for (const rock of ['Lab Rock A', 'Lab Rock B', 'Lab Rock C']) spawn(ctx, 'P2', ROCK(rock));
+    const third = spawn(ctx, 'P3', BEAR('Lab Third'));
+    spawn(ctx, 'P3', ROCK('Lab Rock D'));
+    return { ctx, mine, spare, theirs, third };
+  }
+
+  /** The Aura on the battlefield, put there as if it had resolved onto `host`. */
+  function enchant(ctx: GameContext, host: EnginePermanent) {
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = host.id;
+    return aura;
+  }
+
+  /** P1 casts Eldrazi Conscription from hand onto `host` through the normal path and resolves it. */
+  function castOnto(ctx: GameContext, host: EnginePermanent) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), generic(8));
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Eldrazi Conscription').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, host.id]]),
+    );
+    resolveTop(ctx);
+    return object;
+  }
+
+  /**
+   * The active player attacks with `attackers` (permanent id -> defending player); no blocks.
+   * Sacrifice choices go to `sacrifice` (the prompts are recorded in `prompts`).
+   */
+  function fight(
+    ctx: GameContext,
+    attackers: Map<string, string>,
+    sacrifice: RegExp[] = [],
+    prompts: string[] = [],
+  ) {
+    const queue = [...sacrifice];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers.get(subjectId) ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      if (/sacrifice/i.test(decision.prompt)) {
+        prompts.push(decision.prompt);
+        const wanted = queue.shift();
+        const index = decision.options.findIndex((option) => wanted?.test(option.description));
+        return { index: Math.max(index, 0), targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('eldrazi-conscription-pinned-oracle-supported — the interpreter alone models the Kindred Aura, the +10/+10, trample and the granted annihilator trigger', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    expect(card.types).toEqual(['Kindred', 'Enchantment']);
+    const def = interpretCard(card);
+    // Enchant creature: an Aura spell with one creature target and no effect of its own.
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'creature' }]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // Three statics on the creature this Aura is attached to: +10/+10, trample, and the trigger.
+    const affects = { kind: 'attachedToSource' };
+    expect(def.staticEffects).toHaveLength(3);
+    expect(def.staticEffects[0]).toEqual({
+      affects,
+      op: { layer: 7, sublayer: 'd', power: 10, toughness: 10 },
+    });
+    expect(def.staticEffects[1]).toEqual({ affects, op: { layer: 6, addKeyword: 'trample' } });
+    const grant = def.staticEffects[2]!;
+    expect(grant.affects).toEqual(affects);
+    const granted = (grant.op as unknown as { addTrigger: Record<string, unknown> }).addTrigger;
+    // Annihilator 2 (CR 702.86a): whenever the creature attacks, its defending player sacrifices
+    // two permanents of their choice. The Aura has no trigger of its own.
+    expect(granted['trigger']).toEqual({
+      when: 'attacks',
+      subject: { kind: 'self' },
+      defendingPlayerIsEventPlayer: true,
+    });
+    expect(granted['optional']).toBe(false);
+    expect(granted['targets']).toEqual([]);
+    expect(granted['effects']).toEqual([{ op: 'eventPlayerSacrificesPermanents', count: 2 }]);
+    expect(def.triggers).toEqual([]);
+  });
+
+  it('eldrazi-conscription-kindred-aura-only — it is cast as a Kindred Enchantment Aura, while a Kindred instant stays unmodeled', () => {
+    const { ctx, mine } = board('conscription-kindred');
+    const object = castOnto(ctx, mine);
+    const aura = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId);
+    expect(aura?.attachedTo).toBe(mine.id);
+    const chars = computeCharacteristics(ctx, aura!);
+    expect(chars.types).toEqual(expect.arrayContaining(['Kindred', 'Enchantment']));
+    expect(chars.subtypes).toEqual(expect.arrayContaining(['Eldrazi', 'Aura']));
+    // Negative: the Kindred type is reviewed only on Auras, so another Kindred card is not read.
+    const instant = interpretCard(KINDRED_INSTANT);
+    expect(instant.modeled).toBe(false);
+    expect(instant.unmodeledReasons.join(' ')).toContain('Kindred');
+  });
+
+  it('eldrazi-conscription-buff — the enchanted creature is a 12/12 with trample, and nothing else changes', () => {
+    const { ctx, mine, spare, theirs } = board('conscription-buff');
+    expect(hasKeyword(ctx, mine, 'trample')).toBe(false);
+    castOnto(ctx, mine);
+    expect(effectivePT(ctx, mine)).toEqual({ power: 12, toughness: 12 });
+    expect(hasKeyword(ctx, mine, 'trample')).toBe(true);
+    for (const other of [spare, theirs]) {
+      expect(effectivePT(ctx, other)).toEqual({ power: 2, toughness: 2 });
+      expect(hasKeyword(ctx, other, 'trample')).toBe(false);
+    }
+    // Unattached, it grants nothing.
+    const [aura] = ctx.state.battlefield.filter((perm) => perm.name === 'Eldrazi Conscription');
+    aura!.attachedTo = null;
+    expect(effectivePT(ctx, mine)).toEqual({ power: 2, toughness: 2 });
+  });
+
+  it('eldrazi-conscription-defender-sacrifices-two — when the enchanted creature attacks only the defending player sacrifices two permanents of their choice', () => {
+    const { ctx, mine } = board('conscription-annihilator');
+    enchant(ctx, mine);
+    const before = {
+      P1: controlled(ctx, 'P1'),
+      P3: controlled(ctx, 'P3'),
+      P4: controlled(ctx, 'P4'),
+    };
+    const prompts: string[] = [];
+    fight(ctx, new Map([[mine.id, 'P2']]), [/Lab Theirs/, /Lab Rock B/], prompts);
+    // P2 was asked twice, and chose which two to lose.
+    expect(prompts).toHaveLength(2);
+    expect(prompts.join('\n')).toMatch(/1 of 2/);
+    expect(prompts.join('\n')).toMatch(/2 of 2/);
+    expect(controlled(ctx, 'P2')).toEqual(['Lab Rock A', 'Lab Rock C']);
+    expect(
+      playerById(ctx, 'P2')
+        .graveyard.map((c) => c.name)
+        .sort(),
+    ).toEqual(['Lab Rock B', 'Lab Theirs']);
+    // Nobody else lost anything.
+    expect(controlled(ctx, 'P1')).toEqual(before.P1);
+    expect(controlled(ctx, 'P3')).toEqual(before.P3);
+    expect(controlled(ctx, 'P4')).toEqual(before.P4);
+    // The 12-power trampler hit P2 as well.
+    expect(playerById(ctx, 'P2').life).toBe(28);
+  });
+
+  it('eldrazi-conscription-defender-only — attacking another player takes permanents from that player, and nothing is sacrificed to an attack by another creature or by none', () => {
+    // The defending player is the one attacked: P3 here, not P2.
+    const other = board('conscription-p3');
+    enchant(other.ctx, other.mine);
+    const rest = controlled(other.ctx, 'P2');
+    fight(other.ctx, new Map([[other.mine.id, 'P3']]));
+    expect(controlled(other.ctx, 'P3')).toEqual([]);
+    expect(controlled(other.ctx, 'P2')).toEqual(rest);
+
+    // A different, unenchanted creature attacks: no sacrifice.
+    const bystander = board('conscription-bystander');
+    enchant(bystander.ctx, bystander.mine);
+    const p2 = controlled(bystander.ctx, 'P2');
+    fight(bystander.ctx, new Map([[bystander.spare.id, 'P2']]));
+    expect(controlled(bystander.ctx, 'P2')).toEqual(p2);
+
+    // The enchanted creature stays home: no sacrifice either.
+    const home = board('conscription-home');
+    enchant(home.ctx, home.mine);
+    fight(home.ctx, new Map());
+    expect(controlled(home.ctx, 'P2')).toEqual(p2);
+    expect(controlled(home.ctx, 'P3')).toEqual(['Lab Rock D', 'Lab Third']);
+  });
+
+  it('eldrazi-conscription-two-or-fewer — a defending player with two or fewer permanents sacrifices all of them without a choice', () => {
+    const { ctx, mine } = board('conscription-few');
+    enchant(ctx, mine);
+    const prompts: string[] = [];
+    // P3 controls exactly two permanents: both go, and P3 is never asked.
+    fight(ctx, new Map([[mine.id, 'P3']]), [], prompts);
+    expect(prompts).toEqual([]);
+    expect(controlled(ctx, 'P3')).toEqual([]);
+    expect(
+      playerById(ctx, 'P3')
+        .graveyard.map((c) => c.name)
+        .sort(),
+    ).toEqual(['Lab Rock D', 'Lab Third']);
+
+    // One permanent: that one. No permanents at all: nothing happens and nothing breaks.
+    const one = board('conscription-one');
+    enchant(one.ctx, one.mine);
+    for (const perm of one.ctx.state.battlefield.filter((p) => p.controllerId === 'P3').slice(1))
+      pump(moveObject(one.ctx, perm, { zone: 'graveyard' }));
+    fight(one.ctx, new Map([[one.mine.id, 'P3']]));
+    expect(controlled(one.ctx, 'P3')).toEqual([]);
+    const none = board('conscription-none');
+    enchant(none.ctx, none.mine);
+    fight(none.ctx, new Map([[none.mine.id, 'P4']]));
+    expect(controlled(none.ctx, 'P4')).toEqual([]);
+    expect(playerById(none.ctx, 'P4').life).toBe(28);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -5811,6 +6048,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Cranial Plating',
     sha256: '839a622b17160d32a4e55cddfabe41e707f6da95bdc5f96908679d28ae211580',
     clauseCount: 3,
+  },
+  {
+    name: 'Eldrazi Conscription',
+    sha256: '89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe',
+    clauseCount: 2,
   },
   {
     name: 'Fallen Ideal',

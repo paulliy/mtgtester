@@ -70,7 +70,6 @@ const REASONS: Record<string, string> = {
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
-  'Eldrazi Conscription': 'Annihilator 2 is claimed without an annihilator implementation.',
   'Firemane Commando':
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
   'Armored Skyhunter': 'Equipment filter is any artifact, and attach is omitted.',
@@ -292,6 +291,7 @@ describe('Marchesa catalog audit containment', () => {
     'Killian, Decisive Mentor',
     'Angelic Destiny',
     'Sheltered by Ghosts',
+    'Eldrazi Conscription',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

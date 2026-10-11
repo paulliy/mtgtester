@@ -786,6 +786,7 @@ const families = {
       dealDamageNonbasicLands: true,
       sacrificeOneEachOpponent: true,
       sacrificeEachPlayer: true,
+      eventPlayerSacrificesPermanents: true,
       putCounterByPermanentType: true,
       drawRevealTopLoseManaValue: true,
       goadEachOpponent: true,

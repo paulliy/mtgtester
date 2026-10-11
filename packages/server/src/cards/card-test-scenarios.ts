@@ -8558,6 +8558,39 @@ function shelteredByGhostsScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function eldraziConscriptionScenario(gameId: GameId): CardTestScenario {
+  const conscription = pinnedFrom(COVERAGE_PR05, 'Eldrazi Conscription');
+  const forests = Array.from({ length: 8 }, () => FOREST);
+  return pr01Scenario(gameId, {
+    id: 'eldrazi-conscription-viewer-annihilator',
+    title:
+      'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+    instructions: [
+      'Eldrazi Conscription is in your hand. Eight Forests and Lab Green Bear (2/2) are on your battlefield. An opponent controls Lab Bird and Lab Hex.',
+      'Cast Eldrazi Conscription targeting Lab Green Bear and let it resolve: Lab Green Bear is a 12/12 with trample and annihilator 2.',
+      'Attack P2 with Lab Green Bear. Annihilator 2 triggers: P2, the defending player, sacrifices two permanents. They control exactly two, so both are sacrificed. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Lab Bird and Lab Hex are in P2’s graveyard and P2 controls nothing. P3 and P4 are untouched. Lab Green Bear dealt 12 to P2, leaving P2 at 28, and Eldrazi Conscription stays on Lab Green Bear.',
+    oracleSha256: conscription.sha256,
+    clauseIds: ['eldrazi-conscription-buff', 'eldrazi-conscription-annihilator'],
+    decks: {
+      P1: [conscription.card, LAB_GREEN_BEAR, ...forests],
+      P2: [LAB_BIRD, LAB_HEX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Eldrazi Conscription'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Green Bear', ...forests.map((forest) => forest.name)] },
+        { playerId: 'P2', cardNames: ['Lab Bird', 'Lab Hex'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10405,6 +10438,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw',
   'angelic-destiny-viewer-angel-then-return',
   'sheltered-by-ghosts-viewer-exile-and-lifelink',
+  'eldrazi-conscription-viewer-annihilator',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10689,6 +10723,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'killian-decisive-mentor-viewer-tap-goad-and-attack-draw': killianDecisiveMentorScenario,
   'angelic-destiny-viewer-angel-then-return': angelicDestinyScenario,
   'sheltered-by-ghosts-viewer-exile-and-lifelink': shelteredByGhostsScenario,
+  'eldrazi-conscription-viewer-annihilator': eldraziConscriptionScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

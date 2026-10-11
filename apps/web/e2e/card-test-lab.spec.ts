@@ -7220,3 +7220,53 @@ test('Sheltered by Ghosts: exile an opposing permanent, then attack with lifelin
   await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('37');
   await expect(permanent(page, 'Sheltered by Ghosts')).toHaveCount(1);
 });
+
+test('Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eldrazi Conscription: a 12/12 trampler attacks and the defending player sacrifices two permanents',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(1);
+
+  // Cast the Aura on Lab Green Bear: it becomes a 12/12.
+  const conscription = handCard(page, 'Eldrazi Conscription');
+  await expect(conscription).toHaveClass(/actionable/, { timeout: 15_000 });
+  await conscription.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eldrazi Conscription')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('12/12');
+
+  // Attack P2: annihilator 2 makes the defending player sacrifice both of their permanents.
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Green Bear' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Hex')).toHaveCount(0);
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('28');
+  await expect(permanent(page, 'Eldrazi Conscription')).toHaveCount(1);
+});

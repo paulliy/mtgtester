@@ -659,6 +659,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "89260b61c79de7bbe5a6665d51c5798add420bea6cf7b8eb3510220bb8baeebe",
+      "card": {
+        "oracleId": "3635e4e5-e655-45f4-a444-39756f55129a",
+        "scryfallId": "33965c48-a7ce-4a04-8251-8eeb2d908c0b",
+        "name": "Eldrazi Conscription",
+        "manaCost": "{8}",
+        "cmc": 8,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Kindred Enchantment — Eldrazi Aura",
+        "supertypes": [],
+        "types": [
+          "Kindred",
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Eldrazi",
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nEnchanted creature gets +10/+10 and has trample and annihilator 2. (Whenever it attacks, defending player sacrifices two permanents of their choice.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }
