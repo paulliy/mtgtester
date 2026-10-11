@@ -108,7 +108,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       "Olórin's Searing Light",
       'Reverberate',
       "Tibalt's Trickery",
-      'Animate Dead',
       'Arcane Lighthouse',
       'Firemane Commando',
       'Armored Skyhunter',

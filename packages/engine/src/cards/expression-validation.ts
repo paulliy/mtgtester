@@ -333,6 +333,8 @@ const effectExpressions = {
   sacrificeEachPlayer: {},
   eventPlayerSacrificesPermanents: { count: finite },
   attackingOpponentUntapsNonland: {},
+  reanimateEnchantedCardAndAttach: {},
+  sacrificeRememberedPermanent: {},
   putCounterByPermanentType: { count: numericExpression },
   drawRevealTopLoseManaValue: {},
   goadEachOpponent: {},

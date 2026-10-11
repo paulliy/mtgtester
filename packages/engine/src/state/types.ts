@@ -78,6 +78,11 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * until it becomes unattached or attached to an illegal object (CR 702.103f).
    */
   bestowed?: boolean;
+  /**
+   * Animate Dead's enchant swap: once its enters trigger resolves, it enchants only the creature
+   * put onto the battlefield with it (that object's id), or nothing (`null`) if none was.
+   */
+  reanimatedHostId?: ObjectId | null;
   /** Player this creature is attacking, while in combat. */
   attacking: PlayerId | null;
   /** Attacker this creature is blocking, while in combat. */

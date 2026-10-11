@@ -885,3 +885,35 @@ describe('Eidolon of Countless Battles Card Test Lab scenario', () => {
     replays('eidolon-of-countless-battles-viewer-bestow', steps);
   });
 });
+
+describe('Animate Dead Card Test Lab scenario', () => {
+  it('animate-dead-viewer-reanimate — Animate Dead returns Lab Ox from P2’s graveyard as a 3/4 under P1, and when Lab Doom kills it the Aura goes to the graveyard', () => {
+    const steps: Step[] = [
+      { action: 'Cast Animate Dead', targets: ['Lab Ox'] },
+      { action: 'Cast Lab Doom', targets: ['Lab Ox'] },
+    ];
+    const { scenario, state, seat, onBattlefield, offered } = run(
+      'animate-dead-viewer-reanimate',
+      steps,
+    );
+    // Lab Ox, a card in an opponent's graveyard, was offered as the Aura's target.
+    expect(
+      offered.some((options) => options.some((option) => /Cast Animate Dead/.test(option))),
+    ).toBe(true);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(onBattlefield('Animate Dead')).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Ox']);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Animate Dead', 'Lab Doom']);
+    // It really came back first: the Aura was attached to the returned creature under P1.
+    expect(
+      state.eventLog.filter((event) => event.type === 'attach').map((event) => event.payload),
+    ).toEqual([{ equipment: 'Animate Dead', to: 'Lab Ox' }]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('animate-dead-viewer-reanimate', steps);
+  });
+});

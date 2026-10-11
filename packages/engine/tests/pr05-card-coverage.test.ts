@@ -6772,6 +6772,242 @@ describe('Eidolon of Countless Battles', () => {
   });
 });
 
+// PR05.17 Animate Dead
+// ---------------------------------------------------------------------------------------------
+
+describe('Animate Dead', () => {
+  const { card } = pinned('Animate Dead');
+  const BEAR = (name: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2', oracleText: text });
+  const ROCK = oracle({
+    name: 'Lab Rock',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: '',
+  });
+  const named = (ctx: GameContext, name: string) =>
+    ctx.state.battlefield.filter((perm) => perm.name === name);
+  const inGraveyard = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).graveyard.map((c) => c.name);
+
+  /**
+   * Lab Corpse (P3's), Lab Mine's Corpse (P1's) and a Lab Rock card are in graveyards; P1 controls
+   * Lab Other and P2 controls Lab Theirs on the battlefield.
+   */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const corpse = conjure(ctx, 'P3', BEAR('Lab Corpse'), 'graveyard');
+    const mineCorpse = conjure(ctx, 'P1', BEAR('Lab Own Corpse'), 'graveyard');
+    const rock = conjure(ctx, 'P2', ROCK, 'graveyard');
+    const other = spawn(ctx, 'P1', BEAR('Lab Other'));
+    const theirs = spawn(ctx, 'P2', BEAR('Lab Theirs'));
+    return { ctx, corpse, mineCorpse, rock, other, theirs };
+  }
+
+  /** P1 casts Animate Dead from hand; returns the option's legal host ids. */
+  function castOption(ctx: GameContext) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }, { symbol: 'C' }]);
+    return { object, option: optionFor(ctx, 'P1', object.id) };
+  }
+
+  /** P1 casts Animate Dead onto the graveyard card `target`, leaving the Aura spell on the stack. */
+  function cast(ctx: GameContext, targetId: string) {
+    const { option } = castOption(ctx);
+    expect(option, 'P1 casts Animate Dead').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+  }
+
+  /** Cast onto `targetId`, resolve the spell and its enters trigger. */
+  function reanimate(ctx: GameContext, targetId: string) {
+    cast(ctx, targetId);
+    resolveTop(ctx);
+    settle(ctx);
+    return named(ctx, 'Animate Dead')[0];
+  }
+
+  it('animate-dead-pinned-oracle-supported — the interpreter alone models the graveyard enchant ability, the reanimating enters trigger and the -1/-0', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    // Enchant creature card in a graveyard: the Aura spell's one target is a creature card in
+    // any player's graveyard.
+    expect(def.spellAbility?.targets).toEqual([
+      {
+        kind: 'cardInGraveyard',
+        filter: { kind: 'type', value: 'Creature' },
+        graveyardOwnerScope: 'any',
+      },
+    ]);
+    expect(def.spellAbility?.effects).toEqual([]);
+    // When this Aura enters: one mandatory trigger that does the whole swap, return and attach.
+    expect(def.triggers).toHaveLength(1);
+    const [enters] = def.triggers;
+    expect(enters!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(enters!.optional).toBe(false);
+    expect(enters!.targets).toEqual([]);
+    expect(enters!.effects).toEqual([{ op: 'reanimateEnchantedCardAndAttach' }]);
+    // Enchanted creature gets -1/-0: a layer 7d modification of the attached creature (the parser
+    // reads the zero as -0, which changes nothing).
+    expect(def.staticEffects).toHaveLength(1);
+    const [shrink] = def.staticEffects;
+    expect(shrink!.affects).toEqual({ kind: 'attachedToSource' });
+    const op = shrink!.op as { layer: number; sublayer: string; power: number; toughness: number };
+    expect([op.layer, op.sublayer, op.power]).toEqual([7, 'd', -1]);
+    expect(Math.abs(op.toughness)).toBe(0);
+  });
+
+  it('animate-dead-enchant-graveyard-creature — it can enchant a creature card in any graveyard, and not a noncreature card or a creature on the battlefield', () => {
+    const { ctx, corpse, mineCorpse, rock, other, theirs } = board('animate-cast');
+    const { option } = castOption(ctx);
+    expect(option).toBeDefined();
+    const hosts = option!.targets![0]!.options;
+    // Creature cards in your graveyard and in another player's graveyard are both legal.
+    expect(hosts).toContain(corpse.id);
+    expect(hosts).toContain(mineCorpse.id);
+    // A noncreature card in a graveyard, and creatures on the battlefield, are not.
+    expect(hosts).not.toContain(rock.id);
+    expect(hosts).not.toContain(other.id);
+    expect(hosts).not.toContain(theirs.id);
+    // With no creature card in any graveyard the Aura cannot be cast at all.
+    const bare = pod('animate-cast-none');
+    spawn(bare, 'P2', BEAR('Lab Theirs'));
+    conjure(bare, 'P2', ROCK, 'graveyard');
+    expect(castOption(bare).option).toBeUndefined();
+    // Cast onto a graveyard card, the Aura resolves onto the battlefield attached to that card
+    // (CR 303.4a), before its enters trigger has run.
+    cast(ctx, corpse.id);
+    resolveTop(ctx);
+    const [aura] = named(ctx, 'Animate Dead');
+    expect(aura).toBeDefined();
+    expect(aura!.attachedTo).toBe(corpse.id);
+  });
+
+  it('animate-dead-reanimate — the card returns under your control with the Aura attached, and it gets -1/-0', () => {
+    const { ctx, corpse, other, theirs } = board('animate-reanimate');
+    const aura = reanimate(ctx, corpse.id);
+    // Lab Corpse is P3's card, returned under P1's control.
+    const [back] = named(ctx, 'Lab Corpse');
+    expect(back).toBeDefined();
+    expect(back!.controllerId).toBe('P1');
+    expect(inGraveyard(ctx, 'P3')).not.toContain('Lab Corpse');
+    expect(aura?.attachedTo).toBe(back!.id);
+    // Attached with a new timestamp (CR 613.7e), after the creature entered.
+    expect(aura!.timestamp).toBeGreaterThan(back!.timestamp);
+    // -1/-0 on the enchanted creature only.
+    expect(effectivePT(ctx, back!)).toEqual({ power: 1, toughness: 2 });
+    expect(effectivePT(ctx, other)).toEqual({ power: 2, toughness: 2 });
+    expect(effectivePT(ctx, theirs)).toEqual({ power: 2, toughness: 2 });
+    // Your own graveyard works the same way.
+    const mine = board('animate-reanimate-own');
+    const own = reanimate(mine.ctx, mine.mineCorpse.id);
+    const [ownBack] = named(mine.ctx, 'Lab Own Corpse');
+    expect(ownBack?.controllerId).toBe('P1');
+    expect(own?.attachedTo).toBe(ownBack?.id);
+  });
+
+  it('animate-dead-leave-sacrifice — when the Aura leaves the battlefield that creature’s controller sacrifices it, and only it', () => {
+    const { ctx, corpse, other } = board('animate-leaves');
+    const aura = reanimate(ctx, corpse.id);
+    const [back] = named(ctx, 'Lab Corpse');
+    expect(back).toBeDefined();
+    kill(ctx, aura!);
+    settle(ctx);
+    expect(named(ctx, 'Lab Corpse')).toEqual([]);
+    // It is sacrificed, so it goes to its owner's graveyard; the Aura is in its own.
+    expect(inGraveyard(ctx, 'P3')).toContain('Lab Corpse');
+    expect(inGraveyard(ctx, 'P1')).toContain('Animate Dead');
+    expect(ctx.state.battlefield.includes(other)).toBe(true);
+
+    // Exiled rather than destroyed, the Aura still leaves the battlefield: the creature goes too.
+    const exiled = board('animate-exiled');
+    const exiledAura = reanimate(exiled.ctx, exiled.corpse.id);
+    pump(moveObject(exiled.ctx, exiledAura!, { zone: 'exile' }));
+    settle(exiled.ctx);
+    expect(named(exiled.ctx, 'Lab Corpse')).toEqual([]);
+
+    // The creature controlled by someone else when the Aura leaves is still the one sacrificed.
+    const stolen = board('animate-stolen');
+    const stolenAura = reanimate(stolen.ctx, stolen.corpse.id);
+    named(stolen.ctx, 'Lab Corpse')[0]!.controllerId = 'P2';
+    kill(stolen.ctx, stolenAura!);
+    settle(stolen.ctx);
+    expect(named(stolen.ctx, 'Lab Corpse')).toEqual([]);
+  });
+
+  it('animate-dead-creature-dies — when the returned creature leaves, the Aura goes to the graveyard and nothing else is sacrificed', () => {
+    const { ctx, corpse, other, theirs } = board('animate-dies');
+    reanimate(ctx, corpse.id);
+    const [back] = named(ctx, 'Lab Corpse');
+    kill(ctx, back!);
+    settle(ctx);
+    expect(named(ctx, 'Animate Dead')).toEqual([]);
+    expect(inGraveyard(ctx, 'P1')).toContain('Animate Dead');
+    expect(inGraveyard(ctx, 'P3')).toContain('Lab Corpse');
+    expect(ctx.state.battlefield.includes(other)).toBe(true);
+    expect(ctx.state.battlefield.includes(theirs)).toBe(true);
+    // Negative: another creature of yours dying leaves the Aura and its creature alone.
+    const stays = board('animate-stays');
+    reanimate(stays.ctx, stays.corpse.id);
+    kill(stays.ctx, stays.other);
+    settle(stays.ctx);
+    expect(named(stays.ctx, 'Animate Dead')).toHaveLength(1);
+    expect(named(stays.ctx, 'Lab Corpse')).toHaveLength(1);
+  });
+
+  it('animate-dead-card-left — if the card left the graveyard before the trigger resolved nothing returns and the Aura goes to the graveyard', () => {
+    // The enters trigger is on the stack when the card is exiled from the graveyard.
+    const { ctx, corpse } = board('animate-gone');
+    cast(ctx, corpse.id);
+    resolveTop(ctx);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, corpse, { zone: 'exile' }));
+    resolveTop(ctx);
+    settle(ctx);
+    expect(named(ctx, 'Lab Corpse')).toEqual([]);
+    expect(named(ctx, 'Animate Dead')).toEqual([]);
+    expect(inGraveyard(ctx, 'P1')).toContain('Animate Dead');
+    expect(ctx.state.exile.map((c) => c.name)).toEqual(['Lab Corpse']);
+
+    // The card is exiled in response to the Aura spell: its only target is gone, so it fizzles.
+    const early = board('animate-fizzle');
+    cast(early.ctx, early.corpse.id);
+    pump(moveObject(early.ctx, early.corpse, { zone: 'exile' }));
+    resolveTop(early.ctx);
+    settle(early.ctx);
+    expect(named(early.ctx, 'Animate Dead')).toEqual([]);
+    expect(named(early.ctx, 'Lab Corpse')).toEqual([]);
+    expect(inGraveyard(early.ctx, 'P1')).toContain('Animate Dead');
+  });
+
+  it('animate-dead-protection — a creature with protection from black returns but the Aura cannot attach to it (CR 702.16c), so the Aura goes to the graveyard and that creature is sacrificed', () => {
+    const ctx = pod('animate-protection');
+    const corpse = conjure(ctx, 'P3', BEAR('Lab Pro Black', 'Protection from black'), 'graveyard');
+    reanimate(ctx, corpse.id);
+    expect(named(ctx, 'Animate Dead')).toEqual([]);
+    expect(named(ctx, 'Lab Pro Black')).toEqual([]);
+    expect(inGraveyard(ctx, 'P1')).toContain('Animate Dead');
+    expect(inGraveyard(ctx, 'P3')).toContain('Lab Pro Black');
+
+    // Negative: a creature with protection from another color is enchanted as usual.
+    const fine = pod('animate-protection-other');
+    const white = conjure(fine, 'P3', BEAR('Lab Pro White', 'Protection from white'), 'graveyard');
+    const aura = reanimate(fine, white.id);
+    expect(aura).toBeDefined();
+    expect(named(fine, 'Lab Pro White')).toHaveLength(1);
+    expect(aura!.attachedTo).toBe(named(fine, 'Lab Pro White')[0]!.id);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
@@ -6792,6 +7028,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Angelic Destiny',
     sha256: '3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496',
     clauseCount: 2,
+  },
+  {
+    name: 'Animate Dead',
+    sha256: '236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd',
+    clauseCount: 3,
   },
   {
     name: 'Cranial Plating',

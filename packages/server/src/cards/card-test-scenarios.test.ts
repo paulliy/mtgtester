@@ -375,6 +375,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'tenuous-truce-viewer-attack-sacrifices',
       'tenuous-truce-viewer-other-attack-and-end-step',
       'eidolon-of-countless-battles-viewer-bestow',
+      'animate-dead-viewer-reanimate',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

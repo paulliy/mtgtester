@@ -8717,6 +8717,34 @@ function eidolonOfCountlessBattlesScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function animateDeadScenario(gameId: GameId): CardTestScenario {
+  const animate = pinnedFrom(COVERAGE_PR05, 'Animate Dead');
+  return pr01Scenario(gameId, {
+    id: 'animate-dead-viewer-reanimate',
+    title: 'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+    instructions: [
+      'Animate Dead and Lab Doom are in your hand. Four Swamps are on your battlefield. Lab Ox (4/4) is in P2’s graveyard.',
+      'Cast Animate Dead targeting Lab Ox in P2’s graveyard and let it resolve. Its enters trigger returns Lab Ox to the battlefield under your control and attaches the Aura to it: Lab Ox is a 3/4.',
+      'Cast Lab Doom targeting Lab Ox and let it resolve. Lab Ox dies, so Animate Dead is put into your graveyard.',
+    ],
+    expectedOutcome:
+      'Lab Ox is back in P2’s graveyard and Animate Dead is in yours, together with Lab Doom. Nothing is on the battlefield but your lands.',
+    oracleSha256: animate.sha256,
+    clauseIds: ['animate-dead-enchant', 'animate-dead-reanimate-attach', 'animate-dead-shrink'],
+    decks: {
+      P1: [animate.card, LAB_DOOM, SWAMP, SWAMP, SWAMP, SWAMP],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Animate Dead', 'Lab Doom'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Swamp', 'Swamp', 'Swamp', 'Swamp'] }],
+      graveyard: [{ playerId: 'P2', cardNames: ['Lab Ox'] }],
+    },
+  });
+}
+
 function forgottenAncientScenario(gameId: GameId): CardTestScenario {
   const ancient = pinnedFrom(COVERAGE_PR04, 'Forgotten Ancient');
   return pr01Scenario(gameId, {
@@ -10569,6 +10597,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tenuous-truce-viewer-attack-sacrifices',
   'tenuous-truce-viewer-other-attack-and-end-step',
   'eidolon-of-countless-battles-viewer-bestow',
+  'animate-dead-viewer-reanimate',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -10858,6 +10887,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tenuous-truce-viewer-attack-sacrifices': tenuousTruceAttackScenario,
   'tenuous-truce-viewer-other-attack-and-end-step': tenuousTruceScopeScenario,
   'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,
+  'animate-dead-viewer-reanimate': animateDeadScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

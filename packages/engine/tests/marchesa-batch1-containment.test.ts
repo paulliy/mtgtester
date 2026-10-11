@@ -68,7 +68,6 @@ const REASONS: Record<string, string> = {
     'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
-  'Animate Dead': 'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
   'Firemane Commando':
     'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
@@ -291,6 +290,7 @@ describe('Marchesa catalog audit containment', () => {
     'Eldrazi Conscription',
     'Curse of Bounty',
     'Eidolon of Countless Battles',
+    'Animate Dead',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

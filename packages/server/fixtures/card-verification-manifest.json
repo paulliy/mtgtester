@@ -1273,13 +1273,48 @@
     "c0d8fef4-65f4-4769-982d-b397d2b7e977": {
       "name": "Animate Dead",
       "oracleSha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "animate-dead-enchant",
           "oracleText": "Enchant creature card in a graveyard",
-          "implementation": ["explicitly unsupported; graveyard Aura attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted Aura spell whose one target is a creature card in any player's graveyard (cardInGraveyard, creature filter, any graveyard owner); a noncreature card in a graveyard and a creature on the battlefield are not legal hosts, and with no creature card in any graveyard the Aura cannot be cast",
+            "the Aura enters attached to that graveyard card and stays legal there as a state-based action until its enters trigger resolves; if the card has left the graveyard by resolution the spell has no legal target and does not resolve, and if it leaves while the trigger is on the stack nothing returns and the Aura is put into the graveyard"
+          ],
+          "engineTestIds": [
+            "animate-dead-pinned-oracle-supported",
+            "animate-dead-enchant-graveyard-creature",
+            "animate-dead-card-left"
+          ],
+          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
+        },
+        {
+          "id": "animate-dead-reanimate-attach",
+          "oracleText": "When this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.",
+          "implementation": [
+            "interpreted mandatory enters trigger with an intervening if (CR 603.4) running one effect, reanimateEnchantedCardAndAttach: the Aura now enchants only the creature put onto the battlefield with it; that creature card returns from its graveyard under the Aura controller's control, whoever owned it, and the Aura attaches to it with a new timestamp (CR 613.7e)",
+            "a delayed trigger set up on the Aura object makes that creature's controller sacrifice that exact creature when the Aura leaves the battlefield, by any means; the returned creature leaving instead puts the Aura into the graveyard as a state-based action and sacrifices nothing else; a creature with protection from black returns but the Aura cannot attach to it (CR 702.16c), so the Aura goes to the graveyard and that creature is sacrificed"
+          ],
+          "engineTestIds": [
+            "animate-dead-pinned-oracle-supported",
+            "animate-dead-reanimate",
+            "animate-dead-leave-sacrifice",
+            "animate-dead-creature-dies",
+            "animate-dead-card-left",
+            "animate-dead-protection"
+          ],
+          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
+        },
+        {
+          "id": "animate-dead-shrink",
+          "oracleText": "Enchanted creature gets -1/-0.",
+          "implementation": [
+            "interpreted layer 7d -1/-0 on the creature this Aura is attached to (attachedToSource), so the returned creature is one power smaller and no other creature changes; it applies from the moment the Aura attaches to the returned creature",
+            "the Aura gives nothing once it has left the battlefield"
+          ],
+          "engineTestIds": ["animate-dead-pinned-oracle-supported", "animate-dead-reanimate"],
+          "viewerScenarioIds": ["animate-dead-viewer-reanimate"]
         }
       ],
       "gameplayAiScenarioIds": []

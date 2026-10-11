@@ -1961,6 +1961,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   {
     file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
     titlePath: ['Bess, Soul Nourisher: a 1/1 entering grows Bess, then her attack pumps the 1/1s'],
   },
   {

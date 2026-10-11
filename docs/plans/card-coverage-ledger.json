@@ -139,6 +139,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+    "name": "Animate Dead",
+    "package": "PR05.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Graveyard Aura attach and leave-the-battlefield sacrifice are omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr05-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr05-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "4c3ad545-b375-44a7-a24e-58baacc4e4b6",
     "name": "Annie Joins Up",
     "package": "W7",

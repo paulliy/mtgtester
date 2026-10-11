@@ -33,6 +33,7 @@ import {
 } from '../state/objects';
 import {
   getDefByOracleId,
+  hasProtectionFrom,
   isCreaturePermanent,
   playersInApnapOrder,
   sourceColorsOf,
@@ -261,9 +262,29 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
         perm.attachedTo !== null &&
         s.players.some((p) => p.id === perm.attachedTo) &&
         auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
+      // Animate Dead before its enters trigger resolves: "enchant creature card in a graveyard"
+      // is satisfied by that card while it stays there.
+      const graveyardHostLegal =
+        perm.attachedTo !== null &&
+        perm.reanimatedHostId === undefined &&
+        auraGraveyardHostIsLegal(ctx, perm, perm.attachedTo);
+      // After it: only the creature put onto the battlefield with it, while it is a creature
+      // without protection from the Aura (CR 702.16c).
+      const reanimatedHostIllegal =
+        perm.reanimatedHostId !== undefined &&
+        (host === undefined ||
+          host.id !== perm.reanimatedHostId ||
+          !isCreaturePermanent(ctx, host) ||
+          hasProtectionFrom(ctx, host, chars.colors));
+      // Any other permanent host must satisfy the enchant restriction.
+      const hostIllegal =
+        host !== undefined &&
+        perm.reanimatedHostId === undefined &&
+        enchantAllows(ctx, perm, host) === false;
       if (
-        (host === undefined && !playerHostLegal) ||
-        (host !== undefined && enchantAllows(ctx, perm, host) === false)
+        (host === undefined && !playerHostLegal && !graveyardHostLegal) ||
+        reanimatedHostIllegal ||
+        hostIllegal
       ) {
         debug(
           ctx,
@@ -767,4 +788,24 @@ function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId
     aura.cardId,
     false,
   ).includes(playerId);
+}
+
+/** Whether a graveyard card is still a legal host for `aura`'s enchant ability (Animate Dead). */
+function auraGraveyardHostIsLegal(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  cardId: string,
+): boolean {
+  const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
+  if (enchant === undefined || enchant.kind !== 'cardInGraveyard') return false;
+  return computeTargetOptions(
+    ctx,
+    enchant,
+    aura.controllerId,
+    computeCharacteristics(ctx, aura).colors,
+    undefined,
+    undefined,
+    aura.cardId,
+    false,
+  ).includes(cardId);
 }

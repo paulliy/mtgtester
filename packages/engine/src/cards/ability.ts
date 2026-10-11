@@ -609,6 +609,16 @@ export type Effect =
    * ability's controller.
    */
   | { op: 'attackingOpponentUntapsNonland' }
+  /**
+   * Animate Dead's enters trigger, "if it's on the battlefield": it now enchants only the creature
+   * put onto the battlefield with it; the creature card it enchants, if still in a graveyard,
+   * returns under this ability's controller and this Aura attaches to it with a new timestamp
+   * (CR 613.7e); and "when this Aura leaves the battlefield, that creature's controller
+   * sacrifices it" is set up as a delayed trigger on this Aura object (CR 603.7).
+   */
+  | { op: 'reanimateEnchantedCardAndAttach' }
+  /** The delayed half: that exact object, if it is still on the battlefield, is sacrificed. */
+  | { op: 'sacrificeRememberedPermanent'; objectId: string }
   | {
       op: 'putCounterByPermanentType';
       target: EffectRef;

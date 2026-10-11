@@ -99,10 +99,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Hateful Eidolon: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('c0d8fef4-65f4-4769-982d-b397d2b7e977', 'Animate Dead', [
-    'Enchant creature card in a graveyard',
-    'When this Aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature\'s controller sacrifices it.',
-  ]);
+  // Animate Dead: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
   // Forum of Amity: restored in coverage PR01. The interpreter now models enters-tapped, the
   // {W}/{B} mana ability, and the surveil activation faithfully, so no override is registered.

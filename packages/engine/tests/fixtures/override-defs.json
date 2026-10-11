@@ -8003,12 +8003,6 @@
     }
   },
   {
-    "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
-    "name": "Animate Dead",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [],
@@ -11627,12 +11621,6 @@
   {
     "oracleId": "oracle-angel-s-grace",
     "name": "Angel's Grace",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-animate-dead",
-    "name": "Animate Dead",
     "handledLines": [],
     "def": {}
   },

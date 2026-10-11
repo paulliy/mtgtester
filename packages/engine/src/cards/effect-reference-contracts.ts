@@ -122,6 +122,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   sacrificeEachPlayer: {},
   eventPlayerSacrificesPermanents: {},
   attackingOpponentUntapsNonland: {},
+  reanimateEnchantedCardAndAttach: {},
+  sacrificeRememberedPermanent: {},
   putCounterByPermanentType: { target: permanent },
   drawRevealTopLoseManaValue: {},
   goadEachOpponent: {},

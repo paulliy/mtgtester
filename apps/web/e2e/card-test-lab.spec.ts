@@ -7468,3 +7468,58 @@ test('Eidolon of Countless Battles: bestow onto a creature, then it becomes a cr
     .toBeFalsy();
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+test('Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
+  );
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+
+  // Cast Animate Dead on Lab Ox in P2's graveyard: the Aura's only legal targets are cards there.
+  const animate = handCard(page, 'Animate Dead');
+  await expect(animate).toHaveClass(/actionable/, { timeout: 15_000 });
+  await animate.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await page
+    .locator('.zone-card-thumb.targetable')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, permanent(page, 'Lab Ox'));
+  // The creature returns under your control with the Aura attached, as a 3/4.
+  await expect(permanent(page, 'Lab Ox')).toContainText('3/4');
+  await expect
+    .poll(() => {
+      const board = boards.at(-1);
+      const ox = board?.find((p) => p.name === 'Lab Ox');
+      return ox === undefined
+        ? undefined
+        : board?.find((p) => p.name === 'Animate Dead')?.attachedTo === ox.id;
+    })
+    .toBe(true);
+
+  // Destroy it: the Aura is put into the graveyard with it.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Animate Dead')).toHaveCount(0);
+  await expect(page.getByText('Graveyard (2)')).toBeVisible();
+});

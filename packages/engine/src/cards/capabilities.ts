@@ -314,6 +314,7 @@ const shapes = {
     requireAura: leaf,
     optional: leaf,
     exceptTriggerObject: leaf,
+    objectId: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -789,6 +790,8 @@ const families = {
       sacrificeEachPlayer: true,
       eventPlayerSacrificesPermanents: true,
       attackingOpponentUntapsNonland: true,
+      reanimateEnchantedCardAndAttach: true,
+      sacrificeRememberedPermanent: true,
       putCounterByPermanentType: true,
       drawRevealTopLoseManaValue: true,
       goadEachOpponent: true,

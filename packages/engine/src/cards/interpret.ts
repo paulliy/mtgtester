@@ -4625,8 +4625,26 @@ function parseBlinkChosenBlock(body: string, allocCount: CountSlotAllocator): Ef
  * enters **or attacks**" is two separate triggered abilities with the same effect (CR 603.1),
  * and modeling it as one would make it fire once when it should fire twice.
  */
+/** Animate Dead's enters trigger, as one line (CR 603.4 intervening if, then the swap). */
+const REANIMATE_ATTACH_TRIGGER =
+  'when this aura enters, if it\'s on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this aura." return enchanted creature card to the battlefield under your control and attach this aura to it. when this aura leaves the battlefield, that creature\'s controller sacrifices it';
+
 function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   let lower = line.toLowerCase();
+  if (
+    lower.replace(/\.$/, '') === REANIMATE_ATTACH_TRIGGER &&
+    /^enchant creature card in a graveyard$/im.test(card.oracleText)
+  )
+    return [
+      {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        optional: false,
+        targets: [],
+        effects: [{ op: 'reanimateEnchantedCardAndAttach' }],
+        description: line,
+      },
+    ];
   // Battalion: "Whenever ~ and at least two other creatures attack" is ~'s own attack trigger
   // with an attacker count on the event; the count is put back on the head below.
   const battalion = lower.match(/^whenever ~ and at least (\w+) other creatures attack, /);
@@ -8622,6 +8640,14 @@ export function interpretCard(card: OracleCard): CardDefinition {
           continue;
         } else if (clause === 'artifact') {
           spellTargets.push({ kind: 'artifact' });
+          continue;
+        } else if (clause === 'creature card in a graveyard') {
+          // Animate Dead: an Aura spell targeting a card in any graveyard (CR 303.4a).
+          spellTargets.push({
+            kind: 'cardInGraveyard',
+            filter: ofType('Creature'),
+            graveyardOwnerScope: 'any',
+          });
           continue;
         } else if (clause === 'player') {
           // An Aura can enchant a player (CR 303.4a, 702.5a): its host is that player.

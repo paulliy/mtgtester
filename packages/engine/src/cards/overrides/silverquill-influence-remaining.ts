@@ -69,12 +69,10 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // Angelic Destiny: restored in coverage PR05. The interpreter reads the +4/+4, flying and first
   // strike, and the Angel creature type as a layer 4 addition on the enchanted creature, and
   // returns this Aura card from the graveyard to its owner's hand when that creature dies.
-  // Catalog audit silverquill-remaining-batch-1: graveyard Aura attach and leave-sacrifice omitted.
-  unsupportedCard(
-    'c0d8fef4-65f4-4769-982d-b397d2b7e977',
-    'Animate Dead',
-    'Graveyard Aura attach and leave-the-battlefield sacrifice are omitted.',
-  );
+  // Animate Dead: restored in coverage PR05. The interpreter reads Enchant creature card in a
+  // graveyard as a graveyard-card target the Aura stays legal on, and the enters trigger swaps it
+  // to the creature it returns under your control, attaches with a new timestamp, and sacrifices
+  // that creature when the Aura leaves.
   // Catalog audit silverquill-remaining-batch-1: hexproof/shroud strip authored as menace.
   unsupportedCard(
     '30ac68e6-160a-41f9-9f0f-0e0eef383150',

@@ -4461,6 +4461,61 @@ export function* executeAbility(
           perm.tapped = false;
         }
         break;
+      case 'reanimateEnchantedCardAndAttach': {
+        // Intervening if (CR 603.4): only while this Aura is still on the battlefield.
+        const aura = sourcePermanent();
+        if (aura === undefined) break;
+        const cardId = aura.attachedTo;
+        // It loses "enchant creature card in a graveyard" either way.
+        aura.reanimatedHostId = null;
+        const card =
+          cardId === null
+            ? undefined
+            : ctx.state.players.flatMap((p) => p.graveyard).find((c) => c.id === cardId);
+        if (card === undefined) break;
+        const def = getDefByOracleId(ctx, card.oracleId, card.name);
+        if (!def.types.includes('Creature')) break;
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        const moved = yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: controller.id,
+        });
+        const creature =
+          moved === null ? undefined : ctx.state.battlefield.find((p) => p.id === moved.id);
+        if (creature === undefined) break;
+        aura.reanimatedHostId = creature.id;
+        // A creature with protection from the Aura's color returns but can't be enchanted by it
+        // (CR 702.16c): the Aura stays unattached, state-based actions put it into the graveyard
+        // (CR 704.5m), and the leave trigger below makes that creature's controller sacrifice it.
+        if (!hasProtectionFrom(ctx, creature, computeCharacteristics(ctx, aura).colors)) {
+          aura.attachedTo = creature.id;
+          aura.timestamp = ctx.state.nextTimestamp++;
+          emit(ctx, 'attach', { equipment: aura.name, to: creature.name });
+        }
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: aura.cardId,
+          sourceOracleId: aura.oracleId,
+          controllerId: controller.id,
+          targetId: aura.cardId,
+          targetObjectId: aura.id,
+          when: 'leavesBattlefield',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'sacrificeRememberedPermanent', objectId: creature.id }],
+            description: `${creature.name}'s controller sacrifices it`,
+          },
+          expiry: 'onFire',
+        });
+        break;
+      }
+      case 'sacrificeRememberedPermanent': {
+        const perm = ctx.state.battlefield.find((p) => p.id === effect.objectId);
+        if (perm !== undefined)
+          yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
+        break;
+      }
       case 'attackingOpponentUntapsNonland': {
         const attacker = scope.eventPlayerId;
         if (attacker === undefined || attacker === controller.id) break;

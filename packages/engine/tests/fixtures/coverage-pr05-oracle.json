@@ -799,6 +799,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
+      "card": {
+        "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+        "scryfallId": "cc0c2bab-4392-4e7b-9d14-2901f4ffbae8",
+        "name": "Animate Dead",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature card in a graveyard\nWhen this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.\nEnchanted creature gets -1/-0.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

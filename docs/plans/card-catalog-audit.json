@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 25,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 37,
+      "uniqueOracleIds": 36,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6445,6 +6445,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Bestow {2}{W}{W} as a bestow alternative cost that casts the card as a bestowed Aura spell with enchant creature (CR 702.103a-b), which enters attached as a noncreature Enchantment — Aura and becomes a creature again when it is not attached (CR 702.103f), and reads This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control as two additive layer 7d statics on the source and the creature it is attached to, counting creatures and Auras you control. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "name": "Animate Dead",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the graveyard Aura attach and the leave-the-battlefield sacrifice were omitted): the interpreter reads Enchant creature card in a graveyard as an Aura spell whose target is a creature card in any graveyard that stays a legal host while it remains there, and reads the enters trigger as one effect that, if the Aura is still on the battlefield, swaps its host to the creature returned from that graveyard under its controller's control, attaches with a new timestamp (CR 613.7e) and sets up a delayed trigger on the Aura object that makes that creature's controller sacrifice it when the Aura leaves the battlefield. A creature with protection from black returns but cannot be enchanted (CR 702.16c), so the Aura goes to the graveyard and the creature is sacrificed. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "name": "Animate Dead",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr05",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchant creature card in a graveyard as an Aura spell whose target is a creature card in any graveyard that stays a legal host while it remains there, and reads the enters trigger as one effect that, if the Aura is still on the battlefield, swaps its host to the creature returned from that graveyard under its controller's control, attaches with a new timestamp (CR 613.7e) and sets up a delayed trigger on the Aura object that makes that creature's controller sacrifice it when the Aura leaves the battlefield. A creature with protection from black returns but cannot be enchanted (CR 702.16c), so the Aura goes to the graveyard and the creature is sacrificed. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
     }
   ]
 }
