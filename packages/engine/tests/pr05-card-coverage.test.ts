@@ -915,9 +915,20 @@ describe('Forum Filibuster', () => {
     expect(yard(aura.ctx, 'P2')).toEqual(['Lab Enemy Aura']);
 
     const equipment = board('forum-equipment');
+    // It enters attached (CR 301.5e): the Equipment is already on the Inkling at the moment it
+    // joins the battlefield, so anything seeing its entry sees it equipped.
+    const battlefield = equipment.ctx.state.battlefield;
+    const attachedOnEntry: Array<string | null> = [];
+    const push = battlefield.push.bind(battlefield);
+    battlefield.push = (...perms: EnginePermanent[]) => {
+      for (const perm of perms)
+        if (perm.name === 'Lab Blade') attachedOnEntry.push(perm.attachedTo);
+      return push(...perms);
+    };
     upkeep(equipment.ctx, 'Lab Blade');
     const [token] = named(equipment.ctx, 'Inkling');
     const [blade] = named(equipment.ctx, 'Lab Blade');
+    expect(attachedOnEntry).toEqual([token?.id]);
     expect(blade?.controllerId).toBe('P1');
     expect(blade?.attachedTo).toBe(token?.id);
     expect(effectivePT(equipment.ctx, token!)).toEqual({ power: 4, toughness: 1 });
@@ -4905,6 +4916,29 @@ describe('Martial Impetus', () => {
     expect(effectivePT(ctx, c)).toEqual(BASE);
   });
 
+  it('martial-impetus-pump-fixed-set — the pump applies to the attackers it affected, not to a card that leaves and returns as a new object (CR 400.7, 611.2c)', () => {
+    const { ctx, a, b, c } = board('martial-blink');
+    fight(
+      ctx,
+      new Map([
+        [a.id, 'P3'],
+        [b.id, 'P4'],
+        [c.id, 'P4'],
+      ]),
+    );
+    expect(effectivePT(ctx, b)).toEqual(PLUS);
+    expect(effectivePT(ctx, c)).toEqual(PLUS);
+    // Lab C is exiled and returns the same turn: a new object, without the +1/+1.
+    pump(moveObject(ctx, c, { zone: 'exile' }));
+    const exiled = ctx.state.exile.find((card) => card.name === 'Lab C')!;
+    pump(moveObject(ctx, exiled, { zone: 'battlefield', controllerId: 'P2' }));
+    const back = ctx.state.battlefield.find((perm) => perm.name === 'Lab C')!;
+    expect(back.id).not.toBe(c.id);
+    expect(effectivePT(ctx, back)).toEqual(BASE);
+    // Lab B, which stayed, keeps it.
+    expect(effectivePT(ctx, b)).toEqual(PLUS);
+  });
+
   it('martial-impetus-own-attackers — on the Aura controller’s own turn it pumps their other attackers, and only creatures attacking their opponents', () => {
     const ctx = pod('martial-own');
     const host = spawn(ctx, 'P1', BEAR('Lab Host'));
@@ -6546,6 +6580,20 @@ describe('Eidolon of Countless Battles', () => {
     const creatureOnly = options(creatures.ctx, topCreature.id);
     expect(creatureOnly.some((option) => !/Bestow/.test(option.description))).toBe(true);
     expect(creatureOnly.some((option) => /Bestow/.test(option.description))).toBe(false);
+
+    // The reverse: a permission for Aura spells allows only the bestowed cast, though the card
+    // itself is not an Aura.
+    const auras = board('eidolon-top-auras');
+    spawn(
+      auras.ctx,
+      'P1',
+      PERMISSION('Lab Top Auras', 'You may cast Aura spells from the top of your library.'),
+    );
+    const topAura = conjure(auras.ctx, 'P1', card, 'library');
+    addMana(playerById(auras.ctx, 'P1'), BESTOW_MANA);
+    const auraOnly = options(auras.ctx, topAura.id);
+    expect(auraOnly.some((option) => /Bestow/.test(option.description))).toBe(true);
+    expect(auraOnly.some((option) => !/Bestow/.test(option.description))).toBe(false);
   });
 
   it('eidolon-of-countless-battles-bestow-needs-creature — bestow is offered only while there is a creature to enchant, and an Aura-spell cast trigger sees it', () => {
