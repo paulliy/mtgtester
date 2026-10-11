@@ -203,6 +203,7 @@ jobs:
       # Traces are the retained viewer evidence (trace: 'on', preserveOutput: 'always').
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: card-test-lab-traces
           path: test-results/
