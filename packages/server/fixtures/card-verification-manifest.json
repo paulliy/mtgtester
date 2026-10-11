@@ -1667,7 +1667,10 @@
             "eidolon-of-countless-battles-buff-counts",
             "eidolon-of-countless-battles-counts-as-aura"
           ],
-          "viewerScenarioIds": ["eidolon-of-countless-battles-viewer-bestow"]
+          "viewerScenarioIds": [
+            "eidolon-of-countless-battles-viewer-bestow",
+            "eidolon-of-countless-battles-viewer-creature-and-aura-counts"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

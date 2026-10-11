@@ -1574,6 +1574,54 @@ describe('Eidolon of Countless Battles Card Test Lab scenario', () => {
   });
 });
 
+describe('Eidolon of Countless Battles counts Card Test Lab scenario', () => {
+  it('eidolon-of-countless-battles-viewer-creature-and-aura-counts — the bestowed host is 4/4, 5/5 with a second creature, 6/6 with a second Aura, then 4/4 when both leave', () => {
+    const steps: Step[] = [
+      { action: 'via Bestow', targets: ['Lab Green Bear'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Bird' },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Aegis', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+      { action: 'Cast Lab Doom', targets: ['Lab Bird'] },
+      { action: 'Pass priority' },
+    ];
+    const { scenario, state, seat, onBattlefield, views } = run(
+      'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
+      steps,
+    );
+    const bearSize = (
+      battlefield: Array<{ name: string; power?: number | null; toughness?: number | null }>,
+    ) => {
+      const bear = battlefield.find((perm) => perm.name === 'Lab Green Bear');
+      return `${bear?.power}/${bear?.toughness}`;
+    };
+    const sizes = [...views, scenario.engine.view('P1').battlefield].map(bearSize);
+    // 2/2 bare; 4/4 bestowed (1 creature + 1 Aura); 5/5 with Lab Bird (2 creatures + 1 Aura);
+    // 6/6 with Lab Aegis on Lab Bird (2 creatures + 2 Auras); back to 4/4 once both are gone.
+    expect(sizes.filter((size, index) => size !== sizes[index - 1])).toEqual([
+      '2/2',
+      '4/4',
+      '5/5',
+      '6/6',
+      '4/4',
+    ]);
+    const [bear] = onBattlefield('Lab Green Bear');
+    expect(onBattlefield('Eidolon of Countless Battles')[0]?.attachedTo).toBe(bear?.id);
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(onBattlefield('Lab Aegis')).toEqual([]);
+    expect(
+      seat('P1')
+        .graveyard.map((card) => card.name)
+        .sort(),
+    ).toEqual(['Lab Aegis', 'Lab Bird', 'Lab Doom']);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eidolon-of-countless-battles-viewer-creature-and-aura-counts', steps);
+  });
+});
+
 describe('Animate Dead Card Test Lab scenario', () => {
   it('animate-dead-viewer-reanimate — Animate Dead returns Lab Ox from P2’s graveyard as a 3/4 under P1, and when Lab Doom kills it the Aura goes to the graveyard', () => {
     const steps: Step[] = [

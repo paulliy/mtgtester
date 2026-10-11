@@ -389,6 +389,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'curse-of-bounty-viewer-untap-on-attack',
       'curse-of-bounty-viewer-opponent-attacks',
       'eidolon-of-countless-battles-viewer-bestow',
+      'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
       'animate-dead-viewer-reanimate',
       'animate-dead-viewer-aura-leaves-sacrifices',
       'bess-soul-nourisher-viewer-counter-and-pump',

@@ -9428,6 +9428,58 @@ function eidolonOfCountlessBattlesScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * Eidolon of Countless Battles's buff counts creatures and Auras you control independently: a
+ * second creature adds one, a second Aura adds one more, and losing both takes them away again.
+ * P2's Lab Ox adds nothing.
+ */
+function eidolonOfCountlessBattlesCountsScenario(gameId: GameId): CardTestScenario {
+  const eidolon = pinnedFrom(COVERAGE_PR05, 'Eidolon of Countless Battles');
+  const plains = Array.from({ length: 6 }, () => PLAINS);
+  const swamps = Array.from({ length: 2 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
+    title:
+      'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+    instructions: [
+      'Eidolon of Countless Battles, Lab Bird, Lab Aegis and Lab Doom are in your hand. Six Plains, two Swamps and Lab Green Bear (2/2) are on your battlefield. P2 controls Lab Ox (4/4).',
+      'Cast Eidolon of Countless Battles for its bestow cost targeting Lab Green Bear and let it resolve: Lab Green Bear is a 4/4 (+1/+1 for the one creature you control and +1/+1 for the one Aura you control). P2’s Lab Ox adds nothing.',
+      'Cast Lab Bird and let it resolve: with two creatures and one Aura you control, Lab Green Bear is a 5/5.',
+      'Cast Lab Aegis targeting Lab Bird and let it resolve: with two creatures and two Auras, Lab Green Bear is a 6/6.',
+      'Cast Lab Doom targeting Lab Bird and let it resolve. Lab Bird dies and Lab Aegis goes with it, so you control one creature and one Aura again and Lab Green Bear is a 4/4.',
+    ],
+    expectedOutcome:
+      'Lab Green Bear is a 4/4 enchanted by Eidolon of Countless Battles. Lab Bird and Lab Aegis are in your graveyard with Lab Doom, and P2’s Lab Ox is untouched.',
+    oracleSha256: eidolon.sha256,
+    clauseIds: ['eidolon-of-countless-battles-buff'],
+    decks: {
+      P1: [eidolon.card, LAB_BIRD, LAB_AEGIS, LAB_DOOM, LAB_GREEN_BEAR, ...plains, ...swamps],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Eidolon of Countless Battles', 'Lab Bird', 'Lab Aegis', 'Lab Doom'],
+        },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [
+            'Lab Green Bear',
+            ...plains.map((plain) => plain.name),
+            ...swamps.map((swamp) => swamp.name),
+          ],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+    },
+  });
+}
+
 function animateDeadScenario(gameId: GameId): CardTestScenario {
   const animate = pinnedFrom(COVERAGE_PR05, 'Animate Dead');
   return pr01Scenario(gameId, {
@@ -11363,6 +11415,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'curse-of-bounty-viewer-untap-on-attack',
   'curse-of-bounty-viewer-opponent-attacks',
   'eidolon-of-countless-battles-viewer-bestow',
+  'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
   'animate-dead-viewer-reanimate',
   'animate-dead-viewer-aura-leaves-sacrifices',
   'bess-soul-nourisher-viewer-counter-and-pump',
@@ -11668,6 +11721,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'curse-of-bounty-viewer-untap-on-attack': curseOfBountyScenario,
   'curse-of-bounty-viewer-opponent-attacks': curseOfBountyOpponentAttackScenario,
   'eidolon-of-countless-battles-viewer-bestow': eidolonOfCountlessBattlesScenario,
+  'eidolon-of-countless-battles-viewer-creature-and-aura-counts':
+    eidolonOfCountlessBattlesCountsScenario,
   'animate-dead-viewer-reanimate': animateDeadScenario,
   'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,

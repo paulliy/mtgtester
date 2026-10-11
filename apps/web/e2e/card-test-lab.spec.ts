@@ -8176,6 +8176,88 @@ test('Eidolon of Countless Battles: bestow onto a creature, then it becomes a cr
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
 
+test('Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+  );
+  await expect.poll(() => boards.at(-1)?.find((p) => p.name === 'Lab Green Bear')?.id).toBeTruthy();
+  const bearId = boards.at(-1)!.find((p) => p.name === 'Lab Green Bear')!.id;
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('2/2');
+
+  // Bestow onto Lab Green Bear: one creature and one Aura you control, so +2/+2. P2's Lab Ox
+  // adds nothing.
+  const eidolon = handCard(page, 'Eidolon of Countless Battles');
+  await expect(eidolon).toHaveClass(/actionable/, { timeout: 15_000 });
+  const eidolonBefore = await page.getByText('Eidolon of Countless Battles resolves').count();
+  await eidolon.click();
+  await page
+    .locator('.source-actions .source-action-row button')
+    .filter({ hasText: /bestow/i })
+    .click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Green Bear').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Eidolon of Countless Battles', eidolonBefore);
+  await expect
+    .poll(() => boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo)
+    .toBe(bearId);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+
+  // A second creature only: +1/+1 more.
+  const bird = handCard(page, 'Lab Bird');
+  await expect(bird).toHaveClass(/actionable/, { timeout: 15_000 });
+  const birdBefore = await page.getByText('Lab Bird resolves').count();
+  await bird.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Bird', birdBefore);
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('5/5');
+
+  // A second Aura only (on Lab Bird, so the creature count is unchanged): +1/+1 more.
+  const aegis = handCard(page, 'Lab Aegis');
+  await expect(aegis).toHaveClass(/actionable/, { timeout: 15_000 });
+  const aegisBefore = await page.getByText('Lab Aegis resolves').count();
+  await aegis.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Lab Aegis', aegisBefore);
+  await expect(permanent(page, 'Lab Bird')).toContainText('3/3');
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('6/6');
+
+  // Destroy Lab Bird: the creature and its Aura go together, so the Bear drops back to 4/4.
+  const doom = handCard(page, 'Lab Doom');
+  await expect(doom).toHaveClass(/actionable/, { timeout: 15_000 });
+  await doom.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Bird').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Aegis')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Green Bear')).toContainText('4/4');
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  expect(boards.at(-1)?.find((p) => p.name === 'Eidolon of Countless Battles')?.attachedTo).toBe(
+    bearId,
+  );
+  await expect(page.getByText('Graveyard (3)')).toBeVisible();
+});
+
 test('Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it', async ({
   page,
 }) => {

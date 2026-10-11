@@ -2039,6 +2039,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: [
+      'Eidolon of Countless Battles: the host grows by one per creature and one per Aura you control',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
       'Animate Dead: return an opponent’s creature, then it dies and the Aura goes with it',
     ],
   },
