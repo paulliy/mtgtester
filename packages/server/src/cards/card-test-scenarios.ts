@@ -11553,6 +11553,39 @@ function duelistsHeritageScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function thunderbreakRegentScenario(gameId: GameId): CardTestScenario {
+  const regent = pinnedFrom(COVERAGE_PR06, 'Thunderbreak Regent');
+  return pr01Scenario(gameId, {
+    id: 'thunderbreak-regent-viewer-opponent-targets-dragon',
+    title: 'Thunderbreak Regent: the opponent who targets your Dragon takes 3',
+    instructions: [
+      'Thunderbreak Regent, your only Dragon, is on your battlefield and a Forest is in your hand. P2 has two Swamps and Lab Doom in hand; P3 and P4 do nothing.',
+      'Pass priority. P2 casts Lab Doom on Thunderbreak Regent, and the Regent triggers because an opponent’s spell targeted a Dragon you control.',
+    ],
+    expectedOutcome:
+      'Thunderbreak Regent deals 3 damage to P2, the player who controls the spell, before Lab Doom resolves: P2 is at 37 while P3, P4 and you stay at 40. Lab Doom then destroys the Regent.',
+    oracleSha256: regent.sha256,
+    clauseIds: ['thunderbreak-regent-flying', 'thunderbreak-regent-targeted-trigger'],
+    decks: {
+      P1: [regent.card, FOREST],
+      P2: [LAB_DOOM, SWAMP, SWAMP],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Doom'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Thunderbreak Regent'] },
+        { playerId: 'P2', cardNames: ['Swamp', 'Swamp'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castWhenAble('Lab Doom') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11801,6 +11834,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'brash-taunter-viewer-fight-and-reflect',
   'tomb-blade-viewer-sacrifice-or-lose',
   'duelists-heritage-viewer-double-strike-attacker',
+  'thunderbreak-regent-viewer-opponent-targets-dragon',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12116,6 +12150,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'brash-taunter-viewer-fight-and-reflect': brashTaunterScenario,
   'tomb-blade-viewer-sacrifice-or-lose': tombBladeScenario,
   'duelists-heritage-viewer-double-strike-attacker': duelistsHeritageScenario,
+  'thunderbreak-regent-viewer-opponent-targets-dragon': thunderbreakRegentScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

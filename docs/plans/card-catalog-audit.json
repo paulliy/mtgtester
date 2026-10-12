@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6480,6 +6480,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in necron-dynasties-remaining.ts is replaced by an executable override): the combat-damage rider is authored as an untargeted dealsCombatDamageToPlayer trigger whose effect acts on the event player, the player this creature dealt combat damage to, who chooses to sacrifice a creature they control or lose life equal to the number of creatures they control as it resolves. Flying and Unearth stay interpreted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+      "name": "Thunderbreak Regent",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed eventPlayer was unset on becomes-targeted events): the targeting spell or ability's controller is now bound as the event player of becomes-targeted triggers, and the interpreter reads Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player as a becomesTargeted trigger on a Dragon you control whose dealDamage goes to the event player, dealt by the Regent. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
     }
   ]
 }

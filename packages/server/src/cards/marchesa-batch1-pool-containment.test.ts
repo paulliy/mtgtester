@@ -124,6 +124,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Technomancer',
       'The Ooze',
       'Their Number Is Legion',
+      'Thunderbreak Regent',
       'Thunderfoot Baloth',
       'Tomb Blade',
       'Tomb Fortress',

@@ -151,8 +151,6 @@ const REASONS: Record<string, string> = {
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
-  'Thunderbreak Regent':
-    'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
@@ -288,6 +286,7 @@ describe('Marchesa catalog audit containment', () => {
     'Brash Taunter',
     'Tomb Blade',
     "Duelist's Heritage",
+    'Thunderbreak Regent',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

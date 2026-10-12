@@ -2198,6 +2198,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thunderbreak Regent: the opponent who targets your Dragon takes 3'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

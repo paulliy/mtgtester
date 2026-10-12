@@ -1374,6 +1374,161 @@ describe("Duelist's Heritage", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.12 Thunderbreak Regent
+// ---------------------------------------------------------------------------------------------
+
+describe('Thunderbreak Regent', () => {
+  const { card } = pinned('Thunderbreak Regent');
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const PROD_TARGET = oracle({
+    name: 'Lab Prodder',
+    typeLine: 'Creature — Construct',
+    oracleText: '{T}: Lab Prodder deals 1 damage to target creature.',
+  });
+  const SPARRING_DRAGON = oracle({
+    name: 'Lab Sparring Dragon',
+    typeLine: 'Creature — Dragon',
+    power: '2',
+    toughness: '9',
+  });
+
+  /** P1 controls the Regent (a Dragon) and another Dragon; P2 and P3 control creatures. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const regent = spawn(ctx, 'P1', card);
+    const dragon = spawn(ctx, 'P1', SPARRING_DRAGON);
+    const bear = spawn(ctx, 'P1', LAB_CARD('Lab Bear'));
+    return { ctx, regent, dragon, bear };
+  }
+
+  /** `playerId` casts Lab Bolt at `targetId` and the whole stack settles. */
+  function bolt(ctx: GameContext, playerId: string, targetId: string) {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx);
+  }
+
+  /** Damage the Regent dealt (its own trigger), as opposed to the bolts and prods in the tests. */
+  const regentHits = (ctx: GameContext) =>
+    damageEvents(ctx).filter((event) => String(event.payload['source']).includes('Thunderbreak'));
+
+  it('thunderbreak-regent-pinned-oracle-supported — the interpreter alone models the becomes-targeted trigger as damage to the event player', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // A Dragon you control, targeted by an opponent: the head is filtered to "an opponent controls".
+    expect(trigger!.trigger).toEqual({
+      when: 'becomesTargeted',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'controller', who: 'you' },
+            { kind: 'subtype', value: 'Dragon' },
+          ],
+        },
+      },
+    });
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects).toEqual([
+      { op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'const', n: 3 } },
+    ]);
+  });
+
+  it("thunderbreak-regent-opponent-spell — an opponent's spell targeting your Dragon deals 3 damage to that opponent only, from the Regent", () => {
+    const { ctx, regent, dragon } = board('regent-spell');
+    spawn(ctx, 'P3', LAB_CARD('Lab Bystander'));
+    bolt(ctx, 'P2', dragon.id);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(playerById(ctx, 'P3').life).toBe(40);
+    expect(playerById(ctx, 'P4').life).toBe(40);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    const hit = damageEvents(ctx).find((event) => event.payload['target'] === 'P2');
+    expect(hit?.payload).toMatchObject({
+      amount: 3,
+      controller: 'P1',
+      sourceCardId: regent.cardId,
+    });
+    expect(String(hit?.payload['source'])).toContain('Thunderbreak Regent');
+    // The bolt still resolves afterwards.
+    expect(onField(ctx, dragon.cardId)?.damageMarked).toBe(3);
+
+    // Multiplayer: a different opponent's spell reaches that opponent, not the first.
+    const other = board('regent-spell-p3');
+    bolt(other.ctx, 'P3', other.dragon.id);
+    expect(playerById(other.ctx, 'P3').life).toBe(37);
+    expect(playerById(other.ctx, 'P2').life).toBe(40);
+  });
+
+  it('thunderbreak-regent-opponent-ability — an activated ability an opponent controls counts too', () => {
+    const { ctx, dragon } = board('regent-ability');
+    const prodder = spawn(ctx, 'P2', PROD_TARGET);
+    const option = optionFor(ctx, 'P2', prodder.id, /deals 1 damage/);
+    expect(option).toBeDefined();
+    takeAction(
+      ctx,
+      'P2',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, dragon.id]]),
+    );
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(onField(ctx, dragon.cardId)?.damageMarked).toBe(1);
+  });
+
+  it('thunderbreak-regent-regent-itself — the Regent is a Dragon, so targeting it triggers it', () => {
+    const { ctx, regent } = board('regent-itself');
+    bolt(ctx, 'P2', regent.id);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(onField(ctx, regent.cardId)?.damageMarked).toBe(3);
+  });
+
+  it("thunderbreak-regent-no-trigger — your own spell, a non-Dragon target, or an opponent's Dragon being targeted does nothing", () => {
+    const own = board('regent-own');
+    bolt(own.ctx, 'P1', own.dragon.id);
+    expect(playerById(own.ctx, 'P1').life).toBe(40);
+    expect(regentHits(own.ctx)).toEqual([]);
+
+    const bear = board('regent-bear');
+    bolt(bear.ctx, 'P2', bear.bear.id);
+    expect(playerById(bear.ctx, 'P2').life).toBe(40);
+    expect(regentHits(bear.ctx)).toEqual([]);
+
+    const theirs = board('regent-their-dragon');
+    const foreign = spawn(theirs.ctx, 'P3', SPARRING_DRAGON);
+    bolt(theirs.ctx, 'P2', foreign.id);
+    expect(playerById(theirs.ctx, 'P2').life).toBe(40);
+    expect(playerById(theirs.ctx, 'P3').life).toBe(40);
+  });
+
+  it('thunderbreak-regent-targeting-player — a spell that targets a player rather than a Dragon does not trigger it', () => {
+    const { ctx } = board('regent-player');
+    bolt(ctx, 'P2', 'P1');
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(playerById(ctx, 'P1').life).toBe(37);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1419,6 +1574,11 @@ const RESTORED: RestoredCard[] = [
     sha256: '908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d',
     clauseCount: 1,
     authored: true,
+  },
+  {
+    name: 'Thunderbreak Regent',
+    sha256: '474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657',
+    clauseCount: 2,
   },
 ];
 

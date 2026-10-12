@@ -6675,6 +6675,12 @@
     }
   },
   {
+    "oracleId": "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a",
+    "name": "Scalelord Reckoner",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
     "name": "Delirium",
     "handledLines": [],
@@ -6746,6 +6752,12 @@
   {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
+    "handledLines": [],
+    "def": {}
+  },
+  {
+    "oracleId": "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd",
+    "name": "Black Bolt, Inhuman King",
     "handledLines": [],
     "def": {}
   },
@@ -7740,12 +7752,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
-    "name": "Thunderbreak Regent",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
@@ -12316,6 +12322,12 @@
   {
     "oracleId": "oracle-biotransference",
     "name": "Biotransference",
+    "handledLines": [],
+    "def": {}
+  },
+  {
+    "oracleId": "oracle-black-bolt-inhuman-king",
+    "name": "Black Bolt, Inhuman King",
     "handledLines": [],
     "def": {}
   },
@@ -19650,6 +19662,12 @@
     }
   },
   {
+    "oracleId": "oracle-scalelord-reckoner",
+    "name": "Scalelord Reckoner",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "oracle-scheming-symmetry",
     "name": "Scheming Symmetry",
     "handledLines": [],
@@ -21210,12 +21228,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-thunderbreak-regent",
-    "name": "Thunderbreak Regent",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-thunderfoot-baloth",

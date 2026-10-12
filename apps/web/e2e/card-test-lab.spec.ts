@@ -8719,3 +8719,22 @@ test("Duelist's Heritage: one trigger per attack, double strike for the attacker
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('40');
 });
+
+test('Thunderbreak Regent: the opponent who targets your Dragon takes 3', async ({ page }) => {
+  await runScenario(page, 'Thunderbreak Regent: the opponent who targets your Dragon takes 3');
+  await expect(permanent(page, 'Thunderbreak Regent')).toContainText(/flying/i);
+  // Take the land drop so passing is not interrupted by the land reminder.
+  await page.getByRole('button', { name: 'Play Forest', exact: true }).click();
+  // P2 casts Lab Doom on the Regent when you pass; the Regent's trigger resolves above it.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Thunderbreak Regent.* deals 3 to P2/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('40');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  // Lab Doom then destroys the Regent.
+  await expect(permanent(page, 'Thunderbreak Regent')).toHaveCount(0);
+});

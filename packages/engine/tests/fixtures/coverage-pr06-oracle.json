@@ -209,6 +209,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657",
+      "card": {
+        "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+        "scryfallId": "06624919-bb3e-458c-9301-0bb22d8b556c",
+        "name": "Thunderbreak Regent",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

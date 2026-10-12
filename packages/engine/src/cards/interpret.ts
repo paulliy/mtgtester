@@ -1895,6 +1895,14 @@ function parseEffectSentence(
       ) {
         return [{ op: 'eachOpponentDamage', amount: { kind: 'spellColorCount' } }];
       }
+      // "this creature deals 3 damage to that player" (Thunderbreak Regent): the event's player,
+      // here the controller of the spell or ability that targeted the Dragon.
+      const toThatPlayer = s.match(/^~ deals (\d+) damage to that player$/);
+      if (toThatPlayer !== null) {
+        return [
+          { op: 'dealDamage', target: 'eventPlayer', amount: constant(Number(toThatPlayer[1])) },
+        ];
+      }
       if (s === '~ deals damage equal to its power to that player') {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
       }

@@ -3495,6 +3495,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+    "name": "Thunderbreak Regent",
+    "package": "PR06.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
     "package": "PR01.13",

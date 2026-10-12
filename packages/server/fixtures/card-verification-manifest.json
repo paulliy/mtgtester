@@ -4716,13 +4716,30 @@
     "bb04f927-0348-4a14-9e74-381f18083f6a": {
       "name": "Thunderbreak Regent",
       "oracleSha256": "474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "thunderbreak-regent-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["thunderbreak-regent-pinned-oracle-supported"],
+          "viewerScenarioIds": ["thunderbreak-regent-viewer-opponent-targets-dragon"]
+        },
+        {
+          "id": "thunderbreak-regent-targeted-trigger",
           "oracleText": "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.",
-          "implementation": ["explicitly unsupported; eventPlayer unset on becomes-targeted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted becomesTargeted trigger for a Dragon you control (the Regent itself included), queued only when the spell or ability that targets it is controlled by an opponent (CR 603.3d); the event player is the controller of that spell or ability, so dealDamage 3 from the Regent goes to that opponent alone and never to another opponent; your own spells and abilities, non-Dragon targets and an opponent's Dragons do not trigger it"
+          ],
+          "engineTestIds": [
+            "thunderbreak-regent-pinned-oracle-supported",
+            "thunderbreak-regent-opponent-spell",
+            "thunderbreak-regent-opponent-ability",
+            "thunderbreak-regent-regent-itself",
+            "thunderbreak-regent-no-trigger",
+            "thunderbreak-regent-targeting-player"
+          ],
+          "viewerScenarioIds": ["thunderbreak-regent-viewer-opponent-targets-dragon"]
         }
       ],
       "gameplayAiScenarioIds": []

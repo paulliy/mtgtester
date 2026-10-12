@@ -158,7 +158,8 @@ describe('Steel Hellkite', () => {
 });
 
 describe('Thunderbreak Regent', () => {
-  it('is catalog-contained because becomes-targeted does not bind eventPlayer', () => {
+  // Restored in coverage PR06; behavior is gated by pr06-card-coverage.test.ts.
+  it('is no longer catalog-contained', () => {
     const card = oracle({
       oracleId: 'bb04f927-0348-4a14-9e74-381f18083f6a',
       name: 'Thunderbreak Regent',
@@ -166,12 +167,10 @@ describe('Thunderbreak Regent', () => {
       manaCost: '{2}{R}{R}',
       power: '4',
       toughness: '4',
+      oracleText:
+        'Flying\nWhenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.',
     });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
-    );
+    expect(interpretCard(card).modeled).toBe(true);
   });
 });
 

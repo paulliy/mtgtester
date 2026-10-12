@@ -380,3 +380,32 @@ describe("Duelist's Heritage Card Test Lab scenario", () => {
     replays('duelists-heritage-viewer-double-strike-attacker', steps);
   });
 });
+
+describe('Thunderbreak Regent Card Test Lab scenario', () => {
+  it("thunderbreak-regent-viewer-opponent-targets-dragon — P2's Lab Doom on the Regent makes the Regent deal 3 to P2 first, then destroys it", () => {
+    const steps: Step[] = [{ action: 'Play Forest' }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'thunderbreak-regent-viewer-opponent-targets-dragon',
+      steps,
+    );
+    const damage = state.eventLog.filter((event) => event.type === 'damage');
+    expect(damage).toHaveLength(1);
+    expect(damage[0]?.payload).toMatchObject({
+      controller: 'P1',
+      target: 'P2',
+      amount: 3,
+      sourceCardId: 'c-1',
+    });
+    expect(String(damage[0]?.payload['source'])).toContain('Thunderbreak Regent');
+    expect(seat('P2').life).toBe(37);
+    for (const id of ['P1', 'P3', 'P4']) expect(seat(id).life).toBe(40);
+    // The trigger resolved above Lab Doom, which then destroyed the Regent.
+    expect(onBattlefield('Thunderbreak Regent')).toEqual([]);
+    expect(onBattlefield('Forest')).toHaveLength(1);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Thunderbreak Regent']);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Doom']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('thunderbreak-regent-viewer-opponent-targets-dragon', steps);
+  });
+});

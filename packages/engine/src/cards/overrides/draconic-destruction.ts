@@ -694,11 +694,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     STEEL_HELLKITE_DEF,
   );
 
-  unsupportedCard(
-    'bb04f927-0348-4a14-9e74-381f18083f6a',
-    'Thunderbreak Regent',
-    'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
-  );
+  // Thunderbreak Regent: restored in coverage PR06 (no override remains).
 
   // Catalog audit draconic-batch-4: tap is a second selector pass, not the damaged set.
   unsupportedCard(

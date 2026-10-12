@@ -69,6 +69,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'attacks':
     case 'enchantedPlayerAttacked':
     case 'dealsCombatDamageToPlayer':
+    case 'becomesTargeted':
     case 'castsSpell':
     case 'gainsLife':
     case 'drawsCard':
@@ -88,7 +89,6 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'becomesTapped':
     case 'becomesCrewed':
     case 'fights':
-    case 'becomesTargeted':
     case 'dealtDamage':
     case 'sacrificed':
     case 'tokenCreated':

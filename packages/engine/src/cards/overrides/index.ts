@@ -67,6 +67,7 @@ import { registerUnsupportedSpellFaces } from './unsupported-spell-faces';
 import { registerCoveragePr01Overrides } from './coverage-pr01';
 import { registerCoveragePr02Overrides } from './coverage-pr02';
 import { registerCoveragePr03Overrides } from './coverage-pr03';
+import { registerCoveragePr06Overrides } from './coverage-pr06';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -166,6 +167,7 @@ registerDeck('reviewed-five', registerReviewedFiveOverrides);
 registerDeck('coverage-pr01', registerCoveragePr01Overrides);
 registerDeck('coverage-pr02', registerCoveragePr02Overrides);
 registerDeck('coverage-pr03', registerCoveragePr03Overrides);
+registerDeck('coverage-pr06', registerCoveragePr06Overrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */
