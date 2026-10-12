@@ -11413,6 +11413,42 @@ function tyrantsFamiliarScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function brashTaunterScenario(gameId: GameId): CardTestScenario {
+  const taunter = pinnedFrom(COVERAGE_PR06, 'Brash Taunter');
+  const mountains = Array.from({ length: 3 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'brash-taunter-viewer-fight-and-reflect',
+    title: 'Brash Taunter: fight Lab Ox, then reflect the damage at P3',
+    instructions: [
+      'Brash Taunter and three Mountains are on your battlefield. P2 controls Lab Ox (4/4) and P3 controls Lab Servo (1/1).',
+      'Activate {2}{R}, {T}: Brash Taunter fights another target creature. Notice the Taunter itself is not offered, then choose Lab Ox.',
+      'When the Taunter is dealt damage in the fight, aim its reflection at P3.',
+    ],
+    expectedOutcome:
+      'Brash Taunter deals 1 damage to Lab Ox and Lab Ox deals 4 to the indestructible Taunter, which survives. The trigger then deals 4 damage to P3, who is at 36; P2, P4 and you are untouched at 40.',
+    oracleSha256: taunter.sha256,
+    clauseIds: [
+      'brash-taunter-indestructible',
+      'brash-taunter-reflect-damage',
+      'brash-taunter-fight',
+    ],
+    decks: {
+      P1: [taunter.card, ...mountains],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Brash Taunter', ...mountains.map((m) => m.name)] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11658,6 +11694,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'dragon-tempest-viewer-dragon-deals-damage',
   'scourge-of-valkas-viewer-dragons-deal-damage',
   'tyrants-familiar-viewer-lieutenant-attack',
+  'brash-taunter-viewer-fight-and-reflect',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -11970,6 +12007,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'dragon-tempest-viewer-dragon-deals-damage': dragonTempestScenario,
   'scourge-of-valkas-viewer-dragons-deal-damage': scourgeOfValkasScenario,
   'tyrants-familiar-viewer-lieutenant-attack': tyrantsFamiliarScenario,
+  'brash-taunter-viewer-fight-and-reflect': brashTaunterScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

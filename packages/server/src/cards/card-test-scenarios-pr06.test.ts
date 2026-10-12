@@ -249,3 +249,49 @@ describe("Tyrant's Familiar Card Test Lab scenario", () => {
     replays('tyrants-familiar-viewer-lieutenant-attack', steps);
   });
 });
+
+describe('Brash Taunter Card Test Lab scenario', () => {
+  it('brash-taunter-viewer-fight-and-reflect — fighting Lab Ox, the indestructible Taunter survives 4 damage and reflects exactly 4 at P3', () => {
+    const steps: Step[] = [
+      { action: 'Brash Taunter: This creature fights', targets: ['Lab Ox'] },
+      { action: 'Targets for Brash Taunter', targets: ['P3'] },
+    ];
+    const targetOptions: string[][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'brash-taunter-viewer-fight-and-reflect',
+      steps,
+      (request, current) => {
+        const names = objectNames(current);
+        for (const action of request.legalActions) {
+          const slot = action.targets?.[0];
+          if (slot !== undefined && slot !== null)
+            targetOptions.push(slot.options.map((id) => names.get(id) ?? id).sort());
+        }
+      },
+    );
+    // The fight offered the other creatures only (never the Taunter), then the reflection offered
+    // the three opponents only (never its controller).
+    expect(targetOptions).toEqual([
+      ['Lab Ox', 'Lab Servo'],
+      ['P2', 'P3', 'P4'],
+    ]);
+    const [taunter] = onBattlefield('Brash Taunter');
+    expect(taunter?.damageMarked).toBe(4);
+    expect(taunter?.tapped).toBe(true);
+    expect(onBattlefield('Lab Ox')[0]?.damageMarked).toBe(1);
+    expect(onBattlefield('Lab Servo')[0]?.damageMarked).toBe(0);
+    const reflected = state.eventLog.filter(
+      (event) => event.type === 'damage' && event.payload['target'] === 'P3',
+    );
+    expect(reflected.map((event) => event.payload)).toMatchObject([
+      { controller: 'P1', amount: 4 },
+    ]);
+    expect(String(reflected[0]?.payload['source'])).toContain('Brash Taunter');
+    expect(seat('P3').life).toBe(36);
+    for (const id of ['P1', 'P2', 'P4']) expect(seat(id).life).toBe(40);
+    expect(onBattlefield('Mountain').filter((mountain) => mountain.tapped)).toHaveLength(3);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('brash-taunter-viewer-fight-and-reflect', steps);
+  });
+});

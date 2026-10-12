@@ -34,6 +34,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Bespoke Battlewagon',
       'Blasphemous Edict',
       'Body Launderer',
+      'Brash Taunter',
       'Canoptek Spyder',
       'Canoptek Tomb Sentinel',
       'Canoptek Wraith',

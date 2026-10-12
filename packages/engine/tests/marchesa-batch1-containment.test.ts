@@ -110,7 +110,6 @@ const REASONS: Record<string, string> = {
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   Arcbond: 'The delayed damage is dealt by Arcbond, not by the chosen creature.',
   Backlash: 'Untapped-creature targeting is implemented as any creature.',
-  'Brash Taunter': 'Another-target fight can target this creature.',
   'Breena, the Demagogue':
     'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
   'Deflecting Palm':
@@ -289,6 +288,7 @@ describe('Marchesa catalog audit containment', () => {
     'Dragon Tempest',
     'Scourge of Valkas',
     "Tyrant's Familiar",
+    'Brash Taunter',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

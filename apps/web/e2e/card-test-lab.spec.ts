@@ -8594,3 +8594,37 @@ test("Tyrant's Familiar: lieutenant attack hits a creature of the player it atta
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('33');
 });
+
+test('Brash Taunter: fight Lab Ox, then reflect the damage at P3', async ({ page }) => {
+  await runScenario(page, 'Brash Taunter: fight Lab Ox, then reflect the damage at P3');
+  const taunter = permanent(page, 'Brash Taunter');
+  await expect(taunter).toHaveClass(/actionable/, { timeout: 15_000 });
+  await taunter.click();
+  // A source with one legal action goes straight to its targets; several open the action menu.
+  const fightAction = page.getByRole('button', { name: /fights another target creature/ });
+  if (await fightAction.isVisible()) await fightAction.click();
+  // "Another" target creature: the Taunter itself is not offered, any other creature is.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Servo')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Brash Taunter')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Lab Ox deals 4 to the Taunter, which triggers its reflection: choose P3.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent[data-seat="P3"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Brash Taunter')).toBeVisible();
+  await expect(page.getByText(/Brash Taunter.* deals 4 to P3/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});

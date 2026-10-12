@@ -2639,8 +2639,82 @@
   {
     "oracleId": "3e41648f-c5a9-4b26-b97e-8176fe5e9c85",
     "name": "Brash Taunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+      "{2}{R}, {T}: ~ fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This creature fights another target creature",
+            "effects": [
+              {
+                "first": "source",
+                "op": "fight",
+                "second": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "other"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever this creature is dealt damage, it deals that much damage to target opponent",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
@@ -12455,8 +12529,82 @@
   {
     "oracleId": "oracle-brash-taunter",
     "name": "Brash Taunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+      "{2}{R}, {T}: ~ fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This creature fights another target creature",
+            "effects": [
+              {
+                "first": "source",
+                "op": "fight",
+                "second": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "other"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever this creature is dealt damage, it deals that much damage to target opponent",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-breena-the-demagogue",

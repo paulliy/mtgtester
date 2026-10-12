@@ -1,7 +1,8 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { activated, manaCost, TAP, targetSlots, triggered } from '../templates';
+import { activated, mana, manaCost, TAP, targetSlots, triggered } from '../templates';
+import { OTHER } from '../selector';
 import { TREASURE } from '../tokens';
 import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
@@ -148,11 +149,41 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Backlash',
     'Untapped-creature targeting is implemented as any creature.',
   );
-  // Catalog audit queen-batch-4: another-target fight can target this creature.
-  unsupportedCard(
+  // Brash Taunter: "that much damage" is the amount dealt in the triggering event, dealt by the
+  // Taunter itself to a target opponent. "Another target creature" is any creature but the
+  // Taunter, whoever controls it, so the fight target carries an OTHER filter (CR 701.14).
+  const reflect = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
+  const fightTarget = targetSlots({ creature: { kind: 'creature', filter: OTHER } });
+  defineCard(
     '3e41648f-c5a9-4b26-b97e-8176fe5e9c85',
     'Brash Taunter',
-    'Another-target fight can target this creature.',
+    [
+      'Whenever this creature is dealt damage, it deals that much damage to target opponent.',
+      '{2}{R}, {T}: ~ fights another target creature.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'dealtDamage', subject: { kind: 'self' } },
+          {
+            targets: reflect.targets,
+            effects: [
+              { op: 'dealDamage', target: reflect.slot.opponent, amount: { kind: 'damageDealt' } },
+            ],
+            description:
+              'Whenever this creature is dealt damage, it deals that much damage to target opponent',
+          },
+        ),
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}{R}'), TAP],
+          targets: fightTarget.targets,
+          effects: [{ op: 'fight', first: 'source', second: fightTarget.slot.creature }],
+          description: 'This creature fights another target creature',
+        }),
+      ],
+    },
   );
   // Catalog audit queen-batch-4: life comparison is attacker vs defender.
   unsupportedCard(

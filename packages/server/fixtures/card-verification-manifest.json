@@ -2558,13 +2558,49 @@
     "3e41648f-c5a9-4b26-b97e-8176fe5e9c85": {
       "name": "Brash Taunter",
       "oracleSha256": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "brash-taunter-indestructible",
+          "oracleText": "Indestructible",
+          "implementation": [
+            "keyword indestructible (interpreted): lethal damage is marked but the creature is not destroyed (CR 702.12b)"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-indestructible"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
+        },
+        {
+          "id": "brash-taunter-reflect-damage",
+          "oracleText": "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+          "implementation": [
+            "dealtDamage trigger on this creature with one target opponent slot (never its controller) whose dealDamage uses the damage dealt in that event as the amount and the Taunter as the source; combat, spell and fight damage all trigger it once per damage event, and damage of 0 triggers nothing"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-fight-reflects-damage",
+            "brash-taunter-spell-damage-amount",
+            "brash-taunter-combat-damage-amount",
+            "brash-taunter-target-opponent",
+            "brash-taunter-no-damage-no-trigger"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
+        },
+        {
+          "id": "brash-taunter-fight",
           "oracleText": "{2}{R}, {T}: This creature fights another target creature.",
-          "implementation": ["explicitly unsupported; can target this creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated ability costing {2}{R} and {T} with one creature target filtered to any creature other than this one, whoever controls it, whose fight effect makes this creature and the target each deal damage equal to its power to the other (CR 701.14); it is not offered without the mana or when tapped"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-fight-other-creature",
+            "brash-taunter-fight-reflects-damage",
+            "brash-taunter-no-damage-no-trigger"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []

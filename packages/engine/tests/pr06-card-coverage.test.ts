@@ -818,6 +818,214 @@ describe("Tyrant's Familiar", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.16 Brash Taunter
+// ---------------------------------------------------------------------------------------------
+
+describe('Brash Taunter', () => {
+  const { card } = pinned('Brash Taunter');
+  const BRUTE = (name: string, power: string) =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9' });
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const FIGHT_COST = [...red(1), ...generic(2)];
+
+  /** P1 controls the Taunter; every opponent controls a creature. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const taunter = spawn(ctx, 'P1', card);
+    const brute = spawn(ctx, 'P2', BRUTE('Lab Brute', '3'));
+    const wall = spawn(ctx, 'P3', BRUTE('Lab Wall', '0'));
+    const ally = spawn(ctx, 'P1', BRUTE('Lab Ally', '2'));
+    return { ctx, taunter, brute, wall, ally };
+  }
+
+  /** The Taunter's fight option, with mana in P1's pool to pay for it. */
+  function fightOption(ctx: GameContext, taunter: EnginePermanent) {
+    addMana(playerById(ctx, 'P1'), FIGHT_COST);
+    return optionFor(ctx, 'P1', taunter.id, /fights/);
+  }
+
+  /** Activate the fight against `targetId` and resolve it, aiming the reflected damage at `aim`. */
+  function fight(ctx: GameContext, taunter: EnginePermanent, targetId: string, aim: string) {
+    const option = fightOption(ctx, taunter);
+    expect(option, 'the fight is offered').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx, aimAt(aim));
+  }
+
+  /** P1's combat: `attackers` maps each attacking creature id to its defender, `blocks` blocker to attacker. */
+  function combat(
+    ctx: GameContext,
+    attackers: Record<string, string>,
+    blocks: Record<string, string>,
+    aim: string,
+  ) {
+    const offered: string[][] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers[subjectId] ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered.push(slot.options);
+        return { index: 0, targets: new Map([[slot.slot, aim]]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return offered;
+  }
+
+  /** Damage events that are not combat damage, oldest first. */
+  const nonCombatDamage = (ctx: GameContext) =>
+    damageEvents(ctx).filter((event) => event.payload['combat'] === false);
+
+  it('brash-taunter-pinned-oracle-supported — the override reads the dealt-damage reflection and the another-target fight, beside the interpreted indestructible', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('indestructible');
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'dealtDamage', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+    // "that much damage": the amount dealt in the triggering event, dealt by the Taunter.
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'damageDealt' } },
+    ]);
+    expect(def.activatedAbilities).toHaveLength(1);
+    const [fightAbility] = def.activatedAbilities;
+    expect(fightAbility!.ability.targets).toEqual([
+      { kind: 'creature', filter: { kind: 'other' } },
+    ]);
+    expect(fightAbility!.ability.effects).toEqual([{ op: 'fight', first: 'source', second: 0 }]);
+  });
+
+  it('brash-taunter-indestructible — lethal damage marks but does not destroy it', () => {
+    const { ctx, taunter, brute } = board('taunter-indestructible');
+    fight(ctx, taunter, brute.id, 'P2');
+    expect(hasKeyword(ctx, taunter, 'indestructible')).toBe(true);
+    pump(priorityCheckpoint(ctx));
+    // Dealt 3 damage with 1 toughness: still on the battlefield.
+    expect(onField(ctx, taunter.cardId)?.damageMarked).toBe(3);
+  });
+
+  it("brash-taunter-fight-other-creature — the fight can target any creature but the Taunter itself, yours or an opponent's", () => {
+    const { ctx, taunter, brute, wall, ally } = board('taunter-fight-targets');
+    const option = fightOption(ctx, taunter);
+    expect(option).toBeDefined();
+    const legal = option!.targets!.flatMap((slot) => slot.options).sort();
+    expect(legal).toEqual([ally.id, brute.id, wall.id].sort());
+    expect(legal).not.toContain(taunter.id);
+
+    // Costs {2}{R} and {T}: not offered without the mana, nor once tapped.
+    const poor = board('taunter-fight-cost');
+    addMana(playerById(poor.ctx, 'P1'), generic(3));
+    expect(optionFor(poor.ctx, 'P1', poor.taunter.id, /fights/)).toBeUndefined();
+    const tapped = board('taunter-fight-tapped');
+    tapped.taunter.tapped = true;
+    expect(fightOption(tapped.ctx, tapped.taunter)).toBeUndefined();
+
+    // Fighting your own creature is legal too.
+    const own = board('taunter-fight-own');
+    fight(own.ctx, own.taunter, own.ally.id, 'P2');
+    expect(onField(own.ctx, own.ally.cardId)?.damageMarked).toBe(1);
+    expect(onField(own.ctx, own.taunter.cardId)?.damageMarked).toBe(2);
+    expect(playerById(own.ctx, 'P2').life).toBe(38);
+  });
+
+  it('brash-taunter-fight-reflects-damage — fight damage dealt to it triggers the reflection for exactly that much, dealt by the Taunter to the chosen opponent only', () => {
+    const { ctx, taunter, brute } = board('taunter-fight-reflect');
+    fight(ctx, taunter, brute.id, 'P3');
+    // The Brute deals 3 to the Taunter in the fight; the Taunter deals 1 to the Brute.
+    expect(onField(ctx, brute.cardId)?.damageMarked).toBe(1);
+    expect(playerById(ctx, 'P3').life).toBe(37);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(playerById(ctx, 'P4').life).toBe(40);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    const reflected = damageEvents(ctx).find((event) => event.payload['target'] === 'P3');
+    expect(reflected?.payload).toMatchObject({ controller: 'P1', amount: 3 });
+    expect(String(reflected?.payload['source'])).toContain('Brash Taunter');
+    expect(onField(ctx, taunter.cardId)?.tapped).toBe(true);
+  });
+
+  it('brash-taunter-spell-damage-amount — any damage to it counts, once per hit: a 3-damage spell reflects 3, and a second hit reflects its own amount', () => {
+    const { ctx, taunter } = board('taunter-spell');
+    const cast = (target: string) => {
+      const object = conjure(ctx, 'P2', LAB_BOLT, 'hand');
+      addMana(playerById(ctx, 'P2'), red(1));
+      const option = optionFor(ctx, 'P2', object.id);
+      expect(option).toBeDefined();
+      takeAction(
+        ctx,
+        'P2',
+        option!.payload as PriorityActionPayload,
+        undefined,
+        new Map([[option!.targets![0]!.slot, target]]),
+      );
+      return settle(ctx, aimAt('P2'));
+    };
+    cast(taunter.id);
+    expect(onField(ctx, taunter.cardId)).toBeDefined();
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    cast(taunter.id);
+    expect(playerById(ctx, 'P2').life).toBe(34);
+    expect(nonCombatDamage(ctx).filter((event) => event.payload['target'] === 'P2')).toHaveLength(
+      2,
+    );
+  });
+
+  it('brash-taunter-combat-damage-amount — combat damage dealt to it reflects exactly the damage dealt', () => {
+    const { ctx, taunter } = board('taunter-combat');
+    const blocker = spawn(ctx, 'P2', BRUTE('Lab Blocker', '4'));
+    combat(ctx, { [taunter.id]: 'P2' }, { [blocker.id]: taunter.id }, 'P4');
+    expect(onField(ctx, taunter.cardId)).toBeDefined();
+    expect(playerById(ctx, 'P4').life).toBe(36);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+  });
+
+  it('brash-taunter-target-opponent — the reflection can only be aimed at an opponent, never at you', () => {
+    const { ctx, taunter, wall } = board('taunter-target-opponent');
+    const offered = combat(ctx, { [taunter.id]: 'P2' }, { [wall.id]: taunter.id }, 'P2');
+    // The Wall has no power, so nothing is dealt and nothing triggers.
+    expect(offered).toEqual([]);
+
+    const hit = board('taunter-target-opponent-hit');
+    const blocker = spawn(hit.ctx, 'P2', BRUTE('Lab Blocker', '2'));
+    const seen = combat(
+      hit.ctx,
+      { [hit.taunter.id]: 'P2' },
+      { [blocker.id]: hit.taunter.id },
+      'P3',
+    );
+    expect(seen).toHaveLength(1);
+    expect([...seen[0]!].sort()).toEqual(['P2', 'P3', 'P4']);
+    expect(playerById(hit.ctx, 'P3').life).toBe(38);
+  });
+
+  it('brash-taunter-no-damage-no-trigger — a fight with a 0-power creature deals it no damage, so nothing is reflected', () => {
+    const { ctx, taunter, wall } = board('taunter-no-damage');
+    const run = fight(ctx, taunter, wall.id, 'P2');
+    expect(onField(ctx, wall.cardId)?.damageMarked).toBe(1);
+    expect(onField(ctx, taunter.cardId)?.damageMarked).toBe(0);
+    expect(run.decisions).toHaveLength(0);
+    expect(damageEvents(ctx).every((event) => event.payload['target'] === 'Lab Wall')).toBe(true);
+    for (const id of ['P1', 'P2', 'P3', 'P4']) expect(playerById(ctx, id).life).toBe(40);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -841,6 +1049,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: "Tyrant's Familiar",
     sha256: 'c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4',
+    clauseCount: 3,
+  },
+  {
+    name: 'Brash Taunter',
+    sha256: '811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c',
     clauseCount: 3,
   },
 ];
