@@ -933,7 +933,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/urdragon.ts",
-      "sha256": "e0d6edea2bd3e8bd20fac081ab57da57a6a7084008ccd422e469c84de88cb211",
+      "sha256": "28c3587277c58300ce2823033c2f75259a3b31e8708e988b0c9d192a84490319",
       "description": "registerURDRAGONOverrides"
     },
     {

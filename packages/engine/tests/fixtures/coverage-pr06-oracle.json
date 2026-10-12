@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-12",
+  "cards": [
+    {
+      "sha256": "cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13",
+      "card": {
+        "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+        "scryfallId": "39ac7ad0-e570-4209-988c-7c0f9b9d2004",
+        "name": "Dragon Tempest",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature you control with flying enters, it gains haste until end of turn.\nWhenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

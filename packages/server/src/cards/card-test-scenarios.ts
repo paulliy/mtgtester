@@ -239,6 +239,11 @@ const COVERAGE_PR05: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr05-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR06 cards (combat and damage events) that had no earlier pinned fixture. */
+const COVERAGE_PR06: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr06-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -11293,6 +11298,46 @@ export const REVIEWED_BASELINE_SCENARIO_IDS = [
   'harmonic-viewer-cast-and-double-trigger',
 ] as const;
 
+// Coverage PR06 (docs/plans/card-coverage-chunks.md).
+
+const LAB_SKYDRAKE = card({
+  oracleId: 'lab-skydrake',
+  name: 'Lab Skydrake',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{R}',
+  cmc: 1,
+  colors: ['R'],
+  power: '3',
+  toughness: '3',
+  oracleText: 'Flying, lifelink',
+});
+
+function dragonTempestScenario(gameId: GameId): CardTestScenario {
+  const tempest = pinnedFrom(COVERAGE_PR06, 'Dragon Tempest');
+  return pr01Scenario(gameId, {
+    id: 'dragon-tempest-viewer-dragon-deals-damage',
+    title: 'Dragon Tempest: the entering Dragon deals the damage',
+    instructions: [
+      'Dragon Tempest and a Mountain are on your battlefield; Lab Skydrake (a 3/3 red Dragon with flying and lifelink) is in your hand.',
+      'Cast Lab Skydrake. Put the Dragon damage trigger on P2 when asked, then let both triggers resolve.',
+    ],
+    expectedOutcome:
+      'Lab Skydrake gains haste and deals 1 damage to P2 (you control one Dragon). It is the Dragon that deals the damage, so its lifelink gains you 1 life: you are at 41 and P2 is at 39.',
+    oracleSha256: tempest.sha256,
+    clauseIds: ['dragon-tempest-flying-haste', 'dragon-tempest-dragon-damage'],
+    decks: {
+      P1: [tempest.card, LAB_SKYDRAKE, MOUNTAIN, MOUNTAIN],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Skydrake'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Dragon Tempest', 'Mountain'] }],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11535,6 +11580,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
   'animate-dead-viewer-reanimate',
   'animate-dead-viewer-aura-leaves-sacrifices',
+  'dragon-tempest-viewer-dragon-deals-damage',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -11844,6 +11890,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     eidolonOfCountlessBattlesCountsScenario,
   'animate-dead-viewer-reanimate': animateDeadScenario,
   'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
+  'dragon-tempest-viewer-dragon-deals-damage': dragonTempestScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

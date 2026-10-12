@@ -7475,12 +7475,6 @@
     "def": {}
   },
   {
-    "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
-    "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b9c58cfb-b7d5-4e86-a5d3-efb07192aa22",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -14027,12 +14021,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-dragon-tempest",
-    "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "oracle-dream-pillager",

@@ -852,6 +852,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+    "name": "Dragon Tempest",
+    "package": "PR06.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Dragon-dealt damage is implemented as damage from this enchantment."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
     "name": "Dragonkin Berserker",
     "package": "PR02.08",

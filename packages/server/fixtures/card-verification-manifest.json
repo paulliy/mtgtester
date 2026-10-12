@@ -4412,13 +4412,36 @@
     "b9bacb46-fd1d-459b-81c2-d7d08fe73848": {
       "name": "Dragon Tempest",
       "oracleSha256": "cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "dragon-tempest-flying-haste",
+          "oracleText": "Whenever a creature you control with flying enters, it gains haste until end of turn.",
+          "implementation": [
+            "interpreted enters trigger for a creature you control with flying whose grantKeywordUntilEot gives the entering creature haste (CR 702.10); a creature without flying and a creature an opponent controls do not trigger it, and no other creature gains haste"
+          ],
+          "engineTestIds": [
+            "dragon-tempest-pinned-oracle-supported",
+            "dragon-tempest-flying-haste"
+          ],
+          "viewerScenarioIds": ["dragon-tempest-viewer-dragon-deals-damage"]
+        },
+        {
+          "id": "dragon-tempest-dragon-damage",
           "oracleText": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
-          "implementation": ["explicitly unsupported; damage source is this enchantment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger for a Dragon you control with one any-target slot whose dealDamage uses the entering Dragon as the damage source (its color, lifelink and protection interactions apply), using last known information if it left the battlefield before resolution (CR 608.2h); X is the number of Dragons you control, counted as the trigger resolves; a non-Dragon creature and an opponent's Dragon do not trigger it"
+          ],
+          "engineTestIds": [
+            "dragon-tempest-pinned-oracle-supported",
+            "dragon-tempest-dragon-is-source",
+            "dragon-tempest-dragon-is-source-color",
+            "dragon-tempest-dragon-count",
+            "dragon-tempest-dragon-gone",
+            "dragon-tempest-dragon-trigger-conditions",
+            "dragon-tempest-cast-dragon"
+          ],
+          "viewerScenarioIds": ["dragon-tempest-viewer-dragon-deals-damage"]
         }
       ],
       "gameplayAiScenarioIds": []

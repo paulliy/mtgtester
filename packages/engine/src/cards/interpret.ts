@@ -7547,6 +7547,8 @@ export function interpretCard(card: OracleCard): CardDefinition {
             op: 'dealDamage',
             target: 0,
             amount: { kind: 'countPermanents', selector: ofSubtype('Dragon'), scope: 'you' },
+            // "it deals X damage": the entering Dragon is the source, with last known information.
+            source: 'triggerObject',
           },
         ],
         description: 'Dragon ETB damage equal to Dragon count',
@@ -8892,6 +8894,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // clear reasons after the ordinary line pass, which otherwise records the bespoke lines again.
   if (
     [
+      'Dragon Tempest',
       'Orb of Dragonkind',
       'Rivaz of the Claw',
       'Sarkhan, Dragon Ascendant',

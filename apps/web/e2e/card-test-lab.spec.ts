@@ -8484,3 +8484,32 @@ test('Animate Dead: return an opponent’s creature, then it dies and the Aura g
   await expect(permanent(page, 'Animate Dead')).toHaveCount(0);
   await expect(page.getByText('Graveyard (2)')).toBeVisible();
 });
+
+// Coverage PR06 (docs/plans/card-coverage-chunks.md).
+
+test('Dragon Tempest: the entering Dragon deals the damage', async ({ page }) => {
+  await runScenario(page, 'Dragon Tempest: the entering Dragon deals the damage');
+  const spell = handCard(page, 'Lab Skydrake');
+  await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // Both Tempest triggers fire as the Dragon enters: put the haste trigger on the stack first.
+  const haste = page.getByRole('button', { name: /Flying ETB haste/ });
+  await passUntil(page, haste);
+  await haste.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  // The Dragon deals the damage (not the enchantment), so its lifelink gains you the life.
+  await expect(page.getByText(/Lab Skydrake deals 1 to P2/).first()).toBeVisible();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(permanent(page, 'Lab Skydrake')).toContainText(/haste/i);
+});

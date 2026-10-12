@@ -394,6 +394,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'eidolon-of-countless-battles-viewer-creature-and-aura-counts',
       'animate-dead-viewer-reanimate',
       'animate-dead-viewer-aura-leaves-sacrifices',
+      'dragon-tempest-viewer-dragon-deals-damage',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

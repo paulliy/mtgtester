@@ -151,7 +151,6 @@ const REASONS: Record<string, string> = {
     'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
-  'Dragon Tempest': 'Dragon-dealt damage is implemented as damage from this enchantment.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
@@ -291,6 +290,7 @@ describe('Marchesa catalog audit containment', () => {
     'Curse of Bounty',
     'Eidolon of Countless Battles',
     'Animate Dead',
+    'Dragon Tempest',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
