@@ -1126,6 +1126,8 @@ function dealCombatDamage(
   // A trampling attacker that hits a blocker and the player deals ONE player-damage amount, not
   // two, and a double-striker fires in each step it deals damage in (CR 702.4b).
   const damageToPlayers = new Map<EnginePermanent, number>();
+  // Likewise "is dealt damage" is one event per damaged creature, carrying the step's total.
+  const damageToCreatures = new Map<EnginePermanent, number>();
 
   for (const a of assignments) {
     const traits = combatDamageTraits(ctx, a.source);
@@ -1136,6 +1138,7 @@ function dealCombatDamage(
         sourceHasLifelink: traits.lifelink,
         sourceHasInfect: traits.infect,
         sourceColors: traits.colors,
+        dealtTotals: damageToCreatures,
       });
     } else if (a.targetPlayer !== null) {
       const dealt = dealDamageToPlayer(
@@ -1164,6 +1167,11 @@ function dealCombatDamage(
     }
   }
 
+  queueTriggersForEvent(
+    ctx,
+    'dealtDamage',
+    [...damageToCreatures].map(([permanent, amount]) => ({ permanent, amount })),
+  );
   queueTriggersForEvent(
     ctx,
     'dealsCombatDamageToPlayer',

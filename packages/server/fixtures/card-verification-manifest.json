@@ -2576,13 +2576,14 @@
           "id": "brash-taunter-reflect-damage",
           "oracleText": "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
           "implementation": [
-            "dealtDamage trigger on this creature with one target opponent slot (never its controller) whose dealDamage uses the damage dealt in that event as the amount and the Taunter as the source; combat, spell and fight damage all trigger it once per damage event, and damage of 0 triggers nothing"
+            "dealtDamage trigger on this creature with one target opponent slot (never its controller) whose dealDamage uses the damage dealt in that event as the amount and the Taunter as the source; combat, spell and fight damage all trigger it once per damage event (all combat damage in a step is one event with the summed amount, CR 510.2 and 603.2c, even from two blockers), and damage of 0 triggers nothing"
           ],
           "engineTestIds": [
             "brash-taunter-pinned-oracle-supported",
             "brash-taunter-fight-reflects-damage",
             "brash-taunter-spell-damage-amount",
             "brash-taunter-combat-damage-amount",
+            "brash-taunter-simultaneous-combat-damage",
             "brash-taunter-target-opponent",
             "brash-taunter-no-damage-no-trigger"
           ],

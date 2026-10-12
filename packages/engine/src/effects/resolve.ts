@@ -235,6 +235,12 @@ export function dealDamageToCreature(
     sourceHasInfect?: boolean;
     /** The source's colors, for protection (CR 702.16). Omitted ⇒ colorless. */
     sourceColors?: readonly Color[];
+    /**
+     * Simultaneous combat damage (CR 510.2) is one event for "is dealt damage" (CR 603.2c): the
+     * caller passes a map, the amount dealt is added to it, and it queues the trigger once per
+     * creature with the total after every assignment. Omitted ⇒ this hit queues its own trigger.
+     */
+    dealtTotals?: Map<EnginePermanent, number>;
   },
 ): void {
   if (amount <= 0) return;
@@ -287,7 +293,9 @@ export function dealDamageToCreature(
   if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
   // CR 702.90e: infect still counts as "dealt damage" for triggers even though it marks
   // -1/-1 counters instead of damage.
-  queueTriggersForEvent(ctx, 'dealtDamage', [{ permanent: target, amount }]);
+  if (opts.dealtTotals !== undefined)
+    opts.dealtTotals.set(target, (opts.dealtTotals.get(target) ?? 0) + amount);
+  else queueTriggersForEvent(ctx, 'dealtDamage', [{ permanent: target, amount }]);
   emit(ctx, 'damage', {
     source: source.name,
     sourceCardId: source.cardId,

@@ -995,6 +995,25 @@ describe('Brash Taunter', () => {
     expect(playerById(ctx, 'P2').life).toBe(40);
   });
 
+  it('brash-taunter-simultaneous-combat-damage — damage from two blockers in one step is one event: one trigger for the total, not one per blocker (CR 510.2, 603.2c)', () => {
+    const { ctx, taunter } = board('taunter-double-block');
+    const small = spawn(ctx, 'P2', BRUTE('Lab Small Blocker', '2'));
+    const large = spawn(ctx, 'P2', BRUTE('Lab Large Blocker', '3'));
+    const offered = combat(
+      ctx,
+      { [taunter.id]: 'P2' },
+      { [small.id]: taunter.id, [large.id]: taunter.id },
+      'P4',
+    );
+    expect(onField(ctx, taunter.cardId)?.damageMarked).toBe(5);
+    // Exactly one reflection prompt and one hit of 5, not hits of 2 and 3.
+    expect(offered).toHaveLength(1);
+    const hits = damageEvents(ctx).filter((event) => event.payload['target'] === 'P4');
+    expect(hits).toHaveLength(1);
+    expect(hits[0]?.payload).toMatchObject({ controller: 'P1', amount: 5 });
+    expect(playerById(ctx, 'P4').life).toBe(35);
+  });
+
   it('brash-taunter-target-opponent — the reflection can only be aimed at an opponent, never at you', () => {
     const { ctx, taunter, wall } = board('taunter-target-opponent');
     const offered = combat(ctx, { [taunter.id]: 'P2' }, { [wall.id]: taunter.id }, 'P2');
