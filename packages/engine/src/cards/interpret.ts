@@ -1851,6 +1851,22 @@ function parseEffectSentence(
         },
       ];
     }
+    // "it deals X damage to any target, where X is the number of Dragons you control" (Scourge of
+    // Valkas): "it" is the creature that triggered this, the damage source with last known
+    // information (CR 608.2h), and X is counted as the ability resolves.
+    const itDealsX = s.match(/^it deals x damage to any target, where x is (.+)$/);
+    if (itDealsX !== null && opts.triggerObject === true) {
+      const count = parseDynamicCountValue(itDealsX[1] as string, card, opts);
+      if (count === null) return null;
+      return [
+        {
+          op: 'dealDamage',
+          target: alloc('anyTarget'),
+          amount: count,
+          source: 'triggerObject',
+        },
+      ];
+    }
     {
       const targetHandDamage = s.match(
         /^~ deals damage to target player equal to the number of cards in that player's hand$/,
@@ -7535,23 +7551,11 @@ export function interpretCard(card: OracleCard): CardDefinition {
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
   if (card.name === 'Dragon Tempest') {
+    // Only the haste line is bespoke; the Dragon damage line is read by the effect grammar.
     triggers.push(
       triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
         description: 'Flying ETB haste',
-      }),
-      triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
-        targets: [{ kind: 'anyTarget' }],
-        effects: [
-          {
-            op: 'dealDamage',
-            target: 0,
-            amount: { kind: 'countPermanents', selector: ofSubtype('Dragon'), scope: 'you' },
-            // "it deals X damage": the entering Dragon is the source, with last known information.
-            source: 'triggerObject',
-          },
-        ],
-        description: 'Dragon ETB damage equal to Dragon count',
       }),
     );
     reasons.length = 0;

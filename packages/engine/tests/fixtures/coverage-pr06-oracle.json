@@ -33,6 +33,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c",
+      "card": {
+        "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+        "scryfallId": "e6bd7225-b39f-4b3b-8c36-dbc2c09f6e50",
+        "name": "Scourge of Valkas",
+        "manaCost": "{2}{R}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.\n{R}: This creature gets +1/+0 until end of turn.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

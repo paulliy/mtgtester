@@ -5450,15 +5450,24 @@
         }
       },
       {
-        "description": "Dragon ETB damage equal to Dragon count",
+        "description": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
         "effects": [
           {
             "amount": {
               "kind": "countPermanents",
               "scope": "you",
               "selector": {
-                "kind": "subtype",
-                "value": "Dragon"
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  }
+                ]
               }
             },
             "op": "dealDamage",
@@ -5467,6 +5476,7 @@
           }
         ],
         "kind": "triggered",
+        "optional": false,
         "targets": [
           {
             "kind": "anyTarget"
@@ -5479,12 +5489,12 @@
               "kind": "allOf",
               "of": [
                 {
-                  "kind": "subtype",
-                  "value": "Dragon"
-                },
-                {
                   "kind": "controller",
                   "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
                 }
               ]
             }

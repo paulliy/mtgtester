@@ -172,3 +172,38 @@ describe('Dragon Tempest Card Test Lab scenario', () => {
     replays('dragon-tempest-viewer-dragon-deals-damage', steps);
   });
 });
+
+describe('Scourge of Valkas Card Test Lab scenario', () => {
+  it('scourge-of-valkas-viewer-dragons-deal-damage — Scourge deals 1 as it enters, then Lab Skydrake entering deals 2 itself, so its lifelink gains P1 life, and {R} pumps Scourge', () => {
+    const steps: Step[] = [
+      { action: 'Cast Scourge of Valkas' },
+      { action: 'Targets for Scourge of Valkas', targets: ['P2'] },
+      { action: 'Cast Lab Skydrake', phase: 'precombatMain' },
+      { action: 'Targets for Scourge of Valkas', targets: ['P2'] },
+      { action: 'Scourge of Valkas: {R}' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'scourge-of-valkas-viewer-dragons-deal-damage',
+      steps,
+    );
+    expect(onBattlefield('Scourge of Valkas')).toHaveLength(1);
+    expect(onBattlefield('Lab Skydrake')).toHaveLength(1);
+    // Each Dragon is the damage source for the trigger its own entry caused.
+    expect(
+      state.eventLog.filter((event) => event.type === 'damage').map((event) => event.payload),
+    ).toMatchObject([
+      { source: 'Scourge of Valkas', controller: 'P1', target: 'P2', amount: 1 },
+      { source: 'Lab Skydrake', controller: 'P1', target: 'P2', amount: 2 },
+    ]);
+    expect(seat('P1').life).toBe(42);
+    expect(seat('P2').life).toBe(37);
+    expect(onBattlefield('Mountain').filter((mountain) => mountain.tapped)).toHaveLength(7);
+    // The {R} pump made Scourge a 5/4 flier until end of turn.
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Scourge of Valkas'),
+    ).toMatchObject({ power: 5, toughness: 4, keywords: ['flying'] });
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('scourge-of-valkas-viewer-dragons-deal-damage', steps);
+  });
+});

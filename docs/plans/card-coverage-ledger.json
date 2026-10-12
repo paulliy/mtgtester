@@ -2979,6 +2979,23 @@
     "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+    "name": "Scourge of Valkas",
+    "package": "PR06.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The entering Dragon is the damage source, implemented as damage from this creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
     "name": "Screams from Within",
     "package": "PR05.12",

@@ -8513,3 +8513,45 @@ test('Dragon Tempest: the entering Dragon deals the damage', async ({ page }) =>
   ).toHaveText('39');
   await expect(permanent(page, 'Lab Skydrake')).toContainText(/haste/i);
 });
+
+test('Scourge of Valkas: it and another Dragon each deal X damage as they enter', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Scourge of Valkas: it and another Dragon each deal X damage as they enter',
+  );
+  const castDragon = async (name: string) => {
+    const spell = handCard(page, name);
+    await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+    await spell.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+    // Pass until the Dragon has entered and its trigger asks for a target.
+    await passUntil(page, page.getByText(/Target 1 of 1/));
+    await page.locator('.opponent[data-seat="P2"] > header').click();
+    await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+    await confirm(page);
+  };
+
+  // Scourge enters alone: it is the source and you control one Dragon, so X is 1.
+  await castDragon('Scourge of Valkas');
+  await passStackUntil(page, page.getByText(/Scourge of Valkas deals 1 to P2/).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+
+  // Another Dragon enters: Scourge's trigger fires, the Skydrake is the source and X is 2.
+  await castDragon('Lab Skydrake');
+  await passStackUntil(page, page.getByText(/Lab Skydrake deals 2 to P2/).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+  // The Dragon that entered dealt the damage, so its lifelink gained you the life.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+
+  // The seventh Mountain pays for the {R} pump: Scourge is a 5/4 flier until end of turn.
+  await activate(page, 'Scourge of Valkas', /\{R\}: ~ gets \+1\/\+0/);
+  await passUntil(page, permanent(page, 'Scourge of Valkas').getByText('5/4'));
+  await expect(permanent(page, 'Scourge of Valkas')).toContainText(/flying/i);
+});

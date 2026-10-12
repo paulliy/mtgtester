@@ -108,6 +108,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sautekh Immortal',
       'Scavenging Ooze',
       'Sceptre of Eternal Glory',
+      'Scourge of Valkas',
       'Screams from Within',
       'Shard of the Nightbringer',
       'Shard of the Void Dragon',

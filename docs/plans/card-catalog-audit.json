@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 29,
+      "uniqueOracleIds": 28,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6466,6 +6466,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from the enchantment): the interpreter reads Whenever a creature you control with flying enters, it gains haste until end of turn, and reads Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as damage dealt by the entering Dragon itself (last known information if it has left the battlefield, CR 608.2h) with X counted as the trigger resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+      "name": "Scourge of Valkas",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from Scourge): the interpreter reads Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as an enters trigger on this creature or another Dragon you control whose any-target damage is dealt by the entering creature itself (last known information if it left the battlefield, CR 608.2h) with X counted as the trigger resolves, plus Flying and the {R} +1/+0 pump. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
     }
   ]
 }

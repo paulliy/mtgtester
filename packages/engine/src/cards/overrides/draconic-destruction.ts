@@ -674,11 +674,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'The +1 does not make it legendary or red.',
   );
 
-  unsupportedCard(
-    '0a147009-a57c-4ac1-ab81-d8bd8b737631',
-    'Scourge of Valkas',
-    'The entering Dragon is the damage source, implemented as damage from this creature.',
-  );
+  // Scourge of Valkas: restored in coverage PR06 (no override remains).
 
   defineCard(
     'f63278e0-3c67-421d-87ce-67725e5e74df',

@@ -11338,6 +11338,34 @@ function dragonTempestScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function scourgeOfValkasScenario(gameId: GameId): CardTestScenario {
+  const scourge = pinnedFrom(COVERAGE_PR06, 'Scourge of Valkas');
+  const mountains = Array.from({ length: 7 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'scourge-of-valkas-viewer-dragons-deal-damage',
+    title: 'Scourge of Valkas: it and another Dragon each deal X damage as they enter',
+    instructions: [
+      'Scourge of Valkas and Lab Skydrake (a 3/3 red Dragon with flying and lifelink) are in your hand, and seven Mountains are on your battlefield.',
+      'Cast Scourge of Valkas and aim its enters trigger at P2. Then cast Lab Skydrake and aim the trigger it causes at P2 as well.',
+      'Finally pay {R} for Scourge of Valkas’s pump with your last Mountain and let it resolve.',
+    ],
+    expectedOutcome:
+      'Scourge deals 1 damage to P2 as it enters (you control one Dragon). Lab Skydrake entering then deals 2 damage to P2 (you control two Dragons), and because the Dragon that enters is the source, its lifelink gains you 2 life: you are at 42 and P2 is at 37.',
+    oracleSha256: scourge.sha256,
+    clauseIds: ['scourge-of-valkas-flying', 'scourge-of-valkas-enters-damage'],
+    decks: {
+      P1: [scourge.card, LAB_SKYDRAKE, ...mountains],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Scourge of Valkas', 'Lab Skydrake'] }],
+      battlefield: [{ playerId: 'P1', cardNames: mountains.map((mountain) => mountain.name) }],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11581,6 +11609,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'animate-dead-viewer-reanimate',
   'animate-dead-viewer-aura-leaves-sacrifices',
   'dragon-tempest-viewer-dragon-deals-damage',
+  'scourge-of-valkas-viewer-dragons-deal-damage',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -11891,6 +11920,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'animate-dead-viewer-reanimate': animateDeadScenario,
   'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
   'dragon-tempest-viewer-dragon-deals-damage': dragonTempestScenario,
+  'scourge-of-valkas-viewer-dragons-deal-damage': scourgeOfValkasScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

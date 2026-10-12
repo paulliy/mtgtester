@@ -456,12 +456,6 @@
     }
   },
   {
-    "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
-    "name": "Scourge of Valkas",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
     "name": "Fabled Passage",
     "handledLines": [
@@ -19357,12 +19351,6 @@
   {
     "oracleId": "oracle-scheming-symmetry",
     "name": "Scheming Symmetry",
-    "handledLines": [],
-    "def": {}
-  },
-  {
-    "oracleId": "oracle-scourge-of-valkas",
-    "name": "Scourge of Valkas",
     "handledLines": [],
     "def": {}
   },

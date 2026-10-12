@@ -4789,15 +4789,44 @@
     "0a147009-a57c-4ac1-ab81-d8bd8b737631": {
       "name": "Scourge of Valkas",
       "oracleSha256": "b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "scourge-of-valkas-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["scourge-of-valkas-pinned-oracle-supported"],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
+        },
+        {
+          "id": "scourge-of-valkas-enters-damage",
           "oracleText": "Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
           "implementation": [
-            "explicitly unsupported; damage source is this creature not the entering Dragon"
+            "interpreted enters trigger whose subject is this creature or another Dragon you control (an opponent's Dragon and a non-Dragon do not trigger it) with one any-target slot, whose dealDamage uses the entering creature as the damage source (its color, lifelink and protection apply), with last known information if it left the battlefield before resolution (CR 608.2h); X is the number of Dragons you control, counted as the trigger resolves, and every Scourge you control triggers separately"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "scourge-of-valkas-pinned-oracle-supported",
+            "scourge-of-valkas-self-enters",
+            "scourge-of-valkas-other-dragon-source",
+            "scourge-of-valkas-source-color",
+            "scourge-of-valkas-dragon-count",
+            "scourge-of-valkas-dragon-gone",
+            "scourge-of-valkas-trigger-conditions",
+            "scourge-of-valkas-two-scourges"
+          ],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
+        },
+        {
+          "id": "scourge-of-valkas-red-pump",
+          "oracleText": "{R}: This creature gets +1/+0 until end of turn.",
+          "implementation": [
+            "interpreted activated ability costing {R} (timing any) that gives this creature +1/+0 until end of turn (CR 611.2a), repeatable for each {R} paid and not payable with colorless mana"
+          ],
+          "engineTestIds": [
+            "scourge-of-valkas-pinned-oracle-supported",
+            "scourge-of-valkas-red-pump"
+          ],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
         }
       ],
       "gameplayAiScenarioIds": []

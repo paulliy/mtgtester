@@ -2176,6 +2176,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Dragon Tempest: the entering Dragon deals the damage'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Scourge of Valkas: it and another Dragon each deal X damage as they enter'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -23,7 +23,7 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
-import { hasKeyword } from '../src/state/queries';
+import { effectivePT, hasKeyword } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -160,6 +160,9 @@ function enterFrom(
 const onField = (ctx: GameContext, cardId: string) =>
   ctx.state.battlefield.find((perm) => perm.cardId === cardId);
 
+const red = (n: number) => Array.from({ length: n }, () => ({ symbol: 'R' as const }));
+const generic = (n: number) => Array.from({ length: n }, () => ({ symbol: 'C' as const }));
+
 const damageEvents = (ctx: GameContext) =>
   ctx.state.eventLog.filter((event) => event.type === 'damage');
 
@@ -180,45 +183,50 @@ function expectNoRegistration(card: OracleCard): void {
 
 const LAB_CARD = (name: string) => oracle({ name, typeLine: 'Creature — Secret' });
 
+// Lab creatures shared by the Dragon cards.
+/** A blue 3/3 Dragon with lifelink. */
+const DRAKE = oracle({
+  name: 'Lab Drake',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{0}',
+  colors: ['U'],
+  power: '3',
+  toughness: '3',
+  oracleText: 'Lifelink',
+});
+/** A red 2/2 Dragon. */
+const EMBER_DRAGON = oracle({
+  name: 'Lab Ember Dragon',
+  typeLine: 'Creature — Dragon',
+  manaCost: '{0}',
+  colors: ['R'],
+  power: '2',
+  toughness: '2',
+});
+/** A colorless 1/1 flier. */
+const FLIER = oracle({
+  name: 'Lab Flier',
+  typeLine: 'Creature — Bird',
+  manaCost: '{0}',
+  power: '1',
+  toughness: '1',
+  oracleText: 'Flying',
+});
+/** A creature with protection from blue. */
+const WARDEN = oracle({
+  name: 'Lab Warden',
+  typeLine: 'Creature — Knight',
+  power: '1',
+  toughness: '9',
+  oracleText: 'Protection from blue',
+});
+
 // ---------------------------------------------------------------------------------------------
 // PR06.18 Dragon Tempest
 // ---------------------------------------------------------------------------------------------
 
 describe('Dragon Tempest', () => {
   const { card } = pinned('Dragon Tempest');
-  const DRAKE = oracle({
-    name: 'Lab Drake',
-    typeLine: 'Creature — Dragon',
-    manaCost: '{0}',
-    colors: ['U'],
-    power: '3',
-    toughness: '3',
-    oracleText: 'Lifelink',
-  });
-  const EMBER_DRAGON = oracle({
-    name: 'Lab Ember Dragon',
-    typeLine: 'Creature — Dragon',
-    manaCost: '{0}',
-    colors: ['R'],
-    power: '2',
-    toughness: '2',
-  });
-  const FLIER = oracle({
-    name: 'Lab Flier',
-    typeLine: 'Creature — Bird',
-    manaCost: '{0}',
-    power: '1',
-    toughness: '1',
-    oracleText: 'Flying',
-  });
-  const WARDEN = oracle({
-    name: 'Lab Warden',
-    typeLine: 'Creature — Knight',
-    power: '1',
-    toughness: '9',
-    oracleText: 'Protection from blue',
-  });
-
   /** P1 controls Dragon Tempest. */
   function board(seed: string) {
     const ctx = pod(seed);
@@ -242,7 +250,13 @@ describe('Dragon Tempest', () => {
         target: 0,
         amount: {
           kind: 'countPermanents',
-          selector: { kind: 'subtype', value: 'Dragon' },
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'controller', who: 'you' },
+              { kind: 'subtype', value: 'Dragon' },
+            ],
+          },
           scope: 'you',
         },
         source: 'triggerObject',
@@ -288,11 +302,11 @@ describe('Dragon Tempest', () => {
     expect(onField(blue.ctx, warden.cardId)?.damageMarked).toBe(0);
     expect(playerById(blue.ctx, 'P1').life).toBe(40);
 
-    const red = board('tempest-source-red');
-    const guard = spawn(red.ctx, 'P2', WARDEN);
-    enterFrom(red.ctx, 'P1', EMBER_DRAGON);
-    settle(red.ctx, aimAt(guard.id));
-    expect(onField(red.ctx, guard.cardId)?.damageMarked).toBe(1);
+    const redCase = board('tempest-source-red');
+    const guard = spawn(redCase.ctx, 'P2', WARDEN);
+    enterFrom(redCase.ctx, 'P1', EMBER_DRAGON);
+    settle(redCase.ctx, aimAt(guard.id));
+    expect(onField(redCase.ctx, guard.cardId)?.damageMarked).toBe(1);
   });
 
   it('dragon-tempest-dragon-count — X is the number of Dragons you control as the trigger resolves, not when it triggered', () => {
@@ -368,6 +382,233 @@ describe('Dragon Tempest', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.10 Scourge of Valkas
+// ---------------------------------------------------------------------------------------------
+
+describe('Scourge of Valkas', () => {
+  const { card } = pinned('Scourge of Valkas');
+  const COST = [...red(3), ...generic(2)];
+
+  /** P1 controls Scourge of Valkas. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const scourge = spawn(ctx, 'P1', card);
+    return { ctx, scourge };
+  }
+
+  it('scourge-of-valkas-pinned-oracle-supported — the interpreter alone models the self-or-other-Dragon enters trigger, the Dragon-sourced damage and the red pump', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // This creature, or another Dragon you control: never an opponent's Dragon.
+    expect(trigger!.trigger).toEqual({
+      when: 'enters',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'anyOf',
+          of: [
+            { kind: 'self' },
+            {
+              kind: 'allOf',
+              of: [
+                { kind: 'other' },
+                { kind: 'controller', who: 'you' },
+                { kind: 'subtype', value: 'Dragon' },
+              ],
+            },
+          ],
+        },
+      },
+    });
+    expect(trigger!.targets).toEqual([{ kind: 'anyTarget' }]);
+    // "it deals X damage": the entering creature is the source, X counted on resolution.
+    expect(trigger!.effects).toEqual([
+      {
+        op: 'dealDamage',
+        target: 0,
+        amount: {
+          kind: 'countPermanents',
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'controller', who: 'you' },
+              { kind: 'subtype', value: 'Dragon' },
+            ],
+          },
+          scope: 'you',
+        },
+        source: 'triggerObject',
+      },
+    ]);
+    expect(def.activatedAbilities).toHaveLength(1);
+  });
+
+  it('scourge-of-valkas-self-enters — Scourge entering from the stack triggers itself, as the source, for X = the Dragons you control', () => {
+    const ctx = pod('scourge-self');
+    spawn(ctx, 'P1', EMBER_DRAGON);
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    const scourge = ctx.state.battlefield.find((perm) => perm.name === 'Scourge of Valkas');
+    expect(scourge).toBeDefined();
+    const run = settle(ctx, aimAt('P2'));
+    expect(run.decisions.length).toBeGreaterThan(0);
+    // Scourge and the Ember Dragon: X = 2.
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(damageEvents(ctx).at(-1)?.payload).toMatchObject({
+      source: 'Scourge of Valkas',
+      amount: 2,
+    });
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it("scourge-of-valkas-other-dragon-source — another Dragon you control entering triggers it, and that Dragon (not Scourge) is the source: Scourge doesn't gain life, the lifelink Dragon's controller does", () => {
+    const { ctx } = board('scourge-other');
+    enterFrom(ctx, 'P1', DRAKE);
+    settle(ctx, aimAt('P2'));
+    // Scourge and the Drake: X = 2, dealt by the Drake, whose lifelink gains 2.
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(playerById(ctx, 'P1').life).toBe(42);
+    expect(damageEvents(ctx).at(-1)?.payload).toMatchObject({ source: 'Lab Drake', amount: 2 });
+  });
+
+  it("scourge-of-valkas-source-color — the damage has the entering Dragon's color: a creature with protection from blue is unhurt by a blue Dragon but hurt by a red one", () => {
+    // Scourge itself is red, so damage from it would always reach the Warden.
+    const blue = board('scourge-source-blue');
+    const warden = spawn(blue.ctx, 'P2', WARDEN);
+    enterFrom(blue.ctx, 'P1', DRAKE);
+    settle(blue.ctx, aimAt(warden.id));
+    expect(onField(blue.ctx, warden.cardId)?.damageMarked).toBe(0);
+
+    const redCase = board('scourge-source-red');
+    const guard = spawn(redCase.ctx, 'P2', WARDEN);
+    enterFrom(redCase.ctx, 'P1', EMBER_DRAGON);
+    settle(redCase.ctx, aimAt(guard.id));
+    expect(onField(redCase.ctx, guard.cardId)?.damageMarked).toBe(2);
+  });
+
+  it('scourge-of-valkas-dragon-count — X is the number of Dragons you control as the trigger resolves, counting only your own', () => {
+    const { ctx } = board('scourge-count');
+    spawn(ctx, 'P1', EMBER_DRAGON);
+    spawn(ctx, 'P2', EMBER_DRAGON);
+    enterFrom(ctx, 'P1', DRAKE);
+    settle(ctx, aimAt('P2'));
+    // Scourge, the Ember Dragon and the Drake; the opponent's Dragon is not counted.
+    expect(playerById(ctx, 'P2').life).toBe(37);
+
+    // A Dragon arriving while the trigger is on the stack is counted.
+    const grows = board('scourge-count-grows');
+    enterFrom(grows.ctx, 'P1', DRAKE);
+    pump(priorityCheckpoint(grows.ctx), aimAt('P2'));
+    expect(grows.ctx.state.stack).toHaveLength(1);
+    spawn(grows.ctx, 'P1', EMBER_DRAGON);
+    resolveTop(grows.ctx);
+    expect(playerById(grows.ctx, 'P2').life).toBe(37);
+
+    // A Dragon leaving while the trigger is on the stack is not counted.
+    const shrinks = board('scourge-count-shrinks');
+    const other = spawn(shrinks.ctx, 'P1', EMBER_DRAGON);
+    enterFrom(shrinks.ctx, 'P1', DRAKE);
+    pump(priorityCheckpoint(shrinks.ctx), aimAt('P2'));
+    pump(moveObject(shrinks.ctx, other, { zone: 'graveyard' }));
+    resolveTop(shrinks.ctx);
+    expect(playerById(shrinks.ctx, 'P2').life).toBe(38);
+  });
+
+  it('scourge-of-valkas-dragon-gone — the entering creature, whether another Dragon or Scourge itself, still deals the damage after it left the battlefield (CR 608.2h)', () => {
+    const other = board('scourge-lki-other');
+    spawn(other.ctx, 'P1', EMBER_DRAGON);
+    const drake = enterFrom(other.ctx, 'P1', DRAKE);
+    pump(priorityCheckpoint(other.ctx), aimAt('P2'));
+    expect(other.ctx.state.stack).toHaveLength(1);
+    pump(moveObject(other.ctx, onField(other.ctx, drake.cardId)!, { zone: 'exile' }));
+    resolveTop(other.ctx);
+    // Scourge and the Ember Dragon remain: X = 2, dealt by the Drake as it last existed.
+    expect(playerById(other.ctx, 'P2').life).toBe(38);
+    expect(playerById(other.ctx, 'P1').life).toBe(42);
+    expect(damageEvents(other.ctx).at(-1)?.payload).toMatchObject({
+      source: 'Lab Drake',
+      amount: 2,
+    });
+
+    const own = pod('scourge-lki-self');
+    spawn(own, 'P1', EMBER_DRAGON);
+    spawn(own, 'P1', EMBER_DRAGON);
+    const entered = enterFrom(own, 'P1', card);
+    pump(priorityCheckpoint(own), aimAt('P2'));
+    expect(own.state.stack).toHaveLength(1);
+    pump(moveObject(own, onField(own, entered.cardId)!, { zone: 'graveyard' }));
+    resolveTop(own);
+    expect(onField(own, entered.cardId)).toBeUndefined();
+    expect(playerById(own, 'P2').life).toBe(38);
+    expect(damageEvents(own).at(-1)?.payload).toMatchObject({
+      source: 'Scourge of Valkas',
+      amount: 2,
+    });
+  });
+
+  it("scourge-of-valkas-trigger-conditions — a non-Dragon creature and an opponent's Dragon entering deal no damage", () => {
+    const { ctx } = board('scourge-conditions');
+    enterFrom(ctx, 'P1', LAB_CARD('Lab Walker'));
+    enterFrom(ctx, 'P2', DRAKE);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    settle(ctx, aimAt('P2'));
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('scourge-of-valkas-two-scourges — with two Scourges, another Dragon entering triggers each of them, and a Scourge entering triggers itself and the other', () => {
+    const { ctx } = board('scourge-two');
+    spawn(ctx, 'P1', card);
+    enterFrom(ctx, 'P1', DRAKE);
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+    settle(ctx, aimAt('P2'));
+    // Two Scourges and the Drake: each trigger deals X = 3 from the Drake.
+    expect(playerById(ctx, 'P2').life).toBe(34);
+    expect(playerById(ctx, 'P1').life).toBe(46);
+    expect(damageEvents(ctx).map((event) => event.payload['source'])).toEqual([
+      'Lab Drake',
+      'Lab Drake',
+    ]);
+
+    // The second Scourge entering is "this creature" for itself and "another Dragon" for the first.
+    const entering = board('scourge-two-entering');
+    enterFrom(entering.ctx, 'P1', card);
+    expect(entering.ctx.state.pendingTriggers).toHaveLength(2);
+    settle(entering.ctx, aimAt('P2'));
+    expect(playerById(entering.ctx, 'P2').life).toBe(36);
+    expect(
+      damageEvents(entering.ctx).every((event) => event.payload['source'] === 'Scourge of Valkas'),
+    ).toBe(true);
+  });
+
+  it('scourge-of-valkas-red-pump — {R} gives +1/+0 until end of turn, once per red mana, and is not offered without red mana', () => {
+    const { ctx, scourge } = board('scourge-pump');
+    expect(optionFor(ctx, 'P1', scourge.id, /gets \+1\/\+0/)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), red(2));
+    const first = optionFor(ctx, 'P1', scourge.id, /gets \+1\/\+0/);
+    expect(first).toBeDefined();
+    takeAction(ctx, 'P1', first!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    expect(effectivePT(ctx, scourge)).toEqual({ power: 5, toughness: 4 });
+    takeAction(
+      ctx,
+      'P1',
+      optionFor(ctx, 'P1', scourge.id, /gets \+1\/\+0/)!.payload as PriorityActionPayload,
+    );
+    resolveTop(ctx);
+    expect(effectivePT(ctx, scourge)).toEqual({ power: 6, toughness: 4 });
+    // Colorless mana cannot pay {R}.
+    const dry = board('scourge-pump-colorless');
+    addMana(playerById(dry.ctx, 'P1'), generic(2));
+    expect(optionFor(dry.ctx, 'P1', dry.scourge.id, /gets \+1\/\+0/)).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -382,6 +623,11 @@ const RESTORED: RestoredCard[] = [
     name: 'Dragon Tempest',
     sha256: 'cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13',
     clauseCount: 2,
+  },
+  {
+    name: 'Scourge of Valkas',
+    sha256: 'b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c',
+    clauseCount: 3,
   },
 ];
 

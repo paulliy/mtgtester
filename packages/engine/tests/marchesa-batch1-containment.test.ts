@@ -159,8 +159,6 @@ const REASONS: Record<string, string> = {
   "Tyrant's Familiar":
     'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
   'Atarka Monument': 'The animation does not make it red and green.',
-  'Scourge of Valkas':
-    'The entering Dragon is the damage source, implemented as damage from this creature.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
@@ -291,6 +289,7 @@ describe('Marchesa catalog audit containment', () => {
     'Eidolon of Countless Battles',
     'Animate Dead',
     'Dragon Tempest',
+    'Scourge of Valkas',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
