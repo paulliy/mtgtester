@@ -178,6 +178,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
+      "card": {
+        "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+        "scryfallId": "45834bc6-be8d-4064-930d-efc73cf3c64d",
+        "name": "Duelist's Heritage",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

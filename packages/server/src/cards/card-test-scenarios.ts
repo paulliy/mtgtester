@@ -11449,9 +11449,28 @@ function brashTaunterScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** Pass priority, and fill a declaration's slots with "no block" (or the first choice). */
+function passOrNoBlock(request: Parameters<DecisionProvider['decide']>[0]) {
+  const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+  const fallback = pass ?? request.legalActions[0]!;
+  return {
+    requestId: request.requestId,
+    actionId: fallback.id,
+    targets: (fallback.targets ?? []).map((slot) => ({
+      slot: slot.slot,
+      choice: slot.options.includes('__no_block__') ? '__no_block__' : (slot.options[0] as string),
+    })),
+  };
+}
+
+/** An opponent seat that never blocks and otherwise passes. */
+function neverBlocks(): DecisionProvider {
+  return { decide: passOrNoBlock };
+}
+
 /**
  * An opponent seat that answers a sacrifice-or-lose prompt with `answer` ('decline' takes the
- * loss, otherwise the option whose description contains it) and otherwise passes.
+ * loss, otherwise the option whose description contains it), never blocks, and otherwise passes.
  */
 function sacrificeOrLose(answer: 'decline' | string): DecisionProvider {
   return {
@@ -11462,19 +11481,7 @@ function sacrificeOrLose(answer: 'decline' | string): DecisionProvider {
           : candidate.type !== 'decline' && candidate.description.includes(answer),
       );
       if (action !== undefined) return { requestId: request.requestId, actionId: action.id };
-      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
-      const fallback = pass ?? request.legalActions[0]!;
-      // A declaration (no blockers here) fills each slot with its "no block" choice.
-      return {
-        requestId: request.requestId,
-        actionId: fallback.id,
-        targets: (fallback.targets ?? []).map((slot) => ({
-          slot: slot.slot,
-          choice: slot.options.includes('__no_block__')
-            ? '__no_block__'
-            : (slot.options[0] as string),
-        })),
-      };
+      return passOrNoBlock(request);
     },
   };
 }
@@ -11511,6 +11518,38 @@ function tombBladeScenario(gameId: GameId): CardTestScenario {
       continueThroughCombat: true,
     },
     decisionProviderOverrides: { P2: sacrificeOrLose('decline'), P3: sacrificeOrLose('Lab Servo') },
+  });
+}
+
+function duelistsHeritageScenario(gameId: GameId): CardTestScenario {
+  const heritage = pinnedFrom(COVERAGE_PR06, "Duelist's Heritage");
+  return pr01Scenario(gameId, {
+    id: 'duelists-heritage-viewer-double-strike-attacker',
+    title: "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+    instructions: [
+      "Duelist's Heritage, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield; P2 controls Lab Bird and P3 controls Lab Servo.",
+      'Attack P2 with both Lab Ox and Lab Servo. The Heritage triggers once for the whole attack: target Lab Servo, and say yes to the "you may".',
+    ],
+    expectedOutcome:
+      'Only the two attackers were offered as targets (not Lab Bird or the other Lab Servo). Lab Servo gains double strike and deals 1 damage in each damage step, and Lab Ox deals 4: P2 is at 40 - 4 - 2 = 34.',
+    oracleSha256: heritage.sha256,
+    clauseIds: ['duelists-heritage-attack-trigger'],
+    decks: {
+      P1: [heritage.card, LAB_OX, LAB_SERVO],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Duelist's Heritage", 'Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks(), P3: neverBlocks() },
   });
 }
 
@@ -11761,6 +11800,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tyrants-familiar-viewer-lieutenant-attack',
   'brash-taunter-viewer-fight-and-reflect',
   'tomb-blade-viewer-sacrifice-or-lose',
+  'duelists-heritage-viewer-double-strike-attacker',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12075,6 +12115,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tyrants-familiar-viewer-lieutenant-attack': tyrantsFamiliarScenario,
   'brash-taunter-viewer-fight-and-reflect': brashTaunterScenario,
   'tomb-blade-viewer-sacrifice-or-lose': tombBladeScenario,
+  'duelists-heritage-viewer-double-strike-attacker': duelistsHeritageScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

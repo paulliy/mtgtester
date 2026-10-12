@@ -2396,13 +2396,23 @@
     "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb": {
       "name": "Duelist's Heritage",
       "oracleSha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "duelists-heritage-attack-trigger",
           "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
-          "implementation": ["explicitly unsupported; per-attacker grant on any creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "aggregate attacks trigger over creatures of any controller (CR 603.2c): one trigger per attack declaration however many creatures attack, including an opponent's attack; its one target is any attacking creature, yours or an opponent's, chosen as the trigger is put on the stack (a creature that did not attack is not offered); on resolution you decide whether to grant double strike until end of turn (CR 702.4), and declining grants nothing"
+          ],
+          "engineTestIds": [
+            "duelists-heritage-pinned-oracle-supported",
+            "duelists-heritage-one-trigger-per-attack",
+            "duelists-heritage-target-attacking",
+            "duelists-heritage-opponent-attacker",
+            "duelists-heritage-may-decline",
+            "duelists-heritage-until-end-of-turn"
+          ],
+          "viewerScenarioIds": ["duelists-heritage-viewer-double-strike-attacker"]
         }
       ],
       "gameplayAiScenarioIds": []

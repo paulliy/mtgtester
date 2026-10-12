@@ -333,3 +333,50 @@ describe('Tomb Blade Card Test Lab scenario', () => {
     replays('tomb-blade-viewer-sacrifice-or-lose', steps);
   });
 });
+
+describe("Duelist's Heritage Card Test Lab scenario", () => {
+  it('duelists-heritage-viewer-double-strike-attacker — one trigger for the two-creature attack, only the attackers on offer, and Lab Servo strikes twice', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2', 'P2'] },
+      { action: 'Targets for', targets: ['Lab Servo'] },
+      { action: 'Yes' },
+    ];
+    const targetOptions: string[][] = [];
+    let mayPrompts = 0;
+    const { scenario, state, seat, onBattlefield } = run(
+      'duelists-heritage-viewer-double-strike-attacker',
+      steps,
+      (request, current) => {
+        const slots = request.legalActions.find((action) =>
+          /^Targets for Duelist/.test(action.description),
+        )?.targets;
+        if (slots !== undefined && slots !== null) {
+          const live = current.engine.getState().battlefield;
+          targetOptions.push(
+            slots[0]!.options.map((id) => {
+              const perm = live.find((candidate) => candidate.id === id);
+              return `${perm?.controllerId}:${perm?.name}`;
+            }),
+          );
+        }
+        if (request.legalActions.some((action) => action.type === 'acceptTrigger')) mayPrompts++;
+      },
+    );
+    // One target prompt and one "you may" for the whole attack, offering only P1's two attackers.
+    expect(targetOptions).toHaveLength(1);
+    expect([...targetOptions[0]!].sort()).toEqual(['P1:Lab Ox', 'P1:Lab Servo']);
+    expect(mayPrompts).toBe(1);
+    const [servo] = onBattlefield('Lab Servo').filter((perm) => perm.controllerId === 'P1');
+    const chars = computeCharacteristics(
+      (scenario.engine as unknown as { ctx: GameContext }).ctx,
+      servo as unknown as EnginePermanent,
+    );
+    expect(chars.keywords).toContain('double strike');
+    // Lab Ox 4 + Lab Servo 1 in each of two damage steps.
+    expect(seat('P2').life).toBe(40 - 4 - 2);
+    expect(seat('P3').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('duelists-heritage-viewer-double-strike-attacker', steps);
+  });
+});

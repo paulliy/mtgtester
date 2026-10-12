@@ -100,8 +100,6 @@ const REASONS: Record<string, string> = {
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
   Delirium: "Cast-only-during-an-opponent's-turn is omitted.",
-  "Duelist's Heritage":
-    'Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.',
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
   'Selfless Squire':
     'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
@@ -289,6 +287,7 @@ describe('Marchesa catalog audit containment', () => {
     "Tyrant's Familiar",
     'Brash Taunter',
     'Tomb Blade',
+    "Duelist's Heritage",
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

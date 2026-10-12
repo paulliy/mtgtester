@@ -1,8 +1,8 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { activated, mana, manaCost, TAP, targetSlots, triggered } from '../templates';
-import { OTHER } from '../selector';
+import { activated, mana, manaCost, TAP, targetSlots, triggered, whenAttacks } from '../templates';
+import { OTHER, ofType } from '../selector';
 import { TREASURE } from '../tokens';
 import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
@@ -235,11 +235,35 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Display of Power',
     'Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.',
   );
-  // Catalog audit queen-batch-3: optional once-per-attack-group is a per-attacker grant.
-  unsupportedCard(
+  // Duelist's Heritage: "one or more creatures attack" is one trigger for the whole declaration
+  // (CR 603.2c), whoever attacks. The target is any attacking creature, chosen as the trigger goes
+  // on the stack; "you may" is decided on resolution (CR 603.5).
+  const heritage = targetSlots({
+    attacker: { kind: 'creature', filter: { kind: 'combatRole', role: 'attacking' } },
+  });
+  defineCard(
     '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb',
     "Duelist's Heritage",
-    'Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.',
+    [
+      'Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.',
+    ],
+    {
+      triggers: [
+        triggered(whenAttacks(ofType('Creature'), { aggregate: true }), {
+          targets: heritage.targets,
+          optional: true,
+          effects: [
+            {
+              op: 'grantKeywordUntilEot',
+              target: heritage.slot.attacker,
+              keyword: 'double strike',
+            },
+          ],
+          description:
+            'Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn',
+        }),
+      ],
+    },
   );
   defineCard(
     'bc328acc-8521-4581-88c3-99a7cb2c1cdb',

@@ -933,6 +933,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+    "name": "Duelist's Heritage",
+    "package": "PR06.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "441b51b0-ecd0-466d-9ca8-e754eb563aec",
     "name": "Eidolon of Countless Battles",
     "package": "PR05.19",

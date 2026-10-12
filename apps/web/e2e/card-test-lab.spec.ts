@@ -8674,3 +8674,48 @@ test('Tomb Blade: the damaged player sacrifices a creature or loses life', async
   await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
   await expect(permanent(page, 'Lab Ox')).toHaveCount(2);
 });
+
+test("Duelist's Heritage: one trigger per attack, double strike for the attacker you pick", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+  );
+  const mine = (name: string) =>
+    page
+      .locator('.human-zone .object')
+      .filter({ has: page.getByRole('img', { name, exact: true }) });
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  for (const attacker of ['Lab Ox', 'Lab Servo']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: attacker })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // One trigger for the whole attack: only the two attackers can be chosen.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await expect(mine('Lab Ox')).toHaveClass(/targetable/);
+  await expect(mine('Lab Servo')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Bird')).not.toHaveClass(/targetable/);
+  await mine('Lab Servo').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // "You may": say yes.
+  const yes = page.getByRole('button', { name: 'Yes', exact: true });
+  await passUntil(page, yes);
+  await yes.click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(mine('Lab Servo')).toContainText(/double strike/i);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('40');
+});

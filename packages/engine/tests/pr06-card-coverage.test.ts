@@ -23,7 +23,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
-import { runCombatAndExtraCombats } from '../src/turn/turn';
+import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { effectivePT, hasKeyword } from '../src/state/queries';
@@ -1221,6 +1221,159 @@ describe('Tomb Blade', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.06 Duelist's Heritage
+// ---------------------------------------------------------------------------------------------
+
+describe("Duelist's Heritage", () => {
+  const { card } = pinned("Duelist's Heritage");
+  const FENCER = (name: string, power = '2') =>
+    oracle({ name, typeLine: 'Creature — Human', power, toughness: '9' });
+
+  /** P1 controls Duelist's Heritage; every player controls one idle creature besides attackers. */
+  function board(seed: string, active: 'P1' | 'P2') {
+    const ctx = pod(seed);
+    ctx.state.currentTurnPlayer = active;
+    ctx.state.activePlayerIndex = active === 'P1' ? 0 : 1;
+    spawn(ctx, 'P1', card);
+    const idle = {
+      P1: spawn(ctx, 'P1', FENCER('Lab Idle P1')),
+      P3: spawn(ctx, 'P3', FENCER('Lab Idle P3')),
+    };
+    return { ctx, idle };
+  }
+
+  /**
+   * The active player's combat: `attackers` maps each attacker id to its defender. The trigger's
+   * target prompt (object ids on offer) and "you may" prompt are recorded; the target is `aim`
+   * (default: first on offer) and the optional grant is taken when `accept` is true.
+   */
+  function combat(
+    ctx: GameContext,
+    attackers: Record<string, string>,
+    accept: boolean,
+    aim?: string,
+    phase: typeof runCombatAndExtraCombats = runCombatAndExtraCombats,
+  ) {
+    const targetPrompts: string[][] = [];
+    const mayPrompts: string[] = [];
+    pump(phase(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attackers[subjectId] ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        targetPrompts.push(slot.options);
+        return { index: 0, targets: new Map([[slot.slot, aim ?? slot.options[0]!]]) };
+      }
+      if (decision.options.some((option) => option.type === 'acceptTrigger')) {
+        mayPrompts.push(decision.prompt);
+        const wanted = accept ? 'acceptTrigger' : 'declineTrigger';
+        return {
+          index: decision.options.findIndex((option) => option.type === wanted),
+          targets: new Map(),
+        };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return { targetPrompts, mayPrompts };
+  }
+
+  const keywordsOf = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).keywords;
+
+  it('duelists-heritage-pinned-oracle-supported — the override reads one aggregate attack trigger for any creature, with an optional grant to a target attacking creature', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // Any creature (not only yours), one firing per declaration.
+    expect(trigger!.trigger).toEqual({
+      when: 'attacks',
+      subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+      aggregate: true,
+    });
+    expect(trigger!.optional).toBe(true);
+    expect(trigger!.targets).toEqual([
+      { kind: 'creature', filter: { kind: 'combatRole', role: 'attacking' } },
+    ]);
+    expect(trigger!.effects).toEqual([
+      { op: 'grantKeywordUntilEot', target: 0, keyword: 'double strike' },
+    ]);
+  });
+
+  it("duelists-heritage-one-trigger-per-attack — a declaration of several creatures triggers it exactly once, yours or an opponent's", () => {
+    const own = board('heritage-own', 'P1');
+    const a = spawn(own.ctx, 'P1', FENCER('Lab Attacker A'));
+    const b = spawn(own.ctx, 'P1', FENCER('Lab Attacker B'));
+    const mine = combat(own.ctx, { [a.id]: 'P2', [b.id]: 'P2' }, true);
+    expect(mine.targetPrompts).toHaveLength(1);
+    expect(mine.mayPrompts).toHaveLength(1);
+
+    // An opponent's attack with two creatures: P1 (the Heritage's controller) still gets one trigger.
+    const theirs = board('heritage-opponent', 'P2');
+    const c = spawn(theirs.ctx, 'P2', FENCER('Lab Raider A'));
+    const d = spawn(theirs.ctx, 'P2', FENCER('Lab Raider B'));
+    const hostile = combat(theirs.ctx, { [c.id]: 'P3', [d.id]: 'P3' }, true);
+    expect(hostile.targetPrompts).toHaveLength(1);
+    expect(hostile.mayPrompts).toHaveLength(1);
+    expect(hostile.mayPrompts[0]).toContain("Duelist's Heritage");
+
+    // No attackers, no trigger.
+    const quiet = board('heritage-quiet', 'P1');
+    const none = combat(quiet.ctx, {}, true);
+    expect(none.targetPrompts).toEqual([]);
+    expect(none.mayPrompts).toEqual([]);
+  });
+
+  it('duelists-heritage-target-attacking — only attacking creatures are legal targets, whoever controls them, never a creature that stayed home', () => {
+    const { ctx, idle } = board('heritage-targets', 'P2');
+    const c = spawn(ctx, 'P2', FENCER('Lab Raider A'));
+    const d = spawn(ctx, 'P2', FENCER('Lab Raider B'));
+    spawn(ctx, 'P2', FENCER('Lab Raider At Home'));
+    const run = combat(ctx, { [c.id]: 'P3', [d.id]: 'P3' }, true);
+    expect([...run.targetPrompts[0]!].sort()).toEqual([c.id, d.id].sort());
+    expect(run.targetPrompts[0]).not.toContain(idle.P1.id);
+    expect(run.targetPrompts[0]).not.toContain(idle.P3.id);
+  });
+
+  it("duelists-heritage-opponent-attacker — the controller may target an opponent's attacker, which gains double strike and deals its damage twice", () => {
+    const { ctx } = board('heritage-grant', 'P2');
+    const c = spawn(ctx, 'P2', FENCER('Lab Raider A', '3'));
+    const d = spawn(ctx, 'P2', FENCER('Lab Raider B', '3'));
+    combat(ctx, { [c.id]: 'P3', [d.id]: 'P3' }, true, d.id);
+    expect(keywordsOf(ctx, d)).toContain('double strike');
+    expect(keywordsOf(ctx, c)).not.toContain('double strike');
+    // 3 power twice from the double striker plus 3 once from the other: 9 damage to P3.
+    expect(playerById(ctx, 'P3').life).toBe(40 - 9);
+  });
+
+  it('duelists-heritage-may-decline — declining the "you may" grants nothing, to the target or anyone else', () => {
+    const { ctx } = board('heritage-decline', 'P1');
+    const a = spawn(ctx, 'P1', FENCER('Lab Attacker A', '3'));
+    const b = spawn(ctx, 'P1', FENCER('Lab Attacker B', '3'));
+    const run = combat(ctx, { [a.id]: 'P2', [b.id]: 'P2' }, false, a.id);
+    expect(run.targetPrompts).toHaveLength(1);
+    expect(run.mayPrompts).toHaveLength(1);
+    expect(keywordsOf(ctx, a)).not.toContain('double strike');
+    expect(keywordsOf(ctx, b)).not.toContain('double strike');
+    expect(playerById(ctx, 'P2').life).toBe(40 - 6);
+  });
+
+  it('duelists-heritage-until-end-of-turn — the double strike lasts only until end of turn', () => {
+    const { ctx } = board('heritage-eot', 'P1');
+    const a = spawn(ctx, 'P1', FENCER('Lab Attacker A', '3'));
+    // A whole turn, through combat to the cleanup step.
+    combat(ctx, { [a.id]: 'P2' }, true, undefined, runTurn);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 6);
+    expect(keywordsOf(ctx, a)).not.toContain('double strike');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1259,6 +1412,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Tomb Blade',
     sha256: 'ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: "Duelist's Heritage",
+    sha256: '908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d',
+    clauseCount: 1,
     authored: true,
   },
 ];

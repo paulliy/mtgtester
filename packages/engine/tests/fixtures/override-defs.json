@@ -3564,8 +3564,45 @@
   {
     "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
     "name": "Duelist's Heritage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn",
+          "effects": [
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "5dba7746-c087-4ec1-92ca-ab9882dea24d",
@@ -14258,8 +14295,45 @@
   {
     "oracleId": "oracle-duelist-s-heritage",
     "name": "Duelist's Heritage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn",
+          "effects": [
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-duplicant",

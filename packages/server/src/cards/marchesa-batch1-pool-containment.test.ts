@@ -50,6 +50,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Dragonkin Berserker',
       'Dread Return',
       'Dream Devourer',
+      "Duelist's Heritage",
       'Eidolon of Countless Battles',
       'Eldrazi Conscription',
       'Endless Atlas',

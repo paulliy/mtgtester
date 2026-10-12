@@ -2192,6 +2192,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Tomb Blade: the damaged player sacrifices a creature or loses life'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
