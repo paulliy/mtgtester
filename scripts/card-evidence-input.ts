@@ -2188,6 +2188,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Brash Taunter: fight Lab Ox, then reflect the damage at P3'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomb Blade: the damaged player sacrifices a creature or loses life'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

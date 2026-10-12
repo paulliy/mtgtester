@@ -8628,3 +8628,49 @@ test('Brash Taunter: fight Lab Ox, then reflect the damage at P3', async ({ page
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('40');
 });
+
+test('Tomb Blade: the damaged player sacrifices a creature or loses life', async ({ page }) => {
+  await runScenario(page, 'Tomb Blade: the damaged player sacrifices a creature or loses life');
+  // Unearth the second Tomb Blade from the graveyard: it returns with haste.
+  const graveBlade = page
+    .locator('.zones-strip .zone', { hasText: 'Graveyard' })
+    .locator('.zone-card-thumb')
+    .filter({ has: page.getByRole('img', { name: 'Tomb Blade', exact: true }) });
+  await expect(graveBlade).toHaveClass(/actionable/, { timeout: 15_000 });
+  await graveBlade.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Tomb Blade').nth(1));
+  await expect(permanent(page, 'Tomb Blade')).toHaveCount(2);
+
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  const rows = page.locator('.combat-assignment-row').filter({ hasText: 'Tomb Blade' });
+  await expect(rows).toHaveCount(2);
+  await rows.nth(0).getByRole('button', { name: 'P2' }).click();
+  await rows.nth(1).getByRole('button', { name: 'P3' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Both triggers fire at once: put either on the stack first. The damaged players answer
+  // (P2 loses the life, P3 sacrifices Lab Servo) without involving the attacker.
+  const order = page.getByRole('button', {
+    name: /Tomb Blade: Whenever this creature deals combat damage/,
+  });
+  await passUntil(page, order.first().or(page.getByText(/game over/i).first()));
+  if (await order.first().isVisible()) await order.first().click();
+  await passUntil(page, page.getByText(/game over/i).first());
+
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('32');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('40');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  // P2 kept all three creatures; P3 sacrificed Lab Servo and kept Lab Ox.
+  await expect(permanent(page, 'Lab Bird')).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(2);
+});

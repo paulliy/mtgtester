@@ -11449,6 +11449,71 @@ function brashTaunterScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * An opponent seat that answers a sacrifice-or-lose prompt with `answer` ('decline' takes the
+ * loss, otherwise the option whose description contains it) and otherwise passes.
+ */
+function sacrificeOrLose(answer: 'decline' | string): DecisionProvider {
+  return {
+    decide(request) {
+      const action = request.legalActions.find((candidate) =>
+        answer === 'decline'
+          ? candidate.type === 'decline'
+          : candidate.type !== 'decline' && candidate.description.includes(answer),
+      );
+      if (action !== undefined) return { requestId: request.requestId, actionId: action.id };
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      const fallback = pass ?? request.legalActions[0]!;
+      // A declaration (no blockers here) fills each slot with its "no block" choice.
+      return {
+        requestId: request.requestId,
+        actionId: fallback.id,
+        targets: (fallback.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.includes('__no_block__')
+            ? '__no_block__'
+            : (slot.options[0] as string),
+        })),
+      };
+    },
+  };
+}
+
+function tombBladeScenario(gameId: GameId): CardTestScenario {
+  const blade = pinnedFrom(COVERAGE_PR06, 'Tomb Blade');
+  const swamps = Array.from({ length: 8 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'tomb-blade-viewer-sacrifice-or-lose',
+    title: 'Tomb Blade: the damaged player sacrifices a creature or loses life',
+    instructions: [
+      'You control Tomb Blade and eight Swamps, and a second Tomb Blade is in your graveyard. P2 controls Lab Servo, Lab Ox and Lab Bird, and P3 controls Lab Servo and Lab Ox; P4 controls nothing.',
+      'Unearth the second Tomb Blade from your graveyard for {6}{B}{B} and let it resolve: it returns with haste.',
+      'Attack P2 with one Tomb Blade and P3 with the other. P2 declines to sacrifice; P3 sacrifices Lab Servo.',
+    ],
+    expectedOutcome:
+      'Each Tomb Blade deals 5 combat damage. P2 declines and loses 3 more life (one per creature it controls): it is at 32 and keeps all three creatures. P3 sacrifices Lab Servo and loses no extra life: it is at 35 with Lab Ox only. P4 and you are untouched at 40.',
+    oracleSha256: blade.sha256,
+    clauseIds: ['tomb-blade-flying', 'tomb-blade-combat-damage-rider', 'tomb-blade-unearth'],
+    decks: {
+      P1: [blade.card, blade.card, ...swamps],
+      P2: [LAB_SERVO, LAB_OX, LAB_BIRD, FOREST],
+      P3: [LAB_SERVO, LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tomb Blade', ...swamps.map((swamp) => swamp.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Ox', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo', 'Lab Ox'] },
+      ],
+      graveyard: [{ playerId: 'P1', cardNames: ['Tomb Blade'] }],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: sacrificeOrLose('decline'), P3: sacrificeOrLose('Lab Servo') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11695,6 +11760,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'scourge-of-valkas-viewer-dragons-deal-damage',
   'tyrants-familiar-viewer-lieutenant-attack',
   'brash-taunter-viewer-fight-and-reflect',
+  'tomb-blade-viewer-sacrifice-or-lose',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12008,6 +12074,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'scourge-of-valkas-viewer-dragons-deal-damage': scourgeOfValkasScenario,
   'tyrants-familiar-viewer-lieutenant-attack': tyrantsFamiliarScenario,
   'brash-taunter-viewer-fight-and-reflect': brashTaunterScenario,
+  'tomb-blade-viewer-sacrifice-or-lose': tombBladeScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

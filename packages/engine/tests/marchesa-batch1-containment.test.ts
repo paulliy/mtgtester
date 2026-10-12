@@ -164,7 +164,6 @@ const REASONS: Record<string, string> = {
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
-  'Tomb Blade': 'Combat-damage life loss targets any player, not the damaged player.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Reality Shift':
@@ -289,6 +288,7 @@ describe('Marchesa catalog audit containment', () => {
     'Scourge of Valkas',
     "Tyrant's Familiar",
     'Brash Taunter',
+    'Tomb Blade',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

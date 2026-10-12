@@ -5490,13 +5490,40 @@
     "c857de66-f4e0-4e97-ad01-fac623af8225": {
       "name": "Tomb Blade",
       "oracleSha256": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "tomb-blade-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["tomb-blade-pinned-oracle-supported", "tomb-blade-unearth"],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
+        },
+        {
+          "id": "tomb-blade-combat-damage-rider",
           "oracleText": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.",
-          "implementation": ["explicitly unsupported; combat-damage life loss targets any player"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "dealsCombatDamageToPlayer trigger on this creature with no target: the effect acts on the event player, the player this creature dealt combat damage to; as it resolves that player chooses between sacrificing a creature they control, which avoids the loss, and losing life equal to the number of creatures they control at that moment; with no creatures there is nothing to sacrifice and no life is lost, other opponents are never affected, and no trigger happens when no combat damage is dealt to a player"
+          ],
+          "engineTestIds": [
+            "tomb-blade-pinned-oracle-supported",
+            "tomb-blade-decline-loses-life",
+            "tomb-blade-sacrifice-instead",
+            "tomb-blade-no-creatures",
+            "tomb-blade-damaged-player-only",
+            "tomb-blade-count-at-resolution",
+            "tomb-blade-no-combat-damage"
+          ],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
+        },
+        {
+          "id": "tomb-blade-unearth",
+          "oracleText": "Unearth {6}{B}{B}",
+          "implementation": [
+            "interpreted Unearth {6}{B}{B} (CR 702.84a): activated from the graveyard at sorcery speed, it returns the card to the battlefield with haste"
+          ],
+          "engineTestIds": ["tomb-blade-pinned-oracle-supported", "tomb-blade-unearth"],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
         }
       ],
       "gameplayAiScenarioIds": []

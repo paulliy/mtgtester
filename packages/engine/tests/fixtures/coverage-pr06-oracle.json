@@ -141,6 +141,43 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
+      "card": {
+        "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+        "scryfallId": "2f5f2e19-41ce-40c6-9732-d0f88ad6735f",
+        "name": "Tomb Blade",
+        "manaCost": "{4}{B}{B}",
+        "cmc": 6,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Flying\nWhenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.\nUnearth {6}{B}{B}",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Unearth"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

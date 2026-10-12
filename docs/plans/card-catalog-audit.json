@@ -5586,7 +5586,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 35,
+      "uniqueOracleIds": 34,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6473,6 +6473,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from Scourge): the interpreter reads Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as an enters trigger on this creature or another Dragon you control whose any-target damage is dealt by the entering creature itself (last known information if it left the battlefield, CR 608.2h) with X counted as the trigger resolves, plus Flying and the {R} +1/+0 pump. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+      "name": "Tomb Blade",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in necron-dynasties-remaining.ts is replaced by an executable override): the combat-damage rider is authored as an untargeted dealsCombatDamageToPlayer trigger whose effect acts on the event player, the player this creature dealt combat damage to, who chooses to sacrifice a creature they control or lose life equal to the number of creatures they control as it resolves. Flying and Unearth stay interpreted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
     }
   ]
 }

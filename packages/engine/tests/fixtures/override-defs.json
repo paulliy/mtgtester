@@ -8285,8 +8285,30 @@
   {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
     "name": "Tomb Blade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice",
+          "effects": [
+            {
+              "op": "tombBladeHit",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "c8f1e3bd-bbf0-4750-b054-03553fc61850",
@@ -21213,8 +21235,30 @@
   {
     "oracleId": "oracle-tomb-blade",
     "name": "Tomb Blade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice",
+          "effects": [
+            {
+              "op": "tombBladeHit",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tomb-fortress",

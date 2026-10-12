@@ -1045,6 +1045,182 @@ describe('Brash Taunter', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.14 Tomb Blade
+// ---------------------------------------------------------------------------------------------
+
+describe('Tomb Blade', () => {
+  const { card } = pinned('Tomb Blade');
+  const FODDER = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Soldier', power: '1', toughness: '1' });
+
+  /** P1 controls Tomb Blade; P2 controls `p2` creatures, P3 controls `p3`, P4 controls none. */
+  function board(seed: string, p2: number, p3 = 2) {
+    const ctx = pod(seed);
+    const blade = spawn(ctx, 'P1', card);
+    for (let i = 1; i <= p2; i++) spawn(ctx, 'P2', FODDER(`Lab Fodder P2-${i}`));
+    for (let i = 1; i <= p3; i++) spawn(ctx, 'P3', FODDER(`Lab Fodder P3-${i}`));
+    return { ctx, blade };
+  }
+
+  /**
+   * P1's combat with Tomb Blade attacking `defender` (and `blocks` mapping a blocker id to the
+   * Blade). The defender's sacrifice-or-lose prompt is recorded and answered with `answer`:
+   * 'decline' loses the life, a creature name sacrifices that creature.
+   */
+  function swing(
+    ctx: GameContext,
+    blade: EnginePermanent,
+    defender: string,
+    answer: 'decline' | string,
+    blocks: Record<string, string> = {},
+  ) {
+    const prompts: { player: string; options: string[] }[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === blade.id ? defender : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+      if (decision.options.some((option) => option.type === 'decline')) {
+        prompts.push({
+          player: decision.player,
+          options: decision.options.map((option) => option.description),
+        });
+        const index = decision.options.findIndex((option) =>
+          answer === 'decline' ? option.type === 'decline' : option.description.includes(answer),
+        );
+        return { index, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return prompts;
+  }
+
+  const creaturesOf = (ctx: GameContext, playerId: string) =>
+    ctx.state.battlefield.filter(
+      (perm) => perm.controllerId === playerId && perm.typeLine.includes('Creature'),
+    );
+
+  it('tomb-blade-pinned-oracle-supported — the override reads the combat-damage trigger as an untargeted effect on the damaged player, beside the interpreted flying and unearth', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'dealsCombatDamageToPlayer',
+      subject: { kind: 'self' },
+    });
+    // "that player" is the damaged player, not a target.
+    expect(def.triggers[0]!.targets).toEqual([]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'tombBladeHit', target: 'eventPlayer' }]);
+    expect(def.activatedAbilities).toHaveLength(1);
+  });
+
+  it('tomb-blade-decline-loses-life — declining the sacrifice loses life equal to the number of creatures they control, and they keep every creature', () => {
+    const { ctx, blade } = board('blade-decline', 3);
+    const prompts = swing(ctx, blade, 'P2', 'decline');
+    // The Blade's own 5 combat damage, then 3 more for three creatures.
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5 - 3);
+    expect(creaturesOf(ctx, 'P2')).toHaveLength(3);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]!.player).toBe('P2');
+    expect(prompts[0]!.options.some((option) => /Lose 3 life/.test(option))).toBe(true);
+  });
+
+  it('tomb-blade-sacrifice-instead — sacrificing a creature of their choice avoids the life loss, and only that one creature goes', () => {
+    const { ctx, blade } = board('blade-sacrifice', 3);
+    swing(ctx, blade, 'P2', 'Lab Fodder P2-2');
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5);
+    expect(
+      creaturesOf(ctx, 'P2')
+        .map((perm) => perm.name)
+        .sort(),
+    ).toEqual(['Lab Fodder P2-1', 'Lab Fodder P2-3']);
+    expect(playerById(ctx, 'P2').graveyard.map((object) => object.name)).toEqual([
+      'Lab Fodder P2-2',
+    ]);
+  });
+
+  it('tomb-blade-no-creatures — a player with no creatures cannot sacrifice and loses no life from the rider', () => {
+    const { ctx, blade } = board('blade-none', 0);
+    const prompts = swing(ctx, blade, 'P2', 'decline');
+    expect(prompts).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5);
+  });
+
+  it('tomb-blade-damaged-player-only — only the player the Blade hit is affected: other opponents lose nothing and keep their creatures', () => {
+    const { ctx, blade } = board('blade-multiplayer', 2, 4);
+    const prompts = swing(ctx, blade, 'P3', 'decline');
+    expect(playerById(ctx, 'P3').life).toBe(40 - 5 - 4);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(playerById(ctx, 'P4').life).toBe(40);
+    expect(creaturesOf(ctx, 'P2')).toHaveLength(2);
+    expect(creaturesOf(ctx, 'P3')).toHaveLength(4);
+    expect(prompts.map((prompt) => prompt.player)).toEqual(['P3']);
+  });
+
+  it('tomb-blade-count-at-resolution — the creature count is taken as the trigger resolves, including a creature that arrived since the damage was dealt', () => {
+    const { ctx, blade } = board('blade-count', 2);
+    // The defender's own trigger is put on the stack after (so resolves before) the Blade's.
+    spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Lab Reactor',
+        typeLine: 'Creature — Construct',
+        oracleText:
+          'Whenever a creature deals combat damage to a player, create a 1/1 white Soldier creature token.',
+      }),
+    );
+    const prompts = swing(ctx, blade, 'P2', 'decline');
+    // Two Fodder, the Reactor and the Soldier it made first: four creatures when the Blade's
+    // trigger resolves.
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]!.options.some((option) => /Lose 4 life/.test(option))).toBe(true);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5 - 4);
+  });
+
+  it('tomb-blade-no-combat-damage — no trigger when the Blade is blocked by a creature that absorbs it, or deals no damage to a player', () => {
+    const { ctx, blade } = board('blade-blocked', 2);
+    const blocker = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Lab Flier Wall',
+        typeLine: 'Creature — Wall',
+        power: '0',
+        toughness: '9',
+        oracleText: 'Flying',
+      }),
+    );
+    const prompts = swing(ctx, blade, 'P2', 'decline', { [blocker.id]: blade.id });
+    expect(prompts).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(creaturesOf(ctx, 'P2')).toHaveLength(3);
+  });
+
+  it('tomb-blade-unearth — Unearth {6}{B}{B} is offered from the graveyard at sorcery speed and brings the Blade back with haste', () => {
+    const ctx = pod('blade-unearth');
+    const blade = conjure(ctx, 'P1', card, 'graveyard');
+    expect(optionFor(ctx, 'P1', blade.id, /Unearth/)).toBeUndefined();
+    addMana(playerById(ctx, 'P1'), [
+      ...Array.from({ length: 2 }, () => ({ symbol: 'B' as const })),
+      ...generic(6),
+    ]);
+    const option = optionFor(ctx, 'P1', blade.id, /Unearth/);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    const back = ctx.state.battlefield.find((perm) => perm.cardId === blade.cardId);
+    expect(back).toBeDefined();
+    expect(hasKeyword(ctx, back!, 'haste')).toBe(true);
+    expect(hasKeyword(ctx, back!, 'flying')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1052,6 +1228,8 @@ interface RestoredCard {
   name: string;
   sha256: string;
   clauseCount: number;
+  /** An authored override (not the interpreter alone) carries the card; it must be executable. */
+  authored?: true;
 }
 
 const RESTORED: RestoredCard[] = [
@@ -1069,11 +1247,19 @@ const RESTORED: RestoredCard[] = [
     name: "Tyrant's Familiar",
     sha256: 'c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4',
     clauseCount: 3,
+    authored: true,
   },
   {
     name: 'Brash Taunter',
     sha256: '811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: 'Tomb Blade',
+    sha256: 'ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf',
+    clauseCount: 3,
+    authored: true,
   },
 ];
 
@@ -1132,12 +1318,16 @@ describe('PR06 restoration gate', () => {
     );
     expect(ours.length).toBeGreaterThan(0);
     for (const entry of ours) {
-      expect(getOverride(entry.oracleId), entry.name).toBeUndefined();
-      expect(
-        RESTORED.map((card) => card.name),
-        entry.name,
-      ).toContain(entry.name);
-      expect(getOverride(fixtureOracleId(entry.name)), `${entry.name} alias`).toBeUndefined();
+      const restored = RESTORED.find((card) => card.name === entry.name);
+      expect(restored, entry.name).toBeDefined();
+      for (const id of [entry.oracleId, fixtureOracleId(entry.name)]) {
+        // The fail-closed or placeholder registration is gone: nothing, or an executable override.
+        const override = getOverride(id);
+        if (restored?.authored === true) {
+          expect(override?.unsupportedReason, entry.name).toBeUndefined();
+          expect(override?.def, entry.name).not.toEqual({});
+        } else expect(override, entry.name).toBeUndefined();
+      }
       expect(interpretCard(pinned(entry.name).card).modeled, entry.name).toBe(true);
     }
   });

@@ -295,3 +295,41 @@ describe('Brash Taunter Card Test Lab scenario', () => {
     replays('brash-taunter-viewer-fight-and-reflect', steps);
   });
 });
+
+describe('Tomb Blade Card Test Lab scenario', () => {
+  it('tomb-blade-viewer-sacrifice-or-lose — each damaged player alone chooses: P2 declines and loses 3, P3 sacrifices Lab Servo and loses nothing more', () => {
+    const steps: Step[] = [
+      { action: 'Unearth' },
+      { action: 'Declare attackers', targets: ['P2', 'P3'] },
+    ];
+    const asked: Array<{ player: string; prompt: string }> = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'tomb-blade-viewer-sacrifice-or-lose',
+      steps,
+      (request) => {
+        if (request.legalActions.some((action) => action.type === 'decline'))
+          asked.push({ player: request.decidingPlayer, prompt: request.prompt ?? '' });
+      },
+    );
+    // Only the two damaged players were asked, each with their own creature count.
+    expect(asked.map((entry) => entry.player).sort()).toEqual(['P2', 'P3']);
+    expect(asked.find((entry) => entry.player === 'P2')?.prompt).toMatch(/lose 3 life/);
+    expect(asked.find((entry) => entry.player === 'P3')?.prompt).toMatch(/lose 2 life/);
+    expect(seat('P2').life).toBe(40 - 5 - 3);
+    expect(seat('P3').life).toBe(40 - 5);
+    expect(seat('P4').life).toBe(40);
+    expect(seat('P1').life).toBe(40);
+    const creaturesOf = (id: string) =>
+      state.battlefield
+        .filter((perm) => perm.controllerId === id && perm.typeLine.includes('Creature'))
+        .map((perm) => perm.name)
+        .sort();
+    expect(creaturesOf('P2')).toEqual(['Lab Bird', 'Lab Ox', 'Lab Servo']);
+    expect(creaturesOf('P3')).toEqual(['Lab Ox']);
+    expect(seat('P3').graveyard.map((card) => card.name)).toEqual(['Lab Servo']);
+    expect(onBattlefield('Tomb Blade')).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tomb-blade-viewer-sacrifice-or-lose', steps);
+  });
+});
