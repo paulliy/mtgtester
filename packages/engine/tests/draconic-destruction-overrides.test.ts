@@ -191,7 +191,8 @@ describe('Dragonkin Berserker', () => {
 });
 
 describe('Flameblast Dragon', () => {
-  it('is catalog-contained because the damage target is chosen before pay X', () => {
+  // Restored in coverage PR06; behavior is gated by pr06-card-coverage.test.ts.
+  it('is no longer catalog-contained', () => {
     const card = oracle({
       oracleId: '3180ee4f-66d7-4b73-bc10-9ee0c790ec18',
       name: 'Flameblast Dragon',
@@ -199,12 +200,10 @@ describe('Flameblast Dragon', () => {
       manaCost: '{4}{R}{R}',
       power: '5',
       toughness: '5',
+      oracleText:
+        'Flying\nWhenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.',
     });
-    const def = interpretCard(card);
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'The damage target is chosen before you decide to pay X.',
-    );
+    expect(interpretCard(card).modeled).toBe(true);
   });
 });
 

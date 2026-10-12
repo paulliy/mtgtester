@@ -25,7 +25,7 @@ import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
-import { moveObject, playerById } from '../src/state/objects';
+import { moveObject, playerById, queueTriggersForEvent } from '../src/state/objects';
 import { effectivePT, hasKeyword } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import {
@@ -1765,6 +1765,282 @@ describe('Invisible Woman', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.07 Flameblast Dragon
+// ---------------------------------------------------------------------------------------------
+
+describe('Flameblast Dragon', () => {
+  const { card } = pinned('Flameblast Dragon');
+  /** A creature with protection from red, to show the damage is red and comes from the Dragon. */
+  const RED_WARDEN = oracle({
+    name: 'Lab Red Warden',
+    typeLine: 'Creature — Knight',
+    power: '1',
+    toughness: '9',
+    oracleText: 'Protection from red',
+  });
+  const VICTIM = oracle({
+    name: 'Lab Victim',
+    typeLine: 'Creature — Secret',
+    power: '1',
+    toughness: '9',
+  });
+
+  /** P1 controls Flameblast Dragon, `mountains` Mountains and `plainsCount` Plains; P2 controls a Victim. */
+  function board(seed: string, mountains = 5, plainsCount = 0) {
+    const ctx = pod(seed);
+    const dragon = spawn(ctx, 'P1', card);
+    const victim = spawn(ctx, 'P2', VICTIM);
+    for (let i = 0; i < mountains; i++) spawn(ctx, 'P1', mountain());
+    for (let i = 0; i < plainsCount; i++) spawn(ctx, 'P1', plains());
+    return { ctx, dragon, victim };
+  }
+
+  const tappedLands = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.tapped && perm.typeLine.includes('Land')).length;
+
+  /** The Dragon attacks P2 as the declaration is made; its trigger waits to go on the stack. */
+  function attack(ctx: GameContext, dragon: EnginePermanent) {
+    dragon.attacking = 'P2';
+    queueTriggersForEvent(ctx, 'attacks', [{ permanent: dragon, playerId: 'P1' }]);
+  }
+
+  /** What the payment prompt offered, and what the player answered with. */
+  interface PaymentPrompt {
+    prompt: string;
+    options: string[];
+  }
+
+  /** Answer the "pay {X}{R}?" prompt with the option whose description matches `choice`. */
+  function payment(choice: RegExp, seen: PaymentPrompt[] = []): Answer {
+    return (decision) => {
+      const index = decision.options.findIndex((option) => choice.test(option.description));
+      seen.push({ prompt: decision.prompt, options: decision.options.map((o) => o.description) });
+      expect(index, `${decision.prompt} offers ${choice}`).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    };
+  }
+
+  /** Put the attack trigger on the stack aimed at `aim`, then resolve it answering the payment. */
+  function triggerAndResolve(
+    ctx: GameContext,
+    dragon: EnginePermanent,
+    aim: string,
+    choice: RegExp,
+  ) {
+    attack(ctx, dragon);
+    pump(priorityCheckpoint(ctx), aimAt(aim));
+    expect(ctx.state.stack).toHaveLength(1);
+    const seen: PaymentPrompt[] = [];
+    resolveTop(ctx, payment(choice, seen));
+    return seen;
+  }
+
+  const dragonHits = (ctx: GameContext) =>
+    damageEvents(ctx).filter((event) => String(event.payload['source']).includes('Flameblast'));
+
+  it('flameblast-dragon-pinned-oracle-supported — the override reads flying and an attack trigger that targets any target and then offers the {X}{R} payment', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    // "Whenever this creature attacks": the Dragon itself, never another attacker.
+    expect(trigger!.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    // The ability targets, so the target is chosen when the trigger goes on the stack (CR 603.3d).
+    expect(trigger!.targets).toEqual([{ kind: 'anyTarget' }]);
+    expect(trigger!.effects).toHaveLength(1);
+    expect(trigger!.effects[0]).toMatchObject({ op: 'mayPayXThenDealDamage', target: 0 });
+  });
+
+  it('flameblast-dragon-target-before-payment — the target is chosen when the trigger goes on the stack, before any payment prompt, and nothing is spent until it resolves', () => {
+    const { ctx, dragon, victim } = board('flameblast-order');
+    attack(ctx, dragon);
+    const targetPrompts: string[][] = [];
+    pump(priorityCheckpoint(ctx), (decision) => {
+      const slot = decision.options[0]?.targets?.[0];
+      expect(slot, 'only the target is asked when the trigger goes on the stack').toBeDefined();
+      targetPrompts.push(slot!.options);
+      return { index: 0, targets: new Map([[slot!.slot, victim.id]]) };
+    });
+    // Any target: every player and every creature (the Dragon included) is on offer.
+    expect(targetPrompts).toHaveLength(1);
+    expect([...targetPrompts[0]!].sort()).toEqual(
+      ['P1', 'P2', 'P3', 'P4', dragon.id, victim.id].sort(),
+    );
+    expect(ctx.state.stack).toHaveLength(1);
+    expect(tappedLands(ctx)).toBe(0);
+    expect(damageEvents(ctx)).toEqual([]);
+
+    // The payment prompt only appears when the trigger resolves, with the target already fixed.
+    const seen: PaymentPrompt[] = [];
+    resolveTop(ctx, payment(/^Pay X=2 /, seen));
+    expect(seen).toHaveLength(1);
+    expect(onField(ctx, victim.cardId)?.damageMarked).toBe(2);
+  });
+
+  it("flameblast-dragon-whole-game — a real attack declaration puts the trigger on the stack, asks for the target, then for the payment, and X damage reaches the chosen player alongside the Dragon's combat damage", () => {
+    const { ctx, dragon } = board('flameblast-combat');
+    const order: string[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === dragon.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        order.push('target');
+        expect(tappedLands(ctx)).toBe(0);
+        return { index: 0, targets: new Map([[slot.slot, 'P3']]) };
+      }
+      const pay = decision.options.findIndex((option) => option.description === 'Pay X=3 ({3}{R})');
+      if (pay >= 0) {
+        order.push('payment');
+        expect(ctx.state.stack).toHaveLength(0);
+        return { index: pay, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(order).toEqual(['target', 'payment']);
+    expect(playerById(ctx, 'P3').life).toBe(40 - 3);
+    // The Dragon's 5 flying combat damage went to the defending player.
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5);
+    expect(tappedLands(ctx)).toBe(4);
+    expect(
+      dragonHits(ctx).find((event) => event.payload['target'] === 'P3')?.payload,
+    ).toMatchObject({
+      amount: 3,
+      controller: 'P1',
+      sourceCardId: dragon.cardId,
+    });
+  });
+
+  it('flameblast-dragon-decline — declining spends no mana and deals no damage, to the chosen target or anyone else', () => {
+    const { ctx, dragon, victim } = board('flameblast-decline');
+    const seen = triggerAndResolve(ctx, dragon, victim.id, /^Don't pay$/);
+    expect(seen).toHaveLength(1);
+    expect(tappedLands(ctx)).toBe(0);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(onField(ctx, victim.cardId)?.damageMarked).toBe(0);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('flameblast-dragon-pay-x — paying X = 3 spends {3}{R} and the Dragon deals exactly 3 damage to the chosen target, a creature or a player', () => {
+    const creature = board('flameblast-pay-creature');
+    const seen = triggerAndResolve(creature.ctx, creature.dragon, creature.victim.id, /^Pay X=3 /);
+    expect(onField(creature.ctx, creature.victim.cardId)?.damageMarked).toBe(3);
+    expect(tappedLands(creature.ctx)).toBe(4);
+    // Declining, then X = 0 through the most the lands can pay for ({4}{R} with five lands).
+    expect(seen[0]!.options).toEqual([
+      "Don't pay",
+      'Pay X=0 ({R})',
+      'Pay X=1 ({1}{R})',
+      'Pay X=2 ({2}{R})',
+      'Pay X=3 ({3}{R})',
+      'Pay X=4 ({4}{R})',
+    ]);
+    expect(dragonHits(creature.ctx)).toHaveLength(1);
+
+    const player = board('flameblast-pay-player');
+    triggerAndResolve(player.ctx, player.dragon, 'P4', /^Pay X=4 /);
+    expect(playerById(player.ctx, 'P4').life).toBe(40 - 4);
+    expect(playerById(player.ctx, 'P2').life).toBe(40);
+    expect(tappedLands(player.ctx)).toBe(5);
+  });
+
+  it('flameblast-dragon-pay-zero — paying X = 0 is its own choice from declining: it spends {R} and deals 0 damage', () => {
+    const { ctx, dragon, victim } = board('flameblast-zero');
+    const seen = triggerAndResolve(ctx, dragon, victim.id, /^Pay X=0 \(\{R\}\)$/);
+    expect(seen[0]!.options.slice(0, 2)).toEqual(["Don't pay", 'Pay X=0 ({R})']);
+    expect(tappedLands(ctx)).toBe(1);
+    expect(onField(ctx, victim.cardId)?.damageMarked).toBe(0);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('flameblast-dragon-affordability — X is limited by the mana available, and without red mana the payment is not offered at all', () => {
+    const poor = board('flameblast-poor', 2);
+    const seen = triggerAndResolve(poor.ctx, poor.dragon, 'P2', /^Pay X=1 /);
+    expect(seen[0]!.options).toEqual(["Don't pay", 'Pay X=0 ({R})', 'Pay X=1 ({1}{R})']);
+    expect(playerById(poor.ctx, 'P2').life).toBe(39);
+
+    // Only Plains: {R} cannot be paid, so no prompt (and no damage) at all.
+    const dry = board('flameblast-no-red', 0, 4);
+    attack(dry.ctx, dry.dragon);
+    pump(priorityCheckpoint(dry.ctx), aimAt('P2'));
+    const prompts: string[] = [];
+    resolveTop(dry.ctx, (decision) => {
+      prompts.push(decision.prompt);
+      return { index: 0, targets: new Map() };
+    });
+    expect(prompts).toEqual([]);
+    expect(damageEvents(dry.ctx)).toEqual([]);
+    expect(tappedLands(dry.ctx)).toBe(0);
+  });
+
+  it('flameblast-dragon-target-illegal — if the chosen target is gone as the trigger resolves, there is no payment prompt and nothing is spent', () => {
+    const { ctx, dragon, victim } = board('flameblast-illegal');
+    attack(ctx, dragon);
+    pump(priorityCheckpoint(ctx), aimAt(victim.id));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, onField(ctx, victim.cardId)!, { zone: 'graveyard' }));
+    const prompts: string[] = [];
+    resolveTop(ctx, (decision) => {
+      prompts.push(decision.prompt);
+      return { index: 0, targets: new Map() };
+    });
+    expect(prompts).toEqual([]);
+    expect(tappedLands(ctx)).toBe(0);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('flameblast-dragon-dragon-gone — the Dragon still deals the damage when it has left the battlefield by resolution, as a red source (CR 608.2h)', () => {
+    const { ctx, dragon } = board('flameblast-lki');
+    const warden = spawn(ctx, 'P2', RED_WARDEN);
+    attack(ctx, dragon);
+    pump(priorityCheckpoint(ctx), aimAt('P3'));
+    pump(moveObject(ctx, onField(ctx, dragon.cardId)!, { zone: 'graveyard' }));
+    expect(onField(ctx, dragon.cardId)).toBeUndefined();
+    resolveTop(ctx, payment(/^Pay X=2 /));
+    expect(playerById(ctx, 'P3').life).toBe(40 - 2);
+    expect(dragonHits(ctx)[0]?.payload).toMatchObject({ amount: 2, controller: 'P1' });
+
+    // The same red damage, from the Dragon on the battlefield, cannot hurt protection from red.
+    const alive = board('flameblast-source-red');
+    const guard = spawn(alive.ctx, 'P2', RED_WARDEN);
+    triggerAndResolve(alive.ctx, alive.dragon, guard.id, /^Pay X=2 /);
+    expect(onField(alive.ctx, guard.cardId)?.damageMarked).toBe(0);
+    expect(onField(ctx, warden.cardId)?.damageMarked).toBe(0);
+  });
+
+  it('flameblast-dragon-only-itself — another creature attacking, or the Dragon staying home, offers nothing', () => {
+    const { ctx, dragon } = board('flameblast-others');
+    const other = spawn(ctx, 'P1', LAB_CARD('Lab Raider'));
+    other.attacking = 'P2';
+    queueTriggersForEvent(ctx, 'attacks', [{ permanent: other, playerId: 'P1' }]);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    const prompts: string[] = [];
+    const run = pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === other.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      prompts.push(decision.prompt);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(run).toBeDefined();
+    expect(prompts.filter((prompt) => /Flameblast/.test(prompt))).toEqual([]);
+    expect(dragonHits(ctx)).toEqual([]);
+    expect(tappedLands(ctx)).toBe(0);
+    expect(onField(ctx, dragon.cardId)?.tapped).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1819,6 +2095,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Invisible Woman',
     sha256: 'e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Flameblast Dragon',
+    sha256: '0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663',
     clauseCount: 2,
     authored: true,
   },

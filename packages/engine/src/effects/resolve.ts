@@ -5756,20 +5756,22 @@ export function* executeAbility(
           choices.push(x);
         }
         if (choices.length === 0) break;
+        // Declining and paying X=0 (just the rest of the cost, e.g. {R}) are different choices
+        // (CR 107.3b, 601.2b): the second spends mana, the first does not.
         const outcome = yield {
           decisionType: 'general',
           player: controller.id,
-          prompt: `${source.name}: pay ${describeManaCost(effect.templatedCost)} for X? (0 declines)`,
-          options: choices.map((x) => ({
-            type: 'payX',
-            description:
-              x === 0
-                ? "Don't pay"
-                : `Pay X=${x} (${describeManaCost(withX(effect.templatedCost, x))})`,
-          })),
+          prompt: `${source.name}: pay ${describeManaCost(effect.templatedCost)} for X?`,
+          options: [
+            plainOption({ type: 'decline', description: "Don't pay", verb: 'Decline' }),
+            ...choices.map((x) => ({
+              type: 'payX',
+              description: `Pay X=${x} (${describeManaCost(withX(effect.templatedCost, x))})`,
+            })),
+          ],
         };
-        const chosenX = choices[outcome.index] ?? 0;
-        if (chosenX <= 0) break;
+        if (outcome.index <= 0) break;
+        const chosenX = choices[outcome.index - 1] ?? 0;
         yield* payManaCost(ctx, controller, withX(effect.templatedCost, chosenX));
         dealDamageToObject(ctx, source, t, chosenX);
         break;

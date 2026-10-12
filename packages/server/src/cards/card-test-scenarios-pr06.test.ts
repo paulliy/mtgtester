@@ -460,3 +460,44 @@ describe('Invisible Woman Card Test Lab scenario', () => {
     replays('invisible-woman-viewer-pay-pump-unblockable', steps);
   });
 });
+
+describe('Flameblast Dragon Card Test Lab scenario', () => {
+  it("flameblast-dragon-viewer-target-then-pay-x — the attack trigger is aimed at P3 before the payment is asked, and paying X=3 deals 3 to P3 on top of the Dragon's 5 combat damage to P2", () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Targets for Flameblast Dragon', targets: ['P3'] },
+      { action: 'Pay X=3' },
+    ];
+    const order: string[] = [];
+    let tappedAtTarget = -1;
+    const { scenario, state, seat, onBattlefield } = run(
+      'flameblast-dragon-viewer-target-then-pay-x',
+      steps,
+      (request, current) => {
+        if (request.legalActions.some((action) => action.type === 'chooseTargets')) {
+          order.push('target');
+          tappedAtTarget = current.engine
+            .getState()
+            .battlefield.filter((perm) => perm.tapped && perm.name === 'Mountain').length;
+        }
+        if (request.legalActions.some((action) => action.description === 'Pay X=3 ({3}{R})'))
+          order.push('payment');
+      },
+    );
+    expect(order).toEqual(['target', 'payment']);
+    expect(tappedAtTarget).toBe(0);
+    expect(seat('P3').life).toBe(40 - 3);
+    expect(seat('P2').life).toBe(40 - 5);
+    expect(seat('P4').life).toBe(40);
+    expect(seat('P1').life).toBe(40);
+    expect(onBattlefield('Mountain').filter((land) => land.tapped)).toHaveLength(4);
+    const hit = state.eventLog.find(
+      (event) => event.type === 'damage' && event.payload['target'] === 'P3',
+    );
+    expect(hit?.payload).toMatchObject({ controller: 'P1', amount: 3 });
+    expect(String(hit?.payload['source'])).toContain('Flameblast Dragon');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('flameblast-dragon-viewer-target-then-pay-x', steps);
+  });
+});

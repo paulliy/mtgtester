@@ -2063,8 +2063,46 @@
   {
     "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
     "name": "Flameblast Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target",
+          "effects": [
+            {
+              "op": "mayPayXThenDealDamage",
+              "target": 0,
+              "templatedCost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0,
+                "x": 1
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "31cb87bf-1020-4fd5-95f7-8ecb197d823b",
@@ -15019,8 +15057,46 @@
   {
     "oracleId": "oracle-flameblast-dragon",
     "name": "Flameblast Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target",
+          "effects": [
+            {
+              "op": "mayPayXThenDealDamage",
+              "target": 0,
+              "templatedCost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0,
+                "x": 1
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-flare-of-denial",

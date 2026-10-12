@@ -2206,6 +2206,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Flameblast Dragon: choose the target, then pay {X}{R} for X damage'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

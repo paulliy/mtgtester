@@ -5,11 +5,40 @@
  * are gated by `tests/pr06-card-coverage.test.ts`.
  */
 
-import { manaCost, spell, targetSlots, triggered, whenAttacks } from '../templates';
+import { manaCost, onAttacks, spell, targetSlots, triggered, whenAttacks } from '../templates';
 import { allOf, ofType, YOURS } from '../selector';
-import { extendCard, unsupportedCard } from './index';
+import { defineCard, extendCard, unsupportedCard } from './index';
 
 export function registerCoveragePr06Overrides(): void {
+  // Flameblast Dragon: "if you do" is not a reflexive trigger (only "when you do" is, CR 603.12).
+  // The ability targets, so the target is chosen when the trigger goes on the stack (CR 603.3d);
+  // X is chosen and the cost paid on resolution (CR 107.3b), and the Dragon deals the damage
+  // (last known information if it has left the battlefield, CR 608.2h).
+  const blast = targetSlots({ victim: { kind: 'anyTarget' } });
+  defineCard(
+    '3180ee4f-66d7-4b73-bc10-9ee0c790ec18',
+    'Flameblast Dragon',
+    [
+      'Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.',
+    ],
+    {
+      triggers: [
+        triggered(onAttacks(), {
+          targets: blast.targets,
+          effects: [
+            {
+              op: 'mayPayXThenDealDamage',
+              target: blast.slot.victim,
+              templatedCost: manaCost('{X}{R}'),
+            },
+          ],
+          description:
+            'Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target',
+        }),
+      ],
+    },
+  );
+
   // Invisible Woman: "whenever you attack" is one trigger for the whole declaration (CR 603.2c).
   // The payment is made first, as the trigger resolves; only paying fires the reflexive trigger
   // (CR 603.12), which then goes on the stack and chooses its target, and counts the creatures

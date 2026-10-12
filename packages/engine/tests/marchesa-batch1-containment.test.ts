@@ -150,7 +150,6 @@ const REASONS: Record<string, string> = {
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
   'Dream Pillager':
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-  'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
@@ -287,6 +286,7 @@ describe('Marchesa catalog audit containment', () => {
     'Tomb Blade',
     "Duelist's Heritage",
     'Thunderbreak Regent',
+    'Flameblast Dragon',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

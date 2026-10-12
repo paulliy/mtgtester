@@ -464,11 +464,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     },
   );
 
-  unsupportedCard(
-    '3180ee4f-66d7-4b73-bc10-9ee0c790ec18',
-    'Flameblast Dragon',
-    'The damage target is chosen before you decide to pay X.',
-  );
+  // Flameblast Dragon: restored in coverage PR06 (see coverage-pr06.ts).
 
   defineCard(
     '00de57d2-7cb6-4337-9bc6-f6711e4dfabf',

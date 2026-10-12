@@ -11630,6 +11630,41 @@ function invisibleWomanScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function flameblastDragonScenario(gameId: GameId): CardTestScenario {
+  const dragon = pinnedFrom(COVERAGE_PR06, 'Flameblast Dragon');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'flameblast-dragon-viewer-target-then-pay-x',
+    title: 'Flameblast Dragon: choose the target, then pay {X}{R} for X damage',
+    instructions: [
+      'Flameblast Dragon and four Mountains are on your battlefield. P2 controls Lab Bird; P3 and P4 control nothing relevant.',
+      'Attack P2 with Flameblast Dragon. Its trigger asks for the target first: choose P3. When the trigger resolves it offers the payment: pay X=3 for {3}{R}.',
+    ],
+    expectedOutcome:
+      'The trigger had its target (P3) before any payment was asked. Paying X=3 taps all four Mountains and Flameblast Dragon deals 3 damage to P3, who is at 37. The Dragon also deals 5 combat damage to P2, who is at 35. P4 and you are at 40.',
+    oracleSha256: dragon.sha256,
+    clauseIds: ['flameblast-dragon-flying', 'flameblast-dragon-attack-payment'],
+    decks: {
+      P1: [dragon.card, ...mountains],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Flameblast Dragon', ...mountains.map((mountain) => mountain.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks() },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11880,6 +11915,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'duelists-heritage-viewer-double-strike-attacker',
   'thunderbreak-regent-viewer-opponent-targets-dragon',
   'invisible-woman-viewer-pay-pump-unblockable',
+  'flameblast-dragon-viewer-target-then-pay-x',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12197,6 +12233,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'duelists-heritage-viewer-double-strike-attacker': duelistsHeritageScenario,
   'thunderbreak-regent-viewer-opponent-targets-dragon': thunderbreakRegentScenario,
   'invisible-woman-viewer-pay-pump-unblockable': invisibleWomanScenario,
+  'flameblast-dragon-viewer-target-then-pay-x': flameblastDragonScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

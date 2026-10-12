@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 27,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6487,6 +6487,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed eventPlayer was unset on becomes-targeted events): the targeting spell or ability's controller is now bound as the event player of becomes-targeted triggers, and the interpreter reads Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player as a becomesTargeted trigger on a Dragon you control whose dealDamage goes to the event player, dealt by the Regent. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+      "name": "Flameblast Dragon",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage target is chosen before you decide to pay X; a misreading, because \"If you do\" is not a reflexive trigger and only \"when you do\" is, CR 603.12): the executable override in coverage-pr06.ts is an attack trigger on this creature with an any-target slot chosen when the trigger goes on the stack (CR 603.3d), whose effect offers the {X}{R} payment as it resolves, deals X damage as this creature, and offers paying X=0 separately from declining. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

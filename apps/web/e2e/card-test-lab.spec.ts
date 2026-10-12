@@ -8777,3 +8777,41 @@ test('Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade', a
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('32');
 });
+
+test('Flameblast Dragon: choose the target, then pay {X}{R} for X damage', async ({ page }) => {
+  await runScenario(page, 'Flameblast Dragon: choose the target, then pay {X}{R} for X damage');
+  await expect(permanent(page, 'Flameblast Dragon')).toContainText(/flying/i);
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Flameblast Dragon' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The target comes first, while the trigger goes on the stack; no mana has been spent yet.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await page.locator('.opponent').filter({ hasText: 'P3' }).locator('header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // The payment is asked as the trigger resolves, declining and paying X=0 being separate choices.
+  const pay = page.getByRole('button', { name: /^Pay X=3 / });
+  await passUntil(page, pay);
+  await expect(page.getByRole('button', { name: "Don't pay" })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Pay X=0 / })).toBeVisible();
+  await pay.click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Flameblast Dragon.* deals 3 to P3/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('37');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('40');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});

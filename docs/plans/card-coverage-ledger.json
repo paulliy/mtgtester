@@ -1151,6 +1151,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+    "name": "Flameblast Dragon",
+    "package": "PR06.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The damage target is chosen before you decide to pay X. (A misreading: \"If you do\" is not a reflexive trigger, only \"when you do\" is (CR 603.12), so the target is chosen when the trigger goes on the stack and X is chosen and paid on resolution.)"
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "package": "PR02.11",
