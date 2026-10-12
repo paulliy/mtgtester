@@ -68,6 +68,43 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
+      "card": {
+        "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
+        "scryfallId": "08076c82-edb6-4c3c-abda-3d3ad7bdd78f",
+        "name": "Tyrant's Familiar",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\nLieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste",
+          "Lieutenant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

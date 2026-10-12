@@ -3726,8 +3726,65 @@
   {
     "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
     "name": "Tyrant's Familiar",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 7
+                  },
+                  "op": "dealDamage",
+                  "target": 0
+                }
+              ],
+              "kind": "triggered",
+              "targets": [
+                {
+                  "controller": "eventPlayer",
+                  "kind": "creature"
+                }
+              ],
+              "trigger": {
+                "defendingPlayerIsEventPlayer": true,
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "attacks"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
@@ -21311,8 +21368,65 @@
   {
     "oracleId": "oracle-tyrant-s-familiar",
     "name": "Tyrant's Familiar",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 7
+                  },
+                  "op": "dealDamage",
+                  "target": 0
+                }
+              ],
+              "kind": "triggered",
+              "targets": [
+                {
+                  "controller": "eventPlayer",
+                  "kind": "creature"
+                }
+              ],
+              "trigger": {
+                "defendingPlayerIsEventPlayer": true,
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "attacks"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-ultimate-nullification",

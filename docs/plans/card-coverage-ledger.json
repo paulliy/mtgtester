@@ -3587,6 +3587,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
+    "name": "Tyrant's Familiar",
+    "package": "PR06.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Defending-player creature targeting uses eventPlayer, which is the attacking player."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
     "name": "Ultimate Nullification",
     "package": "W2",

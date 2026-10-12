@@ -18,14 +18,27 @@ import { interpretCard } from '../src/cards/interpret';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
+import type { Ability } from '../src/cards/ability';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
+import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import { effectivePT, hasKeyword } from '../src/state/queries';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  declareAttacks,
+  declareBlocks,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  spawn,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -609,6 +622,202 @@ describe('Scourge of Valkas', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.15 Tyrant's Familiar
+// ---------------------------------------------------------------------------------------------
+
+describe("Tyrant's Familiar", () => {
+  const { card } = pinned("Tyrant's Familiar");
+  const GENERAL = oracle({
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Human',
+    manaCost: '{2}',
+  });
+  const BEAR = (name: string, toughness = '2') =>
+    oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness });
+
+  const stats = (ctx: GameContext, permanent: EnginePermanent) => {
+    const c = computeCharacteristics(ctx, permanent);
+    return {
+      power: c.power,
+      toughness: c.toughness,
+      flying: c.keywords.includes('flying'),
+      haste: c.keywords.includes('haste'),
+      triggers: c.triggers.length,
+    };
+  };
+
+  /** P1 controls the Familiar; P2, P3 and P4 each control a creature. */
+  function board(seed: string, commander: boolean) {
+    const ctx = pod(seed);
+    const familiar = spawn(ctx, 'P1', card);
+    const bears = {
+      P2: spawn(ctx, 'P2', BEAR('Lab Bear P2', '9')),
+      P3: spawn(ctx, 'P3', BEAR('Lab Bear P3', '9')),
+      P4: spawn(ctx, 'P4', BEAR('Lab Bear P4', '9')),
+    };
+    // A second creature each for P2 and P3, so the target is a real choice for either defender.
+    const spares = [
+      spawn(ctx, 'P2', BEAR('Lab Spare P2', '9')),
+      spawn(ctx, 'P3', BEAR('Lab Spare P3', '9')),
+    ];
+    const own = spawn(ctx, 'P1', BEAR('Lab Own Bear', '9'));
+    const general = commander ? spawn(ctx, 'P1', GENERAL) : undefined;
+    if (general !== undefined) general.isCommander = true;
+    return { ctx, familiar, bears, spares, own, general };
+  }
+
+  /**
+   * P1's combat with the Familiar attacking `defender`. Each attack-trigger target prompt is
+   * recorded (object ids on offer) and answered with `aim` (a permanent id), if given.
+   */
+  function attack(ctx: GameContext, familiar: EnginePermanent, defender: string, aim?: string) {
+    const offered: string[][] = [];
+    const run = pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          subjectId === familiar.id ? defender : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        offered.push(slot.options);
+        return { index: 0, targets: new Map([[slot.slot, aim ?? slot.options[0]!]]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return { offered, run };
+  }
+
+  it('tyrants-familiar-pinned-oracle-supported — the override reads the lieutenant line as a pump and a granted attack trigger, both only while you control your commander', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'haste']));
+    expect(def.triggers).toEqual([]);
+    expect(def.staticEffects).toHaveLength(2);
+    for (const effect of def.staticEffects) {
+      expect(effect.affects).toEqual({ kind: 'self' });
+      expect(effect.condition).toEqual({ kind: 'controlsYourCommander' });
+    }
+    expect(def.staticEffects[0]!.op).toEqual({
+      layer: 7,
+      sublayer: 'd',
+      power: 2,
+      toughness: 2,
+    });
+    const granted = (def.staticEffects[1]!.op as { addTrigger: Ability }).addTrigger;
+    // The defending player is the player this creature attacks, and the target is theirs.
+    expect(granted.trigger).toEqual({
+      when: 'attacks',
+      subject: { kind: 'self' },
+      defendingPlayerIsEventPlayer: true,
+    });
+    expect(granted.targets).toEqual([{ kind: 'creature', controller: 'eventPlayer' }]);
+    expect(granted.effects).toEqual([
+      { op: 'dealDamage', target: 0, amount: { kind: 'const', n: 7 } },
+    ]);
+  });
+
+  it('tyrants-familiar-no-commander — without your commander it is a plain 5/5 flying haste creature with no attack trigger', () => {
+    const { ctx, familiar, bears } = board('familiar-off', false);
+    expect(stats(ctx, familiar)).toEqual({
+      power: 5,
+      toughness: 5,
+      flying: true,
+      haste: true,
+      triggers: 0,
+    });
+    const { offered } = attack(ctx, familiar, 'P2');
+    expect(offered).toEqual([]);
+    expect(onField(ctx, bears.P2.cardId)?.damageMarked).toBe(0);
+    expect(damageEvents(ctx).filter((event) => event.payload['combat'] !== true)).toEqual([]);
+  });
+
+  it('tyrants-familiar-lieutenant-active — with your commander out it is a 7/7 with the granted trigger, and both end when the commander leaves', () => {
+    const { ctx, familiar, general } = board('familiar-on', true);
+    expect(stats(ctx, familiar)).toEqual({
+      power: 7,
+      toughness: 7,
+      flying: true,
+      haste: true,
+      triggers: 1,
+    });
+    pump(moveObject(ctx, general!, { zone: 'graveyard' }));
+    expect(stats(ctx, familiar)).toEqual({
+      power: 5,
+      toughness: 5,
+      flying: true,
+      haste: true,
+      triggers: 0,
+    });
+  });
+
+  it("tyrants-familiar-commander-control — a stolen commander or another player's commander does not count", () => {
+    const stolen = board('familiar-stolen', true);
+    stolen.general!.controllerId = 'P2';
+    expect(stats(stolen.ctx, stolen.familiar)).toMatchObject({ power: 5, triggers: 0 });
+
+    const borrowed = board('familiar-borrowed', false);
+    const theirs = spawn(borrowed.ctx, 'P2', GENERAL);
+    theirs.isCommander = true;
+    theirs.controllerId = 'P1';
+    expect(stats(borrowed.ctx, borrowed.familiar)).toMatchObject({ power: 5, triggers: 0 });
+  });
+
+  it("tyrants-familiar-defending-player — attacking one player offers only creatures that player controls, never your own or another opponent's", () => {
+    const p2 = board('familiar-defender-p2', true);
+    const first = attack(p2.ctx, p2.familiar, 'P2');
+    expect(first.offered).toHaveLength(1);
+    expect([...first.offered[0]!].sort()).toEqual([p2.bears.P2.id, p2.spares[0]!.id].sort());
+
+    const p3 = board('familiar-defender-p3', true);
+    const second = attack(p3.ctx, p3.familiar, 'P3');
+    expect([...second.offered[0]!].sort()).toEqual([p3.bears.P3.id, p3.spares[1]!.id].sort());
+    expect(second.offered[0]).not.toContain(p3.bears.P2.id);
+    expect(second.offered[0]).not.toContain(p3.own.id);
+  });
+
+  it('tyrants-familiar-seven-damage — the Familiar deals 7 damage to the chosen creature, not to a player, and the other creatures are untouched', () => {
+    const { ctx, familiar, bears, spares, own } = board('familiar-damage', true);
+    attack(ctx, familiar, 'P2', bears.P2.id);
+    expect(onField(ctx, bears.P2.cardId)?.damageMarked).toBe(7);
+    for (const untouched of [spares[0]!, bears.P3, spares[1]!, bears.P4, own])
+      expect(onField(ctx, untouched.cardId)?.damageMarked).toBe(0);
+    // The only non-combat damage is the trigger's: from the Familiar itself, 7 to the chosen creature.
+    const triggerDamage = damageEvents(ctx).filter((event) => event.payload['combat'] === false);
+    expect(triggerDamage).toHaveLength(1);
+    expect(triggerDamage[0]?.payload).toMatchObject({
+      sourceCardId: familiar.cardId,
+      target: 'Lab Bear P2',
+      targetCardId: bears.P2.cardId,
+      amount: 7,
+    });
+    // The attack itself (7 flying combat damage) still reaches the defending player.
+    expect(playerById(ctx, 'P2').life).toBe(33);
+    expect(playerById(ctx, 'P3').life).toBe(40);
+  });
+
+  it("tyrants-familiar-cast-and-attack — cast with your commander out, its haste lets it attack at once and the trigger kills the defender's creature", () => {
+    const ctx = pod('familiar-cast');
+    spawn(ctx, 'P1', GENERAL).isCommander = true;
+    const victim = spawn(ctx, 'P2', BEAR('Lab Victim'));
+    const object = castFromHand(ctx, 'P1', card, [...red(2), ...generic(5)]);
+    resolveTop(ctx);
+    const familiar = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    expect(stats(ctx, familiar)).toMatchObject({ power: 7, toughness: 7, triggers: 1 });
+    attack(ctx, familiar, 'P2');
+    expect(onField(ctx, victim.cardId)).toBeUndefined();
+    expect(ctx.state.players.find((p) => p.id === 'P2')!.graveyard.map((c) => c.name)).toContain(
+      'Lab Victim',
+    );
+    expect(playerById(ctx, 'P2').life).toBe(33);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -627,6 +836,11 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Scourge of Valkas',
     sha256: 'b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c',
+    clauseCount: 3,
+  },
+  {
+    name: "Tyrant's Familiar",
+    sha256: 'c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4',
     clauseCount: 3,
   },
 ];

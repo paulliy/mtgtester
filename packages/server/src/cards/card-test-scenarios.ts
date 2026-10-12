@@ -11366,6 +11366,53 @@ function scourgeOfValkasScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function tyrantsFamiliarScenario(gameId: GameId): CardTestScenario {
+  const familiar = pinnedFrom(COVERAGE_PR06, "Tyrant's Familiar");
+  const general = card({
+    oracleId: 'lab-familiar-general',
+    name: 'Lab General',
+    typeLine: 'Legendary Creature — Elf Warrior',
+    manaCost: '{2}{G}',
+    cmc: 3,
+    colors: ['G'],
+    colorIdentity: ['G'],
+    power: '2',
+    toughness: '2',
+  });
+  return pr01Scenario(gameId, {
+    id: 'tyrants-familiar-viewer-lieutenant-attack',
+    title: "Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks",
+    instructions: [
+      "Tyrant's Familiar and your commander, Lab General, are on your battlefield. P2 controls Lab Servo and Lab Ox, and P3 controls Lab Bird.",
+      "Attack P2 with Tyrant's Familiar. When its attack trigger asks for a target, notice that only P2's creatures can be chosen, then choose Lab Ox.",
+    ],
+    expectedOutcome:
+      "With your commander out, Tyrant's Familiar is a 7/7 flier. Its trigger deals 7 damage to Lab Ox, which dies, while Lab Servo, Lab Bird and your own creatures are untouched. The Familiar then connects for 7: P2 is at 33.",
+    oracleSha256: familiar.sha256,
+    clauseIds: [
+      'tyrants-familiar-keywords',
+      'tyrants-familiar-lieutenant-pump',
+      'tyrants-familiar-lieutenant-trigger',
+    ],
+    decks: {
+      P1: [familiar.card, FOREST, FOREST],
+      P2: [LAB_SERVO, LAB_OX, FOREST],
+      P3: [LAB_BIRD, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    commanders: { P1: [general] },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["Tyrant's Familiar", 'Lab General'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11610,6 +11657,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'animate-dead-viewer-aura-leaves-sacrifices',
   'dragon-tempest-viewer-dragon-deals-damage',
   'scourge-of-valkas-viewer-dragons-deal-damage',
+  'tyrants-familiar-viewer-lieutenant-attack',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -11921,6 +11969,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'animate-dead-viewer-aura-leaves-sacrifices': animateDeadLeavesScenario,
   'dragon-tempest-viewer-dragon-deals-damage': dragonTempestScenario,
   'scourge-of-valkas-viewer-dragons-deal-damage': scourgeOfValkasScenario,
+  'tyrants-familiar-viewer-lieutenant-attack': tyrantsFamiliarScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

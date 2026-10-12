@@ -396,6 +396,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'animate-dead-viewer-aura-leaves-sacrifices',
       'dragon-tempest-viewer-dragon-deals-damage',
       'scourge-of-valkas-viewer-dragons-deal-damage',
+      'tyrants-familiar-viewer-lieutenant-attack',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

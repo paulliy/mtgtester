@@ -156,8 +156,6 @@ const REASONS: Record<string, string> = {
   'Flameblast Dragon': 'The damage target is chosen before you decide to pay X.',
   'Thunderbreak Regent':
     'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
-  "Tyrant's Familiar":
-    'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
@@ -290,6 +288,7 @@ describe('Marchesa catalog audit containment', () => {
     'Animate Dead',
     'Dragon Tempest',
     'Scourge of Valkas',
+    "Tyrant's Familiar",
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -126,6 +126,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Tomb Fortress',
       'Toxic Deluge',
       'Triarch Praetorian',
+      "Tyrant's Familiar",
       'Vastwood Surge',
       'Vigean Graftmage',
       'Voice of Many',

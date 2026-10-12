@@ -4683,13 +4683,48 @@
     "63394e24-a456-4cc6-9885-8c62447b050a": {
       "name": "Tyrant's Familiar",
       "oracleSha256": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls.",
-          "implementation": ["explicitly unsupported; eventPlayer is the attacking player"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "tyrants-familiar-keywords",
+          "oracleText": "Flying, haste",
+          "implementation": ["keywords flying and haste (interpreted)"],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
+        },
+        {
+          "id": "tyrants-familiar-lieutenant-pump",
+          "oracleText": "As long as you control your commander, this creature gets +2/+2",
+          "implementation": [
+            "layer 7 static +2/+2 on this creature gated by controlsYourCommander (CR 903.7): it applies only while a commander you own is on the battlefield under your control, so a stolen commander, another player's commander and an absent commander give nothing, and it ends when the commander leaves"
+          ],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-lieutenant-active",
+            "tyrants-familiar-commander-control"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
+        },
+        {
+          "id": "tyrants-familiar-lieutenant-trigger",
+          "oracleText": "has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+          "implementation": [
+            "layer 6 static granting this creature an attack trigger under the same controlsYourCommander condition, so it exists only while you control your commander; the trigger reads the defending player as the player this creature attacks (the event player), targets only a creature that player controls, and the Familiar deals the 7 damage itself (CR 508.1b)"
+          ],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-lieutenant-active",
+            "tyrants-familiar-defending-player",
+            "tyrants-familiar-seven-damage",
+            "tyrants-familiar-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
         }
       ],
       "gameplayAiScenarioIds": []

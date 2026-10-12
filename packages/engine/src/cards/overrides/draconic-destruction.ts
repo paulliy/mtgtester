@@ -3,7 +3,7 @@
  */
 
 import { constant } from '../value';
-import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
+import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost, targetSlots, triggered } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -707,10 +707,52 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   );
 
-  unsupportedCard(
+  // Tyrant's Familiar: Lieutenant (CR 903.7). While you control your own commander it gets +2/+2
+  // and has an attack trigger; both exist only under that condition. The trigger's "defending
+  // player" is the player this creature attacks (the event player), not its controller, and the
+  // 7 damage is dealt by the Familiar itself.
+  const lieutenantHit = targetSlots({ creature: { kind: 'creature', controller: 'eventPlayer' } });
+  defineCard(
     '63394e24-a456-4cc6-9885-8c62447b050a',
     "Tyrant's Familiar",
-    'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
+    [
+      'As long as you control your commander, this creature gets +2/+2 and has "Whenever this creature attacks, it deals 7 damage to target creature defending player controls."',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: SELF,
+          op: {
+            layer: 6,
+            addTrigger: triggered(
+              {
+                when: 'attacks',
+                subject: { kind: 'self' },
+                defendingPlayerIsEventPlayer: true,
+              },
+              {
+                targets: lieutenantHit.targets,
+                effects: [
+                  {
+                    op: 'dealDamage',
+                    target: lieutenantHit.slot.creature,
+                    amount: constant(7),
+                  },
+                ],
+                description:
+                  'Whenever this creature attacks, it deals 7 damage to target creature defending player controls',
+              },
+            ),
+          },
+          condition: { kind: 'controlsYourCommander' },
+        },
+      ],
+    },
   );
 
   defineCard(

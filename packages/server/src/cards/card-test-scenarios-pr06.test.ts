@@ -207,3 +207,45 @@ describe('Scourge of Valkas Card Test Lab scenario', () => {
     replays('scourge-of-valkas-viewer-dragons-deal-damage', steps);
   });
 });
+
+describe("Tyrant's Familiar Card Test Lab scenario", () => {
+  it("tyrants-familiar-viewer-lieutenant-attack — attacking P2, the trigger offers only P2's creatures and its 7 damage kills Lab Ox", () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2', '__no_attack__'] },
+      { action: 'Targets for', targets: ['Lab Ox'] },
+    ];
+    const targetOptions: string[][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'tyrants-familiar-viewer-lieutenant-attack',
+      steps,
+      (request, current) => {
+        const slots = request.legalActions.find((action) =>
+          /^Targets for/.test(action.description),
+        )?.targets;
+        if (slots === undefined || slots === null) return;
+        const names = objectNames(current);
+        targetOptions.push(slots[0]!.options.map((id) => names.get(id) ?? id).sort());
+      },
+    );
+    // Only the creatures of the player attacked (P2) were on offer: not P3's Lab Bird, nor Lab General.
+    expect(targetOptions).toEqual([['Lab Ox', 'Lab Servo']]);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toContain('Lab Ox');
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Lab Bird')).toHaveLength(1);
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === "Tyrant's Familiar"),
+    ).toMatchObject({ power: 7, toughness: 7 });
+    const triggerDamage = state.eventLog.filter(
+      (event) => event.type === 'damage' && event.payload['combat'] === false,
+    );
+    expect(triggerDamage.map((event) => event.payload)).toMatchObject([
+      { target: 'Lab Ox', amount: 7 },
+    ]);
+    expect(seat('P2').life).toBe(33);
+    expect(seat('P3').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tyrants-familiar-viewer-lieutenant-attack', steps);
+  });
+});

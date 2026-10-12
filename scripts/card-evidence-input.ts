@@ -2180,6 +2180,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Scourge of Valkas: it and another Dragon each deal X damage as they enter'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

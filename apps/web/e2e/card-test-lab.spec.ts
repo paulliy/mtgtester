@@ -8555,3 +8555,42 @@ test('Scourge of Valkas: it and another Dragon each deal X damage as they enter'
   await passUntil(page, permanent(page, 'Scourge of Valkas').getByText('5/4'));
   await expect(permanent(page, 'Scourge of Valkas')).toContainText(/flying/i);
 });
+
+test("Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks",
+  );
+  // With your commander out the Familiar is a 7/7 flier.
+  await expect(permanent(page, "Tyrant's Familiar").getByText('7/7')).toBeVisible();
+  await expect(permanent(page, "Tyrant's Familiar")).toContainText(/flying/i);
+
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: "Tyrant's Familiar" })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The granted attack trigger: only creatures P2 controls can be chosen.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Servo')).toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab Bird')).not.toHaveClass(/targetable/);
+  await expect(permanent(page, 'Lab General')).not.toHaveClass(/targetable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Servo')).toBeVisible();
+  await expect(permanent(page, 'Lab Bird')).toBeVisible();
+  await expect(page.getByText(/Tyrant's Familiar.* deals 7 to Lab Ox/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('33');
+});
