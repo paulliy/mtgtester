@@ -9726,6 +9726,42 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "085016ee-4429-453f-b7f3-d61065f1214e": {
+      "name": "Invisible Woman",
+      "oracleSha256": "e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "invisible-woman-wall-token",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a 0/3 colorless Wall creature token with defender and reach.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on your turn with an intervening-if that you have cast a noncreature spell this turn (CR 603.4): it creates a 0/3 colorless Wall creature token with defender and reach, and nothing without such a spell"
+          ],
+          "engineTestIds": [
+            "invisible-woman-pinned-oracle-supported",
+            "invisible-woman-wall-token"
+          ],
+          "viewerScenarioIds": ["invisible-woman-viewer-pay-pump-unblockable"]
+        },
+        {
+          "id": "invisible-woman-attack-payment",
+          "oracleText": "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn.",
+          "implementation": [
+            "aggregate attacks trigger over your creatures: one trigger for the whole declaration however many attack, and none for an opponent's attack (CR 603.2c); as it resolves you may pay {R}{G}{W}{U}, and only paying fires a reflexive trigger (CR 603.12) that goes on the stack and then chooses any one creature (yours or an opponent's); as that reflexive trigger resolves the target gets +1/+0 until end of turn for each creature you control at that moment (toughness unchanged) and can't be blocked this turn; declining or being unable to pay creates no trigger and asks for no target"
+          ],
+          "engineTestIds": [
+            "invisible-woman-pinned-oracle-supported",
+            "invisible-woman-once-per-attack",
+            "invisible-woman-decline",
+            "invisible-woman-cannot-pay",
+            "invisible-woman-pay-then-target",
+            "invisible-woman-count-at-resolution"
+          ],
+          "viewerScenarioIds": ["invisible-woman-viewer-pay-pump-unblockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

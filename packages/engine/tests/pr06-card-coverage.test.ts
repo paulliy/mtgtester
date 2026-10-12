@@ -35,7 +35,10 @@ import {
   declareBlocks,
   forest,
   gameConfig,
+  island,
+  mountain,
   oracle,
+  plains,
   pump,
   spawn,
 } from './fixtures';
@@ -1529,6 +1532,239 @@ describe('Thunderbreak Regent', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.25 Invisible Woman
+// ---------------------------------------------------------------------------------------------
+
+describe('Invisible Woman', () => {
+  const { card } = pinned('Invisible Woman');
+  const BRUISER = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Human', power: '2', toughness: '2' });
+  const LAB_SPELL = oracle({
+    name: 'Lab Trinket',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    power: null,
+    toughness: null,
+  });
+
+  /** P1 controls Invisible Woman, the four basic lands that pay {R}{G}{W}{U}, and `extra` creatures. */
+  function board(seed: string, extra: string[], lands = true) {
+    const ctx = pod(seed);
+    const woman = spawn(ctx, 'P1', card);
+    const others = extra.map((name) => spawn(ctx, 'P1', BRUISER(name)));
+    if (lands)
+      for (const land of [mountain(), forest(), plains(), island()]) spawn(ctx, 'P1', land);
+    return { ctx, woman, others };
+  }
+
+  /** Whether `perm` is the subject of a "can't be blocked" effect. */
+  const unblockable = (ctx: GameContext, perm: EnginePermanent) =>
+    ctx.state.effects.some(
+      (effect) => effect.kind === 'cantBeBlocked' && effect.targetCardIds.includes(perm.cardId),
+    );
+
+  /**
+   * P1's combat with `attackers` attacking P2. `pay` answers the "may pay" prompt and `aim` is the
+   * reflexive trigger's target (an object id); blockers in `blockers` try to block `attackers[0]`
+   * only if the declaration lets them. Records every prompt seen and the target ids on offer.
+   */
+  function combat(
+    ctx: GameContext,
+    attackers: EnginePermanent[],
+    pay: boolean,
+    aim?: string,
+    blockers: EnginePermanent[] = [],
+  ) {
+    const prompts: string[] = [];
+    const offered: string[][] = [];
+    const blockable: string[][] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.some((attacker) => attacker.id === subjectId) ? 'P2' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId, subject) => {
+          if (!blockers.some((blocker) => blocker.id === subjectId)) return null;
+          blockable.push(subject.attackers.map((candidate) => candidate.attackerId));
+          const wanted = subject.attackers.find(
+            (candidate) => candidate.attackerId === attackers[0]!.id,
+          );
+          return wanted === undefined ? null : wanted.attackerId;
+        });
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot !== undefined) {
+        prompts.push(decision.prompt);
+        offered.push(slot.options);
+        return { index: 0, targets: new Map([[slot.slot, aim ?? slot.options[0]!]]) };
+      }
+      const payIndex = decision.options.findIndex((option) => /^Pay /.test(option.description));
+      if (payIndex >= 0) {
+        prompts.push(decision.prompt);
+        const declineIndex = decision.options.findIndex((option) =>
+          /^Don't pay$/.test(option.description),
+        );
+        return { index: pay ? payIndex : declineIndex, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return { prompts, offered, blockable };
+  }
+
+  const payPrompts = (prompts: string[]) => prompts.filter((prompt) => /Pay it\?/.test(prompt));
+  const targetPrompts = (prompts: string[]) =>
+    prompts.filter((prompt) => /choose targets/i.test(prompt));
+
+  it('invisible-woman-pinned-oracle-supported — the override adds the attack trigger beside the interpreted Wall trigger, with a paid reflexive pump-and-evade', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    // The interpreted line: beginning of combat on your turn.
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'beginningOfCombat', player: 'you' });
+    // "Whenever you attack": your creatures, one firing for the whole declaration.
+    const attackTrigger = def.triggers[1]!;
+    expect(attackTrigger.trigger).toEqual({
+      when: 'attacks',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+      },
+      aggregate: true,
+    });
+    expect(attackTrigger.targets).toEqual([]);
+    const [pay] = attackTrigger.effects;
+    expect(pay).toMatchObject({ op: 'mayPayManaThenReflexive' });
+    const then = (pay as { then: Ability }).then;
+    // The target is the reflexive trigger's own: any creature, chosen after payment.
+    expect(then.targets).toEqual([{ kind: 'creature' }]);
+    expect(then.effects).toEqual([
+      {
+        op: 'pumpUntilEot',
+        target: 0,
+        power: {
+          kind: 'countPermanents',
+          selector: { kind: 'type', value: 'Creature' },
+          scope: 'you',
+        },
+        toughness: 0,
+      },
+      { op: 'cantBeBlockedUntilEot', target: 0 },
+    ]);
+  });
+
+  it('invisible-woman-wall-token — the interpreted line still makes a 0/3 Wall at the beginning of combat after you cast a noncreature spell, and not otherwise', () => {
+    const quiet = board('woman-wall-quiet', [], false);
+    combat(quiet.ctx, [], false);
+    expect(quiet.ctx.state.battlefield.filter((perm) => perm.name === 'Wall')).toEqual([]);
+
+    const cast = board('woman-wall-cast', [], false);
+    castFromHand(cast.ctx, 'P1', LAB_SPELL, []);
+    resolveTop(cast.ctx);
+    combat(cast.ctx, [], false);
+    const walls = cast.ctx.state.battlefield.filter((perm) => perm.name === 'Wall');
+    expect(walls).toHaveLength(1);
+    expect(effectivePT(cast.ctx, walls[0]!)).toEqual({ power: 0, toughness: 3 });
+    expect(hasKeyword(cast.ctx, walls[0]!, 'defender')).toBe(true);
+    expect(hasKeyword(cast.ctx, walls[0]!, 'reach')).toBe(true);
+  });
+
+  it("invisible-woman-once-per-attack — attacking with several creatures asks for the payment once, and an opponent's attack never does", () => {
+    const { ctx, woman, others } = board('woman-once', ['Lab Bruiser A', 'Lab Bruiser B']);
+    const run = combat(ctx, [woman, ...others], false);
+    expect(payPrompts(run.prompts)).toHaveLength(1);
+
+    const theirs = board('woman-theirs', []);
+    theirs.ctx.state.currentTurnPlayer = 'P2';
+    theirs.ctx.state.activePlayerIndex = 1;
+    const raider = spawn(theirs.ctx, 'P2', BRUISER('Lab Raider'));
+    const answered: string[] = [];
+    pump(runCombatAndExtraCombats(theirs.ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === raider.id ? 'P3' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      if (decision.options.some((option) => /^Pay /.test(option.description)))
+        answered.push(decision.prompt);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(answered).toEqual([]);
+  });
+
+  it('invisible-woman-decline — declining the payment taps nothing and creates no reflexive trigger or target prompt', () => {
+    const { ctx, woman } = board('woman-decline', ['Lab Bruiser A']);
+    const run = combat(ctx, [woman], false);
+    expect(payPrompts(run.prompts)).toHaveLength(1);
+    expect(run.offered).toEqual([]);
+    expect(effectivePT(ctx, woman)).toEqual({ power: 3, toughness: 3 });
+    expect(unblockable(ctx, woman)).toBe(false);
+    expect(
+      ctx.state.battlefield.filter((perm) => perm.tapped && perm.typeLine.includes('Land')),
+    ).toEqual([]);
+  });
+
+  it('invisible-woman-cannot-pay — without {R}{G}{W}{U} there is no payment prompt', () => {
+    const { ctx, woman } = board('woman-broke', ['Lab Bruiser A'], false);
+    for (const land of [mountain(), forest(), plains()]) spawn(ctx, 'P1', land);
+    const run = combat(ctx, [woman], true);
+    expect(payPrompts(run.prompts)).toEqual([]);
+    expect(run.offered).toEqual([]);
+  });
+
+  it('invisible-woman-pay-then-target — paying puts the reflexive trigger on the stack, which then chooses any creature; it gets +1/+0 per creature you control and cannot be blocked', () => {
+    const { ctx, woman, others } = board('woman-pay', ['Lab Bruiser A', 'Lab Bruiser B']);
+    const enemy = spawn(ctx, 'P2', BRUISER('Lab Enemy'));
+    const wall = spawn(
+      ctx,
+      'P2',
+      oracle({ name: 'Lab Deep Wall', typeLine: 'Creature — Wall', power: '0', toughness: '9' }),
+    );
+    const target = others[0]!;
+    const run = combat(ctx, [target], true, target.id, [wall]);
+    // The payment is asked before the target; every creature is on offer, whoever controls it.
+    expect(run.prompts.findIndex((prompt) => /Pay it\?/.test(prompt))).toBeLessThan(
+      run.prompts.findIndex((prompt) => /choose targets/i.test(prompt)),
+    );
+    expect(targetPrompts(run.prompts)).toHaveLength(1);
+    expect(run.offered[0]!.sort()).toEqual(
+      [woman.id, ...others.map((perm) => perm.id), enemy.id, wall.id].sort(),
+    );
+    // Three creatures you control (the Woman and both Bruisers): +3/+0, toughness unchanged.
+    expect(effectivePT(ctx, target)).toEqual({ power: 5, toughness: 2 });
+    expect(unblockable(ctx, target)).toBe(true);
+    // The four lands paid.
+    expect(
+      ctx.state.battlefield.filter((perm) => perm.tapped && perm.typeLine.includes('Land')),
+    ).toHaveLength(4);
+    // It was never blockable, so the Deep Wall's block was not even offered, and all of its power got through.
+    expect(run.blockable.flat()).not.toContain(target.id);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 5);
+  });
+
+  it("invisible-woman-count-at-resolution — the number counts every creature you control as the reflexive trigger resolves, attacking or not, and an opponent's creature as target gets the boost too", () => {
+    const { ctx, woman, others } = board('woman-count', [
+      'Lab Bruiser A',
+      'Lab Bruiser B',
+      'Lab Bruiser C',
+    ]);
+    const enemy = spawn(ctx, 'P2', BRUISER('Lab Enemy'));
+    // Only the Woman attacks, but all four creatures you control count: +4/+0 on the enemy.
+    combat(ctx, [woman], true, enemy.id);
+    expect(effectivePT(ctx, onField(ctx, enemy.cardId)!)).toEqual({ power: 6, toughness: 2 });
+    expect(others.every((perm) => effectivePT(ctx, perm).power === 2)).toBe(true);
+    expect(effectivePT(ctx, woman)).toEqual({ power: 3, toughness: 3 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -1579,6 +1815,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Thunderbreak Regent',
     sha256: '474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657',
     clauseCount: 2,
+  },
+  {
+    name: 'Invisible Woman',
+    sha256: 'e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c',
+    clauseCount: 2,
+    authored: true,
   },
 ];
 

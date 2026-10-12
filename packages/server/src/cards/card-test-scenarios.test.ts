@@ -401,6 +401,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'tomb-blade-viewer-sacrifice-or-lose',
       'duelists-heritage-viewer-double-strike-attacker',
       'thunderbreak-regent-viewer-opponent-targets-dragon',
+      'invisible-woman-viewer-pay-pump-unblockable',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

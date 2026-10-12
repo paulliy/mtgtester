@@ -11586,6 +11586,50 @@ function thunderbreakRegentScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_FREE_TRINKET = card({
+  oracleId: 'lab-free-trinket',
+  name: 'Lab Free Trinket',
+  typeLine: 'Artifact',
+  manaCost: '{0}',
+  cmc: 0,
+});
+
+function invisibleWomanScenario(gameId: GameId): CardTestScenario {
+  const woman = pinnedFrom(COVERAGE_PR06, 'Invisible Woman');
+  const lands = [MOUNTAIN, FOREST, PLAINS, ISLAND];
+  return pr01Scenario(gameId, {
+    id: 'invisible-woman-viewer-pay-pump-unblockable',
+    title: 'Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade',
+    instructions: [
+      'Invisible Woman, Lab Ox (4/4), Lab Servo (1/1) and a Mountain, Forest, Plains and Island are on your battlefield, and Lab Free Trinket (a noncreature spell costing {0}) is in your hand. P2 controls Lab Bird.',
+      'Cast Lab Free Trinket and let it resolve, then move to combat: Invisible Woman makes a 0/3 Wall at the beginning of combat because you cast a noncreature spell.',
+      'Then attack P2 with Lab Ox alone. Pay {R}{G}{W}{U} when asked, then choose Lab Ox as the target of the reflexive trigger.',
+    ],
+    expectedOutcome:
+      'A 0/3 Wall with defender and reach joins your battlefield. Lab Ox gets +1/+0 for each of the four creatures you control, the Wall included (an 8/4), and cannot be blocked this turn, so Lab Bird cannot stop it: P2 is at 32. The four lands are tapped.',
+    oracleSha256: woman.sha256,
+    clauseIds: ['invisible-woman-wall-token', 'invisible-woman-attack-payment'],
+    decks: {
+      P1: [woman.card, LAB_OX, LAB_SERVO, LAB_FREE_TRINKET, ...lands],
+      P2: [LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Free Trinket'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Invisible Woman', 'Lab Ox', 'Lab Servo', ...lands.map((land) => land.name)],
+        },
+        { playerId: 'P2', cardNames: ['Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks() },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11835,6 +11879,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tomb-blade-viewer-sacrifice-or-lose',
   'duelists-heritage-viewer-double-strike-attacker',
   'thunderbreak-regent-viewer-opponent-targets-dragon',
+  'invisible-woman-viewer-pay-pump-unblockable',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12151,6 +12196,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tomb-blade-viewer-sacrifice-or-lose': tombBladeScenario,
   'duelists-heritage-viewer-double-strike-attacker': duelistsHeritageScenario,
   'thunderbreak-regent-viewer-opponent-targets-dragon': thunderbreakRegentScenario,
+  'invisible-woman-viewer-pay-pump-unblockable': invisibleWomanScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

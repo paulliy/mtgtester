@@ -409,3 +409,54 @@ describe('Thunderbreak Regent Card Test Lab scenario', () => {
     replays('thunderbreak-regent-viewer-opponent-targets-dragon', steps);
   });
 });
+
+describe('Invisible Woman Card Test Lab scenario', () => {
+  it('invisible-woman-viewer-pay-pump-unblockable — paying when Lab Ox attacks pumps it by the four creatures you control (the Wall included) and makes it unblockable, so Lab Bird cannot stop it', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Free Trinket' },
+      { action: 'Declare attackers', targets: ['__no_attack__', 'P2', '__no_attack__'] },
+      { action: 'Pay {' },
+      { action: 'Targets for Invisible Woman', targets: ['Lab Ox'] },
+    ];
+    const order: string[] = [];
+    let blockDecisions = 0;
+    const { scenario, state, seat, onBattlefield } = run(
+      'invisible-woman-viewer-pay-pump-unblockable',
+      steps,
+      (request) => {
+        if (request.legalActions.some((action) => action.type === 'payMana')) order.push('pay');
+        if (request.legalActions.some((action) => action.type === 'chooseTargets'))
+          order.push('target');
+        if (request.decidingPlayer === 'P2' && request.legalActions[0]?.type === 'blockDeclaration')
+          blockDecisions++;
+      },
+    );
+    // The noncreature spell earned a 0/3 Wall with defender and reach at the beginning of combat.
+    const [wall] = onBattlefield('Wall');
+    expect(onBattlefield('Wall')).toHaveLength(1);
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Wall'),
+    ).toMatchObject({ power: 0, toughness: 3 });
+    expect(wall?.controllerId).toBe('P1');
+    // One payment prompt for the attack, then the reflexive trigger's own target prompt.
+    expect(order).toEqual(['pay', 'target']);
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Lab Ox'),
+    ).toMatchObject({ power: 8, toughness: 4 });
+    expect(
+      scenario.engine.view('P1').battlefield.find((perm) => perm.name === 'Lab Servo'),
+    ).toMatchObject({ power: 1, toughness: 1 });
+    // Lab Ox cannot be blocked, so Lab Bird was never offered a block and all 8 damage landed.
+    expect(blockDecisions).toBe(0);
+    expect(onBattlefield('Lab Bird')).toHaveLength(1);
+    expect(seat('P2').life).toBe(40 - 8);
+    expect(
+      onBattlefield('Mountain')
+        .concat(onBattlefield('Forest'), onBattlefield('Plains'), onBattlefield('Island'))
+        .filter((land) => land.tapped),
+    ).toHaveLength(4);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('invisible-woman-viewer-pay-pump-unblockable', steps);
+  });
+});

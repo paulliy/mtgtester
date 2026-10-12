@@ -367,6 +367,87 @@
     "def": {}
   },
   {
+    "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
+    "name": "Invisible Woman",
+    "handledLines": [
+      "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may pay {R}{G}{W}{U}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "op": "mayPayManaThenReflexive",
+              "then": {
+                "description": "When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn",
+                "effects": [
+                  {
+                    "op": "pumpUntilEot",
+                    "power": {
+                      "kind": "countPermanents",
+                      "scope": "you",
+                      "selector": {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    },
+                    "target": 0,
+                    "toughness": 0
+                  },
+                  {
+                    "op": "cantBeBlockedUntilEot",
+                    "target": 0
+                  }
+                ],
+                "kind": "spell",
+                "targets": [
+                  {
+                    "kind": "creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "086b2564-9114-4ba2-94fd-b490f98f38a7",
     "name": "Chain Reaction",
     "handledLines": [
@@ -16258,6 +16339,87 @@
     "name": "Intermediate Chirography",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-invisible-woman",
+    "name": "Invisible Woman",
+    "handledLines": [
+      "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may pay {R}{G}{W}{U}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "op": "mayPayManaThenReflexive",
+              "then": {
+                "description": "When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn",
+                "effects": [
+                  {
+                    "op": "pumpUntilEot",
+                    "power": {
+                      "kind": "countPermanents",
+                      "scope": "you",
+                      "selector": {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    },
+                    "target": 0,
+                    "toughness": 0
+                  },
+                  {
+                    "op": "cantBeBlockedUntilEot",
+                    "target": 0
+                  }
+                ],
+                "kind": "spell",
+                "targets": [
+                  {
+                    "kind": "creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-iymrith-desert-doom",

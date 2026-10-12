@@ -244,6 +244,45 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c",
+      "card": {
+        "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
+        "scryfallId": "d8e13ecb-98be-4d9b-86a2-24eaa98f7f0d",
+        "name": "Invisible Woman",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a 0/3 colorless Wall creature token with defender and reach.\nWhenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

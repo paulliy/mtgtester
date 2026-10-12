@@ -8738,3 +8738,42 @@ test('Thunderbreak Regent: the opponent who targets your Dragon takes 3', async 
   // Lab Doom then destroys the Regent.
   await expect(permanent(page, 'Thunderbreak Regent')).toHaveCount(0);
 });
+
+test('Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade', async ({ page }) => {
+  await runScenario(page, 'Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade');
+  // A noncreature spell this turn earns the Wall at the beginning of combat.
+  const trinket = handCard(page, 'Lab Free Trinket');
+  await expect(trinket).toHaveClass(/actionable/, { timeout: 15_000 });
+  await trinket.click();
+  // Nothing to pay: confirming puts the spell on the stack.
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Lab Free Trinket'));
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await expect(permanent(page, 'Wall')).toBeVisible();
+  await expect(permanent(page, 'Wall').getByText('0/3')).toBeVisible();
+
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The payment is asked first; only paying creates the reflexive trigger and its target prompt.
+  const pay = page.getByRole('button', { name: /^Pay \{/ });
+  await expect(pay).toBeVisible({ timeout: 15_000 });
+  await pay.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Four creatures (the Wall included): +4/+0, and the unblockable Ox's 8 damage all lands.
+  await expect(permanent(page, 'Lab Ox').getByText('8/4')).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('32');
+});
