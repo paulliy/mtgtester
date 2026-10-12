@@ -117,6 +117,7 @@ export interface ValueScope {
 export type TriggerScope = Pick<
   ValueScope,
   | 'damageDealt'
+  | 'energyPaid'
   | 'triggerCount'
   | 'spellManaValue'
   | 'spellColorCount'

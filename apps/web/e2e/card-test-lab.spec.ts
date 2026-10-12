@@ -8815,3 +8815,42 @@ test('Flameblast Dragon: choose the target, then pay {X}{R} for X damage', async
   ).toHaveText('40');
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+test('Territorial Aetherkite: pay energy and damage each other creature', async ({ page }) => {
+  await runScenario(page, 'Territorial Aetherkite: pay energy and damage each other creature');
+  const kite = handCard(page, 'Territorial Aetherkite');
+  await expect(kite).toHaveClass(/actionable/, { timeout: 15_000 });
+  await kite.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The enter trigger gives {E}{E}; the payment is then offered, up to the energy you have.
+  // Amounts are listed as rows, each with its own Pay button; declining is a separate button.
+  const row = (amount: number) => page.getByText(`Pay ${amount} energy`, { exact: true });
+  await passUntil(page, row(2));
+  await expect(row(1)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Pay no energy', exact: true })).toBeVisible();
+  const pay = row(2).locator(
+    'xpath=ancestor::div[contains(@class,"group-value")]/following-sibling::div[contains(@class,"group-actions")]//button',
+  );
+  await pay.click();
+
+  // "When you do" is its own trigger: it resolves as a separate object after the enter trigger.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.getByText(
+      'Territorial Aetherkite — When you do, this creature deals that much damage to each other creature resolves',
+    ),
+  ).toBeVisible();
+  // Both Lab Servos and Lab Bird (1/1) died; the Aetherkite and Lab Ox (4/4) survived.
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  await expect(permanent(page, 'Territorial Aetherkite')).toBeVisible();
+  for (const seat of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});

@@ -3221,8 +3221,62 @@
   {
     "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
     "name": "Territorial Aetherkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you get {E}{E} . Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, you get {E}{E}. Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "min": 1,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "When you do, this creature deals that much damage to each other creature",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "energyPaid"
+                    },
+                    "op": "damageEach",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "other"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "kind": "spell",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "4fca09ac-8134-43d9-a84b-686db5e2bf69",
@@ -21242,8 +21296,62 @@
   {
     "oracleId": "oracle-territorial-aetherkite",
     "name": "Territorial Aetherkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you get {E}{E} . Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, you get {E}{E}. Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "min": 1,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "When you do, this creature deals that much damage to each other creature",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "energyPaid"
+                    },
+                    "op": "damageEach",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "other"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "kind": "spell",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-terror-of-the-peaks",

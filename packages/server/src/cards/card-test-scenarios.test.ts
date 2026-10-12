@@ -403,6 +403,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'thunderbreak-regent-viewer-opponent-targets-dragon',
       'invisible-woman-viewer-pay-pump-unblockable',
       'flameblast-dragon-viewer-target-then-pay-x',
+      'territorial-aetherkite-viewer-pay-energy-damage',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

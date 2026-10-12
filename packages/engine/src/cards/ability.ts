@@ -704,6 +704,13 @@ export type Effect =
    */
   | { op: 'mayPayManaThenReflexive'; cost: ParsedManaCost; then: Ability }
   /**
+   * "You may pay one or more {E}. When you do, …" (Territorial Aetherkite) — a reflexive trigger
+   * (CR 603.12) on an energy payment of any amount from `min` up to all the energy you have,
+   * made while this ability resolves. Paying fires `then`, which goes on the stack as its own
+   * ability and reads the amount paid as `energyPaid`; declining fires nothing.
+   */
+  | { op: 'mayPayEnergyThenReflexive'; min: number; then: Ability }
+  /**
    * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
    * counters were actually put on the source — not if it left the battlefield first.
    */

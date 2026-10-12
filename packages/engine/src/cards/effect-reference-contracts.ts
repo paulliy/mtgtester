@@ -161,6 +161,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   sacrificeOneThen: {},
   sacrificeSourceThenReflexive: {},
   mayPayManaThenReflexive: {},
+  mayPayEnergyThenReflexive: {},
   putCountersOnSourceThenReflexive: {},
   gainControlTarget: { target: permanent },
   putCounters: { target: permanent },

@@ -3419,6 +3419,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+    "name": "Territorial Aetherkite",
+    "package": "PR06.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The damage is a reflexive trigger after payment, implemented as the same resolution."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f8e17f4f-080d-4bba-bd05-ca27e94ccecc",
     "name": "Terror of the Peaks",
     "package": "W2",

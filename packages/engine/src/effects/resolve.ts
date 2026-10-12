@@ -3105,6 +3105,45 @@ export function* executeAbility(
         });
         break;
       }
+      case 'mayPayEnergyThenReflexive': {
+        // CR 603.12: the reflexive ability triggers only on energy actually paid, and "that much"
+        // is the amount paid, which the pending trigger carries to its own resolution.
+        const min = Math.max(1, Math.floor(effect.min));
+        const options = [
+          plainOption({ type: 'decline', description: 'Pay no energy', verb: 'Decline' }),
+          ...Array.from({ length: Math.max(0, controller.energy - min + 1) }, (_, offset) => {
+            const amount = min + offset;
+            return valueOption(amount, `Pay ${amount} energy`, {
+              type: 'payEnergy',
+              description: `Pay ${amount} energy`,
+              verb: 'Pay',
+            });
+          }),
+        ];
+        // Nothing to offer without enough energy to pay the minimum.
+        if (options.length === 1) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: pay energy? (${min === 1 ? 'one or more' : `${min} or more`})`,
+          options,
+        };
+        if (outcome.index === 0) break;
+        const paid = min + outcome.index - 1;
+        controller.energy -= paid;
+        emit(ctx, 'energy', { amount: -paid, total: controller.energy }, controller.id);
+        ctx.state.pendingTriggers.push({
+          controllerId: source.controllerId,
+          sourceCardId: source.cardId,
+          ...(source.id === undefined ? {} : { sourceObjectId: source.id }),
+          sourceOracleId: source.oracleId,
+          // The card's own name: while a trigger resolves, `source.name` is that trigger's text.
+          sourceName: ctx.defs.get(source.oracleId)?.name ?? source.name,
+          ability: effect.then,
+          scope: { energyPaid: paid },
+        });
+        break;
+      }
       case 'sacrificeSourceThenReflexive': {
         const perm = sourcePermanent();
         // Only a permanent you control can be sacrificed (CR 701.21a).

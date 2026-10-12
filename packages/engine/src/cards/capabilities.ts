@@ -829,6 +829,7 @@ const families = {
       sacrificeOneThen: true,
       sacrificeSourceThenReflexive: true,
       mayPayManaThenReflexive: true,
+      mayPayEnergyThenReflexive: true,
       putCountersOnSourceThenReflexive: true,
       gainControlTarget: true,
       putCounters: true,

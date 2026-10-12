@@ -5,8 +5,17 @@
  * are gated by `tests/pr06-card-coverage.test.ts`.
  */
 
-import { manaCost, onAttacks, spell, targetSlots, triggered, whenAttacks } from '../templates';
-import { allOf, ofType, YOURS } from '../selector';
+import {
+  manaCost,
+  onAttacks,
+  onEtb,
+  spell,
+  targetSlots,
+  triggered,
+  whenAttacks,
+} from '../templates';
+import { constant } from '../value';
+import { allOf, ofType, OTHER, YOURS } from '../selector';
 import { defineCard, extendCard, unsupportedCard } from './index';
 
 export function registerCoveragePr06Overrides(): void {
@@ -34,6 +43,45 @@ export function registerCoveragePr06Overrides(): void {
           ],
           description:
             'Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target',
+        }),
+      ],
+    },
+  );
+
+  // Territorial Aetherkite: "when you do" is a reflexive trigger (CR 603.12). After the energy is
+  // paid, a separate ability goes on the stack, so players get priority first, and as it
+  // resolves the Aetherkite deals damage equal to the energy paid to each other creature (the
+  // set is read then; last known information if it has left the battlefield, CR 608.2h). Any
+  // amount from one up to all your energy may be paid, not only the two just gained.
+  defineCard(
+    '4f63d306-cc14-405c-8424-d8990c670c74',
+    'Territorial Aetherkite',
+    [
+      'When this creature enters, you get {E}{E} . Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [
+            { op: 'gainEnergy', amount: constant(2) },
+            {
+              op: 'mayPayEnergyThenReflexive',
+              min: 1,
+              then: spell({
+                effects: [
+                  {
+                    op: 'damageEach',
+                    selector: allOf(ofType('Creature'), OTHER),
+                    amount: { kind: 'energyPaid' },
+                  },
+                ],
+                description:
+                  'When you do, this creature deals that much damage to each other creature',
+              }),
+            },
+          ],
+          description:
+            'When this creature enters, you get {E}{E}. Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature',
         }),
       ],
     },

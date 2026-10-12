@@ -836,12 +836,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     PEEMA_TRAILBLAZER_DEF,
   );
 
-  // Catalog audit living-energy-batch-3: reflexive damage is same-resolution then.
-  unsupportedCard(
-    '4f63d306-cc14-405c-8424-d8990c670c74',
-    'Territorial Aetherkite',
-    'The damage is a reflexive trigger after payment, implemented as the same resolution.',
-  );
+  // Territorial Aetherkite: restored in coverage PR06 (see coverage-pr06.ts).
 
   defineCard(
     'be6cab52-b3ae-46a2-a581-2468a49bff25',

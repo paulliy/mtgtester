@@ -2210,6 +2210,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Flameblast Dragon: choose the target, then pay {X}{R} for X damage'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Territorial Aetherkite: pay energy and damage each other creature'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

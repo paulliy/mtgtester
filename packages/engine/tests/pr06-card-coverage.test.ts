@@ -2041,6 +2041,223 @@ describe('Flameblast Dragon', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.11 Territorial Aetherkite
+// ---------------------------------------------------------------------------------------------
+
+describe('Territorial Aetherkite', () => {
+  const { card } = pinned('Territorial Aetherkite');
+  const COST = [...red(2), ...generic(4)];
+  const BIG = (name: string, controller = 'P2') =>
+    oracle({
+      name,
+      typeLine: 'Creature — Secret',
+      power: '1',
+      toughness: '9',
+      oracleText: controller,
+    });
+  const RED_WARDEN = oracle({
+    name: 'Lab Red Warden',
+    typeLine: 'Creature — Knight',
+    power: '1',
+    toughness: '9',
+    oracleText: 'Protection from red',
+  });
+
+  /** The "pay energy?" prompt: what it offered, and the answer to give. */
+  function pays(amount: number | 'none', seen: string[][] = []): Answer {
+    return (decision) => {
+      seen.push(decision.options.map((option) => option.description));
+      const wanted = amount === 'none' ? 'Pay no energy' : `Pay ${amount} energy`;
+      const index = decision.options.findIndex((option) => option.description === wanted);
+      expect(index, `${decision.prompt} offers ${wanted}`).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    };
+  }
+
+  /** P1 has `energy` energy and the Aetherkite enters; its enter trigger waits on the stack. */
+  function entering(seed: string, energy: number) {
+    const ctx = pod(seed);
+    playerById(ctx, 'P1').energy = energy;
+    const kite = enterFrom(ctx, 'P1', card);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    return { ctx, kite };
+  }
+
+  const energyOf = (ctx: GameContext) => playerById(ctx, 'P1').energy;
+  const kiteHits = (ctx: GameContext) =>
+    damageEvents(ctx).filter((event) => String(event.payload['source']).includes('Aetherkite'));
+
+  it('territorial-aetherkite-pinned-oracle-supported — the override reads flying, haste and an enter trigger that gets {E}{E} and then offers a reflexive payment of any amount of energy', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'haste']));
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(trigger!.targets).toEqual([]);
+    expect(trigger!.effects[0]).toEqual({ op: 'gainEnergy', amount: { kind: 'const', n: 2 } });
+    const [, pay] = trigger!.effects;
+    expect(pay).toMatchObject({ op: 'mayPayEnergyThenReflexive', min: 1 });
+    // "That much damage to each other creature": the amount paid, every creature but this one.
+    const then = (pay as { then: Ability }).then;
+    expect(then.targets).toEqual([]);
+    expect(then.effects).toEqual([
+      {
+        op: 'damageEach',
+        selector: {
+          kind: 'allOf',
+          of: [{ kind: 'type', value: 'Creature' }, { kind: 'other' }],
+        },
+        amount: { kind: 'energyPaid' },
+      },
+    ]);
+  });
+
+  it('territorial-aetherkite-gain-energy — entering gets {E}{E} before the payment is asked, added to the energy you already had', () => {
+    const { ctx } = entering('kite-gain', 1);
+    const seen: string[][] = [];
+    resolveTop(ctx, (decision, count) => {
+      // The two energy are already gained when the payment is offered.
+      expect(energyOf(ctx)).toBe(3);
+      return pays('none', seen)(decision, count);
+    });
+    expect(seen).toEqual([['Pay no energy', 'Pay 1 energy', 'Pay 2 energy', 'Pay 3 energy']]);
+    expect(energyOf(ctx)).toBe(3);
+  });
+
+  it('territorial-aetherkite-decline — paying no energy keeps all of it and creates no reflexive trigger or damage', () => {
+    const { ctx, kite } = entering('kite-decline', 1);
+    const enemy = spawn(ctx, 'P2', BIG('Lab Bystander'));
+    resolveTop(ctx, pays('none'));
+    expect(energyOf(ctx)).toBe(3);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toEqual([]);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(onField(ctx, enemy.cardId)?.damageMarked).toBe(0);
+    expect(onField(ctx, kite.cardId)?.damageMarked).toBe(0);
+  });
+
+  it('territorial-aetherkite-pay-any-amount — you may pay from one up to all the energy you have, not only the two just gained', () => {
+    const rich = entering('kite-rich', 5);
+    const seen: string[][] = [];
+    resolveTop(rich.ctx, pays(6, seen));
+    expect(seen[0]).toEqual([
+      'Pay no energy',
+      ...[1, 2, 3, 4, 5, 6, 7].map((n) => `Pay ${n} energy`),
+    ]);
+    expect(energyOf(rich.ctx)).toBe(1);
+
+    // Exactly the two gained: two payments are on offer, and paying both leaves nothing.
+    const poor = entering('kite-poor', 0);
+    const offered: string[][] = [];
+    resolveTop(poor.ctx, pays(2, offered));
+    expect(offered[0]).toEqual(['Pay no energy', 'Pay 1 energy', 'Pay 2 energy']);
+    expect(energyOf(poor.ctx)).toBe(0);
+  });
+
+  it('territorial-aetherkite-reflexive-trigger — paying puts a separate trigger on the stack, so an opponent gets priority before any damage, and a creature that arrives in response is also damaged', () => {
+    const { ctx, kite } = entering('kite-reflexive', 1);
+    const early = spawn(ctx, 'P2', BIG('Lab Early'));
+    resolveTop(ctx, pays(3));
+    // The payment is made; nothing is damaged yet and the reflexive trigger is not on the stack.
+    expect(energyOf(ctx)).toBe(0);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(ctx.state.stack).toEqual([]);
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const [entry] = ctx.state.stack;
+    expect(entry!.controllerId).toBe('P1');
+    expect(entry!.description).toContain('each other creature');
+    expect(entry!.triggerScope?.energyPaid).toBe(3);
+    expect(damageEvents(ctx)).toEqual([]);
+
+    // An opponent's creature enters in response: the set of creatures is read as the trigger resolves.
+    const late = enterFrom(ctx, 'P2', BIG('Lab Late'));
+    resolveTop(ctx);
+    expect(onField(ctx, early.cardId)?.damageMarked).toBe(3);
+    expect(onField(ctx, late.cardId)?.damageMarked).toBe(3);
+    // "Each OTHER creature": the Aetherkite takes nothing from its own trigger.
+    expect(onField(ctx, kite.cardId)?.damageMarked).toBe(0);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('territorial-aetherkite-damage-amount — each other creature, yours included, takes exactly the amount paid from the Aetherkite, and small creatures die', () => {
+    const { ctx, kite } = entering('kite-amount', 0);
+    const own = spawn(ctx, 'P1', BIG('Lab Ally', 'P1'));
+    const small = spawn(
+      ctx,
+      'P3',
+      oracle({ name: 'Lab Mouse', typeLine: 'Creature — Mouse', power: '1', toughness: '1' }),
+    );
+    const enemy = spawn(ctx, 'P2', BIG('Lab Enemy'));
+    resolveTop(ctx, pays(1));
+    pump(priorityCheckpoint(ctx));
+    resolveTop(ctx);
+    expect(onField(ctx, own.cardId)?.damageMarked).toBe(1);
+    expect(onField(ctx, enemy.cardId)?.damageMarked).toBe(1);
+    // Lab Mouse is a 1/1: 1 damage kills it once state-based actions run.
+    pump(priorityCheckpoint(ctx));
+    expect(onField(ctx, small.cardId)).toBeUndefined();
+    expect(onField(ctx, kite.cardId)?.damageMarked).toBe(0);
+    expect(kiteHits(ctx)).toHaveLength(3);
+    expect(kiteHits(ctx).every((event) => event.payload['amount'] === 1)).toBe(true);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+
+    // Paying more deals more.
+    const more = entering('kite-amount-2', 0);
+    const target = spawn(more.ctx, 'P2', BIG('Lab Enemy'));
+    resolveTop(more.ctx, pays(2));
+    pump(priorityCheckpoint(more.ctx));
+    resolveTop(more.ctx);
+    expect(onField(more.ctx, target.cardId)?.damageMarked).toBe(2);
+  });
+
+  it('territorial-aetherkite-aetherkite-gone — the Aetherkite still deals the damage when it has left the battlefield by resolution, as a red source (CR 608.2h)', () => {
+    const { ctx, kite } = entering('kite-lki', 0);
+    const enemy = spawn(ctx, 'P2', BIG('Lab Enemy'));
+    const guard = spawn(ctx, 'P2', RED_WARDEN);
+    resolveTop(ctx, pays(2));
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, onField(ctx, kite.cardId)!, { zone: 'graveyard' }));
+    expect(onField(ctx, kite.cardId)).toBeUndefined();
+    resolveTop(ctx);
+    expect(onField(ctx, enemy.cardId)?.damageMarked).toBe(2);
+    // Red damage from the Aetherkite as it last existed: protection from red stops it.
+    expect(onField(ctx, guard.cardId)?.damageMarked).toBe(0);
+    expect(kiteHits(ctx)[0]?.payload).toMatchObject({ amount: 2, sourceCardId: kite.cardId });
+  });
+
+  it('territorial-aetherkite-whole-game — casting the Aetherkite through the stack gets {E}{E}, the payment is asked as the enter trigger resolves, and the reflexive trigger resolves after its own priority round', () => {
+    const ctx = pod('kite-game');
+    playerById(ctx, 'P1').energy = 1;
+    const enemy = spawn(ctx, 'P2', BIG('Lab Enemy'));
+    const other = spawn(ctx, 'P3', BIG('Lab Other', 'P3'));
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    const kite = ctx.state.battlefield.find((perm) => perm.name === 'Territorial Aetherkite');
+    expect(kite).toBeDefined();
+    const prompts: string[] = [];
+    settle(ctx, (decision, count) => {
+      prompts.push(decision.prompt);
+      return pays(3)(decision, count);
+    });
+    expect(prompts).toHaveLength(1);
+    expect(energyOf(ctx)).toBe(0);
+    expect(onField(ctx, enemy.cardId)?.damageMarked).toBe(3);
+    expect(onField(ctx, other.cardId)?.damageMarked).toBe(3);
+    expect(onField(ctx, kite!.cardId)?.damageMarked).toBe(0);
+    expect(ctx.state.stack).toEqual([]);
+    expect(kiteHits(ctx)).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2101,6 +2318,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Flameblast Dragon',
     sha256: '0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Territorial Aetherkite',
+    sha256: '3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893',
     clauseCount: 2,
     authored: true,
   },

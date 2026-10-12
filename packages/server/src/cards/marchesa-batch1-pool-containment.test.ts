@@ -123,6 +123,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sunforger',
       'Sylvan Reclamation',
       'Technomancer',
+      'Territorial Aetherkite',
       'The Ooze',
       'Their Number Is Legion',
       'Thunderbreak Regent',

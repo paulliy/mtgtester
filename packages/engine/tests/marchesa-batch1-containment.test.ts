@@ -144,8 +144,6 @@ const REASONS: Record<string, string> = {
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
   'Aetherworks Marvel':
     'Look-at-top-six free-cast does not put the rest on the bottom in a random order, and skips that reordering when no spell is castable.',
-  'Territorial Aetherkite':
-    'The damage is a reflexive trigger after payment, implemented as the same resolution.',
   Duplicant: 'Optional exile is a required target.',
   'Adaptive Omnitool': 'Artifact-from-library is put into hand without revealing.',
   'Dream Pillager':
@@ -287,6 +285,7 @@ describe('Marchesa catalog audit containment', () => {
     "Duelist's Heritage",
     'Thunderbreak Regent',
     'Flameblast Dragon',
+    'Territorial Aetherkite',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

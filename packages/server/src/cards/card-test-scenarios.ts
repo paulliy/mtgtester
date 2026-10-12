@@ -11665,6 +11665,38 @@ function flameblastDragonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function territorialAetherkiteScenario(gameId: GameId): CardTestScenario {
+  const kite = pinnedFrom(COVERAGE_PR06, 'Territorial Aetherkite');
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'territorial-aetherkite-viewer-pay-energy-damage',
+    title: 'Territorial Aetherkite: pay energy and damage each other creature',
+    instructions: [
+      'Territorial Aetherkite is in your hand and you control six Mountains and Lab Ox (4/4). P2 controls Lab Servo (1/1) and Lab Bird (1/1); P3 controls Lab Servo.',
+      'Cast Territorial Aetherkite for {4}{R}{R} and let it resolve. Its enter trigger gives you {E}{E}; when it resolves, choose to pay 2 energy.',
+      'The "when you do" damage is a separate trigger: it goes on the stack, and you pass priority to let it resolve.',
+    ],
+    expectedOutcome:
+      'You paid both energy, so the Aetherkite dealt 2 damage to each other creature: all three 1/1 creatures (both Lab Servos and Lab Bird) died, Lab Ox survived with 2 damage and the Aetherkite itself took none. No player lost life.',
+    oracleSha256: kite.sha256,
+    clauseIds: ['territorial-aetherkite-flying-haste', 'territorial-aetherkite-energy-damage'],
+    decks: {
+      P1: [kite.card, LAB_OX, ...mountains],
+      P2: [LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Territorial Aetherkite'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11916,6 +11948,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'thunderbreak-regent-viewer-opponent-targets-dragon',
   'invisible-woman-viewer-pay-pump-unblockable',
   'flameblast-dragon-viewer-target-then-pay-x',
+  'territorial-aetherkite-viewer-pay-energy-damage',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12234,6 +12267,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'thunderbreak-regent-viewer-opponent-targets-dragon': thunderbreakRegentScenario,
   'invisible-woman-viewer-pay-pump-unblockable': invisibleWomanScenario,
   'flameblast-dragon-viewer-target-then-pay-x': flameblastDragonScenario,
+  'territorial-aetherkite-viewer-pay-energy-damage': territorialAetherkiteScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

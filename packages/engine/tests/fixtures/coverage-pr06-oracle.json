@@ -318,6 +318,43 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
+      "card": {
+        "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+        "scryfallId": "c1e2f2af-dbba-4e4c-9c60-ac4d245e1431",
+        "name": "Territorial Aetherkite",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Cat Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\nWhen this creature enters, you get {E}{E} (two energy counters). Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.",
+        "power": "6",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -372,6 +372,7 @@ const effectExpressions = {
   sacrificeOneThen: { selector: selector },
   sacrificeSourceThenReflexive: {},
   mayPayManaThenReflexive: {},
+  mayPayEnergyThenReflexive: { min: finite },
   putCountersOnSourceThenReflexive: { counter: text, count: finite },
   gainControlTarget: {},
   putCounters: { count: numericExpression },

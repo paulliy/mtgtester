@@ -4238,15 +4238,32 @@
     "4f63d306-cc14-405c-8424-d8990c670c74": {
       "name": "Territorial Aetherkite",
       "oracleSha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "territorial-aetherkite-flying-haste",
+          "oracleText": "Flying, haste",
+          "implementation": ["keywords flying and haste (interpreted)"],
+          "engineTestIds": ["territorial-aetherkite-pinned-oracle-supported"],
+          "viewerScenarioIds": ["territorial-aetherkite-viewer-pay-energy-damage"]
+        },
+        {
+          "id": "territorial-aetherkite-energy-damage",
           "oracleText": "When this creature enters, you get {E}{E} (two energy counters). Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.",
           "implementation": [
-            "explicitly unsupported; reflexive damage implemented as same-resolution then"
+            "authored enter trigger: gets {E}{E}, then may pay any amount from one up to all the energy you have; paying fires a reflexive trigger (CR 603.12) that goes on the stack as its own object, with its own priority window, carrying the energy paid, and as it resolves this creature deals that much damage to each other creature (the set read then, last known information if it has left the battlefield, CR 608.2h); declining fires nothing"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "territorial-aetherkite-pinned-oracle-supported",
+            "territorial-aetherkite-gain-energy",
+            "territorial-aetherkite-decline",
+            "territorial-aetherkite-pay-any-amount",
+            "territorial-aetherkite-reflexive-trigger",
+            "territorial-aetherkite-damage-amount",
+            "territorial-aetherkite-aetherkite-gone",
+            "territorial-aetherkite-whole-game"
+          ],
+          "viewerScenarioIds": ["territorial-aetherkite-viewer-pay-energy-damage"]
         }
       ],
       "gameplayAiScenarioIds": []

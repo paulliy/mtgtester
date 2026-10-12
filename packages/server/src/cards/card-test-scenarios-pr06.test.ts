@@ -501,3 +501,48 @@ describe('Flameblast Dragon Card Test Lab scenario', () => {
     replays('flameblast-dragon-viewer-target-then-pay-x', steps);
   });
 });
+
+describe('Territorial Aetherkite Card Test Lab scenario', () => {
+  it('territorial-aetherkite-viewer-pay-energy-damage — paying both energy puts the reflexive trigger on the stack, and it kills every 1/1 but spares the Aetherkite and Lab Ox', () => {
+    const steps: Step[] = [{ action: 'Cast Territorial Aetherkite' }, { action: 'Pay 2 energy' }];
+    let payments = 0;
+    const { scenario, state, seat, onBattlefield } = run(
+      'territorial-aetherkite-viewer-pay-energy-damage',
+      steps,
+      (request) => {
+        if (request.legalActions.some((action) => action.description === 'Pay 2 energy'))
+          payments++;
+      },
+    );
+    expect(payments).toBe(1);
+    expect(seat('P1').energy).toBe(0);
+    // Two triggers went on the stack in turn: the enter trigger, then, after the payment, the
+    // separate reflexive trigger, which resolved before any of the damage was dealt.
+    const log = state.eventLog;
+    const onStack = log.filter((event) => event.type === 'triggerOnStack');
+    expect(onStack).toHaveLength(2);
+    expect(String(onStack[1]!.payload['description'])).toMatch(/^When you do/);
+    const paid = log.findIndex(
+      (event) => event.type === 'energy' && event.payload['amount'] === -2,
+    );
+    const reflexive = log.indexOf(onStack[1]!);
+    const firstDamage = log.findIndex((event) => event.type === 'damage');
+    expect(paid).toBeGreaterThan(log.indexOf(onStack[0]!));
+    expect(reflexive).toBeGreaterThan(paid);
+    expect(firstDamage).toBeGreaterThan(reflexive);
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(onBattlefield('Territorial Aetherkite')).toHaveLength(1);
+    const damage = log.filter((event) => event.type === 'damage');
+    expect(damage).toHaveLength(4);
+    for (const event of damage) {
+      expect(event.payload).toMatchObject({ amount: 2 });
+      expect(String(event.payload['source'])).toContain('Territorial Aetherkite');
+    }
+    for (const id of ['P1', 'P2', 'P3', 'P4']) expect(seat(id).life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('territorial-aetherkite-viewer-pay-energy-damage', steps);
+  });
+});
