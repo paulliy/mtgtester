@@ -49,6 +49,9 @@ export const COMBAT_TRIGGER_SCENARIO_IDS = [
   'namor-viewer-source-removed',
   'scriv-viewer-departed-attacker',
   'scriv-viewer-attacks-controller',
+  'marchesa-viewer-granted-dethrone',
+  'dragon-mage-viewer-normal-cast-wheel',
+  'hunted-phantasm-viewer-opponent-tokens',
 ] as const;
 type ScenarioId = (typeof COMBAT_TRIGGER_SCENARIO_IDS)[number];
 const details: Record<
@@ -115,7 +118,44 @@ const details: Record<
     ],
     expected: 'P2 loses 2 life when the Contract trigger resolves.',
   },
+  'marchesa-viewer-granted-dethrone': {
+    title: 'Marchesa: grant dethrone to an attacking creature',
+    card: 'Marchesa, the Black Rose',
+    clause: 'marchesa-granted-dethrone',
+    instructions: [
+      'Cast Marchesa normally. Temur Ascendancy gives her haste.',
+      'Attack P2 with only Lab Bear while P2 has the most life. P3 casts Lightning Bolt at P2 in response.',
+    ],
+    expected:
+      'Lab Bear gains a +1/+1 counter, deals 3 damage, and P2 ends at 35 life. Marchesa gets no counter.',
+  },
+  'dragon-mage-viewer-normal-cast-wheel': {
+    title: 'Dragon Mage: normal cast and seven-card wheel',
+    card: 'Dragon Mage',
+    clause: 'dragon-mage-wheel',
+    instructions: [
+      'Cast Dragon Mage normally. Decline Temur Ascendancy’s optional draw.',
+      'Attack P2 at 40 life. Dragon Mage deals combat damage and each player discards, then draws seven cards.',
+    ],
+    expected: 'All four players have exactly seven cards in hand and P2 ends at 35 life.',
+  },
+  'hunted-phantasm-viewer-opponent-tokens': {
+    title: 'Hunted Phantasm: give P2 five Goblins',
+    card: 'Hunted Phantasm',
+    clause: 'hunted-phantasm-opponent-tokens',
+    instructions: [
+      'Cast Hunted Phantasm normally and target P2 with its entry trigger.',
+      'Attack P2 at 40 life. Hunted Phantasm cannot be blocked.',
+    ],
+    expected: 'P2 controls five 1/1 red Goblins and ends at 36 life.',
+  },
 };
+
+export function combatTriggerScenarioSubject(id: string): string {
+  const detail = details[id as ScenarioId];
+  if (!detail) throw new Error(`Unknown combat trigger scenario ${id}`);
+  return detail.card;
+}
 
 function passing(): DecisionProvider {
   return {
@@ -181,15 +221,21 @@ export function combatTriggerScenario(id: string, gameId: GameId): CardTestScena
   const namor = id.startsWith('namor');
   const scriv = id.startsWith('scriv');
   const response =
-    id === 'marchesa-viewer-dethrone-response' || id === 'namor-viewer-source-removed';
+    id === 'marchesa-viewer-dethrone-response' ||
+    id === 'namor-viewer-source-removed' ||
+    id === 'marchesa-viewer-granted-dethrone';
   const boltResponse = response || id === 'scriv-viewer-departed-attacker';
   const namedCard = pin(detail.card).card;
+  const viewerScenario = !scriv;
   const cards: OracleCard[] = [
     namedCard,
     pin('Marchesa, the Black Rose').card,
     pin('Namor, Atlantean King').card,
     pin('Scriv, the Obligator').card,
     pin('Lightning Bolt').card,
+    ...(viewerScenario
+      ? [pin('Temur Ascendancy').card, pin('Dragon Mage').card, pin('Hunted Phantasm').card]
+      : []),
     bear,
     ...Array.from({ length: 12 }, () => basic('Forest')),
     ...Array.from({ length: 12 }, () => basic('Mountain')),
@@ -203,7 +249,17 @@ export function combatTriggerScenario(id: string, gameId: GameId): CardTestScena
     commanders: [],
     cards,
   }));
-  const seed = `card-lab-${id}-v2`;
+  const seed = `card-lab-${id}-v3`;
+  const viewerBasics = [
+    'Plains',
+    'Island',
+    'Island',
+    'Swamp',
+    'Mountain',
+    'Mountain',
+    'Forest',
+    'Forest',
+  ];
   const battlefield = scriv
     ? [
         {
@@ -215,12 +271,20 @@ export function combatTriggerScenario(id: string, gameId: GameId): CardTestScena
     : [
         {
           playerId: 'P1' as const,
-          cardNames: [detail.card, ...(namor ? ['Lab Bear'] : []), 'Forest', 'Forest', 'Mountain'],
+          cardNames: [
+            ...viewerBasics,
+            'Temur Ascendancy',
+            ...(namor || id === 'marchesa-viewer-granted-dethrone' ? ['Lab Bear'] : []),
+          ],
         },
         { playerId: 'P2' as const, cardNames: ['Forest'] },
         ...(boltResponse ? [{ playerId: 'P3' as const, cardNames: ['Mountain'] }] : []),
       ];
-  const humanHand = scriv ? ['Scriv, the Obligator', 'Lightning Bolt'] : [];
+  const humanHand = scriv
+    ? ['Scriv, the Obligator', 'Lightning Bolt']
+    : id === 'dragon-mage-viewer-normal-cast-wheel'
+      ? [detail.card, 'Forest']
+      : [detail.card];
   const engine = new Engine(
     { gameId, seed, players, turnCap: 3 },
     {
@@ -240,7 +304,15 @@ export function combatTriggerScenario(id: string, gameId: GameId): CardTestScena
         ],
         hand: [
           ...(humanHand.length ? [{ playerId: 'P1' as const, cardNames: humanHand }] : []),
-          ...(response ? [{ playerId: 'P3' as const, cardNames: ['Lightning Bolt'] }] : []),
+          ...(boltResponse && !scriv
+            ? [{ playerId: 'P3' as const, cardNames: ['Lightning Bolt'] }]
+            : []),
+          ...(id === 'dragon-mage-viewer-normal-cast-wheel'
+            ? (['P2', 'P3', 'P4'] as const).map((playerId) => ({
+                playerId,
+                cardNames: ['Forest'],
+              }))
+            : []),
         ],
         battlefield,
         ...(scriv
@@ -279,7 +351,7 @@ export function combatTriggerScenario(id: string, gameId: GameId): CardTestScena
   return {
     metadata: {
       id,
-      version: 2,
+      version: 3,
       title: detail.title,
       instructions: detail.instructions,
       expectedOutcome: detail.expected,

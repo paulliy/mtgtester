@@ -13,6 +13,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { evaluateCondition } from '../src/cards/condition';
 import { captureObjectFacts } from '../src/cards/source-identity';
 import { queueTriggersForEvent } from '../src/state/objects';
+import { playPreparedScenario } from '../src/flow/game';
 import {
   bear,
   conjure,
@@ -54,6 +55,56 @@ function pod() {
 }
 
 describe('attack qualification and last-known defender regressions', () => {
+  it('rejects a full-turn continuation that omits the postcombat main', () => {
+    const ctx = pod();
+    expect(() =>
+      pump(
+        playPreparedScenario(ctx, {
+          currentTurnPlayer: 'P1',
+          phase: 'precombatMain',
+          step: null,
+          turnNumber: 3,
+          continueThroughCombat: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+          hand: [],
+          battlefield: [],
+        }),
+      ),
+    ).toThrow('postcombat main');
+  });
+  for (const qualifies of [false, true]) {
+    it(`checks emblem attack qualifications only at the event: ${qualifies}`, () => {
+      const ctx = pod();
+      const attacker = spawn(ctx, 'P1', bear());
+      attacker.attacking = 'P2';
+      ctx.state.players[1]!.life = qualifies ? 41 : 39;
+      ctx.state.players[0]!.emblems.push({
+        id: 'combat-qualification-emblem',
+        name: 'Combat qualification emblem',
+        controllerId: 'P1',
+        abilities: [
+          {
+            kind: 'triggered',
+            trigger: {
+              when: 'attacks',
+              subject: { kind: 'permanent', selector: { kind: 'type', value: 'Creature' } },
+              defendingPlayerIsEventPlayer: true,
+              eventCondition: { kind: 'attackingPlayerHasMoreLifeThanYou' },
+            },
+            targets: [],
+            effects: [{ op: 'gainLife', amount: { kind: 'const', n: 5 } }],
+          },
+        ],
+      });
+      queueTriggersForEvent(ctx, 'attacks', [{ permanent: attacker, playerId: 'P1' }]);
+      expect(ctx.state.pendingTriggers).toHaveLength(qualifies ? 1 : 0);
+      if (qualifies) expect(ctx.state.pendingTriggers[0]!.scope?.eventPlayerId).toBe('P2');
+      ctx.state.players[1]!.life = qualifies ? 39 : 41;
+      pump(runPrioritySequence(ctx));
+      expect(ctx.state.players[0]!.life).toBe(qualifies ? 45 : 40);
+    });
+  }
   for (const countersRemain of [true, false]) {
     it(`keeps the separate intervening-if recheck when counters remain: ${countersRemain}`, () => {
       const ctx = pod();

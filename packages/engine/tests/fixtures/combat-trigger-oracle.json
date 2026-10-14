@@ -333,6 +333,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "card": {
+        "oracleId": "e68dc47c-692f-4420-9799-eee104017273",
+        "scryfallId": "5cedb54a-a6f6-48aa-acdf-01c988c1c37d",
+        "name": "Temur Ascendancy",
+        "manaCost": "{G}{U}{R}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures you control have haste.\nWhenever a creature you control with power 4 or greater enters, you may draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      },
+      "sha256": "cc9dd78f2ab4c84a05932579080145b1c96a451c0ebcafa2f7c9af556eb92643"
     }
   ]
 }

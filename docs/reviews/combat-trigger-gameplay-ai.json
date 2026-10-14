@@ -1,0 +1,1101 @@
+{
+  "generatedAt": "2026-10-14T16:57:36.744Z",
+  "liveLlm": "not-run",
+  "note": "Quality-only random and heuristic P1 decisions with scripted opponents; these observations do not certify rules correctness or promote implementation review.",
+  "runs": [
+    {
+      "scenarioId": "marchesa-viewer-dethrone-response",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-marchesa-viewer-dethrone-response-v3",
+      "decisions": 6,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Marchesa, the Black Rose ({1}{U}{B}{R})"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "marchesa-viewer-dethrone-response",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-marchesa-viewer-dethrone-response-v3",
+      "decisions": 6,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Marchesa, the Black Rose ({1}{U}{B}{R})"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "marchesa-viewer-dethrone-negative",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-marchesa-viewer-dethrone-negative-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Marchesa, the Black Rose ({1}{U}{B}{R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "marchesa-viewer-dethrone-negative",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-marchesa-viewer-dethrone-negative-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Marchesa, the Black Rose ({1}{U}{B}{R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "namor-viewer-defender-bonus",
+      "subject": "Namor, Atlantean King",
+      "oracleSha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-namor-viewer-defender-bonus-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Namor, Atlantean King ({1}{W}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (2 eligible creatures)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "namor-viewer-defender-bonus",
+      "subject": "Namor, Atlantean King",
+      "oracleSha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-namor-viewer-defender-bonus-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Namor, Atlantean King ({1}{W}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (2 eligible creatures)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "namor-viewer-source-removed",
+      "subject": "Namor, Atlantean King",
+      "oracleSha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-namor-viewer-source-removed-v3",
+      "decisions": 5,
+      "halted": false,
+      "usedSubjectCard": false,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "namor-viewer-source-removed",
+      "subject": "Namor, Atlantean King",
+      "oracleSha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-namor-viewer-source-removed-v3",
+      "decisions": 6,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Namor, Atlantean King ({1}{W}{U})"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (2 eligible creatures)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "scriv-viewer-departed-attacker",
+      "subject": "Scriv, the Obligator",
+      "oracleSha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-scriv-viewer-departed-attacker-v3",
+      "decisions": 4,
+      "halted": false,
+      "usedSubjectCard": false,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        },
+        {
+          "decidingPlayer": "P2",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "scriv-viewer-departed-attacker",
+      "subject": "Scriv, the Obligator",
+      "oracleSha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-scriv-viewer-departed-attacker-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Scriv, the Obligator ({2}{W}{B})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "scriv-viewer-attacks-controller",
+      "subject": "Scriv, the Obligator",
+      "oracleSha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-scriv-viewer-attacks-controller-v3",
+      "decisions": 5,
+      "halted": false,
+      "usedSubjectCard": false,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P2",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "scriv-viewer-attacks-controller",
+      "subject": "Scriv, the Obligator",
+      "oracleSha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-scriv-viewer-attacks-controller-v3",
+      "decisions": 2,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Scriv, the Obligator ({2}{W}{B})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "marchesa-viewer-granted-dethrone",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-marchesa-viewer-granted-dethrone-v3",
+      "decisions": 5,
+      "halted": false,
+      "usedSubjectCard": false,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "passAndYieldTurn",
+          "description": "Pass and yield until end of turn"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "marchesa-viewer-granted-dethrone",
+      "subject": "Marchesa, the Black Rose",
+      "oracleSha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-marchesa-viewer-granted-dethrone-v3",
+      "decisions": 6,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Marchesa, the Black Rose ({1}{U}{B}{R})"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "pass",
+          "description": "Pass priority"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (2 eligible creatures)"
+        },
+        {
+          "decidingPlayer": "P3",
+          "actionType": "castSpell",
+          "description": "Cast Lightning Bolt ({R})"
+        }
+      ]
+    },
+    {
+      "scenarioId": "dragon-mage-viewer-normal-cast-wheel",
+      "subject": "Dragon Mage",
+      "oracleSha256": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-dragon-mage-viewer-normal-cast-wheel-v3",
+      "decisions": 4,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Dragon Mage ({5}{R}{R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "declineTrigger",
+          "description": "No"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "playLand",
+          "description": "Play Forest"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "dragon-mage-viewer-normal-cast-wheel",
+      "subject": "Dragon Mage",
+      "oracleSha256": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-dragon-mage-viewer-normal-cast-wheel-v3",
+      "decisions": 4,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "playLand",
+          "description": "Play Forest"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Dragon Mage ({5}{R}{R})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "acceptTrigger",
+          "description": "Yes"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    },
+    {
+      "scenarioId": "hunted-phantasm-viewer-opponent-tokens",
+      "subject": "Hunted Phantasm",
+      "oracleSha256": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
+      "scenarioVersion": 3,
+      "providerKind": "random",
+      "seed": "card-lab-hunted-phantasm-viewer-opponent-tokens-v3",
+      "decisions": 1,
+      "halted": false,
+      "usedSubjectCard": false,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "pass",
+          "description": "Pass priority"
+        }
+      ]
+    },
+    {
+      "scenarioId": "hunted-phantasm-viewer-opponent-tokens",
+      "subject": "Hunted Phantasm",
+      "oracleSha256": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
+      "scenarioVersion": 3,
+      "providerKind": "heuristic",
+      "seed": "card-lab-hunted-phantasm-viewer-opponent-tokens-v3",
+      "decisions": 5,
+      "halted": false,
+      "usedSubjectCard": true,
+      "observations": [
+        {
+          "decidingPlayer": "P1",
+          "actionType": "castSpell",
+          "description": "Cast Hunted Phantasm ({1}{U}{U})"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "placeTrigger",
+          "description": "Temur Ascendancy: Whenever a creature you control with power 4 or greater enters, you may draw a card."
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "chooseTargets",
+          "description": "Targets for Hunted Phantasm"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "acceptTrigger",
+          "description": "Yes"
+        },
+        {
+          "decidingPlayer": "P1",
+          "actionType": "attackDeclaration",
+          "description": "Declare attackers (1 eligible creature)"
+        }
+      ]
+    }
+  ],
+  "executionContext": {
+    "commit": "cce8aea7c0a961b438d5cc0f5156b6a60e2027fc",
+    "dirty": true,
+    "sourceHashes": {
+      "packages/bot/src/combat-search.test.ts": "faf5ae02139f5c71479905674f9fd009312f48ba6dce7cfcc065731bffc553be",
+      "packages/bot/src/combat-search.ts": "2a1238385f639ecf76bc2d5875c3ee171d20545ca4fa2d2575908e5cc994573c",
+      "packages/bot/src/combat-snapshot.ts": "e0cfb77774f74a9d8739a56e71641900e4c334b6f690fef8547fca71bb5b3db6",
+      "packages/bot/src/evaluate.test.ts": "74a1c9d1887124d11949754d4046c7146360cd4baf70b3e2f4a45f3dda464756",
+      "packages/bot/src/evaluate.ts": "99fa83938bb80b53f42a41980a693c7f1ee7afa4d716f70c9cbded367f2ce245",
+      "packages/bot/src/index.ts": "2cf99db7236ce9f3d182a7b280bf6af9e382d3606b4814f9ecf8acafbc226e4c",
+      "packages/bot/src/provider.test.ts": "28ef020ca96321e148db04bbf5b8a2298f4092f804c49c8a29325bbdccc3ca53",
+      "packages/bot/src/provider.ts": "021821d4e5407fa067c1cc510827531d64e2c659379ab60173c8cae428073799",
+      "packages/bot/src/rng.ts": "0ceef48bd25f6f4d034b80d5e626f365f51c97e0fb87611c2ed778ffa2d08a2f",
+      "packages/bot/src/veto.test.ts": "3a2cd910fb198d328761b5ac4bfc4f29309ffea66be9ab0763ab85aaf57f4af1",
+      "packages/bot/src/veto.ts": "d666c687adab77bd9ac05eca7e61d4565933f5077a22f7df14b7eac230da11af",
+      "packages/bot/src/weights.ts": "f64f9f0e5620c55feddf0f1346e69b02510104982e84594dfaff505826be2319",
+      "packages/engine/src/actions/ability-modes.ts": "a5900b685a60debc8660255c1582008a3285903a10d441fe6f241e193e506cf8",
+      "packages/engine/src/actions/apply.ts": "a5ba415339c3f7baf6caffbb31bae10f1847364bad318cd13fec86a0c6dcde3c",
+      "packages/engine/src/actions/legal.ts": "c3b3daed5cb57b218e0ccd8a23e638f3499a95d03531c561012f6ddc6f747ebb",
+      "packages/engine/src/cards/ability.ts": "a0170a2db4230b0230599a2643c519642396b85ba3dc3203abae8322b2fcbc89",
+      "packages/engine/src/cards/authoring-validation.ts": "d47e97c75f7d0dd7919fe436f0572452da272c9a4702ea4e60f8ccd724c4c80e",
+      "packages/engine/src/cards/capabilities.ts": "89877b418c8a027bdcd41d0c7084c43456b4ca7ceb5396ab302c896b75a48f67",
+      "packages/engine/src/cards/condition.ts": "144ec4a75c63f414e471b4dd491989173e47d642e8d6d3170481cde55c179d19",
+      "packages/engine/src/cards/continuous-types.ts": "8f5b357584e76cf357239a1bf9418dac6d153098c7515a02ed9a1e713d3ee60f",
+      "packages/engine/src/cards/cost-contracts.ts": "f85690fdcaa62f23dc7c5bdbada028adccdc10def1957c21372da86ad338e5a8",
+      "packages/engine/src/cards/creature-types.ts": "23299577ffa0c73ba8f21bf4c35e1284d40fd8f0caf343d131ae04b3139a76ab",
+      "packages/engine/src/cards/definition.ts": "e06610f26baba161a8d729fa6f4ea47f5eea7f7741c27a8aef5b81d038830817",
+      "packages/engine/src/cards/effect-builders.ts": "134699b60d28f762484464ca7b0e505268e82a1471442d93b5b7cc0fc91ca77a",
+      "packages/engine/src/cards/effect-reference-contracts.ts": "d12bc1760fb5987827572f20e570ac7fd0b180b5ba539d15c0e7db076e5ea2c5",
+      "packages/engine/src/cards/expression-validation.ts": "837d8c3eeb344d8d6ff580ef470e7b16f5e515cf60f9c12391c0aa07b0d12644",
+      "packages/engine/src/cards/interpret-snapshot.ts": "c687adc2c2276f87106e0441784eefba82b798adf5457e8619a798f0f6f31a0e",
+      "packages/engine/src/cards/interpret.ts": "28fe3ca6c3bceb9b5d516a6548d0340cb83138c74f84067978fb150088de833c",
+      "packages/engine/src/cards/ir-graph.ts": "878434b72132817c80bc9df9f9e33dfc43fedc5fea51b876046a78224e90df07",
+      "packages/engine/src/cards/mana-production.ts": "af2a240eb702e5e515f5158886a7e16eda78e999d3a88e28bc549bbcb14fef44",
+      "packages/engine/src/cards/mana-riders.ts": "9a732a0389317adcd29a547c0cc5eb6043904827ad92d25b049244bad5ef9723",
+      "packages/engine/src/cards/overload.ts": "156a7dc171bdc105df0728843ea59ecc849b0a9756262a2ee95f6a7da07587cc",
+      "packages/engine/src/cards/overrides/counter-intelligence.ts": "baf765515f26f93a1b1bde73bf9662331651068938e85f13982aefba05536488",
+      "packages/engine/src/cards/overrides/coverage-pr01.ts": "db8c4e5f8790b239061526c0a41aac1df73876ba7e68100eb8fdfb0c4b01e9b5",
+      "packages/engine/src/cards/overrides/coverage-pr02.ts": "378a604b89a233c81e0203b4d3bd506cb4bae56e7b6d74be6ef4dea4bd435795",
+      "packages/engine/src/cards/overrides/coverage-pr03.ts": "f3ecb558f4c1f0907253f661f75398badcf412d02650f07f66e8ea366bae16f3",
+      "packages/engine/src/cards/overrides/draconic-destruction.ts": "ec413ce6f69aa52ec742e9a7420d17d323c1a8a086ceffe87024b7096297eea0",
+      "packages/engine/src/cards/overrides/index.ts": "17351f6e0002610308683a4daf3e568fffcfaa64a7035f45edbcd76e51bd692b",
+      "packages/engine/src/cards/overrides/living-energy.ts": "7462ec9022d8d33734fb1d95776ad64b3381fe58a60bdf18740f45bf3a8f07a9",
+      "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts": "cbb4e4ebcbd4f30d4cea4944a55990118237b0a06b19fbe15a6a5f2d424f6eb0",
+      "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts": "ea8ed616d6a9d856c1bf9b4577bd14518aaf509701cf42e85988696a833716cb",
+      "packages/engine/src/cards/overrides/necron-dynasties.ts": "92620e7fe0aefa5e6457e0de0096a5fc14a3e26c356baa8fce18d3ed49b3f32d",
+      "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts": "341a486668b21f34fb5e2dd021dd3ac03cb34c59de04ef23e6675a96b8cb273f",
+      "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts": "8d2554b6ab31dac1491022ca2ae7246fb4461af240a30c1dd80b18de7e9144d3",
+      "packages/engine/src/cards/overrides/reviewed-five.ts": "55afd8fc3fae287c43867d7e79771e4088082e58544c1bb6ae4fd520a0da9220",
+      "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts": "f966619d38397bfada64bbb89263c33ab546fe040d6a02b06753f97eac61c710",
+      "packages/engine/src/cards/overrides/silverquill-influence.ts": "f95f9d6cd633f7c6f18aa25bad3a76453d85d3e49972f0fc97ad4a7937ebbab3",
+      "packages/engine/src/cards/overrides/snapshot.ts": "f7f3e33e9d1116393ac330e68c7d78f05f2d9115743f5b7caff0ef92b75a43e7",
+      "packages/engine/src/cards/overrides/token-triumph.ts": "e34ca9119b883f367c9036087cb0e05dacf034cb9bcd35c59bb386aa343ef850",
+      "packages/engine/src/cards/overrides/unsupported-spell-faces.ts": "6e87d6ff28f9b57fc37d79e5a79e7732a12ec69b5d910136eee417d573f39053",
+      "packages/engine/src/cards/overrides/urdragon.ts": "6d27a14a7d22e8a7b89c85b3f0db31d0a38af097cf6300f23397d54c50563412",
+      "packages/engine/src/cards/overrides/w1-remaining.ts": "abf2bbd58fed687d0288d36cf6f2cd38122f039c1f25ee7f997a2f0bc1e97d41",
+      "packages/engine/src/cards/overrides/w2-remaining.ts": "60efe9012d98f5f489d7962e80966c52014474e64118d98c939bf63bd4e2ffa2",
+      "packages/engine/src/cards/overrides/white-black-control-aven.ts": "a25d43aa6a94a8c9f963e0854ec0b7d9206697f89ab03c7a2e1779dc785c66df",
+      "packages/engine/src/cards/overrides/white-black-control-bandit.ts": "6d421240715bd1cdb75fc1a2361eb8c79c46d1c0e01863978aaab20f511d4d71",
+      "packages/engine/src/cards/overrides/white-black-control-cloak.ts": "b2b2f0023432a39bb9d68c22993b6b69e0f9b086ca4dce4b4e041f021868a440",
+      "packages/engine/src/cards/overrides/white-black-control-curse.ts": "8543da00e3999e9827823a2e66b5f5bc8aa8bc69f5548d54afdf9efb860d53fd",
+      "packages/engine/src/cards/overrides/white-black-control-defenders.ts": "09ff4a233861a765457cb44e01a656f827fbf13230ea4453a5f18d57065a7938",
+      "packages/engine/src/cards/overrides/white-black-control-discard-choices.ts": "e23139c408c230a9983dba4b31a11df38ff90a586fa6244efc0bb90fbdf83468",
+      "packages/engine/src/cards/overrides/white-black-control-discard.ts": "98d306cee163e6e3e95176928e2a115c307ae95060bb4a0eeee49b8e90d6cfd4",
+      "packages/engine/src/cards/overrides/white-black-control-duelist.ts": "a53e54c4589f0bf62e79c3f2e466d7bb3f4e96158f5b596478557c422a669f86",
+      "packages/engine/src/cards/overrides/white-black-control-entry.ts": "682ca6d3c0206e248f64623665982b711675dd1b4a63ad844b52d8230b810e39",
+      "packages/engine/src/cards/overrides/white-black-control-gifts.ts": "3b099b5a721e749c27d1c77880cd7babef042de6da34aa1e20a27ddb9046373e",
+      "packages/engine/src/cards/overrides/white-black-control-graveyard-triggers.ts": "75b31ce18d0118ae1132dfd78b2f1e60f622ae083ddd039d0cdc8fe069b89ad9",
+      "packages/engine/src/cards/overrides/white-black-control-graveyard.ts": "474c76ef4b6b141b1e5f4ee8c0c1396e10e24e43b5a6877d50e6b70b9fc3f373",
+      "packages/engine/src/cards/overrides/white-black-control-hand.ts": "3ba4d95fad4be0421e28e8d9eaaafcab487ac840ad0dacea031778153fa5bf2e",
+      "packages/engine/src/cards/overrides/white-black-control-imp.ts": "0c820dce3e806c24973a83b93b5d415440c915c4d1a7692eacef9dce4b1ac164",
+      "packages/engine/src/cards/overrides/white-black-control-leyline.ts": "b5c092b35097987f73cb5dfc907a778dee07af7ea010dcf55390a5f12fd2608a",
+      "packages/engine/src/cards/overrides/white-black-control-library.ts": "160c8809ed03c35da8544364df55a4418f52c8277019882ada121bb9df6dbacd",
+      "packages/engine/src/cards/overrides/white-black-control-liliana.ts": "f8441df88c12ba60b5798c4ab39047c62ac39dfb37876b6c122d39424774633d",
+      "packages/engine/src/cards/overrides/white-black-control-payoffs.ts": "d236d158a421b4a5679db9fd6b6833f9b0ae3c7916eaca554735ce498543ce75",
+      "packages/engine/src/cards/overrides/white-black-control-perch.ts": "59e748846dfc7876244605ce60e375463e7c4a38b0b28c073836e9788d62ce7d",
+      "packages/engine/src/cards/overrides/white-black-control-promise.ts": "4c5cfa84f83c400ab122a8e651080facb16dfcee5026169143dc03cdcee286fb",
+      "packages/engine/src/cards/overrides/white-black-control-protection-stack.ts": "d21c8cb23917c1d662cad0304def3a4688231bdf4a674079b1b8b8164e5b5421",
+      "packages/engine/src/cards/overrides/white-black-control-restoration.ts": "7d6dd6db46e13bf5d852252cc6387b93c984b78249edf19b98a2ffa2f25601e7",
+      "packages/engine/src/cards/overrides/white-black-control-role-model.ts": "60649497af9b243823de74e22de0f23d5a5d96ebf07d89b4f60a9e061673f291",
+      "packages/engine/src/cards/overrides/white-black-control-stax.ts": "4c1944c0fde4596c79e95299b83aceac1ca32ca72f71e59b6de6e4d6c90a42a5",
+      "packages/engine/src/cards/overrides/white-black-control-tergrid.ts": "517bd7548eb35b8d948f85f99a91c601949e1d92d45e38f62ce87d3eb99736bc",
+      "packages/engine/src/cards/overrides/white-black-control-tinybones.ts": "09e04ec1469a37e82d98d9a04a5bd8b15e1ce052764ea70c6580696d652662ca",
+      "packages/engine/src/cards/overrides/white-black-control.ts": "8b8153a09641b273c7ad8d78a6d4a3d11f071ccc0b1bca8f9522e7bda47fb423",
+      "packages/engine/src/cards/rule-statics.ts": "3e5613ab2f0c15da478315e53233ced97205f7d7545b9b38930092505deff97d",
+      "packages/engine/src/cards/selector.ts": "93c8db29671c0dffe60eb16a12ba4642e660a9ead0d03c2c2485153a11d34cfe",
+      "packages/engine/src/cards/source-identity.ts": "2f6c44d8e666ec05a1bce1dadc01549535094a693798774b0a0856302f6a5a48",
+      "packages/engine/src/cards/spell-faces.ts": "75ab4618690242e737034fda49424fa6121002622571d04b57ddb39793284bf7",
+      "packages/engine/src/cards/target-builders.ts": "b705ecfbea0fd84653ff9e2a26a66d428843b7a62b729e44b41641ed0191964b",
+      "packages/engine/src/cards/templates.ts": "bb4f9465a5da8c9a07477f751378b64785a825056ff6c81cb6d0ee0dd3f6f7bf",
+      "packages/engine/src/cards/tokens.ts": "444caac79527cd80b048438bdc4f95b23d06424371122181ebefec2ad3fb81ec",
+      "packages/engine/src/cards/trigger-contracts.ts": "0fa720b8e83627e08835305c19582440ef51310c6e9a8ba4d228dbb416a9c52d",
+      "packages/engine/src/cards/value.ts": "25cef82073ac05c6d5f19046375a5f92a45c2c9ddaacd1f8c6441409d353ab81",
+      "packages/engine/src/casting/cast.ts": "f6eeb9f5fd9e3038f21ebae64e1d2de1f96336cc4822ae537ee74e718ad41d83",
+      "packages/engine/src/casting/checkpoint.ts": "1404dec0f38161005363453627076dd3ea39cba9c3b3319dfbfdbfeb887d2c98",
+      "packages/engine/src/casting/free.ts": "ca56a3b1ef91f41c52dbbe6da440517c1ec71bfe2e2a33c98c122590755e21ab",
+      "packages/engine/src/casting/permissions.ts": "ace5b44ffe6c90f1b64c675610be2fcaababdc87c663a4b83c922aaafa6a0814",
+      "packages/engine/src/casting/preview.ts": "625ef8faee8886fb9d4871f18db0b3b84bd545f444c896bbe953e76e8c438c4c",
+      "packages/engine/src/combat/combat.ts": "d092eef9a11027a00238b0fbe9696a05074da99c7c0b9e1e44f03b554fae9a11",
+      "packages/engine/src/decisions.ts": "3027e33c1a31f0978ab3a97f60c5d4caefbd3dd96373b2a3095a4a08e3f6f4a3",
+      "packages/engine/src/effects/choose.ts": "b4975e48ee5a64bb5dea9c0f2cb00cb199e03ab693c7da881714418f36f7f9f9",
+      "packages/engine/src/effects/continuous.ts": "76538d1e7b488180fd4527a77b6ffc0fb01022d787fbc37e3325001bfe57d169",
+      "packages/engine/src/effects/layer-cache.ts": "87dd7bd5b98d2b1a7473a62f159df239b5d67b532cdf7a30a9a571155e22a61d",
+      "packages/engine/src/effects/resolve.ts": "05b77d0d997b35d4fe8070d89cea1c07e4f0ddff743b07372b03d0a2458bef61",
+      "packages/engine/src/effects/values.ts": "04252e83cb680ffa03632d77f01ec1eb9aab65a0920e3e79160eaa57e5698a6f",
+      "packages/engine/src/engine.ts": "aafb9d51b8b6c69f311a97540986fab36c6c668a39aaa1fc21b3649d8d466a4b",
+      "packages/engine/src/errors.ts": "4ef14202d09591e5b4883b5b180980d41da3c1da22cceadfb0472f4ec2acf253",
+      "packages/engine/src/flow/game.ts": "2651cf9b6718fcad049dde073156298aa69e679d67e0fa7e5af420d008523954",
+      "packages/engine/src/index.ts": "92749cfdbd5ade99004850866fe6d638f8ea529917ef40e54d4f0918216f6d61",
+      "packages/engine/src/log/log.ts": "1d51ed61e3e933d65db33686c5af3a2317560a56bca580cd6f948fed94ddd259",
+      "packages/engine/src/mana/activation.ts": "4c1b82f6082da62dafe2f7bc14d51eda77eec41905aad9288e6db58614881e45",
+      "packages/engine/src/mana/cost.ts": "6b7eb3c42eeea795f8b3b54a6fdc168e4f4108c8c874b10a6ba333e6fbf057f3",
+      "packages/engine/src/mana/pool.ts": "23f0ec5a5f316e4276ebfb33ab9b9bdae81c14e35f8f70e7f1e48ed0b6ec6386",
+      "packages/engine/src/mana/spell-payment.ts": "5142511977336b87decd1db6bec2d07a35053f4a035f60a00b4ab6b11dfe0f0a",
+      "packages/engine/src/mana/stateful-payment.ts": "f6ce5e034f9cec7e8dd4b2badcbb8143219a60e4c6e9667e6f526476903aecff",
+      "packages/engine/src/present.ts": "21a6605eef2e986731bd68abd4e4615758a6b42a28101277f797ce9527301f17",
+      "packages/engine/src/providers/providers.ts": "640f3e76d4133202edd21abb8902eb28e53c4cb4c2bcbe092da8cda05b37e151",
+      "packages/engine/src/rng/prng.ts": "8408d7774135c84412e6426c4cee97a31f34a09e37c6923bf1dd425851bbd70d",
+      "packages/engine/src/sba/sba.ts": "ee703d3a4eaaedfa76684803eafda4f6881ae6d4a57e39af8759970d283602cd",
+      "packages/engine/src/signals.ts": "32cc306d0a92c760d958aad2ab09570db10c40df8e4670e8b7843af7ed56ab5d",
+      "packages/engine/src/stack/copy.ts": "90720a29008f341b3addc51c9ac394a761fb58ff5c4fe10c2b71c89b33b9afcb",
+      "packages/engine/src/stack/replicate-targets.ts": "8479b996b785e44499521f69479de0b477330b2520f5f88a406ef56c33606b97",
+      "packages/engine/src/stack/stack.ts": "8cae1010374666b3cc51e834ba1c5755fb70fcafa4ec08b0b0c5bfb68f70183f",
+      "packages/engine/src/stack/target-occurrences.ts": "6732f65e3f72bdf280404bed4e1e7ac2972546bcc39733ed00d884f36f496fa8",
+      "packages/engine/src/state/counters.ts": "5741ed228ca806509727d5bac4fbaa44adab0b66d7024e5906bf9af4990e7877",
+      "packages/engine/src/state/game.ts": "b888c4580f6a988e617c20e306313b86ea15ca39301c5be1ce9e5202b6e84843",
+      "packages/engine/src/state/objects.ts": "469179c5e2a494df6dc2a95285b859a7fdbce8d0b9f41ebd4365df0097e05ec4",
+      "packages/engine/src/state/phasing.ts": "2f6db19da567e5cbb67207bebf0a7bb79cfcd898b661f930f092920c236c9ae3",
+      "packages/engine/src/state/queries.ts": "02c9e8927ed26f9ad203e8e5c2663bbb6373204b0cb9a095a0aa67b8085a78c2",
+      "packages/engine/src/state/types.ts": "2d1d59fc996d101adb5d76f5c490affc4450480ef8cf27b574f803ac84829b21",
+      "packages/engine/src/targets/announcement.ts": "540c4578339ae65654b910f204b3ebbae8eeac5710956dd6717a6dd0e687c441",
+      "packages/engine/src/targets/context.ts": "87cc176b1a1fcefe2a4e7b25f86a1e91747349d48bd5aecb5050daac8afaf948",
+      "packages/engine/src/targets/legality.ts": "c5b6bd2f700e7219b7fcfa4184067dd0f722fc36bdf3405809dd30913693d8cd",
+      "packages/engine/src/targets/resolution.ts": "5280d74a14ae583997a42773d2831133218b945fc5a885596455697038b6b1fe",
+      "packages/engine/src/testing/candidate-definition.ts": "517e08510ef95c1a07346cc79f9dfe877dbee16e904a05ed404e9c4a3ead3608",
+      "packages/engine/src/testing/prepared-scenario.ts": "dba1fd40a2d85674f3da5ad77a245ffc6bd96ca085b2b19eddd4e9d99fd4f002",
+      "packages/engine/src/turn/mulligan.ts": "40942e542b02aa7e4fd9687b22c82ea2838a1108a29a521ea8776e38c2714799",
+      "packages/engine/src/turn/priority.ts": "bb96990b8ad8c9a0d4bf56d5bf22421bf8f56d776ff9fcc2068447be23fdc9f7",
+      "packages/engine/src/turn/stops.ts": "c06090b92de6b83cec1c394ab931d85d8f2e811ad741cad613a32fde2ee819e6",
+      "packages/engine/src/turn/turn.ts": "61bdeb88c389f4790300919ae373fb5cb89c0bb0fa990c60f9dfb0187b07ca55",
+      "packages/engine/src/utils/assert-never.ts": "1e32edab9bc48c94dff2d3c2c9e566dc8b6b7b9f96cd52c256baa8ad03a0ac9a",
+      "packages/engine/src/view/spectator.ts": "3a14fd783d79a6217e704cb571f04762c98e1b457f733c587832ec2fe5f49c90",
+      "packages/engine/src/view/view.ts": "1c6cf3c78fbb9424ce63f35ce22ec555d0c1899dded2194bf4aca384f2205147",
+      "packages/engine/tests/fixtures/bug-hunt-oracle.json": "a02699c6742152f39b4dc1bfceca6504fbba95585bdee538780c7c9f3af54517",
+      "packages/engine/tests/fixtures/catalog-reviewed-oracle.json": "cf927c1bf5a3fe94e3787c1f243ccaafcb45aea7b6ad964a41f8f0160991c42a",
+      "packages/engine/tests/fixtures/combat-trigger-oracle.json": "0e5d20e9964c93d092003669002dfc900b7b54953aebcb40da6762f18a5a0ce7",
+      "packages/engine/tests/fixtures/counter-targets-oracle.json": "d95477ff1d9e8e812cdd5d435d7a84d5ea1e720ec5e5d8feea48b3b08486de08",
+      "packages/engine/tests/fixtures/coverage-pr01-oracle.json": "33c674e078ad20c827bc428ee1e3fa8028053e314253403f96dec19309d670c5",
+      "packages/engine/tests/fixtures/coverage-pr02-oracle.json": "85fd392547134bb75a36836b4877baadcad7c57c6de3a41d7613210fff3891dd",
+      "packages/engine/tests/fixtures/coverage-pr03-oracle.json": "a58e3c9c0c9839436f6667ba361ca7a3b068e9c8e8ce96948646ca3396edbd89",
+      "packages/engine/tests/fixtures/coverage-pr04-oracle.json": "60ec86118cf5efdb1347b5a1c81b31684581f6adeb0a771b8c6ab1cb81e7e28a",
+      "packages/engine/tests/fixtures/coverage-pr05-oracle.json": "b23f632095a8876f71e8db3c4fb81f3bcd7e9c0369c2ab1e8438861a0c79fdb8",
+      "packages/engine/tests/fixtures/draconic-engine-batch1-oracle.json": "9e13bee940764be2588aa326a0ab0506ea2c4dda619161efa4861a61eb612810",
+      "packages/engine/tests/fixtures/draconic-engine-batch2-oracle.json": "f1edb289fd9550da29ecc23283561c786c5595038843bbd93e00ef30abb9c496",
+      "packages/engine/tests/fixtures/draconic-engine-batch3-oracle.json": "3c56ccd39970374d61bbdb3155139d6355661b574902d4345f6e4446c6aed9ab",
+      "packages/engine/tests/fixtures/force-negation-review-oracle.json": "9335319aa45e8bac56318a99dd60ac26b5d5ad3b381a41b100e2d69b1c03f95e",
+      "packages/engine/tests/fixtures/hideaway-casting-oracle.json": "bbbeb5a557de746c01c0b91d467900ae240376c6475f0094930a02e38623d974",
+      "packages/engine/tests/fixtures/interpret-defs.json": "7e6a094e283c3fb4423d0701f4f54bd875d129b2f919ba0ceffb882bd44de5d2",
+      "packages/engine/tests/fixtures/invalid-ir-oracle.json": "f66190371056f0a46d6062a22e7c2c91ff63a362fc464fd9b41b2347d72d97c4",
+      "packages/engine/tests/fixtures/legacy-authoring-exemptions.json": "cddf51c1162618ecefd24c8cd11e81dd771df27e11302cb68aebdced31c80893",
+      "packages/engine/tests/fixtures/living-energy-engine-batch1-oracle.json": "369afdb8771c71b8d8e8f968e253c0b3f8a2c3ea4caebf8b25ab0252eb9235e0",
+      "packages/engine/tests/fixtures/living-energy-engine-batch2-oracle.json": "56181d1deab846727e14de734e4421e7961cf802b31ccae67a4c6d8819c28680",
+      "packages/engine/tests/fixtures/living-energy-engine-batch3-oracle.json": "aa6c8a279dc262a6c6ce9d6d28094dd71e6df765ebc5cb253d40e99a5c2a3df8",
+      "packages/engine/tests/fixtures/living-energy-engine-batch4-oracle.json": "6f7ef7af85b82e9b0e09dc458730404f09d9a531f99a7a9f5bf51e92b2e2c02c",
+      "packages/engine/tests/fixtures/living-energy-engine-batch5-oracle.json": "4bc365a53c55ec6e3143d37922d3bad26031d18ce83bd0b541391bfc68bf7905",
+      "packages/engine/tests/fixtures/marchesa-batch1-oracle.json": "fd03e3799cd7009bead2c9ffd50a700a71507ffaac3f4e902fe081215238bab4",
+      "packages/engine/tests/fixtures/marchesa-engine-batch1-oracle.json": "33a3f18a853ce20e5799cd76c0c9cb411ed1300d32b67f4dc4015221e7565b1a",
+      "packages/engine/tests/fixtures/marchesa-engine-batch2-oracle.json": "c034ae1ed5624bd5d0f25ae955668ab8ff9eacb66677e3cf8f80b8e68ad99c3c",
+      "packages/engine/tests/fixtures/marchesa-engine-batch3-oracle.json": "55ccfa732d74fe7de23a7c347c7619820306b79e646b7747dc4d1d7b72b2658a",
+      "packages/engine/tests/fixtures/necron-main-engine-batch1-oracle.json": "912c5090ab22af9d5ef605ecb09e4235ae6405a95c4d1b078677ad633752ecec",
+      "packages/engine/tests/fixtures/necron-main-engine-batch2-oracle.json": "732940c75d4762ca90507c772fca6c07969ad79550fdc40db67380ce0a8489dc",
+      "packages/engine/tests/fixtures/necron-remaining-engine-batch1-oracle.json": "d6c9f3ac9e39699decc5812d4119bdcf0d3bb29561c02c9f2e8064d60f5aef18",
+      "packages/engine/tests/fixtures/overload-derivation-oracle.json": "a888df3baf71ca5df8bff8bce1bc4f1643c8d88158b3d2d23fe7c2d43baa0691",
+      "packages/engine/tests/fixtures/overload-static-review-oracle.json": "7428614699260deb48de167e1717dc6fad7d908b249998f1b45fc07799f97fe9",
+      "packages/engine/tests/fixtures/override-defs.json": "e2972786c608b47ff9c4e48bdef471795f8b9b34c06cc82a45809c69e9b8a600",
+      "packages/engine/tests/fixtures/queen-engine-batch1-oracle.json": "cad8fc3f63bf70e01fd7a4548ab658c8a76d51dec96dffbe34a1d2f07239ef86",
+      "packages/engine/tests/fixtures/queen-engine-batch2-oracle.json": "98a05fe358410c28ed38e982f331c7129a57df3a639ed42fa8b8d5d7875ee857",
+      "packages/engine/tests/fixtures/queen-engine-batch3-oracle.json": "5df5b188b870cff6db30db3f1c753cabe563e39b81698b9bc4c8826c6325399a",
+      "packages/engine/tests/fixtures/reviewed-five-oracle.json": "b4c042c61f6ed68b38a2faeba39b5c93679d5d255854a6d63db90f1249c01492",
+      "packages/engine/tests/fixtures/reviewed-five-scenarios.json": "e5489e0d3f4f8765be45224d6e52b1ebeda5e9060ced365752c7b242707e3967",
+      "packages/engine/tests/fixtures/selected-spell-faces-oracle.json": "5ceb65d9d6a2f351a239499d2b96c470ecd724b1ce681aad166bf1bc1992fdec",
+      "packages/engine/tests/fixtures/silverquill-main-engine-batch1-oracle.json": "7d254db39e27f4b255d67a3e8685f45604c2ab6cb712199d2a19825f2d365383",
+      "packages/engine/tests/fixtures/silverquill-remaining-engine-batch1-oracle.json": "9801c9d2c01de9d99a45ef5b4fc2a0245b6c2ea0559fd84e9950f609d378540f",
+      "packages/engine/tests/fixtures/specialized-reference-oracle.json": "17fe3d27b2cfe6fa22e85d44faee2819e05974757dffa995216888815ade1f87",
+      "packages/engine/tests/fixtures/target-untap-oracle.json": "8a4ceae5fd815fd56c01e9cdb9859636a43af8bbf5f65de1773b53a2dfe3e301",
+      "packages/engine/tests/fixtures/token-triumph-engine-batch1-oracle.json": "d15db8038ad57a2071f9fe7ea73e207f022ec706c72bdd014440934fd9d9afdb",
+      "packages/engine/tests/fixtures/token-triumph-engine-batch2-oracle.json": "1608c0a4870e21226792f889a8f0b944b65680b91c742923c76a59c543102e6a",
+      "packages/engine/tests/fixtures/token-triumph-engine-batch3-oracle.json": "c717b1dc3dfe4e4d0836d97d11ffbd518554788bd9faf6ca2d815df1ac7dfa69",
+      "packages/engine/tests/fixtures/transformed-dfc-copy-oracle.json": "6a94cf6bf90a1bcf9ed0d8b1de1c532381f6fc4b91d262a68e3003b3040a88c1",
+      "packages/engine/tests/fixtures/unsupported-event-player-oracle.json": "3bd09f16ded85961ec2b82f2e59483b8ef412358d873d603abd799537bc4b5a0",
+      "packages/engine/tests/fixtures/unsupported-spell-faces-oracle.json": "15cb041d1d8ba953c747d3395f8f29613410448de76bac93cb791d1700068598",
+      "packages/engine/tests/fixtures/urdragon-engine-batch1-oracle.json": "53985a5ddfd8f5d6486b33ba2e2a5fd7fb34e2fd9644c933e0c3c241974db651",
+      "packages/engine/tests/fixtures/urdragon-oracle.json": "6c68d843f685c44f46865d44ea21d910a6af5eeb25586c07ea8f1a546af4b301",
+      "packages/engine/tests/fixtures/w1-remaining-engine-batch1-oracle.json": "97618fb034e25a11c2412f01d1caaaf4b31b52357dfae89ba6521a88c990241c",
+      "packages/engine/tests/fixtures/w2-remaining-engine-batch1-oracle.json": "3dd71526a00943186aeae9c15f5fc8f3744702ab49481968ede32ea0ddc3358f",
+      "packages/engine/tests/fixtures/w2-remaining-engine-batch2-oracle.json": "7a6f11d3b35673d2ec584a81eea15a2e465a78777806d524c4d5959e9f68d3f8",
+      "packages/engine/tests/fixtures/white-black-control-oracle.json": "1fa79538cf13811a5f510e0cac8bc674c3ae11a28c6d2b909c9c2184db119725",
+      "packages/engine/tests/fixtures/zone-change-trigger-oracle.json": "cb816689820ea6e3c32f21759caa4f8645d665d7b4b47ea656f77285d69811f5",
+      "packages/server/fixtures/card-verification-manifest.json": "1c902dbd79eb5c4f31df24aa2991ddc5ae2ad0d9c2261efddee7f3f5838b00a2",
+      "packages/server/fixtures/coverage-contract.json": "b706c2fd4e5b81f2b4114dd7b94270ccea5ac8567ac2a2858730316e4c3cca70",
+      "packages/server/fixtures/coverage-decks/brigid-clachans-heart.txt": "8d5c80db41bafdc026ef9ce7c5cbfe1233b8a5b8cb63351d51ac9675bc5db616",
+      "packages/server/fixtures/coverage-decks/draconic-destruction.txt": "f57a2f3f1f25eb44e5c4768a8691b78779650d71d1a45af0f78ece1fe6b5d617",
+      "packages/server/fixtures/coverage-decks/living-energy.txt": "46763e1ff49c4ed029d3a3c99b000102786327cecd04e8a4fd32be86f59294d2",
+      "packages/server/fixtures/coverage-decks/marchesa-the-black-rose.txt": "cbcc478cb930e5ed1f24776af384df75421c1bfd428de98848ff969b80798530",
+      "packages/server/fixtures/coverage-decks/necron-dynasties.txt": "920a771f79fb5a4533f5fb6064945e73ff8ec65b40da72bcecd19957d6b05af6",
+      "packages/server/fixtures/coverage-decks/pramikon-sky-rampart.txt": "8c03054f711bfb61ca47b59e7ee8f0e80d9ea91801fbc44a13e80ab37996f2db",
+      "packages/server/fixtures/coverage-decks/queen-marchesa-queens-gambit.txt": "dadf7e6aec8c71c555b61cd3cf52228898572a607d9825af860f78243bb15b8c",
+      "packages/server/fixtures/coverage-decks/ruby-the-most-daring-of-trackers.txt": "39dea3930c3b9f0f4592006ba9c268d90d7a8169f394cfe1a78e7e33e9984b50",
+      "packages/server/fixtures/coverage-decks/silverquill-influence.txt": "a8cb03e34488558fbd58c152b446dde1dea6803781cc100bb290d4ce6c3bccc3",
+      "packages/server/fixtures/coverage-decks/the-fantastic-four-marvel-super-heroes-commander-precon-decklist.txt": "992df6607910f65f1661454e15bdcbf759df19227ec0477d3d6e5cccd998feed",
+      "packages/server/fixtures/coverage-decks/token-triumph.txt": "345e421720d0228512852c34333359737148660361cb590d15eae981c5ca7a0b",
+      "packages/server/fixtures/coverage-decks/urdragon.txt": "b7e3aafdf16116e025c87275e7f6a4ab513048b8a3046f4e1fa5749386291a9b",
+      "packages/server/fixtures/coverage-decks/white-black-control.txt": "17c4d805d9ea884e25facefaf4583f11ab9ea8c4a5689b9cbe021498ab2346a3",
+      "packages/server/fixtures/coverage-oracle.json": "1c3ffcec32750cd15668b079251f03888139057a77a311dfa668cd8c5f5edaaa",
+      "packages/server/fixtures/edh-staples-200.txt": "3f85767c164a2d778552860c18a1f5854929eae48ba4668d33d1a4297e81173a",
+      "packages/server/fixtures/generated-decks/generated-1-sliver-hivelord.txt": "786d03aca2594e383f747c743fa509b1fe6cec5eedf9f6ad5bbe403f74707f76",
+      "packages/server/fixtures/generated-decks/generated-2-hawkeye-clint-barton.txt": "28c40be7d60c1bd2233a06a9933ea185623a31ec89a696e97110f3f888a5df17",
+      "packages/server/fixtures/generated-decks/generated-3-tobias-andrion.txt": "3cf996161f851aab0b12eb4c1c6bc1314df6bed7825dafec598017bd4d225eb1",
+      "packages/server/fixtures/generated-decks/generated-4-meng-huo-barbarian-king.txt": "2e86cb92a6a82b49d671c5ca14a0efda2b510b2321dab80d3a9a5feee4fca504",
+      "packages/server/fixtures/invalid-demo.txt": "f7225527745590ee48b785e63761ebcc6f4e935bd2eef248447ac75057a4b9cb",
+      "packages/server/fixtures/valid-mono-green.txt": "cab818a8edec63708267c9b417e7dce0e41db4e0ed191935ea375c9780a589ba",
+      "packages/server/fixtures/white-black-control-oracle.json": "5f6539a92379e4193e4e93d7c66088ed53b358b562f7aa482c76cdc43099a680",
+      "packages/server/src/ai/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/ai/archetype.test.ts": "a8e297f2d5bf2ff51c79b69b2b89e0372bb715b6d533c127251f3733679efc86",
+      "packages/server/src/ai/archetype.ts": "80eca2d034f210a339acc08d4dfdcf3fbd24422d900285c5fa83c098416c0d9e",
+      "packages/server/src/ai/card-summary.ts": "77f3c8f79c86c10860f6f7a3c686f2b0a024fe2c1993700df10447043fa45f08",
+      "packages/server/src/ai/challenger-empirical.test.ts": "3d98b580dabbb2a585fbbf5f08a4a5706658056c0073e4df28bf262f563ee349",
+      "packages/server/src/ai/client.test.ts": "3c6341cee357ff1476235b16d9f52c7ab246bc7ff77849f9625ec1f7ec5e4883",
+      "packages/server/src/ai/client.ts": "32edcc1a3f5f2474803f378a06da65310f8c75f6985704f6eceff53f76d73b23",
+      "packages/server/src/ai/config.test.ts": "4e332ed37666744425bb57782ebc7ef9ab838715bdd85abeef900a786c716a86",
+      "packages/server/src/ai/config.ts": "d811886bf1464451302d6f85c92ca88282d2ad49aa761ccf99e76c8c8ae8e469",
+      "packages/server/src/ai/context-budget.ts": "c7176459bbb6a4ec98b1e718d6a77cb37160aa6469e8fa54d9cc9530e1cff0d8",
+      "packages/server/src/ai/context-components.test.ts": "bb33686fb654e2e5d12c265009f14088ebba248a3065029b713763d4729b6d0e",
+      "packages/server/src/ai/context.test.ts": "a9e848ce67f49f6420e4db19e94eff5b3cfd10d701614cf6e108a3df0262dd02",
+      "packages/server/src/ai/context.ts": "260160c9f9f0855e9db0cb7771e5b1165faf2a63db802fab89e85f15d8619251",
+      "packages/server/src/ai/decision-cache.test.ts": "c71ef04b9321aa10ee0daaea798ae629088c5c4c1df3ba925445176c48ef6f44",
+      "packages/server/src/ai/decision-cache.ts": "c3624e2a08baae54e47500200e06ee0b9c83d87f2cd136cddc0ea82e52213cd7",
+      "packages/server/src/ai/errors.ts": "40b7104d06da413bab4db8d8a21cb9d737d300704e4fbe9a620e7801b0c725cd",
+      "packages/server/src/ai/fallback.test.ts": "60c2ff04a50d1b16053be6035b40a371f0c05af8f846b9f30356950070f3bba6",
+      "packages/server/src/ai/fallback.ts": "2aa1ec083c0225aa3ff69d7b48249b5cf24d6b8cc0ac1c70ee62cd01e81aa863",
+      "packages/server/src/ai/heuristics.test.ts": "1bd8fe60b7eba06a833f3b64ef31b5633f39e6b9a937b4545fe2fe1f9a4f808e",
+      "packages/server/src/ai/heuristics.ts": "3d97d903842690cbdce1c5de69e4d01371a50453e391dda1c38bccca6057c784",
+      "packages/server/src/ai/index.ts": "e388f1ef433c5744cab5f837fa84205349f067de78a915a95005290f63b3c48e",
+      "packages/server/src/ai/jev-client.test.ts": "78ea40274539d82aa788921792c66bb251224a2e54573ac95a02a65af55909d7",
+      "packages/server/src/ai/jev-client.ts": "673c9916abd6fa317b8d21d9fb0598bd053147b135beb38c11f7ebdd0cbb1398",
+      "packages/server/src/ai/jev-context.test.ts": "fff29329ad849bf8f00d5a7e444e46766e05a3cae209a5b3b8012a8cdd784207",
+      "packages/server/src/ai/jev-context.ts": "00c5719fb606fe44c12004f7eaf7307572a00e798714c90850592fb6f383f4b0",
+      "packages/server/src/ai/jev-policy.test.ts": "eeeec2442ed02ca716c19eda1eb485954591b547395df602b4ab157b150d143b",
+      "packages/server/src/ai/jev-policy.ts": "8c42d76b692c09c581a9291cf83c0ff4f5d606aa3542b26b8f042025510801d1",
+      "packages/server/src/ai/jev-runtime.test.ts": "b13adf0408190d3c22921d9a733739c3ca16f6082825d9db01c247642f6508dc",
+      "packages/server/src/ai/jev-runtime.ts": "69476080f520cec683b5108d635651d14093a78bbc3790bcd3d71f08cbcd5621",
+      "packages/server/src/ai/logger.test.ts": "68127beadf6191fde0eb8ae77598284d68c6e26a8a12c908224f19a0c57e526b",
+      "packages/server/src/ai/logger.ts": "f16337a49582820d4d3b3f2fa5b9ef730a221d63e57de22162c3975cf823cd04",
+      "packages/server/src/ai/openrouter-provider-filter.test.ts": "772eee474ab6aca5aad3df64efbdab39600ff6b076d00dcb2a2a232ddae207e6",
+      "packages/server/src/ai/openrouter-provider-filter.ts": "e080f1b20c12de4ab8c896ffc156b34afbcca832b93b4d080f45cc4c34899aeb",
+      "packages/server/src/ai/plan-lifecycle.test.ts": "76c43f7fa2a79acfb243f4706fe7b8d34a8a2a448222cb23bb5937f0bdbef9b1",
+      "packages/server/src/ai/plan-lifecycle.ts": "742f8ee8eec93462fee647cffc14341f91e57743b01d8e9ffe589e1ff18da6bd",
+      "packages/server/src/ai/policy-registry.ts": "43b7498ef39fecfe10e7d43905e65dcc46ddc0c93935fde0ba8066eebb23892f",
+      "packages/server/src/ai/primer.test.ts": "6eec804e6d2f9c9239f1f23e8d8e07228b442c232037c7c8335c886d185ccf10",
+      "packages/server/src/ai/primer.ts": "47267aa17e9541b8f5adcc6ead4723e996d1240dba3496495a07b44bf407151e",
+      "packages/server/src/ai/prompt-cache.ts": "a0810007741db2f5ca18b8ba7c2a98dd7ee85381552f4c0d93aad9537a767b6e",
+      "packages/server/src/ai/provider.test.ts": "9176ddf63b65631b2f8fe7c4cee0475ccbfd81ed8c087739e212f68279e442c4",
+      "packages/server/src/ai/provider.ts": "5287aab2d557f7472485b5ff32cae4b82ffee2363bc54456010179612bd8de83",
+      "packages/server/src/ai/public-memory.ts": "1bbb0222dcbd63bab56a471cdeee9e038d84657bd0fe8cb7aa937e45ff694e23",
+      "packages/server/src/ai/queue.test.ts": "d3cfc8a8060e4a09cc6a2d28148a51efa60ddd06f7a3b9a16a0bbcfeaec02cc2",
+      "packages/server/src/ai/queue.ts": "3febc9589a8df3f0481f659c8f5e027236c6f94918be0479d2b95dfb4498ca08",
+      "packages/server/src/ai/r2-empirical.test.ts": "edba9cabad3bd0198eb7c5f84f818830d86584fd2c49faf620997fec3906a3a1",
+      "packages/server/src/ai/reflection.test.ts": "60ea5c2ac44b57a4351785c46aa64906b8ecb04e35326f9650c734c7a05272fa",
+      "packages/server/src/ai/reflection.ts": "51cfc35c6745692af5c612d162145ffd425dca70c3f4b54d7cfefd23d5abd596",
+      "packages/server/src/ai/retry.test.ts": "1955362ba6f926902ce0524de8d16ea6d3e954732b21a32b2bda88c640dcaf3f",
+      "packages/server/src/ai/retry.ts": "c3c7cde91cb8abfb8820fd05c317bd019af5032490aca2c287f11c55a4d3c498",
+      "packages/server/src/ai/router-cache.test.ts": "1ff3dfc4cb637c1eeb4599ff4d1afba4b2ac529feccaf6d558eb2296afbc477f",
+      "packages/server/src/ai/state-features.ts": "abe7fe530a35127af5001ffae75a81229fd3bb157d1507129013c0448cbcec98",
+      "packages/server/src/ai/state-lifetime-regressions.test.ts": "5248e9ffe54edd35a9935c6228c7a8641fdeb06b23de4b6ef20c217982f7b437",
+      "packages/server/src/ai/strategy-context.ts": "9a1082a58c8b11dd65e7b96209f2104f083e7e5e22b69a0b7c29ca161e80086d",
+      "packages/server/src/ai/strategy-coordinator.test.ts": "91813623d4e6d10283a6ad9d206d33834caaa4abb637c89ea3e2e4e02d3300df",
+      "packages/server/src/ai/strategy-coordinator.ts": "b137b0dd44f8ae2c19df78b8d51c10d7d1e8cbdec10c1532ee1d084b0750f9c3",
+      "packages/server/src/ai/strategy-router.ts": "88e20540a94238994ad26208afb930f4649c66f43d9bf6310a724c576161c265",
+      "packages/server/src/ai/stress-challenge.test.ts": "70ea0cddb5e0a8c53c27bcac161fae202a2c983fa2a58cbd6877d146535c8754",
+      "packages/server/src/ai/tactical-decision-shape.ts": "dbfb813727d092139de1c66dd0ce1aaef59be8992b504e661c6e1196ea3906d8",
+      "packages/server/src/ai/turn-plan.test.ts": "45c875d5ffb5faffc464210dd4c98795fc7aaeacd2094828e68ab8d548063023",
+      "packages/server/src/ai/turn-plan.ts": "703c9edbaa78004bbea1d27cac1da877be600f9b65138a18b9054b4d58708f87",
+      "packages/server/src/ai/validate.test.ts": "e99a41100814f00aafc5755f34d18f294afd0bf360b91ca11e876ceaa9b16ac8",
+      "packages/server/src/ai/validate.ts": "5ba6d4aca3b725cf8353762b5a2f240170a0794c43fccd53bd0d701c96226deb",
+      "packages/server/src/ai/versions.ts": "ed8a7ef4d6f98dccac23f5c5360daf8d387d4e102054b05ffbe806c1b0c7abf9",
+      "packages/server/src/batch/manager.test.ts": "f632a59558f5cb50a0fded6dc4795b98265776f2b168a3ca20fed9fee68eb0f6",
+      "packages/server/src/batch/manager.ts": "f5b91ce83cc53f1b40460ede784542c9602d6b577f12f1f12085f762ceae9840",
+      "packages/server/src/benchmark/cache-experiment.ts": "e1520e71858155bdc58473969c5c361cfd7624846ddec6ed73f3c03ba0233cdb",
+      "packages/server/src/benchmark/capture.test.ts": "5ba2e86f408590c71e06aa335eb6b4d60cf2f32b39e7d300a462e40ec882a215",
+      "packages/server/src/benchmark/capture.ts": "0015787547a23b3e8a8bd8bb89680d366f10990395fcd0e5d856dcff7f1c50eb",
+      "packages/server/src/benchmark/cases.test.ts": "c6de73081bcd46fe3d8a6630b3520d64e78b4ec6ac68a22565f5fd32e3ad1a48",
+      "packages/server/src/benchmark/cases.ts": "01d24c31939a37535996088d4a3c566551942374b3795f17b0fae134d4d3e6b3",
+      "packages/server/src/benchmark/contracts.test.ts": "fdaa706e06b067667ea9470d8d0399c0fc1ebf06724dcc7e027cc478dc3bc001",
+      "packages/server/src/benchmark/contracts.ts": "ae5f2e1f76d879c8a84195904ee3bd4fb92c491fd89b2842382d5ed7297e7e6a",
+      "packages/server/src/benchmark/counterfactual.ts": "4b88bda2ed64c9c07d74e3f255b49240ac9d2cfc764a3436bcf35e3289a287d6",
+      "packages/server/src/benchmark/eval.ts": "5ad8a49db864646c28b6a815d35219a24acb38811b2bf3132443f88e0af560ce",
+      "packages/server/src/benchmark/h-k.test.ts": "92b86beaf77e36025d25589344495ef6b933c0d8fb29eb20b550c912d31913f3",
+      "packages/server/src/benchmark/hash.test.ts": "778beca93e2fa99cb3348a069606916138f15df157dd18b7519e96d66f694a7b",
+      "packages/server/src/benchmark/hash.ts": "b4b39e2f6a28bcb86aa678e152d62b0d187b80c3e5d2308a3838f42ed554aae7",
+      "packages/server/src/benchmark/index.ts": "cd64fb1976ab154d9311cc05b5074951dc106f12cf7976fc1265e686f414051a",
+      "packages/server/src/benchmark/jev-eval.test.ts": "28400b78b02a1303ce2363b21fe1c1b75fc835e1af964aac2ef18bc1d6b9b764",
+      "packages/server/src/benchmark/league.ts": "3695b574bb124782f42a8536e8972daa50e5ef66204ba45f1eba8ae399261741",
+      "packages/server/src/benchmark/manifest.test.ts": "29120fa092b8de5a799b64c9128484b28a713cd69c2d61fa74ce4695f66a485b",
+      "packages/server/src/benchmark/manifest.ts": "e76ee907b2a760db246fd6a40a8b1bbf7efefc8cf836afb5f9576c173ce6494e",
+      "packages/server/src/benchmark/paths.test.ts": "a3e91a3eafdc625d6fba07ad7651b928e3d63160a8e863b9782a92b0ddb6fdb1",
+      "packages/server/src/benchmark/paths.ts": "8f2b1bd592bb212bb0442a5337f6dc803979890db085c57cc239e3d297a2f9b9",
+      "packages/server/src/benchmark/promotion.test.ts": "e617fc57ad64eafc6762c1cc50232803de8fe1b9ff5d36a717cd72b316f700e6",
+      "packages/server/src/benchmark/promotion.ts": "bf2c611ee68a6d98d9a40a29d033068972d944afdd2e137976909d6758889f60",
+      "packages/server/src/benchmark/refresh.test.ts": "c9570fa13fb0661e45a299658877ce39531fff7efd0f953c5efb9802c9792262",
+      "packages/server/src/benchmark/refresh.ts": "2acca02b25a4c4c2c5addc0a1ffee3e7ee64a18254e2f4ca9d99601408e4b669",
+      "packages/server/src/benchmark/replay.test.ts": "bdd9333082816b67659f7f641acdc5009d9dfa0b408cf6292bc436fcb422e6ab",
+      "packages/server/src/benchmark/replay.ts": "012c5d25200a41e8c3c1332aded5e17d36ff930bcd22401fa421d8a5e7f90b3a",
+      "packages/server/src/benchmark/report.test.ts": "801a3121e45eef894225c15d3c497e9d983239b99dc0ae17646a7bb8c4c13405",
+      "packages/server/src/benchmark/report.ts": "0a040c285b66b3a156996ebb6b2aee42c9893194cdcfa4e81f86f0e5cd6d5d08",
+      "packages/server/src/benchmark/score.test.ts": "247a79a4d9946ff4d9afa638778316cea7ad204530ff5e3b6320ce197fcdd723",
+      "packages/server/src/benchmark/score.ts": "59f7a8347e05d7c0309d782cbf1497e7c7adaefbb1dbbe0bd45e904e8d227652",
+      "packages/server/src/benchmark/source-hash.test.ts": "48b58ffc327d3ac133eff8ba6a10ed519f0a848432b8c094b029166659c75086",
+      "packages/server/src/bot/combat-snapshot-parity.test.ts": "8303a9f1ded6d6e830a7eabcb0c2fbdefcefd0f63160a7f1b141489af18cbdf6",
+      "packages/server/src/build-info.ts": "4e821602e655d936c5904ce3b06018fcce08c38d7ced965b51d187696b332a4a",
+      "packages/server/src/cards/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/cards/bug-hunt-scenarios.test.ts": "f6138dd1729dea05e4448a1bdb87a5dd79029fc0c22a6e2d61bcfbb839c7e813",
+      "packages/server/src/cards/bug-hunt-scenarios.ts": "fd6cf37e1d6b32d49ab1eb80ac666f4ed16388c3b8f1b9d44b187fa104320b94",
+      "packages/server/src/cards/card-evidence-input.cli.test.ts": "3031854626ea8a5ac3c56f2dc8b22043d565e3db95cf2c2b0d91ccbb363816c4",
+      "packages/server/src/cards/card-evidence-input.discovery.test.ts": "8944edf435cc1d828ceb872379f0d39c88c65f67f6e5266c8f0a5b8775f0163a",
+      "packages/server/src/cards/card-evidence-input.fixtures.ts": "b203c34ef31985add8143242a3becbba380c3f91aed640bcd1b21b1dfb4eaf68",
+      "packages/server/src/cards/card-evidence-input.manifest.test.ts": "2662ce9e1d256e60235c223c62309b344efe0868b164e80deeaf8b45212d49f5",
+      "packages/server/src/cards/card-evidence-input.resolution.test.ts": "8cfe77aa8d7bde6f9cb59a47d5ff6e84da8f9e3c2b6b988ea81e1701ff0f58e6",
+      "packages/server/src/cards/card-evidence-input.zip.test.ts": "522c0885d0a2d9db76808790fcb1c0222fa511cd783e9e637a29dc85989624d3",
+      "packages/server/src/cards/card-suite-l1-l3.test.ts": "e5cdb66f2af1535959a2b12e9959a5772433833f37a45bac46f4a3822fbe1a20",
+      "packages/server/src/cards/card-suite-l5-ui.test.ts": "b6112ce6f3a4c666b9bae18b6ae9701a845340917efbb6f7e2a79e9b70e4a3a7",
+      "packages/server/src/cards/card-test-lab-gate.test.ts": "1f8dc4b396df443d6066249d6b1a933a32a9b7690e9a155c764bfe4d307500a6",
+      "packages/server/src/cards/card-test-scenarios-pr01.test.ts": "49ec1f5d8baac65a786d7a0ca34665dc8d6aa4613d2cdfd0896ee4010a80b730",
+      "packages/server/src/cards/card-test-scenarios-pr02.test.ts": "bd37624c2efe4f93e56ac44707c2148865c5b5e47a4e51472d822a280c9c239d",
+      "packages/server/src/cards/card-test-scenarios-pr03.test.ts": "a4aeaf521359fd81a30d39329e59fb312095a6a60e76b774e86fa525088a5efc",
+      "packages/server/src/cards/card-test-scenarios-pr04.test.ts": "df6155f4e43bfe07d7e55e7d619b1527d7b4b357b4029f45d4451851ec11895e",
+      "packages/server/src/cards/card-test-scenarios-pr05.test.ts": "7bdd46c2eec36f1c15c76136054966238dabbd8ffbfbd5fa931a61ed62fab529",
+      "packages/server/src/cards/card-test-scenarios.test.ts": "ce40adc5811bace3418a339e9a13412353e99fdce08167c6bed052f8be303199",
+      "packages/server/src/cards/card-test-scenarios.ts": "fc514db2a98181a632ad67e59b8f1bdc60f7885e434cff78e14568a40fc1fdda",
+      "packages/server/src/cards/card-verification-manifest.test.ts": "b082b60d5e55185d26105ea2e7f7a6783f77a0c9311c5b0864cb18ee51d7d4b6",
+      "packages/server/src/cards/ci-card-gate.test.ts": "816f0bc3f303be51b812c6b67bea88c3e03aca2ef7f1a1920c7d753823913f17",
+      "packages/server/src/cards/combat-trigger-scenarios.test.ts": "ea0efe6785ce0582865dda25ebef9a6d76dba268fd56410da9a450374ddca282",
+      "packages/server/src/cards/combat-trigger-scenarios.ts": "5308543d9391218338c8fb8ff00de2b63ba66215276c037c07769dbeb5dc979f",
+      "packages/server/src/cards/counter-overload-scenarios.test.ts": "289ffde8bf3279afee964b0103a2b35228d6b5d5427fbbacef8f690ec30f8048",
+      "packages/server/src/cards/counter-overload-scenarios.ts": "385e1cc9c367288ab3bf10b728b84769a74aac89c114cc47ee2b84c42424f88a",
+      "packages/server/src/cards/coverage-baseline.ts": "c3fd73a43d6c29083ebea8c70dada40a24c0c1876c2177ff8020ce168da3b390",
+      "packages/server/src/cards/coverage-contract.test.ts": "65dbc1c57089c404d99731a73449dda85ec0ca7c3a72c64e2a2199609a78ceff",
+      "packages/server/src/cards/coverage-contract.ts": "b87f3b9667ccc9e19afb7c8e3e5fa99558f723e7e0f8ae6c7fc31f1eba6368cd",
+      "packages/server/src/cards/coverage.test.ts": "b7e501332f369f6d4cff459e4a2583f78e2a4ff2e4af9667179c6225fd6fa9b3",
+      "packages/server/src/cards/coverage.ts": "df778f4428795a198b72a171a72f49691d9084957cce43f5a3617adf8267851b",
+      "packages/server/src/cards/gameplay-ai-evaluation.test.ts": "e591eec8c56ec7b4283f89401623e82387287306923f746a68a2e8595600efd4",
+      "packages/server/src/cards/gameplay-ai-evaluation.ts": "c37962006d59a656a6c9e76bb3574feb63b283fda4fad1338a8e86cfd60e8cee",
+      "packages/server/src/cards/known-decks.test.ts": "e3412b29252dfdd4862bbc98ad8a0f54ce3b82f566c97bca62aabec3034ba778",
+      "packages/server/src/cards/known-decks.ts": "0ec71ca1c88e9626cfa550b28ebcc3d9e2cd805404764d736a425cc215fb840c",
+      "packages/server/src/cards/living-energy.test.ts": "cec25346358d0862ced3067c756433b45993b8ed1f14f4daeeb8745db61148b0",
+      "packages/server/src/cards/marchesa-batch1-pool-containment.test.ts": "fc0e75a41233ab2e8796705a3ecb552ce1bc9e6e6527951d1bca4e8efee48b27",
+      "packages/server/src/cards/normalize.ts": "a98a40c11b807338fabd940d5dedd331745c7340d0b7ea336c6a3ec63a13d592",
+      "packages/server/src/cards/oracle-index.test.ts": "95bec99d2ef7fe6063552ca059d29ceb01c4a02f641ac5e2405694be4e7c8474",
+      "packages/server/src/cards/oracle-index.ts": "6a9842bed137d018b3eec94d8bd2f70b8bd4411e627dad26e6b85717591bef39",
+      "packages/server/src/cards/pool.ts": "ae357e80e943a277b3e4a703f36bbf3ae954adda5409028b902c77083c7fb51f",
+      "packages/server/src/cards/pr02-follow-up-scenarios.test.ts": "aaef3fb0b6eb8e180495e0e02ab56eaf5615d51c6d9bee2de728fa1e067b7079",
+      "packages/server/src/cards/pr02-follow-up-scenarios.ts": "7edf7458c4cebcdc5dce3f90ed6b2c0a0d80f3fa98452d1814ca5457d12453a3",
+      "packages/server/src/cards/primitive-capture-clean-tree.test.ts": "87c17301c001a56a34641c75847fcf0de3cc8351ddb9545c7f22f11d6f61f966",
+      "packages/server/src/cards/primitive-evidence.test.ts": "17b32d9c4e261ac6ff760620c538e1e50a510e06d0284311dd49756070c2f0bc",
+      "packages/server/src/cards/primitive-promotions.test.ts": "f4ede9cc8a77d8df997a6ff327ae814b02244a37feb41464866be84b0f3adcdb",
+      "packages/server/src/cards/primitive-source-containment.test.ts": "bde67d80fd334e9771ac218d599a4e97a067cdf510d0d1b165c5f22e824165e3",
+      "packages/server/src/cards/remaining-four-decks.test.ts": "74a07b5462e2c199599a88ba1778f7f613fe9c8aa80cba7f43679fe859290467",
+      "packages/server/src/cards/reviewed-five-pool-containment.test.ts": "f5867bd6b176c2d239061ecdce2b1ae9855aed376fa9beb23fd47ecd7b329dee",
+      "packages/server/src/cards/scryfall-bulk-fixture.ts": "942cc814173da2298919649716ea1a628f58232c24d000916caa7f9058e7cc6d",
+      "packages/server/src/cards/scryfall.test.ts": "dedbf09771416f7e438caedca66e3e704c8d15dca5b9810919888121aeae1b5f",
+      "packages/server/src/cards/scryfall.ts": "c30519ecbeef08791939ab35a900ef7d038abe3637cd03e9790cd243034ad133",
+      "packages/server/src/cards/specialized-reference-scenarios.test.ts": "bf2a338c7b130609addd50a6cfe584356bbdb2094cfc5ceb0789dcc7330b2807",
+      "packages/server/src/cards/specialized-reference-scenarios.ts": "4a5cca5925e706dfcd33440cee37b3dc8e7bb1c9bce5c1b1129d8060aebb7c50",
+      "packages/server/src/cards/spell-face-lab-expectations.ts": "dbc70dd9d0cc6942b72cc5380ee930c7911cfa6ac0d30f8ad3f0ba6bdb34d1ba",
+      "packages/server/src/cards/spell-face-scenarios.test.ts": "c547b9bf3dbc2a6f3fc7441c0b096140ce3c20dca6ede9138642c31ab2f4ef94",
+      "packages/server/src/cards/spell-face-scenarios.ts": "5115557ba0e05ac8c480ddf0d1d9698422021a05649c25859dfadd7a859ef16d",
+      "packages/server/src/cards/target-untap-scenarios.test.ts": "de7894f308b169941f14d52356a76a439a8b1ac06165a01cbab003f8435eed16",
+      "packages/server/src/cards/target-untap-scenarios.ts": "74b56e5949e0e8987f9853eb04964c63331dfea8a9efb86d1fd2ffb2e4e3e97c",
+      "packages/server/src/cards/token-triumph-deck.test.ts": "cf13252da7e6c1f94db60aa83aa7d7d229db4cb7c02030bb6e876a52ca2c2cdc",
+      "packages/server/src/cards/token-triumph-support.ts": "92afdacd65d4afc5c313250159290e462730126109bd8e9c5080951c4f373d14",
+      "packages/server/src/cards/transformed-dfc-scenarios.test.ts": "972193f83c7d09eb26511ef89920272ce34f88e4c7d6a8104aeef04c68b5bc7b",
+      "packages/server/src/cards/transformed-dfc-scenarios.ts": "e72a2f0951d3eab055190d707ab580585b783d5e38b6007dfa828d823ed1a081",
+      "packages/server/src/cards/war-room-evidence.test.ts": "a05555c624be2b75f9bfb530c7c8c17d5969af3fc2e96ec55e54dec1c683e7aa",
+      "packages/server/src/cards/white-black-control-combat-scenarios.test.ts": "463896262ce85b6228e5d336d2251c59103c863072d4ad6d59456d581113d99c",
+      "packages/server/src/cards/white-black-control-combat-scenarios.ts": "9a49a3a048f7c23c3d46770214cac45ce5720f8bc8f04686bb18b8e9fb96df20",
+      "packages/server/src/cards/white-black-control-counter-class-scenarios.ts": "f2b28be1e2a11896d55fde44129daab1dad52c38efb2a99c452e0ebfa1b3cdf5",
+      "packages/server/src/cards/white-black-control-defender-scenarios.test.ts": "d0bd3ce243a4b92d78b2311012471f6526f5c1d9a2c8919c161d469b3be32b54",
+      "packages/server/src/cards/white-black-control-defender-scenarios.ts": "2b7bba103abd8aeffd9adcfd6ccd6387ad9c2a93e9ad1acf308325b14d14fa53",
+      "packages/server/src/cards/white-black-control-discard-core-scenarios.ts": "741b423b02e2414d79ee05cbf39c09e337d54da225445ad3eb484cc0b3b6996b",
+      "packages/server/src/cards/white-black-control-discard-extension-scenarios.ts": "ade617e5ee0af415c742844e49eb4f0c257b2c6a61ad3729c94e5f7b9287e614",
+      "packages/server/src/cards/white-black-control-entry-scenarios.test.ts": "2d483dcc9a6b422be720adf5bdeeb25f58fa94719d9bcee4f5d09715827c77c8",
+      "packages/server/src/cards/white-black-control-entry-scenarios.ts": "64603497526b0eb97cdf52a5aaf70f1175add1c140588e520e6f0d83f911a684",
+      "packages/server/src/cards/white-black-control-final-scenarios.ts": "e05c2a775b9f4eb42322e81a6457c9d481b14a98afcef037b70b8ec1d2d07976",
+      "packages/server/src/cards/white-black-control-graveyard-scenarios.ts": "167f9e911beb382f6ec52b534d5aca436be14fbff6a3e35e069f57da97340fad",
+      "packages/server/src/cards/white-black-control-hand-limit-scenarios.ts": "ba71b7442a8f12b85f0eaf9e00b961e34851f9ee51ed3b2869687a9e7788bf99",
+      "packages/server/src/cards/white-black-control-hand-scenarios.ts": "4da07776aead87069e2b6669703bc72442b16fbca46fae580e603514ecd5092c",
+      "packages/server/src/cards/white-black-control-keyword-scenarios.test.ts": "cbe9e4a21332d77cafef7f40d490a327bb05266dadd66c1d76f513beacf27b49",
+      "packages/server/src/cards/white-black-control-keyword-scenarios.ts": "df053a070563947f8274cca14c76864345ba967e65be5b6839ed320c4fbf9287",
+      "packages/server/src/cards/white-black-control-liliana-scenarios.ts": "3a12bed421d86273cb8461a0770579acc3d78a2b9a02a246de301e5ed530aeac",
+      "packages/server/src/cards/white-black-control-perch-scenarios.ts": "0b6cad02c3d65232af738b47e2f328549878649f93f6a13343623f518e282cc3",
+      "packages/server/src/cards/white-black-control-protection-scenarios.ts": "3e83af852e691225c038af1b387f453cb176d06cdddf5e1641f4b307574a9c02",
+      "packages/server/src/cards/white-black-control-remaining-combat-scenarios.ts": "0de4b60508948f40cb016775660f578592938113ed075ba30622ef471375f011",
+      "packages/server/src/cards/white-black-control-replacements-scenarios.ts": "6a646aeaa0b3e60a82c28be03e024aac3ece7be362fd00c46314b6c2c17b4cd2",
+      "packages/server/src/cards/white-black-control-scenario-inputs.test.ts": "d2cb834de486554a46cbd8a1ee3affc63f1f3de21f8a53349e7fdcbb39cdce23",
+      "packages/server/src/cards/white-black-control-spell-scenarios.test.ts": "ffaca4ab14ff1caa6edeeee25e18a14f9f1a5c108a8f130bf74e67730e11bdc3",
+      "packages/server/src/cards/white-black-control-spell-scenarios.ts": "8778028f2243be05fdb07ef1d82535364f42748df8153006dc01ac5f33afadf4",
+      "packages/server/src/cards/white-black-control-stax-scenarios.ts": "b04877ed38727123e1496b0320a43f052e186382627c65e57ad4d357dc60bfe1",
+      "packages/server/src/cards/white-black-control-tergrid-scenarios.ts": "38e3ea2cb770b8d2f1ccb9690959e9b1ddabde63cb36d373ec6fc95017db1c8d",
+      "packages/server/src/cards/zone-change-trigger-scenarios.test.ts": "7aadaa6eef2fb4d54bd70f67ae488aabfc8d9812e657fbe9b7eef7ac79a9dab0",
+      "packages/server/src/cards/zone-change-trigger-scenarios.ts": "1933babf70ace933bc0d5d1e0777c56060e15c4084918a053ad0a3a402332673",
+      "packages/server/src/cli/agent-client-core.test.ts": "f4f96095ba2eb8adb2bf951f0cc20894081bec770bdd5237c2b5aa9315ddb6b8",
+      "packages/server/src/cli/agent-client-core.ts": "253eed7303d68914a8c363ae97aa0be9062996e982cfc5fd7e4886a98a2eaa8d",
+      "packages/server/src/cli/agent-client.ts": "491002b3958cce6bf80d6a010370fdf77cecf85197eabaf72366e1b1c7a56027",
+      "packages/server/src/cli/ai-bench.ts": "96b9cc8c7cd7299b66ef75b7e9d8ae09dc40e15885a5666ceebee9707ba6e2b9",
+      "packages/server/src/cli/card-test-reporting.test.ts": "2d73e2d0f250b9dfbcaf78359ef8303a15ac0037393c5b21ada7c2e97a083a47",
+      "packages/server/src/cli/card-test-reporting.ts": "04a3ed7b7a3b4bc3563d8d0525e7039b761a6c828be1142f33bbd5b47eecae55",
+      "packages/server/src/cli/combat-sweep-game.ts": "ff71075cd95eb163e953fd287c3ba07a3281d2d6bfe53e58308d0cd27c48bb85",
+      "packages/server/src/cli/combat-sweep.ts": "4a0a640f8514b874c6c0ec28bd221fdff613ca672c141bbdf6ade39be99e66a9",
+      "packages/server/src/cli/coverage-input.test.ts": "fd151a505754db20bf8bd504d8bc470097d7a2de6513a9f17cac881c50077e9a",
+      "packages/server/src/cli/coverage-input.ts": "d760f649bf848e37bff366f3042ea777f3278e92951c5516a47b4425a75ea098",
+      "packages/server/src/cli/coverage.ts": "573729fb2119cabaafb86b4faaa36c75d90424275e61377581731555ce9547ee",
+      "packages/server/src/cli/import-decks.ts": "8126924c0485aeb3d96c70cdf00d136c8ee2d9cad95e0edae5dbd7dd1a63fd9c",
+      "packages/server/src/cli/modelled-cards.ts": "84a366979bfa7568075fa13832b31bac1cac8c63c80e645963719a52fada9f75",
+      "packages/server/src/cli/play-decks.ts": "23b7e23300f1db8f84914e0c02c7c993b1f45b9990d2c905d9a8ed2ace32590b",
+      "packages/server/src/cli/pool.ts": "1eb2ec7407f889f69ebd860224b946448169f72c00800c6a6b2570fe2e7e5ffa",
+      "packages/server/src/cli/retag.ts": "f0de763919c7021fd60f715d18413e5e3725d839338a73dd208d121958e94897",
+      "packages/server/src/cli/serve.ts": "53f524ae1bc32ec9ba3cfbceb742a45fec024b63dec83c5d1eb5d98996732692",
+      "packages/server/src/cli/snapshot-coverage-decks.ts": "330d30a5a39923421269a4f6eb6ab25d01d9e977a70b72447097436356c53852",
+      "packages/server/src/cli/snapshot-deck-oracle.ts": "11398dc7ce6f56d7e0d7639d7030fcceec3c5e44c8857090f7e1920a90506e95",
+      "packages/server/src/cli/staple-coverage.ts": "23abe76746d8bbf09af4ca568c16dee1b0c775059d9e69c2875ff45cbfb92eca",
+      "packages/server/src/cli/test-cards-l4-l6.ts": "8a1dd8f099cc717df8ac7737efae64ea2737defe8ba877c7369764dc1184d14d",
+      "packages/server/src/cli/test-cards-l7-coverage.ts": "bf52ec55f7227e7ec19ee3395897184aaf197426e1023c6dbbb6ab63ae5b0ae0",
+      "packages/server/src/config/mana-metrics.ts": "1c3e1884e32cf562ad5ce05d92cbe913032c2533c906b339e3cc553f70a985da",
+      "packages/server/src/db/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/db/batches-recovery.test.ts": "fd568e979f9a7a83da6a4632837810976577474316545f10d03b7ecd65bb7819",
+      "packages/server/src/db/batches-results.test.ts": "920e39df20d103f81cf337abc912acb6f6e4a7ec36f769a7cdb8c2dfea8bd152",
+      "packages/server/src/db/batches.ts": "ee2a73110f2e4d860d2580f80f39fd16620b52c76d807b94d0010f14f5c23c9c",
+      "packages/server/src/db/games.test.ts": "aa02c1a699aeb8be45e8ddae86813e2be41f3626e6f6defb43236b28568255be",
+      "packages/server/src/db/games.ts": "ecae5f677afc40471af43168900d567b1f58c46ac98592af0fa201ca91b79437",
+      "packages/server/src/db/index.ts": "2097a8deb27d15dd0d1c2b65e45e8d4ab81a8f3efd22bfca0becb2467b9f01d7",
+      "packages/server/src/db/schema.ts": "53f07d8601e1a6269e983cbf6303eb14b745630972ff6b3c00c764856b781412",
+      "packages/server/src/db/stats-attribution.test.ts": "47d627b8173207f43036853f56eb6b616a6d08901bf3ab9576c9ebba8c9e713e",
+      "packages/server/src/db/stats.test.ts": "de7e8d88941d83cbbbcef85e4c2c23dde4b814a6cc3f68cf82f6d75ec19807f9",
+      "packages/server/src/db/stats.ts": "2cc0b3c0be1c5bf21b99425c9fd6ce7002075413570b040702bf1d53640fb84d",
+      "packages/server/src/decks/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/decks/archetype.test.ts": "08a77da2dca0c6db53a78eb5f45a05f5228887c51807586de2a488cf2c4c5480",
+      "packages/server/src/decks/archetype.ts": "948178e3ea1ed26c6d3699f736277f01c2b5057ecc980e045ecaf3cf9ef7df43",
+      "packages/server/src/decks/archidekt.ts": "3301abc4cfd1500baa63c33fc026343f0fb7d5d627efb2311a03c801e8a19315",
+      "packages/server/src/decks/banned.test.ts": "f5fba0fd5e7b602ea32eda215169bb0fbeca581d9caa7680f88f4577aaddb3cb",
+      "packages/server/src/decks/banned.ts": "8add1ba9591360674681b151990dd786181d53d64d73ff3dfd526d4910a431b6",
+      "packages/server/src/decks/companions.ts": "7ce8615fb672d3a45dd510aaed5192481111dca8a0abe117ffafdd08e8103d12",
+      "packages/server/src/decks/errors.ts": "532732adaa4123f7c482974b6f4fc65180b1fb332c551d031d61aea816ddbb66",
+      "packages/server/src/decks/generate.test.ts": "c90ae7e847884bcf8a6ca7d805f0e1d3485f045808267f3e011ce600ef9f115d",
+      "packages/server/src/decks/generate.ts": "bfc70d79750dcb33d6eab6ab21efc9fdfe01ace7880e3d6381489a31d231d3c3",
+      "packages/server/src/decks/moxfield.ts": "f9dd7635f898a5154963f5f6206f51793154af607564c0357db6e9b2aa08fffe",
+      "packages/server/src/decks/pipeline.test.ts": "90fce758a9fffb240eaa3a8410aa27d9d23edeb60b6945564242a062ee0662d3",
+      "packages/server/src/decks/pipeline.ts": "fb73767f276185de8285b50b12e76300019e575ea5641f930736f991e81c6142",
+      "packages/server/src/decks/plaintext.test.ts": "c0d85b397bfa5bca931999ce0525f53e15b3e29070e5043cf6b4869c72e939c7",
+      "packages/server/src/decks/plaintext.ts": "02188bb0e00063e83307464072264db1b14052384a1f54bfd2d32476af5a8031",
+      "packages/server/src/decks/resolve.ts": "cb3b0617f63d27b4f07ac01481094f1384ca29fc7d0bff00073e70260573ad27",
+      "packages/server/src/decks/source.ts": "5705ac83a2016689c8884c403111cfde19825d1d2ce8f7899d3529ae911585f7",
+      "packages/server/src/decks/strategy-profile.test.ts": "0b483f69026268e4807b696e10626f3428fc574223658ac442b291b169815abb",
+      "packages/server/src/decks/strategy-profile.ts": "0e88945fa8de55027480b5143b1bf34b0709061ccd805f5223b3de62310562ce",
+      "packages/server/src/decks/validate.test.ts": "6551c97d5d73df7756e6e0fe2fcdf50d368a0ad3c491d0f8c63043dc39f12fe3",
+      "packages/server/src/decks/validate.ts": "4059f2ca2e57a02c7817c16a834f217fbc662b45b1510219f6bef0e62687c17c",
+      "packages/server/src/index.ts": "799da95b05043aff49b6058d0a6b1244d2bab3ad2d4cf4edd6e1418ac55a1923",
+      "packages/server/src/match/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/match/annotations.test.ts": "ec0238e04a3603e44a15abd5e8941fbbdb33299201acdb30d1924d1aa8c14fd0",
+      "packages/server/src/match/annotations.ts": "28dc4985cac86a927325eb9f1cecb2e21ead3f5d6cacf78322de9ab1b9145536",
+      "packages/server/src/match/human-provider.test.ts": "d0de4fcae289861154c8ecd8825142c0cb829d16729ba8dbe26ff63635bec546",
+      "packages/server/src/match/human-provider.ts": "94dd46b36b38efb2a91857119518b68f8db90a01ed743e11bd5375f4c0bef6a8",
+      "packages/server/src/match/player-yield.test.ts": "5ceb99042d7fb3d15e06e6a53bb003279fd54e5a3ac4c86eaabfeaad1db8d5cf",
+      "packages/server/src/match/player-yield.ts": "2f9f653d9d5fc3965e149b3fedfec5fa98ac336f664f90bd19bf8283800660ea",
+      "packages/server/src/match/preview.test.ts": "7708e37d691226cd690c6fb30ca213cd6beea7cbb0b08f6ec79151cb4a72e917",
+      "packages/server/src/match/preview.ts": "e3e98fc1ef67030c0db4cc91c8b47b10f6722d84c06704b1a58fc3612b9d1e83",
+      "packages/server/src/match/report.test.ts": "6c752f27cb3ed34cb3721a243a5265a45e6586fa60efd5f9dddbf6b14946bfce",
+      "packages/server/src/match/report.ts": "c0fa67bca0fffdf8c61d78e76cc3967d20663a55b628fc1efd76ee5894826f8f",
+      "packages/server/src/match/runner.test.ts": "2323b10c62f38a9e740b9738dc24bedeb9f6ee9ec91ca13bd8463b8c4a1a4f38",
+      "packages/server/src/match/runner.ts": "00b840acdce34363f79f6add17f8b3b0077152f1e133409dfc389b17d6b1c058",
+      "packages/server/src/match/session.test.ts": "bfe83aec7f72a19bef1cc36dc9e62cc511d48501c6bb6f850deb047ae0217640",
+      "packages/server/src/match/session.ts": "55360856961d08a361bfe317f288888c9464bede63ca4935c5a895ac5b0ad763",
+      "packages/server/src/match/setup.ts": "d6b721ef29fa0612936a1a54b6b3344192555782bed279aab0e4e69d172036db",
+      "packages/server/src/test-factory.ts": "ed56084a8956fb5363fd9315c643fafa77b30fc3bb844bf0f5f388f3e1400304",
+      "packages/server/src/ws/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/server/src/ws/audit-lifecycle.test.ts": "b177544c0b4ed5d7771853122df73b55afab969e58b38c29db1021bda98a6207",
+      "packages/server/src/ws/game-report.test.ts": "cd1604b8e21391d6512bbe9ad49689033f7869ba82d809cde4255627ca78aa94",
+      "packages/server/src/ws/server.ts": "58572adb3b3d18fcb0198ec8837e18ec7aa4b0b0525c81d7ea4ebd015fd0dad5",
+      "packages/server/src/ws/setup-preview.test.ts": "c5cad39f488a503d221148312b12338e218732c4e8c521e688058585a2b3aa5d",
+      "packages/server/src/ws/setup-privacy.test.ts": "896f99e2bc0736002546b1361badd9cf3813533fcdc86228851f89c25d55ebb8",
+      "packages/server/src/ws/setup-privacy.ts": "db47b60b72eb3304682e5698191e8cf02129ddc28777e451da7de6cc48935693",
+      "packages/server/src/ws/submission-rejection.test.ts": "4832e0c0634e3c671d6c1d3b879f6ac1362f9ee39face3d5a5420396688f8bb5",
+      "packages/shared/src/batch.ts": "f1acb5e483419762195eb91b9282d1499800df0c1a15f3ec7df00f60f27398aa",
+      "packages/shared/src/cards.ts": "9380bde837959e270806da87dea1b69f23e5f36bad89affd5d6e806d2dd11975",
+      "packages/shared/src/decks.ts": "ecef776258a73044ee3d87215fc56b8e176ed773ff80aa4be1f1d5bc782fc3a0",
+      "packages/shared/src/effects.ts": "4cc823c3db588a197afde8a0c407662ac84e907c06f7fb4b512f29690a94256b",
+      "packages/shared/src/engine.ts": "609d74e8af70e4a2589748a6f34925dce24b573f5b946a72defeda045a2f52db",
+      "packages/shared/src/enums.ts": "dc6dca092cbd37848412ca59d0333355c3b7efc43c49221c1cd1c21da29cf822",
+      "packages/shared/src/events.ts": "ee085565a5b063f25c08582752d63178dc4690935c4308edcbc877e39e58cf3c",
+      "packages/shared/src/ids.ts": "cc2c8ce8c59dc8cec80e3b35c0aec793a106ff2a88322a36dff37124e7c9e2cd",
+      "packages/shared/src/index.test.ts": "5c9b0bf4ec0857076a8bc0cb952596b84b56baba8e18ff345441070ed0d7e887",
+      "packages/shared/src/index.ts": "4588e84ad4b16e3fdac62c44c1855ff3b43dbcfc989a4afa25b45f14c6dda84b",
+      "packages/shared/src/json.test.ts": "ed210144ed181f3f7c4b5038e08849331c7f43da3953e42636291e10196a12aa",
+      "packages/shared/src/json.ts": "160701cad31daad8509849e059138a9131271ec2a602ca4d34b8251d534c59e7",
+      "packages/shared/src/mana.ts": "0f9c315c197bc525a349bf94f1ffd57aea2833360b9d40fcef96ecde98f78292",
+      "packages/shared/src/objects.ts": "5f8ace37d2ebd932592c2ec7276126546edfe36c15e9dff56e386416cc753c54",
+      "packages/shared/src/player.ts": "e0a835261f3c3e217147db8396adc4cd61c7a6110db8d2a4a9879529ce1607ad",
+      "packages/shared/src/protocol.test.ts": "de0b7c5a6fd555ff6666a6485868214cdf00aa967ec18177e03b2334c5a42b3f",
+      "packages/shared/src/protocol.ts": "d45b473e1a244a4da131d6e666860894c0a7d7e864d04b407d13af6ee342cf61",
+      "packages/shared/src/report.ts": "bfabf2e6cb1b1f5369c67fc6cd6b9b9b865f05213e2bf99c7e5ed686855e2090",
+      "packages/shared/src/spectator.ts": "fc849b5e5e47548def7a1476202a1e2f8fb93c38409f5dfec8251030a4e16345",
+      "packages/shared/src/state.ts": "e6d64285a01f3467994293c9371156b4f4d8eec308333c3b4881c584ea25acea",
+      "packages/shared/src/view.ts": "390f39f904adcc4a7abc88fca4138a7948258ff68382e4beb96d18514eb3b505",
+      "scripts/evaluate-combat-trigger-gameplay.ts": "08dd2e6785f377a6f7b53ee86d187d3f0482b328c4e343269d1831091de68699"
+    },
+    "scope": "Random/heuristic provider observations bound to these source bytes; not a rules receipt or review promotion."
+  }
+}

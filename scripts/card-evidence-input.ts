@@ -2200,6 +2200,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Scriv: lose life when attacking the Contract controller'],
   },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: grant dethrone after a normal cast'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Dragon Mage: cast normally and resolve the combat wheel'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Hunted Phantasm: cast normally and give an opponent five Goblins'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

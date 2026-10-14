@@ -137,6 +137,15 @@ export function* playPreparedScenario(
   spec: PreparedScenarioSpec,
 ): GameGen<GameResult> {
   const state = ctx.state;
+  if (
+    spec.continueThroughNextTurn === true &&
+    (spec.continueThroughCombat !== true ||
+      spec.continueToPostcombatMain !== true ||
+      spec.continueToEndStep !== true)
+  )
+    throw new Error(
+      'continueThroughNextTurn requires combat, postcombat main, and end-step continuations',
+    );
   emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
   emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
   if (
@@ -211,8 +220,6 @@ export function* playPreparedScenario(
     yield* runPrioritySequence(ctx);
   }
   if (spec.continueThroughNextTurn === true) {
-    if (spec.continueThroughCombat !== true || spec.continueToEndStep !== true)
-      throw new Error('continueThroughNextTurn requires combat and end-step continuations');
     // Complete the active turn through the ordinary cleanup routine before advancing. This
     // preserves delayed cleanup effects, turn-based actions and production turn transitions.
     emptyManaPools(ctx);

@@ -10,7 +10,10 @@ import { HeuristicDecisionProvider } from '@mtg/bot';
 import { RandomDecisionProvider } from '@mtg/engine';
 import type { DecisionResponse, LegalAction, PlayerId } from '@mtg/shared';
 import { REVIEWED_BASELINE_SCENARIO_IDS, createCardTestScenario } from './card-test-scenarios';
-import { COMBAT_TRIGGER_SCENARIO_IDS } from './combat-trigger-scenarios';
+import {
+  COMBAT_TRIGGER_SCENARIO_IDS,
+  combatTriggerScenarioSubject,
+} from './combat-trigger-scenarios';
 
 export type ProviderKind = 'random' | 'heuristic';
 
@@ -91,11 +94,7 @@ export function evaluateCombatTriggerGameplayAi() {
         }
       }
       const state = engine.getState();
-      const subject = scenarioId.startsWith('marchesa')
-        ? 'Marchesa, the Black Rose'
-        : scenarioId.startsWith('namor')
-          ? 'Namor, Atlantean King'
-          : 'Scriv, the Obligator';
+      const subject = combatTriggerScenarioSubject(scenarioId);
       const usedSubjectCard = state.eventLog.some(
         (event) =>
           (event.type === 'castSpell' && event.payload['name'] === subject) ||
@@ -104,6 +103,9 @@ export function evaluateCombatTriggerGameplayAi() {
       );
       return {
         scenarioId,
+        subject,
+        oracleSha256: scenario.metadata.oracleSha256,
+        scenarioVersion: scenario.metadata.version,
         providerKind,
         seed: scenario.seed,
         decisions,

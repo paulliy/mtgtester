@@ -8806,7 +8806,7 @@
           "id": "marchesa-dethrone",
           "oracleText": "Dethrone",
           "implementation": [
-            "Attack-event-only most-life qualification for own and granted dethrone; counter placement through the normal stack path"
+            "Attack-event-only most-life qualification for Marchesa’s own dethrone; counter placement through the normal stack path"
           ],
           "engineTestIds": [
             "marchesa-viewer-dethrone-response",
@@ -8816,11 +8816,21 @@
             "marchesa-viewer-dethrone-response",
             "marchesa-viewer-dethrone-negative"
           ]
+        },
+        {
+          "id": "marchesa-granted-dethrone",
+          "oracleText": "Other creatures you control have dethrone.",
+          "implementation": [
+            "Static grant uses the same attack-event qualification; normal paid Marchesa cast grants dethrone to a different attacking creature"
+          ],
+          "engineTestIds": ["marchesa-viewer-granted-dethrone"],
+          "viewerScenarioIds": ["marchesa-viewer-granted-dethrone"]
         }
       ],
       "gameplayAiScenarioIds": [
         "marchesa-viewer-dethrone-response",
-        "marchesa-viewer-dethrone-negative"
+        "marchesa-viewer-dethrone-negative",
+        "marchesa-viewer-granted-dethrone"
       ]
     },
     "ac2173f9-f223-440a-9231-fd98762bdc6f": {
@@ -11432,6 +11442,40 @@
         }
       ],
       "gameplayAiScenarioIds": ["scriv-viewer-departed-attacker", "scriv-viewer-attacks-controller"]
+    },
+    "eab71e4e-27c3-4c41-b95f-259c1d14b97a": {
+      "name": "Dragon Mage",
+      "oracleSha256": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "dragon-mage-wheel",
+          "oracleText": "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards.",
+          "implementation": [
+            "Generic printed clause; normal paid creature cast and production entry/combat path verified in the real Card Test Lab"
+          ],
+          "engineTestIds": ["dragon-mage-viewer-normal-cast-wheel"],
+          "viewerScenarioIds": ["dragon-mage-viewer-normal-cast-wheel"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["dragon-mage-viewer-normal-cast-wheel"]
+    },
+    "ef4b334b-8407-4147-b434-602e59806906": {
+      "name": "Hunted Phantasm",
+      "oracleSha256": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "hunted-phantasm-opponent-tokens",
+          "oracleText": "When this creature enters, target opponent creates five 1/1 red Goblin creature tokens.",
+          "implementation": [
+            "Generic printed clause; normal paid creature cast and production entry/combat path verified in the real Card Test Lab"
+          ],
+          "engineTestIds": ["hunted-phantasm-viewer-opponent-tokens"],
+          "viewerScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
     }
   }
 }

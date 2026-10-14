@@ -40,6 +40,15 @@ function sourceHashes() {
 }
 
 async function verify(page: Page, info: TestInfo, id: string) {
+  const subject = id.startsWith('marchesa')
+    ? 'Marchesa, the Black Rose'
+    : id.startsWith('namor')
+      ? 'Namor, Atlantean King'
+      : id.startsWith('dragon-mage')
+        ? 'Dragon Mage'
+        : id.startsWith('hunted-phantasm')
+          ? 'Hunted Phantasm'
+          : 'Scriv, the Obligator';
   const sourcesBefore = sourceHashes();
   const snapshots: (PlayerBoardState | SpectatorState)[] = [];
   let request: DecisionRequest | undefined;
@@ -64,7 +73,7 @@ async function verify(page: Page, info: TestInfo, id: string) {
   await page.getByRole('button', { name: 'Run scenario' }).click();
   await expect(page).toHaveURL(/\/game$/);
   const over = page.getByText(/game over/i).first();
-  let castScriv = false;
+  let castSubject = false;
   let castBolt = false;
   let attacked = false;
   for (let count = 0; count < 80; count++) {
@@ -74,15 +83,13 @@ async function verify(page: Page, info: TestInfo, id: string) {
     const beforeId = current.requestId;
     const state = snapshots.at(-1)!;
     if (
-      id.startsWith('scriv') &&
-      !castScriv &&
-      current.legalActions.some((a) => a.description.startsWith('Cast Scriv'))
+      !castSubject &&
+      current.legalActions.some((a) => a.description.startsWith(`Cast ${subject}`))
     ) {
-      await page
-        .locator('.hand-card:not(.hand-card-leave-active)', { hasText: 'Scriv, the Obligator' })
-        .click();
+      await page.locator('.hand-card:not(.hand-card-leave-active)', { hasText: subject }).click();
+      await expect(page.getByText(/Auto-pay/)).toBeVisible();
       await page.getByRole('button', { name: 'Confirm', exact: true }).click();
-      castScriv = true;
+      castSubject = true;
     } else if (
       id === 'scriv-viewer-departed-attacker' &&
       !castBolt &&
@@ -99,11 +106,16 @@ async function verify(page: Page, info: TestInfo, id: string) {
       castBolt = true;
     } else if (current.decisionType === 'declareAttackers') {
       await page.getByRole('button', { name: /Declare attackers/ }).click();
-      const names = id.startsWith('marchesa')
-        ? ['Marchesa, the Black Rose']
-        : id.startsWith('namor')
-          ? ['Namor, Atlantean King', 'Lab Bear']
-          : [];
+      const names =
+        id === 'marchesa-viewer-granted-dethrone'
+          ? ['Lab Bear']
+          : id.startsWith('marchesa')
+            ? ['Marchesa, the Black Rose']
+            : id.startsWith('namor')
+              ? ['Namor, Atlantean King', 'Lab Bear']
+              : id.startsWith('dragon-mage') || id.startsWith('hunted-phantasm')
+                ? [subject]
+                : [];
       for (const name of names)
         await page
           .locator('.combat-assignment-row')
@@ -116,7 +128,24 @@ async function verify(page: Page, info: TestInfo, id: string) {
       await page.getByRole('button', { name: /Declare blockers/ }).click();
       await page.getByRole('button', { name: 'Confirm blocks', exact: true }).click();
     } else if (current.decisionType === 'chooseTargets') {
-      await page.getByRole('button', { name: 'Target Lab Bear', exact: true }).click();
+      if (id.startsWith('hunted-phantasm')) {
+        const options = current.legalActions.flatMap((a) =>
+          (a.targets ?? []).flatMap((slot) => slot.options),
+        );
+        expect(options).not.toContain('P1');
+        expect(options).toContain('P2');
+        await page
+          .getByRole('article')
+          .filter({ has: page.getByText('P2', { exact: true }) })
+          .click();
+        await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+      } else await page.getByRole('button', { name: 'Target Lab Bear', exact: true }).click();
+    } else if (current.decisionType === 'orderTriggers') {
+      await page
+        .getByRole('button', { name: current.legalActions[0]!.description, exact: true })
+        .click();
+    } else if (current.legalActions.some((a) => a.description === 'No')) {
+      await page.getByRole('button', { name: 'No', exact: true }).click();
     } else {
       await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
       const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
@@ -137,7 +166,14 @@ async function verify(page: Page, info: TestInfo, id: string) {
   await expect(over).toBeVisible();
   const final = snapshots.at(-1)!;
   const p2 = final.seats.find((seat) => seat.seat === 'P2')!;
-  if (id.startsWith('marchesa')) {
+  expect(castSubject).toBe(true);
+  if (id === 'marchesa-viewer-granted-dethrone') {
+    expect(attacked).toBe(true);
+    expect(final.battlefield.find((p) => p.name === 'Lab Bear')!.counters['+1/+1']).toBe(1);
+    expect(final.battlefield.find((p) => p.name === subject)!.counters['+1/+1'] ?? 0).toBe(0);
+    expect(p2.life).toBe(35);
+    await expect(permanent(page, 'Lab Bear')).toContainText('3/3');
+  } else if (id.startsWith('marchesa')) {
     expect(attacked).toBe(true);
     const positive = id.endsWith('response');
     expect(
@@ -165,8 +201,21 @@ async function verify(page: Page, info: TestInfo, id: string) {
           .find((seat) => seat.seat === 'P3')!
           .graveyard.some((c) => c.name === 'Lightning Bolt'),
       ).toBe(true);
+  } else if (id.startsWith('dragon-mage')) {
+    expect(attacked).toBe(true);
+    expect(p2.life).toBe(35);
+    for (const seat of final.seats)
+      expect('handSize' in seat ? seat.handSize : seat.hand.length).toBe(7);
+    await expect(permanent(page, subject)).toBeVisible();
+  } else if (id.startsWith('hunted-phantasm')) {
+    expect(attacked).toBe(true);
+    expect(p2.life).toBe(36);
+    expect(
+      final.battlefield.filter((p) => p.name === 'Goblin' && p.controller === 'P2'),
+    ).toHaveLength(5);
+    expect(final.battlefield.some((p) => p.name === 'Goblin' && p.controller === 'P1')).toBe(false);
+    await expect(permanent(page, subject)).toBeVisible();
   } else {
-    expect(castScriv).toBe(true);
     const removed = id.includes('departed');
     expect(castBolt).toBe(removed);
     expect(p2.life).toBe(removed ? 40 : 38);
@@ -200,3 +249,9 @@ test('Scriv: no life loss after the attacker dies', async ({ page }, info) =>
   verify(page, info, 'scriv-viewer-departed-attacker'));
 test('Scriv: lose life when attacking the Contract controller', async ({ page }, info) =>
   verify(page, info, 'scriv-viewer-attacks-controller'));
+test('Marchesa: grant dethrone after a normal cast', async ({ page }, info) =>
+  verify(page, info, 'marchesa-viewer-granted-dethrone'));
+test('Dragon Mage: cast normally and resolve the combat wheel', async ({ page }, info) =>
+  verify(page, info, 'dragon-mage-viewer-normal-cast-wheel'));
+test('Hunted Phantasm: cast normally and give an opponent five Goblins', async ({ page }, info) =>
+  verify(page, info, 'hunted-phantasm-viewer-opponent-tokens'));

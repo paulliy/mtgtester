@@ -2319,6 +2319,26 @@ export function queueTriggersForEvent(
               matchesSelector(ctx, subject.permanent, spec.subject.selector, from),
         );
         for (const subject of matched) {
+          const eventPlayerId =
+            spec.defendingPlayerIsEventPlayer === true && subject.permanent.attacking !== null
+              ? (subject.permanent.attackingPlayerId ?? subject.permanent.attacking)
+              : subject.playerId;
+          const scope: TriggerScope = {
+            ...eventObjectScope(ctx, subject.permanent),
+            ...(eventPlayerId === undefined ? {} : { eventPlayerId }),
+          };
+          if (
+            [spec.eventCondition, spec.condition].some(
+              (condition) =>
+                condition !== undefined &&
+                !evaluateCondition(ctx, condition, {
+                  ...from,
+                  ...scope,
+                  triggerObjectCardId: subject.permanent.cardId,
+                }),
+            )
+          )
+            continue;
           ctx.state.pendingTriggers.push({
             controllerId: emblem.controllerId,
             sourceCardId: emblem.id,
@@ -2326,7 +2346,7 @@ export function queueTriggersForEvent(
             sourceName: emblem.name,
             ability,
             triggerObjectCardId: subject.permanent.cardId,
-            scope: eventObjectScope(ctx, subject.permanent),
+            scope,
           });
           debug(ctx, 'stack', `emblem trigger queued: ${emblem.name}`);
         }

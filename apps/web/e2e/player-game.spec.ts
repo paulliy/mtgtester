@@ -14,6 +14,31 @@ import { expect, test } from './setup-test';
 const SEED = 'e2e-4180';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
+  const playerActionRequestIds: string[] = [];
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', (frame) => {
+      try {
+        const message = JSON.parse(String(frame.payload));
+        if (message.type === 'playerActionRequired') {
+          const requestId = message.payload?.request?.requestId;
+          if (typeof requestId === 'string') playerActionRequestIds.push(requestId);
+        }
+      } catch {
+        // Non-JSON socket frames are unrelated to player action requests.
+      }
+    });
+  });
+  const waitForNewPlayerAction = async (previousRequestId: string | undefined): Promise<string> => {
+    await expect
+      .poll(() => playerActionRequestIds.at(-1), { timeout: 60_000 })
+      .not.toBe(previousRequestId);
+    const requestId = playerActionRequestIds.at(-1);
+    if (requestId === undefined || requestId === previousRequestId) {
+      throw new Error('Expected a new playerActionRequired request ID after the UI action.');
+    }
+    return requestId;
+  };
+
   await page.goto('/');
   await page.getByPlaceholder('Fresh seed', { exact: true }).fill(SEED);
   await page.getByRole('button', { name: 'Preview matchup' }).first().click();
@@ -37,34 +62,34 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Play a land' }).click();
   await expect(reminder).toBeHidden();
 
+  const requestBeforeForest = playerActionRequestIds.at(-1);
   await playForest.click();
   await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
+  let currentRequestId = await waitForNewPlayerAction(requestBeforeForest);
 
-  let castButton = playable.getByRole('button', { name: /^Cast / }).first();
-  if (!(await castButton.isVisible({ timeout: 1_000 }))) {
-    const sameTurnForest = playable
-      .getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ })
-      .first();
-    if (await sameTurnForest.isVisible({ timeout: 1_000 })) {
-      await sameTurnForest.click();
-      await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
+  const castButton = playable.getByRole('button', { name: /^Cast / }).first();
+  const playableLand = playable.getByRole('button', { name: /^Play (?!a land\b)/ }).first();
+  const passPriority = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const passAnyway = page.getByRole('button', { name: 'Pass anyway', exact: true });
+  let foundCast = await castButton.isVisible();
+  for (let actionCount = 0; !foundCast && actionCount < 80; actionCount++) {
+    const requestBeforeAction = currentRequestId;
+    if (await playableLand.isVisible()) {
+      await playableLand.click();
+      await expect(page.locator('.log .line', { hasText: /plays .+/ }).last()).toBeVisible();
+    } else if (await passPriority.isVisible()) {
+      await passPriority.click();
+      if (await passAnyway.isVisible()) await passAnyway.click();
+    } else {
+      throw new Error(
+        'A non-priority human choice appeared before a cast action; this scenario needs an explicit UI step.',
+      );
     }
-    castButton = playable.getByRole('button', { name: /^Cast / }).first();
-    if (!(await castButton.isVisible({ timeout: 1_000 }))) {
-      await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
-      const passAnyway = page.getByRole('button', { name: 'Pass anyway' });
-      if (await passAnyway.isVisible({ timeout: 1_000 })) await passAnyway.click();
-      await expect(page.locator('.turn-badge')).toContainText('Your turn', { timeout: 60_000 });
-      const nextTurnForest = playable
-        .getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ })
-        .first();
-      if (await nextTurnForest.isVisible({ timeout: 1_000 })) {
-        await nextTurnForest.click();
-        await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
-      }
-      castButton = playable.getByRole('button', { name: /^Cast / }).first();
-    }
+    currentRequestId = await waitForNewPlayerAction(requestBeforeAction);
+    foundCast = await castButton.isVisible();
   }
+  if (!foundCast)
+    throw new Error('No normal cast action became available after 80 production UI actions.');
   await expect(castButton).toBeVisible({ timeout: 60_000 });
   const castLabel = (await castButton.innerText()).trim();
   const castName = castLabel.replace(/^Cast\s+/, '').replace(/\s+×\d+$/, '');

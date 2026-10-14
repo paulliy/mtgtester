@@ -312,7 +312,7 @@ describe(
           (suite) => suite.file === 'combat-trigger-regressions.spec.ts',
         );
         expect(secondary?.title).toBe('combat-trigger-regressions.spec.ts');
-        expect(secondary?.specs).toHaveLength(6);
+        expect(secondary?.specs).toHaveLength(9);
         expect(await loadViewerEvidence(f.paths, f.options)).toBeDefined();
 
         secondary!.file = 'unknownfilename.spec.ts';
