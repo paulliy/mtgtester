@@ -23,7 +23,9 @@ function p1(page: Page) {
   return page.locator('.human-zone');
 }
 
-test('Perch Protection gifts P2 an extra turn, phases P1 out, then returns the same board', async ({ page }) => {
+test('Perch Protection gifts P2 an extra turn, phases P1 out, then returns the same board', async ({
+  page,
+}) => {
   await runScenario(page);
 
   const spell = handCard(page, 'Perch Protection');
@@ -39,23 +41,33 @@ test('Perch Protection gifts P2 an extra turn, phases P1 out, then returns the s
   // Five real turn beginnings consume P2's extra turn, P2's normal turn, P3, P4, and P1.
   // Ending in P1's next main phase demonstrates the gift affected turn order and that the
   // phased-out objects returned before P1's untap.
-  await expect(page.locator('.turn-badge')).toContainText('Turn 6 · Your turn', { timeout: 45_000 });
+  await expect(page.locator('.turn-badge')).toContainText('Turn 6 · Your turn', {
+    timeout: 45_000,
+  });
   await expect(page.getByText('Main phase 1', { exact: true })).toBeVisible();
 
   const board = p1(page);
   await expect(board.getByRole('img', { name: 'Lab Visible P1 Bear', exact: true })).toBeVisible();
   await expect(board.getByRole('img', { name: 'Plains', exact: true })).toHaveCount(1);
-  const plainsTile = board.locator('.tile', { has: page.getByRole('img', { name: 'Plains', exact: true }) });
+  const plainsTile = board.locator('.tile', {
+    has: page.getByRole('img', { name: 'Plains', exact: true }),
+  });
   await expect(plainsTile.locator('.stack-count-badge')).toHaveText('×6');
   await expect(board.getByRole('img', { name: 'Bird', exact: true })).toHaveCount(1);
-  const birds = board.locator('.tile', { has: page.getByRole('img', { name: 'Bird', exact: true }) });
+  const birds = board.locator('.tile', {
+    has: page.getByRole('img', { name: 'Bird', exact: true }),
+  });
   await expect(birds).toContainText('2/2');
   await expect(birds).toContainText('flying');
   await expect(birds.locator('.stack-count-badge')).toHaveText('×4');
 
   // The real player view shows the exiled object and the public cast/gift/resolution sequence.
-  const exiledPerch = board.locator('.zone', { has: page.getByRole('heading', { name: 'Exile (1)' }) });
-  await expect(exiledPerch.getByRole('img', { name: 'Perch Protection', exact: true })).toBeVisible();
+  const exiledPerch = board.locator('.zone', {
+    has: page.getByRole('heading', { name: 'Exile (1)' }),
+  });
+  await expect(
+    exiledPerch.getByRole('img', { name: 'Perch Protection', exact: true }),
+  ).toBeVisible();
   await expect(page.getByText(/Cast Perch Protection \(\{4\}\{W\}\{W\}\)/)).toBeVisible();
   await expect(page.getByText('Promise P2 a gift (extraTurn)', { exact: false })).toBeVisible();
   await expect(page.getByText('Perch Protection resolves', { exact: false })).toBeVisible();

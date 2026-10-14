@@ -108,6 +108,7 @@ interaction and the missing bug-specific viewer evidence:
 4. **Prevention order choice (Inkshield + Perch Protection)**: Fixed in `packages/engine/src/effects/resolve.ts:317` and `packages/engine/src/combat/combat.ts:1165`. Defending players are prompted to choose the prevention order per CR 616.1 via `choosePlayerDamagePrevention`. Choosing Inkshield first prevents damage and creates Inklings; choosing protection first prevents damage without Inklings. `dealDamageToPlayer` requires an explicit choice when competing prevention effects exist.
 
 Verification results:
+
 - The temporary reproduction script produced 10/10 expected observations before cleanup.
 - Targeted regression tests in `packages/engine/tests/white-black-control-review-bugs.test.ts` and `packages/engine/tests/white-black-control-prevention-order.test.ts` all pass.
 - Full verification script `scripts/run-white-black-verification.ts` completed with 0 errors across all engine tests and Playwright real-viewer scenarios.

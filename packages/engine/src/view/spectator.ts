@@ -66,12 +66,17 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     attacking: perm.attacking,
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
-    keywords: [...new Set([
-      ...chars.keywords,
-      ...chars.protectionFrom.map(color => `protection from ${
-        ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' } as const)[color]
-      }`),
-    ])],
+    keywords: [
+      ...new Set([
+        ...chars.keywords,
+        ...chars.protectionFrom.map(
+          (color) =>
+            `protection from ${
+              ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' } as const)[color]
+            }`,
+        ),
+      ]),
+    ],
     imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,

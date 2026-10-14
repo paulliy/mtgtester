@@ -48,7 +48,10 @@ function card(name: (typeof names)[number]): OracleCard {
 
 function context(seed = 'white-black-control-entry'): GameContext {
   const ctx = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   Object.assign(ctx.state, {
     currentTurnPlayer: 'P1',
@@ -81,10 +84,12 @@ function castPermanent(ctx: GameContext, printed: OracleCard): EnginePermanent {
     return payload.kind === 'castSpell' && payload.objectId === inHand.id;
   });
   if (option === undefined) throw new Error(`No normal cast option for ${printed.name}`);
-  pump(applyPriorityAction(ctx, active, option.payload as PriorityActionPayload, {
-    index: 0,
-    targets: new Map(),
-  }));
+  pump(
+    applyPriorityAction(ctx, active, option.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
   pump(resolveTopOfStack(ctx));
   const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === inHand.cardId);
   if (permanent === undefined) throw new Error(`${printed.name} did not enter the battlefield`);
@@ -118,23 +123,38 @@ function entrant(
   return printed;
 }
 
-function observer(ctx: GameContext, filter: ReturnType<typeof anyOf>, when: 'enters' | 'dies' = 'enters') {
-  const printed = oracle({ name: `Observer ${when}`, typeLine: 'Enchantment', manaCost: null, power: null, toughness: null });
+function observer(
+  ctx: GameContext,
+  filter: ReturnType<typeof anyOf>,
+  when: 'enters' | 'dies' = 'enters',
+) {
+  const printed = oracle({
+    name: `Observer ${when}`,
+    typeLine: 'Enchantment',
+    manaCost: null,
+    power: null,
+    toughness: null,
+  });
   const def = interpretCard(printed);
-  def.triggers = [{
-    kind: 'triggered',
-    trigger: { when, subject: { kind: 'permanent', selector: filter } },
-    targets: [],
-    effects: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }],
-  }];
+  def.triggers = [
+    {
+      kind: 'triggered',
+      trigger: { when, subject: { kind: 'permanent', selector: filter } },
+      targets: [],
+      effects: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }],
+    },
+  ];
   ctx.defs.set(def.oracleId, def);
   return spawn(ctx, 'P1', printed);
 }
 
 function enter(ctx: GameContext, ownerId: string, printed: OracleCard): EnginePermanent {
   const inHand = conjure(ctx, ownerId, printed, 'hand');
-  const result = pump(moveObject(ctx, inHand, { zone: 'battlefield', controllerId: ownerId })).value;
-  if (result === null || result.zone !== 'battlefield') throw new Error(`${printed.name} did not enter`);
+  const result = pump(
+    moveObject(ctx, inHand, { zone: 'battlefield', controllerId: ownerId }),
+  ).value;
+  if (result === null || result.zone !== 'battlefield')
+    throw new Error(`${printed.name} did not enter`);
   return result as EnginePermanent;
 }
 
@@ -154,7 +174,12 @@ function castZeroInstant(ctx: GameContext, playerId: string, name: string): void
     return payload.kind === 'castSpell' && payload.objectId === inHand.id;
   });
   if (option === undefined) throw new Error(`No legal cast option for ${name}`);
-  pump(applyPriorityAction(ctx, active, option.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+  pump(
+    applyPriorityAction(ctx, active, option.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
   pump(resolveTopOfStack(ctx));
 }
 
@@ -171,21 +196,30 @@ describe('white-black-control entry and trigger suppression cards', () => {
     expect(ctx.state.pendingTriggers).toHaveLength(0);
 
     const initialLife = player(ctx, 'P1').life;
-    const opponentCreature = enter(ctx, 'P2', entrant(ctx, 'Opponent Creature', 'Creature — Bear', []));
+    const opponentCreature = enter(
+      ctx,
+      'P2',
+      entrant(ctx, 'Opponent Creature', 'Creature — Bear', []),
+    );
     expect(opponentCreature.tapped).toBe(true);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     pump(runPrioritySequence(ctx));
     expect(player(ctx, 'P1').life).toBe(initialLife + 1);
 
-    const soldier = createTokens(ctx, {
-      name: 'Soldier',
-      typeLine: 'Token Creature — Soldier',
-      types: ['Creature'],
-      subtypes: ['Soldier'],
-      colors: ['W'],
-      power: 1,
-      toughness: 1,
-    }, 1, 'P2')[0]!;
+    const soldier = createTokens(
+      ctx,
+      {
+        name: 'Soldier',
+        typeLine: 'Token Creature — Soldier',
+        types: ['Creature'],
+        subtypes: ['Soldier'],
+        colors: ['W'],
+        power: 1,
+        toughness: 1,
+      },
+      1,
+      'P2',
+    )[0]!;
     expect(soldier.tapped).toBe(true);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     pump(runPrioritySequence(ctx));
@@ -199,7 +233,11 @@ describe('white-black-control entry and trigger suppression cards', () => {
     expect(player(ctx, 'P1').spellsCastThisTurn).toBe(1);
 
     const opposingNonbasic = enter(ctx, 'P2', entrant(ctx, 'Opponent Desert', 'Land — Desert', []));
-    const opposingBasic = enter(ctx, 'P2', entrant(ctx, 'Opponent Island', 'Basic Land — Island', []));
+    const opposingBasic = enter(
+      ctx,
+      'P2',
+      entrant(ctx, 'Opponent Island', 'Basic Land — Island', []),
+    );
     const ownNonbasic = enter(ctx, 'P1', entrant(ctx, 'Own Desert', 'Land — Desert', []));
     expect(opposingNonbasic.tapped).toBe(true);
     expect(opposingBasic.tapped).toBe(false);
@@ -214,7 +252,9 @@ describe('white-black-control entry and trigger suppression cards', () => {
   it('Doorkeeper Thrull suppresses own and watcher enters triggers for artifacts and creatures, not lands', () => {
     const ctx = context();
     const door = castPermanent(ctx, card('Doorkeeper Thrull'));
-    expect(computeCharacteristics(ctx, door).keywords).toEqual(expect.arrayContaining(['flash', 'flying']));
+    expect(computeCharacteristics(ctx, door).keywords).toEqual(
+      expect.arrayContaining(['flash', 'flying']),
+    );
     observer(ctx, anyOf(ofType('Artifact'), ofType('Creature'), ofType('Land')));
 
     enter(ctx, 'P2', entrant(ctx, 'Suppressed Artifact', 'Artifact'));
@@ -231,9 +271,17 @@ describe('white-black-control entry and trigger suppression cards', () => {
     ctx.state.pendingTriggers = [];
 
     const returningDoor = castPermanent(ctx, card('Doorkeeper Thrull'));
-    const muteCard = oracle({ name: 'Thrull Silencer', typeLine: 'Enchantment', manaCost: null, power: null, toughness: null });
+    const muteCard = oracle({
+      name: 'Thrull Silencer',
+      typeLine: 'Enchantment',
+      manaCost: null,
+      power: null,
+      toughness: null,
+    });
     const muteDef = interpretCard(muteCard);
-    muteDef.staticEffects = [{ affects: { kind: 'subtype', value: 'Thrull' }, op: { layer: 6, loseAllAbilities: true } }];
+    muteDef.staticEffects = [
+      { affects: { kind: 'subtype', value: 'Thrull' }, op: { layer: 6, loseAllAbilities: true } },
+    ];
     ctx.defs.set(muteDef.oracleId, muteDef);
     spawn(ctx, 'P1', muteCard);
     expect(computeCharacteristics(ctx, returningDoor).loseAbilities).toBe(true);
@@ -244,7 +292,9 @@ describe('white-black-control entry and trigger suppression cards', () => {
   it('Karn, Argent Defender normally casts and applies the same artifact-or-creature enters filter', () => {
     const ctx = context();
     const karn = castPermanent(ctx, card('Karn, Argent Defender'));
-    expect(computeCharacteristics(ctx, karn).types).toEqual(expect.arrayContaining(['Artifact', 'Creature']));
+    expect(computeCharacteristics(ctx, karn).types).toEqual(
+      expect.arrayContaining(['Artifact', 'Creature']),
+    );
     observer(ctx, anyOf(ofType('Artifact'), ofType('Creature'), ofType('Land')));
 
     enter(ctx, 'P2', entrant(ctx, 'Karn Suppresses Artifact', 'Artifact'));
@@ -258,21 +308,27 @@ describe('white-black-control entry and trigger suppression cards', () => {
   it('Hushbringer suppresses creature enters/dies, preserves enter-counter triggers, and its simultaneous death still suppresses', () => {
     const ctx = context();
     const hush = castPermanent(ctx, card('Hushbringer'));
-    expect(computeCharacteristics(ctx, hush).keywords).toEqual(expect.arrayContaining(['flying', 'lifelink']));
+    expect(computeCharacteristics(ctx, hush).keywords).toEqual(
+      expect.arrayContaining(['flying', 'lifelink']),
+    );
     observer(ctx, ofType('Creature'), 'enters');
     observer(ctx, ofType('Creature'), 'dies');
 
-    const counterWitness = enter(ctx, 'P2', entrant(
+    const counterWitness = enter(
       ctx,
-      'Counter Witness',
-      'Creature — Bear',
-      [
-        { when: 'enters', subject: { kind: 'self' } },
-        { when: 'dies', subject: { kind: 'self' } },
-        { when: 'countersPut', subject: { kind: 'self' }, counter: '+1/+1' },
-      ],
-      { '+1/+1': 1 },
-    ));
+      'P2',
+      entrant(
+        ctx,
+        'Counter Witness',
+        'Creature — Bear',
+        [
+          { when: 'enters', subject: { kind: 'self' } },
+          { when: 'dies', subject: { kind: 'self' } },
+          { when: 'countersPut', subject: { kind: 'self' }, counter: '+1/+1' },
+        ],
+        { '+1/+1': 1 },
+      ),
+    );
     expect(counterWitness.counters['+1/+1']).toBe(1);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     expect(ctx.state.pendingTriggers[0]?.ability.trigger?.when).toBe('countersPut');
@@ -289,9 +345,17 @@ describe('white-black-control entry and trigger suppression cards', () => {
     const ctx = context();
     const hush = castPermanent(ctx, card('Hushbringer'));
     observer(ctx, ofType('Creature'));
-    const muteCard = oracle({ name: 'Faerie Silencer', typeLine: 'Enchantment', manaCost: null, power: null, toughness: null });
+    const muteCard = oracle({
+      name: 'Faerie Silencer',
+      typeLine: 'Enchantment',
+      manaCost: null,
+      power: null,
+      toughness: null,
+    });
     const muteDef = interpretCard(muteCard);
-    muteDef.staticEffects = [{ affects: { kind: 'subtype', value: 'Faerie' }, op: { layer: 6, loseAllAbilities: true } }];
+    muteDef.staticEffects = [
+      { affects: { kind: 'subtype', value: 'Faerie' }, op: { layer: 6, loseAllAbilities: true } },
+    ];
     ctx.defs.set(muteDef.oracleId, muteDef);
 
     enter(ctx, 'P2', entrant(ctx, 'Still Suppressed', 'Creature — Bear'));
@@ -303,26 +367,58 @@ describe('white-black-control entry and trigger suppression cards', () => {
   });
 
   it('structural validation rejects malformed rule-static events, filters, and spell limits', () => {
-    const printed = oracle({ name: 'Malformed Rule Static', typeLine: 'Enchantment', manaCost: null, power: null, toughness: null });
+    const printed = oracle({
+      name: 'Malformed Rule Static',
+      typeLine: 'Enchantment',
+      manaCost: null,
+      power: null,
+      toughness: null,
+    });
     const invalidIssues = (staticValue: unknown) => {
       const def = interpretCard(printed);
       def.ruleStatics = [staticValue as never];
       return validateCardDefinition(def);
     };
 
-    expect(invalidIssues({
-      kind: 'suppressObjectTriggers', events: ['enters', 'castsSpell'], filter: ofType('Creature'),
-    }).some((issue) => issue.path.includes('ruleStatics') && /event|events/i.test(issue.message))).toBe(true);
-    expect(invalidIssues({ kind: 'suppressObjectTriggers', events: ['enters'] })
-      .some((issue) => issue.path.includes('ruleStatics') && issue.path.endsWith('.filter') && /selector|required/i.test(issue.message))).toBe(true);
-    expect(invalidIssues({
-      kind: 'suppressObjectTriggers', events: ['enters', 'dies', 'leavesBattlefield'], filter: ofType('Creature'),
-    }).some((issue) => issue.path.includes('ruleStatics') && /event|events/i.test(issue.message))).toBe(true);
-    expect(invalidIssues({ kind: 'otherPermanentsEnterTapped' })
-      .some((issue) => issue.path.includes('ruleStatics') && issue.path.endsWith('.filter') && /selector|required/i.test(issue.message))).toBe(true);
-    expect(invalidIssues({ kind: 'spellCastLimit', category: 'everything', limit: 1 })
-      .some((issue) => issue.path.endsWith('.category'))).toBe(true);
-    expect(invalidIssues({ kind: 'spellCastLimit', category: 'any', limit: -1 })
-      .some((issue) => issue.path.endsWith('.limit'))).toBe(true);
+    expect(
+      invalidIssues({
+        kind: 'suppressObjectTriggers',
+        events: ['enters', 'castsSpell'],
+        filter: ofType('Creature'),
+      }).some((issue) => issue.path.includes('ruleStatics') && /event|events/i.test(issue.message)),
+    ).toBe(true);
+    expect(
+      invalidIssues({ kind: 'suppressObjectTriggers', events: ['enters'] }).some(
+        (issue) =>
+          issue.path.includes('ruleStatics') &&
+          issue.path.endsWith('.filter') &&
+          /selector|required/i.test(issue.message),
+      ),
+    ).toBe(true);
+    expect(
+      invalidIssues({
+        kind: 'suppressObjectTriggers',
+        events: ['enters', 'dies', 'leavesBattlefield'],
+        filter: ofType('Creature'),
+      }).some((issue) => issue.path.includes('ruleStatics') && /event|events/i.test(issue.message)),
+    ).toBe(true);
+    expect(
+      invalidIssues({ kind: 'otherPermanentsEnterTapped' }).some(
+        (issue) =>
+          issue.path.includes('ruleStatics') &&
+          issue.path.endsWith('.filter') &&
+          /selector|required/i.test(issue.message),
+      ),
+    ).toBe(true);
+    expect(
+      invalidIssues({ kind: 'spellCastLimit', category: 'everything', limit: 1 }).some((issue) =>
+        issue.path.endsWith('.category'),
+      ),
+    ).toBe(true);
+    expect(
+      invalidIssues({ kind: 'spellCastLimit', category: 'any', limit: -1 }).some((issue) =>
+        issue.path.endsWith('.limit'),
+      ),
+    ).toBe(true);
   });
 });

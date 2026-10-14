@@ -310,7 +310,15 @@ function paymentPreview(
   allows: ReturnType<typeof allowanceFor>,
   preparedPlan?: PaymentPlan,
 ): Record<string, unknown> {
-  const plan = preparedPlan ?? planPayment(cost, player.manaEntries, sources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life);
+  const plan =
+    preparedPlan ??
+    planPayment(
+      cost,
+      player.manaEntries,
+      sources,
+      allows,
+      playerLifeLocked(ctx, player.id) ? 0 : player.life,
+    );
   if (plan === null || plan.tapCardIds.length === 0) return {};
   const permanents = plan.tapCardIds
     .map((cardId) => ctx.state.battlefield.find((permanent) => permanent.cardId === cardId))
@@ -863,7 +871,15 @@ export function computePriorityOptions(
         oracleId: faceDownId,
         isCommander: false,
       });
-      if (canPay(cost, player.manaEntries, baseCastSources, faceDownAllows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) {
+      if (
+        canPay(
+          cost,
+          player.manaEntries,
+          baseCastSources,
+          faceDownAllows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      ) {
         options.push({
           type: 'castSpell',
           description: `Cast ${obj.name} face down for ${describeManaCost(cost)}`,
@@ -1552,7 +1568,15 @@ export function computePriorityOptions(
           oracleId: cand.oracleId,
           isCommander: cand.isCommander,
         });
-        if (canPay(cost, player.manaEntries, augmentedSources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life))
+        if (
+          canPay(
+            cost,
+            player.manaEntries,
+            augmentedSources,
+            allows,
+            playerLifeLocked(ctx, player.id) ? 0 : player.life,
+          )
+        )
           unlocks.push(cand.name);
       }
       if (unlocks.length > 0) option.data = { ...option.data, unlocks };
@@ -1626,7 +1650,16 @@ export function computePriorityOptions(
       if (xSymbols === 0) xChoices.push(0);
       else {
         for (let x = 0; ; x++) {
-          if (!canPay(reducedWithX(x), player.manaEntries, usable, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) break;
+          if (
+            !canPay(
+              reducedWithX(x),
+              player.manaEntries,
+              usable,
+              allows,
+              playerLifeLocked(ctx, player.id) ? 0 : player.life,
+            )
+          )
+            break;
           xChoices.push(x);
         }
         if (xChoices.length === 0) continue;
@@ -1634,7 +1667,16 @@ export function computePriorityOptions(
 
       for (const x of xChoices) {
         const manaCost = reducedWithX(x);
-        if (!canPay(manaCost, player.manaEntries, usable, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) continue;
+        if (
+          !canPay(
+            manaCost,
+            player.manaEntries,
+            usable,
+            allows,
+            playerLifeLocked(ctx, player.id) ? 0 : player.life,
+          )
+        )
+          continue;
         if (!canPayNonManaCosts(ctx, perm, activated.costs, x)) continue;
         const jointSources = activationManaSources(ctx, player, perm, activated.costs, manaCost, x);
         if (jointSources === null) continue;
@@ -1758,7 +1800,16 @@ export function computePriorityOptions(
       // has no payment branch in `apply.ts` and must not be offered.
       if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'discardSelf')) continue;
       const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
-      if (!canPay(manaCost, player.manaEntries, sources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) continue;
+      if (
+        !canPay(
+          manaCost,
+          player.manaEntries,
+          sources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        continue;
 
       // CR 602.2b — an ability with no legal target for a slot cannot be activated at all.
       // Channel lands (Otawara) target; cycling does not.
@@ -1824,7 +1875,16 @@ export function computePriorityOptions(
       if (activated.costs.some((c) => c.kind !== 'mana' && c.kind !== 'exileSelfFromGraveyard'))
         continue;
       const manaCost = graveyardActivationCost(ctx, player.id, manaPortionOf(activated.costs));
-      if (!canPay(manaCost, player.manaEntries, sources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) continue;
+      if (
+        !canPay(
+          manaCost,
+          player.manaEntries,
+          sources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        continue;
       if (activated.ability.targets.length > 0) continue; // not needed by any card in this pool
 
       options.push({
@@ -1857,7 +1917,15 @@ export function computePriorityOptions(
   );
   if (foretellGrant !== undefined && ctx.state.currentTurnPlayer === player.id) {
     const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-    if (canPay(FORETELL_COST, player.manaEntries, baseCastSources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) {
+    if (
+      canPay(
+        FORETELL_COST,
+        player.manaEntries,
+        baseCastSources,
+        allows,
+        playerLifeLocked(ctx, player.id) ? 0 : player.life,
+      )
+    ) {
       for (const card of player.hand) {
         const def = getDefByOracleId(ctx, card.oracleId, card.name);
         if (def.types.includes('Land') || def.manaCost === null) continue;
@@ -1889,7 +1957,16 @@ export function computePriorityOptions(
     if (morphCost === undefined) continue;
     // Neither casting nor activating: restricted mana cannot pay it.
     const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-    if (!canPay(morphCost, player.manaEntries, baseCastSources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) continue;
+    if (
+      !canPay(
+        morphCost,
+        player.manaEntries,
+        baseCastSources,
+        allows,
+        playerLifeLocked(ctx, player.id) ? 0 : player.life,
+      )
+    )
+      continue;
     options.push({
       type: 'activateAbility',
       // Only its controller sees this option, and may look at the card (CR 708.5).
@@ -1914,7 +1991,13 @@ export function computePriorityOptions(
     !player.companionMovedToHand &&
     // No purpose: the companion {3} is neither casting nor activating, so restricted mana
     // cannot pay it — which is correct, and is what the default allowance expresses.
-    canPay(COMPANION_COST, player.manaEntries, sources, undefined, playerLifeLocked(ctx, player.id) ? 0 : player.life)
+    canPay(
+      COMPANION_COST,
+      player.manaEntries,
+      sources,
+      undefined,
+      playerLifeLocked(ctx, player.id) ? 0 : player.life,
+    )
   ) {
     options.push({
       type: 'companionToHand',

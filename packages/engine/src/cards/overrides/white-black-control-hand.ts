@@ -20,8 +20,11 @@ export function registerWhiteBlackControlHandOverrides(): void {
     {
       spellAbility: spell({
         targets: opponent.targets,
-        effects: [{ op: 'revealHandAndDiscard', target: opponent.slot.player, filter: NONCREATURE_NONLAND }],
-        description: 'Target opponent reveals their hand. You choose a noncreature, nonland card from it to discard',
+        effects: [
+          { op: 'revealHandAndDiscard', target: opponent.slot.player, filter: NONCREATURE_NONLAND },
+        ],
+        description:
+          'Target opponent reveals their hand. You choose a noncreature, nonland card from it to discard',
       }),
     },
     'Restores Duress with an opponent-only target and the printed noncreature, nonland hand filter.',
@@ -40,7 +43,8 @@ export function registerWhiteBlackControlHandOverrides(): void {
           { op: 'revealHandAndDiscard', target: anyPlayer.slot.player, filter: NONLAND },
           { op: 'loseLife', amount: constant(2) },
         ],
-        description: 'Target player reveals their hand. You choose a nonland card from it to discard. You lose 2 life',
+        description:
+          'Target player reveals their hand. You choose a nonland card from it to discard. You lose 2 life',
       }),
     },
     'Restores Thoughtseize with any-player targeting, a nonland hand filter, and its unconditional life loss.',
@@ -56,7 +60,8 @@ export function registerWhiteBlackControlHandOverrides(): void {
       triggers: [
         triggered(onUpkeep(), {
           effects: [{ op: 'drawRevealTopLoseManaValue' }],
-          description: 'Reveal the top card of your library, put it into your hand, and lose life equal to its mana value',
+          description:
+            'Reveal the top card of your library, put it into your hand, and lose life equal to its mana value',
         }),
       ],
     },

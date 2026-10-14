@@ -99,9 +99,11 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   for (const source of ctx.state.battlefield) {
     for (const [counter, keyword] of Object.entries(KEYWORD_COUNTERS)) {
       if (counterCount(source.counters, counter) <= 0) continue;
-      out.push({ applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
         op: { layer: 6, addKeyword: keyword },
-        timestamp: source.counterTimestamps?.[counter] ?? source.timestamp });
+        timestamp: source.counterTimestamps?.[counter] ?? source.timestamp,
+      });
     }
     if (source.faceDown) continue;
     const printed = ctx.defs.get(source.oracleId);
@@ -320,11 +322,17 @@ export function candidateOf(
   // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
   const manaValue = printedManaValue(ctx, perm);
   const defendingSeat = ctx.state.players.find((player) => player.id === perm.attacking);
-  const defendingPermanent = ctx.state.battlefield.find((permanent) => permanent.id === perm.attacking);
-  const defendingPlayer = defendingSeat?.id ?? (includeCombatDefender && defendingPermanent !== undefined &&
+  const defendingPermanent = ctx.state.battlefield.find(
+    (permanent) => permanent.id === perm.attacking,
+  );
+  const defendingPlayer =
+    defendingSeat?.id ??
+    (includeCombatDefender &&
+    defendingPermanent !== undefined &&
     computeCharacteristics(ctx, defendingPermanent).types.includes('Planeswalker') &&
     (defendingPermanent.controlChanges?.length ?? 0) === perm.attackingPlaneswalkerControlChanges
-    ? defendingPermanent.controllerId : undefined);
+      ? defendingPermanent.controllerId
+      : undefined);
 
   return {
     cardId: perm.cardId,
@@ -367,7 +375,11 @@ export function matchesSelector(
   selector: Selector,
   source: SelectorSource,
 ): boolean {
-  return selectMatches(candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true), selector, source);
+  return selectMatches(
+    candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true),
+    selector,
+    source,
+  );
 }
 
 function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {

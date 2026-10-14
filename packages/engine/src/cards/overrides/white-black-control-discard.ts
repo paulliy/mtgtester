@@ -13,7 +13,9 @@ export function registerWhiteBlackControlDiscardOverrides(): void {
     {
       spellAbility: spell({
         targets: chosen.targets,
-        effects: [{ op: 'discardTarget', target: chosen.slot.player, count: constant(2), atRandom: true }],
+        effects: [
+          { op: 'discardTarget', target: chosen.slot.player, count: constant(2), atRandom: true },
+        ],
         description: 'Target player discards two cards at random',
       }),
     },

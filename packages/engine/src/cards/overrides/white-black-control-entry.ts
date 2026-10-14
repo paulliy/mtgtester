@@ -4,11 +4,7 @@ import { allOf, anyOf, not, ofSupertype, ofType, OPPONENTS } from '../selector';
 import { replaceCard } from './index';
 
 const OPPONENT_CREATURES = allOf(ofType('Creature'), OPPONENTS);
-const OPPONENT_NONBASIC_LANDS = allOf(
-  ofType('Land'),
-  not(ofSupertype('Basic')),
-  OPPONENTS,
-);
+const OPPONENT_NONBASIC_LANDS = allOf(ofType('Land'), not(ofSupertype('Basic')), OPPONENTS);
 const ARTIFACTS_OR_CREATURES = anyOf(ofType('Artifact'), ofType('Creature'));
 
 export function registerWhiteBlackControlEntryOverrides(): void {
@@ -69,9 +65,7 @@ export function registerWhiteBlackControlEntryOverrides(): void {
   replaceCard(
     '3d21f710-6bbc-41ae-a8e5-02debe3e02bd',
     'Hushbringer',
-    [
-      `unrecognized rules text: "Creatures entering or dying don't cause abilities to trigger."`,
-    ],
+    [`unrecognized rules text: "Creatures entering or dying don't cause abilities to trigger."`],
     {
       ruleStatics: [
         { kind: 'suppressObjectTriggers', events: ['enters', 'dies'], filter: ofType('Creature') },

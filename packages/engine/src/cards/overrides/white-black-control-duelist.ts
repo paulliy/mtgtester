@@ -8,7 +8,9 @@ const ORACLE_ID = '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb';
 const NAME = "Duelist's Heritage";
 
 export function registerWhiteBlackControlDuelistOverrides(): void {
-  const chosen = targetSlots({ creature: { kind: 'creature', filter: { kind: 'combatRole', role: 'attacking' } } });
+  const chosen = targetSlots({
+    creature: { kind: 'creature', filter: { kind: 'combatRole', role: 'attacking' } },
+  });
   replaceCard(
     ORACLE_ID,
     NAME,
@@ -26,7 +28,13 @@ export function registerWhiteBlackControlDuelistOverrides(): void {
           {
             targets: chosen.targets,
             optional: true,
-            effects: [{ op: 'grantKeywordUntilEot', target: chosen.slot.creature, keyword: 'double strike' }],
+            effects: [
+              {
+                op: 'grantKeywordUntilEot',
+                target: chosen.slot.creature,
+                keyword: 'double strike',
+              },
+            ],
             description: 'Target attacking creature gains double strike until end of turn',
           },
         ),

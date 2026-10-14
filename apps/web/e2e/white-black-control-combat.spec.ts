@@ -73,7 +73,9 @@ test('Breena: aggregate attacks and compare defending-opponent life', async ({ p
   await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
   await attackWithBothWitnesses(page);
 
-  await expect(page.getByText('Target 1 of 1: click a highlighted card or player.', { exact: true })).toBeVisible({
+  await expect(
+    page.getByText('Target 1 of 1: click a highlighted card or player.', { exact: true }),
+  ).toBeVisible({
     timeout: 15_000,
   });
   await permanent(page, 'Lab Attack Witness Alpha').click();
@@ -100,7 +102,9 @@ test("Duelist's Heritage: one optional double-strike target", async ({ page }) =
   await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
   await attackWithBothWitnesses(page);
 
-  await expect(page.getByText('Target 1 of 1: click a highlighted card or player.', { exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByText('Target 1 of 1: click a highlighted card or player.', { exact: true }),
+  ).toBeVisible({ timeout: 15_000 });
   await permanent(page, 'Lab Attack Witness Alpha').click();
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();

@@ -63,7 +63,12 @@ function card(name: CardName): OracleCard {
 }
 
 function context(seed = 'white-black-control-library'): GameContext {
-  const game = createGame(gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })), { seed }));
+  const game = createGame(
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })),
+      { seed },
+    ),
+  );
   Object.assign(game.state, {
     currentTurnPlayer: 'P1',
     activePlayerIndex: 0,
@@ -80,12 +85,18 @@ function player(game: GameContext, id: string) {
   return found;
 }
 
-function castFromHand(game: GameContext, playerId: string, printed: OracleCard): EnginePermanent | undefined {
+function castFromHand(
+  game: GameContext,
+  playerId: string,
+  printed: OracleCard,
+): EnginePermanent | undefined {
   const previous = new Set(game.state.battlefield.map((permanent) => permanent.cardId));
   const oldTurnPlayer = game.state.currentTurnPlayer;
   const oldActiveIndex = game.state.activePlayerIndex;
   game.state.currentTurnPlayer = playerId;
-  game.state.activePlayerIndex = game.state.players.findIndex((candidate) => candidate.id === playerId);
+  game.state.activePlayerIndex = game.state.players.findIndex(
+    (candidate) => candidate.id === playerId,
+  );
   conjure(game, playerId, printed, 'hand');
   let cast = false;
   pump(runPrioritySequence(game), (decision) => {
@@ -104,7 +115,10 @@ function castFromHand(game: GameContext, playerId: string, printed: OracleCard):
   game.state.activePlayerIndex = oldActiveIndex;
   expect(cast, `${printed.name} cast from hand through priority`).toBe(true);
   return game.state.battlefield.find(
-    (permanent) => permanent.cardId !== undefined && !previous.has(permanent.cardId) && permanent.name === printed.name,
+    (permanent) =>
+      permanent.cardId !== undefined &&
+      !previous.has(permanent.cardId) &&
+      permanent.name === printed.name,
   );
 }
 
@@ -120,7 +134,9 @@ function castLibraryFor(game: GameContext, playerId: string): EnginePermanent {
   const oldTurnPlayer = game.state.currentTurnPlayer;
   const oldActiveIndex = game.state.activePlayerIndex;
   game.state.currentTurnPlayer = playerId;
-  game.state.activePlayerIndex = game.state.players.findIndex((candidate) => candidate.id === playerId);
+  game.state.activePlayerIndex = game.state.players.findIndex(
+    (candidate) => candidate.id === playerId,
+  );
   addMana(game, playerId, 1);
   const library = castFromHand(game, playerId, card('Library of Leng'));
   game.state.currentTurnPlayer = oldTurnPlayer;
@@ -130,17 +146,33 @@ function castLibraryFor(game: GameContext, playerId: string): EnginePermanent {
 }
 
 function dummyEffectSource(game: GameContext, id = 'P1'): EnginePermanent {
-  return spawn(game, id, oracle({
-    name: 'Discard Effect Source', typeLine: 'Artifact', types: ['Artifact'],
-    manaCost: null, cmc: 0, power: null, toughness: null,
-  }));
+  return spawn(
+    game,
+    id,
+    oracle({
+      name: 'Discard Effect Source',
+      typeLine: 'Artifact',
+      types: ['Artifact'],
+      manaCost: null,
+      cmc: 0,
+      power: null,
+      toughness: null,
+    }),
+  );
 }
 
 function discardAbility(count = 1, atRandom = false): Ability {
   return {
     kind: 'activated',
     targets: [{ kind: 'player' }],
-    effects: [{ op: 'discardTarget', target: 0, count: { kind: 'const', n: count }, ...(atRandom ? { atRandom: true as const } : {}) }],
+    effects: [
+      {
+        op: 'discardTarget',
+        target: 0,
+        count: { kind: 'const', n: count },
+        ...(atRandom ? { atRandom: true as const } : {}),
+      },
+    ],
   };
 }
 
@@ -151,7 +183,13 @@ function resolveAbility(
   target: string,
   answer?: Parameters<typeof pump>[1],
 ): void {
-  const ref = { id: source.id, cardId: source.cardId, name: source.name, oracleId: source.oracleId, controllerId: source.controllerId };
+  const ref = {
+    id: source.id,
+    cardId: source.cardId,
+    name: source.name,
+    oracleId: source.oracleId,
+    controllerId: source.controllerId,
+  };
   pump(executeAbility(game, ref, ability, [target]), answer);
   pump(priorityCheckpoint(game));
 }
@@ -179,16 +217,19 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const definition = interpretCard(card('Library of Leng'));
     expect(definition.modeled, definition.unmodeledReasons.join('; ')).toBe(true);
     expect(definition.unmodeledReasons).toEqual([]);
-    expect(definition.ruleStatics).toEqual(expect.arrayContaining([
-      { kind: 'noMaximumHandSize' },
-      { kind: 'effectDiscardMayGoToLibraryTop' },
-    ]));
+    expect(definition.ruleStatics).toEqual(
+      expect.arrayContaining([
+        { kind: 'noMaximumHandSize' },
+        { kind: 'effectDiscardMayGoToLibraryTop' },
+      ]),
+    );
   });
 
   it('library-leng-c01-positive — casts normally and preserves more than seven cards through the real cleanup step', () => {
     const game = context('library-leng-cleanup');
     castLibrary(game);
-    for (let index = 0; index < 8; index++) conjure(game, 'P1', handCard(`Excess Hand ${index}`), 'hand');
+    for (let index = 0; index < 8; index++)
+      conjure(game, 'P1', handCard(`Excess Hand ${index}`), 'hand');
     expect(player(game, 'P1').hand).toHaveLength(8);
     expect(hasNoMaximumHandSize(game, 'P1')).toBe(true);
 
@@ -216,7 +257,9 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
 
     expect(libraryPrompts).toBe(1);
     expect(player(game, 'P1').library[0]?.cardId).toBe(discarded.cardId);
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(false);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(
+      false,
+    );
     expect(player(game, 'P1').discardedCardsThisTurn).toBe(initialDiscardCount + 1);
     const discardLog = game.state.eventLog.find(
       (entry) => entry.type === 'discard' && entry.payload['cardId'] === discarded.cardId,
@@ -239,11 +282,15 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
       return pick(decision, /Pass|does not/i);
     });
     expect(prompts).toBe(1);
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === ownCard.cardId)).toBe(true);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === ownCard.cardId)).toBe(
+      true,
+    );
 
     const opponentCard = conjure(game, 'P2', handCard('Unaffected Opponent Card'), 'hand');
     pump(discardCard(game, opponentCard, 'P2'));
-    expect(player(game, 'P2').graveyard.some((object) => object.cardId === opponentCard.cardId)).toBe(true);
+    expect(
+      player(game, 'P2').graveyard.some((object) => object.cardId === opponentCard.cardId),
+    ).toBe(true);
   });
 
   it('library-leng-c03-positive — random and multi-card effect discards ask separately for each card', () => {
@@ -254,7 +301,8 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const second = conjure(game, 'P1', handCard('Random Choice B'), 'hand');
     const third = conjure(game, 'P1', handCard('Chosen Choice C'), 'hand');
     const combined: Ability = {
-      kind: 'activated', targets: [{ kind: 'player' }],
+      kind: 'activated',
+      targets: [{ kind: 'player' }],
       effects: [
         { op: 'discardTarget', target: 0, count: { kind: 'const', n: 1 }, atRandom: true },
         { op: 'discardTarget', target: 0, count: { kind: 'const', n: 2 } },
@@ -271,7 +319,11 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
       return pick(decision, /Pass|does not/i);
     });
     expect(choices).toHaveLength(3);
-    expect([first, second, third].filter((object) => player(game, 'P1').library.some((entry) => entry.cardId === object.cardId))).toHaveLength(3);
+    expect(
+      [first, second, third].filter((object) =>
+        player(game, 'P1').library.some((entry) => entry.cardId === object.cardId),
+      ),
+    ).toHaveLength(3);
     expect(player(game, 'P1').discardedCardsThisTurn).toBe(3);
   });
 
@@ -300,19 +352,33 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const cycler = conjure(cycling, 'P1', card('Archfiend of Ifnir'), 'hand');
     const option = computePriorityOptions(cycling, player(cycling, 'P1')).find((candidate) => {
       const payload = candidate.payload as PriorityActionPayload;
-      return payload.kind === 'activateAbility' && payload.fromHand === true && payload.objectId === cycler.id;
+      return (
+        payload.kind === 'activateAbility' &&
+        payload.fromHand === true &&
+        payload.objectId === cycler.id
+      );
     });
     expect(option, 'cycling is offered from hand through the normal priority action').toBeDefined();
     let cyclingPrompts = 0;
-    pump(applyPriorityAction(cycling, player(cycling, 'P1'), option!.payload as PriorityActionPayload, {
-      index: 0,
-      targets: new Map(),
-    }), (decision) => {
-      if (decision.prompt.includes('Library of Leng')) cyclingPrompts++;
-      return pick(decision, /Pass|does not/i);
-    });
+    pump(
+      applyPriorityAction(
+        cycling,
+        player(cycling, 'P1'),
+        option!.payload as PriorityActionPayload,
+        {
+          index: 0,
+          targets: new Map(),
+        },
+      ),
+      (decision) => {
+        if (decision.prompt.includes('Library of Leng')) cyclingPrompts++;
+        return pick(decision, /Pass|does not/i);
+      },
+    );
     expect(cyclingPrompts).toBe(0);
-    expect(player(cycling, 'P1').graveyard.some((object) => object.cardId === cycler.cardId)).toBe(true);
+    expect(player(cycling, 'P1').graveyard.some((object) => object.cardId === cycler.cardId)).toBe(
+      true,
+    );
     pump(priorityCheckpoint(cycling));
     settleStack(cycling);
     expect(player(cycling, 'P1').hand).toHaveLength(1); // Cycling still draws normally.
@@ -327,19 +393,36 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const tinybones = castFromHand(game, 'P1', card('Tinybones, Trinket Thief'));
     addMana(game, 'P2', 6);
     const archfiend = castFromHand(game, 'P2', card('Archfiend of Ifnir'));
-    if (!grimoire || !archfiend || !wasteNot || !tinybones) throw new Error('discard watcher failed normal cast');
+    if (!grimoire || !archfiend || !wasteNot || !tinybones)
+      throw new Error('discard watcher failed normal cast');
     expect(game.defs.get(grimoire.oracleId)?.triggers).toHaveLength(1);
     castLibraryFor(game, 'P2');
-    const opponentCreature = spawn(game, 'P1', oracle({
-      name: 'Archfiend Hidden Discard Target', typeLine: 'Creature — Bear', types: ['Creature'],
-      manaCost: null, cmc: 0, power: '2', toughness: '2',
-    }));
-    const discardedCreature = conjure(game, 'P2', handCard('Hidden Creature', 'Creature — Bear'), 'hand');
+    const opponentCreature = spawn(
+      game,
+      'P1',
+      oracle({
+        name: 'Archfiend Hidden Discard Target',
+        typeLine: 'Creature — Bear',
+        types: ['Creature'],
+        manaCost: null,
+        cmc: 0,
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    const discardedCreature = conjure(
+      game,
+      'P2',
+      handCard('Hidden Creature', 'Creature — Bear'),
+      'hand',
+    );
     const handBeforeTriggers = player(game, 'P1').hand.length;
     player(game, 'P1').life = 40;
-    pump(discardCard(game, discardedCreature, 'P2'), (decision) => decision.prompt.includes('Library of Leng')
-      ? pick(decision, 'Put it on top of your library')
-      : pick(decision, /Pass|does not/i));
+    pump(discardCard(game, discardedCreature, 'P2'), (decision) =>
+      decision.prompt.includes('Library of Leng')
+        ? pick(decision, 'Put it on top of your library')
+        : pick(decision, /Pass|does not/i),
+    );
     expect(game.state.pendingTriggers).toHaveLength(2);
     pump(priorityCheckpoint(game));
     expect(player(game, 'P2').library[0]?.cardId).toBe(discardedCreature.cardId);
@@ -356,9 +439,13 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     settleStack(game);
     expect(player(game, 'P1').life).toBe(39);
     expect(player(game, 'P1').hand).toHaveLength(handBeforeTriggers + 2); // Geth and Tinybones each draw.
-    expect(game.state.battlefield.filter((permanent) => permanent.name === 'Zombie')).toHaveLength(0);
+    expect(game.state.battlefield.filter((permanent) => permanent.name === 'Zombie')).toHaveLength(
+      0,
+    );
     expect(player(game, 'P1').manaPool.B).toBe(0);
-    expect(player(game, 'P1').hand.some((entry) => entry.name === discardedCreature.name)).toBe(false);
+    expect(player(game, 'P1').hand.some((entry) => entry.name === discardedCreature.name)).toBe(
+      false,
+    );
   });
 
   it('library-leng-c06-negative — hidden land identity does not produce Waste Not mana', () => {
@@ -371,9 +458,11 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     if (!wasteNot) throw new Error('Waste Not failed normal cast');
     const discardedLand = conjure(game, 'P2', handCard('Hidden Land', 'Land — Swamp'), 'hand');
     const source = dummyEffectSource(game);
-    resolveAbility(game, source, discardAbility(), 'P2', (decision) => decision.prompt.includes('Library of Leng')
-      ? pick(decision, 'Put it on top of your library')
-      : pick(decision, /Pass|does not/i));
+    resolveAbility(game, source, discardAbility(), 'P2', (decision) =>
+      decision.prompt.includes('Library of Leng')
+        ? pick(decision, 'Put it on top of your library')
+        : pick(decision, /Pass|does not/i),
+    );
     settleStack(game);
     expect(player(game, 'P2').library[0]?.cardId).toBe(discardedLand.cardId);
     expect(game.state.pendingTriggers).toHaveLength(0);
@@ -391,9 +480,11 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const handBefore = player(game, 'P1').hand.length;
     const discarded = conjure(game, 'P2', handCard('Hidden Artifact', 'Artifact'), 'hand');
     const source = dummyEffectSource(game);
-    resolveAbility(game, source, discardAbility(), 'P2', (decision) => decision.prompt.includes('Library of Leng')
-      ? pick(decision, 'Put it on top of your library')
-      : pick(decision, /Pass|does not/i));
+    resolveAbility(game, source, discardAbility(), 'P2', (decision) =>
+      decision.prompt.includes('Library of Leng')
+        ? pick(decision, 'Put it on top of your library')
+        : pick(decision, /Pass|does not/i),
+    );
     settleStack(game);
     expect(player(game, 'P2').library[0]?.cardId).toBe(discarded.cardId);
     expect(game.state.pendingTriggers).toHaveLength(0);
@@ -405,23 +496,36 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
     const library = castLibrary(game);
     const source = dummyEffectSource(game);
     const discarded = conjure(game, 'P1', handCard('No Longer Protected'), 'hand');
-    game.state.battlefield = game.state.battlefield.filter((permanent) => permanent.id !== library.id);
+    game.state.battlefield = game.state.battlefield.filter(
+      (permanent) => permanent.id !== library.id,
+    );
     let prompts = 0;
     resolveAbility(game, source, discardAbility(), 'P1', (decision) => {
       if (decision.prompt.includes('Library of Leng')) prompts++;
       return pick(decision, /Pass|does not/i);
     });
     expect(prompts).toBe(0);
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(true);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(
+      true,
+    );
   });
 
   it('library-leng-c10-positive — a connive discard redirected to the library has unknown characteristics and adds no counter', () => {
     const game = context('library-leng-connive-hidden');
     castLibraryFor(game, 'P2');
-    const conniver = spawn(game, 'P2', oracle({
-      name: 'Test Conniver', typeLine: 'Creature — Rogue', types: ['Creature'],
-      manaCost: null, cmc: 2, power: '2', toughness: '2',
-    }));
+    const conniver = spawn(
+      game,
+      'P2',
+      oracle({
+        name: 'Test Conniver',
+        typeLine: 'Creature — Rogue',
+        types: ['Creature'],
+        manaCost: null,
+        cmc: 2,
+        power: '2',
+        toughness: '2',
+      }),
+    );
     const drawn = conjure(game, 'P2', handCard('Hidden Connive Artifact', 'Artifact'), 'library');
     const source = {
       id: conniver.id,
@@ -430,11 +534,21 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
       oracleId: conniver.oracleId,
       controllerId: conniver.controllerId,
     };
-    pump(executeAbility(game, source, { kind: 'activated', targets: [], effects: [{ op: 'connive' }] }, []), (decision) => {
-      if (decision.prompt.includes('Library of Leng')) return pick(decision, 'Put it on top of your library');
-      if (decision.prompt.toLowerCase().includes('discard')) return pick(decision, 'Hidden Connive Artifact');
-      return pick(decision, /Pass|does not/i);
-    });
+    pump(
+      executeAbility(
+        game,
+        source,
+        { kind: 'activated', targets: [], effects: [{ op: 'connive' }] },
+        [],
+      ),
+      (decision) => {
+        if (decision.prompt.includes('Library of Leng'))
+          return pick(decision, 'Put it on top of your library');
+        if (decision.prompt.toLowerCase().includes('discard'))
+          return pick(decision, 'Hidden Connive Artifact');
+        return pick(decision, /Pass|does not/i);
+      },
+    );
     expect(player(game, 'P2').library[0]?.cardId).toBe(drawn.cardId);
     expect(conniver.counters['+1/+1'] ?? 0).toBe(0);
     expect(player(game, 'P2').discardedCardsThisTurn).toBe(1);
@@ -465,7 +579,9 @@ describe('Library of Leng — pinned Oracle effect-discard and hand-size behavio
         ? pick(decision, 'Discard it normally')
         : pick(decision, /Pass|does not/i),
     );
-    expect(player(game, 'P2').graveyard.some((object) => object.cardId === declined.cardId)).toBe(false);
+    expect(player(game, 'P2').graveyard.some((object) => object.cardId === declined.cardId)).toBe(
+      false,
+    );
     expect(game.state.exile.some((object) => object.cardId === declined.cardId)).toBe(true);
     expect(player(game, 'P2').discardedCardsThisTurn).toBe(2);
   });

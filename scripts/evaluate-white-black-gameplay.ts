@@ -406,7 +406,7 @@ const sourceFiles = [
     'packages/server/src/cards/white-black-control-remaining-combat-scenarios.ts',
     'packages/server/src/cards/white-black-control-tergrid-scenarios.ts',
     'packages/server/src/cards/white-black-control-hand-limit-scenarios.ts',
-  'packages/server/src/cards/white-black-control-keyword-scenarios.ts',
+    'packages/server/src/cards/white-black-control-keyword-scenarios.ts',
     'packages/engine/tests/fixtures/white-black-control-oracle.json',
     'packages/server/fixtures/coverage-decks/white-black-control.txt',
     ...sourceTreeFiles('packages/engine/src'),

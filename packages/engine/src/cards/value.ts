@@ -442,7 +442,8 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
     case 'cardTypesInYourGraveyard':
-      if (scope?.controllerId === undefined) throw new Error('your graveyard types require a controller');
+      if (scope?.controllerId === undefined)
+        throw new Error('your graveyard types require a controller');
       return cardTypesInAllGraveyards(ctx, scope.controllerId);
     case 'countersOnSelf':
       if (scope?.sourceCounters === undefined) {

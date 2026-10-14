@@ -88,11 +88,7 @@ export function whiteBlackControlPerchScenario(id: string, gameId: GameId): Card
       expectedOutcome:
         'Perch Protection is cast for {4}{W}{W}; P2 receives the promised extra turn. It creates four blue 2/2 flying Birds, phases out P1’s permanents, and exiles itself. P1’s original Bear and six Plains phase in before P1’s next untap.',
       oracleSha256: perch.sha256,
-      clauseIds: [
-        'perch-protection-c01',
-        'perch-protection-c02',
-        'perch-protection-c03',
-      ],
+      clauseIds: ['perch-protection-c01', 'perch-protection-c02', 'perch-protection-c03'],
     },
     seed,
     seats: players.map((config) => ({

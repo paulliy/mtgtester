@@ -16,7 +16,13 @@ import type { Selector } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 import { computeCharacteristics, selectPermanents } from './continuous';
-import { cardZoneCandidate, effectivePT, getDefByOracleId, opponentsOf, spellDefinitionOf } from '../state/queries';
+import {
+  cardZoneCandidate,
+  effectivePT,
+  getDefByOracleId,
+  opponentsOf,
+  spellDefinitionOf,
+} from '../state/queries';
 import { spellManaValue } from '../state/objects';
 
 function scopedPermanents(
@@ -217,7 +223,9 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
         return sourceObjectFacts(ctx, scope)?.manaValue ?? scope.resolvingSourceManaValue ?? 0;
       if (value.target === 'triggerObject') return eventObjectFacts(ctx, scope)?.manaValue ?? 0;
       const targetId = scope.targets?.[value.target];
-      const spell = ctx.state.stack.find((entry) => entry.id === targetId && entry.kind === 'spell');
+      const spell = ctx.state.stack.find(
+        (entry) => entry.id === targetId && entry.kind === 'spell',
+      );
       if (spell !== undefined && spell.card !== null) {
         const definition = spellDefinitionOf(ctx, spell);
         return spellManaValue(definition, spell.announcedX);

@@ -46,9 +46,12 @@ const regularAttacker = (name: string) =>
 
 function context(): GameContext {
   const ctx = createGame(
-    gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, plains) })), {
-      seed: 'white-black-control-duelist',
-    }),
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, plains) })),
+      {
+        seed: 'white-black-control-duelist',
+      },
+    ),
   );
   Object.assign(ctx.state, {
     currentTurnPlayer: 'P1',
@@ -68,7 +71,8 @@ function castHeritage(ctx: GameContext): void {
   pump(runPrioritySequence(ctx), (decision) => {
     if (decision.player === 'P1' && decision.decisionType === 'priority' && !cast) {
       const index = decision.options.findIndex(
-        (option) => option.type === 'castSpell' && option.description.includes("Duelist's Heritage"),
+        (option) =>
+          option.type === 'castSpell' && option.description.includes("Duelist's Heritage"),
       );
       if (index >= 0) {
         cast = true;
@@ -149,7 +153,9 @@ describe("Duelist's Heritage — pinned Oracle clause: one-or-more creatures att
       return pick(decision, /Pass|does not/i);
     });
 
-    expect(decisions.some((decision) => decision.options.some((option) => option.description === 'Yes'))).toBe(true);
+    expect(
+      decisions.some((decision) => decision.options.some((option) => option.description === 'Yes')),
+    ).toBe(true);
     expect(hasDoubleStrike(ctx, attacker.id)).toBe(false);
   });
 

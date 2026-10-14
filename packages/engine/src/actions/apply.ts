@@ -32,7 +32,12 @@ import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 
 import { emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
-import { discardCard, makePermanent, moveObject, queuePlayerTriggersForEvent } from '../state/objects';
+import {
+  discardCard,
+  makePermanent,
+  moveObject,
+  queuePlayerTriggersForEvent,
+} from '../state/objects';
 import {
   activatingAbilitiesBlockedFor,
   colorsOf,

@@ -200,11 +200,20 @@ registerDeck('white-black-control-stax', registerWhiteBlackControlStaxOverrides)
 registerDeck('white-black-control-discard', registerWhiteBlackControlDiscardOverrides);
 registerDeck('white-black-control-entry', registerWhiteBlackControlEntryOverrides);
 registerDeck('white-black-control-payoffs', registerWhiteBlackControlPayoffOverrides);
-registerDeck('white-black-control-discard-choices', registerWhiteBlackControlDiscardChoiceOverrides);
+registerDeck(
+  'white-black-control-discard-choices',
+  registerWhiteBlackControlDiscardChoiceOverrides,
+);
 registerDeck('white-black-control-graveyard', registerWhiteBlackControlGraveyardOverrides);
 registerDeck('white-black-control-tinybones', registerWhiteBlackControlTinybonesOverrides);
-registerDeck('white-black-control-protection-stack', registerWhiteBlackControlProtectionStackOverrides);
-registerDeck('white-black-control-graveyard-triggers', registerWhiteBlackControlGraveyardTriggerOverrides);
+registerDeck(
+  'white-black-control-protection-stack',
+  registerWhiteBlackControlProtectionStackOverrides,
+);
+registerDeck(
+  'white-black-control-graveyard-triggers',
+  registerWhiteBlackControlGraveyardTriggerOverrides,
+);
 registerDeck('white-black-control-library', registerWhiteBlackControlLibraryOverrides);
 registerDeck('white-black-control-leyline', registerWhiteBlackControlLeylineOverrides);
 registerDeck('white-black-control-liliana', registerWhiteBlackControlLilianaOverrides);

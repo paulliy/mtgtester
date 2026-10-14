@@ -204,11 +204,6 @@ export function whiteBlackControlDiscardCoreScenario(id: string, gameId: GameId)
   const p4Hand: string[] = [];
   const p1Library: string[] = [];
   const witnesses = new Map<string, OracleCard>();
-  const addWitness = (label: string, kind: 'creature' | 'artifact' | 'sorcery' = 'creature') => {
-    const card = witness(label, kind);
-    witnesses.set(card.name, card);
-    return card.name;
-  };
   let p1Mana = 0;
   let p2Mana = 0;
   let p1BattlefieldCreatures: string[] = [];

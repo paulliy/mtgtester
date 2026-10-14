@@ -70,7 +70,10 @@ const entries = [
 export const WHITE_BLACK_FINAL_SCENARIO_IDS = entries.map((entry) => entry.id);
 
 function witness(name: string, kind: 'creature' | 'instant'): OracleCard {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
   const creature = kind === 'creature';
   return {
     ...plains,
@@ -97,19 +100,26 @@ function opponentSpellProvider(spellName: string): DecisionProvider {
   let cast = false;
   return {
     decide(request) {
-      const onOpponentMain = request.decidingPlayer === 'P2' &&
-        request.activePlayer === 'P2' && request.phase === 'precombatMain' &&
+      const onOpponentMain =
+        request.decidingPlayer === 'P2' &&
+        request.activePlayer === 'P2' &&
+        request.phase === 'precombatMain' &&
         request.decisionType === 'priority';
-      const action = onOpponentMain && !cast
-        ? request.legalActions.find((candidate) =>
-            candidate.type === 'castSpell' && candidate.description.startsWith(`Cast ${spellName}`),
-          )
-        : undefined;
+      const action =
+        onOpponentMain && !cast
+          ? request.legalActions.find(
+              (candidate) =>
+                candidate.type === 'castSpell' &&
+                candidate.description.startsWith(`Cast ${spellName}`),
+            )
+          : undefined;
       if (action !== undefined) {
         cast = true;
         return { requestId: request.requestId, actionId: action.id };
       }
-      const pass = request.legalActions.find((candidate) => candidate.type === 'pass') ?? request.legalActions[0];
+      const pass =
+        request.legalActions.find((candidate) => candidate.type === 'pass') ??
+        request.legalActions[0];
       if (pass === undefined) throw new Error(`No legal P2 action for ${request.decisionType}`);
       return { requestId: request.requestId, actionId: pass.id };
     },
@@ -121,27 +131,40 @@ function avenPlotTaxProvider(spellName: string): DecisionProvider {
   let castFromExile = false;
   return {
     decide(request) {
-      const onP2Main = request.decidingPlayer === 'P2' &&
-        request.activePlayer === 'P2' && request.phase === 'precombatMain' &&
+      const onP2Main =
+        request.decidingPlayer === 'P2' &&
+        request.activePlayer === 'P2' &&
+        request.phase === 'precombatMain' &&
         request.decisionType === 'priority';
-      const handCast = onP2Main && request.turn === 1 && !castFromHand
-        ? request.legalActions.find((candidate) => candidate.type === 'castSpell' &&
-            candidate.description.startsWith(`Cast ${spellName}`) &&
-            candidate.data?.['sourceZone'] === 'hand')
-        : undefined;
-      const plottedCast = onP2Main && request.turn === 5 && castFromHand && !castFromExile
-        ? request.legalActions.find((candidate) => candidate.type === 'castSpell' &&
-            candidate.description.startsWith(`Cast ${spellName}`) &&
-            candidate.data?.['sourceName'] === spellName && candidate.data?.['sourceZone'] === 'exile' &&
-            candidate.data?.['manaCost'] === '{2}')
-        : undefined;
+      const handCast =
+        onP2Main && request.turn === 1 && !castFromHand
+          ? request.legalActions.find(
+              (candidate) =>
+                candidate.type === 'castSpell' &&
+                candidate.description.startsWith(`Cast ${spellName}`) &&
+                candidate.data?.['sourceZone'] === 'hand',
+            )
+          : undefined;
+      const plottedCast =
+        onP2Main && request.turn === 5 && castFromHand && !castFromExile
+          ? request.legalActions.find(
+              (candidate) =>
+                candidate.type === 'castSpell' &&
+                candidate.description.startsWith(`Cast ${spellName}`) &&
+                candidate.data?.['sourceName'] === spellName &&
+                candidate.data?.['sourceZone'] === 'exile' &&
+                candidate.data?.['manaCost'] === '{2}',
+            )
+          : undefined;
       const action = handCast ?? plottedCast;
       if (action !== undefined) {
         if (action === handCast) castFromHand = true;
         else castFromExile = true;
         return { requestId: request.requestId, actionId: action.id };
       }
-      const pass = request.legalActions.find((candidate) => candidate.type === 'pass') ?? request.legalActions[0];
+      const pass =
+        request.legalActions.find((candidate) => candidate.type === 'pass') ??
+        request.legalActions[0];
       if (pass === undefined) throw new Error(`No legal P2 action for ${request.decisionType}`);
       return { requestId: request.requestId, actionId: pass.id };
     },
@@ -160,11 +183,21 @@ export function whiteBlackControlFinalScenario(id: string, gameId: GameId): Card
   const isDawn = sourceName === "Dawn's Truce";
   const witnessSpell = witness('Lab Opposing Instant', 'instant');
   const ownCreature = witness('Lab Visible P1 Creature', 'creature');
-  const manaP1 = isLantern ? [plains, plains, plains, swamp] : isAven ? [plains, plains, plains] : [plains, plains];
+  const manaP1 = isLantern
+    ? [plains, plains, plains, swamp]
+    : isAven
+      ? [plains, plains, plains]
+      : [plains, plains];
   const p1Cards = [entry.source.card, ...manaP1, ownCreature];
   const p2Cards = isAvenPlotTax
-    ? [witnessSpell, ...Array.from({ length: 3 }, () => swamp), ...Array.from({ length: 10 }, () => plains)]
-    : isAven || isBilbo ? [witnessSpell, swamp, plains] : [plains, plains, plains];
+    ? [
+        witnessSpell,
+        ...Array.from({ length: 3 }, () => swamp),
+        ...Array.from({ length: 10 }, () => plains),
+      ]
+    : isAven || isBilbo
+      ? [witnessSpell, swamp, plains]
+      : [plains, plains, plains];
   const p3Cards = [plains, swamp];
   const p4Cards = [plains, swamp];
   const configs = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
@@ -177,7 +210,9 @@ export function whiteBlackControlFinalScenario(id: string, gameId: GameId): Card
     { playerId: 'P1', cardNames: manaP1.map((land) => land.name) },
     ...(isAvenPlotTax
       ? [{ playerId: 'P2', cardNames: Array.from({ length: 3 }, () => swamp.name) }]
-      : isAven || isBilbo ? [{ playerId: 'P2', cardNames: [swamp.name] }] : []),
+      : isAven || isBilbo
+        ? [{ playerId: 'P2', cardNames: [swamp.name] }]
+        : []),
     ...(isDawn ? [{ playerId: 'P1', cardNames: [ownCreature.name] }] : []),
   ];
   const hand = [
@@ -215,35 +250,35 @@ export function whiteBlackControlFinalScenario(id: string, gameId: GameId): Card
             "Observe the spell leave exile, P2 retain the cards drawn on their turns, and two of P2's three Swamps tapped.",
           ]
         : isAven
-        ? [
-            'P2 casts Lab Opposing Instant normally from hand.',
-            'Cast Aven Interrupter from your hand in response; it has flash.',
-            'Choose Lab Opposing Instant for the enters trigger and observe it move from the stack to exile.',
-          ]
-        : isLantern
           ? [
-              "Cast Tergrid's Lantern from the back face of Tergrid, God of Fright // Tergrid's Lantern.",
-              "Activate Tergrid's Lantern targeting P2. P2 has no cards in hand or nonland permanents, so P2 loses 3 life.",
+              'P2 casts Lab Opposing Instant normally from hand.',
+              'Cast Aven Interrupter from your hand in response; it has flash.',
+              'Choose Lab Opposing Instant for the enters trigger and observe it move from the stack to exile.',
             ]
-          : isBilbo
+          : isLantern
             ? [
-                'P2 casts Lab Opposing Instant normally from hand.',
-                "Cast Bilbo's Gambit, promise the Treasure gift to P3, and target Lab Opposing Instant.",
-                "Observe P3 create a Treasure and the spell return to P2's hand; players cannot cast spells for the rest of this turn.",
+                "Cast Tergrid's Lantern from the back face of Tergrid, God of Fright // Tergrid's Lantern.",
+                "Activate Tergrid's Lantern targeting P2. P2 has no cards in hand or nonland permanents, so P2 loses 3 life.",
               ]
-            : [
-                "Cast Dawn's Truce and promise the card gift to P2.",
-                'P2 draws a card before the protection effect; you and your visible creature gain hexproof and indestructible until end of turn.',
-              ],
+            : isBilbo
+              ? [
+                  'P2 casts Lab Opposing Instant normally from hand.',
+                  "Cast Bilbo's Gambit, promise the Treasure gift to P3, and target Lab Opposing Instant.",
+                  "Observe P3 create a Treasure and the spell return to P2's hand; players cannot cast spells for the rest of this turn.",
+                ]
+              : [
+                  "Cast Dawn's Truce and promise the card gift to P2.",
+                  'P2 draws a card before the protection effect; you and your visible creature gain hexproof and indestructible until end of turn.',
+                ],
       expectedOutcome: isAvenPlotTax
         ? "Aven Interrupter exiles and plots P2's spell on turn 1. On P2's later turn, the legal plot cast costs {2}; P2 pays with two Swamps, draws for the turn, and the spell leaves exile."
         : isAven
-        ? 'Aven Interrupter resolves normally and its triggered ability moves the opposing spell from the stack to exile.'
-        : isLantern
-          ? "Tergrid's Lantern taps and P2 loses 3 life because P2 has no nonland permanent or card in hand to choose instead."
-          : isBilbo
-            ? "P3 receives the promised Treasure, Lab Opposing Instant returns to its owner's hand, and the turn's spell-casting restriction applies."
-            : "P2 draws one card before Dawn's Truce gives you and your creature hexproof and indestructible until end of turn.",
+          ? 'Aven Interrupter resolves normally and its triggered ability moves the opposing spell from the stack to exile.'
+          : isLantern
+            ? "Tergrid's Lantern taps and P2 loses 3 life because P2 has no nonland permanent or card in hand to choose instead."
+            : isBilbo
+              ? "P3 receives the promised Treasure, Lab Opposing Instant returns to its owner's hand, and the turn's spell-casting restriction applies."
+              : "P2 draws one card before Dawn's Truce gives you and your creature hexproof and indestructible until end of turn.",
       oracleSha256: entry.source.sha256,
       clauseIds: [...entry.clauseIds],
     },
@@ -264,6 +299,8 @@ export function whiteBlackControlFinalScenario(id: string, gameId: GameId): Card
     engine,
     decisionProviderOverrides: isAvenPlotTax
       ? { P2: avenPlotTaxProvider(witnessSpell.name) }
-      : isAven || isBilbo ? { P2: opponentSpellProvider(witnessSpell.name) } : {},
+      : isAven || isBilbo
+        ? { P2: opponentSpellProvider(witnessSpell.name) }
+        : {},
   };
 }

@@ -17,7 +17,6 @@ import {
   additionalTypedTriggerCopies,
   discardCard,
   expireRegenerationShields,
-  moveObject,
   playerById,
 } from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';

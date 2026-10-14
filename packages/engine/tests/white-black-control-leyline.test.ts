@@ -29,7 +29,10 @@ beforeAll(() => registerWhiteBlackControlLeylineOverrides());
 
 function context(seed = 'white-black-control-leyline'): GameContext {
   const game = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })),
+      { seed },
+    ),
   );
   Object.assign(game.state, {
     currentTurnPlayer: 'P1',
@@ -54,7 +57,8 @@ function castLeyline(game: GameContext): EnginePermanent {
   pump(runPrioritySequence(game), (decision) => {
     if (decision.decisionType === 'priority' && decision.player === 'P1' && !cast) {
       const index = decision.options.findIndex(
-        (option) => option.type === 'castSpell' && option.description.includes('Leyline of the Void'),
+        (option) =>
+          option.type === 'castSpell' && option.description.includes('Leyline of the Void'),
       );
       if (index >= 0) {
         cast = true;
@@ -64,8 +68,11 @@ function castLeyline(game: GameContext): EnginePermanent {
     return pick(decision, /Pass|does not/i);
   });
   expect(cast, 'Leyline of the Void casts from hand through normal priority').toBe(true);
-  const permanent = game.state.battlefield.find((candidate) => candidate.name === 'Leyline of the Void');
-  if (permanent === undefined) throw new Error('Leyline of the Void did not resolve as a permanent');
+  const permanent = game.state.battlefield.find(
+    (candidate) => candidate.name === 'Leyline of the Void',
+  );
+  if (permanent === undefined)
+    throw new Error('Leyline of the Void did not resolve as a permanent');
   return permanent;
 }
 
@@ -79,10 +86,12 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
     const definition = interpretCard(leyline);
     expect(definition.modeled, definition.unmodeledReasons.join('; ')).toBe(true);
     expect(definition.unmodeledReasons).toEqual([]);
-    expect(definition.ruleStatics).toEqual(expect.arrayContaining([
-      { kind: 'beginOnBattlefieldFromOpeningHand' },
-      { kind: 'graveyardToExile', scope: 'opponents', basis: 'owner', includeTokens: false },
-    ]));
+    expect(definition.ruleStatics).toEqual(
+      expect.arrayContaining([
+        { kind: 'beginOnBattlefieldFromOpeningHand' },
+        { kind: 'graveyardToExile', scope: 'opponents', basis: 'owner', includeTokens: false },
+      ]),
+    );
   });
 
   it('leyline-c02 — normal cast resolves and affects opponent-owned cards from hand, library, and stack', () => {
@@ -92,7 +101,9 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
     const discarded = conjure(game, 'P2', cardNamed('Opponent Discard'), 'hand');
     pump(discardCard(game, discarded, 'P2'));
     expect(game.state.exile.some((object) => object.cardId === discarded.cardId)).toBe(true);
-    expect(player(game, 'P2').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(false);
+    expect(player(game, 'P2').graveyard.some((object) => object.cardId === discarded.cardId)).toBe(
+      false,
+    );
     expect(game.state.eventLog.filter((event) => event.type === 'discard')).toHaveLength(1);
 
     const milled = conjure(game, 'P3', cardNamed('Opponent Library Card'), 'library');
@@ -111,22 +122,32 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
 
     const ownCard = conjure(game, 'P1', cardNamed('Controller Owned'), 'hand');
     pump(moveObject(game, ownCard, { zone: 'graveyard' }));
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === ownCard.cardId)).toBe(true);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === ownCard.cardId)).toBe(
+      true,
+    );
 
     const stolen = spawn(game, 'P1', cardNamed('Controller Owned Permanent', 'Creature — Bear'));
     changeController(game, stolen, 'P2');
     pump(moveObject(game, stolen, { zone: 'graveyard' }));
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === stolen.cardId)).toBe(true);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === stolen.cardId)).toBe(
+      true,
+    );
     expect(game.state.exile.some((object) => object.cardId === stolen.cardId)).toBe(false);
   });
 
   it('leyline-c04 — tokens are not exiled by this card’s replacement', () => {
     const game = context('leyline-token-negative');
     castLeyline(game);
-    const token = spawn(game, 'P2', cardNamed('Leyline Test Token', 'Creature — Spirit'), { isToken: true });
+    const token = spawn(game, 'P2', cardNamed('Leyline Test Token', 'Creature — Spirit'), {
+      isToken: true,
+    });
     pump(moveObject(game, token, { zone: 'graveyard' }));
     expect(game.state.exile.some((object) => object.id === token.id)).toBe(false);
-    expect(game.state.eventLog.some((event) => event.type === 'dies' && event.payload['cardId'] === token.cardId)).toBe(false);
+    expect(
+      game.state.eventLog.some(
+        (event) => event.type === 'dies' && event.payload['cardId'] === token.cardId,
+      ),
+    ).toBe(false);
   });
 
   it('leyline-c05 — the opening-hand battlefield choice can be accepted or declined after mulligans', () => {
@@ -141,14 +162,20 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
     });
     expect(acceptedPrompts).toBe(1);
     expect(gameObjectInZone(accepted, acceptedCard.cardId, 'battlefield')).toBe(true);
-    expect(player(accepted, 'P1').hand.some((object) => object.cardId === acceptedCard.cardId)).toBe(false);
+    expect(
+      player(accepted, 'P1').hand.some((object) => object.cardId === acceptedCard.cardId),
+    ).toBe(false);
 
     const declined = context('leyline-opening-decline');
     const declinedCard = conjure(declined, 'P1', leyline, 'hand');
     pump(runOpeningHandBattlefieldActions(declined), (decision) =>
-      decision.prompt.includes('opening hand') ? pick(decision, 'Keep the remaining cards in hand') : pick(decision, /Pass|does not/i),
+      decision.prompt.includes('opening hand')
+        ? pick(decision, 'Keep the remaining cards in hand')
+        : pick(decision, /Pass|does not/i),
     );
-    expect(player(declined, 'P1').hand.some((object) => object.cardId === declinedCard.cardId)).toBe(true);
+    expect(
+      player(declined, 'P1').hand.some((object) => object.cardId === declinedCard.cardId),
+    ).toBe(true);
     expect(gameObjectInZone(declined, declinedCard.cardId, 'battlefield')).toBe(false);
   });
 
@@ -166,18 +193,31 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
         : pick(decision, 'Keep the remaining cards in hand');
     });
     expect(order).toEqual(['P3', 'P4', 'P1', 'P2']);
-    for (const id of ['P3', 'P1']) expect(game.state.battlefield.some((object) => object.controllerId === id && object.name === 'Leyline of the Void')).toBe(true);
-    for (const id of ['P4', 'P2']) expect(player(game, id).hand.some((object) => object.name === 'Leyline of the Void')).toBe(true);
+    for (const id of ['P3', 'P1'])
+      expect(
+        game.state.battlefield.some(
+          (object) => object.controllerId === id && object.name === 'Leyline of the Void',
+        ),
+      ).toBe(true);
+    for (const id of ['P4', 'P2'])
+      expect(player(game, id).hand.some((object) => object.name === 'Leyline of the Void')).toBe(
+        true,
+      );
   });
 
   it('leyline-c07 — London mulligan keeps the seven-card hand and still offers Leyline afterward', () => {
     const leylineCopies = copies(8, () => leyline);
-    const game = createGame(gameConfig([
-      { cards: leylineCopies },
-      { cards: copies(8, swamp) },
-      { cards: copies(8, swamp) },
-      { cards: copies(8, swamp) },
-    ], { seed: 'leyline-mulligan-hand-semantics' }));
+    const game = createGame(
+      gameConfig(
+        [
+          { cards: leylineCopies },
+          { cards: copies(8, swamp) },
+          { cards: copies(8, swamp) },
+          { cards: copies(8, swamp) },
+        ],
+        { seed: 'leyline-mulligan-hand-semantics' },
+      ),
+    );
     game.state.currentTurnPlayer = 'P1';
     game.state.activePlayerIndex = 0;
     let p1Mulligans = 0;
@@ -193,13 +233,20 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
           ? pick(decision, 'Begin with Leyline of the Void on the battlefield')
           : pick(decision, 'Keep the remaining cards in hand');
       }
-      if (decision.prompt.includes('opening hand')) return pick(decision, 'Keep the remaining cards in hand');
+      if (decision.prompt.includes('opening hand'))
+        return pick(decision, 'Keep the remaining cards in hand');
       return { index: 0, targets: new Map() };
     });
     expect(player(game, 'P1').mulligansTaken).toBe(1);
     expect(player(game, 'P1').hand).toHaveLength(6);
-    expect(game.state.battlefield.filter((object) => object.controllerId === 'P1' && object.name === 'Leyline of the Void')).toHaveLength(1);
-    const keep = game.state.eventLog.find((event) => event.type === 'keepHand' && event.payload['player'] === 'P1');
+    expect(
+      game.state.battlefield.filter(
+        (object) => object.controllerId === 'P1' && object.name === 'Leyline of the Void',
+      ),
+    ).toHaveLength(1);
+    const keep = game.state.eventLog.find(
+      (event) => event.type === 'keepHand' && event.payload['player'] === 'P1',
+    );
     expect(keep?.payload['bottoming']).toBe(0);
   });
 
@@ -209,7 +256,9 @@ describe('Leyline of the Void — pinned Oracle opening action and graveyard rep
     pump(moveObject(game, permanent, { zone: 'graveyard' }));
     const later = conjure(game, 'P2', cardNamed('After Leyline Leaves'), 'hand');
     pump(moveObject(game, later, { zone: 'graveyard' }));
-    expect(player(game, 'P2').graveyard.some((object) => object.cardId === later.cardId)).toBe(true);
+    expect(player(game, 'P2').graveyard.some((object) => object.cardId === later.cardId)).toBe(
+      true,
+    );
     expect(game.state.exile.some((object) => object.cardId === later.cardId)).toBe(false);
   });
 });

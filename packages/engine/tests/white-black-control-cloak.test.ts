@@ -45,7 +45,10 @@ beforeAll(registerWhiteBlackControlCloakOverrides);
 
 function context(seed: string): GameContext {
   const game = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   Object.assign(game.state, {
     currentTurnPlayer: 'P1',
@@ -173,7 +176,9 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
     expect(result.optionalChoices).toBe(1);
     expect(game.state.players.find((candidate) => candidate.id === 'P2')!.life).toBe(40);
     expect(handCards(game, 'P2')).toHaveLength(before.length - 1);
-    expect(player(game, 'P2').graveyard.filter((object) => before.includes(object.name))).toHaveLength(1);
+    expect(
+      player(game, 'P2').graveyard.filter((object) => before.includes(object.name)),
+    ).toHaveLength(1);
     expect(attacker.assignsNoCombatDamageTurn).toBe(game.state.turnNumber);
   });
 
@@ -182,8 +187,8 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
       const { game, attacker } = setupAttached(seed);
       const available = handCards(game, 'P2');
       combat(game, attacker, 'P2', { accept: true });
-      return player(game, 'P2').graveyard
-        .filter((object) => available.includes(object.name))
+      return player(game, 'P2')
+        .graveyard.filter((object) => available.includes(object.name))
         .map((object) => object.name);
     };
     expect(discardForSeed('cloak-random-replay')).toEqual(discardForSeed('cloak-random-replay'));
@@ -215,7 +220,9 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
   });
 
   it('accepting the choice suppresses both double-strike damage steps and lasts through another combat this turn only', () => {
-    const { game, attacker } = setupAttached('cloak-double-strike-turn-duration', ['double strike']);
+    const { game, attacker } = setupAttached('cloak-double-strike-turn-duration', [
+      'double strike',
+    ]);
     expect(combat(game, attacker, 'P2', { accept: true }).optionalChoices).toBe(1);
     expect(player(game, 'P2').life).toBe(40);
 
@@ -232,7 +239,11 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
   it('uses the actual controller of a planeswalker defender in a multiplayer combat', () => {
     const game = context('cloak-planeswalker-defender-player');
     const attacker = spawn(game, 'P1', creature('Walker Attacker'));
-    const walker = spawn(game, 'P2', oracle({ name: 'Borrowed Walker', typeLine: 'Planeswalker', loyalty: '8' }));
+    const walker = spawn(
+      game,
+      'P2',
+      oracle({ name: 'Borrowed Walker', typeLine: 'Planeswalker', loyalty: '8' }),
+    );
     changeController(game, walker, 'P3');
     const aura = castCloak(game, attacker);
     for (const id of ['P2', 'P3']) conjure(game, id, forest(), 'hand');
@@ -252,7 +263,20 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
     const laterHost = spawn(game, 'P1', creature('Later Enchanted Host'));
     const aura = castCloak(game, attacker);
     spawn(game, 'P1', forest());
-    conjure(game, 'P1', oracle({ name: 'Priority Window Witness', typeLine: 'Instant', manaCost: '{0}', cmc: 0, oracleText: 'Target creature gets +1/+1 until end of turn.', power: null, toughness: null }), 'hand');
+    conjure(
+      game,
+      'P1',
+      oracle({
+        name: 'Priority Window Witness',
+        typeLine: 'Instant',
+        manaCost: '{0}',
+        cmc: 0,
+        oracleText: 'Target creature gets +1/+1 until end of turn.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
     conjure(game, 'P2', forest(), 'hand');
     conjure(game, 'P2', forest(), 'hand');
     let moved = false;
@@ -274,7 +298,20 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
 
   it('does nothing when the original attacking creature leaves before the queued trigger resolves', () => {
     const { game, attacker } = setupAttached('cloak-original-attacker-leaves');
-    conjure(game, 'P1', oracle({ name: 'Target Departure Witness', typeLine: 'Instant', manaCost: '{0}', cmc: 0, oracleText: 'Target creature gets +1/+1 until end of turn.', power: null, toughness: null }), 'hand');
+    conjure(
+      game,
+      'P1',
+      oracle({
+        name: 'Target Departure Witness',
+        typeLine: 'Instant',
+        manaCost: '{0}',
+        cmc: 0,
+        oracleText: 'Target creature gets +1/+1 until end of turn.',
+        power: null,
+        toughness: null,
+      }),
+      'hand',
+    );
     const before = handCards(game, 'P2');
     let removed = false;
     const result = combat(game, attacker, 'P2', {
@@ -287,6 +324,8 @@ describe('Cloak of Confusion — pinned Oracle combat behavior', () => {
     expect(removed).toBe(true);
     expect(result.optionalChoices).toBe(0);
     expect(handCards(game, 'P2')).toEqual(before);
-    expect(player(game, 'P1').graveyard.some((object) => object.cardId === attacker.cardId)).toBe(true);
+    expect(player(game, 'P1').graveyard.some((object) => object.cardId === attacker.cardId)).toBe(
+      true,
+    );
   });
 });

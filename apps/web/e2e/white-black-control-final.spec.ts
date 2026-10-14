@@ -64,19 +64,25 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
     .toBe(true);
 }
 
-test('Aven Interrupter lets P2 cast the plotted spell later and pay the exile tax', async ({ page }) => {
+test('Aven Interrupter lets P2 cast the plotted spell later and pay the exile tax', async ({
+  page,
+}) => {
   await runScenario(page, 'Aven Interrupter: cast the plotted spell later and pay the exile tax');
   const stack = page.locator('.stack');
   await expect(stack).toContainText('Lab Opposing Instant', { timeout: 15_000 });
   await castNormally(page, 'Aven Interrupter');
 
   const p2 = opponent(page, 'P2');
-  await expect(p2.getByRole('img', { name: 'Lab Opposing Instant', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(p2.getByRole('img', { name: 'Lab Opposing Instant', exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(stack).not.toContainText('Lab Opposing Instant');
   await expect(page.getByText(/Aven Interrupter.*Exile target spell/i)).toBeVisible();
 
   await passUntil(page, page.getByText('Lab Opposing Instant resolves', { exact: false }).first());
-  await expect(page.getByText(/Cast Lab Opposing Instant \(\{2\}\) from exile/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/Cast Lab Opposing Instant \(\{2\}\) from exile/i).first(),
+  ).toBeVisible();
   await expect(p2.getByText('2 in hand')).toBeVisible();
   await expect(p2.getByRole('heading', { name: /^Exile/ })).toHaveCount(0);
   await expect(p2.getByRole('heading', { name: 'Graveyard (1)', exact: true })).toBeVisible();
@@ -87,19 +93,28 @@ test('Aven Interrupter lets P2 cast the plotted spell later and pay the exile ta
   await expect(tappedSwamps.locator('.stack-count-badge')).toHaveText('×2');
 });
 
-test('Aven Interrupter is cast in response and exiles the normal opposing spell', async ({ page }) => {
+test('Aven Interrupter is cast in response and exiles the normal opposing spell', async ({
+  page,
+}) => {
   await runScenario(page, 'Aven Interrupter: flash in to exile the opposing spell');
   const stack = page.locator('.stack');
   await expect(stack).toContainText('Lab Opposing Instant', { timeout: 15_000 });
   await castNormally(page, 'Aven Interrupter');
 
-  await expect(opponent(page, 'P2').getByRole('img', { name: 'Lab Opposing Instant' })).toBeVisible({ timeout: 15_000 });
+  await expect(opponent(page, 'P2').getByRole('img', { name: 'Lab Opposing Instant' })).toBeVisible(
+    { timeout: 15_000 },
+  );
   await expect(stack).not.toContainText('Lab Opposing Instant');
   await expect(page.getByText(/Aven Interrupter.*Exile target spell/i)).toBeVisible();
 });
 
-test("Tergrid's Lantern is cast from the back face and makes P2 lose 3 life with no alternative", async ({ page }) => {
-  await runScenario(page, "Tergrid's Lantern: activate against a player with no discard or sacrifice choice");
+test("Tergrid's Lantern is cast from the back face and makes P2 lose 3 life with no alternative", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Tergrid's Lantern: activate against a player with no discard or sacrifice choice",
+  );
   const source = handCard(page, 'Tergrid, God of Fright');
   await expect(source).toHaveClass(/actionable/, { timeout: 15_000 });
   await source.click();

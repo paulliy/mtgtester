@@ -12,27 +12,61 @@ import { runCombatPhase } from '../src/combat/combat';
 import { changeController, moveObject } from '../src/state/objects';
 import { computeCharacteristics } from '../src/effects/continuous';
 import type { GameContext } from '../src/state/types';
-import { bear, conjure, copies, declareAttacks, declareNoBlocks, forest, gameConfig, oracle, plains, pump, spawn } from './fixtures';
+import {
+  bear,
+  conjure,
+  copies,
+  declareAttacks,
+  declareNoBlocks,
+  forest,
+  gameConfig,
+  oracle,
+  plains,
+  pump,
+  spawn,
+} from './fixtures';
 
-const fixture = JSON.parse(readFileSync(new URL('./fixtures/white-black-control-oracle.json', import.meta.url), 'utf8')) as { cards: { sha256: string; card: OracleCard }[] };
+const fixture = JSON.parse(
+  readFileSync(new URL('./fixtures/white-black-control-oracle.json', import.meta.url), 'utf8'),
+) as { cards: { sha256: string; card: OracleCard }[] };
 const pins = {
   'Archon of Absolution': '9bd606953d9c7d2b28966ca403927c18bb825ffbfbac485fc051b9528b23014e',
   'Soul Snare': '994bae03a713184fd5257172464dc1836785328517d213136f2f45d5c4e89855',
 } as const;
 beforeAll(registerWhiteBlackControlDefenderOverrides);
-function card(name: keyof typeof pins) { return fixture.cards.find((entry) => entry.card.name === name)!.card; }
+function card(name: keyof typeof pins) {
+  return fixture.cards.find((entry) => entry.card.name === name)!.card;
+}
 function setup() {
-  const ctx = createGame(gameConfig([0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })), { seed: 'defender-cards' }));
-  Object.assign(ctx.state, { currentTurnPlayer: 'P1', turnNumber: 4, phase: 'precombatMain', step: null });
+  const ctx = createGame(
+    gameConfig(
+      [0, 1, 2, 3].map(() => ({ cards: copies(8, forest) })),
+      { seed: 'defender-cards' },
+    ),
+  );
+  Object.assign(ctx.state, {
+    currentTurnPlayer: 'P1',
+    turnNumber: 4,
+    phase: 'precombatMain',
+    step: null,
+  });
   return ctx;
 }
 function cast(ctx: GameContext, name: keyof typeof pins) {
   for (let index = 0; index < 4; index++) spawn(ctx, 'P1', plains());
   const object = conjure(ctx, 'P1', card(name), 'hand');
   const player = ctx.state.players[0]!;
-  const action = computePriorityOptions(ctx, player).find((option) => { const p = option.payload as PriorityActionPayload; return p.kind === 'castSpell' && p.objectId === object.id; });
+  const action = computePriorityOptions(ctx, player).find((option) => {
+    const p = option.payload as PriorityActionPayload;
+    return p.kind === 'castSpell' && p.objectId === object.id;
+  });
   expect(action).toBeDefined();
-  pump(applyPriorityAction(ctx, player, action!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+  pump(
+    applyPriorityAction(ctx, player, action!.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
   pump(resolveTopOfStack(ctx));
   return ctx.state.battlefield.find((permanent) => permanent.cardId === object.cardId)!;
 }
@@ -52,7 +86,11 @@ describe('white black defender cards', () => {
   it('archon-absolution-c02 requires tax against both its controller and their planeswalker, but not another opponent', () => {
     const ctx = setup();
     cast(ctx, 'Archon of Absolution');
-    const walker = spawn(ctx, 'P1', oracle({ name: 'Protected Walker', typeLine: 'Planeswalker', loyalty: '8' }));
+    const walker = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Protected Walker', typeLine: 'Planeswalker', loyalty: '8' }),
+    );
     spawn(ctx, 'P2', bear());
     ctx.state.currentTurnPlayer = 'P2';
     ctx.state.activePlayerIndex = 1;
@@ -72,7 +110,11 @@ describe('white black defender cards', () => {
   it('archon-absolution-c02 pays the ordinary per-creature planeswalker attack tax', () => {
     const ctx = setup();
     cast(ctx, 'Archon of Absolution');
-    const walker = spawn(ctx, 'P1', oracle({ name: 'Paid Walker', typeLine: 'Planeswalker', loyalty: '8' }));
+    const walker = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Paid Walker', typeLine: 'Planeswalker', loyalty: '8' }),
+    );
     walker.counters['loyalty'] = 8;
     spawn(ctx, 'P2', bear());
     const land = spawn(ctx, 'P2', forest());
@@ -88,44 +130,84 @@ describe('white black defender cards', () => {
     expect(ctx.state.players[0]!.life).toBe(40);
   });
 
-  for (const defender of ['you', 'walker'] as const) it(`soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against ${defender}`, () => {
-    const ctx = setup();
-    const snare = cast(ctx, 'Soul Snare');
-    spawn(ctx, 'P1', plains());
-    const walker = spawn(ctx, 'P1', oracle({ name: 'Snare Walker', typeLine: 'Planeswalker', loyalty: '8' }));
-    const attacker = spawn(ctx, 'P2', bear());
-    attacker.attacking = defender === 'you' ? 'P1' : walker.id;
-    attacker.attackingPlayerId = 'P1';
-    if (defender === 'walker') attacker.attackingPlaneswalkerControlChanges = 0;
-    const unrelated = spawn(ctx, 'P2', bear());
-    unrelated.attacking = 'P3';
-    const player = ctx.state.players[0]!;
-    const action = computePriorityOptions(ctx, player).find((option) => { const p = option.payload as PriorityActionPayload; return p.kind === 'activateAbility' && p.objectId === snare.id; });
-    expect(action).toBeDefined();
-    expect(action!.targets![0]!.options).toEqual([attacker.id]);
-    pump(applyPriorityAction(ctx, player, action!.payload as PriorityActionPayload, { index: 0, targets: new Map([[0, attacker.id]]) }));
-    expect(player.graveyard.some((object) => object.cardId === snare.cardId)).toBe(true);
-    pump(resolveTopOfStack(ctx));
-    expect(ctx.state.exile.some((object) => object.cardId === attacker.cardId)).toBe(true);
-    expect(ctx.state.battlefield).toContain(unrelated);
-  });
+  for (const defender of ['you', 'walker'] as const)
+    it(`soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against ${defender}`, () => {
+      const ctx = setup();
+      const snare = cast(ctx, 'Soul Snare');
+      spawn(ctx, 'P1', plains());
+      const walker = spawn(
+        ctx,
+        'P1',
+        oracle({ name: 'Snare Walker', typeLine: 'Planeswalker', loyalty: '8' }),
+      );
+      const attacker = spawn(ctx, 'P2', bear());
+      attacker.attacking = defender === 'you' ? 'P1' : walker.id;
+      attacker.attackingPlayerId = 'P1';
+      if (defender === 'walker') attacker.attackingPlaneswalkerControlChanges = 0;
+      const unrelated = spawn(ctx, 'P2', bear());
+      unrelated.attacking = 'P3';
+      const player = ctx.state.players[0]!;
+      const action = computePriorityOptions(ctx, player).find((option) => {
+        const p = option.payload as PriorityActionPayload;
+        return p.kind === 'activateAbility' && p.objectId === snare.id;
+      });
+      expect(action).toBeDefined();
+      expect(action!.targets![0]!.options).toEqual([attacker.id]);
+      pump(
+        applyPriorityAction(ctx, player, action!.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map([[0, attacker.id]]),
+        }),
+      );
+      expect(player.graveyard.some((object) => object.cardId === snare.cardId)).toBe(true);
+      pump(resolveTopOfStack(ctx));
+      expect(ctx.state.exile.some((object) => object.cardId === attacker.cardId)).toBe(true);
+      expect(ctx.state.battlefield).toContain(unrelated);
+    });
 
   it('soul-snare-c01 rechecks an attacking planeswalker target when the defender changes control or leaves', () => {
     for (const change of ['control', 'leave', 'type'] as const) {
       const ctx = setup();
       const snare = cast(ctx, 'Soul Snare');
       spawn(ctx, 'P1', plains());
-      const walker = spawn(ctx, 'P1', oracle({ name: 'Changing Walker', typeLine: 'Planeswalker', loyalty: '8' }));
+      const walker = spawn(
+        ctx,
+        'P1',
+        oracle({ name: 'Changing Walker', typeLine: 'Planeswalker', loyalty: '8' }),
+      );
       const attacker = spawn(ctx, 'P2', bear());
       attacker.attacking = walker.id;
       attacker.attackingPlayerId = 'P1';
       attacker.attackingPlaneswalkerControlChanges = 0;
       const player = ctx.state.players[0]!;
-      const action = computePriorityOptions(ctx, player).find((option) => { const p = option.payload as PriorityActionPayload; return p.kind === 'activateAbility' && p.objectId === snare.id; })!;
-      pump(applyPriorityAction(ctx, player, action.payload as PriorityActionPayload, { index: 0, targets: new Map([[0, attacker.id]]) }));
+      const action = computePriorityOptions(ctx, player).find((option) => {
+        const p = option.payload as PriorityActionPayload;
+        return p.kind === 'activateAbility' && p.objectId === snare.id;
+      })!;
+      pump(
+        applyPriorityAction(ctx, player, action.payload as PriorityActionPayload, {
+          index: 0,
+          targets: new Map([[0, attacker.id]]),
+        }),
+      );
       if (change === 'control') changeController(ctx, walker, 'P3');
       else if (change === 'leave') pump(moveObject(ctx, walker, { zone: 'hand' }));
-      else ctx.state.effects.push({ id: 'type-change', sourceId: walker.cardId, description: 'Lose planeswalker type', targetCardIds: [walker.cardId], kind: 'becomeCreature', timestamp: ctx.state.nextTimestamp++, becomeCreature: { replaceTypes: ['Creature'], addSubtypes: [], power: 8, toughness: 8, addKeywords: [] } });
+      else
+        ctx.state.effects.push({
+          id: 'type-change',
+          sourceId: walker.cardId,
+          description: 'Lose planeswalker type',
+          targetCardIds: [walker.cardId],
+          kind: 'becomeCreature',
+          timestamp: ctx.state.nextTimestamp++,
+          becomeCreature: {
+            replaceTypes: ['Creature'],
+            addSubtypes: [],
+            power: 8,
+            toughness: 8,
+            addKeywords: [],
+          },
+        });
       pump(resolveTopOfStack(ctx));
       expect(ctx.state.battlefield, change).toContain(attacker);
     }

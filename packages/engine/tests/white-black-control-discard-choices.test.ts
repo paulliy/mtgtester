@@ -65,7 +65,10 @@ function card(name: keyof typeof pins): OracleCard {
 
 function context(seed = 'white-black-control-discard-choices'): GameContext {
   const ctx = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(12, swamp) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(12, swamp) })),
+      { seed },
+    ),
   );
   Object.assign(ctx.state, {
     currentTurnPlayer: 'P1',
@@ -197,12 +200,20 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
     putInHand(ctx, 'P2', 'P2 Choice One', 'P2 Choice Two');
 
     let choices = 0;
-    castCardFromHand(ctx, 'P2', doom(), new Map([[0, ctx.state.battlefield.find((perm) => perm.name === 'Painful Quandary Doom Target')!.id]]), (decision) => {
-      if (!decision.prompt.includes('Discard a card or lose 5 life.')) return undefined;
-      choices++;
-      expect(decision.player).toBe('P2');
-      return pick(decision, 'Discard P2 Choice Two');
-    });
+    castCardFromHand(
+      ctx,
+      'P2',
+      doom(),
+      new Map([
+        [0, ctx.state.battlefield.find((perm) => perm.name === 'Painful Quandary Doom Target')!.id],
+      ]),
+      (decision) => {
+        if (!decision.prompt.includes('Discard a card or lose 5 life.')) return undefined;
+        choices++;
+        expect(decision.player).toBe('P2');
+        return pick(decision, 'Discard P2 Choice Two');
+      },
+    );
 
     expect(choices).toBe(1);
     expect(player(ctx, 'P2').life).toBe(40);
@@ -261,7 +272,9 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
       ownCast,
       'P1',
       doom(),
-      new Map([[0, ownCast.state.battlefield.find((perm) => perm.name === 'Own Cast Doom Target')!.id]]),
+      new Map([
+        [0, ownCast.state.battlefield.find((perm) => perm.name === 'Own Cast Doom Target')!.id],
+      ]),
     );
     expect(player(ownCast, 'P1').life).toBe(40);
     expect(ownCast.state.stack).toHaveLength(0);
@@ -424,11 +437,32 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
       ['damage', 'discard', 'mill', 'lifeGain'].includes(event.type),
     );
     expect(relevant.map((event) => event.type)).toEqual([
-      'damage', 'damage', 'damage', 'discard', 'discard', 'discard', 'mill', 'mill', 'mill', 'lifeGain',
+      'damage',
+      'damage',
+      'damage',
+      'discard',
+      'discard',
+      'discard',
+      'mill',
+      'mill',
+      'mill',
+      'lifeGain',
     ]);
-    expect(relevant.slice(0, 3).map((event) => event.payload['target'])).toEqual(['P2', 'P3', 'P4']);
-    expect(relevant.slice(3, 6).map((event) => event.payload['player'])).toEqual(['P2', 'P3', 'P4']);
-    expect(relevant.slice(6, 9).map((event) => event.payload['player'])).toEqual(['P2', 'P3', 'P4']);
+    expect(relevant.slice(0, 3).map((event) => event.payload['target'])).toEqual([
+      'P2',
+      'P3',
+      'P4',
+    ]);
+    expect(relevant.slice(3, 6).map((event) => event.payload['player'])).toEqual([
+      'P2',
+      'P3',
+      'P4',
+    ]);
+    expect(relevant.slice(6, 9).map((event) => event.payload['player'])).toEqual([
+      'P2',
+      'P3',
+      'P4',
+    ]);
     expect(relevant.at(-1)?.payload).toMatchObject({ player: 'P1', amount: 1, life: 41 });
   });
 

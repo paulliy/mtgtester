@@ -15,7 +15,11 @@ import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { addGeneric, subtractColored, subtractGeneric } from '../mana/cost';
 import { planSpellPayment } from '../mana/spell-payment';
-import { getDefByOracleId, castingSpellsBlockedFor, nonHandSpellCostIncreaseFor } from '../state/queries';
+import {
+  getDefByOracleId,
+  castingSpellsBlockedFor,
+  nonHandSpellCostIncreaseFor,
+} from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
 import { castSpell } from './cast';
 import { selectedSpellDefinition } from '../cards/spell-faces';
@@ -71,8 +75,11 @@ function legalFreeCastSelections(
     altIndex?: number;
   }[] = [{ definition: def }];
   for (const [altIndex, alternative] of (def.alternativeCasts ?? []).entries()) {
-    if (alternative.kind === 'adventure' || alternative.kind === 'omen' ||
-      (alternative.kind === 'mdfc' && alternative.spellFace !== undefined))
+    if (
+      alternative.kind === 'adventure' ||
+      alternative.kind === 'omen' ||
+      (alternative.kind === 'mdfc' && alternative.spellFace !== undefined)
+    )
       variants.push({
         definition: selectedSpellDefinition(def, alternative),
         alternativeCast: alternative.kind,
@@ -129,7 +136,10 @@ function legalFreeCastSelections(
           costs.push({ kind: 'mana', cost: optional!.cost });
         const commanderTax =
           card.zone === 'command' ? 2 * (previewPlayer.commanderCastCount[card.cardId] ?? 0) : 0;
-        let mana = addGeneric(manaPortionOf(costs), commanderTax + nonHandSpellCostIncreaseFor(preview, controllerId, card.zone));
+        let mana = addGeneric(
+          manaPortionOf(costs),
+          commanderTax + nonHandSpellCostIncreaseFor(preview, controllerId, card.zone),
+        );
         if (reduction.colored !== undefined) mana = subtractColored(mana, reduction.colored);
         mana = subtractGeneric(mana, reduction.generic);
         for (const targets of targetAssignments) {

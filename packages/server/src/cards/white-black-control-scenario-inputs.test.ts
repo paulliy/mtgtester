@@ -5,12 +5,13 @@ import { createCardTestScenario } from './card-test-scenarios';
 
 // Witness cards also reach interpretation during casting, discard, and zone moves.
 // Validate their inputs before spending a browser run on a fail-closed fixture.
-const requirements = JSON.parse(readFileSync(
-  'docs/plans/white-black-control-verification-requirements.json', 'utf8',
-)) as { evidenceSemantics: { factoryReadyViewerScenarioIds: string[] } };
+const requirements = JSON.parse(
+  readFileSync('docs/plans/white-black-control-verification-requirements.json', 'utf8'),
+) as { evidenceSemantics: { factoryReadyViewerScenarioIds: string[] } };
 
 it.each(requirements.evidenceSemantics.factoryReadyViewerScenarioIds)(
-  '%s has supported subjects and witness cards', (id) => {
+  '%s has supported subjects and witness cards',
+  (id) => {
     const scenario = createCardTestScenario(id, `input-check-${id}`);
     expect(scenario).not.toBeNull();
     for (const seat of scenario!.seats) {

@@ -20,7 +20,13 @@ export type RuleStatic =
   | { kind: 'beginOnBattlefieldFromOpeningHand' }
   | { kind: 'effectDiscardMayGoToLibraryTop' }
   /** Redirect a matching graveyard move before any zone-change or dies event. */
-  | { kind: 'graveyardToExile'; scope: 'all' | 'opponents'; basis: 'owner' | 'controller'; includeTokens: boolean; creatureFromBattlefieldOnly?: true }
+  | {
+      kind: 'graveyardToExile';
+      scope: 'all' | 'opponents';
+      basis: 'owner' | 'controller';
+      includeTokens: boolean;
+      creatureFromBattlefieldOnly?: true;
+    }
   /** "Spells you cast cost {1} less to cast" (Temur Battlecrier) / Eminence (The Ur-Dragon). */
   | {
       kind: 'costReduction';
@@ -140,7 +146,12 @@ export type RuleStatic =
       addition: number;
     }
   /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; alsoPlaneswalkersYouControl?: true }
+  | {
+      kind: 'attackTax';
+      amount: number;
+      phyrexianColor?: Color;
+      alsoPlaneswalkersYouControl?: true;
+    }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }
