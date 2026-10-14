@@ -53,6 +53,8 @@ export interface PreparedScenarioSpec {
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
   continueToNextUpkeep?: boolean;
+  /** Finish the arranged active turn, then run exactly the next surviving player's full turn. */
+  continueThroughNextTurn?: boolean;
   /** Card Lab continuation: visit successive upkeeps, including a full rotation to your own. */
   continueThroughUpkeeps?: number;
   /** One subsequent turn's production untap, upkeep, draw and precombat main window. */

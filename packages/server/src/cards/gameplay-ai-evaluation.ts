@@ -10,6 +10,7 @@ import { HeuristicDecisionProvider } from '@mtg/bot';
 import { RandomDecisionProvider } from '@mtg/engine';
 import type { DecisionResponse, LegalAction, PlayerId } from '@mtg/shared';
 import { REVIEWED_BASELINE_SCENARIO_IDS, createCardTestScenario } from './card-test-scenarios';
+import { COMBAT_TRIGGER_SCENARIO_IDS } from './combat-trigger-scenarios';
 
 export type ProviderKind = 'random' | 'heuristic';
 
@@ -42,6 +43,82 @@ export interface GameplayAiReport {
   liveLlm: 'not-run';
   note: string;
   cards: CardAiEvaluation[];
+}
+
+/** Quality observations for the combat regressions, separate from their scripted rules tests. */
+export function evaluateCombatTriggerGameplayAi() {
+  const runs = COMBAT_TRIGGER_SCENARIO_IDS.flatMap((scenarioId) =>
+    (['random', 'heuristic'] as const).map((providerKind) => {
+      const scenario = createCardTestScenario(scenarioId, `quality-${providerKind}-${scenarioId}`)!;
+      const engine = scenario.engine;
+      const provider =
+        providerKind === 'random'
+          ? new RandomDecisionProvider(`${scenario.seed}-quality-random`)
+          : new HeuristicDecisionProvider(`${scenario.seed}-quality-heuristic`, () =>
+              engine.view('P1'),
+            );
+      const observations: DecisionObservation[] = [];
+      let decisions = 0;
+      let halted = false;
+      for (;;) {
+        const step = engine.advance();
+        if (step.kind === 'gameOver') {
+          halted = step.result.halted;
+          break;
+        }
+        if (step.kind !== 'decision') continue;
+        const request = step.request;
+        const response =
+          request.decidingPlayer === 'P1'
+            ? provider.decide(request)
+            : (scenario.decisionProviderOverrides?.[request.decidingPlayer]?.decide(request) ?? {
+                requestId: request.requestId,
+                actionId: (
+                  request.legalActions.find((action) => action.type === 'pass') ??
+                  request.legalActions[0]!
+                ).id,
+              });
+        const action = request.legalActions.find((action) => action.id === response.actionId)!;
+        observations.push({
+          decidingPlayer: request.decidingPlayer,
+          actionType: action.type,
+          description: action.description,
+        });
+        engine.submit(response);
+        if (++decisions >= 400) {
+          halted = true;
+          break;
+        }
+      }
+      const state = engine.getState();
+      const subject = scenarioId.startsWith('marchesa')
+        ? 'Marchesa, the Black Rose'
+        : scenarioId.startsWith('namor')
+          ? 'Namor, Atlantean King'
+          : 'Scriv, the Obligator';
+      const usedSubjectCard = state.eventLog.some(
+        (event) =>
+          (event.type === 'castSpell' && event.payload['name'] === subject) ||
+          (event.type === 'attack' && event.payload['attacker'] === subject) ||
+          (event.type === 'triggerOnStack' && event.payload['source'] === subject),
+      );
+      return {
+        scenarioId,
+        providerKind,
+        seed: scenario.seed,
+        decisions,
+        halted,
+        usedSubjectCard,
+        observations,
+      };
+    }),
+  );
+  return {
+    generatedAt: new Date().toISOString(),
+    liveLlm: 'not-run' as const,
+    note: 'Quality-only random and heuristic P1 decisions with scripted opponents; these observations do not certify rules correctness or promote implementation review.',
+    runs,
+  };
 }
 
 const SUBJECT_BY_SCENARIO: Record<string, { card: string; subject: string }> = {

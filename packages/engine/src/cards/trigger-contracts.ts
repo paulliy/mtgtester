@@ -130,6 +130,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
   const allowed = [
     'when',
     'condition',
+    ...(head['when'] === 'attacks' ? ['eventCondition'] : []),
     ...(family === 'object'
       ? [
           'subject',
@@ -148,7 +149,9 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
-        : family === 'card' ? ['player', 'filter'] : ['player']),
+        : family === 'card'
+          ? ['player', 'filter']
+          : ['player']),
   ];
   for (const key of Object.keys(head))
     if (!allowed.includes(key))
@@ -157,11 +160,22 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         message: `field is incompatible with ${family} trigger`,
       });
   if (family === 'object') {
-    if (head['fromAnyOrigin'] !== undefined &&
-      (head['fromAnyOrigin'] !== true || head['when'] !== 'putIntoGraveyardFromAnywhere'))
-      issues.push({ path: `${path}.fromAnyOrigin`, message: 'all-origin graveyard entry requires its card-zone event and true flag' });
-    if (head['when'] === 'dealsDamageToOpponent' && (head['subject'] as {kind?:string} | undefined)?.kind !== 'self')
-      issues.push({ path: `${path}.subject`, message: 'opponent damage currently supports only the damaging source\'s own ability' });
+    if (
+      head['fromAnyOrigin'] !== undefined &&
+      (head['fromAnyOrigin'] !== true || head['when'] !== 'putIntoGraveyardFromAnywhere')
+    )
+      issues.push({
+        path: `${path}.fromAnyOrigin`,
+        message: 'all-origin graveyard entry requires its card-zone event and true flag',
+      });
+    if (
+      head['when'] === 'dealsDamageToOpponent' &&
+      (head['subject'] as { kind?: string } | undefined)?.kind !== 'self'
+    )
+      issues.push({
+        path: `${path}.subject`,
+        message: "opponent damage currently supports only the damaging source's own ability",
+      });
     const subject = head['subject'];
     if (subject === null || typeof subject !== 'object' || Array.isArray(subject))
       issues.push({ path: `${path}.subject`, message: 'object trigger requires a subject' });
@@ -244,7 +258,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     }
     if (
       head['defendingPlayerIsEventPlayer'] !== undefined &&
-      (head['defendingPlayerIsEventPlayer'] !== true || !['attacks', 'attacksUnblocked'].includes(String(head['when'])))
+      (head['defendingPlayerIsEventPlayer'] !== true ||
+        !['attacks', 'attacksUnblocked'].includes(String(head['when'])))
     )
       issues.push({
         path: `${path}.defendingPlayerIsEventPlayer`,
@@ -252,11 +267,16 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       });
     if (
       head['attackingPlayerIsEventPlayer'] !== undefined &&
-      (head['attackingPlayerIsEventPlayer'] !== true || head['when'] !== 'attacks' ||
-        head['aggregate'] !== 'byEventPlayer' || head['defendingPlayerIsEventPlayer'] !== undefined)
+      (head['attackingPlayerIsEventPlayer'] !== true ||
+        head['when'] !== 'attacks' ||
+        head['aggregate'] !== 'byEventPlayer' ||
+        head['defendingPlayerIsEventPlayer'] !== undefined)
     )
-      issues.push({ path: `${path}.attackingPlayerIsEventPlayer`,
-        message: 'attacking player binding requires defender-grouped attacks without a defending-player binding' });
+      issues.push({
+        path: `${path}.attackingPlayerIsEventPlayer`,
+        message:
+          'attacking player binding requires defender-grouped attacks without a defending-player binding',
+      });
     if (
       head['counter'] !== undefined &&
       (typeof head['counter'] !== 'string' || head['when'] !== 'countersPut')
@@ -293,7 +313,10 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({ path: `${path}.castFrom`, message: 'unknown spell origin restriction' });
   } else if (family === 'card') {
     if (!['you', 'each', 'opponent'].includes(head['player'] as string))
-      issues.push({ path: `${path}.player`, message: 'card trigger requires a supported player scope' });
+      issues.push({
+        path: `${path}.player`,
+        message: 'card trigger requires a supported player scope',
+      });
     if (head['filter'] !== undefined)
       validateExpression('selector', head['filter'], `${path}.filter`, issues);
   } else if (
@@ -308,4 +331,6 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     issues.push({ path: `${path}.player`, message: 'trigger requires a supported player scope' });
   if (head['condition'] !== undefined)
     validateExpression('condition', head['condition'], `${path}.condition`, issues);
+  if (head['eventCondition'] !== undefined)
+    validateExpression('condition', head['eventCondition'], `${path}.eventCondition`, issues);
 }

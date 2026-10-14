@@ -17,6 +17,7 @@ import type { PreparedScenarioSpec } from '../testing/prepared-scenario';
 import {
   beginEndStep,
   beginPostcombatMain,
+  cleanupStep,
   queueStepTriggers,
   runCombatAndExtraCombats,
   runBeginningAndPrecombatMain,
@@ -138,6 +139,15 @@ export function* playPreparedScenario(
   const state = ctx.state;
   emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
   emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
+  if (
+    spec.continueThroughNextTurn === true &&
+    (spec.continueToNextUpkeep === true ||
+      (spec.continueThroughUpkeeps ?? 0) > 0 ||
+      (spec.continueThroughPrecombatMains ?? 0) > 0 ||
+      spec.continueThroughNextPrecombatMain === true ||
+      spec.continueThroughNextCombat === true)
+  )
+    throw new Error('prepared scenario must choose one next-turn continuation');
   yield* runPrioritySequence(ctx);
   if (spec.continueThroughCombat === true) {
     emptyManaPools(ctx);
@@ -162,7 +172,11 @@ export function* playPreparedScenario(
   if (!Number.isSafeInteger(mainCount) || mainCount < 0 || mainCount > 8)
     throw new Error('prepared continuation requires zero to eight production turn beginnings');
   if (mainCount > 0) {
-    if (upkeepCount > 0 || spec.continueThroughNextPrecombatMain === true || spec.continueThroughNextCombat === true)
+    if (
+      upkeepCount > 0 ||
+      spec.continueThroughNextPrecombatMain === true ||
+      spec.continueThroughNextCombat === true
+    )
       throw new Error('prepared scenario must choose one next-turn continuation');
     for (let index = 0; index < mainCount; index++) {
       yield* runEndingPhase(ctx);
@@ -195,6 +209,23 @@ export function* playPreparedScenario(
     queueStepTriggers(ctx, 'upkeep');
     yield* priorityCheckpoint(ctx);
     yield* runPrioritySequence(ctx);
+  }
+  if (spec.continueThroughNextTurn === true) {
+    if (spec.continueThroughCombat !== true || spec.continueToEndStep !== true)
+      throw new Error('continueThroughNextTurn requires combat and end-step continuations');
+    // Complete the active turn through the ordinary cleanup routine before advancing. This
+    // preserves delayed cleanup effects, turn-based actions and production turn transitions.
+    emptyManaPools(ctx);
+    yield* cleanupStep(ctx);
+    emit(
+      ctx,
+      'turnEnd',
+      { turn: state.turnNumber, player: state.currentTurnPlayer },
+      state.currentTurnPlayer,
+    );
+    advanceToNextTurnPlayer(ctx);
+    state.turnNumber += 1;
+    yield* runTurn(ctx);
   }
   const result: GameResult = {
     gameId: state.gameId,

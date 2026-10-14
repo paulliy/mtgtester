@@ -1288,7 +1288,7 @@
               "kind": "triggered",
               "targets": [],
               "trigger": {
-                "condition": {
+                "eventCondition": {
                   "kind": "attackingPlayerHasMoreLife"
                 },
                 "subject": {
@@ -1315,7 +1315,7 @@
           "kind": "triggered",
           "targets": [],
           "trigger": {
-            "condition": {
+            "eventCondition": {
               "kind": "attackingPlayerHasMoreLife"
             },
             "subject": {
@@ -5424,7 +5424,7 @@
             "kind": "triggered",
             "targets": [],
             "trigger": {
-              "condition": {
+              "eventCondition": {
                 "kind": "attackingPlayerHasMoreLife"
               },
               "subject": {
@@ -12282,37 +12282,6 @@
     "def": {}
   },
   {
-    "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
-    "name": "Dragon Mage",
-    "handledLines": [
-      "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Combat damage to a player — each player discards their hand, then draws seven cards",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 7
-              },
-              "op": "eachPlayerDiscardHandThenDraw"
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dealsCombatDamageToPlayer"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "eb287c04-97f5-4e47-beb1-66cc7d15e748",
     "name": "Atarka Monument",
     "handledLines": [],
@@ -16849,7 +16818,7 @@
             "kind": "triggered",
             "targets": [],
             "trigger": {
-              "condition": {
+              "eventCondition": {
                 "kind": "attackingPlayerHasMoreLife"
               },
               "subject": {
@@ -17416,37 +17385,6 @@
             ]
           },
           "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-dragon-mage",
-    "name": "Dragon Mage",
-    "handledLines": [
-      "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Combat damage to a player — each player discards their hand, then draws seven cards",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 7
-              },
-              "op": "eachPlayerDiscardHandThenDraw"
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dealsCombatDamageToPlayer"
-          }
         }
       ]
     }
@@ -20966,7 +20904,7 @@
               "kind": "triggered",
               "targets": [],
               "trigger": {
-                "condition": {
+                "eventCondition": {
                   "kind": "attackingPlayerHasMoreLife"
                 },
                 "subject": {
@@ -20993,7 +20931,7 @@
           "kind": "triggered",
           "targets": [],
           "trigger": {
-            "condition": {
+            "eventCondition": {
               "kind": "attackingPlayerHasMoreLife"
             },
             "subject": {

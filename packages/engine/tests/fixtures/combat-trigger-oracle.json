@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-14",
+  "cards": [
+    {
+      "sha256": "c73cc966291fc1573d003bbe61f7d57cdb711e2105c70a2958e44b82d9bb83c3",
+      "card": {
+        "oracleId": "17a59d3d-9e01-48cd-bb4a-3eaaa077751c",
+        "scryfallId": "3242a9f0-2ba3-4852-ac8f-366772ac1c62",
+        "name": "Marchesa, the Black Rose",
+        "manaCost": "{1}{U}{B}{R}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "B",
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Human Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "Dethrone (Whenever this creature attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)\nOther creatures you control have dethrone.\nWhenever a creature you control with a +1/+1 counter on it dies, return that card to the battlefield under your control at the beginning of the next end step.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Dethrone"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "card": {
+        "oracleId": "171a0a09-4aee-466c-aebd-3b0d4c1f51b4",
+        "scryfallId": "6b06f1aa-53f1-49e1-b9f7-e4b489ef7d55",
+        "name": "Namor, Atlantean King",
+        "manaCost": "{1}{W}{U}",
+        "cmc": 3,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Mutant Merfolk Noble",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Mutant",
+          "Merfolk",
+          "Noble"
+        ],
+        "oracleText": "Flying\nWhenever you cast a noncreature spell, create a 1/1 blue Merfolk creature token.\nWhenever Namor attacks a player who has more life than you, other creatures you control attacking that player get +2/+0 until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "card": {
+        "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
+        "scryfallId": "c133a860-7b8d-485d-b9a2-bf8ae3a68f47",
+        "name": "Scriv, the Obligator",
+        "manaCost": "{2}{W}{B}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Inkling Bird",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Inkling",
+          "Bird"
+        ],
+        "oracleText": "Flying, deathtouch\nWhenever Scriv enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and \"Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it's attacking one of your opponents. Otherwise, its controller loses 2 life.\"",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Deathtouch",
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "de333ade889c2890c3607de423a3f9a62042fa543d41c9ad3936bec983d90121",
+      "card": {
+        "oracleId": "4457ed35-7c10-48c8-9776-456485fdf070",
+        "scryfallId": "7673784e-db4b-43a1-8d55-1bb9fc1e284f",
+        "name": "Lightning Bolt",
+        "manaCost": "{R}",
+        "cmc": 1,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Lightning Bolt deals 3 damage to any target.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
+      "card": {
+        "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
+        "scryfallId": "5525cfde-a92b-4fb5-8f15-a05efebecd3d",
+        "name": "Dragon Mage",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon",
+          "Wizard"
+        ],
+        "oracleText": "Flying\nWhenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2f02ce2946aeac618aebcda36a851b1faefd833d0bc10ecf07d21bb9ac44ce07",
+      "card": {
+        "oracleId": "a3f2c946-409f-4093-b4db-c954d3480a72",
+        "scryfallId": "f5fd8668-900c-48d1-aac3-8355cfc0bb74",
+        "name": "Runehorn Hellkite",
+        "manaCost": "{5}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\n{5}{R}, Exile this card from your graveyard: Each player discards their hand, then draws seven cards.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6c55f1ef058b773f97fb8469612d9c8d1a638edf7c457f805189d40f866a8e3f",
+      "card": {
+        "oracleId": "08becc07-28bc-4a2f-a6b0-28a2998d2f50",
+        "scryfallId": "9ce7113b-08f7-4584-b65f-a7b5caa90c2f",
+        "name": "Windfall",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
+      "card": {
+        "oracleId": "ef4b334b-8407-4147-b434-602e59806906",
+        "scryfallId": "faec8ab3-80c6-4b8f-a60d-50cc683e66b4",
+        "name": "Hunted Phantasm",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "This creature can't be blocked.\nWhen this creature enters, target opponent creates five 1/1 red Goblin creature tokens.",
+        "power": "4",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8595001bc3a271c7391db625bc6130fc4876454d894bf58504fa32d514be2b3e",
+      "card": {
+        "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+        "scryfallId": "214a695b-208e-4fd5-9ceb-23c882eadcf7",
+        "name": "Shadrix Silverquill",
+        "manaCost": "{3}{W}{B}",
+        "cmc": 5,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Elder Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elder",
+          "Dragon"
+        ],
+        "oracleText": "Flying, double strike\nAt the beginning of combat on your turn, you may choose two. Each mode must target a different player.\n• Target player creates a 2/1 white and black Inkling creature token with flying.\n• Target player draws a card and loses 1 life.\n• Target player puts a +1/+1 counter on each creature they control.",
+        "power": "2",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Double strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import ts from 'typescript';
 import {
   getViewerEvidenceSourceFiles,
   type CatalogSpec,
+  VIEWER_CATALOG,
 } from '../../../../scripts/card-evidence-input';
 
 export const repoRoot = resolve(import.meta.dirname, '../../../..');
@@ -91,31 +92,32 @@ export function independentRuntimeBinding(card: string) {
 }
 // Independent AST enumeration of actual test declarations, including describe title paths.
 export function sourceCatalog(): CatalogSpec[] {
-  const file = 'card-test-lab.spec.ts';
-  const source = ts.createSourceFile(
-    file,
-    readFileSync(resolve(repoRoot, 'apps/web/e2e', file), 'utf8'),
-    ts.ScriptTarget.Latest,
-    true,
-  );
   const specs: CatalogSpec[] = [];
-  function visit(node: ts.Node, parents: string[]) {
-    if (ts.isCallExpression(node)) {
-      const name = node.expression.getText(source);
-      const title = node.arguments[0];
-      if ((name === 'test' || name === 'test.describe') && title && ts.isStringLiteral(title)) {
-        const titlePath = [...parents, title.text];
-        if (name === 'test') {
-          specs.push({ file, titlePath });
+  for (const file of new Set(VIEWER_CATALOG.map((spec) => spec.file))) {
+    const source = ts.createSourceFile(
+      file,
+      readFileSync(resolve(repoRoot, 'apps/web/e2e', file), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    function visit(node: ts.Node, parents: string[]) {
+      if (ts.isCallExpression(node)) {
+        const name = node.expression.getText(source);
+        const title = node.arguments[0];
+        if ((name === 'test' || name === 'test.describe') && title && ts.isStringLiteral(title)) {
+          const titlePath = [...parents, title.text];
+          if (name === 'test') {
+            specs.push({ file, titlePath });
+            return;
+          }
+          for (const argument of node.arguments.slice(1)) visit(argument, titlePath);
           return;
         }
-        for (const argument of node.arguments.slice(1)) visit(argument, titlePath);
-        return;
       }
+      ts.forEachChild(node, (child) => visit(child, parents));
     }
-    ts.forEachChild(node, (child) => visit(child, parents));
+    visit(source, []);
   }
-  visit(source, []);
   return specs;
 }
 
@@ -132,9 +134,12 @@ export function fixture() {
   ]);
   writeFileSync(tracePath, zip);
   const catalog = sourceCatalog();
-  const suites: { title: string; file: string; specs: typeof specs; suites: unknown[] }[] = [];
-  const specs = catalog.filter((x) => x.titlePath.length === 1).map(spec);
-  const land = catalog.filter((x) => x.titlePath.length === 2).map(spec);
+  const suites: {
+    title: string;
+    file: string;
+    specs: ReturnType<typeof spec>[];
+    suites: unknown[];
+  }[] = [];
   function spec(item: CatalogSpec) {
     return {
       title: item.titlePath.at(-1)!,
@@ -157,12 +162,26 @@ export function fixture() {
       ],
     };
   }
-  suites.push({
-    title: 'card-test-lab.spec.ts',
-    file: catalog[0]!.file,
-    specs,
-    suites: [{ title: 'land confirmation', file: catalog[0]!.file, specs: land, suites: [] }],
-  });
+  for (const file of new Set(catalog.map((item) => item.file))) {
+    const fileCatalog = catalog.filter((item) => item.file === file);
+    const direct = fileCatalog.filter((item) => item.titlePath.length === 1).map(spec);
+    const children = new Map<string, CatalogSpec[]>();
+    for (const item of fileCatalog.filter((entry) => entry.titlePath.length > 1)) {
+      const title = item.titlePath[0]!;
+      children.set(title, [...(children.get(title) ?? []), item]);
+    }
+    suites.push({
+      title: file,
+      file,
+      specs: direct,
+      suites: [...children].map(([title, items]) => ({
+        title,
+        file,
+        specs: items.map(spec),
+        suites: [],
+      })),
+    });
+  }
   const report = {
     suites,
     errors: [],

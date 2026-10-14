@@ -109,7 +109,10 @@ export interface AlternativeCast {
   /** Fully interpreted Adventure/Omen spell or modal permanent face, independent of the front. */
   spellFace?: import('./definition').CardDefinition;
   /** Printed face text needed to restore the front when a modal permanent leaves. */
-  spellFaceText?: Pick<MdfcLandFace, 'oracleText' | 'manaCost' | 'frontOracleText' | 'frontManaCost'>;
+  spellFaceText?: Pick<
+    MdfcLandFace,
+    'oracleText' | 'manaCost' | 'frontOracleText' | 'frontManaCost'
+  >;
   /** Flashback/escape-style replacement: exile the card after it leaves the stack. */
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
@@ -703,7 +706,6 @@ export type Effect =
   | { op: 'schemingSymmetry' }
   | { op: 'sacrificePermanentOnDamage'; target: EffectRef }
   | { op: 'kambal' }
-  | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
@@ -964,7 +966,13 @@ export type Effect =
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }
   /** Create one token for each opponent, optionally attacking that opponent. */
   | { op: 'createTokenForEachOpponent'; spec: TokenSpec; attacking?: boolean }
-  | { op: 'createTokenForPlayer'; target: EffectRef; spec: TokenSpec; count: Value; opponentsOnly?: true }
+  | {
+      op: 'createTokenForPlayer';
+      target: EffectRef;
+      spec: TokenSpec;
+      count: Value;
+      opponentsOnly?: true;
+    }
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
@@ -1679,7 +1687,11 @@ export type TriggerHead =
  * trigger, and again as it resolves. Both checks are required, and skipping the second is a
  * classic engine bug (the board can change while the trigger sits on the stack).
  */
-export type TriggerSpec = TriggerHead & { condition?: Condition };
+export type TriggerSpec = TriggerHead & {
+  condition?: Condition;
+  /** Attack-event qualification, checked only when attackers are declared, not on resolution. */
+  eventCondition?: Condition;
+};
 
 export const SELF_SUBJECT: TriggerSubject = { kind: 'self' };
 

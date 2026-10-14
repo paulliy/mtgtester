@@ -7,6 +7,7 @@ import {
   evaluateMyriadLandscapeGameplayAi,
   evaluateReviewedFiveGameplayAi,
   evaluateSmotheringTitheGameplayAi,
+  evaluateCombatTriggerGameplayAi,
 } from './gameplay-ai-evaluation';
 
 interface CommittedObservation {
@@ -26,6 +27,17 @@ const committed = JSON.parse(
 ) as CommittedReport;
 
 describe('gameplay-AI quality evaluation (step 15)', () => {
+  it('reports combat-card provider choices separately without claiming a live LLM run', () => {
+    const report = evaluateCombatTriggerGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.note).toContain('Quality-only');
+    expect(report.runs).toHaveLength(12);
+    for (const run of report.runs) {
+      expect(run.decisions).toBeGreaterThan(0);
+      expect(run.observations).toHaveLength(run.decisions);
+      expect(typeof run.usedSubjectCard).toBe('boolean');
+    }
+  });
   it('records random and heuristic decisions for every reviewed lab scenario', () => {
     const report = evaluateReviewedFiveGameplayAi();
     expect(report.liveLlm).toBe('not-run');

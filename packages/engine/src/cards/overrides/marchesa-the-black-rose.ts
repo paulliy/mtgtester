@@ -1,7 +1,7 @@
 /** Authored overrides for marchesa-the-black-rose.txt. */
 
 import type { CardDefinition } from '../definition';
-import { TAP, spell, targetSlots } from '../templates';
+import { TAP, spell, targetSlots, triggered } from '../templates';
 import { counterSpellTarget } from '../target-builders';
 import type { Ability } from '../ability';
 import { constant } from '../value';
@@ -9,21 +9,18 @@ import { allOf, anyOf, hasCounter, IS_TOKEN, OTHER, not, ofType, YOURS } from '.
 import { BIRD_1_1_FLYING, ELDRAZI_SPAWN_0_1, TREASURE } from '../tokens';
 import { defineCard, unsupportedCard } from './index';
 
-// Dethrone (CR 702.103) has no generic keyword representation in this engine — every carrier
+// Dethrone (CR 702.105) has no generic keyword representation in this engine — every carrier
 // (Marchesa's own trigger, the static ability she grants other creatures) is this same
 // bespoke trigger. Dack's Duplicate needs it as an "enters as a copy, except it also has
 // dethrone" addition, which is why it is exported here rather than inlined in MARCHESA.
-const DETHRONE_TRIGGER: Ability = {
-  kind: 'triggered',
-  trigger: {
-    when: 'attacks',
-    subject: { kind: 'self' },
-    condition: { kind: 'attackingPlayerHasMoreLife' },
+const DETHRONE_TRIGGER: Ability = triggered(
+  { when: 'attacks', subject: { kind: 'self' } },
+  {
+    eventCondition: { kind: 'attackingPlayerHasMoreLife' },
+    effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
+    description: 'Dethrone — put a +1/+1 counter on this creature',
   },
-  targets: [],
-  effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
-  description: 'Dethrone — put a +1/+1 counter on this creature',
-};
+);
 
 const MARCHESA: Partial<CardDefinition> = {
   staticEffects: [
@@ -39,45 +36,40 @@ const MARCHESA: Partial<CardDefinition> = {
     },
   ],
   triggers: [
-    {
-      kind: 'triggered',
-      trigger: {
-        when: 'attacks',
-        subject: { kind: 'self' },
-        condition: { kind: 'attackingPlayerHasMoreLife' },
+    triggered(
+      { when: 'attacks', subject: { kind: 'self' } },
+      {
+        eventCondition: { kind: 'attackingPlayerHasMoreLife' },
+        effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
+        description: 'Dethrone — put a +1/+1 counter on Marchesa',
       },
-      targets: [],
-      effects: [{ op: 'putCounters', target: 'source', counter: '+1/+1', count: 1 }],
-      description: 'Dethrone — put a +1/+1 counter on Marchesa',
-    },
-    {
-      kind: 'triggered',
-      trigger: {
+    ),
+    triggered(
+      {
         when: 'dies',
         subject: {
           kind: 'permanent',
           selector: allOf(ofType('Creature'), YOURS, hasCounter('+1/+1')),
         },
       },
-      targets: [],
-      effects: [
-        {
-          op: 'registerDelayedTrigger',
-          when: 'endStep',
-          expiry: 'endStep',
-          target: 'triggerObject',
-          controller: 'source',
-          ability: {
-            kind: 'triggered',
-            targets: [],
-            effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }],
-            description: 'Return that creature to the battlefield',
+      {
+        effects: [
+          {
+            op: 'registerDelayedTrigger',
+            when: 'endStep',
+            expiry: 'endStep',
+            target: 'triggerObject',
+            controller: 'source',
+            ability: triggered(undefined, {
+              effects: [{ op: 'graveyardToBattlefield', target: 'triggerObject' }],
+              description: 'Return that creature to the battlefield',
+            }),
           },
-        },
-      ],
-      description:
-        'Whenever a countered creature you control dies — return it at the next end step',
-    },
+        ],
+        description:
+          'Whenever a countered creature you control dies — return it at the next end step',
+      },
+    ),
   ],
 };
 

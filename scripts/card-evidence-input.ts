@@ -412,6 +412,7 @@ function reportTargets(
   reportPath: string,
 ) {
   const expected = new Set(VIEWER_CATALOG.map(catalogKey));
+  const expectedFiles = new Set(VIEWER_CATALOG.map((spec) => spec.file));
   requireInput(
     catalog.length === expected.size &&
       new Set(catalog.map(catalogKey)).size === expected.size &&
@@ -431,7 +432,7 @@ function reportTargets(
   const seen = new Set<string>();
   const targets: Record<string, string> = {};
   let project: string | undefined;
-  function walk(suites: unknown[], parents: string[], top: boolean) {
+  function walk(suites: unknown[], parents: string[], top: boolean, rootFile?: string) {
     for (const value of suites) {
       const suite = record(value);
       noErrors(suite);
@@ -439,7 +440,9 @@ function reportTargets(
         typeof suite['title'] === 'string' && typeof suite['file'] === 'string',
         'malformed catalog suite',
       );
-      requireInput(suite['file'] === 'card-test-lab.spec.ts', 'catalog file');
+      requireInput(expectedFiles.has(suite['file']), 'catalog file');
+      const catalogFile = top ? (suite['file'] as string) : rootFile;
+      requireInput(suite['file'] === catalogFile, 'catalog suite file');
       if (top) requireInput(suite['title'] === suite['file'], 'catalog file suite title');
       const titles = top ? parents : [...parents, suite['title']];
       for (const raw of array(suite['specs'] ?? [], 'specs')) {
@@ -509,7 +512,7 @@ function reportTargets(
           targets[id] = traces[0]!['path'] as string;
         }
       }
-      walk(array(suite['suites'] ?? [], 'suites'), titles, false);
+      walk(array(suite['suites'] ?? [], 'suites'), titles, false, catalogFile);
     }
   }
   walk(array(report['suites'], 'suites'), [], true);
@@ -861,6 +864,7 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     'packages/shared/src',
     'apps/web/src',
     'apps/web/public',
+    'apps/web/e2e',
   ];
   const runtimeRouting: string[][] = [];
   const visitedRuntimeDirectories = new Set<string>();
@@ -2171,6 +2175,30 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   {
     file: 'card-test-lab.spec.ts',
     titlePath: ['Body Launderer: it dies and returns Lab Servo, not Lab Ox'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: keep dethrone after a life-total response'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Marchesa: ignore a non-leading defender'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Namor: boost allies attacking the defender'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Namor: keep the bonus after source removal'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Scriv: no life loss after the attacker dies'],
+  },
+  {
+    file: 'combat-trigger-regressions.spec.ts',
+    titlePath: ['Scriv: lose life when attacking the Contract controller'],
   },
 ];
 for (const spec of VIEWER_CATALOG) {
