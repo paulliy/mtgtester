@@ -36,6 +36,8 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
     if (requestId === undefined || requestId === previousRequestId) {
       throw new Error('Expected a new playerActionRequired request ID after the UI action.');
     }
+    // The frame can arrive before Vue renders; bind controls to this exact request.
+    await expect(page.locator('.decision')).toHaveAttribute('data-request-id', requestId);
     return requestId;
   };
 
