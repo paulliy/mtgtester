@@ -24,9 +24,11 @@ export interface ObjectFacts extends SourceCastState {
   manaValue: number;
   counters: Record<string, number>;
   tapped: boolean;
+  loseAbilities?: boolean;
   hadToAttackThisCombat: boolean;
   enteredTurnNumber: number;
   chosenOption?: string;
+  classLevel?: number;
   /** The permanent's cast record (`CastRecord`), when the spell that became it was cast. */
   castByPlayerId?: string;
   castFromZone?: string;
@@ -67,9 +69,11 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     manaValue: candidate.manaValue ?? 0,
     counters,
     tapped: permanent.tapped,
+    loseAbilities: chars.loseAbilities,
     hadToAttackThisCombat: permanent.hadToAttackThisCombat === true,
     enteredTurnNumber: permanent.enteredTurnNumber,
     ...(permanent.chosenOption === undefined ? {} : { chosenOption: permanent.chosenOption }),
+    ...(permanent.classLevel === undefined ? {} : { classLevel: permanent.classLevel }),
     ...(permanent.castByPlayerId === undefined
       ? {}
       : {

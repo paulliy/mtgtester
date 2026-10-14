@@ -840,7 +840,7 @@ function discoverViewerEvidenceSources(repoRoot: string) {
     );
     requireInput(
       consumed.files.every((path) => paths.includes(path)),
-      `incomplete generator source binding: ${card}`,
+      `incomplete generator source binding: ${card}; missing: ${consumed.files.filter((path) => !paths.includes(path)).join(', ')}`,
     );
     const order = (a: string[], b: string[]) => JSON.stringify(a).localeCompare(JSON.stringify(b));
     closures.push({

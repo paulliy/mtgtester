@@ -1492,7 +1492,7 @@ function abandon(): void {
                     >
                       {{
                         combatPlan.kind === 'attackers'
-                          ? seatLabel(optionId)
+                          ? (nameById.get(optionId) ?? seatLabel(optionId))
                           : (nameById.get(optionId) ?? optionId)
                       }}
                     </button>

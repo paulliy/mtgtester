@@ -1,3 +1,4 @@
+import { phaseInAtUntap } from '../state/phasing';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 /**
  * Turn structure (CR 500–514, brief §5.3): beginning (untap/upkeep/draw), precombat main,
@@ -14,6 +15,7 @@ import { emit, debug } from '../log/log';
 import { priorityCheckpoint } from '../sba/sba';
 import {
   additionalTypedTriggerCopies,
+  discardCard,
   expireRegenerationShields,
   moveObject,
   playerById,
@@ -39,12 +41,14 @@ function setStep(ctx: GameContext, step: Step): void {
 function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
+  phaseInAtUntap(ctx, ap.id);
   ap.landsPlayedThisTurn = 0;
   for (const player of ctx.state.players) {
     player.cardsDrawnThisTurn = 0;
     player.cardsDrawnThisDrawStep = 0;
     player.spellsCastThisTurn = 0;
     player.noncreatureSpellsCastThisTurn = 0;
+    player.discardedCardsThisTurn = 0;
     delete player.spellsCastThisTurnRecords;
     player.playFromZoneTypeUsesThisTurn = {};
   }
@@ -108,6 +112,7 @@ export function queueStepTriggers(
     | 'drawStep'
     | 'mainPhase'
     | 'precombatMain'
+    | 'secondMainPhase'
     | 'beginningOfCombat',
 ): void {
   assertTriggerEventFamily(when, 'step');
@@ -117,6 +122,7 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      if (spec.player === 'opponent' && perm.controllerId === apId) continue;
       const source = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,
@@ -146,6 +152,7 @@ export function queueStepTriggers(
         const spec = ability.trigger;
         if (spec === undefined || spec.when !== when || !('player' in spec)) continue;
         if (spec.player === 'you' && emblem.controllerId !== apId) continue;
+        if (spec.player === 'opponent' && emblem.controllerId === apId) continue;
         ctx.state.pendingTriggers.push({
           controllerId: emblem.controllerId,
           sourceCardId: emblem.id,
@@ -226,6 +233,8 @@ function queueMonarchTrigger(ctx: GameContext): void {
 export function beginPostcombatMain(ctx: GameContext): void {
   setPhase(ctx, 'postcombatMain', null);
   queueStepTriggers(ctx, 'mainPhase');
+  ctx.state.mainPhasesStartedThisTurn = (ctx.state.mainPhasesStartedThisTurn ?? 1) + 1;
+  if (ctx.state.mainPhasesStartedThisTurn === 2) queueStepTriggers(ctx, 'secondMainPhase');
 }
 
 /**
@@ -257,12 +266,11 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
         })),
       };
       const card = ap.hand[outcome.index] as EngineCardObject;
-      emit(ctx, 'discard', { player: ap.id, name: card.name, cardId: card.cardId }, ap.id);
-      yield* moveObject(ctx, card, { zone: 'graveyard' });
+      yield* discardCard(ctx, card, ap.id, 'cleanup');
     }
 
     // Simultaneously: remove all marked damage and end until-EOT effects (CR 514.2).
-    for (const perm of ctx.state.battlefield) {
+    for (const perm of [...ctx.state.battlefield, ...(ctx.state.phasedOut ?? []).map(record => record.permanent)]) {
       perm.damageMarked = 0;
       perm.damagedByDeathtouch = false;
       delete perm.mustAttackThisTurn;
@@ -301,7 +309,8 @@ export function* runCombatAndExtraCombats(ctx: GameContext): GameGen<void> {
   }
 }
 
-export function* runTurn(ctx: GameContext): GameGen<void> {
+/** The normal turn opening through the first main-phase priority window. */
+export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   const ap = playerById(ctx, s.currentTurnPlayer);
   emit(ctx, 'turnBegin', { turn: s.turnNumber, player: ap.id }, ap.id);
@@ -330,6 +339,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   // Precombat main.
+  ctx.state.mainPhasesStartedThisTurn = 1;
   setPhase(ctx, 'precombatMain', null);
   queueStepTriggers(ctx, 'mainPhase');
   // "your first main phase" is the precombat one specifically, so it gets its own event
@@ -338,6 +348,11 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
+}
+
+export function* runTurn(ctx: GameContext): GameGen<void> {
+  yield* runBeginningAndPrecombatMain(ctx);
+
   yield* runCombatAndExtraCombats(ctx);
 
   // Postcombat main.
@@ -345,10 +360,15 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
 
+  yield* runEndingPhase(ctx);
+}
+
+/** Production end step and cleanup, also used by finite multi-turn viewer scenarios. */
+export function* runEndingPhase(ctx: GameContext): GameGen<void> {
+  const player = ctx.state.currentTurnPlayer;
   beginEndStep(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
-
   yield* cleanupStep(ctx);
-  emit(ctx, 'turnEnd', { turn: s.turnNumber, player: ap.id }, ap.id);
+  emit(ctx, 'turnEnd', { turn: ctx.state.turnNumber, player }, player);
 }

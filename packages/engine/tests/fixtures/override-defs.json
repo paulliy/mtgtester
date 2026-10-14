@@ -46,6 +46,82 @@
     }
   },
   {
+    "oracleId": "008eda1f-b913-4f04-8c29-5e87c270149e",
+    "name": "Tinybones, Trinket Thief",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.\"",
+      "unrecognized rules text: \"{4}{B}{B}: Each opponent with no cards in hand loses 10 life.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent with no cards in hand loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "emptyHandOnly": true,
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 2,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "If an opponent discarded this turn, draw a card and lose 1 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentDiscardedThisTurn"
+            },
+            "player": "each",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "00de57d2-7cb6-4337-9bc6-f6711e4dfabf",
     "name": "Game Trail",
     "handledLines": [
@@ -59,6 +135,122 @@
           "Forest"
         ]
       }
+    }
+  },
+  {
+    "oracleId": "00fdcc19-88ed-46c3-91f0-095806228105",
+    "name": "Waste Not",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.\"",
+      "unrecognized rules text: \"Whenever an opponent discards a land card, add {B}{B}.\"",
+      "unrecognized rules text: \"Whenever an opponent discards a noncreature, nonland card, draw a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 2/2 black Zombie creature token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        },
+        {
+          "description": "Add {B}{B}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [
+                "B"
+              ],
+              "fixedSymbols": [
+                "B",
+                "B"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        },
+        {
+          "description": "Draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        }
+      ]
     }
   },
   {
@@ -398,6 +590,23 @@
     }
   },
   {
+    "oracleId": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+    "name": "Rest in Peace",
+    "handledLines": [
+      "unrecognized rules text: \"If a card or token would be put into a graveyard from anywhere, exile it instead.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "basis": "owner",
+          "includeTokens": true,
+          "kind": "graveyardToExile",
+          "scope": "all"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
     "name": "Marang River Regent // Coil and Catch",
     "handledLines": [],
@@ -460,6 +669,91 @@
     "name": "Scourge of Valkas",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
+    "name": "Liliana of the Veil",
+    "handledLines": [
+      "unrecognized rules text: \"+1: Each player discards a card.\"",
+      "unrecognized rules text: \"−2: Target player sacrifices a creature.\"",
+      "unrecognized rules text: \"−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each player discards a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player sacrifices a creature",
+            "effects": [
+              {
+                "op": "sacrificeTargetPlayerCreature",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Separate permanents into piles; their controller chooses a pile to sacrifice",
+            "effects": [
+              {
+                "op": "separatePermanentsIntoPilesThenSacrifice",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
@@ -542,6 +836,52 @@
     "name": "Teyo, Geometric Tactician",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
+    "name": "Archon of Absolution",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "alsoPlaneswalkersYouControl": true,
+          "amount": 1,
+          "kind": "attackTax"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "0eaea4fd-a377-4541-9bdd-14921034a975",
+    "name": "Doorkeeper Thrull",
+    "handledLines": [
+      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters"
+          ],
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
   },
   {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
@@ -1461,8 +1801,27 @@
   {
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
     "name": "Dark Confidant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal the top card of your library, put it into your hand, and lose life equal to its mana value",
+          "effects": [
+            {
+              "op": "drawRevealTopLoseManaValue"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "20932bca-52be-4288-9c7d-4154650c5ec9",
@@ -1673,6 +2032,64 @@
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "295fe873-ecb5-4d5e-a73c-3af6c478afc5",
+    "name": "Perch Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Create four 2/2 blue Bird creature tokens with flying. If the gift was promised, all permanents you control phase out, and until your next turn, your life total can't change and you gain protection from everything.\"",
+      "unrecognized rules text: \"Gift an extra turn\""
+    ],
+    "def": {
+      "gift": "extraTurn",
+      "spellAbility": {
+        "description": "Create four flying Birds; promised gift phases out your permanents and protects you until your next turn; exile this spell",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [
+                "U"
+              ],
+              "keywords": [
+                "flying"
+              ],
+              "name": "Bird",
+              "power": 2,
+              "subtypes": [
+                "Bird"
+              ],
+              "toughness": 2,
+              "typeLine": "Creature — Bird",
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "op": "phaseOutAndProtectControllerUntilNextTurn"
+              }
+            ]
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "2975590d-6a5b-41e5-8a3b-e9325e71226a",
@@ -1986,6 +2403,38 @@
     "def": {}
   },
   {
+    "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
+    "name": "Imp's Mischief",
+    "handledLines": [
+      "unrecognized rules text: \"Change the target of target spell with a single target. You lose life equal to that spell's mana value.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Change target single-target spell and lose life equal to its mana value",
+        "effects": [
+          {
+            "op": "changeSingleSpellTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "manaValueOfTarget",
+              "target": 0
+            },
+            "op": "loseLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
     "name": "Flameblast Dragon",
     "handledLines": [],
@@ -2110,6 +2559,50 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "33d405ea-7a9a-4970-b70f-9c05d90dd6f0",
+    "name": "Duress",
+    "handledLines": [
+      "unrecognized rules text: \"Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target opponent reveals their hand. You choose a noncreature, nonland card from it to discard",
+        "effects": [
+          {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "op": "revealHandAndDiscard",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
     }
   },
   {
@@ -2338,6 +2831,52 @@
     "def": {}
   },
   {
+    "oracleId": "37c06f89-db36-4937-9404-2b07cd22e1a6",
+    "name": "Dawn's Truce",
+    "handledLines": [
+      "unrecognized rules text: \"Gift a card\"",
+      "unrecognized rules text: \"You and permanents you control gain hexproof until end of turn. If the gift was promised, permanents you control also gain indestructible until end of turn.\""
+    ],
+    "def": {
+      "gift": "card",
+      "spellAbility": {
+        "description": "You and your permanents gain hexproof; promised gift also grants your permanents indestructible this turn",
+        "effects": [
+          {
+            "op": "controllerHexproofUntilEot"
+          },
+          {
+            "keyword": "hexproof",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            }
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordEachUntilEot",
+                "selector": {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "38abf769-e4ef-4b47-9c79-c8cda0b90f6c",
     "name": "Collective Unconscious",
     "handledLines": [
@@ -2555,6 +3094,119 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
+    "name": "Hushbringer",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters",
+            "dies"
+          ],
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "3d2bd4f6-174d-411a-b930-9161aeefd33a",
+    "name": "Tinybones Joins Up",
+    "handledLines": [
+      "unrecognized rules text: \"When ~ enters, any number of target players each discard a card.\"",
+      "unrecognized rules text: \"Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Any number of target players each discard a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardChosenPlayers",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Any number of target players each mill a card and lose 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "millAndLoseLifeChosenPlayers",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
     }
   },
   {
@@ -3085,6 +3737,100 @@
     "def": {}
   },
   {
+    "oracleId": "52bd4331-67b6-4eb8-9566-e00359889fc6",
+    "name": "Soul Snare",
+    "handledLines": [
+      "unrecognized rules text: \"{W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile target creature attacking you or your planeswalker",
+            "effects": [
+              {
+                "op": "exile",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "attackingYouOrYourPlaneswalker"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "535e2af0-7b08-4026-b1bf-87626407dd42",
+    "name": "Archfiend of Ifnir",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cycle or discard another card, put a -1/-1 counter on each creature your opponents control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put a -1/-1 counter on each creature your opponents control",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "-1/-1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "other"
+            },
+            "player": "you",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "53b2c8f2-db9a-4ab0-a4e8-17385b2fa3bd",
     "name": "Aethertide Whale",
     "handledLines": [
@@ -3139,10 +3885,72 @@
     }
   },
   {
+    "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
+    "name": "Rule of Law",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "any",
+          "kind": "spellCastLimit",
+          "limit": 1
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
     "name": "Biotransference",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
+    "name": "Vicious Rumors",
+    "handledLines": [
+      "unrecognized rules text: \"~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent takes 1 damage, discards and mills a card. You gain 1 life",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "eachOpponentDamage"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardEachPlayer",
+            "scope": "opponents"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "millEachPlayer",
+            "scope": "opponents"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "gainLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "55eb9310-f24b-410b-850b-a7d0d5117946",
@@ -3192,6 +4000,33 @@
               "G"
             ]
           ]
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
+    "name": "Authority of the Consuls",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -3496,8 +4331,76 @@
   {
     "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
     "name": "Duelist's Heritage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Target attacking creature gains double strike until end of turn",
+          "effects": [
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "5d258409-28d3-4eac-9f1a-3e494db818bf",
+    "name": "Cloak of Confusion",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Enchanted creature may assign no combat damage this turn; defending player discards at random",
+          "effects": [
+            {
+              "op": "mayForgoTriggerObjectCombatDamageForRandomDiscard"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacksUnblocked"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "5dba7746-c087-4ec1-92ca-ab9882dea24d",
@@ -3603,6 +4506,41 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
+    "name": "Mother of Runes",
+    "handledLines": [
+      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target creature you control gains protection from a color of your choice until end of turn",
+            "effects": [
+              {
+                "op": "grantChosenColorProtectionUntilEot",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
     }
   },
   {
@@ -3728,6 +4666,22 @@
       ]
     },
     "compose": "append"
+  },
+  {
+    "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
+    "name": "Deafening Silence",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "noncreature",
+          "kind": "spellCastLimit",
+          "limit": 1
+        }
+      ]
+    }
   },
   {
     "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
@@ -4087,6 +5041,76 @@
     "name": "Intermediate Chirography",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "6cbd36d9-de47-41b0-9ef4-a72ca01adccd",
+    "name": "Curse of Disturbance",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted player is attacked, create a 2/2 black Zombie creature token. Each opponent attacking that player does the same.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a Zombie; each opponent attacking enchanted player creates one",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "opponentsOnly": true,
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enchantedPlayerAttacked"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
@@ -4461,6 +5485,74 @@
     }
   },
   {
+    "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
+    "name": "Stone of Erech",
+    "handledLines": [
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
+      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile target player's graveyard. Draw a card",
+            "effects": [
+              {
+                "op": "exileTargetPlayerGraveyard",
+                "target": 0
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "basis": "controller",
+          "creatureFromBattlefieldOnly": true,
+          "includeTokens": true,
+          "kind": "graveyardToExile",
+          "scope": "opponents"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -4700,6 +5792,39 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+    "name": "Hypnotic Specter",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature deals damage to an opponent, that player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card at random",
+          "effects": [
+            {
+              "atRandom": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsDamageToOpponent"
+          }
+        }
+      ]
     }
   },
   {
@@ -5185,6 +6310,235 @@
     "def": {}
   },
   {
+    "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+    "name": "Tergrid, God of Fright // Tergrid's Lantern",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.\"",
+      "unsupported layout \"modal_dfc\""
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Cast Tergrid's Lantern",
+          "kind": "mdfc",
+          "manaCost": {
+            "colored": {
+              "B": 1,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          },
+          "name": "Tergrid's Lantern",
+          "spellFace": {
+            "activatedAbilities": [
+              {
+                "ability": {
+                  "description": "Target player loses 3 life unless they sacrifice a nonland permanent or discard a card",
+                  "effects": [
+                    {
+                      "amount": {
+                        "kind": "const",
+                        "n": 3
+                      },
+                      "op": "sacrificeNonlandOrDiscardOrLoseLife",
+                      "target": 0
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": [
+                    {
+                      "kind": "player"
+                    }
+                  ]
+                },
+                "costs": [
+                  {
+                    "kind": "tap"
+                  }
+                ],
+                "timing": "any"
+              },
+              {
+                "ability": {
+                  "description": "Untap Tergrid's Lantern",
+                  "effects": [
+                    {
+                      "op": "untapEach",
+                      "selector": {
+                        "kind": "self"
+                      }
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": []
+                },
+                "costs": [
+                  {
+                    "cost": {
+                      "colored": {
+                        "B": 1,
+                        "G": 0,
+                        "R": 0,
+                        "U": 0,
+                        "W": 0
+                      },
+                      "colorless": 0,
+                      "generic": 3
+                    },
+                    "kind": "mana"
+                  }
+                ],
+                "timing": "any"
+              }
+            ],
+            "colorIdentity": [
+              "B"
+            ],
+            "colors": [
+              "B"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 1,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 3
+            },
+            "modeled": true,
+            "name": "Tergrid's Lantern",
+            "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [],
+            "subtypes": [],
+            "supertypes": [
+              "Legendary"
+            ],
+            "toughness": null,
+            "triggers": [],
+            "typeLine": "Legendary Artifact",
+            "types": [
+              "Artifact"
+            ],
+            "unmodeledReasons": []
+          },
+          "spellFaceText": {
+            "frontManaCost": "{3}{B}{B}",
+            "frontOracleText": "Menace\nWhenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.",
+            "manaCost": "{3}{B}",
+            "oracleText": "{T}: Target player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card.\n{3}{B}: Untap Tergrid's Lantern."
+          },
+          "typeLine": "Legendary Artifact"
+        }
+      ],
+      "name": "Tergrid, God of Fright",
+      "triggers": [
+        {
+          "description": "Put the sacrificed card from a graveyard onto the battlefield under your control",
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  }
+                ]
+              }
+            },
+            "when": "sacrificed"
+          }
+        },
+        {
+          "description": "Put the discarded permanent card from a graveyard onto the battlefield under your control",
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Battle"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "85aa53e8-f062-4d02-bc69-1413f7f0dcf1",
     "name": "Kairi, the Swirling Sky",
     "handledLines": [
@@ -5259,6 +6613,23 @@
       "{2}{R}, Sacrifice an artifact: ~ deals 2 damage to any target."
     ],
     "def": {}
+  },
+  {
+    "oracleId": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+    "name": "Library of Leng",
+    "handledLines": [
+      "unrecognized rules text: \"If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "noMaximumHandSize"
+        },
+        {
+          "kind": "effectDiscardMayGoToLibraryTop"
+        }
+      ]
+    }
   },
   {
     "oracleId": "88600bd4-4dcc-4788-bba4-78b6cf5ad8f8",
@@ -5583,6 +6954,127 @@
     }
   },
   {
+    "oracleId": "8d24c12a-a300-4199-b2a9-3d5ead8df617",
+    "name": "Reluctant Role Model",
+    "handledLines": [
+      "unrecognized rules text: \"Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it.\"",
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had counters on it, put those counters on up to one target creature.\""
+    ],
+    "def": {
+      "keywords": [],
+      "triggers": [
+        {
+          "description": "Survival: if tapped, choose a flying, lifelink, or +1/+1 counter",
+          "effects": [
+            {
+              "op": "chooseOne",
+              "options": [
+                {
+                  "description": "Put a flying counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "flying",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                },
+                {
+                  "description": "Put a lifelink counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "lifelink",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                },
+                {
+                  "description": "Put a +1/+1 counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "+1/+1",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "secondMainPhase"
+          }
+        },
+        {
+          "description": "Put the counters from the creature that died on up to one target creature",
+          "effects": [
+            {
+              "op": "transferCountersFromTriggerObjectToChosenCreatures",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "hasAnyCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
     "name": "Spark Double",
     "handledLines": [
@@ -5741,6 +7233,37 @@
       "ruleStatics": [
         {
           "kind": "artifactTokenCreatesThopter"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
+    "name": "Bottomless Pit",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card at random",
+          "effects": [
+            {
+              "atRandom": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
         }
       ]
     }
@@ -6000,10 +7523,70 @@
     "def": {}
   },
   {
+    "oracleId": "992d9a72-d34d-47d7-96fb-37f0efb515ef",
+    "name": "Hymn to Tourach",
+    "handledLines": [
+      "unrecognized rules text: \"Target player discards two cards at random.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target player discards two cards at random",
+        "effects": [
+          {
+            "atRandom": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "discardTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
     "name": "Mystic Forge",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e",
+    "name": "Planar Void",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever another card is put into a graveyard from anywhere, exile that card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile that card from its graveyard",
+          "effects": [
+            {
+              "op": "exileGraveyardEventCard"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "fromAnyOrigin": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "other"
+              }
+            },
+            "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "9965d9c5-2ebf-4a6c-930e-55c5890979be",
@@ -6933,6 +8516,31 @@
     "def": {}
   },
   {
+    "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
+    "name": "Syphon Mind",
+    "handledLines": [
+      "unrecognized rules text: \"Each other player discards a card. You draw a card for each card discarded this way.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each other player discards a card. Draw a card for each card discarded this way",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "drawForDiscarded": true,
+            "op": "discardEachPlayer",
+            "scope": "opponents"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "abcf5e77-88fc-4b76-a1e8-907a5b27d612",
     "name": "Clan Defiance",
     "handledLines": [
@@ -7087,6 +8695,36 @@
     "name": "Deflecting Swat",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
+    "name": "Karn, Argent Defender",
+    "handledLines": [
+      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters"
+          ],
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
   },
   {
     "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
@@ -7475,6 +9113,80 @@
     "def": {}
   },
   {
+    "oracleId": "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
+    "name": "Rankle, Master of Pranks",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, choose any number —\"",
+      "unrecognized rules text: \"• Each player discards a card.\"",
+      "unrecognized rules text: \"• Each player loses 1 life and draws a card.\"",
+      "unrecognized rules text: \"• Each player sacrifices a creature of their choice.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Choose any number of Rankle modes",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 3,
+            "minChoices": 0,
+            "options": [
+              {
+                "description": "Each player discards a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "discardEachPlayer",
+                    "scope": "all"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Each player loses 1 life and draws a card",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "eachPlayerLosesLifeAndDraws"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Each player sacrifices a creature",
+                "effects": [
+                  {
+                    "count": 1,
+                    "filter": "creature",
+                    "op": "sacrificeEachPlayer"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
     "name": "Dragon Tempest",
     "handledLines": [],
@@ -7694,6 +9406,183 @@
                   }
                 ]
               }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "bcbe879a-4609-4493-bd7d-47c26d27e83c",
+    "name": "Bandit's Talent",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life.\"",
+      "unrecognized rules text: \"At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand.\"",
+      "unrecognized rules text: \"When this Class enters, each opponent discards two cards unless they discard a nonland card.\"",
+      "unrecognized rules text: \"{3}{B}: Level 3\"",
+      "unrecognized rules text: \"{B}: Level 2\"",
+      "unsupported layout \"class\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Gain Class level 2",
+            "effects": [
+              {
+                "level": 2,
+                "op": "gainClassLevel"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "condition": {
+            "cmp": "==",
+            "kind": "sourceClassLevel",
+            "n": 1
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Gain Class level 3",
+            "effects": [
+              {
+                "level": 3,
+                "op": "gainClassLevel"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "condition": {
+            "cmp": "==",
+            "kind": "sourceClassLevel",
+            "n": 2
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "sourceClassLevel",
+            "n": 2
+          },
+          "op": {
+            "addTrigger": {
+              "description": "If the upkeep player has one or fewer cards, they lose 2 life",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 2
+                  },
+                  "op": "loseLifeTarget",
+                  "target": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "condition": {
+                  "cmp": "<=",
+                  "kind": "eventPlayerHandSize",
+                  "n": 1
+                },
+                "player": "opponent",
+                "when": "upkeep"
+              }
+            },
+            "layer": 6
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "sourceClassLevel",
+            "n": 3
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Draw an additional card for each opponent with one or fewer cards",
+              "effects": [
+                {
+                  "maximum": 1,
+                  "op": "drawForOpponentsWithSmallHands"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "you",
+                "when": "drawStep"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Each opponent discards two cards unless they discard a nonland card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "nonlandMaySatisfyCount": true,
+              "op": "discardEachPlayer",
+              "scope": "opponents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
             },
             "when": "enters"
           }
@@ -8122,6 +10011,36 @@
     }
   },
   {
+    "oracleId": "c37051cc-6683-4dbb-b5ff-5c3a5bdab1df",
+    "name": "Painful Quandary",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts a spell, that player loses 5 life unless they discard a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player loses 5 life unless they discard a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discardOrLoseLife",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
     "name": "Champion of Lambholt",
     "handledLines": [],
@@ -8482,6 +10401,46 @@
     "compose": "append"
   },
   {
+    "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
+    "name": "Archon of Emeria",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
+      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "any",
+          "kind": "spellCastLimit",
+          "limit": 1
+        },
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Basic"
+                }
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "otherPermanentsEnterTapped"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "cf7352bf-3971-4bb7-88b9-65ab9a219289",
     "name": "Loaming Shaman",
     "handledLines": [
@@ -8520,6 +10479,64 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "cf8bc2e3-2f22-45d3-9810-bc039202f41c",
+    "name": "Whispers of Emrakul",
+    "handledLines": [
+      "unrecognized rules text: \"If there are four or more card types among cards in your graveyard, that player discards two cards at random instead.\"",
+      "unrecognized rules text: \"Target opponent discards a card at random.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target opponent discards one card at random, or two with delirium",
+        "effects": [
+          {
+            "condition": {
+              "cmp": ">=",
+              "kind": "compareValues",
+              "left": {
+                "kind": "cardTypesInYourGraveyard"
+              },
+              "right": {
+                "kind": "const",
+                "n": 4
+              }
+            },
+            "else": [
+              {
+                "atRandom": true,
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardTarget",
+                "target": 0
+              }
+            ],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "atRandom": true,
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "discardTarget",
+                "target": 0
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
     }
   },
   {
@@ -8602,8 +10619,66 @@
   {
     "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
     "name": "Breena, the Demagogue",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "The attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            },
+            {
+              "count": 2,
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "attackingPlayerIsEventPlayer": true,
+            "condition": {
+              "kind": "defendingOpponentHasMoreLifeThanAnother"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
@@ -8813,6 +10888,70 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "d31fd12f-b4dd-4bc3-ace4-703dabd0f607",
+    "name": "Aven Interrupter",
+    "handledLines": [
+      "unrecognized rules text: \"Spells your opponents cast from graveyards or from exile cost {2} more to cast.\"",
+      "unrecognized rules text: \"When this creature enters, exile target spell. It becomes plotted.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": 2,
+          "kind": "opponentNonHandSpellCostIncrease"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target spell; its owner may cast it as a sorcery on a later turn without paying its mana cost",
+          "effects": [
+            {
+              "op": "exileSpellAndPlot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "spell"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "d54e4e37-042b-44a5-918d-757308545d4d",
+    "name": "Sejiri Shelter // Sejiri Glacier",
+    "handledLines": [
+      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target creature you control gains protection from a color of your choice until end of turn",
+        "effects": [
+          {
+            "op": "grantChosenColorProtectionUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "you",
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {
@@ -9305,6 +11444,36 @@
     }
   },
   {
+    "oracleId": "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe",
+    "name": "Necrogen Mists",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "dbb8a3d9-6b1b-4ad1-b8b9-f92ead03d1d9",
     "name": "Coercive Impetus",
     "handledLines": [],
@@ -9370,6 +11539,157 @@
     "name": "Deflecting Palm",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "ddbe0d17-5cac-417c-afc0-e4aebae83205",
+    "name": "Restoration Magic",
+    "handledLines": [
+      "unrecognized rules text: \"Tiered\"",
+      "unrecognized rules text: \"• Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.\"",
+      "unrecognized rules text: \"• Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.\"",
+      "unrecognized rules text: \"• Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose and pay exactly one tier in addition to the printed mana cost",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 0
+                    },
+                    "colorless": 0,
+                    "generic": 0
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Cure",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordUntilEot",
+                  "target": 0
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordUntilEot",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 0
+                    },
+                    "colorless": 0,
+                    "generic": 1
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Cura",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordUntilEot",
+                  "target": 1
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordUntilEot",
+                  "target": 1
+                },
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 3
+                  },
+                  "op": "gainLife"
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 1
+                    },
+                    "colorless": 0,
+                    "generic": 3
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Curaga",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordEachUntilEot",
+                  "selector": {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordEachUntilEot",
+                  "selector": {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                },
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 6
+                  },
+                  "op": "gainLife"
+                }
+              ],
+              "targetSlots": []
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "permanent"
+          },
+          {
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "de1cfa83-2049-48ab-b093-2f120a3ef4f2",
@@ -9516,6 +11836,142 @@
     }
   },
   {
+    "oracleId": "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe",
+    "name": "Liliana, Waker of the Dead",
+    "handledLines": [
+      "unrecognized rules text: \"+1: Each player discards a card. Each opponent who can't loses 3 life.\"",
+      "unrecognized rules text: \"−3: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard.\"",
+      "unrecognized rules text: \"−7: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\"\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each player discards; opponents unable to discard lose 3 life",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardEachPlayer",
+                "opponentsUnableLoseLife": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target creature gets -X/-X for your graveyard size",
+            "effects": [
+              {
+                "op": "pumpUntilEot",
+                "power": {
+                  "kind": "negate",
+                  "of": {
+                    "kind": "countCardsInZone",
+                    "owner": "you",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": []
+                    },
+                    "zone": "graveyard"
+                  }
+                },
+                "target": 0,
+                "toughness": {
+                  "kind": "negate",
+                  "of": {
+                    "kind": "countCardsInZone",
+                    "owner": "you",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": []
+                    },
+                    "zone": "graveyard"
+                  }
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Create a beginning-of-combat reanimation emblem",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Return target creature card from any graveyard under your control with haste",
+                    "effects": [
+                      {
+                        "gainsHaste": true,
+                        "op": "graveyardToBattlefield",
+                        "target": 0
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [
+                      {
+                        "filter": {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        "graveyardOwnerScope": "any",
+                        "kind": "cardInGraveyard"
+                      }
+                    ],
+                    "trigger": {
+                      "player": "you",
+                      "when": "beginningOfCombat"
+                    }
+                  }
+                ],
+                "name": "Liliana, Waker of the Dead emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -7,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "e1a776d2-fb3a-4215-a14e-4b6e9bda95df",
     "name": "Hunter's Prowess",
     "handledLines": [
@@ -9572,8 +12028,21 @@
   {
     "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
     "name": "Promise of Loyalty",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each player keeps one creature with a vow counter and sacrifices the rest",
+        "effects": [
+          {
+            "op": "eachPlayerKeepsCreatureWithVow"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3",
@@ -9617,6 +12086,66 @@
     "name": "Olórin's Searing Light",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "e70f5520-1b9c-4351-8484-30f0dc692e01",
+    "name": "The Haunt of Hightower",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on ~.\"",
+      "unrecognized rules text: \"Whenever ~ attacks, defending player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Defending player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Put a +1/+1 counter on this creature",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "fromAnyOrigin": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            },
+            "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
@@ -9918,6 +12447,44 @@
     }
   },
   {
+    "oracleId": "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5",
+    "name": "Thoughtseize",
+    "handledLines": [
+      "unrecognized rules text: \"Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target player reveals their hand. You choose a nonland card from it to discard. You lose 2 life",
+        "effects": [
+          {
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "op": "revealHandAndDiscard",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "loseLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
     "name": "Combat Calligrapher",
     "handledLines": [],
@@ -9946,6 +12513,105 @@
         ],
         "kind": "spell",
         "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+    "name": "Bilbo's Gambit",
+    "handledLines": [
+      "unrecognized rules text: \"Gift a Treasure\"",
+      "unrecognized rules text: \"Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.\""
+    ],
+    "def": {
+      "gift": "treasure",
+      "spellAbility": {
+        "description": "Return target spell to its owner's hand; if a gift was promised, players cannot cast spells this turn",
+        "effects": [
+          {
+            "op": "returnSpellToOwnerHand",
+            "target": 0
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "op": "prohibitSpellsThisTurn"
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "ef809e99-34a2-4471-8269-f56bf8037686",
+    "name": "Geth's Grimoire",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent discards a card, you may draw a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "f0449cbd-855c-4c20-a1f5-f76a395d8d39",
+    "name": "Reprieve",
+    "handledLines": [
+      "unrecognized rules text: \"Return target spell to its owner's hand.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Return target spell to its owner's hand. Draw a card",
+        "effects": [
+          {
+            "op": "returnSpellToOwnerHand",
+            "target": 0
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
       }
     }
   },
@@ -10016,6 +12682,57 @@
     "name": "Eriette of the Charmed Apple",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
+    "name": "Oppression",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a player casts a spell, that player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "each",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "f4e32fc1-1b8d-441e-8e76-71f19f98e925",
+    "name": "Leyline of the Void",
+    "handledLines": [
+      "unrecognized rules text: \"If a card would be put into an opponent's graveyard from anywhere, exile it instead.\"",
+      "unrecognized rules text: \"If this card is in your opening hand, you may begin the game with it on the battlefield.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "beginOnBattlefieldFromOpeningHand"
+        },
+        {
+          "basis": "owner",
+          "includeTokens": false,
+          "kind": "graveyardToExile",
+          "scope": "opponents"
+        }
+      ]
+    }
   },
   {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
@@ -10092,6 +12809,31 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
+    "name": "Rebuff the Wicked",
+    "handledLines": [
+      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell that targets a permanent you control",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell",
+            "spellTargetsPermanentYouControl": true
+          }
+        ]
+      }
     }
   },
   {
@@ -11702,6 +14444,49 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-archfiend-of-ifnir",
+    "name": "Archfiend of Ifnir",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cycle or discard another card, put a -1/-1 counter on each creature your opponents control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Put a -1/-1 counter on each creature your opponents control",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "-1/-1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "other"
+            },
+            "player": "you",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-architect-of-the-untamed",
     "name": "Architect of the Untamed",
     "handledLines": [
@@ -11781,6 +14566,62 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-archon-of-absolution",
+    "name": "Archon of Absolution",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "alsoPlaneswalkersYouControl": true,
+          "amount": 1,
+          "kind": "attackTax"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-archon-of-emeria",
+    "name": "Archon of Emeria",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
+      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "any",
+          "kind": "spellCastLimit",
+          "limit": 1
+        },
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Basic"
+                }
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -11915,10 +14756,253 @@
     }
   },
   {
+    "oracleId": "oracle-authority-of-the-consuls",
+    "name": "Authority of the Consuls",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "otherPermanentsEnterTapped"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-aven-interrupter",
+    "name": "Aven Interrupter",
+    "handledLines": [
+      "unrecognized rules text: \"Spells your opponents cast from graveyards or from exile cost {2} more to cast.\"",
+      "unrecognized rules text: \"When this creature enters, exile target spell. It becomes plotted.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "amount": 2,
+          "kind": "opponentNonHandSpellCostIncrease"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Exile target spell; its owner may cast it as a sorcery on a later turn without paying its mana cost",
+          "effects": [
+            {
+              "op": "exileSpellAndPlot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "spell"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-backlash",
     "name": "Backlash",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-bandit-s-talent",
+    "name": "Bandit's Talent",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life.\"",
+      "unrecognized rules text: \"At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand.\"",
+      "unrecognized rules text: \"When this Class enters, each opponent discards two cards unless they discard a nonland card.\"",
+      "unrecognized rules text: \"{3}{B}: Level 3\"",
+      "unrecognized rules text: \"{B}: Level 2\"",
+      "unsupported layout \"class\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Gain Class level 2",
+            "effects": [
+              {
+                "level": 2,
+                "op": "gainClassLevel"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "condition": {
+            "cmp": "==",
+            "kind": "sourceClassLevel",
+            "n": 1
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Gain Class level 3",
+            "effects": [
+              {
+                "level": 3,
+                "op": "gainClassLevel"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "condition": {
+            "cmp": "==",
+            "kind": "sourceClassLevel",
+            "n": 2
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 1,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "sourceClassLevel",
+            "n": 2
+          },
+          "op": {
+            "addTrigger": {
+              "description": "If the upkeep player has one or fewer cards, they lose 2 life",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 2
+                  },
+                  "op": "loseLifeTarget",
+                  "target": "eventPlayer"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "condition": {
+                  "cmp": "<=",
+                  "kind": "eventPlayerHandSize",
+                  "n": 1
+                },
+                "player": "opponent",
+                "when": "upkeep"
+              }
+            },
+            "layer": 6
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "sourceClassLevel",
+            "n": 3
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Draw an additional card for each opponent with one or fewer cards",
+              "effects": [
+                {
+                  "maximum": 1,
+                  "op": "drawForOpponentsWithSmallHands"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "you",
+                "when": "drawStep"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Each opponent discards two cards unless they discard a nonland card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "nonlandMaySatisfyCount": true,
+              "op": "discardEachPlayer",
+              "scope": "opponents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-baxter-building",
@@ -12134,6 +15218,44 @@
       ]
     },
     "compose": "append"
+  },
+  {
+    "oracleId": "oracle-bilbo-s-gambit",
+    "name": "Bilbo's Gambit",
+    "handledLines": [
+      "unrecognized rules text: \"Gift a Treasure\"",
+      "unrecognized rules text: \"Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.\""
+    ],
+    "def": {
+      "gift": "treasure",
+      "spellAbility": {
+        "description": "Return target spell to its owner's hand; if a gift was promised, players cannot cast spells this turn",
+        "effects": [
+          {
+            "op": "returnSpellToOwnerHand",
+            "target": 0
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "op": "prohibitSpellsThisTurn"
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-biotransference",
@@ -12408,6 +15530,37 @@
     }
   },
   {
+    "oracleId": "oracle-bottomless-pit",
+    "name": "Bottomless Pit",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card at random",
+          "effects": [
+            {
+              "atRandom": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-brash-taunter",
     "name": "Brash Taunter",
     "handledLines": [],
@@ -12416,8 +15569,66 @@
   {
     "oracleId": "oracle-breena-the-demagogue",
     "name": "Breena, the Demagogue",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "The attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            },
+            {
+              "count": 2,
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "attackingPlayerIsEventPlayer": true,
+            "condition": {
+              "kind": "defendingOpponentHasMoreLifeThanAnother"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-brokers-hideout",
@@ -12967,6 +16178,37 @@
     }
   },
   {
+    "oracleId": "oracle-cloak-of-confusion",
+    "name": "Cloak of Confusion",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Enchanted creature may assign no combat damage this turn; defending player discards at random",
+          "effects": [
+            {
+              "op": "mayForgoTriggerObjectCombatDamageForRandomDiscard"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacksUnblocked"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-cloud-key",
     "name": "Cloud Key",
     "handledLines": [
@@ -13501,6 +16743,76 @@
     }
   },
   {
+    "oracleId": "oracle-curse-of-disturbance",
+    "name": "Curse of Disturbance",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted player is attacked, create a 2/2 black Zombie creature token. Each opponent attacking that player does the same.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a Zombie; each opponent attacking enchanted player creates one",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "opponentsOnly": true,
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enchantedPlayerAttacked"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-cut-a-deal",
     "name": "Cut a Deal",
     "handledLines": [],
@@ -13557,8 +16869,27 @@
   {
     "oracleId": "oracle-dark-confidant",
     "name": "Dark Confidant",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal the top card of your library, put it into your hand, and lose life equal to its mana value",
+          "effects": [
+            {
+              "op": "drawRevealTopLoseManaValue"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-darkness",
@@ -13738,6 +17069,68 @@
             "player": "you",
             "when": "gainsLife"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-dawn-s-truce",
+    "name": "Dawn's Truce",
+    "handledLines": [
+      "unrecognized rules text: \"Gift a card\"",
+      "unrecognized rules text: \"You and permanents you control gain hexproof until end of turn. If the gift was promised, permanents you control also gain indestructible until end of turn.\""
+    ],
+    "def": {
+      "gift": "card",
+      "spellAbility": {
+        "description": "You and your permanents gain hexproof; promised gift also grants your permanents indestructible this turn",
+        "effects": [
+          {
+            "op": "controllerHexproofUntilEot"
+          },
+          {
+            "keyword": "hexproof",
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            }
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "keyword": "indestructible",
+                "op": "grantKeywordEachUntilEot",
+                "selector": {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-deafening-silence",
+    "name": "Deafening Silence",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "noncreature",
+          "kind": "spellCastLimit",
+          "limit": 1
         }
       ]
     }
@@ -13998,6 +17391,36 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-doorkeeper-thrull",
+    "name": "Doorkeeper Thrull",
+    "handledLines": [
+      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters"
+          ],
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-dragon-mage",
     "name": "Dragon Mage",
     "handledLines": [
@@ -14049,14 +17472,95 @@
   {
     "oracleId": "oracle-duelist-s-heritage",
     "name": "Duelist's Heritage",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Target attacking creature gains double strike until end of turn",
+          "effects": [
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [
+            {
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-duplicant",
     "name": "Duplicant",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-duress",
+    "name": "Duress",
+    "handledLines": [
+      "unrecognized rules text: \"Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target opponent reveals their hand. You choose a noncreature, nonland card from it to discard",
+        "effects": [
+          {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "op": "revealHandAndDiscard",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-eiganjo-dynastorian-replenish",
@@ -15195,6 +18699,36 @@
     }
   },
   {
+    "oracleId": "oracle-geth-s-grimoire",
+    "name": "Geth's Grimoire",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent discards a card, you may draw a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You may draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-gev-scaled-scorch",
     "name": "Gev, Scaled Scorch",
     "handledLines": [
@@ -15900,6 +19434,90 @@
     }
   },
   {
+    "oracleId": "oracle-hushbringer",
+    "name": "Hushbringer",
+    "handledLines": [
+      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters",
+            "dies"
+          ],
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-hymn-to-tourach",
+    "name": "Hymn to Tourach",
+    "handledLines": [
+      "unrecognized rules text: \"Target player discards two cards at random.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target player discards two cards at random",
+        "effects": [
+          {
+            "atRandom": true,
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "discardTarget",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-hypnotic-specter",
+    "name": "Hypnotic Specter",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature deals damage to an opponent, that player discards a card at random.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card at random",
+          "effects": [
+            {
+              "atRandom": true,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsDamageToOpponent"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-illuminor-szeras",
     "name": "Illuminor Szeras",
     "handledLines": [
@@ -15937,6 +19555,38 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-imp-s-mischief",
+    "name": "Imp's Mischief",
+    "handledLines": [
+      "unrecognized rules text: \"Change the target of target spell with a single target. You lose life equal to that spell's mana value.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Change target single-target spell and lose life equal to its mana value",
+        "effects": [
+          {
+            "op": "changeSingleSpellTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "manaValueOfTarget",
+              "target": 0
+            },
+            "op": "loseLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell",
+            "spellHasSingleTarget": true
+          }
+        ]
+      }
     }
   },
   {
@@ -16208,6 +19858,36 @@
     "name": "Kardur, Doomscourge",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-karn-argent-defender",
+    "name": "Karn, Argent Defender",
+    "handledLines": [
+      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "events": [
+            "enters"
+          ],
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-keen-duelist",
@@ -16557,10 +20237,269 @@
     }
   },
   {
+    "oracleId": "oracle-leyline-of-the-void",
+    "name": "Leyline of the Void",
+    "handledLines": [
+      "unrecognized rules text: \"If a card would be put into an opponent's graveyard from anywhere, exile it instead.\"",
+      "unrecognized rules text: \"If this card is in your opening hand, you may begin the game with it on the battlefield.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "beginOnBattlefieldFromOpeningHand"
+        },
+        {
+          "basis": "owner",
+          "includeTokens": false,
+          "kind": "graveyardToExile",
+          "scope": "opponents"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-library-of-leng",
+    "name": "Library of Leng",
+    "handledLines": [
+      "unrecognized rules text: \"If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "noMaximumHandSize"
+        },
+        {
+          "kind": "effectDiscardMayGoToLibraryTop"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-lightning-runner",
     "name": "Lightning Runner",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-liliana-of-the-veil",
+    "name": "Liliana of the Veil",
+    "handledLines": [
+      "unrecognized rules text: \"+1: Each player discards a card.\"",
+      "unrecognized rules text: \"−2: Target player sacrifices a creature.\"",
+      "unrecognized rules text: \"−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each player discards a card",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardEachPlayer",
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target player sacrifices a creature",
+            "effects": [
+              {
+                "op": "sacrificeTargetPlayerCreature",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Separate permanents into piles; their controller chooses a pile to sacrifice",
+            "effects": [
+              {
+                "op": "separatePermanentsIntoPilesThenSacrifice",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -6,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-liliana-waker-of-the-dead",
+    "name": "Liliana, Waker of the Dead",
+    "handledLines": [
+      "unrecognized rules text: \"+1: Each player discards a card. Each opponent who can't loses 3 life.\"",
+      "unrecognized rules text: \"−3: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard.\"",
+      "unrecognized rules text: \"−7: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\"\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each player discards; opponents unable to discard lose 3 life",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardEachPlayer",
+                "opponentsUnableLoseLife": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "scope": "all"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Target creature gets -X/-X for your graveyard size",
+            "effects": [
+              {
+                "op": "pumpUntilEot",
+                "power": {
+                  "kind": "negate",
+                  "of": {
+                    "kind": "countCardsInZone",
+                    "owner": "you",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": []
+                    },
+                    "zone": "graveyard"
+                  }
+                },
+                "target": 0,
+                "toughness": {
+                  "kind": "negate",
+                  "of": {
+                    "kind": "countCardsInZone",
+                    "owner": "you",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": []
+                    },
+                    "zone": "graveyard"
+                  }
+                }
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": -3,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "Create a beginning-of-combat reanimation emblem",
+            "effects": [
+              {
+                "abilities": [
+                  {
+                    "description": "Return target creature card from any graveyard under your control with haste",
+                    "effects": [
+                      {
+                        "gainsHaste": true,
+                        "op": "graveyardToBattlefield",
+                        "target": 0
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [
+                      {
+                        "filter": {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        "graveyardOwnerScope": "any",
+                        "kind": "cardInGraveyard"
+                      }
+                    ],
+                    "trigger": {
+                      "player": "you",
+                      "when": "beginningOfCombat"
+                    }
+                  }
+                ],
+                "name": "Liliana, Waker of the Dead emblem",
+                "op": "createEmblem"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -7,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-loaming-shaman",
@@ -17381,6 +21320,41 @@
     }
   },
   {
+    "oracleId": "oracle-mother-of-runes",
+    "name": "Mother of Runes",
+    "handledLines": [
+      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Target creature you control gains protection from a color of your choice until end of turn",
+            "effects": [
+              {
+                "op": "grantChosenColorProtectionUntilEot",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-mutilate",
     "name": "Mutilate",
     "handledLines": [
@@ -17555,6 +21529,36 @@
               "kind": "self"
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-necrogen-mists",
+    "name": "Necrogen Mists",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
           }
         }
       ]
@@ -17977,6 +21981,36 @@
     }
   },
   {
+    "oracleId": "oracle-oppression",
+    "name": "Oppression",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a player casts a spell, that player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "each",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-organic-extinction",
     "name": "Organic Extinction",
     "handledLines": [
@@ -18119,6 +22153,36 @@
               }
             },
             "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-painful-quandary",
+    "name": "Painful Quandary",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts a spell, that player loses 5 life unless they discard a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That player loses 5 life unless they discard a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discardOrLoseLife",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "when": "castsSpell"
           }
         }
       ]
@@ -18484,6 +22548,64 @@
     }
   },
   {
+    "oracleId": "oracle-perch-protection",
+    "name": "Perch Protection",
+    "handledLines": [
+      "unrecognized rules text: \"Create four 2/2 blue Bird creature tokens with flying. If the gift was promised, all permanents you control phase out, and until your next turn, your life total can't change and you gain protection from everything.\"",
+      "unrecognized rules text: \"Gift an extra turn\""
+    ],
+    "def": {
+      "gift": "extraTurn",
+      "spellAbility": {
+        "description": "Create four flying Birds; promised gift phases out your permanents and protects you until your next turn; exile this spell",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 4
+            },
+            "op": "createToken",
+            "spec": {
+              "colors": [
+                "U"
+              ],
+              "keywords": [
+                "flying"
+              ],
+              "name": "Bird",
+              "power": 2,
+              "subtypes": [
+                "Bird"
+              ],
+              "toughness": 2,
+              "typeLine": "Creature — Bird",
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          {
+            "condition": {
+              "kind": "giftPromised"
+            },
+            "else": [],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "op": "phaseOutAndProtectControllerUntilNextTurn"
+              }
+            ]
+          },
+          {
+            "op": "resolvingSpellExile"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-pia-and-kiran-nalaar",
     "name": "Pia and Kiran Nalaar",
     "handledLines": [
@@ -18613,6 +22735,37 @@
     }
   },
   {
+    "oracleId": "oracle-planar-void",
+    "name": "Planar Void",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever another card is put into a graveyard from anywhere, exile that card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile that card from its graveyard",
+          "effects": [
+            {
+              "op": "exileGraveyardEventCard"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "fromAnyOrigin": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "other"
+              }
+            },
+            "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-plasmancer",
     "name": "Plasmancer",
     "handledLines": [
@@ -18709,8 +22862,21 @@
   {
     "oracleId": "oracle-promise-of-loyalty",
     "name": "Promise of Loyalty",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each player keeps one creature with a vow counter and sacrifices the rest",
+        "effects": [
+          {
+            "op": "eachPlayerKeepsCreatureWithVow"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-provoke-the-trolls",
@@ -18986,10 +23152,109 @@
     }
   },
   {
+    "oracleId": "oracle-rankle-master-of-pranks",
+    "name": "Rankle, Master of Pranks",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, choose any number —\"",
+      "unrecognized rules text: \"• Each player discards a card.\"",
+      "unrecognized rules text: \"• Each player loses 1 life and draws a card.\"",
+      "unrecognized rules text: \"• Each player sacrifices a creature of their choice.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Choose any number of Rankle modes",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 3,
+            "minChoices": 0,
+            "options": [
+              {
+                "description": "Each player discards a card",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "discardEachPlayer",
+                    "scope": "all"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Each player loses 1 life and draws a card",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "eachPlayerLosesLifeAndDraws"
+                  }
+                ],
+                "targetSlots": []
+              },
+              {
+                "description": "Each player sacrifices a creature",
+                "effects": [
+                  {
+                    "count": 1,
+                    "filter": "creature",
+                    "op": "sacrificeEachPlayer"
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-reality-shift",
     "name": "Reality Shift",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-rebuff-the-wicked",
+    "name": "Rebuff the Wicked",
+    "handledLines": [
+      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell that targets a permanent you control",
+        "effects": [
+          {
+            "op": "counter",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell",
+            "spellTargetsPermanentYouControl": true
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-reckless-fireweaver",
@@ -19037,6 +23302,326 @@
       "You have no maximum hand size."
     ],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-reluctant-role-model",
+    "name": "Reluctant Role Model",
+    "handledLines": [
+      "unrecognized rules text: \"Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it.\"",
+      "unrecognized rules text: \"Whenever this creature or another creature you control dies, if it had counters on it, put those counters on up to one target creature.\""
+    ],
+    "def": {
+      "keywords": [],
+      "triggers": [
+        {
+          "description": "Survival: if tapped, choose a flying, lifelink, or +1/+1 counter",
+          "effects": [
+            {
+              "op": "chooseOne",
+              "options": [
+                {
+                  "description": "Put a flying counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "flying",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                },
+                {
+                  "description": "Put a lifelink counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "lifelink",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                },
+                {
+                  "description": "Put a +1/+1 counter on Reluctant Role Model",
+                  "effects": [
+                    {
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      },
+                      "counter": "+1/+1",
+                      "op": "putCounters",
+                      "target": "source"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "not",
+              "of": {
+                "kind": "isUntapped"
+              }
+            },
+            "player": "you",
+            "when": "secondMainPhase"
+          }
+        },
+        {
+          "description": "Put the counters from the creature that died on up to one target creature",
+          "effects": [
+            {
+              "op": "transferCountersFromTriggerObjectToChosenCreatures",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "hasAnyCounter"
+              }
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-reprieve",
+    "name": "Reprieve",
+    "handledLines": [
+      "unrecognized rules text: \"Return target spell to its owner's hand.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Return target spell to its owner's hand. Draw a card",
+        "effects": [
+          {
+            "op": "returnSpellToOwnerHand",
+            "target": 0
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "draw"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-rest-in-peace",
+    "name": "Rest in Peace",
+    "handledLines": [
+      "unrecognized rules text: \"If a card or token would be put into a graveyard from anywhere, exile it instead.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "basis": "owner",
+          "includeTokens": true,
+          "kind": "graveyardToExile",
+          "scope": "all"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-restoration-magic",
+    "name": "Restoration Magic",
+    "handledLines": [
+      "unrecognized rules text: \"Tiered\"",
+      "unrecognized rules text: \"• Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.\"",
+      "unrecognized rules text: \"• Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.\"",
+      "unrecognized rules text: \"• Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose and pay exactly one tier in addition to the printed mana cost",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 0
+                    },
+                    "colorless": 0,
+                    "generic": 0
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Cure",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordUntilEot",
+                  "target": 0
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordUntilEot",
+                  "target": 0
+                }
+              ],
+              "targetSlots": [
+                0
+              ]
+            },
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 0
+                    },
+                    "colorless": 0,
+                    "generic": 1
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Cura",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordUntilEot",
+                  "target": 1
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordUntilEot",
+                  "target": 1
+                },
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 3
+                  },
+                  "op": "gainLife"
+                }
+              ],
+              "targetSlots": [
+                1
+              ]
+            },
+            {
+              "additionalCost": [
+                {
+                  "cost": {
+                    "colored": {
+                      "B": 0,
+                      "G": 0,
+                      "R": 0,
+                      "U": 0,
+                      "W": 1
+                    },
+                    "colorless": 0,
+                    "generic": 3
+                  },
+                  "kind": "mana"
+                }
+              ],
+              "description": "Curaga",
+              "effects": [
+                {
+                  "keyword": "hexproof",
+                  "op": "grantKeywordEachUntilEot",
+                  "selector": {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                },
+                {
+                  "keyword": "indestructible",
+                  "op": "grantKeywordEachUntilEot",
+                  "selector": {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                },
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 6
+                  },
+                  "op": "gainLife"
+                }
+              ],
+              "targetSlots": []
+            }
+          ]
+        },
+        "targets": [
+          {
+            "kind": "permanent"
+          },
+          {
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-reverberate",
@@ -19199,6 +23784,22 @@
       "Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens."
     ],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-rule-of-law",
+    "name": "Rule of Law",
+    "handledLines": [
+      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "category": "any",
+          "kind": "spellCastLimit",
+          "limit": 1
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-runehorn-hellkite",
@@ -19686,6 +24287,31 @@
     }
   },
   {
+    "oracleId": "oracle-sejiri-shelter-sejiri-glacier",
+    "name": "Sejiri Shelter // Sejiri Glacier",
+    "handledLines": [
+      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target creature you control gains protection from a color of your choice until end of turn",
+        "effects": [
+          {
+            "op": "grantChosenColorProtectionUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "you",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "oracle-selfless-squire",
     "name": "Selfless Squire",
     "handledLines": [],
@@ -20124,6 +24750,57 @@
     "compose": "append"
   },
   {
+    "oracleId": "oracle-soul-snare",
+    "name": "Soul Snare",
+    "handledLines": [
+      "unrecognized rules text: \"{W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile target creature attacking you or your planeswalker",
+            "effects": [
+              {
+                "op": "exile",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "attackingYouOrYourPlaneswalker"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-spark-double",
     "name": "Spark Double",
     "handledLines": [
@@ -20414,6 +25091,74 @@
     }
   },
   {
+    "oracleId": "oracle-stone-of-erech",
+    "name": "Stone of Erech",
+    "handledLines": [
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
+      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile target player's graveyard. Draw a card",
+            "effects": [
+              {
+                "op": "exileTargetPlayerGraveyard",
+                "target": 0
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "draw"
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "kind": "sacrificeSelf"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "basis": "controller",
+          "creatureFromBattlefieldOnly": true,
+          "includeTokens": true,
+          "kind": "graveyardToExile",
+          "scope": "opponents"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-stridehangar-automaton",
     "name": "Stridehangar Automaton",
     "handledLines": [
@@ -20653,6 +25398,31 @@
     }
   },
   {
+    "oracleId": "oracle-syphon-mind",
+    "name": "Syphon Mind",
+    "handledLines": [
+      "unrecognized rules text: \"Each other player discards a card. You draw a card for each card discarded this way.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each other player discards a card. Draw a card for each card discarded this way",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "drawForDiscarded": true,
+            "op": "discardEachPlayer",
+            "scope": "opponents"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-szarekh-the-silent-king",
     "name": "Szarekh, the Silent King",
     "handledLines": [],
@@ -20701,6 +25471,235 @@
               "kind": "self"
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-tergrid-god-of-fright-tergrid-s-lantern",
+    "name": "Tergrid, God of Fright // Tergrid's Lantern",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.\"",
+      "unsupported layout \"modal_dfc\""
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "ability": {
+            "effects": [],
+            "kind": "spell",
+            "targets": []
+          },
+          "description": "Cast Tergrid's Lantern",
+          "kind": "mdfc",
+          "manaCost": {
+            "colored": {
+              "B": 1,
+              "G": 0,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 3
+          },
+          "name": "Tergrid's Lantern",
+          "spellFace": {
+            "activatedAbilities": [
+              {
+                "ability": {
+                  "description": "Target player loses 3 life unless they sacrifice a nonland permanent or discard a card",
+                  "effects": [
+                    {
+                      "amount": {
+                        "kind": "const",
+                        "n": 3
+                      },
+                      "op": "sacrificeNonlandOrDiscardOrLoseLife",
+                      "target": 0
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": [
+                    {
+                      "kind": "player"
+                    }
+                  ]
+                },
+                "costs": [
+                  {
+                    "kind": "tap"
+                  }
+                ],
+                "timing": "any"
+              },
+              {
+                "ability": {
+                  "description": "Untap Tergrid's Lantern",
+                  "effects": [
+                    {
+                      "op": "untapEach",
+                      "selector": {
+                        "kind": "self"
+                      }
+                    }
+                  ],
+                  "kind": "activated",
+                  "targets": []
+                },
+                "costs": [
+                  {
+                    "cost": {
+                      "colored": {
+                        "B": 1,
+                        "G": 0,
+                        "R": 0,
+                        "U": 0,
+                        "W": 0
+                      },
+                      "colorless": 0,
+                      "generic": 3
+                    },
+                    "kind": "mana"
+                  }
+                ],
+                "timing": "any"
+              }
+            ],
+            "colorIdentity": [
+              "B"
+            ],
+            "colors": [
+              "B"
+            ],
+            "defense": null,
+            "entersTapped": false,
+            "hasUnsupportedCost": false,
+            "keywords": [],
+            "loyalty": null,
+            "manaAbilities": [],
+            "manaCost": {
+              "colored": {
+                "B": 1,
+                "G": 0,
+                "R": 0,
+                "U": 0,
+                "W": 0
+              },
+              "colorless": 0,
+              "generic": 3
+            },
+            "modeled": true,
+            "name": "Tergrid's Lantern",
+            "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+            "power": null,
+            "ruleStatics": [],
+            "spellAbility": {
+              "effects": [],
+              "kind": "spell",
+              "targets": []
+            },
+            "staticEffects": [],
+            "subtypes": [],
+            "supertypes": [
+              "Legendary"
+            ],
+            "toughness": null,
+            "triggers": [],
+            "typeLine": "Legendary Artifact",
+            "types": [
+              "Artifact"
+            ],
+            "unmodeledReasons": []
+          },
+          "spellFaceText": {
+            "frontManaCost": "{3}{B}{B}",
+            "frontOracleText": "Menace\nWhenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.",
+            "manaCost": "{3}{B}",
+            "oracleText": "{T}: Target player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card.\n{3}{B}: Untap Tergrid's Lantern."
+          },
+          "typeLine": "Legendary Artifact"
+        }
+      ],
+      "name": "Tergrid, God of Fright",
+      "triggers": [
+        {
+          "description": "Put the sacrificed card from a graveyard onto the battlefield under your control",
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "isToken"
+                    }
+                  }
+                ]
+              }
+            },
+            "when": "sacrificed"
+          }
+        },
+        {
+          "description": "Put the discarded permanent card from a graveyard onto the battlefield under your control",
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Battle"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            },
+            "player": "opponent",
+            "when": "discardsCard"
           }
         }
       ]
@@ -20777,6 +25776,66 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-the-haunt-of-hightower",
+    "name": "The Haunt of Hightower",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on ~.\"",
+      "unrecognized rules text: \"Whenever ~ attacks, defending player discards a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Defending player discards a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardTarget",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "defendingPlayerIsEventPlayer": true,
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Put a +1/+1 counter on this creature",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "fromAnyOrigin": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            },
+            "when": "putIntoGraveyardFromAnywhere"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-the-war-in-heaven",
     "name": "The War in Heaven",
     "handledLines": [],
@@ -20832,6 +25891,44 @@
       "You have no maximum hand size."
     ],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-thoughtseize",
+    "name": "Thoughtseize",
+    "handledLines": [
+      "unrecognized rules text: \"Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target player reveals their hand. You choose a nonland card from it to discard. You lose 2 life",
+        "effects": [
+          {
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Land"
+              }
+            },
+            "op": "revealHandAndDiscard",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "loseLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-thrakkus-the-butcher",
@@ -21028,6 +26125,173 @@
     "name": "Tibalt's Trickery",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-tinybones-joins-up",
+    "name": "Tinybones Joins Up",
+    "handledLines": [
+      "unrecognized rules text: \"When ~ enters, any number of target players each discard a card.\"",
+      "unrecognized rules text: \"Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Any number of target players each discard a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "discardChosenPlayers",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Any number of target players each mill a card and lose 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "millAndLoseLifeChosenPlayers",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": null,
+                "min": 0
+              },
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-tinybones-trinket-thief",
+    "name": "Tinybones, Trinket Thief",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.\"",
+      "unrecognized rules text: \"{4}{B}{B}: Each opponent with no cards in hand loses 10 life.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Each opponent with no cards in hand loses 10 life",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 10
+                },
+                "emptyHandOnly": true,
+                "op": "eachOpponentLosesLife"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 2,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 4
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "If an opponent discarded this turn, draw a card and lose 1 life",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "loseLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "opponentDiscardedThisTurn"
+            },
+            "player": "each",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tomb-blade",
@@ -21531,6 +26795,52 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-vicious-rumors",
+    "name": "Vicious Rumors",
+    "handledLines": [
+      "unrecognized rules text: \"~ deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent takes 1 damage, discards and mills a card. You gain 1 life",
+        "effects": [
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "eachOpponentDamage"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "discardEachPlayer",
+            "scope": "opponents"
+          },
+          {
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "millEachPlayer",
+            "scope": "opponents"
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "op": "gainLife"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-vindictive-lich",
     "name": "Vindictive Lich",
     "handledLines": [],
@@ -21642,6 +26952,122 @@
     }
   },
   {
+    "oracleId": "oracle-waste-not",
+    "name": "Waste Not",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.\"",
+      "unrecognized rules text: \"Whenever an opponent discards a land card, add {B}{B}.\"",
+      "unrecognized rules text: \"Whenever an opponent discards a noncreature, nonland card, draw a card.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Create a 2/2 black Zombie creature token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "B"
+                ],
+                "name": "Zombie",
+                "power": 2,
+                "subtypes": [
+                  "Zombie"
+                ],
+                "toughness": 2,
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        },
+        {
+          "description": "Add {B}{B}",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "colors": [
+                "B"
+              ],
+              "fixedSymbols": [
+                "B",
+                "B"
+              ],
+              "op": "addMana"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        },
+        {
+          "description": "Draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "player": "opponent",
+            "when": "discardsCard"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-wear-tear",
     "name": "Wear // Tear",
     "handledLines": [],
@@ -21727,6 +27153,64 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-whispers-of-emrakul",
+    "name": "Whispers of Emrakul",
+    "handledLines": [
+      "unrecognized rules text: \"If there are four or more card types among cards in your graveyard, that player discards two cards at random instead.\"",
+      "unrecognized rules text: \"Target opponent discards a card at random.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Target opponent discards one card at random, or two with delirium",
+        "effects": [
+          {
+            "condition": {
+              "cmp": ">=",
+              "kind": "compareValues",
+              "left": {
+                "kind": "cardTypesInYourGraveyard"
+              },
+              "right": {
+                "kind": "const",
+                "n": 4
+              }
+            },
+            "else": [
+              {
+                "atRandom": true,
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "discardTarget",
+                "target": 0
+              }
+            ],
+            "op": "conditionalEffect",
+            "then": [
+              {
+                "atRandom": true,
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "op": "discardTarget",
+                "target": 0
+              }
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
     }
   },
   {

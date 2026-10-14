@@ -1,3 +1,4 @@
+import { playerLifeLocked } from '../state/phasing';
 import { counterCount } from '../state/counters';
 import {
   eventObjectFacts,
@@ -30,7 +31,7 @@ import type { Value, ValueScope } from './value';
  */
 
 import type { GameGen } from '../decisions';
-import { loseLife, payManaCost } from '../effects/resolve';
+import { payLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
 import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
@@ -50,6 +51,9 @@ import type { EnginePermanent } from '../state/types';
 export type Comparison = '>=' | '<=' | '==';
 
 export type Condition =
+  | { kind: 'giftPromised' }
+  | { kind: 'sourceClassLevel'; cmp: Comparison; n: number }
+  | { kind: 'eventPlayerHandSize'; cmp: Comparison; n: number }
   /**
    * "you control two or more other lands" — count the permanents matching `selector` within
    * `scope`, and compare. `scope` narrows *whose* permanents are counted before the selector
@@ -99,6 +103,7 @@ export type Condition =
   | { kind: 'excessDamageDealtTo'; scope: 'opponents' }
   /** "an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
   | { kind: 'opponentDealtDamageThisTurn'; minDamage: number }
+  | { kind: 'opponentDiscardedThisTurn' }
   /** "creatures you control have total power 10 or greater" (Mosswort Bridge). */
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
@@ -164,6 +169,8 @@ export type Condition =
   /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
   | { kind: 'attackingPlayerHasMoreLife' }
   | { kind: 'attackingPlayerHasMoreLifeThanYou' }
+  /** Breena: the attacked opponent has more life than another of your opponents. */
+  | { kind: 'defendingOpponentHasMoreLifeThanAnother' }
   /** The attack-trigger object is attacking an opponent of the ability's controller. */
   | { kind: 'triggerObjectAttackingOpponent' }
   | { kind: 'allOf'; of: Condition[] }
@@ -219,8 +226,12 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'opponentCount':
     case 'excessDamageDealtTo':
     case 'opponentDealtDamageThisTurn':
+    case 'opponentDiscardedThisTurn':
     case 'totalCreaturePower':
     case 'isUntapped':
+    case 'giftPromised':
+    case 'sourceClassLevel':
+    case 'eventPlayerHandSize':
     case 'wasKicked':
     case 'sourceWasCast':
     case 'announcedXAtLeast':
@@ -242,6 +253,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'yourTurn':
     case 'attackingPlayerHasMoreLife':
     case 'attackingPlayerHasMoreLifeThanYou':
+    case 'defendingOpponentHasMoreLifeThanAnother':
     case 'triggerObjectAttackingOpponent':
     case 'eventPlayerDrawCount':
     case 'notFirstDrawInOwnDrawStep':
@@ -377,6 +389,8 @@ export function evaluateCondition(
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));
     }
+    case 'opponentDiscardedThisTurn':
+      return opponentsOf(ctx, source.controllerId).some(player => (player.discardedCardsThisTurn ?? 0) > 0);
     case 'opponentDealtDamageThisTurn': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
@@ -402,6 +416,16 @@ export function evaluateCondition(
       if (source?.cardId === undefined) return false;
       const perm = sourceState();
       return perm !== undefined && !perm.tapped;
+    }
+    case 'giftPromised': return source.giftPromised === true;
+    case 'sourceClassLevel': {
+      const state = sourceState();
+      return state !== undefined && compare(state.classLevel ?? 1, condition.cmp, condition.n);
+    }
+    case 'eventPlayerHandSize': {
+      if (scope.eventPlayerId === undefined) throw new Error('hand-size condition has no bound event player');
+      const player = ctx.state.players.find(candidate => candidate.id === scope.eventPlayerId);
+      return player !== undefined && !player.hasLost && compare(player.hand.length, condition.cmp, condition.n);
     }
     case 'enteredThisTurn': {
       if (source?.cardId === undefined) return false;
@@ -471,6 +495,17 @@ export function evaluateCondition(
         .map((player) => player.life);
       const mostLife = lives.length === 0 ? 0 : Math.max(...lives);
       return defender.life === mostLife;
+    }
+    case 'defendingOpponentHasMoreLifeThanAnother': {
+      // The attacked player is an event fact, not the attacker's current combat assignment.
+      const defenderId = scope.triggerObjectFacts?.candidate.attackingDefenderId;
+      const opponents = ctx.state.players.filter(
+        (player) => !player.hasLost && player.id !== source.controllerId,
+      );
+      const defender = opponents.find((player) => player.id === defenderId);
+      return defender !== undefined && opponents.some(
+        (player) => player.id !== defender.id && defender.life > player.life,
+      );
     }
     case 'attackingPlayerHasMoreLifeThanYou': {
       const attacker = sourceState();
@@ -589,7 +624,7 @@ export function* resolveCondition(
       // this module, and importing back would close a runtime import cycle.
       const player = ctx.state.players.find((p) => p.id === source.controllerId);
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
-      if (condition.n > player.life) return false;
+      if (condition.n > player.life || (condition.n > 0 && playerLifeLocked(ctx, player.id))) return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
@@ -604,7 +639,7 @@ export function* resolveCondition(
         ],
       };
       if (outcome.index !== 0) return false;
-      loseLife(ctx, player, condition.n);
+      payLife(ctx, player, condition.n);
       emit(ctx, 'costPaid', { player: player.id, source: sourceName, life: condition.n });
       return true;
     }
@@ -637,7 +672,7 @@ export function* resolveCondition(
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
       const sources = manaSourcesFor(ctx, player.id);
       const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-      if (!canPay(condition.cost, player.manaEntries, sources, allows, player.life)) return false;
+      if (!canPay(condition.cost, player.manaEntries, sources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,

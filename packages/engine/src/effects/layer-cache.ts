@@ -94,6 +94,7 @@ function foldCounters(h: number, perm: EnginePermanent): number {
     h = mix(h, hashString(name));
     // Offset so that negative counts stay distinct under the xor.
     h = mix(h, (perm.counters[name] ?? 0) + 0x10000);
+    h = mix(h, perm.counterTimestamps?.[name] ?? perm.timestamp);
   }
   return h;
 }
@@ -115,6 +116,7 @@ export function digestOf(
   h = mix(h, s.battlefield.length);
   for (const perm of s.battlefield) {
     h = mix(h, perm.timestamp);
+    h = mix(h, perm.classLevel ?? 1);
     h = mix(h, hashString(perm.oracleId));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.

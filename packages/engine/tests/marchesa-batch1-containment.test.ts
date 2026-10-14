@@ -100,8 +100,6 @@ const REASONS: Record<string, string> = {
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
   Delirium: "Cast-only-during-an-opponent's-turn is omitted.",
-  "Duelist's Heritage":
-    'Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.',
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
   'Selfless Squire':
     'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
@@ -111,8 +109,6 @@ const REASONS: Record<string, string> = {
   Arcbond: 'The delayed damage is dealt by Arcbond, not by the chosen creature.',
   Backlash: 'Untapped-creature targeting is implemented as any creature.',
   'Brash Taunter': 'Another-target fight can target this creature.',
-  'Breena, the Demagogue':
-    'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
   'Deflecting Palm':
     'Source choice and reflection are implemented as unscoped combat-damage prevention.',
   'Scheming Symmetry':
@@ -121,8 +117,6 @@ const REASONS: Record<string, string> = {
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
-  'Promise of Loyalty':
-    'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
@@ -165,8 +159,6 @@ const REASONS: Record<string, string> = {
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Dark Confidant':
-    'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Thundermaw Hellkite':
     'Tap applies to all opposing fliers, not only creatures dealt that damage.',
@@ -179,6 +171,7 @@ const REASONS: Record<string, string> = {
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',
     'Myriad Landscape',
@@ -290,7 +283,11 @@ describe('Marchesa catalog audit containment', () => {
     'Eldrazi Conscription',
     'Curse of Bounty',
     'Eidolon of Countless Battles',
+    'Breena, the Demagogue',
+    "Duelist's Heritage",
+    'Dark Confidant',
     'Animate Dead',
+    'Promise of Loyalty',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

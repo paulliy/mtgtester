@@ -44,6 +44,7 @@ import {
   manaSourcesFor,
   spellHasConvoke,
   getDefByOracleId,
+  nonHandSpellCostIncreaseFor,
   playFromZonePermission,
   wardCostOf,
   requireModeled,
@@ -407,7 +408,8 @@ function* proposeCast(
     resolutionPermission !== undefined &&
     payload.alternativeCast !== undefined &&
     payload.alternativeCast !== 'adventure' &&
-    payload.alternativeCast !== 'omen'
+    payload.alternativeCast !== 'omen' &&
+    payload.alternativeCast !== 'mdfc'
   ) {
     throw new Error('without-mana-cost permission cannot combine alternative costs or nonzero X');
   }
@@ -431,6 +433,22 @@ function* proposeCast(
           ...s.players.flatMap((p) => [...p.hand, ...p.library, ...p.graveyard, ...p.commandZone]),
         ].find((card) => card === permittedCard && card.id === payload.objectId);
   if (obj === undefined) throw new Error('engine bug: spell to cast not found');
+  const plotCast = payload.plotCast === true;
+  if (
+    plotCast &&
+    (resolutionPermission !== undefined ||
+      payload.fromExile !== true ||
+      obj.ownerId !== player.id ||
+      obj.plottedTurn === undefined ||
+      obj.plottedTurn >= s.turnNumber)
+  )
+    throw new Error('plot casting permission is not legal');
+  if (
+    plotCast &&
+    payload.alternativeCast !== undefined &&
+    !['adventure', 'omen', 'mdfc'].includes(payload.alternativeCast)
+  )
+    throw new Error('plot cannot combine alternative costs');
   if (
     resolutionPermission === undefined &&
     payload.fromCommand &&
@@ -443,6 +461,7 @@ function* proposeCast(
   if (
     resolutionPermission === undefined &&
     payload.alternativeCast === undefined &&
+    !plotCast &&
     def.manaCost === null
   ) {
     throw new Error('a spell with no mana cost requires an alternative cost');
@@ -461,9 +480,16 @@ function* proposeCast(
   }
   if (
     payload.alternativeCast !== undefined &&
-    !['energy', 'commanderFree', 'nonMana', 'overload', 'adventure', 'omen', 'bestow'].includes(
-      payload.alternativeCast,
-    )
+    ![
+      'energy',
+      'commanderFree',
+      'nonMana',
+      'overload',
+      'adventure',
+      'omen',
+      'mdfc',
+      'bestow',
+    ].includes(payload.alternativeCast)
   )
     throw new Error('unknown casting alternative');
   const authoredAlternative =
@@ -471,6 +497,7 @@ function* proposeCast(
     payload.alternativeCast === 'overload' ||
     payload.alternativeCast === 'adventure' ||
     payload.alternativeCast === 'omen' ||
+    payload.alternativeCast === 'mdfc' ||
     payload.alternativeCast === 'bestow';
   if (payload.altIndex !== undefined && !authoredAlternative) {
     throw new Error('unexpected alternative index');
@@ -483,17 +510,22 @@ function* proposeCast(
   if (authoredAlternative && selectedAlternative?.kind !== payload.alternativeCast) {
     throw new Error('missing or mismatched casting alternative');
   }
+  if (selectedAlternative?.kind === 'mdfc' && selectedAlternative.spellFace === undefined)
+    throw new Error('a modal land face cannot be cast as a spell');
   if (selectedAlternative !== undefined) {
     const from = selectedAlternative.from;
     const freeSpellFace =
-      resolutionPermission !== undefined &&
-      (selectedAlternative.kind === 'adventure' || selectedAlternative.kind === 'omen');
+      (resolutionPermission !== undefined || plotCast) &&
+      (selectedAlternative.kind === 'adventure' ||
+        selectedAlternative.kind === 'omen' ||
+        selectedAlternative.kind === 'mdfc');
     // A broad "you may play that card this turn" permission allows a spell face or bestow.
     const temporaryExileSpellFace =
       payload.fromExile === true &&
       obj.playableUntilEotBy === player.id &&
       (selectedAlternative.kind === 'adventure' ||
         selectedAlternative.kind === 'omen' ||
+        selectedAlternative.kind === 'mdfc' ||
         selectedAlternative.kind === 'bestow');
     // So does a permission to cast it from the top of the library or a graveyard (CR 118.9);
     // that permission is checked against the bestowed spell below.
@@ -505,9 +537,9 @@ function* proposeCast(
       (!freeSpellFace &&
         !zonePermissionBestow &&
         (payload.fromLibraryTop === true ||
-          (payload.fromExile === true && !temporaryExileSpellFace))) ||
+          (payload.fromExile === true && !temporaryExileSpellFace && !freeSpellFace))) ||
       (payload.fromCommand && from === 'hand') ||
-      (payload.fromExile === true && from === 'hand') ||
+      (payload.fromExile === true && from === 'hand' && !freeSpellFace) ||
       (!freeSpellFace &&
         !zonePermissionBestow &&
         (payload.fromGraveyard === true
@@ -531,10 +563,12 @@ function* proposeCast(
     }
   }
   const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  if (castingSpellsBlockedFor(ctx, player.id, printedSpellDef))
+    throw new Error('casting spells is prohibited');
   // Without paying the mana cost, an X in the mana cost is 0 (CR 107.3b); an X announced only
   // for an additional cost ("pay X life", Toxic Deluge) is still chosen (CR 601.2b).
   if (
-    resolutionPermission !== undefined &&
+    (resolutionPermission !== undefined || plotCast) &&
     (payload.x ?? 0) !== 0 &&
     (printedSpellDef.manaCost?.x !== undefined || printedSpellDef.announcesX !== true)
   ) {
@@ -556,7 +590,7 @@ function* proposeCast(
     const instantSpeed =
       printedSpellDef.types.includes('Instant') || printedSpellDef.keywords.includes('flash');
     if (
-      !instantSpeed &&
+      (plotCast || !instantSpeed) &&
       (s.currentTurnPlayer !== player.id ||
         s.stack.length > 0 ||
         !['precombatMain', 'postcombatMain'].includes(s.phase))
@@ -630,11 +664,12 @@ function* proposeCast(
     payload.fromExile === true &&
     !(obj.onAdventure === true && obj.ownerId === player.id) &&
     obj.playableUntilEotBy !== player.id &&
+    !plotCast &&
     foretold === null
   ) {
     throw new Error('exile cast permission is not legal');
   }
-  if (foretold !== null && payload.alternativeCast !== undefined) {
+  if (!plotCast && foretold !== null && payload.alternativeCast !== undefined) {
     throw new Error('a foretold card is cast only for its foretell cost');
   }
   if (payload.reboundCast === true) {
@@ -668,6 +703,32 @@ function* proposeCast(
     castInProgress: true,
   };
   s.stack.push(spellEntry);
+  if (printedSpellDef.gift !== undefined) {
+    const opponents = s.players.filter(
+      (candidate) => !candidate.hasLost && candidate.id !== player.id,
+    );
+    const promise = yield {
+      decisionType: 'general',
+      player: player.id,
+      prompt: `Promise an opponent a gift (${printedSpellDef.gift})?`,
+      options: [
+        { type: 'declineGift', description: 'Do not promise a gift' },
+        ...opponents.map((opponent) => ({
+          type: 'promiseGift',
+          description: `Promise ${opponent.id} a gift (${printedSpellDef.gift})`,
+        })),
+      ],
+    };
+    if (!Number.isInteger(promise.index) || promise.index < 0 || promise.index > opponents.length)
+      throw new Error('invalid gift recipient choice');
+    if (promise.index > 0) spellEntry.giftRecipientId = opponents[promise.index - 1]!.id;
+    emit(
+      ctx,
+      'giftPromised',
+      { recipient: spellEntry.giftRecipientId ?? null, gift: printedSpellDef.gift },
+      player.id,
+    );
+  }
 
   const tax = payload.fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
   const reduction = costReductionFor(ctx, player.id, obj.oracleId, obj.cardId, printedSpellDef);
@@ -739,7 +800,11 @@ function* proposeCast(
     if (alt?.kind !== 'bestow') throw new Error('missing bestow cost');
     cost = alt.manaCost;
     abilityDef = printedSpellDef;
-  } else if (payload.alternativeCast === 'adventure' || payload.alternativeCast === 'omen') {
+  } else if (
+    payload.alternativeCast === 'adventure' ||
+    payload.alternativeCast === 'omen' ||
+    payload.alternativeCast === 'mdfc'
+  ) {
     const alt = selectedAlternative;
     if (alt?.kind !== payload.alternativeCast)
       throw new Error(`missing ${payload.alternativeCast} cost`);
@@ -757,10 +822,13 @@ function* proposeCast(
   }
   // Every alternative cost still announces modes, pays additional costs, and includes the
   // commander tax (CR 118.9d, 601.2b/f). Only the printed mana-cost component is replaced.
-  if (resolutionPermission !== undefined) cost = emptyCost();
+  if (resolutionPermission !== undefined || plotCast) cost = emptyCost();
   if ((payload.x ?? 0) > 0 && (cost.x ?? 0) === 0 && abilityDef.announcesX !== true)
     throw new Error('this spell does not announce X');
-  cost = withX(addGeneric(cost, tax), payload.x ?? 0);
+  cost = withX(
+    addGeneric(cost, tax + nonHandSpellCostIncreaseFor(ctx, player.id, obj.zone)),
+    payload.x ?? 0,
+  );
   const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
   castingAdditionalCosts = [
     ...castingAdditionalCosts,
@@ -939,6 +1007,7 @@ function* proposeCast(
   }
 
   Object.assign(spellCard, {
+    ...(payload.alternativeCast === 'mdfc' ? { face: 'back' as const } : {}),
     ...(abilityDef.optionalAdditionalCost !== undefined && (payload.optionalCostCount ?? 0) > 0
       ? {
           optionalCostCounts: {

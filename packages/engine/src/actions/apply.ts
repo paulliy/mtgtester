@@ -32,7 +32,7 @@ import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 
 import { emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
-import { makePermanent, moveObject, queuePlayerTriggersForEvent } from '../state/objects';
+import { discardCard, makePermanent, moveObject, queuePlayerTriggersForEvent } from '../state/objects';
 import {
   activatingAbilitiesBlockedFor,
   colorsOf,
@@ -238,7 +238,7 @@ export function* applyPriorityAction(
         const manaCost = handActivationCost(ctx, def, activated.costs, player.id, card.cardId);
 
         if (activated.costs.some((c) => c.kind === 'discardSelf')) {
-          yield* moveObject(ctx, card, { zone: 'graveyard' });
+          yield* discardCard(ctx, card, player.id, 'cost');
         }
         if (totalPips(manaCost) > 0) {
           yield* payManaCost(ctx, player, manaCost, {

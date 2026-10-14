@@ -3,7 +3,7 @@ import type { Ability, Effect } from '../cards/ability';
 import type { CardDefinition } from '../cards/definition';
 import { isPermanentCard } from '../cards/definition';
 import type { DamageKeyword, EngineStackObject, GameContext } from '../state/types';
-import { spellDefinitionOf } from '../state/queries';
+import { getDefByOracleId, spellDefinitionOf } from '../state/queries';
 
 /** CR 707.10: a spell copy is a separate stack object, never a cast or a physical card. */
 export function queueSpellCopy(
@@ -14,6 +14,12 @@ export function queueSpellCopy(
   if (original.kind !== 'spell' || original.castInProgress || original.ability?.kind !== 'spell')
     throw new Error('only a completed executable spell can be copied');
   const definition = spellDefinitionOf(ctx, original);
+  const modalText =
+    original.alternativeCastKind === 'mdfc'
+      ? getDefByOracleId(ctx, original.sourceOracleId, original.description).alternativeCasts?.find(
+          (alt) => alt.kind === 'mdfc' && alt.spellFace?.name === definition.name,
+        )?.spellFaceText
+      : undefined;
   const id = `o-${ctx.state.nextObjectNum++}`;
   const copy: EngineStackObject = {
     ...original,
@@ -28,6 +34,22 @@ export function queueSpellCopy(
     sourceCardId: id,
     sourceOracleId: original.sourceOracleId,
     spellDefinition: definition,
+    ...(isPermanentCard(definition)
+      ? {
+          permanentSpellCopy: {
+            oracleText:
+              original.permanentSpellCopy?.oracleText ??
+              modalText?.oracleText ??
+              original.card?.oracleText ??
+              '',
+            manaCost:
+              original.permanentSpellCopy?.manaCost ??
+              modalText?.manaCost ??
+              original.card?.manaCost ??
+              null,
+          },
+        }
+      : {}),
     sourceColors: [...definition.colors],
     isCommanderCast: false,
     sourceDamageKeywords:

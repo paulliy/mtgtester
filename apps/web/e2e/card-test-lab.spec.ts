@@ -3,6 +3,25 @@ import type { OracleCard } from '@mtg/shared';
 import { SPELL_FACE_LAB_EXPECTATIONS } from '../../../packages/server/src/cards/spell-face-lab-expectations';
 import { TRANSFORMED_DFC_SCENARIO_IDS } from '../../../packages/server/src/cards/transformed-dfc-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS } from '../../../packages/server/src/cards/pr02-follow-up-scenarios';
+import { WHITE_BLACK_COMBAT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-combat-scenarios';
+import { WHITE_BLACK_HAND_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-hand-scenarios';
+import { WHITE_BLACK_ENTRY_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-entry-scenarios';
+import { WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-discard-extension-scenarios';
+import { WHITE_BLACK_DEFENDER_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-defender-scenarios';
+import { WHITE_BLACK_SPELL_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-spell-scenarios';
+import { WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-counter-class-scenarios';
+import { WHITE_BLACK_FINAL_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-final-scenarios';
+import { WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-perch-scenarios';
+import { WHITE_BLACK_PROTECTION_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-protection-scenarios';
+import { WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-discard-core-scenarios';
+import { WHITE_BLACK_GRAVEYARD_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-graveyard-scenarios';
+import { WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-stax-scenarios';
+import { WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-replacements-scenarios';
+import { WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-liliana-scenarios';
+import { WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-remaining-combat-scenarios';
+import { WHITE_BLACK_TERGRID_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-tergrid-scenarios';
+import { WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-hand-limit-scenarios';
+import { WHITE_BLACK_KEYWORD_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-keyword-scenarios';
 const SPELL_FACE_VIEWER_PINS = JSON.parse(
   readFileSync('packages/engine/tests/fixtures/selected-spell-faces-oracle.json', 'utf8'),
 ) as { cards: { card: OracleCard }[] };
@@ -49,6 +68,25 @@ async function runScenario(page: Page, title: string): Promise<void> {
     for (const scenarioId of optionIds)
       if (
         !TRANSFORMED_DFC_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_HAND_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_DEFENDER_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_SPELL_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_FINAL_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some(id => id === scenarioId) &&
+      !WHITE_BLACK_PROTECTION_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_TERGRID_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.includes(scenarioId) &&
+      !WHITE_BLACK_KEYWORD_SCENARIO_IDS.includes(scenarioId) &&
         !PR02_FOLLOW_UP_SCENARIO_IDS.includes(
           scenarioId as (typeof PR02_FOLLOW_UP_SCENARIO_IDS)[number],
         )
@@ -60,6 +98,25 @@ async function runScenario(page: Page, title: string): Promise<void> {
         .filter(
           (id) =>
             !TRANSFORMED_DFC_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_HAND_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_DEFENDER_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_SPELL_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_FINAL_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some(perchId => perchId === id) &&
+            !WHITE_BLACK_PROTECTION_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_TERGRID_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.includes(id) &&
+            !WHITE_BLACK_KEYWORD_SCENARIO_IDS.includes(id) &&
             !PR02_FOLLOW_UP_SCENARIO_IDS.includes(
               id as (typeof PR02_FOLLOW_UP_SCENARIO_IDS)[number],
             ),

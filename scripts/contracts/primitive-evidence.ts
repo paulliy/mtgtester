@@ -7,6 +7,7 @@ import type { CardDefinition } from '../../packages/engine/src/cards/definition'
 import { deriveCardCapabilities } from '../../packages/engine/src/cards/capabilities';
 import { discoverGeneratorSourceFiles, parseEvidenceJson } from '../card-evidence-input';
 import { PRIMITIVE_CONTRACTS } from './primitive-contracts';
+import { isPathWithinRoot } from './source-containment';
 
 const sha = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 function requireInput(condition: unknown, message: string): asserts condition {
@@ -89,6 +90,8 @@ export function capturePrimitiveSources(repoRoot: string): PrimitiveCapture {
     'scripts/contracts/tsconfig.json',
     'tsconfig.base.json',
     'scripts/contracts/primitive-evidence.ts',
+    'scripts/contracts/source-containment.ts',
+    'scripts/contracts/bounded-hand-discard.ts',
     'scripts/card-evidence-input.ts',
   ]);
   const testFiles = new Set(
@@ -103,7 +106,7 @@ export function capturePrimitiveSources(repoRoot: string): PrimitiveCapture {
   const files: Record<string, string> = {};
   for (const path of [...paths].sort()) {
     const absolute = realpathSync(resolve(root, path));
-    requireInput(absolute.startsWith(root + '/'), `source escaped repository: ${path}`);
+    requireInput(isPathWithinRoot(root, absolute), `source escaped repository: ${path}`);
     files[path] = sha(readFileSync(absolute));
   }
   return {

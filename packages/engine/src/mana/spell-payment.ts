@@ -1,3 +1,4 @@
+import { playerLifeLocked } from '../state/phasing';
 import type { ObjectId } from '@mtg/shared';
 import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
@@ -136,6 +137,7 @@ export function planSpellPayment(
     for (let ordinal = 0; ordinal < count; ordinal++)
       groups.push({ costIndex, ordinal, kind, resource, candidates });
   }
+  if (lifePaid > 0 && playerLifeLocked(ctx, player.id)) return null;
   const statefulMana = needsStatefulManaPayment(ctx, player, request.mana, lifePaid);
   if (!statefulMana && lifePaid > 0 && lifePaid > player.life) return null;
   // The caller cannot smuggle a nonexistent or duplicate assignment through a prefix.
@@ -236,7 +238,7 @@ export function planSpellPayment(
             player.manaEntries,
             usableFrom(player, sources),
             allows,
-            player.life - lifePaid,
+            playerLifeLocked(ctx, player.id) ? 0 : player.life - lifePaid,
           );
       if (manaPlan === null) return null;
       return {

@@ -7,8 +7,16 @@ export function selectedSpellDefinition(
   alternative?: AlternativeCast,
 ): CardDefinition {
   if (alternative?.kind === 'bestow') return bestowedDefinition(definition);
-  if (alternative?.kind !== 'adventure' && alternative?.kind !== 'omen') return definition;
+  if (alternative?.kind !== 'adventure' && alternative?.kind !== 'omen' && alternative?.kind !== 'mdfc') return definition;
+  if (alternative.kind === 'mdfc' && alternative.spellFace === undefined) return definition;
   return spellFaceOf(alternative);
+}
+
+/** Modal faces retain the chosen characteristics on the battlefield and reset elsewhere. */
+export function selectedPermanentDefinition(definition: CardDefinition, face?: 'front' | 'back'): CardDefinition {
+  if (face !== 'back') return definition;
+  const alternative = definition.alternativeCasts?.find(entry => entry.kind === 'mdfc' && entry.spellFace !== undefined);
+  return alternative === undefined ? definition : spellFaceOf(alternative);
 }
 
 export function spellFaceOf(alternative: AlternativeCast): CardDefinition {
@@ -19,9 +27,15 @@ export function spellFaceOf(alternative: AlternativeCast): CardDefinition {
     face.hasUnsupportedCost ||
     face.manaCost === null ||
     face.spellAbility?.kind !== 'spell' ||
-    face.types.length !== 1 ||
-    !['Instant', 'Sorcery'].includes(face.types[0]!) ||
-    !face.subtypes.includes(alternative.kind === 'omen' ? 'Omen' : 'Adventure') ||
+    (alternative.kind === 'mdfc' &&
+      (alternative.spellFaceText === undefined ||
+        typeof alternative.spellFaceText.oracleText !== 'string' ||
+        typeof alternative.spellFaceText.frontOracleText !== 'string' ||
+        typeof alternative.spellFaceText.manaCost !== 'string')) ||
+    (alternative.kind === 'mdfc'
+      ? !face.types.some(type => ['Artifact', 'Battle', 'Creature', 'Enchantment', 'Planeswalker'].includes(type)) || face.types.includes('Land')
+      : face.types.length !== 1 || !['Instant', 'Sorcery'].includes(face.types[0]!) ||
+        !face.subtypes.includes(alternative.kind === 'omen' ? 'Omen' : 'Adventure')) ||
     JSON.stringify(face.manaCost) !== JSON.stringify(alternative.manaCost) ||
     (alternative.name !== undefined && alternative.name !== face.name) ||
     (alternative.typeLine !== undefined && alternative.typeLine !== face.typeLine) ||

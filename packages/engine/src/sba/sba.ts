@@ -8,6 +8,7 @@
  */
 
 import type { LossReason, ObjectId, PlayerId } from '@mtg/shared';
+import { playerLifeLocked } from '../state/phasing';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import {
   abilityForModes,
@@ -68,14 +69,15 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     emit(ctx, 'playerEliminated', { player: player.id, reason: player.lossReason }, player.id);
 
     // Objects owned by the player leave the battlefield and the stack (CR 800.4a).
-    const leaving = s.battlefield.filter((p) => p.ownerId === player.id);
+    const leaving = [...s.battlefield, ...(s.phasedOut ?? []).map(record => record.permanent)].filter((p) => p.ownerId === player.id);
+    s.phasedOut = (s.phasedOut ?? []).filter(record => record.permanent.ownerId !== player.id);
     s.battlefield = s.battlefield.filter((p) => p.ownerId !== player.id);
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
     // End effects giving a departed player control. A permanent put onto the
     // battlefield under that player's control has no such effect to end (CR 800.4a).
-    for (const perm of [...s.battlefield]) {
+    for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map(record => record.permanent)]) {
       if (perm.controllerId !== player.id) continue;
       perm.controlChanges = (perm.controlChanges ?? []).filter(
         (id) => !s.players.find((p) => p.id === id)?.hasLost,
@@ -83,6 +85,7 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       const controller = perm.controlChanges.at(-1) ?? perm.defaultControllerId ?? perm.ownerId;
       if (s.players.find((p) => p.id === controller)?.hasLost) {
         leaving.push(perm);
+        s.phasedOut = (s.phasedOut ?? []).filter(record => record.permanent !== perm);
         yield* moveObject(ctx, perm, { zone: 'exile' });
         continue;
       }
@@ -776,6 +779,8 @@ export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
 
 /** Whether a player is still a legal host for `aura`'s enchant ability (CR 303.4d, 704.5m). */
 function auraPlayerHostIsLegal(ctx: GameContext, aura: EnginePermanent, playerId: string): boolean {
+  // Protection forbids enchantment; hexproof only forbids targeting, not attachment.
+  if (playerLifeLocked(ctx, playerId)) return false;
   const enchant = getDefByOracleId(ctx, aura.oracleId, aura.name).spellAbility?.targets[0];
   if (enchant === undefined || enchant.kind !== 'player') return false;
   return computeTargetOptions(

@@ -31,8 +31,11 @@ import {
   combatDamageTraits,
   dealDamageToCreature,
   dealDamageToPlayer,
+  choosePlayerDamagePrevention,
+  dealDamageToObject,
   permanentSource,
 } from '../effects/resolve';
+import type { PlayerDamagePrevention } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
 import { payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
@@ -55,6 +58,7 @@ import {
 } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
+import { counterCount } from '../state/counters';
 
 function setStep(ctx: GameContext, step: NonNullable<GameContext['state']['step']>): void {
   ctx.state.step = step;
@@ -92,18 +96,23 @@ function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
 }
 
 function attackTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
+  const walker = findPermanent(ctx, defendingPlayerId);
+  const controllerId = walker?.controllerId ?? defendingPlayerId;
   return gatherRuleStatics(ctx).reduce((total, entry) => {
-    if (entry.controllerId !== defendingPlayerId || entry.static.kind !== 'attackTax') return total;
+    if (entry.controllerId !== controllerId || entry.static.kind !== 'attackTax' ||
+      (walker !== undefined && entry.static.alsoPlaneswalkersYouControl !== true)) return total;
     return total + entry.static.amount;
   }, 0);
 }
 
 function attackCost(ctx: GameContext, defendingPlayerId: PlayerId, count = 1): ParsedManaCost {
+  const walker = findPermanent(ctx, defendingPlayerId);
   const cost = { ...emptyCost(), generic: attackTax(ctx, defendingPlayerId) * count };
   const phyrexian = gatherRuleStatics(ctx).flatMap((entry) => {
     if (
-      entry.controllerId !== defendingPlayerId ||
+      entry.controllerId !== (walker?.controllerId ?? defendingPlayerId) ||
       entry.static.kind !== 'attackTax' ||
+      (walker !== undefined && entry.static.alsoPlaneswalkersYouControl !== true) ||
       entry.static.phyrexianColor === undefined
     ) {
       return [];
@@ -137,15 +146,38 @@ function canPayAttackTax(
   );
 }
 
+interface CombatDefender { id: string; playerId: PlayerId; life: number; name?: string }
+
+function combatDefenders(ctx: GameContext, opponents: readonly EnginePlayerState[]): CombatDefender[] {
+  return opponents.flatMap((player) => [
+    { id: player.id, playerId: player.id, life: player.life },
+    ...controlledPermanents(ctx, player.id)
+      .filter((permanent) => computeCharacteristics(ctx, permanent).types.includes('Planeswalker'))
+      .map((permanent) => ({ id: permanent.id, playerId: player.id, life: player.life, name: permanent.name })),
+  ]);
+}
+
+function attackRestrictionAllows(creature: EnginePermanent, defender: CombatDefender): boolean {
+  return !(creature.cantAttackPlayerWhileCounter ?? []).some((restriction) =>
+    restriction.playerId === defender.playerId && counterCount(creature.counters, restriction.counter) > 0);
+}
+
+function goadRequirementsSatisfied(defender: CombatDefender, goaders: ReadonlySet<PlayerId>): number {
+  return defender.id === defender.playerId ? goaders.size - (goaders.has(defender.id) ? 1 : 0) : 0;
+}
+
 function attackTargetsFor(
   ctx: GameContext,
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
-): EnginePlayerState[] {
-  const payable = opponents.filter((opp) => canPayAttackTax(ctx, creature.controllerId, opp.id));
+): CombatDefender[] {
+  const payable = combatDefenders(ctx, opponents).filter((opp) => attackRestrictionAllows(creature, opp) && canPayAttackTax(ctx, creature.controllerId, opp.id));
   const goaderIds = goaderIdsFor(ctx, creature);
-  const preferred = payable.filter((opp) => !goaderIds.has(opp.id));
-  return preferred.length > 0 ? preferred : payable;
+  if (goaderIds.size === 0) return payable;
+  // A cost never forces the player to obey an additional requirement (CR 508.1d).
+  const free = payable.filter((opp) => totalPips(attackCost(ctx, opp.id)) === 0);
+  const maximum = Math.max(0, ...free.map((opp) => goadRequirementsSatisfied(opp, goaderIds)));
+  return payable.filter((opp) => goadRequirementsSatisfied(opp, goaderIds) >= maximum);
 }
 
 /**
@@ -163,11 +195,12 @@ function freeAttackTargetsFor(
   ctx: GameContext,
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
-): EnginePlayerState[] {
-  const free = opponents.filter((opp) => totalPips(attackCost(ctx, opp.id)) === 0);
+): CombatDefender[] {
+  const free = combatDefenders(ctx, opponents).filter((opp) => attackRestrictionAllows(creature, opp) && totalPips(attackCost(ctx, opp.id)) === 0);
   const goaderIds = goaderIdsFor(ctx, creature);
-  const preferred = free.filter((opp) => !goaderIds.has(opp.id));
-  return preferred.length > 0 ? preferred : free;
+  if (goaderIds.size === 0) return free;
+  const maximum = Math.max(0, ...free.map((opp) => goadRequirementsSatisfied(opp, goaderIds)));
+  return free.filter((opp) => goadRequirementsSatisfied(opp, goaderIds) === maximum);
 }
 
 function* payAttackTax(
@@ -232,6 +265,10 @@ function commitAttacker(
 ): void {
   if (hadToAttack) creature.hadToAttackThisCombat = true;
   creature.attacking = defenderId;
+  const walker = findPermanent(ctx, defenderId);
+  creature.attackingPlayerId = walker?.controllerId ?? defenderId;
+  if (walker !== undefined) creature.attackingPlaneswalkerControlChanges = walker.controlChanges?.length ?? 0;
+  else delete creature.attackingPlaneswalkerControlChanges;
   creature.statuses.push('attacking');
   if (!hasKeyword(ctx, creature, 'vigilance')) {
     creature.tapped = true; // CR 508.1f
@@ -271,9 +308,10 @@ function buildAttackSubjects(
       power: pt.power,
       toughness: pt.toughness,
       defenders: legal.map((opp) => ({
-        playerId: opp.id,
+        playerId: opp.playerId,
         life: opp.life,
         attackTax: attackTax(ctx, opp.id),
+        ...(opp.id === opp.playerId ? {} : { defenderId: opp.id, name: opp.name }),
       })),
       mustAttack,
       hasTriggers: triggersOf(ctx, creature).length > 0,
@@ -306,7 +344,7 @@ function buildAttackOption(subjects: readonly AttackDeclarationSubject[]): Engin
     },
     targets: subjects.map((s, i) => ({
       slot: i,
-      options: [...s.defenders.map((d) => d.playerId), ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
+      options: [...s.defenders.map((d) => d.defenderId ?? d.playerId), ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
     })),
   };
 }
@@ -530,10 +568,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // separately from `attacking` (which clears at end of combat) so the check still holds
   // in a later main phase.
   for (const perm of declared) perm.attackedThisTurn = true;
-  const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
+  const defendingPlayers = [...new Set(declared.map((a) => a.attackingPlayerId ?? a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
-    const auras = ctx.state.battlefield.filter((p) => p.attachedTo === defId);
+    const auras = ctx.state.battlefield.filter((p) => p.attachedTo === defId && declared.some((a) => a.attacking === defId));
     for (const aura of auras) {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
     }
@@ -758,7 +796,7 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
   const defending = ctx.state.combat?.defendingPlayers ?? [];
   for (const defenderId of playersInApnapOrder(ctx).map((p) => p.id)) {
     if (!defending.includes(defenderId)) continue;
-    const incoming = attackers(ctx).filter((a) => a.attacking === defenderId);
+    const incoming = attackers(ctx).filter((a) => (a.attackingPlayerId ?? a.attacking) === defenderId);
     if (incoming.length === 0) continue;
 
     const candidates = blockCandidatesFor(ctx, defenderId, incoming);
@@ -995,6 +1033,7 @@ interface DamageAssignment {
  * striker deal damage twice (CR 702.7c). `dealtFirstStrikeDamage` records the former set.
  */
 function dealsInStep(ctx: GameContext, perm: EnginePermanent, step: 'first' | 'regular'): boolean {
+  if (perm.assignsNoCombatDamageTurn === ctx.state.turnNumber) return false;
   const dbl = hasKeyword(ctx, perm, 'double strike');
   if (step === 'first') return dbl || hasKeyword(ctx, perm, 'first strike');
   return dbl || !perm.dealtFirstStrikeDamage;
@@ -1013,11 +1052,11 @@ function markFirstStrikeCombatants(ctx: GameContext): void {
  * blockers (CR 510.1c-d); everything else (0 or 1 live blocker) is a forced case with nothing to
  * look up, handled inline exactly as CR 510.1c and trample (702.19b) dictate.
  */
-function dealCombatDamage(
+function* dealCombatDamage(
   ctx: GameContext,
   step: 'first' | 'regular',
   divisions: DamageDivisions,
-): void {
+): GameGen<void> {
   const assignments: DamageAssignment[] = [];
 
   for (const attacker of attackers(ctx)) {
@@ -1118,6 +1157,15 @@ function dealCombatDamage(
     });
   }
 
+  // All affected players choose in APNAP order before any of the damage is dealt.
+  const prevention = new Map<PlayerId, PlayerDamagePrevention>();
+  for (const player of playersInApnapOrder(ctx)) {
+    const amount = assignments.filter((assignment) => assignment.targetPlayer === player.id)
+      .reduce((sum, assignment) => sum + assignment.amount, 0);
+    const chosen = yield* choosePlayerDamagePrevention(ctx, player, amount, true);
+    if (chosen !== undefined) prevention.set(player.id, chosen);
+  }
+
   // All combat damage in a step is dealt simultaneously (CR 510.2).
   emit(ctx, 'combatDamageStep', { step, assignments: assignments.length });
 
@@ -1138,6 +1186,14 @@ function dealCombatDamage(
         sourceColors: traits.colors,
       });
     } else if (a.targetPlayer !== null) {
+      if (!ctx.state.players.some((player) => player.id === a.targetPlayer)) {
+        const walker = findPermanent(ctx, a.targetPlayer);
+        if (walker !== undefined && computeCharacteristics(ctx, walker).types.includes('Planeswalker') &&
+          walker.controllerId === a.source.attackingPlayerId &&
+          (walker.controlChanges?.length ?? 0) === a.source.attackingPlaneswalkerControlChanges)
+          dealDamageToObject(ctx, permanentSource(a.source), walker.id, a.amount, true);
+        continue;
+      }
       const dealt = dealDamageToPlayer(
         ctx,
         permanentSource(a.source),
@@ -1148,6 +1204,7 @@ function dealCombatDamage(
           sourceIsCommander: a.source.isCommander,
           sourceHasLifelink: traits.lifelink,
           sourceHasInfect: traits.infect,
+          ...(prevention.has(a.targetPlayer) ? {prevention: prevention.get(a.targetPlayer)!} : {}),
         },
       );
       // Prevented damage was never dealt: no "deals combat damage to a player" trigger, and no
@@ -1185,6 +1242,8 @@ function firstStrikeStepNeeded(ctx: GameContext): boolean {
 function endCombatCleanup(ctx: GameContext): void {
   for (const perm of ctx.state.battlefield) {
     perm.attacking = null;
+    delete perm.attackingPlayerId;
+    delete perm.attackingPlaneswalkerControlChanges;
     perm.blocking = null;
     perm.blockedByOrdered = [];
     perm.dealtFirstStrikeDamage = false;
@@ -1209,6 +1268,9 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   if (anyAttackers) {
     setStep(ctx, 'declareBlockers');
     yield* declareBlockers(ctx);
+    queueTriggersForEvent(ctx, 'attacksUnblocked', attackers(ctx)
+      .filter(permanent => permanent.blockedByOrdered.length === 0)
+      .map(permanent => ({ permanent, playerId: permanent.attackingPlayerId ?? permanent.attacking! })));
     yield* runPrioritySequence(ctx);
     emptyManaPools(ctx);
 
@@ -1216,14 +1278,14 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
       setStep(ctx, 'firstStrikeCombatDamage');
       markFirstStrikeCombatants(ctx);
       const firstDivisions = yield* assignDamageDivisions(ctx, 'first');
-      dealCombatDamage(ctx, 'first', firstDivisions);
+      yield* dealCombatDamage(ctx, 'first', firstDivisions);
       yield* runPrioritySequence(ctx);
       emptyManaPools(ctx);
     }
 
     setStep(ctx, 'combatDamage');
     const regularDivisions = yield* assignDamageDivisions(ctx, 'regular');
-    dealCombatDamage(ctx, 'regular', regularDivisions);
+    yield* dealCombatDamage(ctx, 'regular', regularDivisions);
     yield* runPrioritySequence(ctx);
     emptyManaPools(ctx);
   }

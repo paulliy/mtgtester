@@ -38,7 +38,24 @@ slots with fixed nonnegative integer counts. It also covers eight foundation cap
 `Ability.effects`, `ParsedManaCost`, `Effect.gainLife`, and `Value.const`. Their bounded scope
 is untargeted Instant/Sorcery spells with at most two fixed life-gain instructions (0–1000)
 and a total cost of at most {1}{G}. A complete card within that composition can be
-primitive-eligible. Other dependencies remain unregistered.
+primitive-eligible. Three printed-keyword contracts cover `Keyword.flying`, `Keyword.menace`,
+and `Keyword.lifelink` on ordinary nonlegendary 2/2 Creatures costing {0}, with exactly that
+one keyword and no other executable behavior. Separate normal-cast combat executions check
+ground/reach blocker legality, legal two-blocker versus rejected lone-blocker menace, and
+controller life gain versus ordinary damage without lifelink. These deliberately narrow
+scopes exclude granted keywords, counters, other faces and mixed abilities; they do not make
+the white-black deck's more complex creatures primitive-eligible. Other dependencies remain
+unregistered.
+
+The hand-discard composition adds a separate supported branch to six shared foundations
+and registers `Ability.targets`, `Effect.revealHandAndDiscard`, `Selector.allOf`,
+`Selector.not`, `Selector.type`, and `TargetSpec.player`. Its machine scope is an ordinary
+{B} Sorcery with one opponent player target and one reveal-and-discard instruction using
+exactly the noncreature/nonland filter. Independent normal casts check reveal, selection by
+the caster, the exact discarded object, insufficient mana, Sorcery timing, illegal self
+targeting, no eligible cards, and the hand as it exists at resolution. Every capability has
+distinct positive and negative executions. This scope accepts Duress's IR without granting
+general eligibility to other targeted spells or discard effects.
 
 Primitive eligibility is a prerequisite for future reviewed-card promotion. It does not
 replace pinned Oracle clauses, normal casting/activation card scenarios, real viewer

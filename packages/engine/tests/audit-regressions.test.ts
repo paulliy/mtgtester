@@ -180,10 +180,6 @@ describe('audit: approximate cards fail closed', () => {
       "Songbirds' Blessing",
       "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
     ],
-    [
-      'Promise of Loyalty',
-      "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
-    ],
   ])('%s is not advertised as modeled', (name, oracleText) => {
     const def = interpretCard(oracle({ name, oracleText }));
     expect(def.modeled).toBe(false);

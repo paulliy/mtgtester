@@ -1,3 +1,4 @@
+import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import type { ManaAllowance, ManaSource, ParsedManaCost, PaymentPlan, ProducedMana } from './cost';
 import { emptyCost, planPayment } from './cost';
@@ -138,13 +139,13 @@ export function planStatefulManaPayment(
   const visit = (snapshot: GameContext): PaymentPlan | null => {
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     const availableSources = sourcesFor(snapshot, payer);
-    if ((lifeReserved === 0 || payer.life >= lifeReserved) && payer.energy >= energyReserved) {
+    if ((lifeReserved === 0 || (!playerLifeLocked(snapshot, payer.id) && payer.life >= lifeReserved)) && payer.energy >= energyReserved) {
       const final = planPayment(
         cost,
         payer.manaEntries,
         availableSources.filter((source) => source.convoke === true),
         allows,
-        Math.max(0, payer.life - lifeReserved),
+        playerLifeLocked(snapshot, payer.id) ? 0 : Math.max(0, payer.life - lifeReserved),
       );
       if (final)
         return {

@@ -66,7 +66,12 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     attacking: perm.attacking,
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
-    keywords: [...chars.keywords],
+    keywords: [...new Set([
+      ...chars.keywords,
+      ...chars.protectionFrom.map(color => `protection from ${
+        ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' } as const)[color]
+      }`),
+    ])],
     imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,
@@ -461,9 +466,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     // Only an explicitly revealed search result is narrated: CR 701.16a makes it public, while an
     // unrevealed find bound for a hidden zone must stay private to the searcher.
     case 'searchFound':
+    case 'revealCard':
       return p['revealed'] === true
         ? { ...base, text: `reveals ${str(p, 'name') ?? 'a card'}` }
         : null;
+    case 'returnSpell':
+      return { ...base, text: `${str(p, 'name') ?? 'a spell'} returns to its owner's hand` };
     case 'lifeLoss':
       return { ...base, text: `loses ${num(p, 'amount') ?? 0} life` };
 

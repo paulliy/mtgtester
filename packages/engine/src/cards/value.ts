@@ -45,6 +45,7 @@ export function assertNumericReference(
 
 /** What a resolving ability knows that the board alone does not. */
 export interface ValueScope {
+  giftPromised?: boolean;
   /** Whose "you" this is. */
   controllerId: PlayerId;
   /** The source object's card id, for `self`-relative selectors. */
@@ -135,6 +136,7 @@ export type Value =
   | { kind: 'const'; n: number }
   /** Number of card types among cards in all graveyards (Tarmogoyf, CR 208.2b). */
   | { kind: 'cardTypesInAllGraveyards' }
+  | { kind: 'cardTypesInYourGraveyard' }
   /** `of` plus a constant, e.g. Tarmogoyf's toughness = types + 1. */
   | { kind: 'plus'; of: Value; n: number }
   | { kind: 'negate'; of: Value }
@@ -264,6 +266,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'times':
       return isDynamicValue(value.of);
     case 'cardTypesInAllGraveyards':
+    case 'cardTypesInYourGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -327,6 +330,7 @@ export function needsScope(value: Value): boolean {
     case 'negate':
     case 'times':
       return needsScope(value.of);
+    case 'cardTypesInYourGraveyard':
     case 'countPermanents':
     case 'countTappedPermanents':
     case 'countPermanentsControlledByTarget':
@@ -381,9 +385,10 @@ export function needsScope(value: Value): boolean {
 }
 
 /** Number of card types among cards in all graveyards (CR 208.2b). */
-export function cardTypesInAllGraveyards(ctx: GameContext): number {
+export function cardTypesInAllGraveyards(ctx: GameContext, owner?: PlayerId): number {
   const present = new Set<string>();
   for (const player of ctx.state.players) {
+    if (owner !== undefined && player.id !== owner) continue;
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
@@ -436,6 +441,9 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       return evaluateValue(ctx, value.of, scope) * value.n;
     case 'cardTypesInAllGraveyards':
       return cardTypesInAllGraveyards(ctx);
+    case 'cardTypesInYourGraveyard':
+      if (scope?.controllerId === undefined) throw new Error('your graveyard types require a controller');
+      return cardTypesInAllGraveyards(ctx, scope.controllerId);
     case 'countersOnSelf':
       if (scope?.sourceCounters === undefined) {
         throw new Error('engine bug: source counters need a layer evaluation scope');

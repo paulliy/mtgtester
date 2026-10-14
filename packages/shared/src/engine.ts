@@ -133,7 +133,7 @@ export interface AttackDeclarationSubject {
   toughness: number;
   /** Legal defenders for this creature alone. `attackTax` is per-attacker; the total for a
    * defender receiving several attackers is `attackTax * count`, checked jointly on submission. */
-  defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
+  defenders: Array<{ playerId: PlayerId; life: number; attackTax: number; defenderId?: ObjectId; name?: string }>;
   mustAttack: boolean;
   /** A creature that puts something on the stack when it attacks is worth attacking with at
    * any power — counts *every* trigger on the creature, not only attack triggers, so it

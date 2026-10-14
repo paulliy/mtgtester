@@ -29,6 +29,7 @@
     "retag": "bun run packages/server/src/cli/retag.ts",
     "pool": "bun run packages/server/src/cli/pool.ts",
     "modelled-cards": "bun run packages/server/src/cli/modelled-cards.ts",
+    "scryfall:update": "bun run scripts/update-scryfall-bank.ts",
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
     "ai-bench": "bun run packages/server/src/cli/ai-bench.ts",

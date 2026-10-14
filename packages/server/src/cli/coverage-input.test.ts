@@ -8,7 +8,7 @@ describe('reproducible coverage Oracle input', () => {
   it('preserves other flags and reads the complete pinned population without a bulk dependency', () => {
     const result = coverageInput(['--json', '--oracle-fixture', pinned, '--complete']);
     expect(result.args).toEqual(['--json', '--complete']);
-    expect(result.index.size).toBe(906);
+    expect(result.index.size).toBe(958);
     const signet = result.index.resolve('Arcane Signet')!;
     const report = measureCoverage([{ name: 'input probe', cards: [signet] }]);
     // Baseline population is checked separately by each CLI; the input must retain the exact pin.

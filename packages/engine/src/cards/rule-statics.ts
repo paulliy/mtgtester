@@ -16,6 +16,11 @@ import type { Selector } from './selector';
 import type { Value } from './value';
 
 export type RuleStatic =
+  | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
+  | { kind: 'beginOnBattlefieldFromOpeningHand' }
+  | { kind: 'effectDiscardMayGoToLibraryTop' }
+  /** Redirect a matching graveyard move before any zone-change or dies event. */
+  | { kind: 'graveyardToExile'; scope: 'all' | 'opponents'; basis: 'owner' | 'controller'; includeTokens: boolean; creatureFromBattlefieldOnly?: true }
   /** "Spells you cast cost {1} less to cast" (Temur Battlecrier) / Eminence (The Ur-Dragon). */
   | {
       kind: 'costReduction';
@@ -78,6 +83,10 @@ export type RuleStatic =
       yourTurnOnly: boolean;
       duringCombatOnly?: boolean;
     }
+  /** Each player's own cast tally applies, including spells cast before the source entered. */
+  | { kind: 'spellCastLimit'; category: 'any' | 'noncreature'; limit: number }
+  | { kind: 'otherPermanentsEnterTapped'; filter: Selector }
+  | { kind: 'suppressObjectTriggers'; events: ('enters' | 'dies')[]; filter: Selector }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
   /** "You may play lands from the top of your library/your graveyard." */
@@ -131,7 +140,7 @@ export type RuleStatic =
       addition: number;
     }
   /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color }
+  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; alsoPlaneswalkersYouControl?: true }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }
