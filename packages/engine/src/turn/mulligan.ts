@@ -108,14 +108,26 @@ export function* runOpeningHands(ctx: GameContext): GameGen<void> {
 export function* runOpeningHandBattlefieldActions(ctx: GameContext): GameGen<void> {
   for (const player of playersInApnapOrder(ctx)) {
     while (true) {
-      const cards = player.hand.filter(card => ctx.defs.get(card.oracleId)?.ruleStatics.some(
-        rule => rule.kind === 'beginOnBattlefieldFromOpeningHand'));
+      const cards = player.hand.filter((card) =>
+        ctx.defs
+          .get(card.oracleId)
+          ?.ruleStatics.some((rule) => rule.kind === 'beginOnBattlefieldFromOpeningHand'),
+      );
       if (cards.length === 0) break;
-      for (const card of cards) requireModeled(ctx.defs.get(card.oracleId)!, 'opening-hand battlefield action');
-      const choice = yield { decisionType: 'general', player: player.id,
+      for (const card of cards)
+        requireModeled(ctx.defs.get(card.oracleId)!, 'opening-hand battlefield action');
+      const choice = yield {
+        decisionType: 'general',
+        player: player.id,
         prompt: 'You may begin the game with a card from your opening hand on the battlefield.',
-        options: [...cards.map(card => ({ type: 'beginOnBattlefield', description: `Begin with ${card.name} on the battlefield`, payload: card.id })),
-          { type: 'decline', description: 'Keep the remaining cards in hand' }],
+        options: [
+          ...cards.map((card) => ({
+            type: 'beginOnBattlefield',
+            description: `Begin with ${card.name} on the battlefield`,
+            payload: card.id,
+          })),
+          { type: 'decline', description: 'Keep the remaining cards in hand' },
+        ],
       };
       const card = cards[choice.index];
       if (card === undefined) break;

@@ -409,10 +409,7 @@
           "requiredScenarioIds": {
             "positive": "bandit-s-talent-c01-positive",
             "negative": "bandit-s-talent-c01-negative",
-            "viewer": [
-              "bandit-s-talent-viewer",
-              "bandit-s-talent-viewer-level-three-extra-draw"
-            ]
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
           }
         },
         {
@@ -434,10 +431,7 @@
           "requiredScenarioIds": {
             "positive": "bandit-s-talent-c03-positive",
             "negative": "bandit-s-talent-c03-negative",
-            "viewer": [
-              "bandit-s-talent-viewer",
-              "bandit-s-talent-viewer-level-three-extra-draw"
-            ]
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
           }
         },
         {
@@ -459,10 +453,7 @@
           "requiredScenarioIds": {
             "positive": "bandit-s-talent-c05-positive",
             "negative": "bandit-s-talent-c05-negative",
-            "viewer": [
-              "bandit-s-talent-viewer",
-              "bandit-s-talent-viewer-level-three-extra-draw"
-            ]
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
           }
         },
         {
@@ -479,10 +470,7 @@
       ],
       "requiredScenarioIds": {
         "normalCastOrActivation": "bandit-s-talent-normal-cast-activation",
-        "viewer": [
-          "bandit-s-talent-viewer",
-          "bandit-s-talent-viewer-level-three-extra-draw"
-        ],
+        "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"],
         "gameplayAi": "bandit-s-talent-gameplay-ai"
       }
     },
@@ -595,10 +583,7 @@
       ],
       "requiredScenarioIds": {
         "normalCastOrActivation": "breena-the-demagogue-normal-cast-activation",
-        "viewer": [
-          "breena-viewer-flying-blocker",
-          "breena-viewer-opponent-life-aggregate"
-        ],
+        "viewer": ["breena-viewer-flying-blocker", "breena-viewer-opponent-life-aggregate"],
         "gameplayAi": "breena-the-demagogue-gameplay-ai"
       },
       "implementationPrimitives": [

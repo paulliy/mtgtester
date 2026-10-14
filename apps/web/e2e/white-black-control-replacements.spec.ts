@@ -52,14 +52,18 @@ async function castAndResolve(page: Page, name: string, target?: Locator): Promi
   }
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
   await expect
-    .poll(async () => {
-      if ((await page.getByText(`${name} resolves`, { exact: true }).count()) > resolvesBefore) return true;
-      const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-      if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-      return false;
-    }, {
-      timeout: 20_000,
-    })
+    .poll(
+      async () => {
+        if ((await page.getByText(`${name} resolves`, { exact: true }).count()) > resolvesBefore)
+          return true;
+        const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        return false;
+      },
+      {
+        timeout: 20_000,
+      },
+    )
     .toBe(true);
 }
 
@@ -86,17 +90,32 @@ test('Planar Void casts normally, then exiles P2’s permanent destroyed by Gene
   await expect(permanent(page, 'Planar Void')).toBeVisible();
 
   await castAndResolve(page, 'Generous Gift', permanent(page, 'Sol Ring'));
-  const orderTrigger = page.getByRole('button', { name: 'Planar Void: Exile that card from its graveyard', exact: true });
-  await expect.poll(async () => {
-    if (await opponentExile(page, 'P2').getByRole('img', { name: 'Sol Ring', exact: true }).isVisible()
-      && await humanZone(page, 'Exile').getByRole('img', { name: 'Generous Gift', exact: true }).isVisible()) return true;
-    if (await orderTrigger.first().isVisible()) await orderTrigger.first().click();
-    else {
-      const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-      if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-    }
-    return false;
-  }, { timeout: 20_000 }).toBe(true);
+  const orderTrigger = page.getByRole('button', {
+    name: 'Planar Void: Exile that card from its graveyard',
+    exact: true,
+  });
+  await expect
+    .poll(
+      async () => {
+        if (
+          (await opponentExile(page, 'P2')
+            .getByRole('img', { name: 'Sol Ring', exact: true })
+            .isVisible()) &&
+          (await humanZone(page, 'Exile')
+            .getByRole('img', { name: 'Generous Gift', exact: true })
+            .isVisible())
+        )
+          return true;
+        if (await orderTrigger.first().isVisible()) await orderTrigger.first().click();
+        else {
+          const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+          if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        }
+        return false;
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(true);
   await expect(opponentPermanent(page, 'P2', 'Sol Ring')).toHaveCount(0);
   await expect(
     opponentExile(page, 'P2').getByRole('img', { name: 'Sol Ring', exact: true }),
@@ -133,7 +152,12 @@ test('Library of Leng puts an effect-discarded card on top and the next normal d
 
   await passUntil(page, page.locator('.turn-badge').filter({ hasText: 'Turn 5' }));
   await expect(handCard(page, 'Duress')).toBeVisible();
-  await expect(page.locator('.log .line').filter({ hasText: /P1.*draws Duress/i }).first()).toBeVisible();
+  await expect(
+    page
+      .locator('.log .line')
+      .filter({ hasText: /P1.*draws Duress/i })
+      .first(),
+  ).toBeVisible();
   await expect(permanent(page, 'Library of Leng')).toBeVisible();
 });
 
@@ -146,11 +170,16 @@ test('Leyline of the Void uses its actual opening-hand choice and exiles a destr
 
   await expect(page.getByText(/Keep this hand or mulligan/)).toBeVisible();
   await page.getByRole('button', { name: 'Keep this hand', exact: true }).click();
-  await expect(page.getByText('You may begin the game with a card from your opening hand on the battlefield.')).toBeVisible();
+  await expect(
+    page.getByText('You may begin the game with a card from your opening hand on the battlefield.'),
+  ).toBeVisible();
   await handCard(page, 'Leyline of the Void').first().click();
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
   await expect(permanent(page, 'Leyline of the Void')).toBeVisible();
-  const declineOpening = page.getByRole('button', { name: 'Keep the remaining cards in hand', exact: true });
+  const declineOpening = page.getByRole('button', {
+    name: 'Keep the remaining cards in hand',
+    exact: true,
+  });
   if (await declineOpening.isVisible()) await declineOpening.click();
 
   const plainsInHand = handCard(page, 'Plains');
@@ -159,11 +188,8 @@ test('Leyline of the Void uses its actual opening-hand choice and exiles a destr
   await expect
     .poll(
       async () => {
-        if ((await gift.getAttribute('class'))?.includes('actionable'))
-          return true;
-        if (
-          (await plainsInHand.first().getAttribute('class'))?.includes('actionable')
-        ) {
+        if ((await gift.getAttribute('class'))?.includes('actionable')) return true;
+        if ((await plainsInHand.first().getAttribute('class'))?.includes('actionable')) {
           await plainsInHand.first().click();
           return false;
         }

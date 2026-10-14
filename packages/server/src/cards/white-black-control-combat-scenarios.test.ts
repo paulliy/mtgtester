@@ -38,7 +38,11 @@ function runScenario(id: string): RunResult {
 
     if (request.decidingPlayer === 'P1' && request.decisionType === 'priority' && !castFromHand) {
       action = request.legalActions.find(
-        (candidate) => candidate.type === 'castSpell' && candidate.description.includes(scenario.metadata.title.startsWith('Breena') ? 'Breena' : "Duelist's Heritage"),
+        (candidate) =>
+          candidate.type === 'castSpell' &&
+          candidate.description.includes(
+            scenario.metadata.title.startsWith('Breena') ? 'Breena' : "Duelist's Heritage",
+          ),
       );
       if (action !== undefined) castFromHand = true;
     }
@@ -54,9 +58,9 @@ function runScenario(id: string): RunResult {
     } else if (request.decisionType === 'chooseTargets') {
       action = request.legalActions.find((candidate) => (candidate.targets?.length ?? 0) > 0);
       expect(action).toBeDefined();
-      const alpha = engine.getState().battlefield.find(
-        (permanent) => permanent.name === 'Lab Attack Witness Alpha',
-      );
+      const alpha = engine
+        .getState()
+        .battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Alpha');
       expect(alpha).toBeDefined();
       for (const slot of action!.targets ?? []) {
         expect(slot.options).toContain(alpha!.id);
@@ -83,9 +87,8 @@ function runScenario(id: string): RunResult {
         choice:
           request.decisionType === 'declareAttackers'
             ? 'P2'
-            : slot.options.find((candidate) =>
-                targetChoices.includes(candidate),
-              ) ?? slot.options[0]!,
+            : (slot.options.find((candidate) => targetChoices.includes(candidate)) ??
+              slot.options[0]!),
       })),
     });
   }
@@ -99,58 +102,59 @@ function runScenario(id: string): RunResult {
 }
 
 describe('white-black control prepared combat scenarios', () => {
-  it.each(WHITE_BLACK_COMBAT_SCENARIO_IDS)('%s runs cast and combat through Engine deterministically', (id) => {
-    const first = runScenario(id);
-    const replay = runScenario(id);
+  it.each(WHITE_BLACK_COMBAT_SCENARIO_IDS)(
+    '%s runs cast and combat through Engine deterministically',
+    (id) => {
+      const first = runScenario(id);
+      const replay = runScenario(id);
 
-    expect(first.result.kind).toBe('gameOver');
-    if (first.result.kind !== 'gameOver') throw new Error('scenario did not finish');
-    expect(first.result.result).toMatchObject({ halted: false, winnerSeat: null });
-    expect(first.eventLogHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(first.eventLogHash).toBe(replay.eventLogHash);
-    expect(first.decisionTrace).toEqual(replay.decisionTrace);
-    expect(first.decisionTrace.some((decision) => decision.decisionType === 'declareAttackers')).toBe(
-      true,
-    );
-    expect(
-      first.decisionTrace.filter((decision) => decision.decisionType === 'declareAttackers')[0]
-        ?.targetChoices,
-    ).toEqual(['P2', 'P2']);
+      expect(first.result.kind).toBe('gameOver');
+      if (first.result.kind !== 'gameOver') throw new Error('scenario did not finish');
+      expect(first.result.result).toMatchObject({ halted: false, winnerSeat: null });
+      expect(first.eventLogHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(first.eventLogHash).toBe(replay.eventLogHash);
+      expect(first.decisionTrace).toEqual(replay.decisionTrace);
+      expect(
+        first.decisionTrace.some((decision) => decision.decisionType === 'declareAttackers'),
+      ).toBe(true);
+      expect(
+        first.decisionTrace.filter((decision) => decision.decisionType === 'declareAttackers')[0]
+          ?.targetChoices,
+      ).toEqual(['P2', 'P2']);
 
-    const state = first.engine.getState();
-    expect(state.players.find((player) => player.id === 'P2')?.life).toBe(39);
+      const state = first.engine.getState();
+      expect(state.players.find((player) => player.id === 'P2')?.life).toBe(39);
 
-    if (id === WHITE_BLACK_COMBAT_SCENARIO_IDS[0]) {
-      expect(
-        state.players.find((player) => player.id === 'P1')?.hand.map((card) => card.name),
-      ).toEqual(['Lab Breena Draw']);
-      expect(
-        state.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Alpha')
-          ?.counters['+1/+1'],
-      ).toBe(2);
-      expect(
-        state.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Beta')
-          ?.counters['+1/+1'] ?? 0,
-      ).toBe(0);
-      expect(
-        first.decisionTrace.filter((decision) => decision.decisionType === 'chooseTargets'),
-      ).toHaveLength(1);
-    } else {
-      const view = first.engine.view('P1');
-      expect(
-        view.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Alpha')
-          ?.keywords,
-      ).toContain('double strike');
-      expect(
-        view.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Beta')
-          ?.keywords ?? [],
-      ).not.toContain('double strike');
-      expect(
-        first.decisionTrace.filter((decision) => decision.action === 'Yes'),
-      ).toHaveLength(1);
-      expect(
-        first.decisionTrace.filter((decision) => decision.decisionType === 'chooseTargets'),
-      ).toHaveLength(1);
-    }
-  });
+      if (id === WHITE_BLACK_COMBAT_SCENARIO_IDS[0]) {
+        expect(
+          state.players.find((player) => player.id === 'P1')?.hand.map((card) => card.name),
+        ).toEqual(['Lab Breena Draw']);
+        expect(
+          state.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Alpha')
+            ?.counters['+1/+1'],
+        ).toBe(2);
+        expect(
+          state.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Beta')
+            ?.counters['+1/+1'] ?? 0,
+        ).toBe(0);
+        expect(
+          first.decisionTrace.filter((decision) => decision.decisionType === 'chooseTargets'),
+        ).toHaveLength(1);
+      } else {
+        const view = first.engine.view('P1');
+        expect(
+          view.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Alpha')
+            ?.keywords,
+        ).toContain('double strike');
+        expect(
+          view.battlefield.find((permanent) => permanent.name === 'Lab Attack Witness Beta')
+            ?.keywords ?? [],
+        ).not.toContain('double strike');
+        expect(first.decisionTrace.filter((decision) => decision.action === 'Yes')).toHaveLength(1);
+        expect(
+          first.decisionTrace.filter((decision) => decision.decisionType === 'chooseTargets'),
+        ).toHaveLength(1);
+      }
+    },
+  );
 });

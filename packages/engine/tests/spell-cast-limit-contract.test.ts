@@ -29,7 +29,10 @@ registerWhiteBlackControlStaxOverrides();
 
 function context(seed = 'spell-cast-limit-contract'): GameContext {
   const ctx = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   Object.assign(ctx.state, {
     currentTurnPlayer: 'P1',
@@ -52,7 +55,13 @@ function ruleSource(
   category: 'any' | 'noncreature',
   name = `Test ${category} Limit`,
 ) {
-  const printed = oracle({ name, typeLine: 'Enchantment', manaCost: null, power: null, toughness: null });
+  const printed = oracle({
+    name,
+    typeLine: 'Enchantment',
+    manaCost: null,
+    power: null,
+    toughness: null,
+  });
   const def = interpretCard(printed);
   def.ruleStatics = [{ kind: 'spellCastLimit', category, limit: 1 }];
   ctx.defs.set(def.oracleId, def);
@@ -79,10 +88,12 @@ function castFromHand(ctx: GameContext, playerId: string, printed: OracleCard): 
     return payload.kind === 'castSpell' && payload.objectId === card.id;
   });
   if (option === undefined) throw new Error(`No legal cast option for ${printed.name}`);
-  pump(applyPriorityAction(ctx, activePlayer, option.payload as PriorityActionPayload, {
-    index: 0,
-    targets: new Map(),
-  }));
+  pump(
+    applyPriorityAction(ctx, activePlayer, option.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
   pump(resolveTopOfStack(ctx));
 }
 
@@ -115,7 +126,9 @@ describe('spellCastLimit rule-static contract', () => {
 
     expect(canCast(ctx, 'P1', spellCard('Second Noncreature'))).toBe(false);
     expect(canCast(ctx, 'P1', spellCard('Allowed Creature', 'Creature — Bear'))).toBe(true);
-    expect(canCast(ctx, 'P1', spellCard('Allowed Artifact Creature', 'Artifact Creature — Golem'))).toBe(true);
+    expect(
+      canCast(ctx, 'P1', spellCard('Allowed Artifact Creature', 'Artifact Creature — Golem')),
+    ).toBe(true);
     expect(canCast(ctx, 'P2', spellCard('Other Player Noncreature'))).toBe(true);
 
     // Keep the source live through this assertion so the test also proves these are category-
@@ -130,10 +143,15 @@ describe('spellCastLimit rule-static contract', () => {
     expect(player(ctx, 'P1').spellsCastThisTurn).toBe(1);
     expect(canCast(ctx, 'P1', spellCard('Still This Turn'))).toBe(false);
 
-    pump(runTurn(ctx), (decision) => ({ index: 0, targets: new Map() }));
+    pump(runTurn(ctx), (_decision) => ({ index: 0, targets: new Map() }));
     expect(player(ctx, 'P1').spellsCastThisTurn).toBe(0);
     expect(player(ctx, 'P1').noncreatureSpellsCastThisTurn).toBe(0);
-    Object.assign(ctx.state, { currentTurnPlayer: 'P1', activePlayerIndex: 0, phase: 'precombatMain', step: null });
+    Object.assign(ctx.state, {
+      currentTurnPlayer: 'P1',
+      activePlayerIndex: 0,
+      phase: 'precombatMain',
+      step: null,
+    });
     expect(canCast(ctx, 'P1', spellCard('Next Turn'))).toBe(true);
   });
 
@@ -163,7 +181,12 @@ describe('spellCastLimit rule-static contract', () => {
       return payload.kind === 'castSpell' && payload.objectId === inHand.id;
     });
     expect(option).toBeDefined();
-    pump(applyPriorityAction(ctx, p1, option!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, p1, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
     pump(resolveTopOfStack(ctx));
     expect(p1.spellsCastThisTurn).toBe(1);
     expect(canCast(ctx, 'P1', spellCard('Blocked by Rule of Law'))).toBe(false);
@@ -180,7 +203,12 @@ describe('spellCastLimit rule-static contract', () => {
       return payload.kind === 'castSpell' && payload.objectId === inHand.id;
     });
     expect(option).toBeDefined();
-    pump(applyPriorityAction(ctx, p1, option!.payload as PriorityActionPayload, { index: 0, targets: new Map() }));
+    pump(
+      applyPriorityAction(ctx, p1, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+    );
     pump(resolveTopOfStack(ctx));
     expect(canCast(ctx, 'P1', spellCard('Blocked Instant'))).toBe(false);
     expect(canCast(ctx, 'P1', spellCard('Allowed Creature', 'Creature — Bear'))).toBe(true);

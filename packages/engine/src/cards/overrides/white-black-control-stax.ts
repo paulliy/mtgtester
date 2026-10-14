@@ -6,9 +6,7 @@ export function registerWhiteBlackControlStaxOverrides(): void {
   replaceCard(
     '53e88e64-6f82-4154-a66e-6aeb0154b368',
     'Rule of Law',
-    [
-      `unrecognized rules text: "Each player can't cast more than one spell each turn."`,
-    ],
+    [`unrecognized rules text: "Each player can't cast more than one spell each turn."`],
     { ruleStatics: [{ kind: 'spellCastLimit', category: 'any', limit: 1 }] },
     'Applies the one-spell-per-player-per-turn limit from each player’s own cast tally.',
   );

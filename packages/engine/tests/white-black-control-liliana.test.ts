@@ -46,10 +46,12 @@ function card(name: CardName): OracleCard {
 }
 
 function context(seed: string): GameContext {
-  const game = createGame(gameConfig(
-    Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })),
-    { seed },
-  ));
+  const game = createGame(
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(16, swamp) })),
+      { seed },
+    ),
+  );
   Object.assign(game.state, {
     currentTurnPlayer: 'P1',
     activePlayerIndex: 0,
@@ -102,13 +104,20 @@ function activateLoyalty(
   const controller = player(game, walker.controllerId);
   const action = computePriorityOptions(game, controller).find((option) => {
     const payload = option.payload as PriorityActionPayload;
-    return payload.kind === 'activateAbility' && payload.objectId === walker.id && payload.index === index;
+    return (
+      payload.kind === 'activateAbility' &&
+      payload.objectId === walker.id &&
+      payload.index === index
+    );
   });
   expect(action, `${walker.name} loyalty ability ${index} is legally available`).toBeDefined();
-  pump(applyPriorityAction(game, controller, action!.payload as PriorityActionPayload, {
-    index: 0,
-    targets,
-  }), onDecision);
+  pump(
+    applyPriorityAction(game, controller, action!.payload as PriorityActionPayload, {
+      index: 0,
+      targets,
+    }),
+    onDecision,
+  );
   expect(game.state.stack).toHaveLength(1);
 }
 
@@ -117,7 +126,14 @@ function resolveAbility(game: GameContext, answer?: Parameters<typeof pump>[1]):
 }
 
 function cardNamed(name: string, typeLine = 'Sorcery', manaCost: string | null = null): OracleCard {
-  return oracle({ name, typeLine: typeLine === 'Sorcery' ? 'Artifact' : typeLine, manaCost, cmc: 1, power: null, toughness: null });
+  return oracle({
+    name,
+    typeLine: typeLine === 'Sorcery' ? 'Artifact' : typeLine,
+    manaCost,
+    cmc: 1,
+    power: null,
+    toughness: null,
+  });
 }
 
 function creature(name: string, power = '2', toughness = '2'): OracleCard {
@@ -131,8 +147,11 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
       const definition = interpretCard(card(name));
       expect(definition.modeled, `${name}: ${definition.unmodeledReasons.join('; ')}`).toBe(true);
       expect(definition.unmodeledReasons).toEqual([]);
-      expect(definition.activatedAbilities.filter((ability) => ability.costs.some((cost) => cost.kind === 'loyalty')))
-        .toHaveLength(3);
+      expect(
+        definition.activatedAbilities.filter((ability) =>
+          ability.costs.some((cost) => cost.kind === 'loyalty'),
+        ),
+      ).toHaveLength(3);
     }
   });
 
@@ -140,27 +159,30 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     const game = context('liliana-veil-loyalty-limits');
     const walker = castLiliana(game, 'Liliana of the Veil');
     expect(walker.counters['loyalty']).toBe(3);
-    const available = computePriorityOptions(game, player(game, 'P1'))
-      .filter((option) => {
-        const payload = option.payload as PriorityActionPayload;
-        return payload.kind === 'activateAbility' && payload.objectId === walker.id;
-      });
+    const available = computePriorityOptions(game, player(game, 'P1')).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind === 'activateAbility' && payload.objectId === walker.id;
+    });
     expect(available).toHaveLength(2); // At three loyalty, the -6 is not yet payable.
 
     activateLoyalty(game, walker, 0);
     expect(walker.counters['loyalty']).toBe(4); // Cost is paid before the discard resolves.
     resolveAbility(game, (decision) => pick(decision, /Pass|does not/i));
-    expect(computePriorityOptions(game, player(game, 'P1')).some((option) => {
-      const payload = option.payload as PriorityActionPayload;
-      return payload.kind === 'activateAbility' && payload.objectId === walker.id;
-    })).toBe(false);
+    expect(
+      computePriorityOptions(game, player(game, 'P1')).some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return payload.kind === 'activateAbility' && payload.objectId === walker.id;
+      }),
+    ).toBe(false);
 
     game.state.currentTurnPlayer = 'P2';
     game.state.activePlayerIndex = 1;
-    expect(computePriorityOptions(game, player(game, 'P1')).some((option) => {
-      const payload = option.payload as PriorityActionPayload;
-      return payload.kind === 'activateAbility' && payload.objectId === walker.id;
-    })).toBe(false);
+    expect(
+      computePriorityOptions(game, player(game, 'P1')).some((option) => {
+        const payload = option.payload as PriorityActionPayload;
+        return payload.kind === 'activateAbility' && payload.objectId === walker.id;
+      }),
+    ).toBe(false);
   });
 
   it('liliana-veil-c02 — +1 has every player choose, including the controller', () => {
@@ -185,7 +207,9 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     });
     expect(order).toEqual(['P1', 'P2', 'P3', 'P4']);
     for (const [id, [discarded, retained]] of cards) {
-      expect(player(game, id).graveyard.some((entry) => entry.cardId === discarded.cardId)).toBe(true);
+      expect(player(game, id).graveyard.some((entry) => entry.cardId === discarded.cardId)).toBe(
+        true,
+      );
       expect(player(game, id).hand.map((entry) => entry.cardId)).toEqual([retained.cardId]);
     }
     expect(walker.counters['loyalty']).toBe(4);
@@ -235,7 +259,10 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     resolveAbility(game, (decision) => {
       if (decision.prompt.startsWith('Put ')) {
         putters.push(decision.prompt);
-        return pick(decision, decision.prompt.includes('Pile Creature') ? 'Put it in pile 1' : 'Put it in pile 2');
+        return pick(
+          decision,
+          decision.prompt.includes('Pile Creature') ? 'Put it in pile 1' : 'Put it in pile 2',
+        );
       }
       if (decision.prompt === 'Choose a pile of permanents to sacrifice.') {
         expect(decision.player).toBe('P2');
@@ -315,7 +342,8 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     const opponentGraveyard = context('liliana-waker-minus-three-not-opponent-graveyard');
     const opponentWalker = castLiliana(opponentGraveyard, 'Liliana, Waker of the Dead');
     const untouched = spawn(opponentGraveyard, 'P3', creature('No Own Graveyard Value', '5', '5'));
-    for (let index = 0; index < 7; index++) conjure(opponentGraveyard, 'P2', cardNamed(`P2 Card ${index}`), 'graveyard');
+    for (let index = 0; index < 7; index++)
+      conjure(opponentGraveyard, 'P2', cardNamed(`P2 Card ${index}`), 'graveyard');
     activateLoyalty(opponentGraveyard, opponentWalker, 1, new Map([[0, untouched.id]]));
     resolveAbility(opponentGraveyard);
     expect(computeCharacteristics(opponentGraveyard, untouched).power).toBe(5);
@@ -349,7 +377,9 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     });
     expect(game.state.stack).toHaveLength(1);
     resolveAbility(game);
-    const returned = game.state.battlefield.find((permanent) => permanent.cardId === creatureCard.cardId);
+    const returned = game.state.battlefield.find(
+      (permanent) => permanent.cardId === creatureCard.cardId,
+    );
     expect(returned?.controllerId).toBe('P1');
     expect(computeCharacteristics(game, returned!).keywords).toContain('haste');
   });
@@ -366,7 +396,9 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     queueStepTriggers(game, 'beginningOfCombat');
     pump(priorityCheckpoint(game));
     expect(game.state.stack).toHaveLength(0);
-    expect(player(game, 'P2').graveyard.some((entry) => entry.cardId === onlySpell.cardId)).toBe(true);
+    expect(player(game, 'P2').graveyard.some((entry) => entry.cardId === onlySpell.cardId)).toBe(
+      true,
+    );
 
     const target = conjure(game, 'P3', creature('Leaves Before Resolution'), 'graveyard');
     queueStepTriggers(game, 'beginningOfCombat');
@@ -378,7 +410,9 @@ describe('Liliana cards — pinned Oracle behavior through normal casts and loya
     expect(game.state.stack).toHaveLength(1);
     pump(moveObject(game, target, { zone: 'exile' }));
     resolveAbility(game);
-    expect(game.state.battlefield.some((permanent) => permanent.cardId === target.cardId)).toBe(false);
+    expect(game.state.battlefield.some((permanent) => permanent.cardId === target.cardId)).toBe(
+      false,
+    );
     expect(game.state.exile.some((entry) => entry.cardId === target.cardId)).toBe(true);
   });
 });

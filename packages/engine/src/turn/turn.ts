@@ -17,7 +17,6 @@ import {
   additionalTypedTriggerCopies,
   discardCard,
   expireRegenerationShields,
-  moveObject,
   playerById,
 } from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
@@ -248,7 +247,7 @@ export function beginEndStep(ctx: GameContext): void {
 }
 
 /** Cleanup step (CR 514), repeating while SBAs/triggers give players priority (514.3a). */
-function* cleanupStep(ctx: GameContext): GameGen<void> {
+export function* cleanupStep(ctx: GameContext): GameGen<void> {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   for (;;) {
     setStep(ctx, 'cleanup');
@@ -270,7 +269,10 @@ function* cleanupStep(ctx: GameContext): GameGen<void> {
     }
 
     // Simultaneously: remove all marked damage and end until-EOT effects (CR 514.2).
-    for (const perm of [...ctx.state.battlefield, ...(ctx.state.phasedOut ?? []).map(record => record.permanent)]) {
+    for (const perm of [
+      ...ctx.state.battlefield,
+      ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+    ]) {
       perm.damageMarked = 0;
       perm.damagedByDeathtouch = false;
       delete perm.mustAttackThisTurn;
@@ -347,7 +349,6 @@ export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   queueStepTriggers(ctx, 'precombatMain');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
-
 }
 
 export function* runTurn(ctx: GameContext): GameGen<void> {

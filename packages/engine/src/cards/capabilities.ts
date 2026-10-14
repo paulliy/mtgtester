@@ -101,7 +101,9 @@ const shapes = {
     ability: { node: 'Ability' },
     landFace: { node: 'MdfcLandFace' },
     spellFace: { node: 'CardDefinition' },
-    spellFaceText: { object: { oracleText: leaf, manaCost: leaf, frontOracleText: leaf, frontManaCost: leaf } },
+    spellFaceText: {
+      object: { oracleText: leaf, manaCost: leaf, frontOracleText: leaf, frontManaCost: leaf },
+    },
     exileOnResolution: leaf,
     escaped: leaf,
   } satisfies Fields<Objects<AlternativeCast>>,
@@ -371,6 +373,7 @@ const shapes = {
     oncePerTurn: leaf,
     condition: { node: 'Condition' },
     caster: leaf,
+    eventCondition: { node: 'Condition' },
     filter: { node: 'Selector' },
     targetFilter: { node: 'Selector' },
     ordinal: leaf,
@@ -1275,7 +1278,7 @@ const families = {
     discriminator: 'kind',
     tags: {
       costReduction: true,
-        opponentNonHandSpellCostIncrease: true,
+      opponentNonHandSpellCostIncrease: true,
       cantBeCountered: true,
       cantCastSpells: true,
       spellCastLimit: true,

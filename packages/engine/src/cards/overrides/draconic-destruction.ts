@@ -93,19 +93,6 @@ const RUNEHORN_HELLKITE_DEF = {
   ],
 };
 
-const DRAGON_MAGE_DEF = {
-  triggers: [
-    {
-      kind: 'triggered' as const,
-      trigger: { when: 'dealsCombatDamageToPlayer' as const, subject: { kind: 'self' as const } },
-      targets: [],
-      effects: [{ op: 'eachPlayerDiscardHandThenDraw' as const, count: constant(7) }],
-      description:
-        'Combat damage to a player — each player discards their hand, then draws seven cards',
-    },
-  ],
-};
-
 const SPIT_FLAME_DEF = {
   triggers: [
     {
@@ -396,14 +383,8 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
   // generically (see the Sarkhan, Soul Aflame special case in interpret.ts, which used to
   // hand-author this exact reduction and now leaves it to the same generic rule).
 
-  defineCard(
-    'eab71e4e-27c3-4c41-b95f-259c1d14b97a',
-    'Dragon Mage',
-    [
-      'Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards.',
-    ],
-    DRAGON_MAGE_DEF,
-  );
+  // Dragon Mage's fixed-count wheel now parses generically. Keeping its handled-line override
+  // would reject the correctly parsed clause as stale, or mask future Oracle changes.
 
   // Catalog audit draconic-batch-5: playableUntilEot includes playing lands.
   unsupportedCard(

@@ -5,6 +5,7 @@ import {
   eventObjectState,
   sourceObjectFacts,
   sourceObjectState,
+  type ObjectFacts,
 } from './source-identity';
 import { assertNever } from '../utils/assert-never';
 import { evaluateValueIn } from '../effects/values';
@@ -166,8 +167,9 @@ export type Condition =
   | { kind: 'notYourTurn' }
   /** "During your turn" — checked against the trigger source's controller. */
   | { kind: 'yourTurn' }
-  /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
+  /** Dethrone: the defending player has the most life, or is tied for the most life. */
   | { kind: 'attackingPlayerHasMoreLife' }
+  /** The defending player has more life than the ability's controller. */
   | { kind: 'attackingPlayerHasMoreLifeThanYou' }
   /** Breena: the attacked opponent has more life than another of your opponents. */
   | { kind: 'defendingOpponentHasMoreLifeThanAnother' }
@@ -298,6 +300,12 @@ export function evaluateCondition(
     controllerId: source.controllerId as PlayerId,
   };
   const sourceState = () => sourceObjectState(ctx, scope);
+  const defenderIdOf = (attacker: EnginePermanent | ObjectFacts | undefined) =>
+    attacker === undefined
+      ? undefined
+      : 'candidate' in attacker
+        ? attacker.candidate.attackingDefenderId
+        : attacker.attacking;
   switch (condition.kind) {
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
@@ -374,14 +382,8 @@ export function evaluateCondition(
       return ctx.state.currentTurnPlayer === source.controllerId;
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
-      const information = eventObjectState(ctx, scope);
-      const attacker =
-        information !== undefined && !('candidate' in information) ? information : undefined;
-      return (
-        attacker !== undefined &&
-        attacker.attacking !== null &&
-        attacker.attacking !== source.controllerId
-      );
+      const defenderId = defenderIdOf(eventObjectState(ctx, scope));
+      return opponentsOf(ctx, source.controllerId).some((opponent) => opponent.id === defenderId);
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);
@@ -390,7 +392,9 @@ export function evaluateCondition(
       return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));
     }
     case 'opponentDiscardedThisTurn':
-      return opponentsOf(ctx, source.controllerId).some(player => (player.discardedCardsThisTurn ?? 0) > 0);
+      return opponentsOf(ctx, source.controllerId).some(
+        (player) => (player.discardedCardsThisTurn ?? 0) > 0,
+      );
     case 'opponentDealtDamageThisTurn': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
@@ -417,15 +421,21 @@ export function evaluateCondition(
       const perm = sourceState();
       return perm !== undefined && !perm.tapped;
     }
-    case 'giftPromised': return source.giftPromised === true;
+    case 'giftPromised':
+      return source.giftPromised === true;
     case 'sourceClassLevel': {
       const state = sourceState();
       return state !== undefined && compare(state.classLevel ?? 1, condition.cmp, condition.n);
     }
     case 'eventPlayerHandSize': {
-      if (scope.eventPlayerId === undefined) throw new Error('hand-size condition has no bound event player');
-      const player = ctx.state.players.find(candidate => candidate.id === scope.eventPlayerId);
-      return player !== undefined && !player.hasLost && compare(player.hand.length, condition.cmp, condition.n);
+      if (scope.eventPlayerId === undefined)
+        throw new Error('hand-size condition has no bound event player');
+      const player = ctx.state.players.find((candidate) => candidate.id === scope.eventPlayerId);
+      return (
+        player !== undefined &&
+        !player.hasLost &&
+        compare(player.hand.length, condition.cmp, condition.n)
+      );
     }
     case 'enteredThisTurn': {
       if (source?.cardId === undefined) return false;
@@ -486,9 +496,8 @@ export function evaluateCondition(
       // Printed dethrone: "attacks the player with the most life or tied for most life".
       const attacker =
         source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       if (defender === undefined) return false;
       const lives = ctx.state.players
         .filter((player) => !player.hasLost)
@@ -503,15 +512,16 @@ export function evaluateCondition(
         (player) => !player.hasLost && player.id !== source.controllerId,
       );
       const defender = opponents.find((player) => player.id === defenderId);
-      return defender !== undefined && opponents.some(
-        (player) => player.id !== defender.id && defender.life > player.life,
+      return (
+        defender !== undefined &&
+        opponents.some((player) => player.id !== defender.id && defender.life > player.life)
       );
     }
     case 'attackingPlayerHasMoreLifeThanYou': {
-      const attacker = sourceState();
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const attacker =
+        source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       return defender !== undefined && controller !== undefined && defender.life > controller.life;
     }
@@ -624,7 +634,8 @@ export function* resolveCondition(
       // this module, and importing back would close a runtime import cycle.
       const player = ctx.state.players.find((p) => p.id === source.controllerId);
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
-      if (condition.n > player.life || (condition.n > 0 && playerLifeLocked(ctx, player.id))) return false;
+      if (condition.n > player.life || (condition.n > 0 && playerLifeLocked(ctx, player.id)))
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
@@ -672,7 +683,16 @@ export function* resolveCondition(
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
       const sources = manaSourcesFor(ctx, player.id);
       const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-      if (!canPay(condition.cost, player.manaEntries, sources, allows, playerLifeLocked(ctx, player.id) ? 0 : player.life)) return false;
+      if (
+        !canPay(
+          condition.cost,
+          player.manaEntries,
+          sources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,

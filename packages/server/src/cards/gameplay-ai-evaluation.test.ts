@@ -1,12 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { COMBAT_TRIGGER_SCENARIO_IDS } from './combat-trigger-scenarios';
 import {
   evaluateArcaneDenialGameplayAi,
   evaluateFabledPassageGameplayAi,
   evaluateMyriadLandscapeGameplayAi,
   evaluateReviewedFiveGameplayAi,
   evaluateSmotheringTitheGameplayAi,
+  evaluateCombatTriggerGameplayAi,
 } from './gameplay-ai-evaluation';
 
 interface CommittedObservation {
@@ -26,6 +28,17 @@ const committed = JSON.parse(
 ) as CommittedReport;
 
 describe('gameplay-AI quality evaluation (step 15)', () => {
+  it('reports combat-card provider choices separately without claiming a live LLM run', () => {
+    const report = evaluateCombatTriggerGameplayAi();
+    expect(report.liveLlm).toBe('not-run');
+    expect(report.note).toContain('Quality-only');
+    expect(report.runs).toHaveLength(COMBAT_TRIGGER_SCENARIO_IDS.length * 2);
+    for (const run of report.runs) {
+      expect(run.decisions).toBeGreaterThan(0);
+      expect(run.observations).toHaveLength(run.decisions);
+      expect(typeof run.usedSubjectCard).toBe('boolean');
+    }
+  });
   it('records random and heuristic decisions for every reviewed lab scenario', () => {
     const report = evaluateReviewedFiveGameplayAi();
     expect(report.liveLlm).toBe('not-run');

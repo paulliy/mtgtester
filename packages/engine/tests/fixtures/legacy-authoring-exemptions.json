@@ -58,11 +58,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "ae224dd26966964c62c7e515472182be5b8d5eb7eb9dc9213a0d25e5b95ba021",
-      "description": "DRAGON_MAGE_DEF"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "20576ec322029130b83f6d4d760b9d6ad4595334d6bb22926fdb97500d5ec8df",
       "description": "SPIT_FLAME_DEF"
     },
@@ -138,11 +133,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "edd65f9e1e18f0145d473394450b4a73f5f6db9fa19e978e4297071fc08ecef3",
-      "description": "registerDRACONIC_DESTRUCTIONOverrides"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "70b35b7ede83ecbd5c045330e17ef843515faadc5809406a048e0593cb7c9616",
       "description": "Clan Defiance"
     },
@@ -150,11 +140,6 @@
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "ff07edf450fcb85fadb77b64e739c284dc32bdd1c853641ce10ff68aeab6ee33",
       "description": "Demanding Dragon"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "3299d2a5d251194e488bc9ef327cc0d860fa48bf1c1883ff9f735253b3bd97c3",
-      "description": "Dragon Mage"
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
@@ -453,16 +438,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "69944fc3dd9573301909ab6398ce2feffc20f9f77e99b06004d417c9bef52508",
-      "description": "DETHRONE_TRIGGER"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "744e7ece87a5d2419ddee7d26e3f5fec7ea9c81ad348a8882348a8da0703924e",
-      "description": "MARCHESA"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "sha256": "f4c15dea37e88c8441b42ac7fbae2a01a6ae4e3944060f15343ed0a6258fdebe",
       "description": "Aether Channeler"
     },
@@ -505,21 +480,6 @@
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "sha256": "1449912b621ca7d584d9d297bbd5be686dac59557560f24321e010dce930f03a",
       "description": "Pawn of Ulamog"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "7fe9127ee06812730a0bd0d471852cea70f757a5ec4b1807a356eccd38498833",
-      "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "2d92ecef53cfa5cc5c8cfb89d0540342d09f4ec92a1a96fd31edc5e33cbb9e52",
-      "description": "Dack's Duplicate"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "852348a7ecc59bbccc52317d0ca3783ef888050a356bd7059f14f06a3982cb97",
-      "description": "Marchesa, the Black Rose"
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
@@ -1055,6 +1015,11 @@
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
       "sha256": "898e22922a6925fda6b527ed0bcd20394fc9f83a4507913993ee8099867dbcb9",
       "description": "Zopandrel, Hunger Dominus"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "d027d31a154eb12543ee9a1f485804a1b39bcd2bc9b545bdbc941b4e1230aa53",
+      "description": "registerDRACONIC_DESTRUCTIONOverrides"
     }
   ]
 }

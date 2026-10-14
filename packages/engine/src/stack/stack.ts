@@ -12,7 +12,7 @@ import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
 import { makePermanent, moveObject, queueTriggersForObject, createTokens } from '../state/objects';
-import { getDefByOracleId, sourceColorsOf, spellDefinitionOf } from '../state/queries';
+import { sourceColorsOf, spellDefinitionOf } from '../state/queries';
 import type { EngineStackObject, GameContext } from '../state/types';
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */

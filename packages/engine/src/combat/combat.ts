@@ -99,8 +99,12 @@ function attackTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
   const walker = findPermanent(ctx, defendingPlayerId);
   const controllerId = walker?.controllerId ?? defendingPlayerId;
   return gatherRuleStatics(ctx).reduce((total, entry) => {
-    if (entry.controllerId !== controllerId || entry.static.kind !== 'attackTax' ||
-      (walker !== undefined && entry.static.alsoPlaneswalkersYouControl !== true)) return total;
+    if (
+      entry.controllerId !== controllerId ||
+      entry.static.kind !== 'attackTax' ||
+      (walker !== undefined && entry.static.alsoPlaneswalkersYouControl !== true)
+    )
+      return total;
     return total + entry.static.amount;
   }, 0);
 }
@@ -146,23 +150,42 @@ function canPayAttackTax(
   );
 }
 
-interface CombatDefender { id: string; playerId: PlayerId; life: number; name?: string }
+interface CombatDefender {
+  id: string;
+  playerId: PlayerId;
+  life: number;
+  name?: string;
+}
 
-function combatDefenders(ctx: GameContext, opponents: readonly EnginePlayerState[]): CombatDefender[] {
+function combatDefenders(
+  ctx: GameContext,
+  opponents: readonly EnginePlayerState[],
+): CombatDefender[] {
   return opponents.flatMap((player) => [
     { id: player.id, playerId: player.id, life: player.life },
     ...controlledPermanents(ctx, player.id)
       .filter((permanent) => computeCharacteristics(ctx, permanent).types.includes('Planeswalker'))
-      .map((permanent) => ({ id: permanent.id, playerId: player.id, life: player.life, name: permanent.name })),
+      .map((permanent) => ({
+        id: permanent.id,
+        playerId: player.id,
+        life: player.life,
+        name: permanent.name,
+      })),
   ]);
 }
 
 function attackRestrictionAllows(creature: EnginePermanent, defender: CombatDefender): boolean {
-  return !(creature.cantAttackPlayerWhileCounter ?? []).some((restriction) =>
-    restriction.playerId === defender.playerId && counterCount(creature.counters, restriction.counter) > 0);
+  return !(creature.cantAttackPlayerWhileCounter ?? []).some(
+    (restriction) =>
+      restriction.playerId === defender.playerId &&
+      counterCount(creature.counters, restriction.counter) > 0,
+  );
 }
 
-function goadRequirementsSatisfied(defender: CombatDefender, goaders: ReadonlySet<PlayerId>): number {
+function goadRequirementsSatisfied(
+  defender: CombatDefender,
+  goaders: ReadonlySet<PlayerId>,
+): number {
   return defender.id === defender.playerId ? goaders.size - (goaders.has(defender.id) ? 1 : 0) : 0;
 }
 
@@ -171,7 +194,10 @@ function attackTargetsFor(
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
 ): CombatDefender[] {
-  const payable = combatDefenders(ctx, opponents).filter((opp) => attackRestrictionAllows(creature, opp) && canPayAttackTax(ctx, creature.controllerId, opp.id));
+  const payable = combatDefenders(ctx, opponents).filter(
+    (opp) =>
+      attackRestrictionAllows(creature, opp) && canPayAttackTax(ctx, creature.controllerId, opp.id),
+  );
   const goaderIds = goaderIdsFor(ctx, creature);
   if (goaderIds.size === 0) return payable;
   // A cost never forces the player to obey an additional requirement (CR 508.1d).
@@ -196,7 +222,9 @@ function freeAttackTargetsFor(
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
 ): CombatDefender[] {
-  const free = combatDefenders(ctx, opponents).filter((opp) => attackRestrictionAllows(creature, opp) && totalPips(attackCost(ctx, opp.id)) === 0);
+  const free = combatDefenders(ctx, opponents).filter(
+    (opp) => attackRestrictionAllows(creature, opp) && totalPips(attackCost(ctx, opp.id)) === 0,
+  );
   const goaderIds = goaderIdsFor(ctx, creature);
   if (goaderIds.size === 0) return free;
   const maximum = Math.max(0, ...free.map((opp) => goadRequirementsSatisfied(opp, goaderIds)));
@@ -267,7 +295,8 @@ function commitAttacker(
   creature.attacking = defenderId;
   const walker = findPermanent(ctx, defenderId);
   creature.attackingPlayerId = walker?.controllerId ?? defenderId;
-  if (walker !== undefined) creature.attackingPlaneswalkerControlChanges = walker.controlChanges?.length ?? 0;
+  if (walker !== undefined)
+    creature.attackingPlaneswalkerControlChanges = walker.controlChanges?.length ?? 0;
   else delete creature.attackingPlaneswalkerControlChanges;
   creature.statuses.push('attacking');
   if (!hasKeyword(ctx, creature, 'vigilance')) {
@@ -344,7 +373,10 @@ function buildAttackOption(subjects: readonly AttackDeclarationSubject[]): Engin
     },
     targets: subjects.map((s, i) => ({
       slot: i,
-      options: [...s.defenders.map((d) => d.defenderId ?? d.playerId), ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
+      options: [
+        ...s.defenders.map((d) => d.defenderId ?? d.playerId),
+        ...(s.mustAttack ? [] : [NO_ATTACK_TARGET]),
+      ],
     })),
   };
 }
@@ -568,10 +600,14 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // separately from `attacking` (which clears at end of combat) so the check still holds
   // in a later main phase.
   for (const perm of declared) perm.attackedThisTurn = true;
-  const defendingPlayers = [...new Set(declared.map((a) => a.attackingPlayerId ?? a.attacking as PlayerId))];
+  const defendingPlayers = [
+    ...new Set(declared.map((a) => a.attackingPlayerId ?? (a.attacking as PlayerId))),
+  ];
   for (const defId of defendingPlayers) {
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
-    const auras = ctx.state.battlefield.filter((p) => p.attachedTo === defId && declared.some((a) => a.attacking === defId));
+    const auras = ctx.state.battlefield.filter(
+      (p) => p.attachedTo === defId && declared.some((a) => a.attacking === defId),
+    );
     for (const aura of auras) {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
     }
@@ -796,7 +832,9 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
   const defending = ctx.state.combat?.defendingPlayers ?? [];
   for (const defenderId of playersInApnapOrder(ctx).map((p) => p.id)) {
     if (!defending.includes(defenderId)) continue;
-    const incoming = attackers(ctx).filter((a) => (a.attackingPlayerId ?? a.attacking) === defenderId);
+    const incoming = attackers(ctx).filter(
+      (a) => (a.attackingPlayerId ?? a.attacking) === defenderId,
+    );
     if (incoming.length === 0) continue;
 
     const candidates = blockCandidatesFor(ctx, defenderId, incoming);
@@ -1160,7 +1198,8 @@ function* dealCombatDamage(
   // All affected players choose in APNAP order before any of the damage is dealt.
   const prevention = new Map<PlayerId, PlayerDamagePrevention>();
   for (const player of playersInApnapOrder(ctx)) {
-    const amount = assignments.filter((assignment) => assignment.targetPlayer === player.id)
+    const amount = assignments
+      .filter((assignment) => assignment.targetPlayer === player.id)
       .reduce((sum, assignment) => sum + assignment.amount, 0);
     const chosen = yield* choosePlayerDamagePrevention(ctx, player, amount, true);
     if (chosen !== undefined) prevention.set(player.id, chosen);
@@ -1188,9 +1227,12 @@ function* dealCombatDamage(
     } else if (a.targetPlayer !== null) {
       if (!ctx.state.players.some((player) => player.id === a.targetPlayer)) {
         const walker = findPermanent(ctx, a.targetPlayer);
-        if (walker !== undefined && computeCharacteristics(ctx, walker).types.includes('Planeswalker') &&
+        if (
+          walker !== undefined &&
+          computeCharacteristics(ctx, walker).types.includes('Planeswalker') &&
           walker.controllerId === a.source.attackingPlayerId &&
-          (walker.controlChanges?.length ?? 0) === a.source.attackingPlaneswalkerControlChanges)
+          (walker.controlChanges?.length ?? 0) === a.source.attackingPlaneswalkerControlChanges
+        )
           dealDamageToObject(ctx, permanentSource(a.source), walker.id, a.amount, true);
         continue;
       }
@@ -1204,7 +1246,9 @@ function* dealCombatDamage(
           sourceIsCommander: a.source.isCommander,
           sourceHasLifelink: traits.lifelink,
           sourceHasInfect: traits.infect,
-          ...(prevention.has(a.targetPlayer) ? {prevention: prevention.get(a.targetPlayer)!} : {}),
+          ...(prevention.has(a.targetPlayer)
+            ? { prevention: prevention.get(a.targetPlayer)! }
+            : {}),
         },
       );
       // Prevented damage was never dealt: no "deals combat damage to a player" trigger, and no
@@ -1268,9 +1312,16 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   if (anyAttackers) {
     setStep(ctx, 'declareBlockers');
     yield* declareBlockers(ctx);
-    queueTriggersForEvent(ctx, 'attacksUnblocked', attackers(ctx)
-      .filter(permanent => permanent.blockedByOrdered.length === 0)
-      .map(permanent => ({ permanent, playerId: permanent.attackingPlayerId ?? permanent.attacking! })));
+    queueTriggersForEvent(
+      ctx,
+      'attacksUnblocked',
+      attackers(ctx)
+        .filter((permanent) => permanent.blockedByOrdered.length === 0)
+        .map((permanent) => ({
+          permanent,
+          playerId: permanent.attackingPlayerId ?? permanent.attacking!,
+        })),
+    );
     yield* runPrioritySequence(ctx);
     emptyManaPools(ctx);
 

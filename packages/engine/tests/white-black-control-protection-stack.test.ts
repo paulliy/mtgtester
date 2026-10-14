@@ -304,12 +304,18 @@ describe('white-black-control protection and stack cards — pinned Oracle', () 
       timestamp: ctx.state.nextTimestamp++,
     });
     expect(computeCharacteristics(ctx, targetAgain).protectionFrom).toEqual(['W']);
-    expect(buildPlayerBoardState(ctx, 'P1').battlefield.find(permanent => permanent.id === targetAgain.id)?.keywords)
-      .toContain('protection from white');
+    expect(
+      buildPlayerBoardState(ctx, 'P1').battlefield.find(
+        (permanent) => permanent.id === targetAgain.id,
+      )?.keywords,
+    ).toContain('protection from white');
     endUntilEotEffects(ctx);
     expect(computeCharacteristics(ctx, targetAgain).protectionFrom).toEqual([]);
-    expect(buildPlayerBoardState(ctx, 'P1').battlefield.find(permanent => permanent.id === targetAgain.id)?.keywords)
-      .not.toContain('protection from white');
+    expect(
+      buildPlayerBoardState(ctx, 'P1').battlefield.find(
+        (permanent) => permanent.id === targetAgain.id,
+      )?.keywords,
+    ).not.toContain('protection from white');
   });
 
   it('sejiri-shelter-c01-positive — the normal spell targets only your creature and chooses color on resolution', () => {

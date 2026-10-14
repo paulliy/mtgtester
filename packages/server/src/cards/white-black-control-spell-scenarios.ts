@@ -189,7 +189,9 @@ export function whiteBlackControlSpellScenario(id: string, gameId: GameId): Card
     types: ['Artifact'],
     manaCost: '{0}',
   });
-  const p1Mana = isImp ? [swamp, swamp, plains] : Array.from({ length: isCure ? 1 : isCuraga ? 5 : 2 }, () => plains);
+  const p1Mana = isImp
+    ? [swamp, swamp, plains]
+    : Array.from({ length: isCure ? 1 : isCuraga ? 5 : 2 }, () => plains);
   const configs = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,
     deckId: `white-black-spells-${seat}`,
@@ -251,13 +253,16 @@ export function whiteBlackControlSpellScenario(id: string, gameId: GameId): Card
           ]
         : [
             `Cast Restoration Magic choosing ${isCure ? 'Cure ({0})' : isCuraga ? 'Curaga ({3}{W})' : 'Cura ({1})'} as its additional cost.`,
-            isCuraga ? 'Observe every permanent you control gain hexproof and indestructible until end of turn, and gain 6 life.'
+            isCuraga
+              ? 'Observe every permanent you control gain hexproof and indestructible until end of turn, and gain 6 life.'
               : `Choose Lab P1 Cura Target; it should gain hexproof and indestructible until end of turn${isCure ? '.' : ', and you should gain 3 life.'}`,
           ],
       expectedOutcome: isImp
         ? "Imp's Mischief changes the target of the normally cast single-target spell to your creature and its caster loses life equal to mana value 2."
-        : isCuraga ? 'Curaga grants hexproof and indestructible to all your permanents until end of turn and gains 6 life.'
-          : isCure ? 'Cure grants hexproof and indestructible to its target with zero additional mana paid and no life gain.'
+        : isCuraga
+          ? 'Curaga grants hexproof and indestructible to all your permanents until end of turn and gains 6 life.'
+          : isCure
+            ? 'Cure grants hexproof and indestructible to its target with zero additional mana paid and no life gain.'
             : 'The Cura mode grants hexproof and indestructible to the chosen permanent until end of turn and gains its caster 3 life.',
       oracleSha256: entry.source.sha256,
       clauseIds: [...entry.clauseIds],

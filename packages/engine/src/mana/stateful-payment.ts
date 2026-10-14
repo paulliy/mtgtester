@@ -139,7 +139,11 @@ export function planStatefulManaPayment(
   const visit = (snapshot: GameContext): PaymentPlan | null => {
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     const availableSources = sourcesFor(snapshot, payer);
-    if ((lifeReserved === 0 || (!playerLifeLocked(snapshot, payer.id) && payer.life >= lifeReserved)) && payer.energy >= energyReserved) {
+    if (
+      (lifeReserved === 0 ||
+        (!playerLifeLocked(snapshot, payer.id) && payer.life >= lifeReserved)) &&
+      payer.energy >= energyReserved
+    ) {
       const final = planPayment(
         cost,
         payer.manaEntries,

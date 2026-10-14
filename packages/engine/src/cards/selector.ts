@@ -413,8 +413,10 @@ export function selectMatches(
         candidate.attackingDefenderId !== source.controllerId
       );
     case 'attackingYouOrYourPlaneswalker':
-      return candidate.attackingDefenderId != null &&
-        candidate.attackingDefendingPlayerId === source.controllerId;
+      return (
+        candidate.attackingDefenderId != null &&
+        candidate.attackingDefendingPlayerId === source.controllerId
+      );
     case 'attackingEventPlayer':
       return (
         source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId

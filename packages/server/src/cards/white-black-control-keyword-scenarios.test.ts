@@ -25,9 +25,7 @@ async function run(id: string) {
     if (request.presentation?.blockDeclaration?.rejection !== undefined) blockRejections++;
     const provider = scenario.decisionProviderOverrides?.[request.decidingPlayer];
     if (provider !== undefined) {
-      scenario.engine.submit(
-        await provider.decide(request),
-      );
+      scenario.engine.submit(await provider.decide(request));
       continue;
     }
     const action =

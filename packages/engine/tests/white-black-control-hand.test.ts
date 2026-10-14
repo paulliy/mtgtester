@@ -13,16 +13,7 @@ import { createGame } from '../src/state/game';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { queueStepTriggers } from '../src/turn/turn';
 import { runPrioritySequence } from '../src/turn/priority';
-import {
-  copies,
-  conjure,
-  gameConfig,
-  oracle,
-  pick,
-  pump,
-  spawn,
-  swamp,
-} from './fixtures';
+import { copies, conjure, gameConfig, oracle, pick, pump, spawn, swamp } from './fixtures';
 
 interface PinnedCard {
   sha256: string;
@@ -49,7 +40,10 @@ if (![duress, thoughtseize, darkConfidant].every((card) => interpretCard(card).m
 
 function pod(seed = 'white-black-control-hand'): GameContext {
   const ctx = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(8, swamp) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(8, swamp) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -240,9 +234,7 @@ describe('white-black-control hand spells', () => {
     });
 
     expect(player(ctx, 'P1').life).toBe(38);
-    expect(player(ctx, 'P2').graveyard.map((card) => card.name)).toEqual([
-      'Thoughtseize Creature',
-    ]);
+    expect(player(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Thoughtseize Creature']);
     expect(player(ctx, 'P2').hand.map((card) => card.name)).toEqual(['Thoughtseize Reserve']);
   });
 
@@ -273,7 +265,9 @@ describe('Dark Confidant upkeep reveal', () => {
     const ctx = pod();
     player(ctx, 'P1').life = 40;
     castPermanent(ctx, darkConfidant);
-    const confidant = ctx.state.battlefield.find((permanent) => permanent.name === darkConfidant.name)!;
+    const confidant = ctx.state.battlefield.find(
+      (permanent) => permanent.name === darkConfidant.name,
+    )!;
     const top = handCard('Confidant Reveal', 'Artifact', '{2}{B}');
     player(ctx, 'P1').library.splice(0);
     conjure(ctx, 'P1', top, 'library');
@@ -297,7 +291,9 @@ describe('Dark Confidant upkeep reveal', () => {
     const ctx = pod();
     player(ctx, 'P1').life = 40;
     castPermanent(ctx, darkConfidant);
-    const confidant = ctx.state.battlefield.find((permanent) => permanent.name === darkConfidant.name)!;
+    const confidant = ctx.state.battlefield.find(
+      (permanent) => permanent.name === darkConfidant.name,
+    )!;
     player(ctx, 'P1').library.splice(0);
     const cardsDrawnBefore = player(ctx, 'P1').cardsDrawnThisTurn;
 
@@ -381,7 +377,9 @@ describe('hand-effect structural contracts', () => {
     );
 
     expect(issues.map((issue) => issue.message)).toEqual(
-      expect.arrayContaining([expect.stringContaining('creature is incompatible with effect domains player')]),
+      expect.arrayContaining([
+        expect.stringContaining('creature is incompatible with effect domains player'),
+      ]),
     );
   });
 

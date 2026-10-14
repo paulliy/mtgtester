@@ -64,9 +64,7 @@ async function main(): Promise<void> {
   }
 
   const previousByOracleId = new Map(
-    existingCards
-      .filter((card) => card.oracle_id)
-      .map((card) => [card.oracle_id!, card]),
+    existingCards.filter((card) => card.oracle_id).map((card) => [card.oracle_id!, card]),
   );
   let added = 0;
   let changed = 0;
@@ -80,11 +78,7 @@ async function main(): Promise<void> {
     }
 
     // Scryfall's updated_at is the fast path; compare full records when it is unavailable.
-    if (
-      previous.updated_at &&
-      remote.updated_at &&
-      previous.updated_at === remote.updated_at
-    ) {
+    if (previous.updated_at && remote.updated_at && previous.updated_at === remote.updated_at) {
       unchanged += 1;
       return previous;
     }

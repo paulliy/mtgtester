@@ -214,7 +214,8 @@ export function targetIsLegal(
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
       (context.targeting === false || !playerLifeLocked(ctx, player.id)) &&
-      !(context.targeting !== false &&
+      !(
+        context.targeting !== false &&
         player.id !== controllerId &&
         ctx.state.playerHexproofTurn?.[player.id] === ctx.state.turnNumber
       ) &&

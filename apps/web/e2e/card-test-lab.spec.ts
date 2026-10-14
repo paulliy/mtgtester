@@ -3,6 +3,7 @@ import type { OracleCard } from '@mtg/shared';
 import { SPELL_FACE_LAB_EXPECTATIONS } from '../../../packages/server/src/cards/spell-face-lab-expectations';
 import { TRANSFORMED_DFC_SCENARIO_IDS } from '../../../packages/server/src/cards/transformed-dfc-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS } from '../../../packages/server/src/cards/pr02-follow-up-scenarios';
+import { COMBAT_TRIGGER_SCENARIO_IDS } from '../../../packages/server/src/cards/combat-trigger-scenarios';
 import { WHITE_BLACK_COMBAT_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-combat-scenarios';
 import { WHITE_BLACK_HAND_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-hand-scenarios';
 import { WHITE_BLACK_ENTRY_SCENARIO_IDS } from '../../../packages/server/src/cards/white-black-control-entry-scenarios';
@@ -68,25 +69,26 @@ async function runScenario(page: Page, title: string): Promise<void> {
     for (const scenarioId of optionIds)
       if (
         !TRANSFORMED_DFC_SCENARIO_IDS.includes(scenarioId) &&
+        !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(scenarioId) &&
         !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_HAND_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS.includes(scenarioId) &&
         !WHITE_BLACK_DEFENDER_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_SPELL_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_FINAL_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some(id => id === scenarioId) &&
-      !WHITE_BLACK_PROTECTION_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_TERGRID_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.includes(scenarioId) &&
-      !WHITE_BLACK_KEYWORD_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_SPELL_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_FINAL_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some((id) => id === scenarioId) &&
+        !WHITE_BLACK_PROTECTION_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_TERGRID_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.includes(scenarioId) &&
+        !WHITE_BLACK_KEYWORD_SCENARIO_IDS.includes(scenarioId) &&
         !PR02_FOLLOW_UP_SCENARIO_IDS.includes(
           scenarioId as (typeof PR02_FOLLOW_UP_SCENARIO_IDS)[number],
         )
@@ -98,6 +100,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
         .filter(
           (id) =>
             !TRANSFORMED_DFC_SCENARIO_IDS.includes(id) &&
+            !(COMBAT_TRIGGER_SCENARIO_IDS as readonly string[]).includes(id) &&
             !WHITE_BLACK_COMBAT_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_HAND_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_ENTRY_SCENARIO_IDS.includes(id) &&
@@ -106,7 +109,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
             !WHITE_BLACK_SPELL_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_FINAL_SCENARIO_IDS.includes(id) &&
-            !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some(perchId => perchId === id) &&
+            !WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.some((perchId) => perchId === id) &&
             !WHITE_BLACK_PROTECTION_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.includes(id) &&
             !WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.includes(id) &&

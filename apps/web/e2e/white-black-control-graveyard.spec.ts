@@ -49,15 +49,18 @@ async function castAndResolve(page: Page, name: string): Promise<void> {
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
   await expect
-    .poll(async () => {
-      if (await permanent(page, name).isVisible()) return true;
-      if ((await page.getByText(`${name} resolves`).count()) > before) return true;
-      const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-      if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-      return false;
-    }, {
-      timeout: 15_000,
-    })
+    .poll(
+      async () => {
+        if (await permanent(page, name).isVisible()) return true;
+        if ((await page.getByText(`${name} resolves`).count()) > before) return true;
+        const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        return false;
+      },
+      {
+        timeout: 15_000,
+      },
+    )
     .toBe(true);
 }
 
@@ -69,12 +72,18 @@ async function castDestroyTarget(page: Page): Promise<void> {
   await permanent(page, 'Lab P2 Creature to Destroy').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
-  await expect.poll(async () => {
-    if (await page.getByText('Lab Prepared Doom resolves', { exact: true }).isVisible()) return true;
-    const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-    if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-    return false;
-  }, { timeout: 15_000 }).toBe(true);
+  await expect
+    .poll(
+      async () => {
+        if (await page.getByText('Lab Prepared Doom resolves', { exact: true }).isVisible())
+          return true;
+        const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
   await expect(page.getByText('Lab Prepared Doom resolves', { exact: true })).toBeVisible({
     timeout: 15_000,
   });
@@ -94,13 +103,17 @@ test('Rest in Peace casts normally, clears both existing graveyards, and replace
 
   await castAndResolve(page, 'Rest in Peace');
   await expect(permanent(page, 'Rest in Peace')).toBeVisible();
-  await expect.poll(async () => {
-    if ((await opponentGraveyard(page).count()) === 0) return true;
-    const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
-    if (await pass.isVisible()) await pass.click();
-    return false;
-  }).toBe(true);
-  await expect(page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' })).toContainText('Graveyard 0');
+  await expect
+    .poll(async () => {
+      if ((await opponentGraveyard(page).count()) === 0) return true;
+      const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+      if (await pass.isVisible()) await pass.click();
+      return false;
+    })
+    .toBe(true);
+  await expect(
+    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+  ).toContainText('Graveyard 0');
   await expect(opponentGraveyard(page)).toHaveCount(0);
   await expect(
     humanZone(page, 'Exile').getByRole('img', { name: 'Lab P1 Existing Graveyard Card' }),

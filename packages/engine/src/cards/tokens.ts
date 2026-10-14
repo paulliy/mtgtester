@@ -118,7 +118,11 @@ export const ASSASSIN_1_1: TokenSpec = creatureToken({
 });
 
 export const ZOMBIE_2_2_BLACK: TokenSpec = creatureToken({
-  name: 'Zombie', subtypes: ['Zombie'], colors: ['B'], power: 2, toughness: 2,
+  name: 'Zombie',
+  subtypes: ['Zombie'],
+  colors: ['B'],
+  power: 2,
+  toughness: 2,
 });
 
 export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({

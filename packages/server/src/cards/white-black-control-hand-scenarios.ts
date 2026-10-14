@@ -67,7 +67,10 @@ function witness(
   name: string,
   options: { typeLine: string; types: string[]; cmc?: number; manaCost?: string },
 ): OracleCard {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
   return {
     ...plains,
     oracleId: `lab-white-black-${slug}`,
@@ -135,7 +138,9 @@ export function whiteBlackControlHandScenario(id: string, gameId: GameId): CardT
         name === 'Duress'
           ? ['Cast Duress targeting P2, then choose Lab P2 Artifact from the revealed hand.']
           : name === 'Thoughtseize'
-            ? ['Cast Thoughtseize targeting P2, then choose Lab P2 Creature from the revealed hand.']
+            ? [
+                'Cast Thoughtseize targeting P2, then choose Lab P2 Creature from the revealed hand.',
+              ]
             : ['Cast Dark Confidant from your hand and pass through to your next upkeep.'],
       expectedOutcome:
         name === 'Duress'

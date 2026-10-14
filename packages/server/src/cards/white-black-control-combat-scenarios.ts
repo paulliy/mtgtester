@@ -56,7 +56,10 @@ const cards = [
 export const WHITE_BLACK_COMBAT_SCENARIO_IDS = cards.map((entry) => entry.id);
 
 function witness(name: string): OracleCard {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
   return {
     ...plains,
     oracleId: `lab-white-black-${slug}`,
@@ -86,9 +89,7 @@ export function whiteBlackControlCombatScenario(id: string, gameId: GameId): Car
   const beta = witness('Lab Attack Witness Beta');
   const defenders = ['P2', 'P3', 'P4'].map((seat) => witness(`Lab ${seat} Defender`));
   const mana =
-    entry.card.name === 'Breena, the Demagogue'
-      ? [plains, swamp, plains]
-      : [plains, plains, swamp];
+    entry.card.name === 'Breena, the Demagogue' ? [plains, swamp, plains] : [plains, plains, swamp];
   const draw = witness('Lab Breena Draw');
   const deckCards = [entry.card, ...mana, alpha, beta, draw, ...defenders];
   const players = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
@@ -119,7 +120,7 @@ export function whiteBlackControlCombatScenario(id: string, gameId: GameId): Car
       expectedOutcome:
         entry.card.name === 'Breena, the Demagogue'
           ? 'The two attackers cause one trigger because they attack the same opponent. P2 has more life than P3 and P4, so P1 draws exactly one card and one creature P1 controls receives two +1/+1 counters.'
-          : "One trigger is created for the two attackers. Accepting the optional ability gives double strike to the single selected attacker; the other attacker remains unchanged.",
+          : 'One trigger is created for the two attackers. Accepting the optional ability gives double strike to the single selected attacker; the other attacker remains unchanged.',
       oracleSha256: entry.sha256,
       clauseIds: [...entry.clauseIds],
     },

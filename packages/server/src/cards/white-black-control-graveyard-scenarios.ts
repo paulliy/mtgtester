@@ -168,9 +168,7 @@ export function whiteBlackControlGraveyardScenario(id: string, gameId: GameId): 
     ...Array.from({ length: 8 }, () => plains),
     ...Array.from({ length: 8 }, () => swamp),
     ...(isRest || !isStoneActivation ? [p2Creature] : []),
-    ...(isRest || isStoneActivation || entry.kind === 'stone-replacement'
-      ? [p2GraveyardCard]
-      : []),
+    ...(isRest || isStoneActivation || entry.kind === 'stone-replacement' ? [p2GraveyardCard] : []),
   ];
   const configs = (['P1', 'P2', 'P3', 'P4'] as const).map((seat) => ({
     id: seat,

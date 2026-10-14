@@ -10,7 +10,10 @@ import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 function pod(seed = 'discard-player-contract'): GameContext {
   const ctx = createGame(
-    gameConfig(Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })), { seed }),
+    gameConfig(
+      Array.from({ length: 4 }, () => ({ cards: copies(8, forest) })),
+      { seed },
+    ),
   );
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
@@ -107,7 +110,9 @@ describe('discard effects with player references', () => {
       { op: 'discardTarget', target: 0, count: constant(1) },
       ['P2'],
       (decision) => ({
-        index: decision.options.findIndex((option) => option.description === 'Discard Opponent Card'),
+        index: decision.options.findIndex(
+          (option) => option.description === 'Discard Opponent Card',
+        ),
         targets: new Map(),
       }),
     );
@@ -138,12 +143,18 @@ describe('discard effects with player references', () => {
       const ctx = pod(seed);
       const source = sourceFor(ctx);
       putInHand(ctx, 'P2', 'Random A', 'Random B');
-      runEffect(ctx, source, [{ kind: 'player' }], {
-        op: 'discardTarget',
-        target: 0,
-        count: constant(7),
-        atRandom: true,
-      }, ['P2']);
+      runEffect(
+        ctx,
+        source,
+        [{ kind: 'player' }],
+        {
+          op: 'discardTarget',
+          target: 0,
+          count: constant(7),
+          atRandom: true,
+        },
+        ['P2'],
+      );
       expect(player(ctx, 'P2').hand).toHaveLength(0);
       expect(player(ctx, 'P2').graveyard).toHaveLength(2);
       return player(ctx, 'P2').graveyard.map((card) => card.name);
@@ -159,7 +170,9 @@ describe('discard effects with player references', () => {
       putInHand(ctx, playerId, `${playerId} First`, `${playerId} Chosen`);
 
     const order: string[] = [];
-    const originalHandSizes = new Map(ctx.state.players.map((entry) => [entry.id, entry.hand.length]));
+    const originalHandSizes = new Map(
+      ctx.state.players.map((entry) => [entry.id, entry.hand.length]),
+    );
     const { decisions } = runEffect(
       ctx,
       source,
@@ -201,7 +214,7 @@ describe('discard effects with player references', () => {
       [],
       { op: 'discardEachPlayer', scope: 'opponents', count: constant(1) },
       [],
-      (decision) => ({ index: 0, targets: new Map() }),
+      (_decision) => ({ index: 0, targets: new Map() }),
     );
 
     expect(decisions.map((decision) => decision.player)).toEqual(['P2', 'P3', 'P4']);
@@ -211,9 +224,7 @@ describe('discard effects with player references', () => {
         `${playerId} Goes`,
       ]);
     for (const playerId of ['P2', 'P3', 'P4'])
-      expect(player(ctx, playerId).hand.map((card) => card.name)).toEqual([
-        `${playerId} Reserve`,
-      ]);
+      expect(player(ctx, playerId).hand.map((card) => card.name)).toEqual([`${playerId} Reserve`]);
   });
 
   it('drawForDiscarded draws only for cards actually discarded, despite empty hands and a lost player', () => {
@@ -257,11 +268,7 @@ describe('discard effects with player references', () => {
     expect(player(ctx, 'P2').graveyard.map((card) => card.name)).toEqual(['Opponent One']);
     expect(player(ctx, 'P3').hand).toHaveLength(0);
     expect(player(ctx, 'P4').hand.map((card) => card.name)).toEqual(['Lost Player Card']);
-    expect(player(ctx, 'P1').hand.map((card) => card.name)).toEqual([
-      'Draw 1',
-      'Draw 2',
-      'Draw 3',
-    ]);
+    expect(player(ctx, 'P1').hand.map((card) => card.name)).toEqual(['Draw 1', 'Draw 2', 'Draw 3']);
   });
 
   it('skips a lost discardTarget player and accepts an empty target hand', () => {
@@ -292,7 +299,12 @@ describe('discard effects with player references', () => {
 
   it('rejects a creature target for discardTarget during structural reference validation', () => {
     const definition = interpretCard(
-      oracle({ name: 'Malformed Discard Spell', typeLine: 'Sorcery', power: null, toughness: null }),
+      oracle({
+        name: 'Malformed Discard Spell',
+        typeLine: 'Sorcery',
+        power: null,
+        toughness: null,
+      }),
     );
     definition.spellAbility = {
       kind: 'spell',
@@ -301,7 +313,9 @@ describe('discard effects with player references', () => {
     };
 
     expect(validateCardDefinition(definition).map((issue) => issue.message)).toEqual(
-      expect.arrayContaining([expect.stringContaining('creature is incompatible with effect domains player')]),
+      expect.arrayContaining([
+        expect.stringContaining('creature is incompatible with effect domains player'),
+      ]),
     );
   });
 });

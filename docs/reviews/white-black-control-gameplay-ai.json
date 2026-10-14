@@ -191,10 +191,7 @@
     }
   },
   "decisionCap": 2000,
-  "providers": [
-    "random",
-    "heuristic-all-players"
-  ],
+  "providers": ["random", "heuristic-all-players"],
   "note": "Quality-only observations from production-engine prepared scenarios using seeded random and heuristic providers for every player, without scripted scenario decision overrides. These observations do not certify rules or viewer correctness. Failed runs retain their observed actions and error; live LLM was not run.",
   "scenarios": [
     {

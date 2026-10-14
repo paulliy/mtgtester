@@ -332,11 +332,25 @@ export function spell(body: AbilityBody): Ability {
  * ability would trigger and again as it resolves — not a targeting restriction.
  */
 export function triggered(
-  head: TriggerHead,
-  body: AbilityBody & { condition?: Condition },
+  head: TriggerHead | undefined,
+  body: AbilityBody & { condition?: Condition; eventCondition?: Condition },
 ): Ability {
+  // A delayed registration supplies its own event and bound referents (CR 603.7).
+  if (head === undefined) {
+    if (body.condition !== undefined || body.eventCondition !== undefined)
+      throw new Error('a trigger condition requires an explicit event head');
+    return buildAbility('triggered', body);
+  }
+  if (body.eventCondition !== undefined && head.when !== 'attacks')
+    throw new Error('an event-only condition requires an attacks event');
   const trigger: TriggerSpec =
-    body.condition === undefined ? head : ({ ...head, condition: body.condition } as TriggerSpec);
+    body.condition === undefined && body.eventCondition === undefined
+      ? head
+      : {
+          ...head,
+          ...(body.condition === undefined ? {} : { condition: body.condition }),
+          ...(body.eventCondition === undefined ? {} : { eventCondition: body.eventCondition }),
+        };
   return buildAbility('triggered', body, trigger);
 }
 
