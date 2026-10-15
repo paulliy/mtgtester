@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "retrievedAt": "2026-10-15",
+  "cards": [
+    {
+      "sha256": "2c168d95b98fc29bee9fb1d7a562d50070400c32fe9b4476196eb820d301b472",
+      "card": {
+        "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+        "scryfallId": "dcca54de-3b2e-4801-bb66-3809382d6f01",
+        "name": "Promise of Loyalty",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

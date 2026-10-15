@@ -2343,6 +2343,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

@@ -321,6 +321,11 @@ const COVERAGE_PR06: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr06-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+/** Coverage PR07 cards (combat requirements, restrictions and extra combats). */
+const COVERAGE_PR07: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr07-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
@@ -12659,6 +12664,58 @@ function humanTorchScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+// Coverage PR07 (docs/plans/card-coverage-chunks.md).
+
+/** Keeps `keep` when asked which creature to put a vow counter on; attacks `defender` otherwise. */
+function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
+  const attackWithEverything = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      if (request.prompt === 'Choose a creature to keep and put a vow counter on.') {
+        const action = request.legalActions.find((candidate) =>
+          candidate.description.includes(keep),
+        );
+        if (action === undefined) throw new Error(`No option to keep ${keep}`);
+        return { requestId: request.requestId, actionId: action.id };
+      }
+      return attackWithEverything.decide(request);
+    },
+  };
+}
+
+function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
+  const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
+  const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
+    title: 'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+    instructions: [
+      'Promise of Loyalty and five Plains are in play for you; you control Lab Ox and Lab Servo, and so does P2.',
+      'Cast Promise of Loyalty and keep Lab Ox (P2 keeps its own Lab Ox).',
+      "On P2's turn P2's vowed Lab Ox may not attack you; it attacks P3 instead.",
+    ],
+    expectedOutcome:
+      'Each of you and P2 keeps one Lab Ox with a vow counter and sacrifices the Lab Servo. P2 was not offered you as a defender, so you stay at 40 life, and the vowed Lab Ox dealt 4 to P3, who is at 36.',
+    oracleSha256: promise.sha256,
+    clauseIds: ['promise-of-loyalty-c01'],
+    decks: {
+      P1: [promise.card, ...plains, LAB_OX, LAB_SERVO],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Promise of Loyalty'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: [...plains.map((land) => land.name), 'Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: { P2: keepThenAttack('Lab Ox', 'P3') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -12958,6 +13015,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tenuous-truce-viewer-they-attack',
   'wall-of-tears-viewer-blocked-creature-returns',
   'human-torch-viewer-keywords-and-damage-copy',
+  'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13429,6 +13487,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tenuous-truce-viewer-they-attack': (gameId) => tenuousTruceScenario(gameId, 'they-attack'),
   'wall-of-tears-viewer-blocked-creature-returns': wallOfTearsScenario,
   'human-torch-viewer-keywords-and-damage-copy': humanTorchScenario,
+  'promise-of-loyalty-viewer-vowed-creature-cant-attack-you': promiseOfLoyaltyScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -9531,3 +9531,47 @@ test('Human Torch: a noncreature spell grants flying, double strike and haste, a
   }
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+// Coverage PR07 (docs/plans/card-coverage-chunks.md).
+
+test('Promise of Loyalty: a vowed creature cannot attack its caster but can attack others', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+  );
+  const spell = handCard(page, 'Promise of Loyalty');
+  await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Keep Lab Ox: every player chooses in turn order, then the vow counters are put on.
+  await passStackUntil(
+    page,
+    page.getByText('Choose a creature to keep and put a vow counter on.', { exact: true }),
+  );
+  await page
+    .locator('.panel-group')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .getByRole('button', { name: 'Keep', exact: true })
+    .click();
+
+  // P2's vowed Lab Ox may not attack you, so it attacks P3.
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const seat of ['P1', 'P2']) {
+    const kept =
+      seat === 'P1' ? page.locator('.human-zone') : page.locator(`.opponent[data-seat="${seat}"]`);
+    await expect(kept.getByRole('img', { name: 'Lab Ox', exact: true })).toBeVisible();
+    await expect(kept.locator('.counters').filter({ hasText: /vow/i })).toBeVisible();
+    await expect(
+      kept
+        .locator('.object')
+        .filter({ has: page.getByRole('img', { name: 'Lab Servo', exact: true }) }),
+    ).toHaveCount(0);
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});

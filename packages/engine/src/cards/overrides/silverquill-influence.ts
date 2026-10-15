@@ -201,9 +201,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Enchanted creature gets +1/+1 and has protection from creatures.',
   ]);
 
-  unimplemented('e1d294e8-67b1-4a4a-86b8-f98f28a327d9', 'Promise of Loyalty', [
-    "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
-  ]);
+  // Promise of Loyalty: authored in white-black-control-promise.ts (recorded in coverage PR07).
 
   unimplemented('ff6b52b7-ae3c-465b-b10e-901160e5230e', 'Nils, Discipline Enforcer', [
     'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.',

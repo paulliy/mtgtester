@@ -2839,16 +2839,17 @@
   {
     "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
     "name": "Promise of Loyalty",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.\"",
-      "override for \"Promise of Loyalty\" has no executable behavior"
+    "package": "PR07.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/engine/tests/white-black-control-curse-promise.test.ts",
+      "apps/web/e2e/white-black-control-remaining-combat.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
