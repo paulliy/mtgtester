@@ -9085,7 +9085,7 @@ test("Delirium: during an opponent's attack, tap its creature, hit it back and s
   await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
   await permanent(page, 'Lab Ox').click();
   await expect(page.getByText(/All 1 target selected/)).toBeVisible();
-  await confirm(page);
+  // Auto-pay is previewed in the same tray as the target, so one Confirm casts it.
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
 
