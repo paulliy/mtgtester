@@ -12251,6 +12251,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "b4c27c89-fa50-4cf0-bf37-039732d16fef": {
+      "name": "Toby, Beastie Befriender",
+      "oracleSha256": "ab14f8f89747265e1dc7c2837a49999e1ab57539f9ff54794f332d4f8da17ab0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "toby-beast-token-cant-attack-or-block-alone",
+          "oracleText": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "implementation": [
+            "authored enters trigger that creates a 4/4 white Beast creature token whose own rule statics (new TokenSpec ruleStatics: cantAttackAlone, cantBlockAlone) say it is declared as an attacker only if another creature is also declared as an attacker, and as a blocker only if another creature of the same defending player is also declared as a blocker in that player's declaration (CR 506.5); a declaration that breaks it is rejected with the new attackAlone/blockAlone violations and, if still wrong, repaired by the engine: a lone blocking Beast stands down, a lone attacking Beast stands down unless it has an attack requirement it can obey, in which case another creature that can attack is declared with it (CR 508.1d); a Beast that has an attack requirement but no other creature that could be declared is not required to attack"
+          ],
+          "engineTestIds": [
+            "toby-pinned-oracle-supported",
+            "toby-beast-token",
+            "toby-cant-attack-alone",
+            "toby-attack-alone-required",
+            "toby-cant-block-alone",
+            "toby-restriction-scope",
+            "toby-whole-game"
+          ],
+          "viewerScenarioIds": ["toby-viewer-beast-cant-block-alone"]
+        },
+        {
+          "id": "toby-creature-tokens-have-flying",
+          "oracleText": "As long as you control four or more creature tokens, creature tokens you control have flying.",
+          "implementation": [
+            "authored layer 6 static that gives flying to every creature token you control while you control four or more creature tokens; the count is judged on the characteristics the layers have produced so far (a static condition that counts permanents is now evaluated inside the layer pass, CR 613.8a), so it is checked continuously, counts only creature tokens, and stops the moment you control three or Toby leaves"
+          ],
+          "engineTestIds": ["toby-pinned-oracle-supported", "toby-flying", "toby-flying-count"],
+          "viewerScenarioIds": ["toby-viewer-flying-with-four-tokens"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

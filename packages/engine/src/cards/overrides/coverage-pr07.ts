@@ -5,19 +5,30 @@
  */
 
 import {
+  grantsKeyword,
   onAttacks,
   onEndStep,
+  onEtb,
   onUpkeep,
   targetSlots,
   triggered,
   whenAttacks,
   whenPermanent,
 } from '../templates';
-import { allOfConditions } from '../condition';
+import { allOfConditions, countPermanents } from '../condition';
 import type { TokenSpec } from '../ability';
 import { constant } from '../value';
-import { creatureToken, INKLING_2_1_FLYING } from '../tokens';
-import { allOf, HAS_ANY_COUNTER, named, ofSubtype, ofType, SELF, YOURS } from '../selector';
+import { BEAST_4_4_WHITE_CANT_ACT_ALONE, creatureToken, INKLING_2_1_FLYING } from '../tokens';
+import {
+  allOf,
+  HAS_ANY_COUNTER,
+  IS_TOKEN,
+  named,
+  ofSubtype,
+  ofType,
+  SELF,
+  YOURS,
+} from '../selector';
 import { defineCard } from './index';
 
 export function registerCoveragePr07Overrides(): void {
@@ -305,6 +316,38 @@ export function registerCoveragePr07Overrides(): void {
           description:
             'At the beginning of each opponent\'s end step, that player creates a 1/1 red Goblin creature token with "Creatures you control attack each combat if able."',
         }),
+      ],
+    },
+  );
+
+  // Toby, Beastie Befriender: the Beast's restriction is its own ability, so it is lost with the
+  // token's abilities and applies to that token only (CR 506.5: it attacks or blocks alone when it
+  // is the only creature declared as an attacker, or as a blocker by its controller). The flying
+  // static is checked continuously: it applies exactly while you control four or more creature
+  // tokens, and covers every creature token you control, whoever created it.
+  const creatureTokens = allOf(ofType('Creature'), IS_TOKEN);
+  defineCard(
+    'b4c27c89-fa50-4cf0-bf37-039732d16fef',
+    'Toby, Beastie Befriender',
+    [
+      'When ~ enters, create a 4/4 white Beast creature token with "~ can\'t attack or block alone."',
+      'As long as you control four or more creature tokens, creature tokens you control have flying.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [
+            { op: 'createToken', spec: BEAST_4_4_WHITE_CANT_ACT_ALONE, count: constant(1) },
+          ],
+          description:
+            'When Toby enters, create a 4/4 white Beast creature token with "This token can\'t attack or block alone."',
+        }),
+      ],
+      staticEffects: [
+        {
+          ...grantsKeyword(allOf(creatureTokens, YOURS), 'flying'),
+          condition: countPermanents(creatureTokens, 'you', '>=', 4),
+        },
       ],
     },
   );

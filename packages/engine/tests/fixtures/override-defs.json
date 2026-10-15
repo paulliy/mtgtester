@@ -9963,6 +9963,108 @@
     }
   },
   {
+    "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
+    "name": "Toby, Beastie Befriender",
+    "handledLines": [
+      "As long as you control four or more creature tokens, creature tokens you control have flying.",
+      "When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 4,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "isToken"
+                }
+              ]
+            }
+          },
+          "op": {
+            "addKeyword": "flying",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Beast",
+                "power": 4,
+                "ruleStatics": [
+                  {
+                    "kind": "cantAttackAlone"
+                  },
+                  {
+                    "kind": "cantBlockAlone"
+                  }
+                ],
+                "subtypes": [
+                  "Beast"
+                ],
+                "toughness": 4,
+                "typeLine": "Creature — Beast",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
     "name": "Armored Skyhunter",
     "handledLines": [],
@@ -28958,6 +29060,108 @@
             },
             "player": "each",
             "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-toby-beastie-befriender",
+    "name": "Toby, Beastie Befriender",
+    "handledLines": [
+      "As long as you control four or more creature tokens, creature tokens you control have flying.",
+      "When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 4,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "isToken"
+                }
+              ]
+            }
+          },
+          "op": {
+            "addKeyword": "flying",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Beast",
+                "power": 4,
+                "ruleStatics": [
+                  {
+                    "kind": "cantAttackAlone"
+                  },
+                  {
+                    "kind": "cantBlockAlone"
+                  }
+                ],
+                "subtypes": [
+                  "Beast"
+                ],
+                "toughness": 4,
+                "typeLine": "Creature — Beast",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
           }
         }
       ]

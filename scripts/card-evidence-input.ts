@@ -2413,6 +2413,16 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ["Goblin Spymaster: at an opponent's end step that player creates a Goblin token"],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Toby, Beastie Befriender: the Beast token cannot block alone'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

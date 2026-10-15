@@ -276,6 +276,39 @@ function fight(
   return { combats, decisions: run.decisions };
 }
 
+/**
+ * Run the active player's combat with these declarations (creature object id to the player or
+ * planeswalker it attacks, blocker object id to the attacker it blocks; everything else stays
+ * home) and record the violation kinds the engine rejected, in order. A rejected declaration is
+ * re-sent unchanged, so the engine's own repair decides what happens.
+ */
+function declaredCombat(
+  ctx: GameContext,
+  attacks: Record<string, string>,
+  blocks: Record<string, string> = {},
+) {
+  const attackRejections: string[] = [];
+  const blockRejections: string[] = [];
+  const asked: { attackers: number; blockers: number } = { attackers: 0, blockers: 0 };
+  pump(runCombatAndExtraCombats(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined) {
+      asked.attackers++;
+      for (const violation of decision.presentationAttackDeclaration.rejection?.violations ?? [])
+        attackRejections.push(violation.kind);
+      return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+    }
+    if (decision.presentationBlockDeclaration !== undefined) {
+      asked.blockers++;
+      for (const violation of decision.presentationBlockDeclaration.rejection?.violations ?? [])
+        blockRejections.push(violation.kind);
+      return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+    }
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
+  });
+  return { attackRejections, blockRejections, asked };
+}
+
 /** Pays energy when offered; with `decline`, always declines. */
 const payEnergy =
   (decline = false): Answer =>
@@ -1662,6 +1695,245 @@ describe('Goblin Spymaster', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.23 Toby, Beastie Befriender
+// ---------------------------------------------------------------------------------------------
+
+describe('Toby, Beastie Befriender', () => {
+  const { card } = pinned('Toby, Beastie Befriender');
+  const SERVO = (name: string) =>
+    oracle({ name, typeLine: 'Artifact Creature — Servo', power: '1', toughness: '1' });
+
+  /** A Beast token for `playerId`, made by resolving Toby's own enters trigger. */
+  function beastFor(ctx: GameContext, playerId: string): EnginePermanent {
+    const toby = spawn(ctx, playerId, card);
+    const [ability] = interpretCard(card).triggers;
+    pump(
+      executeAbility(
+        ctx,
+        {
+          cardId: toby.cardId,
+          oracleId: card.oracleId,
+          name: card.name,
+          controllerId: playerId,
+        },
+        ability!,
+        [],
+      ),
+    );
+    const beast = ctx.state.battlefield
+      .filter((perm) => perm.name === 'Beast' && perm.isToken)
+      .at(-1)!;
+    // It has been under your control since an earlier turn.
+    beast.summoningSick = false;
+    return beast;
+  }
+
+  /** A creature token that is not a Beast, made for `playerId` as a creature token. */
+  const plainToken = (ctx: GameContext, playerId: string, name: string) =>
+    spawn(ctx, playerId, SERVO(name), { isToken: true });
+
+  it('toby-pinned-oracle-supported — the authored override carries the enters trigger and the flying static under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters' });
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'createToken',
+        count: { kind: 'const', n: 1 },
+        spec: {
+          name: 'Beast',
+          colors: ['W'],
+          power: 4,
+          toughness: 4,
+          ruleStatics: [{ kind: 'cantAttackAlone' }, { kind: 'cantBlockAlone' }],
+        },
+      },
+    ]);
+    expect(def.staticEffects).toMatchObject([
+      {
+        op: { layer: 6, addKeyword: 'flying' },
+        condition: { kind: 'countPermanents', scope: 'you', cmp: '>=', n: 4 },
+      },
+    ]);
+  });
+
+  it('toby-beast-token — casting Toby creates a 4/4 white Beast creature token for you', () => {
+    const ctx = pod('toby-cast');
+    castFromHand(ctx, 'P1', card, [{ symbol: 'W' }, ...generic(2)]);
+    resolveTop(ctx);
+    settle(ctx);
+    const beasts = ctx.state.battlefield.filter((perm) => perm.name === 'Beast');
+    expect(beasts).toHaveLength(1);
+    expect(beasts[0]!.isToken).toBe(true);
+    expect(beasts[0]!.controllerId).toBe('P1');
+    const chars = computeCharacteristics(ctx, beasts[0]!);
+    expect([chars.power, chars.toughness]).toEqual([4, 4]);
+    expect(chars.colors).toEqual(['W']);
+    expect(chars.subtypes).toEqual(['Beast']);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('toby-cant-attack-alone — the Beast alone is rejected and stands down; with another attacker, or with a second such Beast, it attacks', () => {
+    const ctx = pod('toby-attack-alone');
+    const beast = beastFor(ctx, 'P1');
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    // Alone: the declaration is rejected twice and the engine repairs it by standing the Beast down.
+    const alone = declaredCombat(ctx, { [beast.id]: 'P2' });
+    expect(alone.attackRejections).toEqual(['attackAlone']);
+    expect(beast.tapped).toBe(false);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    // Together with the Bear, it attacks.
+    const together = declaredCombat(ctx, { [beast.id]: 'P2', [bear.id]: 'P2' });
+    expect(together.attackRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(34);
+    // The Bear attacking alone is fine (it has no restriction).
+    beast.tapped = false;
+    bear.tapped = false;
+    declaredCombat(ctx, { [bear.id]: 'P3' });
+    expect(playerById(ctx, 'P3').life).toBe(38);
+    // Two Beasts attack together: each has the other.
+    const second = beastFor(ctx, 'P1');
+    second.summoningSick = false;
+    beast.tapped = false;
+    const pair = declaredCombat(ctx, { [beast.id]: 'P4', [second.id]: 'P4' });
+    expect(pair.attackRejections).toEqual([]);
+    expect(playerById(ctx, 'P4').life).toBe(32);
+  });
+
+  it('toby-attack-alone-required — a goaded Beast is not required to attack with no partner, and with one it is required, and the engine brings the partner along', () => {
+    const ctx = pod('toby-attack-required');
+    const beast = beastFor(ctx, 'P1');
+    beast.goadedBy = [{ goaderId: 'P2', appliedTurn: ctx.state.turnNumber }];
+    // Nobody else can attack (Toby is tapped): the Beast has no partner, so it is not forced.
+    const toby = ctx.state.battlefield.find((perm) => perm.name === card.name)!;
+    toby.tapped = true;
+    expect(mustAttackIn(ctx, 'P1', [beast])).toEqual({ [beast.id]: false });
+    toby.tapped = false;
+    expect(playerById(ctx, 'P3').life).toBe(40);
+    // With a partner it must attack (a goaded creature never attacks the goader).
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    beast.tapped = false;
+    expect(mustAttackIn(ctx, 'P1', [beast, bear])).toEqual({
+      [beast.id]: true,
+      [bear.id]: false,
+    });
+    // Declared alone while required: the Bear is brought along so the requirement is obeyed.
+    beast.tapped = false;
+    bear.tapped = false;
+    const repaired = declaredCombat(ctx, { [beast.id]: 'P3' });
+    expect(repaired.attackRejections).toEqual(['attackAlone']);
+    expect(beast.tapped).toBe(true);
+    expect(bear.tapped).toBe(true);
+  });
+
+  it('toby-cant-block-alone — the Beast alone cannot block, and with another of its controller’s blockers it can; another player’s blocker does not count', () => {
+    const ctx = pod('toby-block-alone');
+    const beast = beastFor(ctx, 'P2');
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    const other = spawn(ctx, 'P1', GRIZZLY('P1 Other'));
+    // Alone: rejected, and the engine stands it down, so the Raider is unblocked.
+    const alone = declaredCombat(ctx, { [raider.id]: 'P2' }, { [beast.id]: raider.id });
+    expect(alone.blockRejections).toEqual(['blockAlone']);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    // Together with the Bear (both block the Raider), the block stands.
+    raider.tapped = false;
+    const together = declaredCombat(
+      ctx,
+      { [raider.id]: 'P2' },
+      { [beast.id]: raider.id, [bear.id]: raider.id },
+    );
+    expect(together.blockRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    // A blocker another player declares does not make it "not alone": P2's Beast, P3's Bear.
+    const bearP3 = spawn(ctx, 'P3', GRIZZLY('P3 Bear'));
+    const second = spawn(ctx, 'P1', GRIZZLY('P1 Second Raider'));
+    other.tapped = false;
+    bear.tapped = true;
+    const apart = declaredCombat(
+      ctx,
+      { [second.id]: 'P2', [other.id]: 'P3' },
+      { [beast.id]: second.id, [bearP3.id]: other.id },
+    );
+    expect(apart.blockRejections).toEqual(['blockAlone']);
+    expect(playerById(ctx, 'P2').life).toBe(36);
+  });
+
+  it('toby-restriction-scope — only the Beast token has the restriction: Toby and a second creature of yours attack and block alone freely', () => {
+    const ctx = pod('toby-scope');
+    const toby = spawn(ctx, 'P1', card);
+    const run = declaredCombat(ctx, { [toby.id]: 'P2' });
+    expect(run.attackRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(39);
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const attacker = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    toby.tapped = false;
+    const block = declaredCombat(ctx, { [attacker.id]: 'P2' }, { [bear.id]: attacker.id });
+    expect(block.blockRejections).toEqual([]);
+  });
+
+  it('toby-flying — creature tokens you control have flying while you control four or more creature tokens, and not otherwise', () => {
+    const ctx = pod('toby-flying');
+    const toby = spawn(ctx, 'P1', card);
+    const keywordsOf = (perm: EnginePermanent) => computeCharacteristics(ctx, perm).keywords;
+    const tokens = [1, 2, 3].map((n) => plainToken(ctx, 'P1', `Token ${n}`));
+    for (const token of tokens) expect(keywordsOf(token)).not.toContain('flying');
+    const fourth = plainToken(ctx, 'P1', 'Token 4');
+    for (const token of [...tokens, fourth]) expect(keywordsOf(token)).toContain('flying');
+    // Toby and nontoken creatures are not tokens; an opponent's tokens are not yours.
+    expect(keywordsOf(toby)).not.toContain('flying');
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    expect(keywordsOf(bear)).not.toContain('flying');
+    const theirs = plainToken(ctx, 'P2', 'Their Token');
+    expect(keywordsOf(theirs)).not.toContain('flying');
+    // Checked continuously: back to three, and nobody has flying.
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== fourth.id);
+    for (const token of tokens) expect(keywordsOf(token)).not.toContain('flying');
+  });
+
+  it('toby-flying-count — non-creature tokens do not count toward four, and four with Toby gone gives nothing', () => {
+    const ctx = pod('toby-flying-count');
+    const toby = spawn(ctx, 'P1', card);
+    const keywordsOf = (perm: EnginePermanent) => computeCharacteristics(ctx, perm).keywords;
+    const creatures = [1, 2, 3].map((n) => plainToken(ctx, 'P1', `Token ${n}`));
+    const treasure = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Treasure',
+        typeLine: 'Artifact — Treasure',
+        power: null,
+        toughness: null,
+      }),
+      { isToken: true },
+    );
+    expect(treasure.isToken).toBe(true);
+    for (const token of creatures) expect(keywordsOf(token)).not.toContain('flying');
+    const fourth = plainToken(ctx, 'P1', 'Token 4');
+    expect(keywordsOf(fourth)).toContain('flying');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== toby.id);
+    for (const token of [...creatures, fourth]) expect(keywordsOf(token)).not.toContain('flying');
+  });
+
+  it('toby-whole-game — cast Toby, the Beast arrives, and on a later turn it attacks only alongside another creature', () => {
+    const ctx = pod('toby-chain');
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    castFromHand(ctx, 'P1', card, [{ symbol: 'W' }, ...generic(2)]);
+    resolveTop(ctx);
+    settle(ctx);
+    const beast = ctx.state.battlefield.find((perm) => perm.name === 'Beast')!;
+    beast.summoningSick = false;
+    const lone = declaredCombat(ctx, { [beast.id]: 'P2' });
+    expect(lone.attackRejections).toEqual(['attackAlone']);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    const pair = declaredCombat(ctx, { [beast.id]: 'P2', [bear.id]: 'P2' });
+    expect(pair.attackRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(34);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -1729,6 +2001,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Goblin Spymaster',
     sha256: 'dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Toby, Beastie Befriender',
+    sha256: 'ab14f8f89747265e1dc7c2837a49999e1ab57539f9ff54794f332d4f8da17ab0',
+    clauseCount: 2,
     authored: true,
   },
 ];

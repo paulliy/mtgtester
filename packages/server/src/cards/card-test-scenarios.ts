@@ -13067,6 +13067,82 @@ function goblinSpymasterScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function tobyScenario(gameId: GameId, kind: 'block' | 'flying'): CardTestScenario {
+  const toby = pinnedFrom(COVERAGE_PR07, 'Toby, Beastie Befriender');
+  const block = kind === 'block';
+  return pr01Scenario(gameId, {
+    id: block ? 'toby-viewer-beast-cant-block-alone' : 'toby-viewer-flying-with-four-tokens',
+    title: block
+      ? 'Toby, Beastie Befriender: the Beast token cannot block alone'
+      : 'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+    instructions: block
+      ? [
+          'Toby is in your hand with a Plains and two Forests on your battlefield; P2 controls Lab Ox (4/4). Cast Toby and let it resolve: its enters trigger creates a 4/4 white Beast token.',
+          'Pass priority to P2’s turn. P2 attacks you with Lab Ox. Declare the Beast as the only blocker and confirm: the engine rejects it because the Beast can’t block alone.',
+          'Then also block with Toby and confirm: now the Beast may block.',
+        ]
+      : [
+          'Toby and three Lab Token Forges are in your hand, with a Plains and five Forests on your battlefield.',
+          'Cast Toby: its Beast token is your first creature token. Then cast a Lab Token Forge three times, each making a 1/1 Servo token.',
+          'Once you control four creature tokens, every one of them has flying.',
+        ],
+    expectedOutcome: block
+      ? 'The first declaration was rejected with “Beast can’t block alone”. Beast and Toby then blocked Lab Ox together: you took no damage and are at 40.'
+      : 'With four creature tokens (the Beast and three Servos) the Beast and the Servos have flying; with three they did not.',
+    oracleSha256: toby.sha256,
+    clauseIds: block
+      ? ['toby-beast-token-cant-attack-or-block-alone']
+      : ['toby-creature-tokens-have-flying'],
+    decks: {
+      P1: block
+        ? [toby.card, PLAINS, FOREST, FOREST]
+        : [
+            toby.card,
+            LAB_TOKEN_FORGE,
+            LAB_TOKEN_FORGE,
+            LAB_TOKEN_FORGE,
+            PLAINS,
+            FOREST,
+            FOREST,
+            FOREST,
+            FOREST,
+            FOREST,
+          ],
+      P2: block ? [LAB_OX, FOREST, FOREST] : PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: block
+            ? ['Toby, Beastie Befriender']
+            : ['Toby, Beastie Befriender', 'Lab Token Forge', 'Lab Token Forge', 'Lab Token Forge'],
+        },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: block
+            ? ['Plains', 'Forest', 'Forest']
+            : ['Plains', 'Forest', 'Forest', 'Forest', 'Forest', 'Forest'],
+        },
+        ...(block ? [{ playerId: 'P2' as const, cardNames: ['Lab Ox'] }] : []),
+      ],
+      ...(block
+        ? {
+            continueThroughCombat: true,
+            continueToPostcombatMain: true,
+            continueToEndStep: true,
+            continueThroughNextTurn: true,
+          }
+        : {}),
+    },
+    ...(block ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } } : {}),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13379,6 +13455,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'combat-calligrapher-viewer-inkling-cant-attack-you',
   'combat-calligrapher-viewer-attacker-creates-inkling',
   'goblin-spymaster-viewer-opponent-end-step-token',
+  'toby-viewer-beast-cant-block-alone',
+  'toby-viewer-flying-with-four-tokens',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13867,6 +13945,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'combat-calligrapher-viewer-attacker-creates-inkling': (gameId) =>
     combatCalligrapherScenario(gameId, 'token'),
   'goblin-spymaster-viewer-opponent-end-step-token': goblinSpymasterScenario,
+  'toby-viewer-beast-cant-block-alone': (gameId) => tobyScenario(gameId, 'block'),
+  'toby-viewer-flying-with-four-tokens': (gameId) => tobyScenario(gameId, 'flying'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -96,6 +96,20 @@ function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): bool
   );
 }
 
+/**
+ * "Can't attack alone" / "can't block alone" (Toby's Beast token, CR 506.5): a creature with the
+ * rule static, read off the creature itself (the static's source).
+ */
+function cantActAlone(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  kind: 'cantAttackAlone' | 'cantBlockAlone',
+): boolean {
+  return gatherRuleStatics(ctx).some(
+    (entry) => entry.static.kind === kind && entry.sourceCardId === creature.cardId,
+  );
+}
+
 function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   if (perm.tapped) return false;
   if (hasKeyword(ctx, perm, 'defender')) return false;
@@ -428,6 +442,27 @@ function commitAttacker(
 }
 
 /**
+ * Must this creature be declared as an attacker (CR 508.1d)? It has a requirement it can obey for
+ * free. A creature that can't attack alone obeys it only together with another creature that can
+ * be declared, so with no such partner it is not required to attack (CR 506.5, 508.1c).
+ */
+function mustAttackNow(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  eligible: readonly EnginePermanent[],
+  opponents: readonly EnginePlayerState[],
+): boolean {
+  if (!hasAttackRequirement(ctx, creature)) return false;
+  if (freeAttackTargetsFor(ctx, creature, opponents).length === 0) return false;
+  return (
+    !cantActAlone(ctx, creature, 'cantAttackAlone') ||
+    eligible.some(
+      (other) => other.id !== creature.id && attackTargetsFor(ctx, other, opponents).length > 0,
+    )
+  );
+}
+
+/**
  * Build the per-creature legal-defender set for every eligible attacker (CR 508.1c/d) — the
  * data both the presentation layer and the offered menu are built from. `defenders` alone
  * already encodes restrictions and costs (item 15); `mustAttack` encodes the one requirement
@@ -443,9 +478,7 @@ function buildAttackSubjects(
   return eligible.map((creature) => {
     const pt = effectivePT(ctx, creature);
     const legal = attackTargetsFor(ctx, creature, opponents);
-    const mustAttack =
-      hasAttackRequirement(ctx, creature) &&
-      freeAttackTargetsFor(ctx, creature, opponents).length > 0;
+    const mustAttack = mustAttackNow(ctx, creature, eligible, opponents);
     return {
       subjectId: creature.id,
       name: creature.name,
@@ -577,6 +610,17 @@ function validateAttackDeclaration(
   eligible: readonly EnginePermanent[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): CombatViolation[] {
+  // CR 506.5: a creature that can't attack alone is declared only with another attacker.
+  const declared = eligible.filter((creature) => (assignment.get(creature.id) ?? null) !== null);
+  const lone = declared.length === 1 ? declared[0] : undefined;
+  if (lone !== undefined && cantActAlone(ctx, lone, 'cantAttackAlone'))
+    return [
+      {
+        subjectId: lone.id,
+        kind: 'attackAlone',
+        message: `${lone.name} can't attack alone`,
+      },
+    ];
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
@@ -621,9 +665,7 @@ function* applyAttackDeclaration(
   for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
     yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
     for (const creature of creatures) {
-      const hadToAttack =
-        hasAttackRequirement(ctx, creature) &&
-        freeAttackTargetsFor(ctx, creature, opponents).length > 0;
+      const hadToAttack = mustAttackNow(ctx, creature, eligible, opponents);
       commitAttacker(
         ctx,
         creature,
@@ -654,6 +696,30 @@ function repairAttackDeclaration(
   let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
   let guard = eligible.length + 1;
   while (violations.length > 0 && guard-- > 0) {
+    // A creature that can't attack alone, declared alone (CR 506.5): when it has a requirement
+    // the declaration has to obey (CR 508.1d), another creature joins it; otherwise it stands down.
+    const alone = violations.find((v) => v.kind === 'attackAlone');
+    if (alone !== undefined) {
+      const lone = eligible.find((c) => c.id === alone.subjectId) as EnginePermanent;
+      const partner = mustAttackNow(ctx, lone, eligible, opponents)
+        ? eligible
+            .filter((c) => c.id !== lone.id && freeAttackTargetsFor(ctx, c, opponents).length > 0)
+            .sort(
+              (a, b) =>
+                effectivePT(ctx, a).power - effectivePT(ctx, b).power || a.id.localeCompare(b.id),
+            )[0]
+        : undefined;
+      const target =
+        partner === undefined ? undefined : freeAttackTargetsFor(ctx, partner, opponents)[0];
+      if (partner !== undefined && target !== undefined)
+        repaired.set(partner.id, {
+          defenderId: target.player.id,
+          planeswalkerId: target.planeswalker?.id ?? null,
+        });
+      else repaired.set(lone.id, null);
+      violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+      continue;
+    }
     const violatedIds = new Set(violations.map((v) => v.subjectId));
     const candidates = eligible
       .filter((c) => violatedIds.has(c.id))
@@ -662,8 +728,7 @@ function repairAttackDeclaration(
       );
     const pick = candidates[0];
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
-    const mustAttack =
-      hasAttackRequirement(ctx, pick) && freeAttackTargetsFor(ctx, pick, opponents).length > 0;
+    const mustAttack = mustAttackNow(ctx, pick, eligible, opponents);
     const free = mustAttack ? freeAttackTargetsFor(ctx, pick, opponents)[0] : undefined;
     repaired.set(
       pick.id,
@@ -912,6 +977,18 @@ function validateBlockDeclaration(
       });
     }
   }
+  // CR 506.5: a creature that can't block alone blocks only if another creature of the same
+  // defending player is declared as a blocker too (this is that player's whole declaration).
+  const blocking = candidates.filter(
+    ({ blocker }) => (assignment.get(blocker.id) ?? null) !== null,
+  );
+  const lone = blocking.length === 1 ? blocking[0]?.blocker : undefined;
+  if (lone !== undefined && cantActAlone(ctx, lone, 'cantBlockAlone'))
+    violations.push({
+      subjectId: lone.id,
+      kind: 'blockAlone',
+      message: `${lone.name} can't block alone`,
+    });
   return violations;
 }
 
@@ -971,8 +1048,12 @@ function repairBlockDeclaration(
       )[0];
     if (pick === undefined) break; // unreachable: every violation names a candidate
     const currentAttackerId = repaired.get(pick.blocker.id);
+    // A lone blocker that can't block alone stands down; no other attacker fixes that.
+    const alone = violations.some(
+      (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
+    );
     const alternative =
-      pick.blocker.mustBlockThisTurn === true
+      pick.blocker.mustBlockThisTurn === true && !alone
         ? pick.blockable.find((a) => a.id !== currentAttackerId && !hasKeyword(ctx, a, 'menace'))
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);

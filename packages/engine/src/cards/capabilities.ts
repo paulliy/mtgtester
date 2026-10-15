@@ -1330,6 +1330,8 @@ const families = {
       counterPlacementReplacement: true,
       attackTax: true,
       attackRestriction: true,
+      cantAttackAlone: true,
+      cantBlockAlone: true,
       targetLifeTax: true,
       convoke: true,
       improvise: true,

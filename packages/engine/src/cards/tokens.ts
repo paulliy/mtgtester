@@ -160,6 +160,18 @@ export const BEAST_3_3_GREEN: TokenSpec = creatureToken({
   toughness: 3,
 });
 
+/** Toby's Beast: "This token can't attack or block alone." (CR 506.5) */
+export const BEAST_4_4_WHITE_CANT_ACT_ALONE: TokenSpec = {
+  ...creatureToken({
+    name: 'Beast',
+    subtypes: ['Beast'],
+    colors: ['W'],
+    power: 4,
+    toughness: 4,
+  }),
+  ruleStatics: [{ kind: 'cantAttackAlone' }, { kind: 'cantBlockAlone' }],
+};
+
 export const THOPTER_1_1_FLYING: TokenSpec = creatureToken({
   name: 'Thopter',
   subtypes: ['Thopter'],

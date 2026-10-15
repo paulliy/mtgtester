@@ -432,3 +432,53 @@ describe('Goblin Spymaster Card Test Lab scenarios', () => {
     replays('goblin-spymaster-viewer-opponent-end-step-token', steps);
   });
 });
+
+describe('Toby, Beastie Befriender Card Test Lab scenarios', () => {
+  it('toby-viewer-beast-cant-block-alone — the Beast alone is rejected, then Beast and Toby block Lab Ox together', () => {
+    const rejections: string[] = [];
+    const steps: Step[] = [
+      { action: 'Cast Toby, Beastie Befriender' },
+      // Slot 0 is Toby, slot 1 is the Beast (battlefield order): the Beast alone.
+      { action: 'Declare blockers', targets: ['__no_block__', 'Lab Ox'] },
+      { action: 'Declare blockers', targets: ['Lab Ox', 'Lab Ox'] },
+    ];
+    const { scenario, state, seat, onBattlefield, prompts } = run(
+      'toby-viewer-beast-cant-block-alone',
+      steps,
+      (request) => {
+        if (/fix the flagged problem/.test(request.prompt ?? '')) rejections.push(request.prompt);
+      },
+    );
+    expect(rejections).toHaveLength(1);
+    expect(prompts.filter((prompt) => prompt.startsWith('Declare blockers'))).toHaveLength(2);
+    const beast = onBattlefield('Beast')[0];
+    expect(beast?.controllerId).toBe('P1');
+    expect(seat('P1').life).toBe(40);
+    expect(onBattlefield('Lab Ox')).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('toby-viewer-beast-cant-block-alone', steps);
+  });
+
+  it('toby-viewer-flying-with-four-tokens — the Beast and three Servos have flying once you control four creature tokens', () => {
+    const steps: Step[] = [
+      { action: 'Cast Toby, Beastie Befriender' },
+      { action: 'Cast Lab Token Forge' },
+      { action: 'Cast Lab Token Forge' },
+      { action: 'Cast Lab Token Forge' },
+    ];
+    const { scenario, state, onBattlefield } = run('toby-viewer-flying-with-four-tokens', steps);
+    expect(onBattlefield('Servo')).toHaveLength(3);
+    expect(onBattlefield('Beast')).toHaveLength(1);
+    const flying = (name: string) =>
+      scenario.engine
+        .view('P1')
+        .battlefield.filter((perm) => perm.name === name)
+        .map((perm) => perm.keywords?.includes('flying') === true);
+    expect(flying('Beast')).toEqual([true]);
+    expect(flying('Servo')).toEqual([true, true, true]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('toby-viewer-flying-with-four-tokens', steps);
+  });
+});

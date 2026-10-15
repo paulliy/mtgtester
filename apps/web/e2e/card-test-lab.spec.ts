@@ -9810,3 +9810,62 @@ test("Goblin Spymaster: at an opponent's end step that player creates a Goblin t
     page.locator('.human-zone').getByRole('img', { name: 'Goblin', exact: true }),
   ).toHaveCount(0);
 });
+
+test('Toby, Beastie Befriender: the Beast token cannot block alone', async ({ page }) => {
+  await runScenario(page, 'Toby, Beastie Befriender: the Beast token cannot block alone');
+  const toby = handCard(page, 'Toby, Beastie Befriender');
+  await expect(toby).toHaveClass(/actionable/);
+  await toby.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Beast'));
+  // P2 attacks with Lab Ox. The Beast alone is not a legal declaration.
+  const declare = page.getByRole('button', { name: /Declare blockers/ });
+  await passUntil(page, declare);
+  await declare.click();
+  const rows = page.locator('.combat-assignment-row');
+  await rows
+    .filter({ has: page.getByText('Beast', { exact: true }) })
+    .getByRole('button', { name: 'Lab Ox' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await expect(page.getByText(/Beast can't block alone/)).toBeVisible();
+  // Adding Toby as a second blocker makes it legal.
+  await rows
+    .filter({ has: page.getByText('Toby, Beastie Befriender', { exact: true }) })
+    .getByRole('button', { name: 'Lab Ox' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
+
+test('Toby, Beastie Befriender: creature tokens have flying while you control four or more', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+  );
+  const cast = async (card: string) => {
+    const hand = handCard(page, card).first();
+    await expect(hand).toHaveClass(/actionable/, { timeout: 15_000 });
+    await hand.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+  };
+  await cast('Toby, Beastie Befriender');
+  await passStackUntil(page, permanent(page, 'Beast'));
+  await expect(permanent(page, 'Beast')).not.toContainText(/flying/i);
+  for (let servos = 1; servos <= 3; servos++) {
+    await cast('Lab Token Forge');
+    await passStackUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  }
+  await expect(permanent(page, 'Beast')).toContainText(/flying/i);
+  await expect(permanent(page, 'Servo')).toContainText(/flying/i);
+});

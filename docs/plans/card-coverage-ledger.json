@@ -3866,16 +3866,20 @@
   {
     "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
     "name": "Toby, Beastie Befriender",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\"\"",
       "unrecognized rules text: \"As long as you control four or more creature tokens, creature tokens you control have flying.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",

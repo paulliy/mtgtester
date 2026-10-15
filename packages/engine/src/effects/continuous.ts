@@ -35,6 +35,7 @@ import type { Color } from '@mtg/shared';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
 import { evaluateCondition } from '../cards/condition';
+import type { Condition } from '../cards/condition';
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
@@ -71,6 +72,12 @@ interface LayerEffect {
   applies: Applicability;
   op: ContinuousOp;
   timestamp: number;
+  /**
+   * "As long as you control four or more creature tokens" (Toby): a count of permanents, judged on
+   * the characteristics the layers have produced so far (CR 613.8a: it can change whether this
+   * effect exists), so it cannot be read before the pass the way other static conditions are.
+   */
+  condition?: Extract<Condition, { kind: 'countPermanents' }>;
 }
 
 /** Mutable per-permanent state threaded through the layers. */
@@ -132,8 +139,10 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
           `engine bug: ${def.name} has a static effect whose selector reads power or keywords — event-only selectors cannot be a continuous effect's affected set`,
         );
       }
+      const boardCondition = s.condition?.kind === 'countPermanents' ? s.condition : undefined;
       if (
         s.condition !== undefined &&
+        boardCondition === undefined &&
         !evaluateCondition(ctx, s.condition, {
           cardId: source.cardId,
           controllerId: source.controllerId,
@@ -157,6 +166,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
           },
           op: { layer: 6, addProtection: [source.chosenOption as Color] },
           timestamp: source.timestamp,
+          ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
         });
         continue;
       }
@@ -174,6 +184,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
         },
         op: s.op,
         timestamp: source.timestamp,
+        ...(boardCondition !== undefined ? { condition: boardCondition } : {}),
       });
     }
     if (!source.transformed && def.artifactGraveyardAbilities === true) {
@@ -256,11 +267,20 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
  * Moon is a Mountain with nothing but "{T}: Add {R}". This is the hinge of CR 613.8: it lets
  * one layer-4 effect delete another's, so the deleted one is *dependent* and must wait.
  */
-function effectExists(work: WorkMap, effect: LayerEffect): boolean {
+function effectExists(ctx: GameContext, work: WorkMap, effect: LayerEffect): boolean {
   // CR 611.2c: a resolved spell's effect is independent of its source, which may be long gone.
   if (effect.applies.kind === 'fixed') return true;
   const source = work.get(effect.applies.source.cardId);
-  return source !== undefined && !source.chars.loseAbilities;
+  if (source === undefined || source.chars.loseAbilities) return false;
+  if (effect.condition === undefined) return true;
+  const count = scopeOf(ctx, work, effect)?.countPermanents?.(
+    effect.condition.selector,
+    effect.condition.scope,
+  );
+  return (
+    count !== undefined &&
+    (effect.condition.cmp === '>=' ? count >= effect.condition.n : count <= effect.condition.n)
+  );
 }
 
 /**
@@ -534,7 +554,7 @@ function applyOpTo(
 }
 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
-  if (!effectExists(work, effect)) return;
+  if (!effectExists(ctx, work, effect)) return;
   const scope = scopeOf(ctx, work, effect);
   for (const entry of work.values()) {
     if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op, scope);
@@ -547,7 +567,7 @@ function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
  * effect's behavior changed.
  */
 function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): string {
-  if (!effectExists(work, effect)) return '<nonexistent>';
+  if (!effectExists(ctx, work, effect)) return '<nonexistent>';
   const targets: string[] = [];
   for (const entry of work.values()) {
     if (affects(ctx, effect, entry)) targets.push(entry.perm.cardId);

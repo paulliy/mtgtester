@@ -171,6 +171,14 @@ export type RuleStatic =
       includePlaneswalkers: true;
       cost?: { perCounterOnCreature: true };
     }
+  /**
+   * "This creature can't attack alone" / "can't block alone" (Toby's Beast token). The creature
+   * is this permanent itself. Attacking alone means being the only creature declared as an
+   * attacker; blocking alone means being the only creature its controller declares as a blocker
+   * (CR 506.5). Such a creature may be declared only together with another one.
+   */
+  | { kind: 'cantAttackAlone' }
+  | { kind: 'cantBlockAlone' }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }
