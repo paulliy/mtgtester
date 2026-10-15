@@ -143,10 +143,12 @@ describe('immediate mana rider scope contracts', () => {
     const state = setup([]);
     const before = cloneContractContext(state.ctx);
     expect(() =>
-      applyManaRider(state.ctx, state.source, state.player, {
-        op: 'gainLife',
-        amount: { kind: 'lifeTotal' },
-      }),
+      pump(
+        applyManaRider(state.ctx, state.source, state.player, {
+          op: 'gainLife',
+          amount: { kind: 'lifeTotal' },
+        }),
+      ),
     ).toThrow('unavailable ability scope');
     expect(state.ctx.state).toEqual(before.state);
   });

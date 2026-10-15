@@ -131,11 +131,13 @@ describe('Neriv, Heart of the Storm — damage-doubling replacement (CR 616)', (
     const fresh = spawn(ctx, 'P1', bear('3', '3', 'Fresh Attacker'));
     const target = spawn(ctx, 'P2', bear('9', '9', 'Sturdy Blocker'));
 
-    dealDamageToCreature(ctx, permanentSource(fresh), target, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(fresh), target, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
 
     expect(target.damageMarked).toBe(6);
   });
@@ -147,11 +149,13 @@ describe('Neriv, Heart of the Storm — damage-doubling replacement (CR 616)', (
     ctx.state.turnNumber += 1; // "old" entered last turn, relative to now
     const target = spawn(ctx, 'P2', bear('9', '9', 'Sturdy Blocker 2'));
 
-    dealDamageToCreature(ctx, permanentSource(old), target, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(old), target, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
 
     expect(target.damageMarked).toBe(3);
   });
@@ -162,11 +166,13 @@ describe('Neriv, Heart of the Storm — damage-doubling replacement (CR 616)', (
     const theirs = spawn(ctx, 'P2', bear('3', '3', 'Their Fresh Attacker'));
     const target = spawn(ctx, 'P1', bear('9', '9', 'Sturdy Blocker 3'));
 
-    dealDamageToCreature(ctx, permanentSource(theirs), target, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(theirs), target, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
 
     expect(target.damageMarked).toBe(3);
   });
@@ -180,16 +186,20 @@ describe('Gisela, Blade of Goldnight — target-aware damage replacements', () =
     const ownTarget = spawn(ctx, 'P1', bear('9', '9', 'Own Target'));
     const opposingTarget = spawn(ctx, 'P2', bear('9', '9', 'Opposing Target'));
 
-    dealDamageToCreature(ctx, permanentSource(source), ownTarget, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
-    dealDamageToCreature(ctx, permanentSource(source), opposingTarget, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), ownTarget, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), opposingTarget, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
 
     expect(ownTarget.damageMarked).toBe(1);
     expect(opposingTarget.damageMarked).toBe(6);
@@ -254,11 +264,13 @@ describe('Rith, Liberated Primeval — turn-scoped excess damage feeds an interv
     const opposing = spawn(ctx, 'P2', bear('2', '2', 'Overkilled Bear'));
 
     // 5 damage to a 2-toughness creature: 3 is excess.
-    dealDamageToCreature(ctx, permanentSource(source), opposing, 5, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), opposing, 5, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(ctx.state.excessDamageControllerIds).toContain('P2');
 
     const trigger = interpretCard(rith()).triggers.find(
@@ -283,11 +295,13 @@ describe('Rith, Liberated Primeval — turn-scoped excess damage feeds an interv
     const opposing = spawn(ctx, 'P2', bear('2', '9', 'Sturdy Bear'));
 
     // 2 damage to a 9-toughness creature: no excess.
-    dealDamageToCreature(ctx, permanentSource(source), opposing, 2, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), opposing, 2, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(ctx.state.excessDamageControllerIds).not.toContain('P2');
 
     const trigger = interpretCard(rith()).triggers.find(
@@ -310,11 +324,13 @@ describe('Rith, Liberated Primeval — turn-scoped excess damage feeds an interv
     const source = spawn(ctx, 'P1', rith());
     const own = spawn(ctx, 'P1', bear('2', '2', 'My Own Overkilled Bear'));
 
-    dealDamageToCreature(ctx, permanentSource(source), own, 5, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), own, 5, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(ctx.state.excessDamageControllerIds).toContain('P1');
 
     const trigger = interpretCard(rith()).triggers.find(

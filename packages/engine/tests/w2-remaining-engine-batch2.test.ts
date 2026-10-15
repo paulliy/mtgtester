@@ -251,7 +251,7 @@ describe('Twitching Doll', () => {
     const ctx = pod('twitching-doll');
     const doll = spawn(ctx, 'P1', card);
     const def = interpretCard(card);
-    applyManaRider(ctx, doll, playerOf(ctx, 'P1'), def.manaAbilities[0]!.onActivate![0]!);
+    pump(applyManaRider(ctx, doll, playerOf(ctx, 'P1'), def.manaAbilities[0]!.onActivate![0]!));
     doll.counters['+1/+1'] = 1;
     expect(doll.counters['nest']).toBe(1);
     ctx.state.battlefield.splice(ctx.state.battlefield.indexOf(doll), 1);

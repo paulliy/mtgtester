@@ -352,7 +352,7 @@ describe('W2 card coverage', () => {
     const doll = spawn(ctx, 'P1', real('Twitching Doll'));
     const def = definitions.get('Twitching Doll')!;
     const player = ctx.state.players[0]!;
-    applyManaRider(ctx, doll, player, def.manaAbilities[0]!.onActivate![0]!);
+    pump(applyManaRider(ctx, doll, player, def.manaAbilities[0]!.onActivate![0]!));
     doll.counters['+1/+1'] = 1;
     expect(doll.counters['nest']).toBe(1);
     ctx.state.battlefield.splice(ctx.state.battlefield.indexOf(doll), 1);

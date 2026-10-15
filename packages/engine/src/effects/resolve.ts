@@ -223,7 +223,8 @@ export interface EffectSource {
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
-export function dealDamageToCreature(
+// eslint-disable-next-line require-yield -- a generator so a CR 616.1 replacement-order choice can interrupt it
+export function* dealDamageToCreature(
   ctx: GameContext,
   source: EffectSource,
   target: EnginePermanent,
@@ -242,7 +243,7 @@ export function dealDamageToCreature(
      */
     dealtTotals?: Map<EnginePermanent, number>;
   },
-): void {
+): GameGen<void> {
   if (amount <= 0) return;
   if (opts.combat && ctx.state.combatDamagePrevention.all) {
     emit(ctx, 'damagePrevented', {
@@ -310,7 +311,8 @@ export function dealDamageToCreature(
  * Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). Returns the
  * damage actually dealt — 0 when it was prevented — for "deals damage to a player" consequences.
  */
-export function dealDamageToPlayer(
+// eslint-disable-next-line require-yield -- a generator so a CR 616.1 replacement-order choice can interrupt it
+export function* dealDamageToPlayer(
   ctx: GameContext,
   source: EffectSource,
   target: EnginePlayerState,
@@ -321,7 +323,7 @@ export function dealDamageToPlayer(
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
   },
-): number {
+): GameGen<number> {
   if (amount <= 0) return 0;
   if (
     opts.combat &&
@@ -402,12 +404,12 @@ export function dealDamageToPlayer(
 }
 
 /** Deal non-combat damage from `source` to whichever kind of object `id` names. */
-function dealDamageToObject(
+function* dealDamageToObject(
   ctx: GameContext,
   source: EffectSource,
   id: ObjectId,
   amount: number,
-): void {
+): GameGen<void> {
   const sourcePermanent = ctx.state.battlefield.find(
     (p) => p.cardId === source.cardId && (source.id === undefined || p.id === source.id),
   );
@@ -424,7 +426,7 @@ function dealDamageToObject(
   const sourceColors = sourceColorsOf(ctx, source.cardId, source.oracleId, source.lastKnownColors);
   const targetPlayer = ctx.state.players.find((p) => p.id === id);
   if (targetPlayer !== undefined) {
-    dealDamageToPlayer(ctx, source, targetPlayer, amount, {
+    yield* dealDamageToPlayer(ctx, source, targetPlayer, amount, {
       combat: false,
       sourceIsCommander: false,
       sourceHasLifelink,
@@ -477,7 +479,7 @@ function dealDamageToObject(
     });
     return;
   }
-  dealDamageToCreature(ctx, source, perm, amount, {
+  yield* dealDamageToCreature(ctx, source, perm, amount, {
     combat: false,
     sourceHasDeathtouch,
     sourceHasLifelink,
@@ -1457,14 +1459,14 @@ export function* executeAbility(
         const secondPower = effectivePT(ctx, second).power;
         const firstTraits = combatDamageTraits(ctx, first);
         const secondTraits = combatDamageTraits(ctx, second);
-        dealDamageToCreature(ctx, permanentSource(first), second, firstPower, {
+        yield* dealDamageToCreature(ctx, permanentSource(first), second, firstPower, {
           combat: false,
           sourceHasDeathtouch: firstTraits.deathtouch,
           sourceHasLifelink: firstTraits.lifelink,
           sourceHasInfect: firstTraits.infect,
           sourceColors: firstTraits.colors,
         });
-        dealDamageToCreature(ctx, permanentSource(second), first, secondPower, {
+        yield* dealDamageToCreature(ctx, permanentSource(second), first, secondPower, {
           combat: false,
           sourceHasDeathtouch: secondTraits.deathtouch,
           sourceHasLifelink: secondTraits.lifelink,
@@ -1635,7 +1637,7 @@ export function* executeAbility(
         if (t === null) break;
         const damageSource = effect.source === undefined ? source : damageSourceOf(effect.source);
         if (damageSource === undefined) break;
-        dealDamageToObject(ctx, damageSource, t, amountOf(effect.amount));
+        yield* dealDamageToObject(ctx, damageSource, t, amountOf(effect.amount));
         break;
       }
       case 'dealDamageUnlessSacrifice': {
@@ -1644,7 +1646,7 @@ export function* executeAbility(
         const amount = amountOf(effect.amount);
         const targetPlayer = ctx.state.players.find((p) => p.id === t);
         if (targetPlayer === undefined) {
-          dealDamageToObject(ctx, source, t, amount);
+          yield* dealDamageToObject(ctx, source, t, amount);
           break;
         }
         const creatures = ctx.state.battlefield.filter(
@@ -1674,13 +1676,13 @@ export function* executeAbility(
             sacrificed = true;
           }
         }
-        if (!sacrificed) dealDamageToObject(ctx, source, t, amount);
+        if (!sacrificed) yield* dealDamageToObject(ctx, source, t, amount);
         break;
       }
       case 'dealDamageEachChosen': {
         const amount = amountOf(effect.amount);
         for (const id of chosenReferents(effect.targetSlot)) {
-          dealDamageToObject(ctx, source, id, amount);
+          yield* dealDamageToObject(ctx, source, id, amount);
         }
         break;
       }
@@ -2014,7 +2016,7 @@ export function* executeAbility(
             continue;
           }
           const currentId = movedReferent(id);
-          if (currentId !== null) dealDamageToObject(ctx, source, currentId, amount);
+          if (currentId !== null) yield* dealDamageToObject(ctx, source, currentId, amount);
         }
         break;
       }
@@ -2612,7 +2614,7 @@ export function* executeAbility(
         // 702.90b): the shared object path reads them, as for any other noncombat damage.
         const amount = amountOf(effect.amount);
         for (const opp of opponentsOf(ctx, controller.id))
-          dealDamageToObject(ctx, source, opp.id, amount);
+          yield* dealDamageToObject(ctx, source, opp.id, amount);
         break;
       }
       case 'damageEachCreatureController': {
@@ -2624,7 +2626,7 @@ export function* executeAbility(
         );
         for (const creature of creatures) {
           const owner = playerById(ctx, creature.controllerId);
-          dealDamageToPlayer(ctx, source, owner, amount, {
+          yield* dealDamageToPlayer(ctx, source, owner, amount, {
             combat: false,
             sourceIsCommander: false,
             sourceHasLifelink: false,
@@ -2781,7 +2783,7 @@ export function* executeAbility(
         if (target === undefined) break;
         target.tapped = true;
         queueTriggersForObject(ctx, 'becomesTapped', target);
-        dealDamageToPlayer(
+        yield* dealDamageToPlayer(
           ctx,
           source,
           playerById(ctx, target.controllerId),
@@ -2983,7 +2985,7 @@ export function* executeAbility(
           const chars = computeCharacteristics(ctx, perm);
           return chars.types.includes('Land') && !chars.supertypes.includes('Basic');
         }).length;
-        dealDamageToPlayer(ctx, source, target, amount, {
+        yield* dealDamageToPlayer(ctx, source, target, amount, {
           combat: false,
           sourceIsCommander: false,
           sourceHasLifelink: false,
@@ -3818,7 +3820,7 @@ export function* executeAbility(
         break;
       }
       case 'damageController':
-        dealDamageToPlayer(ctx, source, controller, effect.amount, {
+        yield* dealDamageToPlayer(ctx, source, controller, effect.amount, {
           combat: false,
           sourceIsCommander: false,
           sourceHasLifelink: false,
@@ -3836,7 +3838,7 @@ export function* executeAbility(
         );
         const amount = amountOf(effect.amount);
         for (const perm of affected) {
-          dealDamageToObject(ctx, damageSource, perm.id, amount);
+          yield* dealDamageToObject(ctx, damageSource, perm.id, amount);
         }
         emit(ctx, 'damageEach', {
           source: damageSource.name,
@@ -3856,10 +3858,10 @@ export function* executeAbility(
         if (effect.source !== undefined && damageSource === undefined) break;
         for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
           if (damageSource !== undefined) {
-            dealDamageToObject(ctx, damageSource, player.id, amount);
+            yield* dealDamageToObject(ctx, damageSource, player.id, amount);
             continue;
           }
-          dealDamageToPlayer(ctx, source, player, amount, {
+          yield* dealDamageToPlayer(ctx, source, player, amount, {
             combat: false,
             sourceIsCommander: false,
             sourceHasLifelink: false,
@@ -5015,7 +5017,7 @@ export function* executeAbility(
             damage += spellManaValue(getDefByOracleId(ctx, top.oracleId, top.name), undefined);
             yield* moveObject(ctx, top, { zone: 'graveyard' });
           }
-          dealDamageToObject(ctx, source, target.id, damage);
+          yield* dealDamageToObject(ctx, source, target.id, damage);
         }
         break;
       }
@@ -5376,14 +5378,14 @@ export function* executeAbility(
         const bPower = effectivePT(ctx, b).power;
         const aTraits = combatDamageTraits(ctx, a);
         const bTraits = combatDamageTraits(ctx, b);
-        dealDamageToCreature(ctx, permanentSource(a), b, aPower, {
+        yield* dealDamageToCreature(ctx, permanentSource(a), b, aPower, {
           combat: false,
           sourceHasDeathtouch: aTraits.deathtouch,
           sourceHasLifelink: aTraits.lifelink,
           sourceHasInfect: aTraits.infect,
           sourceColors: aTraits.colors,
         });
-        dealDamageToCreature(ctx, permanentSource(b), a, bPower, {
+        yield* dealDamageToCreature(ctx, permanentSource(b), a, bPower, {
           combat: false,
           sourceHasDeathtouch: bTraits.deathtouch,
           sourceHasLifelink: bTraits.lifelink,
@@ -5757,7 +5759,7 @@ export function* executeAbility(
         if (outcome.index <= 0) break;
         const chosenX = choices[outcome.index - 1] ?? 0;
         yield* payManaCost(ctx, controller, withX(effect.templatedCost, chosenX));
-        dealDamageToObject(ctx, source, t, chosenX);
+        yield* dealDamageToObject(ctx, source, t, chosenX);
         break;
       }
       case 'exileTopNPlayableUntilEot': {
@@ -7367,7 +7369,7 @@ export function* payManaCost(
       ? combatDamageTraits(ctx, perm)
       : lastKnownTraits;
     for (const effect of source.onActivate ?? []) {
-      applyManaRider(ctx, perm, player, effect, traits);
+      yield* applyManaRider(ctx, perm, player, effect, traits);
     }
   }
 
@@ -7801,22 +7803,24 @@ export function* payAbilityCosts(
  * Apply a mana ability's `onActivate` rider — a painland's "This land deals 1 damage to you".
  *
  * Deliberately NOT `executeAbility`: a mana ability never uses the stack (CR 605.3a), so its
- * rider cannot target, cannot be responded to, and must not yield. Only the non-targeted,
- * non-generator ops are accepted; anything else throws rather than being silently skipped,
- * which would hand the player free mana (brief §6.3).
+ * rider cannot target and cannot be responded to. Only the non-targeted ops are accepted;
+ * anything else throws rather than being silently skipped, which would hand the player free
+ * mana (brief §6.3). It is a generator only because its damage runs through the replacement
+ * pipeline, where a CR 616.1 replacement-order choice can interrupt it; the rider itself never
+ * uses the stack.
  */
-export function applyManaRider(
+export function* applyManaRider(
   ctx: GameContext,
   perm: EnginePermanent,
   controller: EnginePlayerState,
   effect: ManaRider,
   traits = combatDamageTraits(ctx, perm),
-): void {
+): GameGen<void> {
   assertManaRiders(perm.name, [effect]);
   const source = permanentSource(perm);
   switch (effect.op) {
     case 'damageController':
-      dealDamageToPlayer(ctx, source, controller, effect.amount, {
+      yield* dealDamageToPlayer(ctx, source, controller, effect.amount, {
         combat: false,
         sourceIsCommander: false,
         sourceHasLifelink: traits.lifelink,

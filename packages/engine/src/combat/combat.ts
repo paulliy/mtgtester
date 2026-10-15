@@ -1013,11 +1013,11 @@ function markFirstStrikeCombatants(ctx: GameContext): void {
  * blockers (CR 510.1c-d); everything else (0 or 1 live blocker) is a forced case with nothing to
  * look up, handled inline exactly as CR 510.1c and trample (702.19b) dictate.
  */
-function dealCombatDamage(
+function* dealCombatDamage(
   ctx: GameContext,
   step: 'first' | 'regular',
   divisions: DamageDivisions,
-): void {
+): GameGen<void> {
   const assignments: DamageAssignment[] = [];
 
   for (const attacker of attackers(ctx)) {
@@ -1132,7 +1132,7 @@ function dealCombatDamage(
   for (const a of assignments) {
     const traits = combatDamageTraits(ctx, a.source);
     if (a.targetCreature !== null) {
-      dealDamageToCreature(ctx, permanentSource(a.source), a.targetCreature, a.amount, {
+      yield* dealDamageToCreature(ctx, permanentSource(a.source), a.targetCreature, a.amount, {
         combat: true,
         sourceHasDeathtouch: traits.deathtouch,
         sourceHasLifelink: traits.lifelink,
@@ -1141,7 +1141,7 @@ function dealCombatDamage(
         dealtTotals: damageToCreatures,
       });
     } else if (a.targetPlayer !== null) {
-      const dealt = dealDamageToPlayer(
+      const dealt = yield* dealDamageToPlayer(
         ctx,
         permanentSource(a.source),
         playerById(ctx, a.targetPlayer),
@@ -1224,14 +1224,14 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
       setStep(ctx, 'firstStrikeCombatDamage');
       markFirstStrikeCombatants(ctx);
       const firstDivisions = yield* assignDamageDivisions(ctx, 'first');
-      dealCombatDamage(ctx, 'first', firstDivisions);
+      yield* dealCombatDamage(ctx, 'first', firstDivisions);
       yield* runPrioritySequence(ctx);
       emptyManaPools(ctx);
     }
 
     setStep(ctx, 'combatDamage');
     const regularDivisions = yield* assignDamageDivisions(ctx, 'regular');
-    dealCombatDamage(ctx, 'regular', regularDivisions);
+    yield* dealCombatDamage(ctx, 'regular', regularDivisions);
     yield* runPrioritySequence(ctx);
     emptyManaPools(ctx);
   }
