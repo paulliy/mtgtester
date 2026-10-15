@@ -429,6 +429,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'tenuous-truce-viewer-end-step',
       'tenuous-truce-viewer-you-attack',
       'tenuous-truce-viewer-they-attack',
+      'wall-of-tears-viewer-blocked-creature-returns',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

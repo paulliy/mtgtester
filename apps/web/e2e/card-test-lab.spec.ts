@@ -9409,3 +9409,27 @@ test('Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura', 
   await expect(permanent(page, 'Tenuous Truce')).toHaveCount(0);
   await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
 });
+
+test('Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+  );
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Servo' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.getByText(/Wall of Tears — Whenever this creature blocks.* resolves/i).first(),
+  ).toBeVisible();
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Wall of Tears')).toHaveCount(1);
+});

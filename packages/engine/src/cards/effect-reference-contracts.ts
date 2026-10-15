@@ -88,6 +88,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   grantKeywordEachUntilEot: {},
   grantKeywordToAttackGroupUntilEot: {},
   putCountersOnCreatureOfChoice: {},
+  returnBlockedCreatureAtEndOfCombat: {},
   grantProtectionEachUntilEot: {},
   dealDamage: { target: damage, source: optionalRef(permanent) },
   dealDamageUnlessSacrifice: { target: player },

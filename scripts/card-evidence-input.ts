@@ -2326,6 +2326,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

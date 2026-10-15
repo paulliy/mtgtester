@@ -3659,6 +3659,33 @@
     }
   },
   {
+    "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
+    "name": "Wall of Tears",
+    "handledLines": [
+      "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat",
+          "effects": [
+            {
+              "op": "returnBlockedCreatureAtEndOfCombat"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "blocks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "58d7b8b3-ac47-4805-8259-4ba8e70d7dc3",
     "name": "Primal Might",
     "handledLines": [
@@ -23469,6 +23496,33 @@
               "kind": "self"
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-wall-of-tears",
+    "name": "Wall of Tears",
+    "handledLines": [
+      "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat",
+          "effects": [
+            {
+              "op": "returnBlockedCreatureAtEndOfCombat"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "blocks"
           }
         }
       ]

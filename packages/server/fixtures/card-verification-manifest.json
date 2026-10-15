@@ -10132,6 +10132,30 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "5825d718-6a32-4f4c-9b56-1a50051cfe28": {
+      "name": "Wall of Tears",
+      "oracleSha256": "00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "wall-of-tears-block-return",
+          "oracleText": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+          "implementation": [
+            "a blocks trigger on the Wall itself, queued with the creature it blocked bound by object, that creates a delayed trigger for the beginning of the new end-of-combat step (CR 511.1, 603.7) returning that exact creature to its OWNER's hand; the delayed trigger does not depend on the Wall, so it fires even if the Wall died in combat or left, and does nothing if the creature left and returned as a new object (CR 400.7); the interpreter owns defender"
+          ],
+          "engineTestIds": [
+            "wall-of-tears-pinned-oracle-supported",
+            "wall-of-tears-blocks",
+            "wall-of-tears-unblocked",
+            "wall-of-tears-independent",
+            "wall-of-tears-new-object",
+            "wall-of-tears-bounce-owner"
+          ],
+          "viewerScenarioIds": ["wall-of-tears-viewer-blocked-creature-returns"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

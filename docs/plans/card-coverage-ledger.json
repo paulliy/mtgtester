@@ -4118,15 +4118,19 @@
   {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
     "name": "Wall of Tears",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "6556c4c0-b10d-4208-821b-0c0a49abd188",

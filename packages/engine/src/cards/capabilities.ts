@@ -775,6 +775,7 @@ const families = {
       grantKeywordEachUntilEot: true,
       grantKeywordToAttackGroupUntilEot: true,
       putCountersOnCreatureOfChoice: true,
+      returnBlockedCreatureAtEndOfCombat: true,
       grantProtectionEachUntilEot: true,
       dealDamage: true,
       dealDamageUnlessSacrifice: true,
@@ -1070,6 +1071,7 @@ const families = {
       damagePreventedToPlayer: true,
       playerDealtDamage: true,
       attackDeclared: true,
+      endOfCombat: true,
     } satisfies Record<Extract<TriggerSpec['when'], string | number>, true>,
   },
   Ability: {

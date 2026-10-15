@@ -1706,6 +1706,8 @@ export interface TriggerEventSubject {
    * the watching permanent's own controller, which nothing else in `TriggerEventSubject` names.
    */
   sourceControllerId?: PlayerId;
+  /** `blocks`: the attacking creature this blocker blocked, by object. */
+  blockedObjectId?: ObjectId;
   /** `leavesBattlefield`: the zone this permanent went to. */
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
@@ -1992,6 +1994,9 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
+            ...(first.blockedObjectId !== undefined
+              ? { blockedObjectId: first.blockedObjectId }
+              : {}),
             ...(spec.subject.kind !== 'self' ? eventObjectScope(ctx, first.permanent) : {}),
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }

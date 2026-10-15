@@ -290,6 +290,31 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Wall of Tears: defender is read by the interpreter. Each time it blocks a creature (it can
+  // block one) the trigger remembers that creature by object and creates a delayed trigger for the
+  // beginning of the end of combat step (CR 511.1, 603.7) that returns it to its owner's hand. The
+  // delayed trigger does not depend on the Wall: it fires even if the Wall left combat or the
+  // battlefield, and does nothing if the creature has left and returned as a new object (CR 400.7).
+  defineCard(
+    '5825d718-6a32-4f4c-9b56-1a50051cfe28',
+    'Wall of Tears',
+    [
+      "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'blocks', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'returnBlockedCreatureAtEndOfCombat' }],
+            description:
+              "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat",
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

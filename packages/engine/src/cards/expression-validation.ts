@@ -311,6 +311,7 @@ const effectExpressions = {
   grantKeywordEachUntilEot: { selector: selector },
   grantKeywordToAttackGroupUntilEot: {},
   putCountersOnCreatureOfChoice: { count: finite },
+  returnBlockedCreatureAtEndOfCombat: {},
   grantProtectionEachUntilEot: { selector: selector },
   dealDamage: { amount: numberValue },
   dealDamageUnlessSacrifice: { amount: numberValue },

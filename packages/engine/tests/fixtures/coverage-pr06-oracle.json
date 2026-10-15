@@ -916,6 +916,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd",
+      "card": {
+        "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
+        "scryfallId": "4638d815-fb86-490c-84d6-777a1c6131d6",
+        "name": "Wall of Tears",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Wall",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Wall"
+        ],
+        "oracleText": "Defender (This creature can't attack.)\nWhenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+        "power": "0",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

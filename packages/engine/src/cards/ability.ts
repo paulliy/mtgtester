@@ -546,6 +546,13 @@ export type Effect =
    */
   | { op: 'putCountersOnCreatureOfChoice'; counter: string; count: number }
   /**
+   * "Return that creature to its owner's hand at end of combat" for a `blocks` trigger (Wall of
+   * Tears): creates a delayed trigger for the end of combat step (CR 511) that returns the
+   * creature this blocker blocked, remembered by object, so one that left and came back as a new
+   * object is not returned (CR 400.7). The delayed trigger does not depend on the blocker.
+   */
+  | { op: 'returnBlockedCreatureAtEndOfCombat' }
+  /**
    * "Creatures you control gain protection from each color until end of turn" (Akroma's Will).
    * Separate from `grantKeywordEachUntilEot` because protection carries an ARGUMENT: it is not a
    * `KeywordAbility` name, and layer 6 applies it through `addProtection`, not `addKeyword`.
@@ -1664,7 +1671,7 @@ export type TriggerHead =
    * `beginningOfCombat` is CR 507.1's begin combat step, queued the same way.
    */
   | {
-      when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat';
+      when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat' | 'endOfCombat';
       /**
        * `'enchanted'`: only the step of the player this Aura enchants ("at the beginning of enchanted
        * opponent's end step", Tenuous Truce); the event player is that player.

@@ -35,6 +35,7 @@ export function triggerEventFamily(
     case 'untapStep':
     case 'drawStep':
     case 'beginningOfCombat':
+    case 'endOfCombat':
     case 'mainPhase':
     case 'precombatMain':
       return 'step';
@@ -86,6 +87,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'untapStep':
     case 'drawStep':
     case 'beginningOfCombat':
+    case 'endOfCombat':
     case 'mainPhase':
     case 'precombatMain':
       return true;

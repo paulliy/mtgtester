@@ -108,7 +108,8 @@ export function queueStepTriggers(
     | 'drawStep'
     | 'mainPhase'
     | 'precombatMain'
-    | 'beginningOfCombat',
+    | 'beginningOfCombat'
+    | 'endOfCombat',
 ): void {
   assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;

@@ -1691,6 +1691,28 @@ export function* executeAbility(
         if (chosen !== null) addCounters(ctx, source, chosen, effect.counter, effect.count);
         break;
       }
+      case 'returnBlockedCreatureAtEndOfCombat': {
+        const blockedId = scope.blockedObjectId;
+        const blocked = blockedId === undefined ? undefined : findPermanent(ctx, blockedId);
+        if (blocked === undefined) break;
+        ctx.state.delayedTriggers.push({
+          id: `dt-${ctx.state.nextObjectNum++}`,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId as never,
+          controllerId: controller.id,
+          targetId: blocked.cardId,
+          targetObjectId: blocked.id,
+          when: 'endOfCombat',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'returnToHand', target: 'triggerObject' }],
+            description: "Return that creature to its owner's hand at end of combat",
+          },
+          expiry: 'onFire',
+        });
+        break;
+      }
       case 'grantProtectionEachUntilEot': {
         // Same shape as `grantKeywordEachUntilEot`; the affected set is fixed at resolution
         // (CR 611.2c), so a creature that enters afterwards is not protected.

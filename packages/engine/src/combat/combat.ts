@@ -65,6 +65,7 @@ import {
 } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
+import { queueStepTriggers } from '../turn/turn';
 
 function setStep(ctx: GameContext, step: NonNullable<GameContext['state']['step']>): void {
   ctx.state.step = step;
@@ -845,7 +846,7 @@ function applyBlockDeclaration(
         defenderId,
       );
       debug(ctx, 'combat', `${blocker.name} blocks ${attacker.name}`);
-      queueTriggersForObject(ctx, 'blocks', blocker);
+      queueTriggersForEvent(ctx, 'blocks', [{ permanent: blocker, blockedObjectId: attacker.id }]);
     }
     // Bushido and similar abilities trigger once when an attacker becomes blocked, regardless
     // of how many creatures block it (CR 509.1h).
@@ -1428,6 +1429,8 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   }
 
   setStep(ctx, 'endCombat');
+  // "At end of combat" delayed triggers (Wall of Tears) fire as the step begins (CR 511.1).
+  queueStepTriggers(ctx, 'endOfCombat');
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
   endCombatCleanup(ctx);

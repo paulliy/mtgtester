@@ -85,6 +85,8 @@ export interface ValueScope {
    * "those creatures" (Frontier Warmonger). Remembered, not re-derived (CR 603.7c).
    */
   attackGroupIds?: readonly string[];
+  /** `blocks`: the creature this blocker blocked, by object (Wall of Tears). */
+  blockedObjectId?: string;
   /** `attackDeclared` with `perDefender`: the attacked player this firing is about (Breena). */
   attackedPlayerId?: PlayerId;
   /**
@@ -139,6 +141,7 @@ export type TriggerScope = Pick<
   | 'treasureManaSpent'
   | 'eventPlayerId'
   | 'attackGroupIds'
+  | 'blockedObjectId'
   | 'attackedPlayerId'
   | 'attackedWatcher'
   | 'stationPower'

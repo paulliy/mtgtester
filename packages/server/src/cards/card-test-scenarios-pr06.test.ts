@@ -1021,3 +1021,20 @@ describe('Tenuous Truce Card Test Lab scenarios', () => {
     replays('tenuous-truce-viewer-they-attack', steps);
   });
 });
+
+describe('Wall of Tears Card Test Lab scenario', () => {
+  it('wall-of-tears-viewer-blocked-creature-returns — Wall of Tears blocks Lab Servo, which is returned to P1’s hand at end of combat', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'wall-of-tears-viewer-blocked-creature-returns',
+      steps,
+    );
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(seat('P1').hand.map((card) => card.name)).toEqual(['Lab Servo']);
+    expect(onBattlefield('Wall of Tears')[0]?.damageMarked).toBe(1);
+    expect(seat('P2').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('wall-of-tears-viewer-blocked-creature-returns', steps);
+  });
+});

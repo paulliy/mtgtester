@@ -4326,25 +4326,29 @@ const RAZE = oracle({
 });
 
 /**
- * The active player declares `attacks`, nobody blocks, and the first time anything is on the stack
- * P1 casts the named instant at `target`. Returns whether it was cast.
+ * The active player declares `attacks`, `blocks` (blocker id to attacker id) stand, and P1 casts the
+ * named instant at `target` the first time anything is on the stack, or, with `step`, the first time
+ * P1 has priority in that step. Returns whether it was cast.
  */
 function respondWith(
   ctx: GameContext,
   attacks: Record<string, string>,
   spell: string,
   target: string,
+  opts: { step?: string; blocks?: Record<string, string> } = {},
 ): () => boolean {
   let cast = false;
   pump(runCombatAndExtraCombats(ctx), (decision) => {
     if (decision.presentationAttackDeclaration !== undefined)
       return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
     if (decision.presentationBlockDeclaration !== undefined)
-      return declareBlocks(decision, () => null);
+      return declareBlocks(decision, (subjectId) => opts.blocks?.[subjectId] ?? null);
     const option = decision.options.findIndex(
       (candidate) => decision.player === 'P1' && candidate.description.includes(spell),
     );
-    if (option >= 0 && !cast && ctx.state.stack.length > 0) {
+    const ready =
+      opts.step === undefined ? ctx.state.stack.length > 0 : ctx.state.step === opts.step;
+    if (option >= 0 && !cast && ready) {
       cast = true;
       const slot = decision.options[option]!.targets![0]!;
       return { index: option, targets: new Map([[slot.slot, target]]) };
@@ -5381,6 +5385,126 @@ describe('Tenuous Truce', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.26 Wall of Tears
+// ---------------------------------------------------------------------------------------------
+
+describe('Wall of Tears', () => {
+  const { card } = pinned('Wall of Tears');
+
+  /** P1's two Bears attack; P2 controls the Wall (and a Giant that can kill it). */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const wall = spawn(ctx, 'P2', card);
+    const bears = [1, 2].map((n) => spawn(ctx, 'P1', GRIZZLY(`Lab P1 Bear ${n}`)));
+    return { ctx, wall, bears: bears as [EnginePermanent, EnginePermanent] };
+  }
+  const inHand = (ctx: GameContext, owner: string, name: string) =>
+    playerById(ctx, owner).hand.some((c) => c.name === name);
+  const onBoard = (ctx: GameContext, perm: EnginePermanent) => ctx.state.battlefield.includes(perm);
+
+  it('wall-of-tears-pinned-oracle-supported — the interpreter reads defender and the override reads one block trigger that creates the end-of-combat return', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('defender');
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'blocks', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'returnBlockedCreatureAtEndOfCombat' }]);
+  });
+
+  it('wall-of-tears-blocks — the creature it blocks is returned to its owner’s hand at end of combat, after combat damage, and the other attacker stays', () => {
+    const { ctx, wall, bears } = board('wall-blocks');
+    const [blocked, other] = bears;
+    declareAndFight(ctx, { [blocked.id]: 'P2', [other.id]: 'P2' }, undefined, {
+      [wall.id]: blocked.id,
+    });
+    expect(onBoard(ctx, blocked)).toBe(false);
+    expect(inHand(ctx, 'P1', 'Lab P1 Bear 1')).toBe(true);
+    expect(onBoard(ctx, other)).toBe(true);
+    // Combat damage happened first: the Wall (0/4) took 2 and the other Bear hit P2 for 2.
+    expect(wall.damageMarked).toBe(2);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    expect(
+      ctx.state.eventLog.findIndex((e) => e.type === 'combatDamageStep') <
+        ctx.state.eventLog.findIndex(
+          (e) => e.type === 'returnToHand' && e.payload['target'] === 'Lab P1 Bear 1',
+        ),
+    ).toBe(true);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+  });
+
+  it('wall-of-tears-unblocked — nothing is returned when it does not block, and a block that does not happen creates nothing', () => {
+    const { ctx, bears } = board('wall-no-block');
+    declareAndFight(ctx, { [bears[0].id]: 'P2' });
+    expect(onBoard(ctx, bears[0])).toBe(true);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+  });
+
+  it('wall-of-tears-independent — the return still happens if the Wall dies in combat or left the battlefield', () => {
+    const slain = pod('wall-dies');
+    const wall = spawn(slain, 'P2', card);
+    const giant = spawn(
+      slain,
+      'P1',
+      oracle({ name: 'Lab Giant', typeLine: 'Creature — Giant', power: '5', toughness: '5' }),
+    );
+    declareAndFight(slain, { [giant.id]: 'P2' }, undefined, { [wall.id]: giant.id });
+    expect(onBoard(slain, wall)).toBe(false);
+    expect(inHand(slain, 'P1', 'Lab Giant')).toBe(true);
+
+    const gone = board('wall-removed');
+    conjure(gone.ctx, 'P1', ZAP, 'hand');
+    const zapped = respondWith(gone.ctx, { [gone.bears[0].id]: 'P2' }, 'Lab Zap', gone.wall.id, {
+      step: 'combatDamage',
+      blocks: { [gone.wall.id]: gone.bears[0].id },
+    });
+    expect(zapped()).toBe(true);
+    expect(onBoard(gone.ctx, gone.wall)).toBe(false);
+    expect(inHand(gone.ctx, 'P1', 'Lab P1 Bear 1')).toBe(true);
+  });
+
+  it('wall-of-tears-new-object — a creature that left and returned before end of combat is a new object and is not returned', () => {
+    const { ctx, wall, bears } = board('wall-new-object');
+    const [blocked] = bears;
+    // An instant P1 never casts: it makes P1's priority in each step a real decision.
+    conjure(ctx, 'P1', ZAP, 'hand');
+    let blinked = false;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (id === blocked.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (id) => (id === wall.id ? blocked.id : null));
+      if (!blinked && ctx.state.step === 'combatDamage' && decision.player === 'P1') {
+        blinked = true;
+        pump(moveObject(ctx, blocked, { zone: 'hand' }));
+        const card = playerById(ctx, 'P1').hand.find((c) => c.cardId === blocked.cardId)!;
+        pump(moveObject(ctx, card, { zone: 'battlefield', controllerId: 'P1' }));
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(blinked).toBe(true);
+    const fresh = ctx.state.battlefield.find((p) => p.name === 'Lab P1 Bear 1');
+    expect(fresh).toBeDefined();
+    expect(fresh!.id).not.toBe(blocked.id);
+    expect(inHand(ctx, 'P1', 'Lab P1 Bear 1')).toBe(false);
+  });
+
+  it('wall-of-tears-bounce-owner — it returns to its OWNER’s hand, not its controller’s', () => {
+    const { ctx, wall, bears } = board('wall-owner');
+    const [stolen] = bears;
+    stolen.controllerId = 'P3';
+    stolen.ownerId = 'P1';
+    ctx.state.currentTurnPlayer = 'P3';
+    ctx.state.activePlayerIndex = 2;
+    declareAndFight(ctx, { [stolen.id]: 'P2' }, undefined, { [wall.id]: stolen.id });
+    expect(inHand(ctx, 'P1', 'Lab P1 Bear 1')).toBe(true);
+    expect(inHand(ctx, 'P3', 'Lab P1 Bear 1')).toBe(false);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -5540,6 +5664,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Tenuous Truce',
     sha256: '95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Wall of Tears',
+    sha256: '00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd',
+    clauseCount: 1,
     authored: true,
   },
   {

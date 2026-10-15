@@ -12498,6 +12498,58 @@ function tenuousTruceScenario(
   });
 }
 
+/** The seat blocks the first attacker offered with every creature able, declining nothing. */
+const blockEverything: DecisionProvider = {
+  decide(request) {
+    const block = request.legalActions.find((action) =>
+      action.description.startsWith('Declare blockers'),
+    );
+    if (block !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: block.id,
+        targets: (block.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice: slot.options.find((id) => id !== '__no_block__') ?? (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function wallOfTearsScenario(gameId: GameId): CardTestScenario {
+  const wall = pinnedFrom(COVERAGE_PR06, 'Wall of Tears');
+  return pr01Scenario(gameId, {
+    id: 'wall-of-tears-viewer-blocked-creature-returns',
+    title: 'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+    instructions: [
+      'You control Lab Servo (1/1). P2 controls Wall of Tears (0/4), which blocks whatever you attack with.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Servo and confirm.',
+    ],
+    expectedOutcome:
+      'Wall of Tears blocked Lab Servo, took 1 damage from it, and at end of combat Lab Servo was returned to your hand: it is no longer on the battlefield. P2 is still at 40.',
+    oracleSha256: wall.sha256,
+    clauseIds: ['wall-of-tears-block-return'],
+    decks: {
+      P1: [LAB_SERVO, FOREST, FOREST],
+      P2: [wall.card, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Wall of Tears'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12775,6 +12827,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tenuous-truce-viewer-end-step',
   'tenuous-truce-viewer-you-attack',
   'tenuous-truce-viewer-they-attack',
+  'wall-of-tears-viewer-blocked-creature-returns',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13124,6 +13177,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tenuous-truce-viewer-end-step': (gameId) => tenuousTruceScenario(gameId, 'end-step'),
   'tenuous-truce-viewer-you-attack': (gameId) => tenuousTruceScenario(gameId, 'you-attack'),
   'tenuous-truce-viewer-they-attack': (gameId) => tenuousTruceScenario(gameId, 'they-attack'),
+  'wall-of-tears-viewer-blocked-creature-returns': wallOfTearsScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,
