@@ -24,6 +24,7 @@ import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
+import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
@@ -534,6 +535,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     activeSlots = abilityModeTargetSlots(modes, selection);
     modeLabel = abilityModeLabel(modes, selection);
   }
+  // "For each player, up to one target …" (Nils): one optional slot per player in the game now.
+  ability = expandPerPlayerTargets(ctx, ability, trigger.controllerId);
   const specs = ability.targets;
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
@@ -665,6 +668,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         player: trigger.controllerId,
         prompt:
           `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
+          (spec.controllerPlayer === undefined ? '' : `controlled by ${spec.controllerPlayer} `) +
           // "Any number of" has no upper bound to show.
           `(${picked.length}${Number.isFinite(effectiveMax) ? `/${effectiveMax}` : ''} chosen)` +
           `${canStop ? ', or stop choosing' : ''}.`,

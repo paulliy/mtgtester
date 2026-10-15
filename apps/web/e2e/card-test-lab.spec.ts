@@ -9722,3 +9722,38 @@ test("Rite of the Raging Storm: each player's upkeep makes them a Lightning Rage
   // Sacrificed at the end step: no Lightning Rager is left on the battlefield.
   await expect(permanent(page, 'Lightning Rager')).toHaveCount(0);
 });
+
+test('Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player',
+  );
+  // One prompt for each player in turn order: you first, then P2.
+  const prompt = (seat: string) =>
+    page.getByText(new RegExp(`choose a target controlled by ${seat}`)).first();
+  await passUntil(page, prompt('P1'));
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+  await passUntil(page, prompt('P2'));
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo')).toContainText('2/2');
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Bird')).toContainText('1/1');
+});
+
+test('Nils, Discipline Enforcer: a creature with counters must pay to attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Nils, Discipline Enforcer: a creature with counters must pay to attack you',
+  );
+  // P2 paid {2} for Lab Ox's two counters and attacks you; decline to block with Nils.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('34');
+});

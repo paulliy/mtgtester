@@ -24,6 +24,9 @@ const targetFields = {
   graveyardOwnerSlot: 'unsupported',
   graveyardOwnerScope: 'unsupported',
   tapState: 'unsupported',
+  perPlayer: 'unsupported',
+  controllerPlayer: 'unsupported',
+  slotGroup: 'unsupported',
   spellTargetsPermanentYouControl: 'unsupported',
   spellHasSingleTarget: 'unsupported',
 } satisfies Record<keyof TargetSpec, FieldRole>;

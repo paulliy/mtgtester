@@ -12929,6 +12929,55 @@ function riteOfTheRagingStormScenario(
   });
 }
 
+function nilsScenario(gameId: GameId, kind: 'counters' | 'tax'): CardTestScenario {
+  const nils = pinnedFrom(COVERAGE_PR07, 'Nils, Discipline Enforcer');
+  const counters = kind === 'counters';
+  return pr01Scenario(gameId, {
+    id: `nils-viewer-${counters ? 'end-step-counters' : 'counters-attack-tax'}`,
+    title: counters
+      ? 'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player'
+      : 'Nils, Discipline Enforcer: a creature with counters must pay to attack you',
+    instructions: counters
+      ? [
+          'Nils, Discipline Enforcer and Lab Servo (1/1) are on your battlefield. P2 controls Lab Ox (4/4) and Lab Bird (1/1).',
+          'Pass priority until your end step. Nils’s trigger asks for up to one creature for each player in turn: choose Lab Servo for yourself and Lab Ox for P2, and none for anyone else.',
+        ]
+      : [
+          'It is P2’s turn. Nils is on your battlefield. P2 controls Lab Ox (4/4) with two +1/+1 counters and two untapped Forests.',
+          'Pass priority and let P2’s attack play out: Lab Ox can attack you only if P2 pays {2}, one for each counter on it. Declare no blockers when asked.',
+        ],
+    expectedOutcome: counters
+      ? 'Lab Servo is a 2/2 and Lab Ox a 5/5, each with one +1/+1 counter; Nils and Lab Bird got none.'
+      : 'P2 paid {2} (both Forests are tapped) and Lab Ox, a 6/6, attacked you: you took 6 and are at 34.',
+    oracleSha256: nils.sha256,
+    clauseIds: counters ? ['nils-end-step-counters'] : ['nils-counters-attack-tax'],
+    decks: {
+      P1: [nils.card, ...(counters ? [LAB_SERVO] : []), FOREST, FOREST],
+      P2: [LAB_OX, ...(counters ? [LAB_BIRD] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(counters ? {} : { currentTurnPlayer: 'P2' as const }),
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: counters
+            ? ['Nils, Discipline Enforcer', 'Lab Servo']
+            : ['Nils, Discipline Enforcer'],
+        },
+        counters
+          ? { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Bird'] }
+          : { playerId: 'P2', cardNames: ['Lab Ox'], counters: { '+1/+1': 2 } },
+        ...(counters ? [] : [{ playerId: 'P2' as const, cardNames: ['Forest', 'Forest'] }]),
+      ],
+      ...(counters ? { continueToEndStep: true } : { continueThroughCombat: true }),
+    },
+    ...(counters ? {} : { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } }),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13236,6 +13285,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'eriette-viewer-end-step-drain',
   'rite-of-the-raging-storm-viewer-named-cant-attack-you',
   'rite-of-the-raging-storm-viewer-upkeep-token',
+  'nils-viewer-end-step-counters',
+  'nils-viewer-counters-attack-tax',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13717,6 +13768,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     riteOfTheRagingStormScenario(gameId, 'restriction'),
   'rite-of-the-raging-storm-viewer-upkeep-token': (gameId) =>
     riteOfTheRagingStormScenario(gameId, 'token'),
+  'nils-viewer-end-step-counters': (gameId) => nilsScenario(gameId, 'counters'),
+  'nils-viewer-counters-attack-tax': (gameId) => nilsScenario(gameId, 'tax'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

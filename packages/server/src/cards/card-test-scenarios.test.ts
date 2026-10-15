@@ -532,6 +532,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'eriette-viewer-end-step-drain',
       'rite-of-the-raging-storm-viewer-named-cant-attack-you',
       'rite-of-the-raging-storm-viewer-upkeep-token',
+      'nils-viewer-end-step-counters',
+      'nils-viewer-counters-attack-tax',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

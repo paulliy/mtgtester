@@ -101,7 +101,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       "Angel's Grace",
       'Display of Power',
       'Nighthawk Scavenger',
-      'Nils, Discipline Enforcer',
       "Olórin's Searing Light",
       'Reverberate',
       "Tibalt's Trickery",

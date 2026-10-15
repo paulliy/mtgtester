@@ -1211,19 +1211,33 @@
     "ff6b52b7-ae3c-465b-b10e-901160e5230e": {
       "name": "Nils, Discipline Enforcer",
       "oracleSha256": "4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "nils-end-step-counters",
           "oracleText": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
-          "implementation": ["explicitly unsupported; counters every creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored end-step trigger on your end step only with a per-player target spec expanded as it goes on the stack (CR 603.3d) into one optional slot for each player still in the game, in turn order from you and you included, each limited to creatures that player controls and each chosen on its own, so at most one creature per player and any player may be left out; on resolution every chosen creature that is still a creature that player controls gets a +1/+1 counter (CR 608.2b), and a player who has left the game has no slot"
+          ],
+          "engineTestIds": [
+            "nils-pinned-oracle-supported",
+            "nils-per-player-targets",
+            "nils-up-to-one",
+            "nils-options-per-player",
+            "nils-eliminated-player",
+            "nils-recheck-on-resolution",
+            "nils-whole-turn"
+          ],
+          "viewerScenarioIds": ["nils-viewer-end-step-counters"]
         },
         {
+          "id": "nils-counters-attack-tax",
           "oracleText": "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
-          "implementation": ["explicitly unsupported; attack-tax static omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static with a creature-has-any-counter filter and a per-counter cost: a creature with counters of any kind can attack you or a planeswalker you control only if its controller pays one generic mana for each counter on it, charged per creature, summed for every creature attacking you, and never forced (CR 508.1d, 508.1g-h); a creature without counters, and attacks on anyone else, cost nothing"
+          ],
+          "engineTestIds": ["nils-pinned-oracle-supported", "nils-attack-tax", "nils-whole-turn"],
+          "viewerScenarioIds": ["nils-viewer-counters-attack-tax"]
         }
       ],
       "gameplayAiScenarioIds": []

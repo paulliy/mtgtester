@@ -332,3 +332,39 @@ describe('Rite of the Raging Storm Card Test Lab scenarios', () => {
     replays('rite-of-the-raging-storm-viewer-upkeep-token', steps);
   });
 });
+
+describe('Nils, Discipline Enforcer Card Test Lab scenarios', () => {
+  it('nils-viewer-end-step-counters — the trigger asks for a creature for each player: Lab Servo and Lab Ox grow, Nils and Lab Bird do not', () => {
+    const prompts: string[] = [];
+    const steps: Step[] = [{ action: 'Target Lab Servo' }, { action: 'Target Lab Ox' }];
+    const { scenario, state, onBattlefield } = run(
+      'nils-viewer-end-step-counters',
+      steps,
+      (request) => {
+        if (/controlled by P\d/.test(request.prompt)) prompts.push(request.prompt);
+      },
+    );
+    expect(prompts.map((prompt) => /controlled by (P\d)/.exec(prompt)?.[1])).toEqual(['P1', 'P2']);
+    const grew = (name: string) => onBattlefield(name)[0]?.counters['+1/+1'];
+    expect(grew('Lab Servo')).toBe(1);
+    expect(grew('Lab Ox')).toBe(1);
+    expect(grew('Lab Bird')).toBeUndefined();
+    expect(grew('Nils, Discipline Enforcer')).toBeUndefined();
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('nils-viewer-end-step-counters', steps);
+  });
+
+  it('nils-viewer-counters-attack-tax — P2 pays {2} for the two counters on Lab Ox, which then hits you for 6', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { scenario, state, seat, onBattlefield } = run('nils-viewer-counters-attack-tax', steps);
+    expect(seat('P1').life).toBe(34);
+    expect(onBattlefield('Forest').filter((land) => land.controllerId === 'P2')).toHaveLength(2);
+    expect(
+      onBattlefield('Forest').filter((land) => land.controllerId === 'P2' && land.tapped),
+    ).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('nils-viewer-counters-attack-tax', steps);
+  });
+});

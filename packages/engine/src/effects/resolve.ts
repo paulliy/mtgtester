@@ -1397,15 +1397,20 @@ export function* executeAbility(
       return currentId === null ? [] : [currentId];
     });
   const legalChosenPermanents = (slot: number): EnginePermanent[] => {
-    const spec = ability.targets[slot];
-    if (spec === undefined) return [];
-    const legal = (countTargets?.[slot] ?? []).flatMap((id) => {
-      if (!stillLegal(id, spec, slot)) return [];
-      const currentId = movedReferent(id);
-      const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
-      return permanent === undefined ? [] : [permanent as EnginePermanent];
+    // A per-player spec (Nils) was expanded into one slot per player; naming it names them all.
+    const slots = ability.targets.flatMap((candidate, index) =>
+      index === slot || candidate.slotGroup === slot ? [index] : [],
+    );
+    return slots.flatMap((index) => {
+      const spec = ability.targets[index];
+      if (spec === undefined) return [];
+      return (countTargets?.[index] ?? []).flatMap((id) => {
+        if (!stillLegal(id, spec, index)) return [];
+        const currentId = movedReferent(id);
+        const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
+        return permanent === undefined ? [] : [permanent as EnginePermanent];
+      });
     });
-    return legal;
   };
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */

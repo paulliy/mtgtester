@@ -2690,6 +2690,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
+    "name": "Nils, Discipline Enforcer",
+    "package": "PR07.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: End-step trigger counters every creature, and the attack-tax static is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9a1fbe72-4a17-42be-8e23-d7d30a5e59c1",
     "name": "Norn's Annex",
     "package": "W2",

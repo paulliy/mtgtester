@@ -180,6 +180,9 @@ const shapes = {
     graveyardOwnerSlot: leaf,
     graveyardOwnerScope: leaf,
     tapState: leaf,
+    perPlayer: leaf,
+    controllerPlayer: leaf,
+    slotGroup: leaf,
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     level: leaf,

@@ -117,6 +117,8 @@ export function targetIsLegal(
       : {}),
   };
   const matchesController = (id: PlayerId): boolean => {
+    // A slot expanded from a per-player spec (Nils) belongs to one player.
+    if (spec.controllerPlayer !== undefined && id !== spec.controllerPlayer) return false;
     switch (controller) {
       case undefined:
         return true;

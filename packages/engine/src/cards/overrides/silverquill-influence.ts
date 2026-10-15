@@ -200,10 +200,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Promise of Loyalty: authored in white-black-control-promise.ts (recorded in coverage PR07).
 
-  unimplemented('ff6b52b7-ae3c-465b-b10e-901160e5230e', 'Nils, Discipline Enforcer', [
-    'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.',
-    "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
-  ]);
+  // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
 
   unimplemented('7e00b0cd-d212-4604-ba07-da21f4fe00b0', 'Sram, Senior Edificer', [
     'Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card.',

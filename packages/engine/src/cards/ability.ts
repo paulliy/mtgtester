@@ -8,7 +8,7 @@
  * depend on it without a cycle.
  */
 
-import type { Color, ManaCostString } from '@mtg/shared';
+import type { Color, ManaCostString, PlayerId } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
@@ -469,6 +469,19 @@ export interface TargetSpec {
    */
   graveyardOwnerSlot?: number;
   graveyardOwnerScope?: 'controller' | 'opponent' | 'any';
+  /**
+   * "For each player, … up to one target creature that player controls" (Nils, Discipline
+   * Enforcer): when the triggered ability is put on the stack this one spec becomes one optional
+   * slot (`count` 0 to 1, which it must declare itself) for each player still in the game, in
+   * turn order starting with the ability's controller (CR 603.3d), each limited to that
+   * player's permanents. It must be the LAST target spec of a triggered ability; an effect that
+   * names its slot (`…EachChosen`) acts on every slot of the group.
+   */
+  perPlayer?: true;
+  /** Set when a `perPlayer` spec is expanded: only permanents this player controls may be chosen. */
+  controllerPlayer?: PlayerId;
+  /** Set when a `perPlayer` spec is expanded: the index of the spec this slot was expanded from. */
+  slotGroup?: number;
   /**
    * "Target untapped creature" (Backlash) — the tapped state a battlefield permanent must have
    * when chosen and again as the spell or ability resolves (CR 608.2b). Selectors deliberately

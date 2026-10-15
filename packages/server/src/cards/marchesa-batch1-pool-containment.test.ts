@@ -106,6 +106,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Mordant Dragon',
       'Myriad Landscape',
       'Necron Deathmark',
+      'Nils, Discipline Enforcer',
       'Nullmage Shepherd',
       'Peema Trailblazer',
       'Pensive Professor',

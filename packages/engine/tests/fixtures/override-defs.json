@@ -14928,8 +14928,61 @@
   {
     "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
     "name": "Nils, Discipline Enforcer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
+      "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "cost": {
+            "perCounterOnCreature": true
+          },
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-academy-ruins",
@@ -23845,8 +23898,61 @@
   {
     "oracleId": "oracle-nils-discipline-enforcer",
     "name": "Nils, Discipline Enforcer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
+      "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "cost": {
+            "perCounterOnCreature": true
+          },
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-nissa-worldsoul-speaker",

@@ -304,12 +304,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Nighthawk Scavenger',
     "Power counts card types in all graveyards, not only opponents' graveyards.",
   );
-  // Catalog audit queen-batch-1: putCountersEach hits every creature; attack-tax static omitted.
-  unsupportedCard(
-    'ff6b52b7-ae3c-465b-b10e-901160e5230e',
-    'Nils, Discipline Enforcer',
-    'End-step trigger counters every creature, and the attack-tax static is omitted.',
-  );
+  // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
   // Catalog audit queen-batch-1: threshold damage clause is claimed but not authored.
   unsupportedCard(
     'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',

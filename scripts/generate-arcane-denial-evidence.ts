@@ -35,6 +35,7 @@ const SOURCE_FILES = [
   'packages/engine/src/utils/assert-never.ts',
   'packages/engine/src/targets/context.ts',
   'packages/engine/src/targets/legality.ts',
+  'packages/engine/src/targets/per-player.ts',
   'packages/engine/src/targets/resolution.ts',
   'packages/engine/src/targets/announcement.ts',
   'packages/engine/tests/fixtures/bug-hunt-oracle.json',

@@ -221,6 +221,29 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
         message: 'variable-count target slots must follow every ordinary target slot',
       });
     }
+    if (spec.perPlayer !== undefined) {
+      if (
+        spec.perPlayer !== true ||
+        spec.count?.min !== 0 ||
+        spec.count.max !== 1 ||
+        spec.controller !== undefined ||
+        spec.controllerPlayer !== undefined ||
+        spec.slotGroup !== undefined ||
+        !knownDomain ||
+        !targetDomains(spec.kind).includes('permanent') ||
+        slot !== targets.length - 1
+      )
+        issues.push({
+          path: `${at}.perPlayer`,
+          message:
+            'a per-player target must be the last slot, an optional (0 to 1) battlefield permanent with no controller of its own',
+        });
+    } else if (spec.controllerPlayer !== undefined || spec.slotGroup !== undefined) {
+      issues.push({
+        path: at,
+        message: 'a player-bound slot is only produced by expanding a per-player target',
+      });
+    }
     if (
       spec.totalManaValueAtMost !== undefined &&
       (!integer(spec.totalManaValueAtMost) ||

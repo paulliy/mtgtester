@@ -178,11 +178,15 @@ function attackOptionsFor(
   ctx: GameContext,
   playerId: string,
   creature: EnginePermanent,
-): { players: string[]; planeswalkers: string[] } {
+): { players: string[]; planeswalkers: string[]; taxes: Record<string, number> } {
   turnOfPlayer(ctx, playerId);
   ctx.state.phase = 'precombatMain';
   ctx.state.step = null;
-  let offered: { players: string[]; planeswalkers: string[] } = { players: [], planeswalkers: [] };
+  let offered: { players: string[]; planeswalkers: string[]; taxes: Record<string, number> } = {
+    players: [],
+    planeswalkers: [],
+    taxes: {},
+  };
   pump(runCombatAndExtraCombats(ctx), (decision) => {
     if (decision.presentationAttackDeclaration !== undefined) {
       const subject = decision.presentationAttackDeclaration.subjects.find(
@@ -191,6 +195,10 @@ function attackOptionsFor(
       offered = {
         players: subject?.defenders.map((defender) => defender.playerId) ?? [],
         planeswalkers: subject?.planeswalkers.map((walker) => walker.objectId) ?? [],
+        taxes: Object.fromEntries([
+          ...(subject?.defenders.map((d) => [d.playerId, d.attackTax] as const) ?? []),
+          ...(subject?.planeswalkers.map((w) => [w.objectId, w.attackTax] as const) ?? []),
+        ]),
       };
       return declareAttacks(decision, () => null);
     }
@@ -271,7 +279,7 @@ function endStepOf(ctx: GameContext, playerId: string, answer?: Answer) {
   turnOfPlayer(ctx, playerId);
   ctx.state.phase = 'ending';
   beginEndStep(ctx);
-  pump(priorityCheckpoint(ctx));
+  pump(priorityCheckpoint(ctx), answer);
   return settle(ctx, answer);
 }
 
@@ -281,7 +289,7 @@ function upkeepOf(ctx: GameContext, playerId: string, answer?: Answer) {
   ctx.state.phase = 'beginning';
   ctx.state.step = 'upkeep';
   queueStepTriggers(ctx, 'upkeep');
-  pump(priorityCheckpoint(ctx));
+  pump(priorityCheckpoint(ctx), answer);
   return settle(ctx, answer);
 }
 
@@ -1087,6 +1095,195 @@ describe('Rite of the Raging Storm', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.09 Nils, Discipline Enforcer
+// ---------------------------------------------------------------------------------------------
+
+describe('Nils, Discipline Enforcer', () => {
+  const { card } = pinned('Nils, Discipline Enforcer');
+
+  /** P1 controls Nils and a Wolf; every opponent controls two Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const nils = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Wolf'));
+    const bears: Record<string, EnginePermanent[]> = {};
+    for (const id of ['P2', 'P3', 'P4'])
+      bears[id] = [spawn(ctx, id, GRIZZLY(`${id} Bear`)), spawn(ctx, id, GRIZZLY(`${id} Cub`))];
+    return { ctx, nils, mine, bears };
+  }
+
+  /**
+   * Answers each per-player target prompt (it names the player) with the creature named in
+   * `picks` for that player, or declines when the player has no entry. Records every prompt.
+   */
+  function choose(picks: Record<string, string>, asked: string[] = []): Answer {
+    return (decision) => {
+      asked.push(decision.prompt);
+      const player = /controlled by (P\d)/.exec(decision.prompt)?.[1];
+      const wanted = player === undefined ? undefined : picks[player];
+      const index = decision.options.findIndex(
+        (option) => wanted !== undefined && option.description === `Target ${wanted}`,
+      );
+      if (index >= 0) return { index, targets: new Map() };
+      const decline = decision.options.findIndex((option) => option.type === 'decline');
+      return { index: Math.max(decline, 0), targets: new Map() };
+    };
+  }
+
+  const plus = (perm: EnginePermanent) => perm.counters['+1/+1'] ?? 0;
+
+  it('nils-pinned-oracle-supported — the authored override carries the per-player counter trigger and the costed attack restriction under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'attackRestriction',
+        filter: {
+          kind: 'allOf',
+          of: [{ kind: 'type', value: 'Creature' }, { kind: 'hasAnyCounter' }],
+        },
+        includePlaneswalkers: true,
+        cost: { perCounterOnCreature: true },
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'endStep', player: 'you' });
+    expect(def.triggers[0]!.targets).toEqual([
+      { kind: 'creature', count: { min: 0, max: 1 }, perPlayer: true },
+    ]);
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'putCountersEachChosen', targetSlot: 0, counter: '+1/+1', count: 1 },
+    ]);
+  });
+
+  it('nils-per-player-targets — the trigger asks for up to one creature for each player, you included, and each chosen creature gets a +1/+1 counter', () => {
+    const { ctx, mine, bears } = board('nils-targets');
+    const asked: string[] = [];
+    endStepOf(
+      ctx,
+      'P1',
+      choose({ P1: 'P1 Wolf', P2: 'P2 Cub', P3: 'P3 Bear', P4: 'P4 Cub' }, asked),
+    );
+    // One prompt for each of the four players, in turn order starting with you.
+    expect(asked.map((prompt) => /controlled by (P\d)/.exec(prompt)?.[1])).toEqual([
+      'P1',
+      'P2',
+      'P3',
+      'P4',
+    ]);
+    expect(plus(mine)).toBe(1);
+    expect([bears['P2']!, bears['P3']!, bears['P4']!].map((pair) => pair.map(plus))).toEqual([
+      [0, 1],
+      [1, 0],
+      [0, 1],
+    ]);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('nils-up-to-one — at most one creature per player, and any player may be left out', () => {
+    const { ctx, mine, bears } = board('nils-up-to-one');
+    const asked: string[] = [];
+    // Decline for you and for P3 and P4; P2 picks a Bear. Once P2 has a target its slot is done:
+    // the Cub is never offered as a second target.
+    endStepOf(ctx, 'P1', choose({ P2: 'P2 Bear' }, asked));
+    expect(plus(mine)).toBe(0);
+    expect(bears['P2']!.map(plus)).toEqual([1, 0]);
+    expect(bears['P3']!.map(plus)).toEqual([0, 0]);
+    expect(bears['P4']!.map(plus)).toEqual([0, 0]);
+    expect(asked).toHaveLength(4);
+  });
+
+  it('nils-options-per-player — each slot offers only that player’s creatures, and a player with no creatures is not asked', () => {
+    const { ctx, bears } = board('nils-options');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.controllerId !== 'P3');
+    const offered = new Map<string, string[]>();
+    endStepOf(ctx, 'P1', (decision) => {
+      const player = /controlled by (P\d)/.exec(decision.prompt)?.[1] ?? 'unknown';
+      offered.set(
+        player,
+        decision.options.filter((option) => option.type === 'pickTarget').map((o) => o.description),
+      );
+      return { index: 0, targets: new Map() };
+    });
+    expect([...offered.keys()]).toEqual(['P1', 'P2', 'P4']);
+    expect(offered.get('P2')!.sort()).toEqual(['Target P2 Bear', 'Target P2 Cub']);
+    expect(offered.get('P4')!.sort()).toEqual(['Target P4 Bear', 'Target P4 Cub']);
+    expect(offered.get('P1')!.sort()).toEqual([
+      'Target Nils, Discipline Enforcer',
+      'Target P1 Wolf',
+    ]);
+    expect(bears['P3']!.map(plus)).toEqual([0, 0]);
+  });
+
+  it('nils-eliminated-player — a player who has left the game gets no slot', () => {
+    const { ctx } = board('nils-eliminated');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.controllerId !== 'P4');
+    playerById(ctx, 'P4').hasLost = true;
+    const asked: string[] = [];
+    endStepOf(ctx, 'P1', choose({}, asked));
+    expect(asked.map((prompt) => /controlled by (P\d)/.exec(prompt)?.[1])).toEqual([
+      'P1',
+      'P2',
+      'P3',
+    ]);
+  });
+
+  it('nils-recheck-on-resolution — a target that is no longer that player’s creature as the trigger resolves gets nothing, the others still do', () => {
+    const { ctx, bears } = board('nils-recheck');
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'ending';
+    beginEndStep(ctx);
+    pump(priorityCheckpoint(ctx), choose({ P2: 'P2 Bear', P3: 'P3 Bear' }));
+    expect(ctx.state.stack).toHaveLength(1);
+    // In response, P2's chosen Bear changes controllers: it is no longer a creature P2 controls.
+    bears['P2']![0]!.controllerId = 'P4';
+    resolveTop(ctx);
+    expect(plus(bears['P2']![0]!)).toBe(0);
+    expect(plus(bears['P3']![0]!)).toBe(1);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('nils-attack-tax — a creature with counters can attack you or your planeswalkers only by paying {X}, X being its counters of any kind; others, and attacks elsewhere, cost nothing', () => {
+    const { ctx, bears } = board('nils-tax');
+    const walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const bear = bears['P2']![0]!;
+    bear.counters = { '+1/+1': 2, shield: 1 };
+    const lands = Array.from({ length: 3 }, () => spawn(ctx, 'P2', forest()));
+    // What it is offered: {3} to attack you or your planeswalker, nothing to attack anyone else.
+    const offered = attackOptionsFor(ctx, 'P2', bear);
+    expect(offered.taxes['P1']).toBe(3);
+    expect(offered.taxes[walker.id]).toBe(3);
+    expect(offered.taxes['P3']).toBe(0);
+    // A creature with no counters pays nothing to attack you.
+    expect(attackOptionsFor(ctx, 'P2', bears['P2']![1]!).taxes['P1']).toBe(0);
+    // Declared and paid: three generic mana, one for each counter.
+    fight(ctx, () => ({ [bear.id]: 'P1' }));
+    expect(lands.every((land) => land.tapped)).toBe(true);
+    const attackEvent = ctx.state.eventLog.find(
+      (event) => event.type === 'attack' && event.payload['attacker'] === 'P2 Bear',
+    );
+    expect(attackEvent?.payload['defender']).toBe('P1');
+  });
+
+  it('nils-whole-turn — cast Nils, grow a creature at your end step, and on its controller’s turn that creature must pay to attack you', () => {
+    const ctx = pod('nils-turn');
+    const cub = spawn(ctx, 'P2', GRIZZLY('P2 Cub'));
+    const lands = [spawn(ctx, 'P2', forest()), spawn(ctx, 'P2', forest())];
+    castFromHand(ctx, 'P1', card, [...white(1), ...generic(2)]);
+    resolveTop(ctx);
+    endStepOf(ctx, 'P1', choose({ P2: 'P2 Cub' }));
+    expect(plus(cub)).toBe(1);
+    // P2's turn: one counter means {1}, and with no mana it cannot attack you at all.
+    for (const land of lands) land.tapped = true;
+    expect(attackOptionsFor(ctx, 'P2', cub).players).not.toContain('P1');
+    for (const land of lands) land.tapped = false;
+    const offered = attackOptionsFor(ctx, 'P2', cub);
+    expect(offered.players).toContain('P1');
+    expect(offered.taxes['P1']).toBe(1);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -1135,6 +1332,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Rite of the Raging Storm',
     sha256: '8084d5a45cbb44df44eb1f24fae2549e89b2b59f375e1901b47aed4f9cf22725',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Nils, Discipline Enforcer',
+    sha256: '4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e',
     clauseCount: 2,
     authored: true,
   },

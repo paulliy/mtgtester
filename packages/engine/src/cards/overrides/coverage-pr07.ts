@@ -17,7 +17,7 @@ import { allOfConditions } from '../condition';
 import type { TokenSpec } from '../ability';
 import { constant } from '../value';
 import { creatureToken } from '../tokens';
-import { allOf, named, ofSubtype, ofType, SELF, YOURS } from '../selector';
+import { allOf, HAS_ANY_COUNTER, named, ofSubtype, ofType, SELF, YOURS } from '../selector';
 import { defineCard } from './index';
 
 export function registerCoveragePr07Overrides(): void {
@@ -173,6 +173,49 @@ export function registerCoveragePr07Overrides(): void {
           ],
           description:
             'At the beginning of each player\'s upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and "At the beginning of the end step, sacrifice this token."',
+        }),
+      ],
+    },
+  );
+
+  // Nils, Discipline Enforcer: the trigger has one optional target slot for each player in the
+  // game (you included), each a creature that player controls, chosen as it goes on the stack
+  // (CR 603.3d); each target that is still legal as it resolves gets a +1/+1 counter. The static
+  // is a tax, not a ban: a creature with counters on it (of any kind) can attack you or your
+  // planeswalkers if its controller pays {X}, X being the counters on that creature, which is
+  // charged per creature and never forced (CR 508.1d).
+  const grow = targetSlots({
+    creature: { kind: 'creature', count: { min: 0, max: 1 }, perPlayer: true },
+  });
+  defineCard(
+    'ff6b52b7-ae3c-465b-b10e-901160e5230e',
+    'Nils, Discipline Enforcer',
+    [
+      'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.',
+      "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'attackRestriction',
+          filter: allOf(ofType('Creature'), HAS_ANY_COUNTER),
+          includePlaneswalkers: true,
+          cost: { perCounterOnCreature: true },
+        },
+      ],
+      triggers: [
+        triggered(onEndStep('you'), {
+          targets: grow.targets,
+          effects: [
+            {
+              op: 'putCountersEachChosen',
+              targetSlot: grow.slot.creature,
+              counter: '+1/+1',
+              count: 1,
+            },
+          ],
+          description:
+            'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls',
         }),
       ],
     },

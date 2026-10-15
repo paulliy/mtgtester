@@ -60,8 +60,6 @@ const REASONS: Record<string, string> = {
     'Choose a Background is claimed without a background companion implementation.',
   'Nighthawk Scavenger':
     "Power counts card types in all graveyards, not only opponents' graveyards.",
-  'Nils, Discipline Enforcer':
-    'End-step trigger counters every creature, and the attack-tax static is omitted.',
   "Olórin's Searing Light":
     'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
@@ -274,6 +272,7 @@ describe('Marchesa catalog audit containment', () => {
     'Lightning Runner',
     'Firkraag, Cunning Instigator',
     'Eriette of the Charmed Apple',
+    'Nils, Discipline Enforcer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
