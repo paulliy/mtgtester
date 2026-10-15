@@ -3277,6 +3277,17 @@ describe('Selfless Squire', () => {
     expect(counters(rival, theirs)).toBe(0);
   });
 
+  it('selfless-squire-counters — Gisela\'s "prevent half that damage, rounded up" is prevention too: with no shield, 3 damage to you is 2 prevented and counted, 1 dealt', () => {
+    const ctx = pod('squire-gisela-half');
+    const squire = enterFrom(ctx, 'P1', card);
+    ctx.state.pendingTriggers = [];
+    ctx.state.damageShields = [];
+    spawn(ctx, 'P1', gisela);
+    bolt(ctx, 'P2', 'P1');
+    expect(life(ctx, 'P1')).toBe(39);
+    expect(counters(ctx, squire)).toBe(2);
+  });
+
   it('selfless-squire-order-choice — a doubling replacement and the shield change how many counters the Squire gets, so you choose the order', () => {
     const play = (pickText: RegExp) => {
       const ctx = pod(`squire-order-${pickText.source}`);

@@ -48,6 +48,8 @@ export type DamageModifier =
       label: string;
       /** The `damagePrevented` log reason. */
       reason: string;
+      /** How much of `amount` it prevents; omitted means all of it ("prevent half", Gisela). */
+      prevents?: (amount: number) => number;
       /** Runs when this prevention is applied, with the amount it prevented (always above 0). */
       onPrevented?: (prevented: number) => void;
       /** It has a follow-up (tokens, a reflection) that depends on the amount it prevents. */
@@ -249,11 +251,15 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
       }
     } else if (entry.static.kind === 'damageHalvedToYou') {
       if (targetControllerId === entry.controllerId) {
+        // Gisela's "prevent half that damage, rounded up" is a prevention (CR 615), so it is
+        // seen by "whenever damage that would be dealt to you is prevented" (Selfless Squire).
         modifiers.push({
-          kind: 'replacement',
+          kind: 'prevention',
           id: idFor(entry.sourceCardId, entry.static.kind),
           label: `${label}: prevent half of that damage, rounded up`,
-          apply: (amount) => Math.floor(amount / 2),
+          reason: entry.static.kind,
+          prevents: (amount) => Math.ceil(amount / 2),
+          outcomeBearing: false,
         });
       }
     }
@@ -373,11 +379,17 @@ function signature(amount: number, order: readonly DamageModifier[]): string {
     if (amount <= 0) break;
     if (modifier.kind === 'replacement') amount = modifier.apply(amount);
     else {
-      if (modifier.outcomeBearing) preventions.push([modifier.id, amount]);
-      amount = 0;
+      const prevented = preventedBy(modifier, amount);
+      if (modifier.outcomeBearing) preventions.push([modifier.id, prevented]);
+      amount -= prevented;
     }
   }
   return JSON.stringify([amount, preventions]);
+}
+
+/** The part of `amount` a prevention prevents: all of it unless it prevents only some. */
+function preventedBy(modifier: Extract<DamageModifier, { kind: 'prevention' }>, amount: number) {
+  return modifier.prevents === undefined ? amount : Math.min(amount, modifier.prevents(amount));
 }
 
 /** True when applying the candidates in a different order changes what happens. */
@@ -391,8 +403,8 @@ function choiceMatters(amount: number, candidates: readonly DamageModifier[]): b
 }
 
 /**
- * Apply every modifier to one damage event (CR 616.1). Every prevention in this pool prevents all
- * of the damage it applies to.
+ * Apply every modifier to one damage event (CR 616.1). A prevention prevents all of the damage it
+ * applies to unless it says how much (`prevents`); the rest stays in the event.
  */
 export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): GameGen<DamageResult> {
   let amount = event.amount;
@@ -423,6 +435,8 @@ export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): Gam
       amount = next.apply(amount);
       continue;
     }
+    const preventedAmount = preventedBy(next, amount);
+    if (preventedAmount <= 0) continue;
     emit(ctx, 'damagePrevented', {
       source: event.source.name,
       target:
@@ -432,11 +446,11 @@ export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): Gam
       ...(event.recipient.kind === 'permanent'
         ? { targetCardId: event.recipient.permanent.cardId }
         : {}),
-      amount,
+      amount: preventedAmount,
       reason: next.reason,
     });
-    prevented.push({ modifierId: next.id, amount });
-    next.onPrevented?.(amount);
+    prevented.push({ modifierId: next.id, amount: preventedAmount });
+    next.onPrevented?.(preventedAmount);
     // One "damage that would be dealt to you is prevented" event per prevention applied to one
     // source's damage to the player, carrying the amount it prevented.
     if (event.recipient.kind === 'player')
@@ -444,9 +458,9 @@ export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): Gam
         ctx,
         'damagePreventedToPlayer',
         event.recipient.player.id,
-        amount,
+        preventedAmount,
       );
-    amount = 0;
+    amount -= preventedAmount;
   }
   return { amount, prevented };
 }
