@@ -6902,13 +6902,15 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   if (lower === 'prevent all combat damage that would be dealt to this creature') {
     return [{ kind: 'preventCombatDamageToSelf' }];
   }
-  if (lower === 'affinity for artifacts') {
+  // Affinity for [permanent type] (CR 702.41a): costs {1} less for each such permanent you control.
+  const affinity = lower.match(/^affinity for (artifacts|planeswalkers)$/);
+  if (affinity !== null) {
     return [
       {
         kind: 'costReduction',
         amount: {
           kind: 'countPermanents',
-          selector: allOf(ofType('Artifact'), YOURS),
+          selector: allOf(ofType(affinity[1] === 'artifacts' ? 'Artifact' : 'Planeswalker'), YOURS),
           scope: 'all',
         },
         selfOnly: true,

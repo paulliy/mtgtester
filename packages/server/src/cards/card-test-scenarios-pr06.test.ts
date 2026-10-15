@@ -940,3 +940,30 @@ describe('Mangara Card Test Lab scenarios', () => {
     replays('mangara-viewer-one-attacker', steps);
   });
 });
+
+describe('Tomik Card Test Lab scenarios', () => {
+  it('tomik-viewer-affinity-for-planeswalkers — with one planeswalker Tomik is cast for {W}{B}', () => {
+    const steps: Step[] = [{ action: 'Cast Tomik' }];
+    const { scenario, state, onBattlefield } = run(
+      'tomik-viewer-affinity-for-planeswalkers',
+      steps,
+    );
+    expect(onBattlefield('Tomik, Wielder of Law')).toHaveLength(1);
+    expect(onBattlefield('Plains')[0]?.tapped).toBe(true);
+    expect(onBattlefield('Swamp')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tomik-viewer-affinity-for-planeswalkers', steps);
+  });
+
+  it('tomik-viewer-attack-drain-and-draw — P2 attacking you with two creatures loses 3 life and you draw', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { scenario, state, seat } = run('tomik-viewer-attack-drain-and-draw', steps);
+    expect(seat('P2').life).toBe(37);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P1').life).toBe(35);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tomik-viewer-attack-drain-and-draw', steps);
+  });
+});

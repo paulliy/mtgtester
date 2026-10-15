@@ -2039,8 +2039,46 @@
   {
     "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLifeTarget",
+              "target": "eventPlayer"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
@@ -22638,8 +22676,46 @@
   {
     "oracleId": "oracle-tomik-wielder-of-law",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLifeTarget",
+              "target": "eventPlayer"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-transcendent-envoy",

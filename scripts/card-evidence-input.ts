@@ -2302,6 +2302,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Mangara: an opponent attacking you with one creature draws nothing'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: an opponent attacking you with two creatures loses 3 life and you draw'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

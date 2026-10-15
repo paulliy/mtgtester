@@ -177,6 +177,35 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Tomik, Wielder of Law: the interpreter reads affinity for planeswalkers (generic mana only, CR
+  // 702.41a) and flying, vigilance. The attack ability is Mangara's trigger: once per declaration by
+  // an opponent, with the intervening-if (CR 603.4) that two or more of that player's attackers are
+  // attacking you or a planeswalker you control, checked as the attack is declared and as it
+  // resolves. "That opponent" is the attacking player, the event player, who loses 3 life; you draw.
+  extendCard(
+    '2ef0961a-0543-4371-8c2a-333881b735e5',
+    'Tomik, Wielder of Law',
+    [
+      'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'opponent' },
+          {
+            condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 2 },
+            effects: [
+              { op: 'loseLifeTarget', target: 'eventPlayer', amount: constant(3) },
+              { op: 'draw', count: constant(1) },
+            ],
+            description:
+              'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

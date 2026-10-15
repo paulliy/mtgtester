@@ -2167,13 +2167,25 @@
     "2ef0961a-0543-4371-8c2a-333881b735e5": {
       "name": "Tomik, Wielder of Law",
       "oracleSha256": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "tomik-affinity-for-planeswalkers",
+          "oracleText": "Affinity for planeswalkers",
+          "implementation": [
+            "the interpreter reads affinity for planeswalkers as a selfOnly costReduction of generic mana for each planeswalker you control (an opponent's do not count), so it never reduces {W}{B}"
+          ],
+          "engineTestIds": ["tomik-pinned-oracle-supported", "tomik-affinity"],
+          "viewerScenarioIds": ["tomik-viewer-affinity-for-planeswalkers"]
+        },
+        {
+          "id": "tomik-attack-drain-and-draw",
           "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.",
-          "implementation": ["explicitly unsupported; self-attack drain; Affinity omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you and the planeswalkers still in combat; the attacking opponent, the event player, loses 3 life and you draw one card"
+          ],
+          "engineTestIds": ["tomik-attack-trigger", "tomik-planeswalkers"],
+          "viewerScenarioIds": ["tomik-viewer-attack-drain-and-draw"]
         }
       ],
       "gameplayAiScenarioIds": []

@@ -141,6 +141,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Thundermaw Hellkite',
       'Tomb Blade',
       'Tomb Fortress',
+      'Tomik, Wielder of Law',
       'Toxic Deluge',
       'Triarch Praetorian',
       "Tyrant's Familiar",

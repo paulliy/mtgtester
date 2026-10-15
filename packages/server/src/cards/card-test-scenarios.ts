@@ -12353,6 +12353,64 @@ function mangaraScenario(gameId: GameId, attackers: 1 | 2): CardTestScenario {
   });
 }
 
+function tomikAffinityScenario(gameId: GameId): CardTestScenario {
+  const tomik = pinnedFrom(COVERAGE_PR06, 'Tomik, Wielder of Law');
+  return pr01Scenario(gameId, {
+    id: 'tomik-viewer-affinity-for-planeswalkers',
+    title: 'Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker',
+    instructions: [
+      'Tomik, Wielder of Law ({1}{W}{B}) is in your hand. A Plains, a Swamp and Lab Walker, a planeswalker, are on your battlefield.',
+      'Cast Tomik, paying with the Plains and the Swamp only, and let it resolve.',
+    ],
+    expectedOutcome:
+      'Affinity for planeswalkers made the spell cost {W}{B}: Tomik is on your battlefield and both lands are tapped.',
+    oracleSha256: tomik.sha256,
+    clauseIds: ['tomik-affinity-for-planeswalkers'],
+    decks: {
+      P1: [tomik.card, PLAINS, SWAMP, LAB_WALKER, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Tomik, Wielder of Law'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Plains', 'Swamp', 'Lab Walker'] }],
+    },
+  });
+}
+
+function tomikAttackScenario(gameId: GameId): CardTestScenario {
+  const tomik = pinnedFrom(COVERAGE_PR06, 'Tomik, Wielder of Law');
+  return pr01Scenario(gameId, {
+    id: 'tomik-viewer-attack-drain-and-draw',
+    title: 'Tomik: an opponent attacking you with two creatures loses 3 life and you draw',
+    instructions: [
+      'It is P2’s turn. You control Tomik, Wielder of Law. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome:
+      'Two creatures attacked you, so Tomik’s ability triggered: P2 lost 3 life and is at 37, and you drew a card (your library is one card smaller). You took 5 and are at 35.',
+    oracleSha256: tomik.sha256,
+    clauseIds: ['tomik-attack-drain-and-draw'],
+    decks: {
+      P1: [tomik.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tomik, Wielder of Law'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12624,6 +12682,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ever-watching-threshold-viewer-attacked-elsewhere',
   'mangara-viewer-two-attackers',
   'mangara-viewer-one-attacker',
+  'tomik-viewer-affinity-for-planeswalkers',
+  'tomik-viewer-attack-drain-and-draw',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12967,6 +13027,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     everWatchingThresholdScenario(gameId, 'attacked-elsewhere'),
   'mangara-viewer-two-attackers': (gameId) => mangaraScenario(gameId, 2),
   'mangara-viewer-one-attacker': (gameId) => mangaraScenario(gameId, 1),
+  'tomik-viewer-affinity-for-planeswalkers': tomikAffinityScenario,
+  'tomik-viewer-attack-drain-and-draw': tomikAttackScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

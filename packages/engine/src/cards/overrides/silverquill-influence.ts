@@ -162,10 +162,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     FLICKERING_WARD_DEF,
   );
 
-  unimplemented('2ef0961a-0543-4371-8c2a-333881b735e5', 'Tomik, Wielder of Law', [
-    'Affinity for planeswalkers',
-    'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.',
-  ]);
+  // Tomik, Wielder of Law: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd', 'Pearl-Ear, Imperial Advisor', [
     'Enchantment spells you cast have affinity for Auras.',

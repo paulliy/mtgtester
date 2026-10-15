@@ -9308,3 +9308,41 @@ test('Mangara: an opponent attacking you with one creature draws nothing', async
   expect(library.first() - library.last()).toBe(0);
   await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
 });
+
+test('Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker',
+  );
+  const tomik = handCard(page, 'Tomik, Wielder of Law');
+  await expect(tomik).toHaveClass(/actionable/, { timeout: 15_000 });
+  const before = await page.getByText('Tomik, Wielder of Law resolves').count();
+  await tomik.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Tomik, Wielder of Law', before);
+  await expect(permanent(page, 'Tomik, Wielder of Law')).toHaveCount(1);
+  await expect(permanent(page, 'Plains').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Swamp').locator('.tap-badge')).toHaveText('TAP');
+});
+
+test('Tomik: an opponent attacking you with two creatures loses 3 life and you draw', async ({
+  page,
+}) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Tomik: an opponent attacking you with two creatures loses 3 life and you draw',
+  );
+  // P2 attacks you with both creatures; decline to block with Tomik.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('35');
+});

@@ -359,12 +359,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       },
     ],
   });
-  // Catalog audit silverquill-remaining-batch-2: current Oracle is affinity + opponent-attacks.
-  unsupportedCard(
-    '2ef0961a-0543-4371-8c2a-333881b735e5',
-    'Tomik, Wielder of Law',
-    'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
-  );
+  // Tomik, Wielder of Law: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     '71c52bf5-2a5d-488e-8b15-7ef290e4b77d',
     'War Room',

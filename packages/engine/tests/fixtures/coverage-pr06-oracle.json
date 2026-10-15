@@ -805,6 +805,48 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
+      "card": {
+        "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+        "scryfallId": "8a7fc460-fc49-480f-8ee2-28a173509f0b",
+        "name": "Tomik, Wielder of Law",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Advisor"
+        ],
+        "oracleText": "Affinity for planeswalkers (This spell costs {1} less to cast for each planeswalker you control.)\nFlying, vigilance\nWhenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Affinity",
+          "Vigilance"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

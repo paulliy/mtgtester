@@ -115,7 +115,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Herald of Amity',
       'Intermediate Chirography',
       'Keen Duelist',
-      'Tomik, Wielder of Law',
       'Combat Calligrapher',
       'Malakir Rebirth // Malakir Mire',
       'Valakut Awakening // Valakut Stoneforge',

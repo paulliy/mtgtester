@@ -4950,6 +4950,146 @@ describe('Mangara, the Diplomat', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.21 Tomik, Wielder of Law
+// ---------------------------------------------------------------------------------------------
+
+describe('Tomik, Wielder of Law', () => {
+  const { card } = pinned('Tomik, Wielder of Law');
+  const W = { symbol: 'W' as const };
+  const B = { symbol: 'B' as const };
+
+  /** P1 controls Tomik; each other player has two Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const tomik = spawn(ctx, 'P1', card);
+    const bears = Object.fromEntries(
+      (['P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        [1, 2].map((n) => spawn(ctx, id, GRIZZLY(`Lab ${id} Bear ${n}`))),
+      ]),
+    ) as Record<'P2' | 'P3' | 'P4', EnginePermanent[]>;
+    return { ctx, tomik, bears };
+  }
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+
+  it('tomik-pinned-oracle-supported — the interpreter reads affinity for planeswalkers and flying and vigilance, and the override adds the attack trigger that drains the attacking opponent and draws', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'vigilance']));
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'costReduction',
+        amount: {
+          kind: 'countPermanents',
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'type', value: 'Planeswalker' },
+              { kind: 'controller', who: 'you' },
+            ],
+          },
+          scope: 'all',
+        },
+        selfOnly: true,
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'attackDeclared',
+      attacker: 'opponent',
+      condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 2 },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'loseLifeTarget', target: 'eventPlayer', amount: { kind: 'const', n: 3 } },
+      { op: 'draw', count: { kind: 'const', n: 1 } },
+    ]);
+  });
+
+  it('tomik-affinity — it costs {1} less for each planeswalker you control, for generic mana only', () => {
+    const none = pod('tomik-cost-none');
+    const inHand = conjure(none, 'P1', card, 'hand');
+    addMana(playerById(none, 'P1'), [W, B]);
+    expect(
+      optionFor(none, 'P1', inHand.id),
+      'no planeswalker: {1}{W}{B} unaffordable',
+    ).toBeUndefined();
+
+    const one = pod('tomik-cost-one');
+    spawn(one, 'P1', WALKER());
+    castFromHand(one, 'P1', card, [W, B]);
+    resolveTop(one);
+    expect(one.state.battlefield.some((p) => p.name === card.name)).toBe(true);
+
+    // Two planeswalkers reduce only the generic {1}: {W}{B} is still owed.
+    const two = pod('tomik-cost-two');
+    spawn(two, 'P1', WALKER('Lab Walker One'));
+    spawn(two, 'P1', WALKER('Lab Walker Two'));
+    const other = conjure(two, 'P1', card, 'hand');
+    addMana(playerById(two, 'P1'), [W]);
+    expect(optionFor(two, 'P1', other.id), 'only {W}').toBeUndefined();
+    // An opponent's planeswalker does not count.
+    const theirs = pod('tomik-cost-theirs');
+    spawn(theirs, 'P2', WALKER());
+    const third = conjure(theirs, 'P1', card, 'hand');
+    addMana(playerById(theirs, 'P1'), [W, B]);
+    expect(optionFor(theirs, 'P1', third.id)).toBeUndefined();
+  });
+
+  it('tomik-attack-trigger — an opponent attacking you with two or more creatures loses 3 life and you draw; one attacker, or an attack elsewhere, does neither', () => {
+    const two = board('tomik-two');
+    turnOfPlayer(two.ctx, 'P2');
+    declareAndFight(two.ctx, { [two.bears.P2[0]!.id]: 'P1', [two.bears.P2[1]!.id]: 'P1' });
+    expect(life(two.ctx, 'P2')).toBe(37);
+    expect(handSize(two.ctx, 'P1')).toBe(1);
+    // Nobody else is touched: only the attacking opponent loses life.
+    expect(life(two.ctx, 'P3')).toBe(40);
+
+    const one = board('tomik-one');
+    turnOfPlayer(one.ctx, 'P2');
+    declareAndFight(one.ctx, { [one.bears.P2[0]!.id]: 'P1' });
+    expect(life(one.ctx, 'P2')).toBe(40);
+    expect(handSize(one.ctx, 'P1')).toBe(0);
+
+    const elsewhere = board('tomik-elsewhere');
+    turnOfPlayer(elsewhere.ctx, 'P3');
+    declareAndFight(elsewhere.ctx, {
+      [elsewhere.bears.P3[0]!.id]: 'P2',
+      [elsewhere.bears.P3[1]!.id]: 'P2',
+    });
+    expect(life(elsewhere.ctx, 'P3')).toBe(40);
+    expect(handSize(elsewhere.ctx, 'P1')).toBe(0);
+  });
+
+  it('tomik-planeswalkers — attackers at you and/or your planeswalkers count together, and a creature removed from combat no longer counts on resolution', () => {
+    const mixed = board('tomik-mixed');
+    const walker = spawn(mixed.ctx, 'P1', WALKER());
+    turnOfPlayer(mixed.ctx, 'P4');
+    declareAndFight(mixed.ctx, {
+      [mixed.bears.P4[0]!.id]: 'P1',
+      [mixed.bears.P4[1]!.id]: walker.id,
+    });
+    expect(life(mixed.ctx, 'P4')).toBe(37);
+    expect(handSize(mixed.ctx, 'P1')).toBe(1);
+
+    const gone = board('tomik-gone');
+    conjure(gone.ctx, 'P1', ZAP, 'hand');
+    turnOfPlayer(gone.ctx, 'P2');
+    const [first, second] = gone.bears.P2 as [EnginePermanent, EnginePermanent];
+    const zapped = respondWith(
+      gone.ctx,
+      { [first.id]: 'P1', [second.id]: 'P1' },
+      'Lab Zap',
+      first.id,
+    );
+    expect(zapped()).toBe(true);
+    expect(life(gone.ctx, 'P2')).toBe(40);
+    expect(handSize(gone.ctx, 'P1')).toBe(0);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -5091,6 +5231,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Mangara, the Diplomat',
     sha256: '23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Tomik, Wielder of Law',
+    sha256: 'aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc',
+    clauseCount: 2,
     authored: true,
   },
   {

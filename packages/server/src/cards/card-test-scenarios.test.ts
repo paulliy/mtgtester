@@ -423,6 +423,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'ever-watching-threshold-viewer-attacked-elsewhere',
       'mangara-viewer-two-attackers',
       'mangara-viewer-one-attacker',
+      'tomik-viewer-affinity-for-planeswalkers',
+      'tomik-viewer-attack-drain-and-draw',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

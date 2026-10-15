@@ -3810,6 +3810,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+    "name": "Tomik, Wielder of Law",
+    "package": "PR06.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Affinity and opponent-attacks trigger are implemented as a self-attack drain."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
     "name": "Toxic Deluge",
     "package": "PR02.02",
