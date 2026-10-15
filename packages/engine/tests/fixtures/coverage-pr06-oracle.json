@@ -736,6 +736,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5",
+      "card": {
+        "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
+        "scryfallId": "b711a0aa-90e5-4f16-9dc3-9cc331fc3101",
+        "name": "Ever-Watching Threshold",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

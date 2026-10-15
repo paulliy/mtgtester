@@ -2280,6 +2280,20 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       'Breena: attacking the opponent with the most life draws you a card and grows a creature',
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking you draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking someone else draws nothing'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

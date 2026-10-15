@@ -9249,3 +9249,41 @@ test('Breena: attacking the opponent with the most life draws you a card and gro
     ).toHaveText('30');
   }
 });
+
+test('Ever-Watching Threshold: an opponent attacking you draws you a card', async ({ page }) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(page, 'Ever-Watching Threshold: an opponent attacking you draws you a card');
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+});
+
+test('Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card', async ({
+  page,
+}) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(permanent(page, 'Lab Walker')).toContainText('loyalty×1');
+});
+
+test('Ever-Watching Threshold: an opponent attacking someone else draws nothing', async ({
+  page,
+}) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Ever-Watching Threshold: an opponent attacking someone else draws nothing',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});

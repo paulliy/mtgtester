@@ -12235,6 +12235,86 @@ function breenaScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** P2's attack declaration: every creature at the first opponent option that is a planeswalker. */
+const attackPlaneswalkerWithEverything: DecisionProvider = {
+  decide(request) {
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice:
+            slot.options.find((id) => !/^P\d$/.test(id) && id !== '__no_attack__') ??
+            (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function everWatchingThresholdScenario(
+  gameId: GameId,
+  kind: 'attacked-you' | 'attacked-planeswalker' | 'attacked-elsewhere',
+): CardTestScenario {
+  const threshold = pinnedFrom(COVERAGE_PR06, 'Ever-Watching Threshold');
+  const titles = {
+    'attacked-you': 'Ever-Watching Threshold: an opponent attacking you draws you a card',
+    'attacked-planeswalker':
+      'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+    'attacked-elsewhere':
+      'Ever-Watching Threshold: an opponent attacking someone else draws nothing',
+  } as const;
+  const walker = kind === 'attacked-planeswalker';
+  return pr01Scenario(gameId, {
+    id: `ever-watching-threshold-viewer-${kind}`,
+    title: titles[kind],
+    instructions: [
+      walker
+        ? 'It is P2’s turn. You control Ever-Watching Threshold and Lab Walker, a planeswalker with 5 loyalty. P2 controls Lab Ox (4/4) and attacks Lab Walker, not you. You control no creatures.'
+        : 'It is P2’s turn. You control Ever-Watching Threshold. P2 controls Lab Ox (4/4) and ' +
+          (kind === 'attacked-you' ? 'attacks you with it. Do not block.' : 'attacks P3 with it.'),
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome:
+      kind === 'attacked-elsewhere'
+        ? 'P2 did not attack you or a planeswalker you control, so the ability did not trigger and you drew nothing. P3 took 4 and is at 36.'
+        : walker
+          ? 'P2 attacked a planeswalker you control, so the ability triggered and you drew a card: your library is one card smaller. Lab Walker took 4 and is at 1 loyalty, and you are at 40.'
+          : 'P2 attacked you, so the ability triggered and you drew a card: your library is one card smaller. You took 4 and are at 36.',
+    oracleSha256: threshold.sha256,
+    clauseIds: ['ever-watching-threshold-attacked'],
+    decks: {
+      P1: [threshold.card, ...(walker ? [LAB_WALKER] : []), FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Ever-Watching Threshold', ...(walker ? ['Lab Walker'] : [])],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: {
+      P2: walker
+        ? attackPlaneswalkerWithEverything
+        : attackPlayerWithEverything(kind === 'attacked-you' ? 'P1' : 'P3'),
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12501,6 +12581,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'firemane-commando-viewer-other-attack-elsewhere',
   'firemane-commando-viewer-other-attack-at-you',
   'breena-viewer-attack-more-life',
+  'ever-watching-threshold-viewer-attacked-you',
+  'ever-watching-threshold-viewer-attacked-planeswalker',
+  'ever-watching-threshold-viewer-attacked-elsewhere',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12836,6 +12919,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'firemane-commando-viewer-other-attack-at-you': (gameId) =>
     firemaneOtherAttackScenario(gameId, 'P1'),
   'breena-viewer-attack-more-life': breenaScenario,
+  'ever-watching-threshold-viewer-attacked-you': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-you'),
+  'ever-watching-threshold-viewer-attacked-planeswalker': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-planeswalker'),
+  'ever-watching-threshold-viewer-attacked-elsewhere': (gameId) =>
+    everWatchingThresholdScenario(gameId, 'attacked-elsewhere'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

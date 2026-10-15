@@ -877,3 +877,41 @@ describe('Breena Card Test Lab scenario', () => {
     replays('breena-viewer-attack-more-life', steps);
   });
 });
+
+describe('Ever-Watching Threshold Card Test Lab scenarios', () => {
+  it('ever-watching-threshold-viewer-attacked-you — P2 attacking you draws you a card', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: [] }];
+    const { scenario, state, seat } = run('ever-watching-threshold-viewer-attacked-you', steps);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P1').life).toBe(36);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('ever-watching-threshold-viewer-attacked-you', steps);
+  });
+
+  it('ever-watching-threshold-viewer-attacked-planeswalker — P2 attacking your planeswalker draws you a card and costs it loyalty, not you life', () => {
+    const steps: Step[] = [];
+    const { state, seat, onBattlefield } = run(
+      'ever-watching-threshold-viewer-attacked-planeswalker',
+      steps,
+    );
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P1').life).toBe(40);
+    expect(onBattlefield('Lab Walker')[0]?.counters['loyalty']).toBe(1);
+    expect(state.stack).toEqual([]);
+    replays('ever-watching-threshold-viewer-attacked-planeswalker', steps);
+  });
+
+  it('ever-watching-threshold-viewer-attacked-elsewhere — P2 attacking P3 does not trigger it', () => {
+    const steps: Step[] = [];
+    const { state, seat } = run('ever-watching-threshold-viewer-attacked-elsewhere', steps);
+    expect(seat('P1').hand).toHaveLength(0);
+    expect(seat('P3').life).toBe(36);
+    expect(
+      state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Ever-Watching Threshold',
+      ),
+    ).toHaveLength(0);
+    replays('ever-watching-threshold-viewer-attacked-elsewhere', steps);
+  });
+});

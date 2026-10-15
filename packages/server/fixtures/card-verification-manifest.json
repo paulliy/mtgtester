@@ -10030,6 +10030,32 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "c6639b52-b51d-46e7-a83c-c4621b1cecaa": {
+      "name": "Ever-Watching Threshold",
+      "oracleSha256": "f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "ever-watching-threshold-attacked",
+          "oracleText": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.",
+          "implementation": [
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that at least one creature of that attack is attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you or a planeswalker still in combat; it draws one card for you"
+          ],
+          "engineTestIds": [
+            "ever-watching-threshold-pinned-oracle-supported",
+            "ever-watching-threshold-attacks-you",
+            "ever-watching-threshold-planeswalker",
+            "ever-watching-threshold-resolution-check"
+          ],
+          "viewerScenarioIds": [
+            "ever-watching-threshold-viewer-attacked-you",
+            "ever-watching-threshold-viewer-attacked-planeswalker",
+            "ever-watching-threshold-viewer-attacked-elsewhere"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

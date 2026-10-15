@@ -8704,6 +8704,41 @@
     "def": {}
   },
   {
+    "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
+    "name": "Ever-Watching Threshold",
+    "handledLines": [
+      "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 1,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c68faebc-b2cd-461b-b93e-e1fcd4816810",
     "name": "Midnight Clock",
     "handledLines": [
@@ -15466,6 +15501,41 @@
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-ever-watching-threshold",
+    "name": "Ever-Watching Threshold",
+    "handledLines": [
+      "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 1,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-fabled-passage",

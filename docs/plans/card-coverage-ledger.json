@@ -1149,15 +1149,19 @@
   {
     "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
     "name": "Ever-Watching Threshold",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",

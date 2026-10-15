@@ -4318,6 +4318,43 @@ const ZAP = oracle({
   manaCost: '{0}',
   oracleText: 'Destroy target creature.',
 });
+const RAZE = oracle({
+  name: 'Lab Raze',
+  typeLine: 'Instant',
+  manaCost: '{0}',
+  oracleText: 'Destroy target planeswalker.',
+});
+
+/**
+ * The active player declares `attacks`, nobody blocks, and the first time anything is on the stack
+ * P1 casts the named instant at `target`. Returns whether it was cast.
+ */
+function respondWith(
+  ctx: GameContext,
+  attacks: Record<string, string>,
+  spell: string,
+  target: string,
+): () => boolean {
+  let cast = false;
+  pump(runCombatAndExtraCombats(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined)
+      return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, () => null);
+    const option = decision.options.findIndex(
+      (candidate) => decision.player === 'P1' && candidate.description.includes(spell),
+    );
+    if (option >= 0 && !cast && ctx.state.stack.length > 0) {
+      cast = true;
+      const slot = decision.options[option]!.targets![0]!;
+      return { index: option, targets: new Map([[slot.slot, target]]) };
+    }
+    const pass = decision.options.findIndex((candidate) => candidate.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
+  });
+  return () => cast;
+}
+
 const handSize = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
 const counterOf = (perm: EnginePermanent, kind = 'loyalty') => perm.counters[kind] ?? 0;
 
@@ -4635,6 +4672,126 @@ describe('Breena, the Demagogue', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.22 Ever-Watching Threshold
+// ---------------------------------------------------------------------------------------------
+
+describe('Ever-Watching Threshold', () => {
+  const { card } = pinned('Ever-Watching Threshold');
+
+  /** P1 controls the Threshold; each other player has two Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', GRIZZLY('Lab P1 Bear'));
+    const bears = Object.fromEntries(
+      (['P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        [spawn(ctx, id, GRIZZLY(`Lab ${id} Bear 1`)), spawn(ctx, id, GRIZZLY(`Lab ${id} Bear 2`))],
+      ]),
+    ) as Record<'P2' | 'P3' | 'P4', EnginePermanent[]>;
+    return { ctx, mine, bears };
+  }
+  const triggers = (ctx: GameContext) =>
+    ctx.state.eventLog.filter(
+      (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Ever-Watching Threshold',
+    ).length;
+
+  it('ever-watching-threshold-pinned-oracle-supported — the override reads one attack trigger for an opponent with an intervening-if on their attackers attacking you or your planeswalkers', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'attackDeclared',
+      attacker: 'opponent',
+      condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 1 },
+    });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+  });
+
+  it('ever-watching-threshold-attacks-you — you draw once when an opponent attacks you, however many creatures, and not when they attack someone else or you attack', () => {
+    const one = board('ewt-one');
+    turnOfPlayer(one.ctx, 'P2');
+    declareAndFight(one.ctx, { [one.bears.P2[0]!.id]: 'P1' });
+    expect(handSize(one.ctx, 'P1')).toBe(1);
+
+    const two = board('ewt-two');
+    turnOfPlayer(two.ctx, 'P2');
+    declareAndFight(two.ctx, { [two.bears.P2[0]!.id]: 'P1', [two.bears.P2[1]!.id]: 'P1' });
+    expect(handSize(two.ctx, 'P1')).toBe(1);
+    expect(triggers(two.ctx)).toBe(1);
+
+    const elsewhere = board('ewt-elsewhere');
+    turnOfPlayer(elsewhere.ctx, 'P2');
+    declareAndFight(elsewhere.ctx, { [elsewhere.bears.P2[0]!.id]: 'P3' });
+    expect(handSize(elsewhere.ctx, 'P1')).toBe(0);
+    // The ability's condition is false, so it never even goes on the stack.
+    expect(triggers(elsewhere.ctx)).toBe(0);
+
+    const mine = board('ewt-mine');
+    declareAndFight(mine.ctx, { [mine.mine.id]: 'P2' });
+    expect(handSize(mine.ctx, 'P1')).toBe(0);
+  });
+
+  it('ever-watching-threshold-planeswalker — attacking a planeswalker you control counts, attacking another player’s does not', () => {
+    const yours = board('ewt-walker');
+    const walker = spawn(yours.ctx, 'P1', WALKER());
+    turnOfPlayer(yours.ctx, 'P3');
+    declareAndFight(yours.ctx, { [yours.bears.P3[0]!.id]: walker.id });
+    expect(handSize(yours.ctx, 'P1')).toBe(1);
+    expect(counterOf(walker)).toBe(3);
+
+    const theirs = board('ewt-their-walker');
+    const other = spawn(theirs.ctx, 'P4', WALKER());
+    turnOfPlayer(theirs.ctx, 'P3');
+    declareAndFight(theirs.ctx, { [theirs.bears.P3[0]!.id]: other.id });
+    expect(handSize(theirs.ctx, 'P1')).toBe(0);
+
+    // One attacker at you and one elsewhere is still one card.
+    const mixed = board('ewt-mixed');
+    turnOfPlayer(mixed.ctx, 'P4');
+    declareAndFight(mixed.ctx, {
+      [mixed.bears.P4[0]!.id]: 'P1',
+      [mixed.bears.P4[1]!.id]: 'P2',
+    });
+    expect(handSize(mixed.ctx, 'P1')).toBe(1);
+  });
+
+  it('ever-watching-threshold-resolution-check — checked again as it resolves: if every creature attacking you is gone, or its planeswalker is, nothing is drawn', () => {
+    const gone = board('ewt-gone');
+    conjure(gone.ctx, 'P1', ZAP, 'hand');
+    turnOfPlayer(gone.ctx, 'P2');
+    const [doomed, safe] = gone.bears.P2 as [EnginePermanent, EnginePermanent];
+    const zapped = respondWith(
+      gone.ctx,
+      { [doomed.id]: 'P1', [safe.id]: 'P3' },
+      'Lab Zap',
+      doomed.id,
+    );
+    expect(zapped()).toBe(true);
+    expect(handSize(gone.ctx, 'P1')).toBe(0);
+    expect(gone.ctx.state.eventLog.some((e) => e.type === 'triggerConditionFailed')).toBe(true);
+
+    // Only the creature attacking the planeswalker counted; the planeswalker is destroyed.
+    const walked = board('ewt-walker-gone');
+    const walker = spawn(walked.ctx, 'P1', WALKER());
+    conjure(walked.ctx, 'P1', RAZE, 'hand');
+    turnOfPlayer(walked.ctx, 'P2');
+    const razed = respondWith(
+      walked.ctx,
+      { [walked.bears.P2[0]!.id]: walker.id },
+      'Lab Raze',
+      walker.id,
+    );
+    expect(razed()).toBe(true);
+    expect(walked.ctx.state.battlefield.includes(walker)).toBe(false);
+    expect(handSize(walked.ctx, 'P1')).toBe(0);
+    expect(walked.ctx.state.eventLog.some((e) => e.type === 'triggerConditionFailed')).toBe(true);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -4763,6 +4920,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Breena, the Demagogue',
     sha256: '1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996',
+    clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Ever-Watching Threshold',
+    sha256: 'f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5',
     clauseCount: 1,
     authored: true,
   },

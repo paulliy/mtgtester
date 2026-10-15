@@ -125,6 +125,31 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Ever-Watching Threshold: triggers once as an opponent declares an attack. Intervening-if
+  // (CR 603.4): at least one of that player's attackers is attacking you or a planeswalker you
+  // control, checked as the attack is declared and as the ability resolves, counting only creatures
+  // still attacking you or a planeswalker still in combat then.
+  defineCard(
+    'c6639b52-b51d-46e7-a83c-c4621b1cecaa',
+    'Ever-Watching Threshold',
+    [
+      'Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'opponent' },
+          {
+            condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 1 },
+            effects: [{ op: 'draw', count: constant(1) }],
+            description:
+              'Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the
