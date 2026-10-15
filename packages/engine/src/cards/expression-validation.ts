@@ -345,8 +345,6 @@ const effectExpressions = {
   replicateCopies: {},
   copyEachTargetedSpell: {},
   angelGrace: {},
-  arcbond: {},
-  arcbondDamage: {},
   tapAndDamageController: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},

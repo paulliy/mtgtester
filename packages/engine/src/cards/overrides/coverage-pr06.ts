@@ -13,6 +13,7 @@ import {
   targetSlots,
   triggered,
   whenAttacks,
+  whenPermanent,
 } from '../templates';
 import { constant } from '../value';
 import { allOf, ofType, OTHER, YOURS } from '../selector';
@@ -45,6 +46,55 @@ export function registerCoveragePr06Overrides(): void {
             'Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target',
         }),
       ],
+    },
+  );
+
+  // Arcbond: the delayed trigger is keyed to the chosen creature OBJECT (a blinked creature is a
+  // new object, CR 400.7) and lasts this turn, under Arcbond's controller. Each time the creature is
+  // dealt damage (simultaneous combat damage is one event, CR 510.2, 603.2c) the CREATURE deals
+  // that much damage to each other creature and each player, simultaneously, with last known
+  // information if the damage killed it (CR 608.2h). The damage it deals is never dealt to itself.
+  const arcbond = targetSlots({ creature: { kind: 'creature' } });
+  defineCard(
+    '01790829-cc03-430f-a899-2f274b7dbf62',
+    'Arcbond',
+    [
+      'Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.',
+    ],
+    {
+      spellAbility: spell({
+        targets: arcbond.targets,
+        effects: [
+          {
+            op: 'registerDelayedTrigger',
+            when: 'dealtDamage',
+            target: arcbond.slot.creature,
+            expiry: 'cleanup',
+            // The delayed ability is a triggered one; its head only names the event, the
+            // registration above decides which creature's damage and for how long.
+            ability: triggered(whenPermanent('dealtDamage', ofType('Creature')), {
+              effects: [
+                {
+                  op: 'damageEach',
+                  selector: ofType('Creature'),
+                  amount: { kind: 'damageDealt' },
+                  source: 'triggerObject',
+                  exceptSource: true,
+                },
+                {
+                  op: 'damageEachPlayer',
+                  amount: { kind: 'damageDealt' },
+                  source: 'triggerObject',
+                },
+              ],
+              description:
+                'That creature deals that much damage to each other creature and each player',
+            }),
+          },
+        ],
+        description:
+          'Choose target creature. Whenever it is dealt damage this turn, it deals that much damage to each other creature and each player',
+      }),
     },
   );
 

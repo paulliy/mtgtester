@@ -64,8 +64,64 @@
   {
     "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
     "name": "Arcbond",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. Whenever it is dealt damage this turn, it deals that much damage to each other creature and each player",
+        "effects": [
+          {
+            "ability": {
+              "description": "That creature deals that much damage to each other creature and each player",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "exceptSource": true,
+                  "op": "damageEach",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "source": "triggerObject"
+                },
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "op": "damageEachPlayer",
+                  "source": "triggerObject"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "permanent",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "when": "dealtDamage"
+              }
+            },
+            "expiry": "cleanup",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "dealtDamage"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "0192ba05-6144-4fec-a803-462ecdf64195",
@@ -12055,8 +12111,64 @@
   {
     "oracleId": "oracle-arcbond",
     "name": "Arcbond",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. Whenever it is dealt damage this turn, it deals that much damage to each other creature and each player",
+        "effects": [
+          {
+            "ability": {
+              "description": "That creature deals that much damage to each other creature and each player",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "exceptSource": true,
+                  "op": "damageEach",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "source": "triggerObject"
+                },
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "op": "damageEachPlayer",
+                  "source": "triggerObject"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "permanent",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "when": "dealtDamage"
+              }
+            },
+            "expiry": "cleanup",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "dealtDamage"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-architect-of-the-untamed",

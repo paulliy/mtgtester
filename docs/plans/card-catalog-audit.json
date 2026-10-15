@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 39,
+      "uniqueOracleIds": 38,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6501,6 +6501,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage is a reflexive trigger implemented as the same resolution): the executable override in coverage-pr06.ts gets {E}{E} on entering, then offers paying any amount of energy from one up to all of it, and paying creates a separate reflexive trigger (CR 603.12) that goes on the stack with its own priority window and carries the energy paid, so that as it resolves this creature deals that much damage to each other creature, as last known if it has left the battlefield. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
+      "name": "Arcbond",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the delayed damage is dealt by Arcbond): the executable override in coverage-pr06.ts registers a this-turn delayed trigger keyed to the chosen creature object, and each time it is dealt damage that creature, with last known information if it has left the battlefield, deals that much damage to each other creature and each player; damageEach and damageEachPlayer now resolve an explicit source that way, and the bespoke arcbond and arcbondDamage ops are deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

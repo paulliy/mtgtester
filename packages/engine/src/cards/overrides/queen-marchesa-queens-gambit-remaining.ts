@@ -137,12 +137,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     "Angel's Grace",
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   );
-  // Catalog audit queen-batch-4: delayed damage is dealt by Arcbond, not the creature.
-  unsupportedCard(
-    '01790829-cc03-430f-a899-2f274b7dbf62',
-    'Arcbond',
-    'The delayed damage is dealt by Arcbond, not by the chosen creature.',
-  );
+  // Arcbond: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-4: untapped restriction omitted.
   unsupportedCard(
     '3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c',

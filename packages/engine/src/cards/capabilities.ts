@@ -802,8 +802,6 @@ const families = {
       replicateCopies: true,
       copyEachTargetedSpell: true,
       angelGrace: true,
-      arcbond: true,
-      arcbondDamage: true,
       tapAndDamageController: true,
       drawForEachOpponent: true,
       drawTargetAndController: true,

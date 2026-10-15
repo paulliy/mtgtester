@@ -2540,13 +2540,26 @@
     "01790829-cc03-430f-a899-2f274b7dbf62": {
       "name": "Arcbond",
       "oracleSha256": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
-          "implementation": ["explicitly unsupported; damage source is Arcbond"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "arcbond-delayed-reflection",
+          "oracleText": "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
+          "implementation": [
+            "instant with a creature target slot that registers a this-turn delayed trigger keyed to that creature object (a blinked creature is a new object, CR 400.7), controlled by Arcbond's controller; each time the creature is dealt damage (simultaneous combat damage is one event, CR 510.2, 603.2c) the creature, as the damage source with last known information if it has left the battlefield (CR 608.2h), deals that much damage to each other creature and each player simultaneously"
+          ],
+          "engineTestIds": [
+            "arcbond-pinned-oracle-supported",
+            "arcbond-damage-everything",
+            "arcbond-source-is-creature",
+            "arcbond-creature-died",
+            "arcbond-each-time",
+            "arcbond-this-turn-only",
+            "arcbond-blinked",
+            "arcbond-target-gone",
+            "arcbond-combat-damage-once"
+          ],
+          "viewerScenarioIds": ["arcbond-viewer-reflect-damage"]
         }
       ],
       "gameplayAiScenarioIds": []

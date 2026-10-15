@@ -2214,6 +2214,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Territorial Aetherkite: pay energy and damage each other creature'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Arcbond: the chosen creature reflects the damage it is dealt'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

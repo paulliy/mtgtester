@@ -106,7 +106,6 @@ const REASONS: Record<string, string> = {
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
-  Arcbond: 'The delayed damage is dealt by Arcbond, not by the chosen creature.',
   Backlash: 'Untapped-creature targeting is implemented as any creature.',
   'Breena, the Demagogue':
     'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
@@ -286,6 +285,7 @@ describe('Marchesa catalog audit containment', () => {
     'Thunderbreak Regent',
     'Flameblast Dragon',
     'Territorial Aetherkite',
+    'Arcbond',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

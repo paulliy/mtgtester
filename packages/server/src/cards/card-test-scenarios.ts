@@ -11697,6 +11697,37 @@ function territorialAetherkiteScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function arcbondScenario(gameId: GameId): CardTestScenario {
+  const arcbond = pinnedFrom(COVERAGE_PR06, 'Arcbond');
+  const mountains = Array.from({ length: 4 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'arcbond-viewer-reflect-damage',
+    title: 'Arcbond: the chosen creature reflects the damage it is dealt',
+    instructions: [
+      'Arcbond and Lab Shock are in your hand; you control Lab Ox (4/4) and four Mountains. P2 controls Lab Servo and Lab Bird (both 1/1) and P3 controls Lab Servo.',
+      'Cast Arcbond targeting Lab Ox and let it resolve. Then cast Lab Shock targeting Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lab Ox is dealt 2 damage, so Lab Ox itself deals 2 damage to each other creature and each player: both Lab Servos and Lab Bird die, Lab Ox survives with only the 2 from Lab Shock, and all four players (you included) are at 38.',
+    oracleSha256: arcbond.sha256,
+    clauseIds: ['arcbond-delayed-reflection'],
+    decks: {
+      P1: [arcbond.card, LAB_SHOCK, LAB_OX, ...mountains],
+      P2: [LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Arcbond', 'Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Bird'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11949,6 +11980,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'invisible-woman-viewer-pay-pump-unblockable',
   'flameblast-dragon-viewer-target-then-pay-x',
   'territorial-aetherkite-viewer-pay-energy-damage',
+  'arcbond-viewer-reflect-damage',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12268,6 +12300,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'invisible-woman-viewer-pay-pump-unblockable': invisibleWomanScenario,
   'flameblast-dragon-viewer-target-then-pay-x': flameblastDragonScenario,
   'territorial-aetherkite-viewer-pay-energy-damage': territorialAetherkiteScenario,
+  'arcbond-viewer-reflect-damage': arcbondScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

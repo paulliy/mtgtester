@@ -29,6 +29,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Animate Dead',
       'Anrakyr the Traveller',
       'Arcane Denial',
+      'Arcbond',
       'Attune with Aether',
       'Beacon of Unrest',
       'Bespoke Battlewagon',

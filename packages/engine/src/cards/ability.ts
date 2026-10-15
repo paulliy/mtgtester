@@ -663,8 +663,6 @@ export type Effect =
     }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }
   | { op: 'angelGrace' }
-  | { op: 'arcbond'; target: EffectRef }
-  | { op: 'arcbondDamage' }
   | { op: 'tapAndDamageController'; target: EffectRef }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
@@ -818,7 +816,7 @@ export type Effect =
       exceptSource?: true;
     }
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
-  | { op: 'damageEachPlayer'; amount: Value }
+  | { op: 'damageEachPlayer'; amount: Value; source?: EffectRef }
   /**
    * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). One
    * `destinations` entry per card that may be found — each independently offers "find or

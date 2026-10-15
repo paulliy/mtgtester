@@ -2258,6 +2258,233 @@ describe('Territorial Aetherkite', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.01 Arcbond
+// ---------------------------------------------------------------------------------------------
+
+describe('Arcbond', () => {
+  const { card } = pinned('Arcbond');
+  const COST = [...red(1), ...generic(2)];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const BRUTE = (name: string, power = '1', toughness = '9') =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness });
+  /** A blue 1/9 creature with lifelink. */
+  const LEECH = oracle({
+    name: 'Lab Leech',
+    typeLine: 'Creature — Leech',
+    colors: ['U'],
+    power: '1',
+    toughness: '9',
+    oracleText: 'Lifelink',
+  });
+  /** A blue 1/3 creature with lifelink, small enough to die to a bolt. */
+  const FRAIL_LEECH = oracle({
+    name: 'Lab Frail Leech',
+    typeLine: 'Creature — Leech',
+    colors: ['U'],
+    power: '1',
+    toughness: '3',
+    oracleText: 'Lifelink',
+  });
+
+  /** P1 controls the chosen creature `chosen`; P2 and P3 each control a creature. */
+  function board(seed: string, chosenCard: OracleCard = BRUTE('Lab Chosen')) {
+    const ctx = pod(seed);
+    const chosen = spawn(ctx, 'P1', chosenCard);
+    const ally = spawn(ctx, 'P1', BRUTE('Lab Ally'));
+    const foe = spawn(ctx, 'P2', BRUTE('Lab Foe'));
+    const far = spawn(ctx, 'P3', BRUTE('Lab Far'));
+    return { ctx, chosen, ally, foe, far };
+  }
+
+  /** P1 casts Arcbond on `targetId` and it resolves. */
+  function arcbond(ctx: GameContext, targetId: string) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Arcbond').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx);
+  }
+
+  /** `playerId` bolts `targetId`, and the whole stack (including the Arcbond trigger) settles. */
+  function bolt(ctx: GameContext, targetId: string, playerId = 'P2') {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx);
+  }
+
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+
+  it('arcbond-pinned-oracle-supported — the override registers a this-turn delayed trigger on the chosen creature that has the creature deal the damage dealt to each other creature and each player', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    const spell = def.spellAbility!;
+    expect(spell.targets).toEqual([{ kind: 'creature' }]);
+    expect(spell.effects).toHaveLength(1);
+    const [register] = spell.effects;
+    expect(register).toMatchObject({
+      op: 'registerDelayedTrigger',
+      when: 'dealtDamage',
+      target: 0,
+      expiry: 'cleanup',
+    });
+    expect((register as { ability: Ability }).ability.effects).toEqual([
+      {
+        op: 'damageEach',
+        selector: { kind: 'type', value: 'Creature' },
+        amount: { kind: 'damageDealt' },
+        source: 'triggerObject',
+        exceptSource: true,
+      },
+      { op: 'damageEachPlayer', amount: { kind: 'damageDealt' }, source: 'triggerObject' },
+    ]);
+  });
+
+  it('arcbond-damage-everything — a creature dealt 3 deals 3 to every other creature and every player, its controller included, and nothing more to itself', () => {
+    const { ctx, chosen, ally, foe, far } = board('arcbond-all');
+    arcbond(ctx, chosen.id);
+    expect(ctx.state.delayedTriggers).toHaveLength(1);
+    bolt(ctx, chosen.id);
+    // The bolt's own 3 is all the chosen creature took.
+    expect(onField(ctx, chosen.cardId)?.damageMarked).toBe(3);
+    for (const other of [ally, foe, far]) expect(onField(ctx, other.cardId)?.damageMarked).toBe(3);
+    for (const id of ['P1', 'P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(37);
+    const reflected = damageEvents(ctx).filter((event) => event.payload['amount'] === 3);
+    // Three creatures and four players, plus the bolt itself.
+    expect(reflected).toHaveLength(8);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('arcbond-source-is-creature — the creature is the source: its lifelink gains its controller the total dealt, and protection from its color stops the damage', () => {
+    const { ctx, chosen, foe } = board('arcbond-source', LEECH);
+    const warden = spawn(ctx, 'P3', WARDEN);
+    arcbond(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    // Ally, Foe and Far take 3 each, and so do the four players; the Warden's share is prevented.
+    expect(onField(ctx, warden.cardId)?.damageMarked).toBe(0);
+    expect(onField(ctx, foe.cardId)?.damageMarked).toBe(3);
+    // Seven shares of 3 gain 21 life, and P1 itself takes 3.
+    expect(life(ctx, 'P1')).toBe(40 - 3 + 21);
+    for (const id of ['P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(37);
+    expect(
+      damageEvents(ctx).some((event) => String(event.payload['source']).includes('Arcbond')),
+    ).toBe(false);
+  });
+
+  it('arcbond-creature-died — a creature killed by the damage still deals it, with last known information (lifelink)', () => {
+    const { ctx, chosen, ally, foe } = board('arcbond-lki', FRAIL_LEECH);
+    arcbond(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    expect(onField(ctx, chosen.cardId)).toBeUndefined();
+    for (const other of [ally, foe]) expect(onField(ctx, other.cardId)?.damageMarked).toBe(3);
+    for (const id of ['P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(37);
+    // Three other creatures and four players: 21 from the dead creature's lifelink, P1 takes 3.
+    expect(life(ctx, 'P1')).toBe(40 - 3 + 3 * 3 + 3 * 4);
+    // It does not retrigger: no further damage is dealt to the creature or by it twice.
+    expect(ctx.state.delayedTriggers.length).toBeLessThanOrEqual(1);
+  });
+
+  it('arcbond-each-time — every time the creature is dealt damage this turn triggers again, for that amount', () => {
+    const { ctx, chosen, foe } = board('arcbond-twice');
+    arcbond(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    expect(onField(ctx, foe.cardId)?.damageMarked).toBe(6);
+    for (const id of ['P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(34);
+    expect(life(ctx, 'P1')).toBe(34);
+  });
+
+  it('arcbond-this-turn-only — damage dealt to the creature on a later turn does nothing', () => {
+    const { ctx, chosen, foe } = board('arcbond-expiry');
+    arcbond(ctx, chosen.id);
+    pump(runTurn(ctx));
+    expect(ctx.state.delayedTriggers).toEqual([]);
+    const before = damageEvents(ctx).length;
+    bolt(ctx, chosen.id);
+    expect(damageEvents(ctx).length).toBe(before + 1);
+    expect(onField(ctx, foe.cardId)?.damageMarked).toBe(0);
+    for (const id of ['P1', 'P3', 'P4']) expect(life(ctx, id), id).toBe(40);
+  });
+
+  it('arcbond-blinked — a creature that left and came back is a new object and is no longer tracked (CR 400.7)', () => {
+    const { ctx, chosen, foe } = board('arcbond-blink');
+    arcbond(ctx, chosen.id);
+    pump(moveObject(ctx, onField(ctx, chosen.cardId)!, { zone: 'exile' }));
+    const exiled = ctx.state.exile.find((object) => object.cardId === chosen.cardId)!;
+    pump(moveObject(ctx, exiled, { zone: 'battlefield', controllerId: 'P1' }));
+    const returned = onField(ctx, chosen.cardId)!;
+    expect(returned.id).not.toBe(chosen.id);
+    bolt(ctx, returned.id);
+    expect(onField(ctx, returned.cardId)?.damageMarked).toBe(3);
+    expect(onField(ctx, foe.cardId)?.damageMarked).toBe(0);
+    for (const id of ['P1', 'P3', 'P4']) expect(life(ctx, id), id).toBe(40);
+  });
+
+  it('arcbond-target-gone — if the chosen creature is gone as Arcbond resolves, nothing is set up', () => {
+    const { ctx, chosen } = board('arcbond-gone');
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', object.id)!;
+    takeAction(
+      ctx,
+      'P1',
+      option.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option.targets![0]!.slot, chosen.id]]),
+    );
+    pump(moveObject(ctx, onField(ctx, chosen.cardId)!, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+  });
+
+  it('arcbond-combat-damage-once — damage from two blockers in one combat damage step is one event: one trigger for the total, not one per blocker', () => {
+    const { ctx, chosen, ally, foe } = board('arcbond-double-block', BRUTE('Lab Chosen', '1', '9'));
+    const small = spawn(ctx, 'P2', BRUTE('Lab Small Blocker', '2'));
+    const large = spawn(ctx, 'P2', BRUTE('Lab Large Blocker', '3'));
+    arcbond(ctx, chosen.id);
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === chosen.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) =>
+          subjectId === small.id || subjectId === large.id ? chosen.id : null,
+        );
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    // 2 + 3 = 5 combat damage to the chosen creature, then ONE reflection of 5.
+    expect(onField(ctx, chosen.cardId)?.damageMarked).toBe(5);
+    expect(onField(ctx, ally.cardId)?.damageMarked).toBe(5);
+    expect(onField(ctx, foe.cardId)?.damageMarked).toBe(5);
+    expect(life(ctx, 'P3')).toBe(35);
+    expect(life(ctx, 'P4')).toBe(35);
+    expect(life(ctx, 'P1')).toBe(35);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2319,6 +2546,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Flameblast Dragon',
     sha256: '0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Arcbond',
+    sha256: 'c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3',
+    clauseCount: 1,
     authored: true,
   },
   {

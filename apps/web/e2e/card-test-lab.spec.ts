@@ -8854,3 +8854,35 @@ test('Territorial Aetherkite: pay energy and damage each other creature', async 
   }
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+test('Arcbond: the chosen creature reflects the damage it is dealt', async ({ page }) => {
+  await runScenario(page, 'Arcbond: the chosen creature reflects the damage it is dealt');
+  const arcbond = handCard(page, 'Arcbond');
+  await expect(arcbond).toHaveClass(/actionable/, { timeout: 15_000 });
+  await arcbond.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await awaitResolution(page, 'Arcbond', 0);
+
+  // Arcbond has resolved: damage dealt to Lab Ox now is reflected by Lab Ox.
+  const shock = handCard(page, 'Lab Shock');
+  await expect(shock).toHaveClass(/actionable/, { timeout: 15_000 });
+  await shock.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Ox')).toBeVisible();
+  for (const seat of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('38');
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('38');
+});

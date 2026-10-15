@@ -2740,52 +2740,6 @@ export function* executeAbility(
         gainLife(ctx, controller, 2);
         break;
       }
-      case 'arcbond': {
-        const targetId = ref(effect.target);
-        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        if (target === undefined) break;
-        ctx.state.delayedTriggers.push({
-          id: `dt-${ctx.state.nextObjectNum++}`,
-          sourceCardId: source.cardId,
-          sourceOracleId: source.oracleId as never,
-          controllerId: source.controllerId,
-          targetId: target.cardId,
-          when: 'dealtDamage',
-          ability: {
-            kind: 'triggered',
-            targets: [],
-            effects: [{ op: 'arcbondDamage' }],
-            description:
-              'That creature deals that much damage to each other creature and each player',
-          },
-          expiry: 'cleanup',
-        });
-        break;
-      }
-      case 'arcbondDamage': {
-        const amount = amountOf({ kind: 'damageDealt' });
-        const trigger =
-          triggerObjectCardId === undefined ? undefined : findPermanent(ctx, triggerObjectCardId);
-        for (const creature of ctx.state.battlefield.filter(
-          (perm) =>
-            computeCharacteristics(ctx, perm).types.includes('Creature') &&
-            perm.cardId !== trigger?.cardId,
-        )) {
-          dealDamageToCreature(ctx, source, creature, amount, {
-            combat: false,
-            sourceHasDeathtouch: false,
-            sourceHasLifelink: false,
-          });
-        }
-        for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
-          dealDamageToPlayer(ctx, source, player, amount, {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          });
-        }
-        break;
-      }
       case 'combatCalligrapher': {
         const attackingPlayerId =
           scope.eventPlayerId ??
@@ -3885,25 +3839,20 @@ export function* executeAbility(
         break;
       case 'damageEach': {
         // The affected set is fixed here (CR 611.2c) and the damage is dealt simultaneously,
-        // so a creature that dies to it still received its share.
-        const damageSourceId = effect.source === undefined ? null : ref(effect.source);
-        const damageSource =
-          damageSourceId === null ? undefined : findPermanent(ctx, damageSourceId);
-        if (effect.source !== undefined && damageSource === undefined) break;
+        // so a creature that dies to it still received its share. An explicit source ("that
+        // creature deals damage", Arcbond) keeps dealing it with last known information after it
+        // has left the battlefield (CR 608.2h).
+        const damageSource = effect.source === undefined ? source : damageSourceOf(effect.source);
+        if (damageSource === undefined) break;
         const affected = affectedBy(ctx, source, effect.selector).filter(
-          (permanent) => effect.exceptSource !== true || permanent.cardId !== damageSource?.cardId,
+          (permanent) => effect.exceptSource !== true || permanent.cardId !== damageSource.cardId,
         );
         const amount = amountOf(effect.amount);
         for (const perm of affected) {
-          dealDamageToObject(
-            ctx,
-            damageSource === undefined ? source : permanentSource(damageSource),
-            perm.id,
-            amount,
-          );
+          dealDamageToObject(ctx, damageSource, perm.id, amount);
         }
         emit(ctx, 'damageEach', {
-          source: damageSource?.name ?? source.name,
+          source: damageSource.name,
           targets: affected.map((p) => p.name),
           amount,
         });
@@ -3913,7 +3862,16 @@ export function* executeAbility(
         // Earthquake's second half. Split from `damageEach` rather than folded in, because a
         // `Selector` describes permanents and players are not permanents.
         const amount = amountOf(effect.amount);
+        // With an explicit source ("it deals that much damage to each player", Arcbond) the
+        // damage is that object's, so its lifelink and protection-relevant colors apply.
+        const damageSource =
+          effect.source === undefined ? undefined : damageSourceOf(effect.source);
+        if (effect.source !== undefined && damageSource === undefined) break;
         for (const player of ctx.state.players.filter((p) => !p.hasLost)) {
+          if (damageSource !== undefined) {
+            dealDamageToObject(ctx, damageSource, player.id, amount);
+            continue;
+          }
           dealDamageToPlayer(ctx, source, player, amount, {
             combat: false,
             sourceIsCommander: false,

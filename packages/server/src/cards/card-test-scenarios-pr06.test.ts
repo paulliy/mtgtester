@@ -22,6 +22,8 @@ interface Step {
   targets?: string[];
   /** Only take this step while the game is in this phase (an action offered earlier is skipped). */
   phase?: string;
+  /** Only take this step once this holds (e.g. the stack is empty); until then pass. */
+  ready?: (scenario: CardTestScenario) => boolean;
 }
 
 function objectNames(scenario: CardTestScenario): Map<string, string> {
@@ -48,6 +50,7 @@ function scripted(steps: Step[]) {
   return (request: DecisionRequest, scenario: CardTestScenario): Choice => {
     for (const [index, step] of remaining.slice(0, 1).entries()) {
       if (step.phase !== undefined && scenario.engine.getState().phase !== step.phase) continue;
+      if (step.ready !== undefined && !step.ready(scenario)) continue;
       const action = request.legalActions.find((candidate) =>
         candidate.description.includes(step.action),
       );
@@ -544,5 +547,37 @@ describe('Territorial Aetherkite Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('territorial-aetherkite-viewer-pay-energy-damage', steps);
+  });
+});
+
+describe('Arcbond Card Test Lab scenario', () => {
+  it('arcbond-viewer-reflect-damage — Lab Ox, dealt 2 by Lab Shock after Arcbond resolved, deals 2 to each other creature and each player, so the three 1/1s die and every player is at 38', () => {
+    const steps: Step[] = [
+      { action: 'Cast Arcbond', targets: ['Lab Ox'] },
+      {
+        action: 'Cast Lab Shock',
+        targets: ['Lab Ox'],
+        ready: (current) => current.engine.getState().stack.length === 0,
+      },
+    ];
+    const { scenario, state, seat, onBattlefield } = run('arcbond-viewer-reflect-damage', steps);
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(onBattlefield('Lab Bird')).toEqual([]);
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.damageMarked).toBe(2);
+    for (const id of ['P1', 'P2', 'P3', 'P4']) expect(seat(id).life, id).toBe(38);
+    const reflected = state.eventLog.filter(
+      (event) => event.type === 'damage' && String(event.payload['source']).includes('Lab Ox'),
+    );
+    // Three creatures and four players, all dealt by Lab Ox rather than by Arcbond.
+    expect(reflected).toHaveLength(7);
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'damage' && String(event.payload['source']).includes('Arcbond'),
+      ),
+    ).toBe(false);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('arcbond-viewer-reflect-damage', steps);
   });
 });
