@@ -685,6 +685,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+    "name": "Comeuppance",
+    "package": "PR06.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: All-damage prevention and reflection are implemented as preventCombatDamageToController."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
     "name": "Conclave Tribunal",
     "package": "PR02.06",

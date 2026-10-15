@@ -560,6 +560,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
+      "card": {
+        "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+        "scryfallId": "b63d828d-4f62-424b-969a-00dcc4651b56",
+        "name": "Comeuppance",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, Comeuppance deals that much damage to that creature. If damage from a noncreature source is prevented this way, Comeuppance deals that much damage to the source's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

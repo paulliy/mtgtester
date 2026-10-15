@@ -9012,3 +9012,32 @@ test("Deflecting Palm: prevent a chosen creature's damage and reflect it", async
     ).toHaveText('40');
   }
 });
+
+test('Comeuppance: prevent the damage and deal it back to the creature and the controller', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+  );
+  const comeuppance = handCard(page, 'Comeuppance');
+  await expect(comeuppance).toHaveClass(/actionable/, { timeout: 15_000 });
+  await comeuppance.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // P2's Lab Shock and Lab Ox's attack are both prevented; each reflection goes to its own target.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Comeuppance.* deals 2 to P2/).first()).toBeVisible();
+  await expect(page.getByText(/Comeuppance.* deals 4 to Lab Ox/).first()).toBeVisible();
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('38');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+});

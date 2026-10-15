@@ -187,12 +187,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Combat Calligrapher',
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   );
-  // Catalog audit queen-batch-2: reflection and planeswalker prevention omitted.
-  unsupportedCard(
-    '01f29158-2dc9-4b9d-b726-add5d3fd5782',
-    'Comeuppance',
-    'All-damage prevention and reflection are implemented as preventCombatDamageToController.',
-  );
+  // Comeuppance: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     'ee81f37b-2a81-46d7-8d2f-9091123846c4',
     'Crackling Doom',

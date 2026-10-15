@@ -143,6 +143,34 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Comeuppance: one shield for the turn covering you and the planeswalkers you control as the
+  // damage would be dealt, from sources you don't control, combat or not. Each prevented amount
+  // is dealt by Comeuppance to the source itself when it is a creature as the damage would be
+  // dealt (only if it is still on the battlefield) and otherwise to the source's controller, right
+  // after the prevented damage event. Reflections that prevent each other forever are a draw.
+  defineCard(
+    '01f29158-2dc9-4b9d-b726-add5d3fd5782',
+    'Comeuppance',
+    [
+      "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source's controller.",
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'createDamageShield',
+            player: 'you',
+            andPlaneswalkersYouControl: true,
+            sources: 'youDontControl',
+            reflect: 'toSourceCreatureElseController',
+          },
+        ],
+        description:
+          "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control",
+      }),
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

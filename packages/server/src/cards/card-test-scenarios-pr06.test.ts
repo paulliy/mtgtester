@@ -723,3 +723,35 @@ describe('Deflecting Palm Card Test Lab scenario', () => {
     replays('deflecting-palm-viewer-chosen-source-reflects', steps);
   });
 });
+
+describe('Comeuppance Card Test Lab scenario', () => {
+  it("comeuppance-viewer-prevent-and-reflect — Lab Shock's 2 is reflected to P2, Lab Ox's 4 combat damage is reflected to Lab Ox itself, which dies, and P1 takes nothing", () => {
+    const steps: Step[] = [{ action: 'Cast Comeuppance' }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'comeuppance-viewer-prevent-and-reflect',
+      steps,
+    );
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P2').life).toBe(38);
+    for (const id of ['P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    expect(onBattlefield('Lab Ox')).toHaveLength(0);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(
+      expect.arrayContaining(['Lab Ox', 'Lab Shock']),
+    );
+    expect(
+      state.eventLog.filter((event) => event.type === 'damage').map((event) => event.payload),
+    ).toMatchObject([
+      { source: 'Comeuppance', target: 'P2', amount: 2, combat: false },
+      { source: 'Comeuppance', target: 'Lab Ox', amount: 4, combat: false },
+    ]);
+    expect(
+      state.eventLog.filter((event) => event.type === 'damagePrevented').map((e) => e.payload),
+    ).toMatchObject([
+      { source: 'Lab Shock', target: 'P1', amount: 2 },
+      { source: 'Lab Ox', target: 'P1', amount: 4 },
+    ]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('comeuppance-viewer-prevent-and-reflect', steps);
+  });
+});

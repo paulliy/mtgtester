@@ -659,9 +659,12 @@ export type Effect =
       /** "The next time ... would deal damage": the shield ends when it first prevents damage. */
       oneShot?: true;
       /** "... deals that much damage to that source's controller": dealt as the damage is prevented. */
-      reflect?: 'toSourceController';
+      reflect?: 'toSourceController' | 'toSourceCreatureElseController';
+      /** "... dealt to you and planeswalkers you control": the shield covers those too. */
+      andPlaneswalkersYouControl?: true;
+      /** "... by sources you don't control", checked as the damage would be dealt. */
+      sources?: 'youDontControl';
     }
-  | { op: 'preventCombatDamageToController' }
   | { op: 'copyTargetSpell'; target: number }
   /**
    * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller

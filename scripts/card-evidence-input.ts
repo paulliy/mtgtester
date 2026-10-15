@@ -2238,6 +2238,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ["Deflecting Palm: prevent a chosen creature's damage and reflect it"],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

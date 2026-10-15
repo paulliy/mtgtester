@@ -195,8 +195,25 @@
   {
     "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
     "name": "Comeuppance",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control",
+        "effects": [
+          {
+            "andPlaneswalkersYouControl": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceCreatureElseController",
+            "sources": "youDontControl"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
@@ -13979,8 +13996,25 @@
   {
     "oracleId": "oracle-comeuppance",
     "name": "Comeuppance",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control",
+        "effects": [
+          {
+            "andPlaneswalkersYouControl": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceCreatureElseController",
+            "sources": "youDontControl"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-commander-s-insignia",

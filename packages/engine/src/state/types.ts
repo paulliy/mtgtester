@@ -545,15 +545,29 @@ export interface DamageShield {
   sourceObjectId?: ObjectId;
   /** "The next time ... would deal damage": removed as soon as it prevents damage. */
   oneShot?: true;
-  /** "If damage is prevented this way, <the effect source> deals that much damage to that source's controller." */
-  reflectToSourceController?: true;
+  /** Also covers damage to planeswalkers its player controls, checked as the damage would be dealt. */
+  andPlaneswalkersTheyControl?: true;
+  /** Only damage from sources that this player does not control, checked as it would be dealt. */
+  sourceNotControlledBy?: PlayerId;
+  /**
+   * "If damage is prevented this way, <the effect source> deals that much damage to ...": to that
+   * source's controller, or (Comeuppance) to the source itself when it is a creature as the damage
+   * would be dealt and otherwise to its controller.
+   */
+  reflect?: 'toSourceController' | 'toSourceCreatureElseController';
 }
 
 /** Damage an effect owes because it prevented damage, dealt right after the prevented event. */
 export interface DamageReflection {
   effectSource: import('../effects/resolve').EffectSource;
-  toPlayerId: PlayerId;
+  /** A player or a permanent (object id) to deal the damage to. */
+  toId: string;
   amount: number;
+  /**
+   * The (shield, recipient, amount) steps that led here from the original damage event. A step
+   * that repeats is a mandatory loop with no choice in it (CR 104.4b).
+   */
+  chain: string[];
 }
 
 export interface EngineState extends GameState {
@@ -620,6 +634,8 @@ export interface EngineState extends GameState {
   damageShields: DamageShield[];
   /** Reflections queued by prevention, drained by `flushDamageReflections` (transient). */
   damageReflections: DamageReflection[];
+  /** The chain of the reflection being dealt right now, empty for an original damage event. */
+  damageChain: string[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   /**

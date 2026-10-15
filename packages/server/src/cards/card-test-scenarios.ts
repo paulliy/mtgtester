@@ -11940,6 +11940,64 @@ function deflectingPalmScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** `castOnNthWindow` for the spell, and attacking `defender` with everything when asked to. */
+function castOnNthWindowThenAttack(
+  spell: string,
+  nth: number,
+  defender: PlayerId,
+): DecisionProvider {
+  const cast = castOnNthWindow(spell, nth);
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const attacking = request.legalActions.some((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      return attacking ? attack.decide(request) : cast.decide(request);
+    },
+  };
+}
+
+function comeuppanceScenario(gameId: GameId): CardTestScenario {
+  const comeuppance = pinnedFrom(COVERAGE_PR06, 'Comeuppance');
+  const plains = Array.from({ length: 4 }, () => PLAINS);
+  return pr01Scenario(gameId, {
+    id: 'comeuppance-viewer-prevent-and-reflect',
+    title: 'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+    instructions: [
+      "It is P2's turn. Comeuppance is in your hand with four Plains on your battlefield. P2 controls Lab Ox (4/4) and holds Lab Shock with a Mountain.",
+      'When you get priority, cast Comeuppance and let it resolve. P2 then casts Lab Shock at you and attacks you with Lab Ox. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Comeuppance prevents all of it, so you are still at 40. Lab Shock is a noncreature source, so Comeuppance deals 2 to its controller P2, who is at 38. Lab Ox is a creature source, so Comeuppance deals its 4 combat damage back to Lab Ox itself, which dies; P2 takes nothing more. P3 and P4 are at 40.',
+    oracleSha256: comeuppance.sha256,
+    clauseIds: [
+      'comeuppance-prevention',
+      'comeuppance-creature-reflection',
+      'comeuppance-noncreature-reflection',
+    ],
+    decks: {
+      P1: [comeuppance.card, ...plains],
+      P2: [LAB_OX, LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [
+        { playerId: 'P1', cardNames: ['Comeuppance'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((p) => p.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Mountain'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castOnNthWindowThenAttack('Lab Shock', 3, 'P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12198,6 +12256,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'guard-gomazoa-viewer-blocks-and-takes-no-damage',
   'selfless-squire-viewer-prevent-and-grow',
   'deflecting-palm-viewer-chosen-source-reflects',
+  'comeuppance-viewer-prevent-and-reflect',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12523,6 +12582,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'guard-gomazoa-viewer-blocks-and-takes-no-damage': guardGomazoaScenario,
   'selfless-squire-viewer-prevent-and-grow': selflessSquireScenario,
   'deflecting-palm-viewer-chosen-source-reflects': deflectingPalmScenario,
+  'comeuppance-viewer-prevent-and-reflect': comeuppanceScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -128,6 +128,7 @@ export function createGame(config: GameConfig): GameContext {
     combatDamagePrevention: { all: false, players: {} },
     damageShields: [],
     damageReflections: [],
+    damageChain: [],
     lifeFloorPlayers: {},
     creaturesCantBeBlockedThisTurn: false,
     exiledUntilLeaves: {},

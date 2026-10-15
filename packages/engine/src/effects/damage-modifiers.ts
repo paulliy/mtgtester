@@ -16,9 +16,10 @@ import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
 import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
-import { matchesSelector } from './continuous';
+import { computeCharacteristics, matchesSelector } from './continuous';
 import type { EffectSource } from './resolve';
 import type { SelectorSource } from '../cards/selector';
+import { GameOverSignal } from '../signals';
 
 /** One source dealing damage to one recipient (CR 120.1), before any modifier applies. */
 export interface DamageEvent {
@@ -101,37 +102,57 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     });
   }
 
-  // "Prevent all damage that would be dealt to you this turn" shields, oldest first.
-  if (recipient.kind === 'player') {
-    for (const damageShield of ctx.state.damageShields) {
-      if (damageShield.playerId !== recipient.player.id) continue;
-      if (
-        damageShield.sourceObjectId !== undefined &&
-        !sourceIsObject(ctx, event.source, damageShield.sourceObjectId)
-      )
-        continue;
-      const owed = damageShield.reflectToSourceController === true;
-      modifiers.push({
-        kind: 'prevention',
-        id: `shield:${damageShield.id}`,
-        label: `${damageShield.effectSource.name}: prevent ${damageShield.sourceObjectId === undefined ? 'all' : 'that'} damage to ${recipient.player.id}`,
-        reason: 'damageShield',
-        // Reflection and one-shot shields have consequences beyond the amount prevented.
-        outcomeBearing: owed || damageShield.oneShot === true,
-        onPrevented: (prevented) => {
-          if (damageShield.oneShot === true)
-            ctx.state.damageShields = ctx.state.damageShields.filter(
-              (entry) => entry.id !== damageShield.id,
-            );
-          if (owed)
-            ctx.state.damageReflections.push({
-              effectSource: damageShield.effectSource,
-              toPlayerId: event.source.controllerId,
-              amount: prevented,
-            });
-        },
-      });
-    }
+  // "Prevent all damage that would be dealt to you ..." shields, oldest first. What each covers is
+  // checked as the damage would be dealt: its player, or a planeswalker that player controls now.
+  for (const damageShield of ctx.state.damageShields) {
+    const covered =
+      recipient.kind === 'player'
+        ? damageShield.playerId === recipient.player.id
+        : damageShield.andPlaneswalkersTheyControl === true &&
+          recipient.permanent.controllerId === damageShield.playerId &&
+          computeCharacteristics(ctx, recipient.permanent).types.includes('Planeswalker');
+    if (!covered) continue;
+    if (
+      damageShield.sourceObjectId !== undefined &&
+      !sourceIsObject(ctx, event.source, damageShield.sourceObjectId)
+    )
+      continue;
+    if (
+      damageShield.sourceNotControlledBy !== undefined &&
+      event.source.controllerId === damageShield.sourceNotControlledBy
+    )
+      continue;
+    modifiers.push({
+      kind: 'prevention',
+      id: `shield:${damageShield.id}`,
+      label: `${damageShield.effectSource.name}: prevent ${damageShield.sourceObjectId === undefined ? 'the' : 'that'} damage to ${recipientName(event)}`,
+      reason: 'damageShield',
+      // Reflection and one-shot shields have consequences beyond the amount prevented.
+      outcomeBearing: damageShield.reflect !== undefined || damageShield.oneShot === true,
+      onPrevented: (prevented) => {
+        if (damageShield.oneShot === true)
+          ctx.state.damageShields = ctx.state.damageShields.filter(
+            (entry) => entry.id !== damageShield.id,
+          );
+        if (damageShield.reflect === undefined) return;
+        const toId = reflectionTarget(ctx, event.source, damageShield.reflect);
+        if (toId === null) return;
+        // The same shield preventing the same amount to the same recipient again, with no choice
+        // anywhere in between, repeats forever: a mandatory loop, so the game is a draw (CR 104.4b).
+        const step = `${damageShield.id}>${recipientKey(event)}>${prevented}`;
+        if (ctx.state.damageChain.includes(step))
+          throw new GameOverSignal(
+            null,
+            `unbreakable mandatory damage-prevention loop (draw, CR 104.4b): ${damageShield.effectSource.name}`,
+          );
+        ctx.state.damageReflections.push({
+          effectSource: damageShield.effectSource,
+          toId,
+          amount: prevented,
+          chain: [...ctx.state.damageChain, step],
+        });
+      },
+    });
   }
 
   const statics = gatherRuleStatics(ctx);
@@ -227,6 +248,35 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     );
   }
   return modifiers;
+}
+
+function recipientKey(event: DamageEvent): string {
+  return event.recipient.kind === 'player'
+    ? event.recipient.player.id
+    : event.recipient.permanent.id;
+}
+
+/**
+ * Who a reflecting shield's effect deals the prevented damage to: the source's controller, or for
+ * a creature source (as it is on the battlefield, else as last known) the creature itself, which
+ * is only dealt damage if it is still that object on the battlefield. A creature that is already
+ * gone has nothing to deal damage to, and its controller is not a substitute.
+ */
+function reflectionTarget(
+  ctx: GameContext,
+  source: EffectSource,
+  mode: 'toSourceController' | 'toSourceCreatureElseController',
+): string | null {
+  if (mode === 'toSourceController') return source.controllerId;
+  const permanent = ctx.state.battlefield.find((p) =>
+    source.id !== undefined ? p.id === source.id : p.cardId === source.cardId,
+  );
+  const isCreature =
+    permanent !== undefined
+      ? computeCharacteristics(ctx, permanent).types.includes('Creature')
+      : (source.lastKnownFacts?.candidate.types.includes('Creature') ?? false);
+  if (!isCreature) return source.controllerId;
+  return permanent?.id ?? null;
 }
 
 /** Is `source` this object: a permanent, or a spell on the stack, by object id (CR 400.7)? */

@@ -320,6 +320,8 @@ const shapes = {
     chosenSource: leaf,
     oneShot: leaf,
     reflect: leaf,
+    andPlaneswalkersYouControl: leaf,
+    sources: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -803,7 +805,6 @@ const families = {
       createTreasureForDeaths: true,
       preventCombatDamageAll: true,
       createDamageShield: true,
-      preventCombatDamageToController: true,
       copyTargetSpell: true,
       replicateCopies: true,
       copyEachTargetedSpell: true,

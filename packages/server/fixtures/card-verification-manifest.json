@@ -2207,13 +2207,48 @@
     "01f29158-2dc9-4b9d-b726-add5d3fd5782": {
       "name": "Comeuppance",
       "oracleSha256": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "comeuppance-prevention",
           "oracleText": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control.",
-          "implementation": ["explicitly unsupported; combat-damage prevention only"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "a damage shield for the turn, through the damage modifier pipeline, covering you and each planeswalker you control as the damage would be dealt (one that arrives later this turn is covered, one you stop controlling is not), combat or noncombat, from sources you do not control as it would be dealt; damage from your own sources, to your creatures and to other players is not prevented; it ends at cleanup; when it applies with another effect on the same damage and the order changes the outcome, you choose the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-your-sources",
+            "comeuppance-planeswalkers",
+            "comeuppance-this-turn",
+            "comeuppance-order-choice"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
+        },
+        {
+          "id": "comeuppance-creature-reflection",
+          "oracleText": "If damage from a creature source is prevented this way, Comeuppance deals that much damage to that creature.",
+          "implementation": [
+            "when the source is a creature as the damage would be dealt (as it is on the battlefield, else as last known), Comeuppance deals the prevented amount to that creature right after the prevented damage event, or after all combat damage of the step; only while it is still that object on the battlefield, so a creature that has left takes nothing and its controller is not damaged instead"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-creature-source",
+            "comeuppance-order-choice"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
+        },
+        {
+          "id": "comeuppance-noncreature-reflection",
+          "oracleText": "If damage from a noncreature source is prevented this way, Comeuppance deals that much damage to the source's controller.",
+          "implementation": [
+            "when the source is not a creature (a spell, or an ability of a noncreature permanent), Comeuppance deals the prevented amount to the source's controller right after the prevented damage event; two such shields that prevent and reflect each other's damage forever with no choice between are a mandatory loop and the game is a draw (CR 104.4b)"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-noncreature-source",
+            "comeuppance-mandatory-loop"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []

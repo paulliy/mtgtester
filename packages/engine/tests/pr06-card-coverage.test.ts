@@ -24,6 +24,7 @@ import { addMana } from '../src/mana/pool';
 import type { Ability } from '../src/cards/ability';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { priorityCheckpoint } from '../src/sba/sba';
+import { GameOverSignal } from '../src/signals';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { runCombatAndExtraCombats, runTurn } from '../src/turn/turn';
@@ -3582,6 +3583,296 @@ describe('Deflecting Palm', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.04 Comeuppance
+// ---------------------------------------------------------------------------------------------
+
+describe('Comeuppance', () => {
+  const { card } = pinned('Comeuppance');
+  const palmCard = pinned('Deflecting Palm').card;
+  const COST = [{ symbol: 'W' as const }, ...generic(3)];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const OGRE = (name: string, power: string) =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9' });
+  const PINGER = oracle({
+    name: 'Lab Pinger',
+    typeLine: 'Creature — Construct',
+    power: '1',
+    toughness: '9',
+    oracleText: '{T}: Lab Pinger deals 2 damage to any target.',
+  });
+  const ROD = oracle({
+    name: 'Lab Rod',
+    typeLine: 'Artifact',
+    manaCost: '{1}',
+    oracleText: '{T}: Lab Rod deals 2 damage to any target.',
+  });
+  const WALKER = oracle({
+    name: 'Lab Walker',
+    typeLine: 'Legendary Planeswalker — Lab',
+    manaCost: '{2}',
+    loyalty: '5',
+  });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const loyalty = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)!.counters['loyalty'];
+  const marked = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)?.damageMarked;
+  const damagePayloads = (ctx: GameContext) => damageEvents(ctx).map((event) => event.payload);
+
+  /** It is P2's turn and P1 casts Comeuppance, which resolves. */
+  function comeuppance(ctx: GameContext) {
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    return object;
+  }
+
+  /** `playerId` casts Lab Bolt at `targetId` and the stack settles; `answer` gets other decisions. */
+  function bolt(ctx: GameContext, playerId: string, targetId: string, answer?: Answer) {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx, answer);
+  }
+
+  /** `permanent`'s controller activates its tap ability at `targetId`, leaving it on the stack. */
+  function activate(ctx: GameContext, perm: EnginePermanent, targetId: string) {
+    const option = optionFor(ctx, perm.controllerId, perm.id, /deals 2 damage/);
+    expect(option, `${perm.name} activates`).toBeDefined();
+    takeAction(
+      ctx,
+      perm.controllerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+  }
+
+  /** `turn`'s combat: each creature in `attackers` attacks P1, who does not block. */
+  function attackP1(ctx: GameContext, attackers: string[], answer?: Answer, turn = 'P2') {
+    ctx.state.currentTurnPlayer = turn;
+    ctx.state.activePlayerIndex = Number(turn.slice(1)) - 1;
+    pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P1' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    });
+  }
+
+  it("comeuppance-pinned-oracle-supported — the override reads one shield for you and your planeswalkers against sources you do not control, reflecting to a creature source or else to the source's controller", () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.spellAbility!.targets).toEqual([]);
+    expect(def.spellAbility!.effects).toEqual([
+      {
+        op: 'createDamageShield',
+        player: 'you',
+        andPlaneswalkersYouControl: true,
+        sources: 'youDontControl',
+        reflect: 'toSourceCreatureElseController',
+      },
+    ]);
+  });
+
+  it('comeuppance-creature-source — combat damage from a creature is prevented and Comeuppance deals that much to that creature, not to its controller', () => {
+    const ctx = pod('comeuppance-combat');
+    const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '4'));
+    comeuppance(ctx);
+    attackP1(ctx, [ogre.id]);
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(40);
+    expect(marked(ctx, ogre)).toBe(4);
+    expect(damagePayloads(ctx)).toMatchObject([
+      { source: 'Comeuppance', target: 'Lab Ogre', amount: 4, combat: false },
+    ]);
+  });
+
+  it('comeuppance-creature-source — noncombat damage from a creature ability is prevented and reflected to that creature too, and a creature that has left takes nothing and its controller is not hurt instead', () => {
+    const ctx = pod('comeuppance-pinger');
+    const pinger = spawn(ctx, 'P2', PINGER);
+    comeuppance(ctx);
+    activate(ctx, pinger, 'P1');
+    settle(ctx);
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(40);
+    expect(marked(ctx, pinger)).toBe(2);
+
+    const gone = pod('comeuppance-pinger-gone');
+    const leaver = spawn(gone, 'P2', PINGER);
+    comeuppance(gone);
+    activate(gone, leaver, 'P1');
+    pump(moveObject(gone, leaver, { zone: 'graveyard' }));
+    settle(gone);
+    expect(life(gone, 'P1')).toBe(40);
+    expect(life(gone, 'P2')).toBe(40);
+    expect(damagePayloads(gone)).toEqual([]);
+  });
+
+  it("comeuppance-noncreature-source — a spell's damage is prevented and Comeuppance deals that much to the spell's controller, and so does a noncreature permanent's ability", () => {
+    const ctx = pod('comeuppance-bolt');
+    comeuppance(ctx);
+    bolt(ctx, 'P2', 'P1');
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(37);
+    expect(damagePayloads(ctx)).toMatchObject([{ source: 'Comeuppance', target: 'P2', amount: 3 }]);
+
+    const rod = pod('comeuppance-rod');
+    const artifact = spawn(rod, 'P3', ROD);
+    comeuppance(rod);
+    activate(rod, artifact, 'P1');
+    settle(rod);
+    expect(life(rod, 'P1')).toBe(40);
+    expect(life(rod, 'P3')).toBe(38);
+    expect(life(rod, 'P2')).toBe(40);
+  });
+
+  it('comeuppance-your-sources — damage from sources you control is not prevented, nor is damage to your creatures or to another player', () => {
+    const ctx = pod('comeuppance-own');
+    const mine = spawn(ctx, 'P1', OGRE('Lab Mine', '1'));
+    const walker = spawn(ctx, 'P1', WALKER);
+    comeuppance(ctx);
+    bolt(ctx, 'P1', 'P1');
+    expect(life(ctx, 'P1')).toBe(37);
+    bolt(ctx, 'P1', walker.id);
+    expect(loyalty(ctx, walker)).toBe(2);
+    // Damage to your creature is not damage to you or a planeswalker.
+    bolt(ctx, 'P2', mine.id);
+    expect(marked(ctx, mine)).toBe(3);
+    // Damage to another player is not covered.
+    bolt(ctx, 'P2', 'P3');
+    expect(life(ctx, 'P3')).toBe(37);
+    expect(life(ctx, 'P2')).toBe(40);
+  });
+
+  it("comeuppance-planeswalkers — planeswalkers you control are protected, including one that arrives after it resolved, but not another player's", () => {
+    const ctx = pod('comeuppance-walker');
+    const early = spawn(ctx, 'P1', WALKER);
+    const theirs = spawn(
+      ctx,
+      'P2',
+      oracle({ ...WALKER, name: 'Lab Rival Walker', oracleId: 'oracle-lab-rival-walker' }),
+    );
+    comeuppance(ctx);
+    bolt(ctx, 'P2', early.id);
+    expect(loyalty(ctx, early)).toBe(5);
+    expect(life(ctx, 'P2')).toBe(37);
+    // A planeswalker gained later this turn is covered because "you control" is checked as the
+    // damage would be dealt.
+    const late = spawn(
+      ctx,
+      'P1',
+      oracle({ ...WALKER, name: 'Lab Late Walker', oracleId: 'oracle-lab-late-walker' }),
+    );
+    bolt(ctx, 'P3', late.id);
+    expect(loyalty(ctx, late)).toBe(5);
+    expect(life(ctx, 'P3')).toBe(37);
+    // Not yours, so not covered.
+    bolt(ctx, 'P3', theirs.id);
+    expect(loyalty(ctx, theirs)).toBe(2);
+    // A walker you stop controlling is no longer covered.
+    onField(ctx, early.cardId)!.controllerId = 'P2';
+    bolt(ctx, 'P3', early.id);
+    expect(loyalty(ctx, early)).toBe(2);
+  });
+
+  it('comeuppance-this-turn — the shield ends with the turn', () => {
+    const ctx = pod('comeuppance-next-turn');
+    comeuppance(ctx);
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) return declareNoAttacks(decision);
+      return pick(decision, /Pass|Discard|does not/);
+    });
+    expect(ctx.state.damageShields).toEqual([]);
+    bolt(ctx, 'P2', 'P1');
+    expect(life(ctx, 'P1')).toBe(37);
+  });
+
+  it('comeuppance-order-choice — Comeuppance and Deflecting Palm both prevent the damage and reflect differently, so you choose which applies first', () => {
+    const play = (pickText: RegExp) => {
+      const ctx = pod(`comeuppance-palm-${pickText.source}`);
+      const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '4'));
+      comeuppance(ctx);
+      const palm = castFromHand(ctx, 'P1', palmCard, [{ symbol: 'R' }, { symbol: 'W' }]);
+      resolveTop(ctx, (decision) => ({
+        index: decision.options.findIndex((o) => o.description === 'Lab Ogre'),
+        targets: new Map(),
+      }));
+      const asked: PendingDecision[] = [];
+      attackP1(ctx, [ogre.id], (decision) => {
+        asked.push(decision);
+        return {
+          index: decision.options.findIndex((o) => pickText.test(o.description)),
+          targets: new Map(),
+        };
+      });
+      return { ctx, ogre, asked, palm };
+    };
+    const comeuppanceFirst = play(/Comeuppance/);
+    expect(comeuppanceFirst.asked).toHaveLength(1);
+    expect(comeuppanceFirst.asked[0]!.player).toBe('P1');
+    expect(marked(comeuppanceFirst.ctx, comeuppanceFirst.ogre)).toBe(4);
+    expect(life(comeuppanceFirst.ctx, 'P2')).toBe(40);
+    // The Palm was not used up, so it is still waiting.
+    expect(comeuppanceFirst.ctx.state.damageShields.map((s) => s.oneShot === true)).toContain(true);
+    const palmFirst = play(/Deflecting Palm/);
+    expect(palmFirst.asked).toHaveLength(1);
+    expect(life(palmFirst.ctx, 'P2')).toBe(36);
+    expect(marked(palmFirst.ctx, palmFirst.ogre)).toBe(0);
+    expect(life(palmFirst.ctx, 'P1')).toBe(40);
+  });
+
+  it("comeuppance-mandatory-loop — two Comeuppances that prevent and reflect each other's damage forever are an unbreakable loop, and the game is a draw (CR 104.4b)", () => {
+    const ctx = pod('comeuppance-loop');
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    // P2 has its own Comeuppance, protecting P2 from everything P2 does not control.
+    const second = conjure(ctx, 'P2', card, 'hand');
+    addMana(playerById(ctx, 'P2'), COST);
+    const option = optionFor(ctx, 'P2', second.id);
+    expect(option).toBeDefined();
+    takeAction(ctx, 'P2', option!.payload as PriorityActionPayload);
+    resolveTop(ctx);
+    let thrown: unknown;
+    try {
+      bolt(ctx, 'P2', 'P1');
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(GameOverSignal);
+    expect((thrown as GameOverSignal).winner).toBeNull();
+    expect((thrown as GameOverSignal).haltReason).toContain('draw');
+    expect((thrown as GameOverSignal).haltReason).toContain('CR 104.4b');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3679,6 +3970,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Deflecting Palm',
     sha256: '3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Comeuppance',
+    sha256: 'c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75',
+    clauseCount: 3,
     authored: true,
   },
   {

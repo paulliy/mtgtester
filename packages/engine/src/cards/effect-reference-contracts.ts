@@ -130,7 +130,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
   createDamageShield: {},
-  preventCombatDamageToController: {},
   copyTargetSpell: { target: spell },
   replicateCopies: {},
   copyEachTargetedSpell: { targetSlot: many(spell) },

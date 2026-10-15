@@ -3772,15 +3772,14 @@ export function* executeAbility(
           playerId: controller.id,
           ...(sourceObjectId !== undefined ? { sourceObjectId } : {}),
           ...(effect.oneShot === true ? { oneShot: true as const } : {}),
-          ...(effect.reflect === 'toSourceController'
-            ? { reflectToSourceController: true as const }
+          ...(effect.reflect !== undefined ? { reflect: effect.reflect } : {}),
+          ...(effect.andPlaneswalkersYouControl === true
+            ? { andPlaneswalkersTheyControl: true as const }
             : {}),
+          ...(effect.sources === 'youDontControl' ? { sourceNotControlledBy: controller.id } : {}),
         });
         break;
       }
-      case 'preventCombatDamageToController':
-        ctx.state.combatDamagePrevention.players[controller.id] = true;
-        break;
       case 'replicateCopies': {
         yield* replicateCopies(ctx, controller.id, effect);
         break;
@@ -6219,12 +6218,14 @@ export function* executeAbility(
 export function* flushDamageReflections(ctx: GameContext): GameGen<void> {
   while (ctx.state.damageReflections.length > 0) {
     const reflection = ctx.state.damageReflections.shift()!;
+    ctx.state.damageChain = reflection.chain;
     yield* dealDamageToObject(
       ctx,
       reflection.effectSource,
-      reflection.toPlayerId as unknown as ObjectId,
+      reflection.toId as unknown as ObjectId,
       reflection.amount,
     );
+    ctx.state.damageChain = [];
   }
 }
 

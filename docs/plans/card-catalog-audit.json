@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 35,
+      "uniqueOracleIds": 34,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6536,6 +6536,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed source choice and reflection are implemented as unscoped combat-damage prevention): the executable override in coverage-pr06.ts has its controller choose a permanent or spell as it resolves (CR 609.7a) and creates a one-shot damage shield for damage from exactly that object to you, any damage and not only combat, which ends when it first prevents damage; a source that changes zones is a new object (CR 400.7). The prevented amount is queued and dealt by Deflecting Palm to that source's controller right after the prevented damage event, after all combat damage in the step, through the same damage pipeline. The bespoke deflectingPalm op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+      "name": "Comeuppance",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and reflection are implemented as preventCombatDamageToController): the executable override in coverage-pr06.ts creates a damage shield for the turn that prevents all damage, combat and noncombat, to you and to the planeswalkers you control as the damage would be dealt, from sources you do not control, through the damage modifier pipeline. Each prevented amount is dealt by Comeuppance right after the prevented damage event to the source itself when it is a creature as the damage would be dealt (only while it is still that object on the battlefield) and otherwise to the source's controller. Reflections that prevent each other forever, with no choice in between, are an unbreakable mandatory loop and end the game as a draw (CR 104.4b). The bespoke preventCombatDamageToController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }
