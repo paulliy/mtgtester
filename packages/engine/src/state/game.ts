@@ -126,6 +126,7 @@ export function createGame(config: GameConfig): GameContext {
     createdTokenThisTurn: Object.fromEntries(players.map((p) => [p.id, false])),
     creaturesDiedThisTurn: 0,
     combatDamagePrevention: { all: false, players: {} },
+    damageShields: [],
     lifeFloorPlayers: {},
     creaturesCantBeBlockedThisTurn: false,
     exiledUntilLeaves: {},

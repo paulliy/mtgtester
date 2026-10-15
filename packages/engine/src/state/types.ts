@@ -531,6 +531,15 @@ export interface DelayedTrigger {
   player?: 'you';
 }
 
+/** "Prevent all damage that would be dealt to you this turn" and its relatives (CR 615). */
+export interface DamageShield {
+  id: string;
+  /** The spell or ability that created it, as last known information. */
+  effectSource: import('../effects/resolve').EffectSource;
+  /** The player whose damage it prevents. */
+  playerId: PlayerId;
+}
+
 export interface EngineState extends GameState {
   players: EnginePlayerState[];
   battlefield: EnginePermanent[];
@@ -587,6 +596,12 @@ export interface EngineState extends GameState {
     players: Record<PlayerId, boolean>;
     tokenSpecs?: Record<PlayerId, import('../cards/ability').TokenSpec>;
   };
+  /**
+   * Damage prevention shields created by resolving spells and abilities, oldest first, cleared as
+   * the turn's "until end of turn" effects end (CR 514.2). Each is collected by the damage modifier
+   * pipeline (`effects/damage-modifiers.ts`) for the damage it covers.
+   */
+  damageShields: DamageShield[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   /**

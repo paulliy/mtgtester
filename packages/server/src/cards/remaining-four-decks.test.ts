@@ -129,7 +129,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Delirium',
       "Duelist's Heritage",
       'Humble Defector',
-      'Selfless Squire',
       'Teyo, Geometric Tactician',
       'Wishclaw Talisman',
       'Brash Taunter',

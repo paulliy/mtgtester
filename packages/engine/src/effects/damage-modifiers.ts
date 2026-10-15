@@ -13,8 +13,8 @@ import type { Color, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { emit } from '../log/log';
 import { plainOption, presentedSource } from '../present';
-import { createToken } from '../state/objects';
-import { gatherRuleStatics, hasProtectionFrom } from '../state/queries';
+import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
+import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { matchesSelector } from './continuous';
 import type { EffectSource } from './resolve';
@@ -101,6 +101,20 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     });
   }
 
+  // "Prevent all damage that would be dealt to you this turn" shields, oldest first.
+  if (recipient.kind === 'player') {
+    for (const damageShield of ctx.state.damageShields) {
+      if (damageShield.playerId !== recipient.player.id) continue;
+      modifiers.push({
+        kind: 'prevention',
+        id: `shield:${damageShield.id}`,
+        label: `${damageShield.effectSource.name}: prevent all damage to ${recipient.player.id}`,
+        reason: 'damageShield',
+        outcomeBearing: false,
+      });
+    }
+  }
+
   const statics = gatherRuleStatics(ctx);
   const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === event.source.cardId);
   const perCard = new Map<string, number>();
@@ -181,7 +195,30 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
       }
     }
   }
+  // A prevention whose amount is observable (a "whenever damage that would be dealt to you is
+  // prevented" trigger will count it) is not interchangeable with another that prevents the same
+  // damage, so the order between them matters.
+  if (
+    recipient.kind === 'player' &&
+    modifiers.some((modifier) => modifier.kind === 'prevention') &&
+    hasPreventionListener(ctx, recipient.player.id)
+  ) {
+    return modifiers.map((modifier) =>
+      modifier.kind === 'prevention' ? { ...modifier, outcomeBearing: true } : modifier,
+    );
+  }
   return modifiers;
+}
+
+/** Does a permanent watch "damage that would be dealt to" `playerId` "is prevented"? */
+function hasPreventionListener(ctx: GameContext, playerId: PlayerId): boolean {
+  return ctx.state.battlefield.some((perm) =>
+    triggersOf(ctx, perm).some(
+      (ability) =>
+        ability.trigger?.when === 'damagePreventedToPlayer' &&
+        (ability.trigger.player === 'each' || perm.controllerId === playerId),
+    ),
+  );
 }
 
 /**
@@ -258,6 +295,15 @@ export function* applyDamageModifiers(ctx: GameContext, event: DamageEvent): Gam
     });
     prevented.push({ modifierId: next.id, amount });
     next.onPrevented?.(amount);
+    // One "damage that would be dealt to you is prevented" event per prevention applied to one
+    // source's damage to the player, carrying the amount it prevented.
+    if (event.recipient.kind === 'player')
+      queuePlayerTriggersForEvent(
+        ctx,
+        'damagePreventedToPlayer',
+        event.recipient.player.id,
+        amount,
+      );
     amount = 0;
   }
   return { amount, prevented };

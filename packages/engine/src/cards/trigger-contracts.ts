@@ -41,6 +41,7 @@ export function triggerEventFamily(
     case 'gainsLife':
     case 'drawsCard':
     case 'foretells':
+    case 'damagePreventedToPlayer':
       return 'player';
     default:
       return assertNever(when, 'trigger event dispatcher');
@@ -74,6 +75,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'gainsLife':
     case 'drawsCard':
     case 'foretells':
+    case 'damagePreventedToPlayer':
     case 'upkeep':
     case 'endStep':
     case 'untapStep':

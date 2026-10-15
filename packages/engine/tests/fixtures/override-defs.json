@@ -5482,8 +5482,50 @@
   {
     "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
     "name": "Selfless Squire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, prevent all damage that would be dealt to you this turn.",
+      "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, prevent all damage that would be dealt to you this turn",
+          "effects": [
+            {
+              "op": "createDamageShield",
+              "player": "you"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "damagePreventedToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "7e00b0cd-d212-4604-ba07-da21f4fe00b0",
@@ -20509,8 +20551,50 @@
   {
     "oracleId": "oracle-selfless-squire",
     "name": "Selfless Squire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, prevent all damage that would be dealt to you this turn.",
+      "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, prevent all damage that would be dealt to you this turn",
+          "effects": [
+            {
+              "op": "createDamageShield",
+              "player": "you"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "damagePreventedToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-servant-of-the-conduit",

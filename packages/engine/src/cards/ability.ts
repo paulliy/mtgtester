@@ -642,6 +642,12 @@ export type Effect =
   | { op: 'goadEachOpponent' }
   | { op: 'createTreasureForDeaths' }
   | { op: 'preventCombatDamageAll' }
+  /**
+   * "Prevent all damage that would be dealt to you this turn" (Selfless Squire): a shield that
+   * lasts until the turn's cleanup step. It applies to damage that would be dealt after it is
+   * created, combat or not, from any source.
+   */
+  | { op: 'createDamageShield'; player: 'you' }
   | { op: 'preventCombatDamageToController' }
   | { op: 'copyTargetSpell'; target: number }
   /**
@@ -1633,7 +1639,13 @@ export type TriggerHead =
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
-  | { when: 'foretells'; player: 'you' };
+  | { when: 'foretells'; player: 'you' }
+  /**
+   * "Whenever damage that would be dealt to you is prevented" (Selfless Squire): queued once per
+   * prevention applied to one damage event to the player, carrying the amount it prevented
+   * (`damageDealt` in the ability's value scope).
+   */
+  | { when: 'damagePreventedToPlayer'; player: 'you' | 'each' };
 
 /**
  * When a triggered ability fires.

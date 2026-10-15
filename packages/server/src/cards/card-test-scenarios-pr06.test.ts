@@ -660,3 +660,34 @@ describe('Guard Gomazoa Card Test Lab scenario', () => {
     replays('guard-gomazoa-viewer-blocks-and-takes-no-damage', steps);
   });
 });
+
+describe('Selfless Squire Card Test Lab scenario', () => {
+  it('selfless-squire-viewer-prevent-and-grow — after the Squire enters, P2 casts Lab Shock at P1, all 2 damage is prevented, and the Squire gets two +1/+1 counters', () => {
+    const steps: Step[] = [{ action: 'Cast Selfless Squire' }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'selfless-squire-viewer-prevent-and-grow',
+      steps,
+    );
+    const [squire] = onBattlefield('Selfless Squire');
+    expect(squire?.counters['+1/+1']).toBe(2);
+    expect(
+      scenario.engine.view('P1').battlefield.find((p) => p.name === 'Selfless Squire'),
+    ).toMatchObject({
+      power: 3,
+      toughness: 3,
+    });
+    expect(seat('P1').life).toBe(40);
+    const prevented = state.eventLog.filter((event) => event.type === 'damagePrevented');
+    expect(prevented).toHaveLength(1);
+    expect(prevented[0]?.payload).toMatchObject({
+      target: 'P1',
+      amount: 2,
+      reason: 'damageShield',
+    });
+    expect(state.eventLog.filter((event) => event.type === 'damage')).toEqual([]);
+    expect(seat('P2').graveyard.map((card) => card.name)).toEqual(['Lab Shock']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('selfless-squire-viewer-prevent-and-grow', steps);
+  });
+});

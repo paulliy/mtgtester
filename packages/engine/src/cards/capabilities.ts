@@ -799,6 +799,7 @@ const families = {
       goadEachOpponent: true,
       createTreasureForDeaths: true,
       preventCombatDamageAll: true,
+      createDamageShield: true,
       preventCombatDamageToController: true,
       copyTargetSpell: true,
       replicateCopies: true,
@@ -1052,6 +1053,7 @@ const families = {
       drawsCard: true,
       becomesCrewed: true,
       foretells: true,
+      damagePreventedToPlayer: true,
     } satisfies Record<Extract<TriggerSpec['when'], string | number>, true>,
   },
   Ability: {

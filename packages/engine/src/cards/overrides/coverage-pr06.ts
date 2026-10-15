@@ -78,6 +78,43 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Selfless Squire: the enter trigger makes a shield for the rest of the turn that covers every
+  // source and both combat and noncombat damage to you (CR 615). The second ability is a
+  // separate trigger of the permanent, so it works whenever the Squire is on the battlefield and
+  // damage to you is prevented by anything, once per prevented source's damage, for that amount.
+  defineCard(
+    '7d079c78-b2a9-444f-ab54-c61c041baa6d',
+    'Selfless Squire',
+    [
+      'When this creature enters, prevent all damage that would be dealt to you this turn.',
+      'Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [{ op: 'createDamageShield', player: 'you' }],
+          description:
+            'When this creature enters, prevent all damage that would be dealt to you this turn',
+        }),
+        triggered(
+          { when: 'damagePreventedToPlayer', player: 'you' },
+          {
+            effects: [
+              {
+                op: 'putCounters',
+                target: 'source',
+                counter: '+1/+1',
+                count: { kind: 'damageDealt' },
+              },
+            ],
+            description:
+              'Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature',
+          },
+        ),
+      ],
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

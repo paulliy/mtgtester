@@ -408,6 +408,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'thundermaw-hellkite-viewer-damage-and-tap-fliers',
       'backlash-viewer-tap-and-reflect',
       'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+      'selfless-squire-viewer-prevent-and-grow',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

@@ -129,6 +129,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   goadEachOpponent: {},
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
+  createDamageShield: {},
   preventCombatDamageToController: {},
   copyTargetSpell: { target: spell },
   replicateCopies: {},

@@ -3755,6 +3755,13 @@ export function* executeAbility(
       case 'preventCombatDamageAll':
         ctx.state.combatDamagePrevention.all = true;
         break;
+      case 'createDamageShield':
+        ctx.state.damageShields.push({
+          id: `shield-${ctx.state.nextObjectNum++}`,
+          effectSource: source,
+          playerId: controller.id,
+        });
+        break;
       case 'preventCombatDamageToController':
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         break;

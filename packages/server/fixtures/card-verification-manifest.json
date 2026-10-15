@@ -2434,13 +2434,41 @@
     "7d079c78-b2a9-444f-ab54-c61c041baa6d": {
       "name": "Selfless Squire",
       "oracleSha256": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "selfless-squire-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted)"],
+          "engineTestIds": ["selfless-squire-pinned-oracle-supported"],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
+        },
+        {
+          "id": "selfless-squire-shield",
           "oracleText": "When this creature enters, prevent all damage that would be dealt to you this turn.",
-          "implementation": ["explicitly unsupported; combat prevention only; counters omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enter trigger that creates a damage shield for its controller: through the damage modifier pipeline it prevents every damage event to that player, combat and noncombat, from any source, from the moment it resolves until the turn's cleanup step (CR 514.2); damage to your creatures or to other players is not covered, and it does not carry into the next turn"
+          ],
+          "engineTestIds": [
+            "selfless-squire-pinned-oracle-supported",
+            "selfless-squire-shield",
+            "selfless-squire-this-turn",
+            "selfless-squire-order-choice"
+          ],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
+        },
+        {
+          "id": "selfless-squire-counters",
+          "oracleText": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature.",
+          "implementation": [
+            "trigger of the permanent on a new damagePreventedToPlayer event, queued once per prevention applied to one source's damage to its controller (any prevention: the shield or a combat shield), putting that many +1/+1 counters on it; it works while the Squire is on the battlefield whether or not its own shield is the prevention, and not for damage prevented to another player; when the order of a replacement and a prevention changes the amount prevented, the damaged player chooses the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "selfless-squire-pinned-oracle-supported",
+            "selfless-squire-counters",
+            "selfless-squire-order-choice"
+          ],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
         }
       ],
       "gameplayAiScenarioIds": []

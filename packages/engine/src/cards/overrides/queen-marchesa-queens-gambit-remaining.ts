@@ -364,12 +364,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ['unrecognized rules text: "You and target opponent each draw three cards."'],
     SECRET_RENDEZVOUS,
   );
-  // Catalog audit queen-batch-3: all-damage prevention and counters omitted.
-  unsupportedCard(
-    '7d079c78-b2a9-444f-ab54-c61c041baa6d',
-    'Selfless Squire',
-    'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
-  );
+  // Selfless Squire: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-5: optional choose-two is mandatory; duplicate modes allowed.
   unsupportedCard(
     '2143f413-7baa-4fd6-a7ca-32f52bfa553f',

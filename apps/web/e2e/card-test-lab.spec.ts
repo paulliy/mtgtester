@@ -8966,3 +8966,18 @@ test('Guard Gomazoa: blocks Lab Ox and takes no combat damage', async ({ page })
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('40');
 });
+
+test('Selfless Squire: prevent the damage to you and grow by that much', async ({ page }) => {
+  await runScenario(page, 'Selfless Squire: prevent the damage to you and grow by that much');
+  const squire = handCard(page, 'Selfless Squire');
+  await expect(squire).toHaveClass(/actionable/, { timeout: 15_000 });
+  await squire.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The enter trigger resolves, then P2's Lab Shock at you is prevented and the Squire grows.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Selfless Squire')).toContainText('3/3');
+  await expect(page.getByText(/Lab Shock.* prevented/i).first()).toBeVisible();
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});

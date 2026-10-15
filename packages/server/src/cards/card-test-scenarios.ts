@@ -11846,6 +11846,67 @@ function guardGomazoaScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * An opponent seat that casts `spell` (aimed at P1 when legal) at the `nth` priority window where
+ * it can, so a scenario can let P1's own spell and trigger resolve before the opponent acts.
+ */
+function castOnNthWindow(spell: string, nth: number): DecisionProvider {
+  let windows = 0;
+  return {
+    decide(request) {
+      const action = request.legalActions.find((candidate) =>
+        candidate.description.startsWith(`Cast ${spell}`),
+      );
+      if (action !== undefined && ++windows === nth) {
+        return {
+          requestId: request.requestId,
+          actionId: action.id,
+          targets: (action.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('P1') ? 'P1' : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((candidate) => candidate.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function selflessSquireScenario(gameId: GameId): CardTestScenario {
+  const squire = pinnedFrom(COVERAGE_PR06, 'Selfless Squire');
+  const plains = Array.from({ length: 4 }, () => PLAINS);
+  return pr01Scenario(gameId, {
+    id: 'selfless-squire-viewer-prevent-and-grow',
+    title: 'Selfless Squire: prevent the damage to you and grow by that much',
+    instructions: [
+      'Selfless Squire is in your hand with four Plains on your battlefield. P2 holds Lab Shock with a Mountain.',
+      'Cast Selfless Squire and let its enter trigger resolve. Once it has, P2 casts Lab Shock at you; let it resolve, and then the Squire trigger.',
+    ],
+    expectedOutcome:
+      'Lab Shock deals no damage to you, so you are still at 40, and Selfless Squire gets two +1/+1 counters and is a 3/3.',
+    oracleSha256: squire.sha256,
+    clauseIds: ['selfless-squire-flash', 'selfless-squire-shield', 'selfless-squire-counters'],
+    decks: {
+      P1: [squire.card, ...plains],
+      P2: [LAB_SHOCK, MOUNTAIN, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        { playerId: 'P1', cardNames: ['Selfless Squire'] },
+        { playerId: 'P2', cardNames: ['Lab Shock'] },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((p) => p.name) },
+        { playerId: 'P2', cardNames: ['Mountain'] },
+      ],
+    },
+    decisionProviderOverrides: { P2: castOnNthWindow('Lab Shock', 3) },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12102,6 +12163,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'thundermaw-hellkite-viewer-damage-and-tap-fliers',
   'backlash-viewer-tap-and-reflect',
   'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+  'selfless-squire-viewer-prevent-and-grow',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12425,6 +12487,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'thundermaw-hellkite-viewer-damage-and-tap-fliers': thundermawHellkiteScenario,
   'backlash-viewer-tap-and-reflect': backlashScenario,
   'guard-gomazoa-viewer-blocks-and-takes-no-damage': guardGomazoaScenario,
+  'selfless-squire-viewer-prevent-and-grow': selflessSquireScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

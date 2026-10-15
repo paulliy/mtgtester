@@ -340,6 +340,7 @@ const effectExpressions = {
   goadEachOpponent: {},
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
+  createDamageShield: { player: oneOf('you') },
   preventCombatDamageToController: {},
   copyTargetSpell: {},
   replicateCopies: {},

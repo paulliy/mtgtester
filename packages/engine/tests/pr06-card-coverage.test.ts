@@ -36,11 +36,13 @@ import {
   copies,
   declareAttacks,
   declareBlocks,
+  declareNoAttacks,
   forest,
   gameConfig,
   island,
   mountain,
   oracle,
+  pick,
   plains,
   pump,
   registerCustomDef,
@@ -3103,6 +3105,233 @@ describe('Guard Gomazoa', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.20 Selfless Squire
+// ---------------------------------------------------------------------------------------------
+
+describe('Selfless Squire', () => {
+  const { card } = pinned('Selfless Squire');
+  const COST = [{ symbol: 'W' as const }, ...generic(3)];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const BRUTE = (name: string, power: string) =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9' });
+  const gisela = oracle({
+    oracleId: '66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5',
+    name: 'Gisela, Blade of Goldnight',
+    typeLine: 'Legendary Creature — Angel',
+    supertypes: ['Legendary'],
+    manaCost: '{4}{R}{W}{W}',
+    colors: ['R', 'W'],
+    colorIdentity: ['R', 'W'],
+    power: '5',
+    toughness: '5',
+    oracleText:
+      'If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\n' +
+      'If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.',
+  });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const counters = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)!.counters['+1/+1'] ?? 0;
+
+  /** P1 casts the Squire (Flash) and the stack settles, so its enter trigger has resolved. */
+  function castSquire(ctx: GameContext) {
+    const object = castFromHand(ctx, 'P1', card, COST);
+    settle(ctx);
+    return onField(ctx, object.cardId)!;
+  }
+
+  /** `playerId` casts Lab Bolt at `targetId` and the stack settles; `answer` gets other decisions. */
+  function bolt(ctx: GameContext, playerId: string, targetId: string, answer?: Answer) {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx, answer);
+  }
+
+  /** P2's turn: each creature in `attackers` attacks P1, who does not block. */
+  function attackP1(ctx: GameContext, attackers: string[], answer?: Answer) {
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P1' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    });
+  }
+
+  it('selfless-squire-pinned-oracle-supported — the override reads flash, an enter trigger that makes a damage shield, and a prevented-damage trigger that counts the prevented amount on this creature', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flash');
+    expect(def.triggers.map((t) => t.trigger)).toEqual([
+      { when: 'enters', subject: { kind: 'self' } },
+      { when: 'damagePreventedToPlayer', player: 'you' },
+    ]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'createDamageShield', player: 'you' }]);
+    expect(def.triggers[1]!.effects).toEqual([
+      { op: 'putCounters', target: 'source', counter: '+1/+1', count: { kind: 'damageDealt' } },
+    ]);
+  });
+
+  it('selfless-squire-shield — through the stack, the shield prevents combat and noncombat damage to you this turn, but not damage to your creatures', () => {
+    const ctx = pod('squire-shield');
+    const squire = castSquire(ctx);
+    expect(ctx.state.damageShields).toHaveLength(1);
+    expect(counters(ctx, squire)).toBe(0);
+    const mine = spawn(ctx, 'P1', BRUTE('Lab Mine', '1'));
+
+    bolt(ctx, 'P2', 'P1');
+    expect(life(ctx, 'P1')).toBe(40);
+
+    const ogre = spawn(ctx, 'P2', BRUTE('Lab Ogre', '4'));
+    attackP1(ctx, [ogre.id]);
+    expect(life(ctx, 'P1')).toBe(40);
+
+    // Damage to your creatures is not damage to you.
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    bolt(ctx, 'P2', mine.id);
+    expect(onField(ctx, mine.cardId)!.damageMarked).toBe(3);
+    // Damage to another player is not covered.
+    bolt(ctx, 'P1', 'P3');
+    expect(life(ctx, 'P3')).toBe(37);
+  });
+
+  it('selfless-squire-this-turn — the shield ends with the turn: damage the next turn is dealt', () => {
+    const ctx = pod('squire-next-turn');
+    castSquire(ctx);
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) return declareNoAttacks(decision);
+      return pick(decision, /Pass|Discard|does not/);
+    });
+    expect(ctx.state.damageShields).toEqual([]);
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    bolt(ctx, 'P2', 'P1');
+    expect(life(ctx, 'P1')).toBe(37);
+  });
+
+  it('selfless-squire-counters — each prevented source puts that many +1/+1 counters on the Squire, once per source: two attackers make two triggers', () => {
+    const ctx = pod('squire-counters');
+    const squire = castSquire(ctx);
+    const a = spawn(ctx, 'P2', BRUTE('Lab Ogre A', '4'));
+    const b = spawn(ctx, 'P2', BRUTE('Lab Ogre B', '2'));
+    attackP1(ctx, [a.id, b.id]);
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(counters(ctx, squire)).toBe(6);
+    // Noncombat damage is prevented and counted too.
+    bolt(ctx, 'P2', 'P1');
+    expect(counters(ctx, squire)).toBe(9);
+    // The counters are triggers, not prevented-damage reflection: nothing hurt the attackers.
+    expect(onField(ctx, a.cardId)!.damageMarked).toBe(0);
+  });
+
+  it('selfless-squire-counters — the trigger belongs to the Squire alone: with no shield, a Fog-style combat shield to you still counts, and damage to someone else or to your creature does not', () => {
+    const ctx = pod('squire-fog');
+    const squire = enterFrom(ctx, 'P1', card);
+    // Enter trigger is not resolved here: no shield exists, only the combat shield below.
+    ctx.state.pendingTriggers = [];
+    ctx.state.damageShields = [];
+    ctx.state.combatDamagePrevention = { all: false, players: { P1: true } };
+    const ogre = spawn(ctx, 'P2', BRUTE('Lab Ogre', '3'));
+    attackP1(ctx, [ogre.id]);
+    expect(counters(ctx, squire)).toBe(3);
+    expect(life(ctx, 'P1')).toBe(40);
+
+    const other = pod('squire-others');
+    const watcher = enterFrom(other, 'P1', card);
+    other.state.pendingTriggers = [];
+    other.state.damageShields = [];
+    const bystander = spawn(other, 'P1', BRUTE('Lab Bystander', '1'));
+    bolt(other, 'P1', 'P3');
+    bolt(other, 'P2', bystander.id);
+    expect(counters(other, watcher)).toBe(0);
+    // An opponent's Squire does not count damage prevented for you.
+    const rival = pod('squire-rival');
+    const theirs = enterFrom(rival, 'P2', card);
+    rival.state.pendingTriggers = [];
+    rival.state.combatDamagePrevention = { all: false, players: { P1: true } };
+    attackP1(rival, [spawn(rival, 'P2', BRUTE('Lab Ogre', '3')).id]);
+    expect(counters(rival, theirs)).toBe(0);
+  });
+
+  it('selfless-squire-order-choice — a doubling replacement and the shield change how many counters the Squire gets, so you choose the order', () => {
+    const play = (pickText: RegExp) => {
+      const ctx = pod(`squire-order-${pickText.source}`);
+      const squire = castSquire(ctx);
+      spawn(ctx, 'P2', gisela);
+      const asked: PendingDecision[] = [];
+      bolt(ctx, 'P2', 'P1', (decision) => {
+        asked.push(decision);
+        return {
+          index: decision.options.findIndex((o) => pickText.test(o.description)),
+          targets: new Map(),
+        };
+      });
+      return { ctx, squire, asked };
+    };
+    // P2's Gisela doubles damage dealt to P1: 3 becomes 6 if that applies first, else the shield
+    // prevents 3.
+    const shieldFirst = play(/prevent all damage/);
+    expect(shieldFirst.asked).toHaveLength(1);
+    expect(shieldFirst.asked[0]!.player).toBe('P1');
+    expect(counters(shieldFirst.ctx, shieldFirst.squire)).toBe(3);
+    const doubleFirst = play(/double/);
+    expect(doubleFirst.asked).toHaveLength(1);
+    expect(counters(doubleFirst.ctx, doubleFirst.squire)).toBe(6);
+    expect(life(doubleFirst.ctx, 'P1')).toBe(40);
+
+    // Without the Squire to watch, the same two effects give the same result either way: no prompt.
+    const unwatched = pod('squire-order-unwatched');
+    const shield = enterFrom(unwatched, 'P1', card);
+    unwatched.state.pendingTriggers = [];
+    onField(unwatched, shield.cardId)!.faceDown = true;
+    unwatched.state.damageShields.push({
+      id: 'lab-shield',
+      effectSource: permanentSource(shield),
+      playerId: 'P1',
+    });
+    spawn(unwatched, 'P2', gisela);
+    const hit = pump(
+      dealDamageToPlayer(
+        unwatched,
+        permanentSource(spawn(unwatched, 'P2', BRUTE('Lab Ogre', '2'))),
+        playerById(unwatched, 'P1'),
+        3,
+        {
+          combat: false,
+          sourceIsCommander: false,
+          sourceHasLifelink: false,
+        },
+      ),
+    );
+    expect(hit.decisions).toEqual([]);
+    expect(life(unwatched, 'P1')).toBe(40);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3188,6 +3417,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Territorial Aetherkite',
     sha256: '3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Selfless Squire',
+    sha256: 'debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6',
+    clauseCount: 3,
     authored: true,
   },
   {

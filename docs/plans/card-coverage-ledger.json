@@ -3144,6 +3144,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
+    "name": "Selfless Squire",
+    "package": "PR06.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
     "name": "Shanna, Sisay's Legacy",
     "package": "W8",

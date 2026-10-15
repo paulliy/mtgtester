@@ -101,8 +101,6 @@ const REASONS: Record<string, string> = {
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
   Delirium: "Cast-only-during-an-opponent's-turn is omitted.",
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
-  'Selfless Squire':
-    'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
@@ -285,6 +283,7 @@ describe('Marchesa catalog audit containment', () => {
     'Arcbond',
     'Thundermaw Hellkite',
     'Backlash',
+    'Selfless Squire',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

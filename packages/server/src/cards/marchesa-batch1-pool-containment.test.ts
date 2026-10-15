@@ -115,6 +115,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Sceptre of Eternal Glory',
       'Scourge of Valkas',
       'Screams from Within',
+      'Selfless Squire',
       'Shard of the Nightbringer',
       'Shard of the Void Dragon',
       'Sheltered by Ghosts',
