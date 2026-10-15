@@ -117,6 +117,14 @@ export const ASSASSIN_1_1: TokenSpec = creatureToken({
   keywords: ['deathtouch', 'haste'],
 });
 
+export const ZOMBIE_2_2_BLACK: TokenSpec = creatureToken({
+  name: 'Zombie',
+  subtypes: ['Zombie'],
+  colors: ['B'],
+  power: 2,
+  toughness: 2,
+});
+
 export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({
   name: 'Necron Warrior',
   subtypes: ['Necron'],
@@ -487,6 +495,7 @@ export const FOOD: TokenSpec = {
  * against this list (by deep structural equality) so a match returns the SAME object, not a copy.
  */
 export const ALL_TOKENS: TokenSpec[] = [
+  ZOMBIE_2_2_BLACK,
   SOLDIER_1_1_LIFELINK,
   INKLING_2_1_FLYING,
   ASSASSIN_1_1,

@@ -99,8 +99,6 @@ const REASONS: Record<string, string> = {
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
-  'Promise of Loyalty':
-    'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
   "Songbirds' Blessing":
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
@@ -133,8 +131,6 @@ const REASONS: Record<string, string> = {
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Dark Confidant':
-    'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
@@ -144,6 +140,7 @@ const REASONS: Record<string, string> = {
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',
     'Myriad Landscape',
@@ -255,13 +252,15 @@ describe('Marchesa catalog audit containment', () => {
     'Eldrazi Conscription',
     'Curse of Bounty',
     'Eidolon of Countless Battles',
+    'Breena, the Demagogue',
+    "Duelist's Heritage",
+    'Dark Confidant',
     'Animate Dead',
     'Dragon Tempest',
     'Scourge of Valkas',
     "Tyrant's Familiar",
     'Brash Taunter',
     'Tomb Blade',
-    "Duelist's Heritage",
     'Thunderbreak Regent',
     'Flameblast Dragon',
     'Territorial Aetherkite',
@@ -274,9 +273,9 @@ describe('Marchesa catalog audit containment', () => {
     'Michiko Konda, Truth Seeker',
     'Delirium',
     'Firemane Commando',
-    'Breena, the Demagogue',
     'Mangara, the Diplomat',
     'Tomik, Wielder of Law',
+    'Promise of Loyalty',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

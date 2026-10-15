@@ -11,7 +11,7 @@ import type { GameGen } from '../decisions';
 import { drawCards } from '../effects/resolve';
 import { emit, debug } from '../log/log';
 import { moveObject } from '../state/objects';
-import { playersInApnapOrder } from '../state/queries';
+import { playersInApnapOrder, requireModeled } from '../state/queries';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
 
 const MAX_MULLIGANS = 8;
@@ -101,6 +101,39 @@ export function* runOpeningHands(ctx: GameContext): GameGen<void> {
       mulligans: p.mulligansTaken,
     })),
   });
+  yield* runOpeningHandBattlefieldActions(ctx);
+}
+
+/** CR 103.6: after all mulligans, each player may take opening-hand actions in any order. */
+export function* runOpeningHandBattlefieldActions(ctx: GameContext): GameGen<void> {
+  for (const player of playersInApnapOrder(ctx)) {
+    while (true) {
+      const cards = player.hand.filter((card) =>
+        ctx.defs
+          .get(card.oracleId)
+          ?.ruleStatics.some((rule) => rule.kind === 'beginOnBattlefieldFromOpeningHand'),
+      );
+      if (cards.length === 0) break;
+      for (const card of cards)
+        requireModeled(ctx.defs.get(card.oracleId)!, 'opening-hand battlefield action');
+      const choice = yield {
+        decisionType: 'general',
+        player: player.id,
+        prompt: 'You may begin the game with a card from your opening hand on the battlefield.',
+        options: [
+          ...cards.map((card) => ({
+            type: 'beginOnBattlefield',
+            description: `Begin with ${card.name} on the battlefield`,
+            payload: card.id,
+          })),
+          { type: 'decline', description: 'Keep the remaining cards in hand' },
+        ],
+      };
+      const card = cards[choice.index];
+      if (card === undefined) break;
+      yield* moveObject(ctx, card, { zone: 'battlefield', controllerId: player.id });
+    }
+  }
 }
 
 function* keepHand(ctx: GameContext, player: EnginePlayerState): GameGen<void> {

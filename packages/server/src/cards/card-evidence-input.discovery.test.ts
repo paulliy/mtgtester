@@ -279,6 +279,7 @@ const pinned = require('./pinned.json');
       'packages/shared/src',
       'apps/web/src',
       'apps/web/public',
+      'apps/web/e2e',
     ]) {
       if (!fs.existsSync(resolve(repoRoot, directory))) continue;
       for (const path of fs.readdirSync(resolve(repoRoot, directory), {

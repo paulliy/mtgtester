@@ -97,6 +97,10 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
    */
   attackedPlaneswalkerRemoved: boolean;
+  /** A chosen assignment prohibition lasts through all combats of this turn. */
+  assignsNoCombatDamageTurn?: number;
+  /** A resolved effect's fixed attack prohibition, active while the named counter remains. */
+  cantAttackPlayerWhileCounter?: Array<{ playerId: PlayerId; counter: string }>;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */
@@ -112,6 +116,10 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   dealtFirstStrikeDamage: boolean;
   /** Timestamp assigned on entry (CR 613.7 ordering of continuous effects). */
   timestamp: number;
+  /** CR 613.7c: all counters of a kind use the most recent placement timestamp. */
+  counterTimestamps?: Record<string, number>;
+  /** Class levels are object state, not counters or copiable characteristics (CR 716). */
+  classLevel?: number;
   /** `state.turnNumber` when this object entered the battlefield — "entered this turn" (Neriv). */
   enteredTurnNumber: number;
   /**
@@ -261,12 +269,15 @@ export interface EngineCardObject extends EngineObject, CastRecord {
    * Devourer). Hidden from every other player until it is cast.
    */
   foretold?: { turn: number; cost: import('../mana/cost').ParsedManaCost };
+  /** A public exile incarnation plotted by an effect (CR 702.170c–d). */
+  plottedTurn?: number;
 }
 
 /** The keywords that change how a source's damage is dealt (CR 702.2, 702.15, 702.90). */
 export type DamageKeyword = 'deathtouch' | 'lifelink' | 'infect';
 
 export interface EngineStackObject extends StackObject {
+  giftRecipientId?: PlayerId;
   /** Addendum (Unbreakable Formation): cast during a main phase of its caster's own turn. */
   castDuringOwnMainPhase?: true;
   /** Last known rules facts of this ability's source incarnation. */
@@ -302,6 +313,7 @@ export interface EngineStackObject extends StackObject {
     | 'overload'
     | 'adventure'
     | 'omen'
+    | 'mdfc'
     | 'nonMana'
     | 'energy'
     | 'commanderFree'
@@ -404,6 +416,8 @@ export interface EnginePlayerState extends PlayerState {
   spellsCastThisTurn: number;
   /** Of those, the ones that were not creature spells ("you've cast a noncreature spell"). */
   noncreatureSpellsCastThisTurn: number;
+  /** Discard actions this turn, irrespective of a replacement's destination. */
+  discardedCardsThisTurn?: number;
   /**
    * Those spells in cast order, by their characteristics as cast: "your fourth noncreature spell
    * each turn" (The Fantasticar), "the total mana value of other spells you've cast this turn"
@@ -602,6 +616,8 @@ export interface EngineState extends GameState {
   nextDecisionNum: number;
   /** Monotonic timestamp for continuous-effect ordering (CR 613.7). */
   nextTimestamp: number;
+  /** Ordinal main phase begun this turn, including extra main phases. */
+  mainPhasesStartedThisTurn?: number;
   combat: CombatState | null;
   /**
    * Board states for action-by-action replay, keyed by the `GameEvent.sequence` they are the
@@ -657,6 +673,12 @@ export interface EngineState extends GameState {
   damageChain: string[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
+  spellsProhibitedTurn?: number;
+  playerHexproofTurn?: Record<PlayerId, number>;
+  extraTurns?: PlayerId[];
+  phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
+  playerProtectionUntilNextTurn?: Record<PlayerId, number>;
+  normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,
    * so it covers creatures that arrive after it resolved too (CR 611.2c). Reset each turn.

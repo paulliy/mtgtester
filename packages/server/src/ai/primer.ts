@@ -47,11 +47,11 @@ const LAND_AND_MANA_PRIMER = `Land and mana data are authoritative. A source lis
 
 const TARGETING_PRIMER = `Targeted actions expose numbered target slots. Fill every required slot with an offered choice for that slot; do not copy ids from another slot or invent a target.`;
 
-const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending seat or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
+const ATTACK_PRIMER = `This is one batched attack declaration. Fill every creature target slot with an offered defending player or planeswalker id, or __no_attack__. Different creatures may attack different opponents; obey forced-attack options and any attack-tax correction.`;
 
 const BLOCK_PRIMER = `This is one batched block declaration. Fill every blocker target slot with an offered attacker id or __no_block__. Several blockers may block one attacker; menace requires a legal multi-block assignment.`;
 
-const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending seat only after every blocker has at least lethal damage assigned.`;
+const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending player or planeswalker only after every blocker has at least lethal damage assigned.`;
 
 const MANA_SPLIT_PRIMER = `Return manaSplit counts summing exactly to the stated amount and use only offered mana categories.`;
 

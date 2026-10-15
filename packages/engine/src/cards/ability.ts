@@ -106,8 +106,13 @@ export interface AlternativeCast {
   ability?: Ability;
   /** Back-face characteristics for a modal DFC that may be played as a land. */
   landFace?: MdfcLandFace;
-  /** Fully interpreted Adventure/Omen spell characteristics, independent of the front. */
+  /** Fully interpreted Adventure/Omen spell or modal permanent face, independent of the front. */
   spellFace?: import('./definition').CardDefinition;
+  /** Printed face text needed to restore the front when a modal permanent leaves. */
+  spellFaceText?: Pick<
+    MdfcLandFace,
+    'oracleText' | 'manaCost' | 'frontOracleText' | 'frontManaCost'
+  >;
   /** Flashback/escape-style replacement: exile the card after it leaves the stack. */
   exileOnResolution?: boolean;
   /** The alternative is Escape and marks the resulting stack/permanent object as escaped. */
@@ -424,6 +429,9 @@ export type TargetKind =
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
   kind: TargetKind;
+  /** A stack spell must currently target a permanent controlled by you. */
+  spellTargetsPermanentYouControl?: true;
+  spellHasSingleTarget?: true;
   /**
    * "target creature you control" / "target creature an opponent controls". Omitted for an
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
@@ -558,6 +566,14 @@ export type Effect =
    * `KeywordAbility` name, and layer 6 applies it through `addProtection`, not `addKeyword`.
    */
   | { op: 'grantProtectionEachUntilEot'; selector: Selector; colors: Color[] }
+  | { op: 'grantChosenColorProtectionUntilEot'; target: EffectRef }
+  | { op: 'returnSpellToOwnerHand'; target: EffectRef }
+  | { op: 'changeSingleSpellTarget'; target: EffectRef }
+  /** Exile the exact graveyard incarnation that fired this card-zone trigger. */
+  | { op: 'exileGraveyardEventCard' }
+  | { op: 'sacrificeTargetPlayerCreature'; target: EffectRef }
+  | { op: 'eachPlayerKeepsCreatureWithVow' }
+  | { op: 'separatePermanentsIntoPilesThenSacrifice'; target: EffectRef }
   | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: EffectRef } // to the slot's creature or player
   /**
    * "deals N damage to target opponent unless that player sacrifices a creature of their
@@ -580,6 +596,15 @@ export type Effect =
       action: 'sacrifice' | 'exile';
     }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
+  | { op: 'transferCountersFromTriggerObjectToChosenCreatures'; targetSlot: number }
+  | { op: 'mayForgoTriggerObjectCombatDamageForRandomDiscard' }
+  | { op: 'gainClassLevel'; level: number }
+  | { op: 'drawForOpponentsWithSmallHands'; maximum: number }
+  | { op: 'phaseOutAndProtectControllerUntilNextTurn' }
+  | { op: 'prohibitSpellsThisTurn' }
+  | { op: 'controllerHexproofUntilEot' }
+  | { op: 'exileSpellAndPlot'; target: EffectRef }
+  | { op: 'sacrificeNonlandOrDiscardOrLoseLife'; target: EffectRef; amount: Value }
   /**
    * "When this creature dies, ... put those counters on target creature you control" (Iron
    * Apprentice): every counter the ability's own source last had (CR 603.10a), each kind and
@@ -738,7 +763,6 @@ export type Effect =
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
   | { op: 'schemingSymmetry' }
   | { op: 'kambal' }
-  | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
   | { op: 'exileCard'; target: EffectRef }
@@ -841,6 +865,26 @@ export type Effect =
   | { op: 'putFromHandOnLibraryTop'; count: Value; anyOrder: boolean }
   /** Discard cards using the game PRNG rather than a player choice. */
   | { op: 'discardAtRandom'; count: Value }
+  /** A specified player discards; random selection uses only the seeded game PRNG. */
+  | { op: 'discardTarget'; target: EffectRef; count: Value; atRandom?: true }
+  /** The affected player may discard a card; otherwise they lose the specified life. */
+  | { op: 'discardOrLoseLife'; target: EffectRef; amount: Value }
+  | { op: 'millEachPlayer'; scope: 'all' | 'opponents'; count: Value }
+  | { op: 'eachPlayerLosesLifeAndDraws'; amount: Value; count: Value }
+  | { op: 'discardChosenPlayers'; targetSlot: number; count: Value }
+  | { op: 'millAndLoseLifeChosenPlayers'; targetSlot: number; count: Value; amount: Value }
+  /** Reveal a player's hand, then the resolving ability's controller chooses a matching discard. */
+  | { op: 'revealHandAndDiscard'; target: EffectRef; filter: Selector }
+  /** Players choose hidden cards in APNAP order before any chosen cards are discarded. */
+  | {
+      op: 'discardEachPlayer';
+      scope: 'all' | 'opponents';
+      count: Value;
+      atRandom?: true;
+      drawForDiscarded?: true;
+      opponentsUnableLoseLife?: Value;
+      nonlandMaySatisfyCount?: true;
+    }
   | { op: 'mill'; count: Value } // controller mills
   | { op: 'gainEnergy'; amount: Value }
   /** Create a player-owned emblem containing abilities but no targetable characteristics. */
@@ -855,7 +899,7 @@ export type Effect =
   | { op: 'cascade' }
   /** Rebound's optional next-upkeep cast from exile. */
   | { op: 'reboundCastFromExile' }
-  | { op: 'eachOpponentLosesLife'; amount: Value | number }
+  | { op: 'eachOpponentLosesLife'; amount: Value | number; emptyHandOnly?: true }
   /**
    * "You gain life equal to the life lost this way" (Gray Merchant of Asphodel, Exsanguinate).
    * Reads back the life ACTUALLY lost by earlier life-loss effects of the SAME resolution —
@@ -998,7 +1042,13 @@ export type Effect =
       /** "...attacking that player or a planeswalker they control" (Adeline). */
       orPlaneswalker?: boolean;
     }
-  | { op: 'createTokenForPlayer'; target: EffectRef; spec: TokenSpec; count: Value }
+  | {
+      op: 'createTokenForPlayer';
+      target: EffectRef;
+      spec: TokenSpec;
+      count: Value;
+      opponentsOnly?: true;
+    }
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
@@ -1052,6 +1102,7 @@ export type Effect =
       target: EffectRef;
       /** "under its owner's control" (Gift of Immortality); the ability's controller otherwise. */
       under?: 'owner';
+      gainsHaste?: true;
     }
   /**
    * "Put target creature card from a graveyard onto the battlefield under your control. You
@@ -1570,12 +1621,15 @@ export type ObjectTriggerWhen =
   | 'blocks'
   | 'becomesBlocked'
   | 'dealsCombatDamageToPlayer'
+  /** Source's own combat or noncombat damage to a player opposing its controller. */
+  | 'dealsDamageToOpponent'
   | 'becomesTapped'
   /** "Whenever this Vehicle becomes crewed": a crew ability of it resolves (CR 702.122e). */
   | 'becomesCrewed'
   | 'fights'
   | 'becomesTargeted'
   | 'enchantedPlayerAttacked'
+  | 'attacksUnblocked'
   | 'dealtDamage'
   | 'sacrificed'
   | 'tokenCreated'
@@ -1596,6 +1650,7 @@ export type ObjectTriggerWhen =
 
 /** The event half of a `TriggerSpec`, without the intervening-if clause. */
 export type TriggerHead =
+  | { when: 'discardsCard'; player: 'you' | 'each' | 'opponent'; filter?: Selector }
   | {
       when: ObjectTriggerWhen;
       subject: TriggerSubject;
@@ -1608,6 +1663,8 @@ export type TriggerHead =
        * The count reaches the effects as the `triggerCount` `Value`.
        */
       aggregate?: boolean | 'byEventPlayer';
+      /** This graveyard-entry watcher includes battlefield origins, rather than Konrad's separate dies head. */
+      fromAnyOrigin?: true;
       /**
        * "When this land enters **untapped**" (Mystic Sanctuary) — part of the trigger event, read
        * once as the permanent enters. Not an intervening-if (CR 603.4): tapping it in response
@@ -1641,6 +1698,8 @@ export type TriggerHead =
        * instead of the attacker's controller.
        */
       defendingPlayerIsEventPlayer?: true;
+      /** Keep the attacking player as eventPlayer while grouping attacks per defender. */
+      attackingPlayerIsEventPlayer?: true;
       /**
        * Battalion: "whenever ~ and at least two other creatures attack" — part of the attack
        * event, counted among the attackers declared with it, not an intervening-if (CR 603.4).
@@ -1682,7 +1741,7 @@ export type TriggerHead =
        * `'enchanted'`: only the step of the player this Aura enchants ("at the beginning of enchanted
        * opponent's end step", Tenuous Truce); the event player is that player.
        */
-      player: 'you' | 'each' | 'enchanted';
+      player: 'you' | 'each' | 'enchanted' | 'opponent';
     }
   /**
    * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at
@@ -1694,6 +1753,7 @@ export type TriggerHead =
    * only, so it is a separate event from `mainPhase`, which deliberately fires at both.
    */
   | { when: 'precombatMain'; player: 'you' | 'each' }
+  | { when: 'secondMainPhase'; player: 'you' | 'each' }
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
@@ -1740,7 +1800,11 @@ export type TriggerHead =
  * trigger, and again as it resolves. Both checks are required, and skipping the second is a
  * classic engine bug (the board can change while the trigger sits on the stack).
  */
-export type TriggerSpec = TriggerHead & { condition?: Condition };
+export type TriggerSpec = TriggerHead & {
+  condition?: Condition;
+  /** Attack-event qualification, checked only when attackers are declared, not on resolution. */
+  eventCondition?: Condition;
+};
 
 export const SELF_SUBJECT: TriggerSubject = { kind: 'self' };
 

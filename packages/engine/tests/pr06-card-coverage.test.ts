@@ -5736,6 +5736,12 @@ interface RestoredCard {
   clauseCount: number;
   /** An authored override (not the interpreter alone) carries the card; it must be executable. */
   authored?: true;
+  /**
+   * Restored by both PR06 and the white-black control work (merged from main). The shared
+   * verification manifest entry is main's, pinned by white-black-control-manifest.test.ts; the
+   * PR06 tests above remain as additional engine evidence for the same implementation.
+   */
+  manifestOwnedByWhiteBlackControl?: true;
 }
 
 const RESTORED: RestoredCard[] = [
@@ -5772,6 +5778,7 @@ const RESTORED: RestoredCard[] = [
     sha256: '908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d',
     clauseCount: 1,
     authored: true,
+    manifestOwnedByWhiteBlackControl: true,
   },
   {
     name: 'Thunderbreak Regent',
@@ -5855,6 +5862,7 @@ const RESTORED: RestoredCard[] = [
     sha256: '1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996',
     clauseCount: 1,
     authored: true,
+    manifestOwnedByWhiteBlackControl: true,
   },
   {
     name: 'Ever-Watching Threshold',
@@ -5974,7 +5982,11 @@ describe('PR06 restoration gate', () => {
     }
   });
 
-  it.each(RESTORED.map((card) => [card.name, card] as const))(
+  it.each(
+    RESTORED.filter((card) => card.manifestOwnedByWhiteBlackControl !== true).map(
+      (card) => [card.name, card] as const,
+    ),
+  )(
     '%s declares implemented-unreviewed clauses mapped to engine and viewer evidence',
     (name, expected) => {
       const entry = pinned(name);

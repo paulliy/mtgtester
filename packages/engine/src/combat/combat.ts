@@ -199,22 +199,43 @@ function allAttackTargets(
 }
 
 /**
- * Goad (CR 701.15b): the creature attacks a PLAYER other than the goader if able. Attacking any
- * planeswalker does not satisfy that, so while some non-goader player is attackable only those
- * players are legal; otherwise it still attacks if able — any player or planeswalker, goader's
- * included.
+ * Promise of Loyalty: "Those creatures can't attack you or planeswalkers you control for as long
+ * as they have a vow counter on them." The restriction covers the player and every planeswalker
+ * that player controls.
+ */
+function attackRestrictionAllows(creature: EnginePermanent, target: AttackTarget): boolean {
+  return !(creature.cantAttackPlayerWhileCounter ?? []).some(
+    (restriction) =>
+      restriction.playerId === target.player.id &&
+      counterCount(creature.counters, restriction.counter) > 0,
+  );
+}
+
+/**
+ * Goad (CR 508.1d, 701.15b): how many of the creature's goad requirements attacking this target
+ * obeys. Attacking a PLAYER P obeys each goader's requirement except P's own; attacking any
+ * planeswalker obeys none.
+ */
+function goadRequirementsSatisfied(target: AttackTarget, goaders: ReadonlySet<PlayerId>): number {
+  if (target.planeswalker !== null) return 0;
+  return goaders.size - (goaders.has(target.player.id) ? 1 : 0);
+}
+
+/**
+ * Restrict `candidates` to targets obeying the maximum number of goad requirements achievable
+ * among the FREE targets (CR 508.1d: a cost never forces the player to obey an additional
+ * requirement, so cost-gated targets never raise the maximum).
  */
 function applyGoadScope(
   ctx: GameContext,
   creature: EnginePermanent,
   candidates: AttackTarget[],
+  free: readonly AttackTarget[],
 ): AttackTarget[] {
   const goaderIds = goaderIdsFor(ctx, creature);
   if (goaderIds.size === 0) return candidates;
-  const preferred = candidates.filter(
-    (t) => t.planeswalker === null && !goaderIds.has(t.player.id),
-  );
-  return preferred.length > 0 ? preferred : candidates;
+  const maximum = Math.max(0, ...free.map((t) => goadRequirementsSatisfied(t, goaderIds)));
+  return candidates.filter((t) => goadRequirementsSatisfied(t, goaderIds) >= maximum);
 }
 
 function attackTargetsFor(
@@ -222,10 +243,16 @@ function attackTargetsFor(
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
 ): AttackTarget[] {
-  const payable = allAttackTargets(ctx, opponents).filter((t) =>
+  const allowed = allAttackTargets(ctx, opponents).filter((t) =>
+    attackRestrictionAllows(creature, t),
+  );
+  const payable = allowed.filter((t) =>
     canPayAttackTax(ctx, creature.controllerId, t.player.id, t.planeswalker !== null),
   );
-  return applyGoadScope(ctx, creature, payable);
+  const free = allowed.filter(
+    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+  );
+  return applyGoadScope(ctx, creature, payable, free);
 }
 
 /**
@@ -245,9 +272,11 @@ function freeAttackTargetsFor(
   opponents: readonly EnginePlayerState[],
 ): AttackTarget[] {
   const free = allAttackTargets(ctx, opponents).filter(
-    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+    (t) =>
+      attackRestrictionAllows(creature, t) &&
+      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
   );
-  return applyGoadScope(ctx, creature, free);
+  return applyGoadScope(ctx, creature, free, free);
 }
 
 function* payAttackTax(
@@ -1172,6 +1201,7 @@ interface DamageAssignment {
  * striker deal damage twice (CR 702.7c). `dealtFirstStrikeDamage` records the former set.
  */
 function dealsInStep(ctx: GameContext, perm: EnginePermanent, step: 'first' | 'regular'): boolean {
+  if (perm.assignsNoCombatDamageTurn === ctx.state.turnNumber) return false;
   const dbl = hasKeyword(ctx, perm, 'double strike');
   if (step === 'first') return dbl || hasKeyword(ctx, perm, 'first strike');
   return dbl || !perm.dealtFirstStrikeDamage;
@@ -1409,6 +1439,13 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   if (anyAttackers) {
     setStep(ctx, 'declareBlockers');
     yield* declareBlockers(ctx);
+    queueTriggersForEvent(
+      ctx,
+      'attacksUnblocked',
+      attackers(ctx)
+        .filter((permanent) => permanent.blockedByOrdered.length === 0)
+        .map((permanent) => ({ permanent, playerId: permanent.attacking! })),
+    );
     yield* runPrioritySequence(ctx);
     emptyManaPools(ctx);
 

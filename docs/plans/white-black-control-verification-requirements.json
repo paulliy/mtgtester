@@ -1,0 +1,2404 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/engine/tests/fixtures/white-black-control-oracle.json",
+  "projectedAt": "2026-10-12",
+  "evidenceSemantics": {
+    "status": "requirements-only",
+    "executionResultsPresent": false,
+    "statement": "Scenario IDs declare required evidence; factory-ready IDs refer to registered scenario definitions, not generated viewer outputs, execution results, or pass claims.",
+    "factoryReadyViewerScenarioIds": [
+      "breena-viewer-opponent-life-aggregate",
+      "duelists-heritage-viewer-single-optional-target",
+      "duress-viewer",
+      "thoughtseize-viewer",
+      "dark-confidant-viewer",
+      "authority-of-the-consuls-viewer-opponent-creature-entry",
+      "archon-of-emeria-viewer-opponent-nonbasic-land-entry",
+      "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger",
+      "hushbringer-viewer-suppresses-creature-entry-trigger",
+      "karn-argent-defender-viewer-suppresses-artifact-creature-trigger",
+      "archfiend-of-ifnir-viewer-cycle-counter",
+      "waste-not-viewer-opponent-discard-payoffs",
+      "whispers-of-emrakul-viewer-delirium-random-discard",
+      "painful-quandary-viewer-opponent-cast-choice",
+      "vicious-rumors-viewer-cast-results",
+      "rankle-master-of-pranks-viewer-combat-modes",
+      "tinybones-joins-up-viewer-multi-player-etb-discard",
+      "tinybones-trinket-thief-viewer-opponent-discard-end-step",
+      "archon-of-absolution-viewer-taxes-planeswalker-attack",
+      "soul-snare-viewer-exiles-planeswalker-attacker",
+      "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat",
+      "imp-s-mischief-viewer",
+      "restoration-magic-viewer",
+      "reluctant-role-model-viewer",
+      "bandit-s-talent-viewer",
+      "aven-interrupter-viewer-plots-opponent-spell",
+      "tergrid-lantern-viewer-target-loses-life",
+      "bilbo-s-gambit-viewer-gift-returns-spell",
+      "dawn-s-truce-viewer-gift-protects-permanents",
+      "perch-protection-viewer-gift-phaseout-next-turn",
+      "aven-interrupter-viewer-later-plot-cast-pays-tax",
+      "mother-of-runes-viewer",
+      "sejiri-shelter-sejiri-glacier-viewer",
+      "reprieve-viewer",
+      "rebuff-the-wicked-viewer",
+      "hymn-to-tourach-viewer-two-random-discards",
+      "bottomless-pit-viewer-next-upkeep-random-discard",
+      "necrogen-mists-viewer-next-upkeep-discard-choice",
+      "hypnotic-specter-viewer-unblocked-combat-discard",
+      "oppression-viewer-opponent-cast-discard",
+      "syphon-mind-viewer-opponents-discard-and-draw",
+      "geth-s-grimoire-viewer-hymn-discard-draw-payoff",
+      "rest-in-peace-viewer",
+      "stone-of-erech-viewer-activation",
+      "stone-of-erech-viewer-opponent-creature-death",
+      "rule-of-law-viewer-single-spell-limit",
+      "deafening-silence-viewer-creature-exemption",
+      "planar-void-viewer-destroyed-permanent",
+      "library-of-leng-viewer-effect-discard-and-draw",
+      "leyline-of-the-void-viewer-opening-hand-and-destruction",
+      "liliana-of-the-veil-viewer-each-player-discards",
+      "liliana-of-the-veil-viewer-targeted-sacrifice",
+      "liliana-waker-of-the-dead-viewer-discard-life-loss",
+      "liliana-waker-of-the-dead-viewer-graveyard-scaled-removal",
+      "curse-of-disturbance-viewer-two-attackers-one-zombie",
+      "promise-of-loyalty-viewer-apnap-vow-and-sacrifice",
+      "cloak-of-confusion-viewer-no-damage-random-discard",
+      "liliana-of-the-veil-viewer-ultimate-piles",
+      "liliana-waker-of-the-dead-viewer-ultimate-emblem-reanimation",
+      "tergrid-front-viewer-discards-permanent-card",
+      "tergrid-front-viewer-opponent-sacrifice",
+      "tergrid-lantern-viewer-discard-then-paid-untap",
+      "reluctant-role-model-viewer-death-counter-transfer",
+      "bandit-s-talent-viewer-level-three-extra-draw",
+      "sejiri-glacier-viewer-next-turn-mother-runes",
+      "restoration-magic-viewer-cure",
+      "restoration-magic-viewer-curaga",
+      "library-of-leng-viewer-no-maximum-hand-size",
+      "tinybones-trinket-thief-viewer-empty-hand-activation",
+      "archfiend-of-ifnir-viewer-normal-cycling",
+      "waste-not-viewer-noncreature-nonland-draw",
+      "tinybones-joins-up-viewer-legendary-entry-mill-life",
+      "hushbringer-viewer-suppresses-creature-death-trigger",
+      "archon-of-emeria-viewer-single-spell-limit",
+      "rankle-master-of-pranks-viewer-all-three-modes",
+      "doorkeeper-thrull-viewer-flash-suppresses-incoming-entry",
+      "breena-viewer-flying-blocker",
+      "archfiend-of-ifnir-viewer-flying-blocker",
+      "hypnotic-specter-viewer-flying-blocker",
+      "aven-interrupter-viewer-flying-blocker",
+      "the-haunt-of-hightower-viewer-flying-blocker",
+      "doorkeeper-thrull-viewer-flying-blocker",
+      "archon-of-absolution-viewer-protection-blocker",
+      "tergrid-front-viewer-menace-blocker"
+    ],
+    "futureViewerScenarioIdsAreRequirementsOnly": true
+  },
+  "cards": [
+    {
+      "oracleId": "535e2af0-7b08-4026-b1bf-87626407dd42",
+      "oracleSha256": "6c5032145f59037b03b32b5eb8f73eab0da3e75df607c7485f5531b4f3e7d6aa",
+      "cardName": "Archfiend of Ifnir",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Archfiend of Ifnir",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "archfiend-of-ifnir-c01-positive",
+            "negative": "archfiend-of-ifnir-c01-negative",
+            "viewer": "archfiend-of-ifnir-viewer-flying-blocker"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Archfiend of Ifnir",
+          "text": "Whenever you cycle or discard another card, put a -1/-1 counter on each creature your opponents control.",
+          "requiredScenarioIds": {
+            "positive": "archfiend-of-ifnir-c02-positive",
+            "negative": "archfiend-of-ifnir-c02-negative",
+            "viewer": [
+              "archfiend-of-ifnir-viewer-normal-cycling",
+              "archfiend-of-ifnir-viewer-cycle-counter"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Archfiend of Ifnir",
+          "text": "Cycling {2} ({2}, Discard this card: Draw a card.)",
+          "requiredScenarioIds": {
+            "positive": "archfiend-of-ifnir-c03-positive",
+            "negative": "archfiend-of-ifnir-c03-negative",
+            "viewer": "archfiend-of-ifnir-viewer-normal-cycling"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "archfiend-of-ifnir-normal-cast-activation",
+        "viewer": [
+          "archfiend-of-ifnir-viewer-flying-blocker",
+          "archfiend-of-ifnir-viewer-normal-cycling",
+          "archfiend-of-ifnir-viewer-cycle-counter"
+        ],
+        "gameplayAi": "archfiend-of-ifnir-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flying keyword projection",
+        "Own discard and cycling-event trigger with opponent-creature counter placement",
+        "Normal cycling activation with generic mana payment, self-discard, and draw"
+      ],
+      "engineTestIds": [
+        "uses all three exact wrapper hashes and models every printed clause",
+        "casts Archfiend of Ifnir normally and observes one own discard once for each opponent creature",
+        "does not trigger Archfiend for an opponent discard and keeps the controller discard scope",
+        "casts Archfiend and normally cycles another copy from hand, triggering exactly once",
+        "does not observe Archfiend cycling itself, but still pays the cycling cost and draws"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-payoffs.test.ts"
+    },
+    {
+      "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
+      "oracleSha256": "9bd606953d9c7d2b28966ca403927c18bb825ffbfbac485fc051b9528b23014e",
+      "cardName": "Archon of Absolution",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Archon of Absolution",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "archon-of-absolution-c01-positive",
+            "negative": "archon-of-absolution-c01-negative",
+            "viewer": "archon-of-absolution-viewer-protection-blocker"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Archon of Absolution",
+          "text": "Protection from white (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything white.)",
+          "requiredScenarioIds": {
+            "positive": "archon-of-absolution-c02-positive",
+            "negative": "archon-of-absolution-c02-negative",
+            "viewer": "archon-of-absolution-viewer-protection-blocker"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Archon of Absolution",
+          "text": "Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+          "requiredScenarioIds": {
+            "positive": "archon-of-absolution-c03-positive",
+            "negative": "archon-of-absolution-c03-negative",
+            "viewer": "archon-of-absolution-viewer-taxes-planeswalker-attack"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "archon-of-absolution-normal-cast-activation",
+        "viewer": [
+          "archon-of-absolution-viewer-protection-blocker",
+          "archon-of-absolution-viewer-taxes-planeswalker-attack"
+        ],
+        "gameplayAi": "archon-of-absolution-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
+      "oracleSha256": "621a6663ea180829baaabb0673010fe7177bbd7976d0d5f7099cb9beb4ad9a7f",
+      "cardName": "Archon of Emeria",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Archon of Emeria",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "archon-of-emeria-c01-positive",
+            "negative": "archon-of-emeria-c01-negative",
+            "viewer": "archon-of-emeria-viewer-opponent-nonbasic-land-entry"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Archon of Emeria",
+          "text": "Each player can't cast more than one spell each turn.",
+          "requiredScenarioIds": {
+            "positive": "archon-of-emeria-c02-positive",
+            "negative": "archon-of-emeria-c02-negative",
+            "viewer": "archon-of-emeria-viewer-single-spell-limit"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Archon of Emeria",
+          "text": "Nonbasic lands your opponents control enter tapped.",
+          "requiredScenarioIds": {
+            "positive": "archon-of-emeria-c03-positive",
+            "negative": "archon-of-emeria-c03-negative",
+            "viewer": "archon-of-emeria-viewer-opponent-nonbasic-land-entry"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "archon-of-emeria-normal-cast-activation",
+        "viewer": [
+          "archon-of-emeria-viewer-opponent-nonbasic-land-entry",
+          "archon-of-emeria-viewer-single-spell-limit"
+        ],
+        "gameplayAi": "archon-of-emeria-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flying keyword projection",
+        "Per-player one-spell-per-turn static casting limit",
+        "Opponent-controlled nonbasic-land enters-tapped replacement"
+      ],
+      "engineTestIds": [
+        "Archon of Emeria normally casts, preserves flying, limits each player, and taps only opponents’ nonbasic lands"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-entry.test.ts"
+    },
+    {
+      "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
+      "oracleSha256": "bd953a06e68d037b63a96351f987c6d1f253d650cff640bb04d7dec46506dd89",
+      "cardName": "Authority of the Consuls",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Authority of the Consuls",
+          "text": "Creatures your opponents control enter tapped.",
+          "requiredScenarioIds": {
+            "positive": "authority-of-the-consuls-c01-positive",
+            "negative": "authority-of-the-consuls-c01-negative",
+            "viewer": "authority-of-the-consuls-viewer-opponent-creature-entry"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Authority of the Consuls",
+          "text": "Whenever a creature an opponent controls enters, you gain 1 life.",
+          "requiredScenarioIds": {
+            "positive": "authority-of-the-consuls-c02-positive",
+            "negative": "authority-of-the-consuls-c02-negative",
+            "viewer": "authority-of-the-consuls-viewer-opponent-creature-entry"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "authority-of-the-consuls-normal-cast-activation",
+        "viewer": "authority-of-the-consuls-viewer-opponent-creature-entry",
+        "gameplayAi": "authority-of-the-consuls-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Opponent-controlled creature enters-tapped replacement",
+        "Opponent creature entry trigger gains one life"
+      ],
+      "engineTestIds": [
+        "Authority of the Consuls normally casts, taps opposing creature and token entries, and keeps its life trigger"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-entry.test.ts"
+    },
+    {
+      "oracleId": "d31fd12f-b4dd-4bc3-ace4-703dabd0f607",
+      "oracleSha256": "861efb2a0c89250b158e9f1b6ba71dbd3744cd4d72591457b2739ae8251c4000",
+      "cardName": "Aven Interrupter",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Aven Interrupter",
+          "text": "Flash",
+          "requiredScenarioIds": {
+            "positive": "aven-interrupter-c01-positive",
+            "negative": "aven-interrupter-c01-negative",
+            "viewer": "aven-interrupter-viewer-plots-opponent-spell"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Aven Interrupter",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "aven-interrupter-c02-positive",
+            "negative": "aven-interrupter-c02-negative",
+            "viewer": "aven-interrupter-viewer-flying-blocker"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Aven Interrupter",
+          "text": "When this creature enters, exile target spell. It becomes plotted. (Its owner may cast it as a sorcery on a later turn without paying its mana cost.)",
+          "requiredScenarioIds": {
+            "positive": "aven-interrupter-c03-positive",
+            "negative": "aven-interrupter-c03-negative",
+            "viewer": [
+              "aven-interrupter-viewer-plots-opponent-spell",
+              "aven-interrupter-viewer-later-plot-cast-pays-tax"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 4,
+          "face": "front",
+          "faceName": "Aven Interrupter",
+          "text": "Spells your opponents cast from graveyards or from exile cost {2} more to cast.",
+          "requiredScenarioIds": {
+            "positive": "aven-interrupter-c04-positive",
+            "negative": "aven-interrupter-c04-negative",
+            "viewer": "aven-interrupter-viewer-later-plot-cast-pays-tax"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "aven-interrupter-normal-cast-activation",
+        "viewer": [
+          "aven-interrupter-viewer-plots-opponent-spell",
+          "aven-interrupter-viewer-flying-blocker",
+          "aven-interrupter-viewer-later-plot-cast-pays-tax"
+        ],
+        "gameplayAi": "aven-interrupter-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flash and flying keyword projection",
+        "Enters trigger targets and exiles a spell, recording plot permission for a later turn",
+        "Plot timing, owner permission, free cast, X handling, and alternate-cost validation",
+        "Additional {2} cost for opposing graveyard and exile casts, with hand casts and own casts excluded"
+      ],
+      "engineTestIds": [
+        "pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it",
+        "pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it",
+        "pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it",
+        "offers an owner-only later-turn plot cast as a sorcery, previews the {2} Aven tax, and pays it with the additional cost",
+        "does not offer plot in the same turn, off-turn, or while the stack is nonempty",
+        "exiles an uncounterable spell because this ability exiles instead of countering",
+        "makes a targeted spell copy cease to exist without creating a plotted card",
+        "clears plot permission when the exiled card leaves and returns to exile as a new incarnation",
+        "adds {2} for opposing graveyard and exile casts, but not hand casts or the source controller",
+        "keeps X at zero on a plotted X spell and rejects a combined alternate cost",
+        "offers a plotted MDFC back face and applies the opposing Aven tax to its free plot cast"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-aven.test.ts"
+    },
+    {
+      "oracleId": "bcbe879a-4609-4493-bd7d-47c26d27e83c",
+      "oracleSha256": "f806d0ae13bbfb7b4d6b8168dc45fad6a8ad31691ebe1701b48b8d5955dd69e3",
+      "cardName": "Bandit's Talent",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "(Gain the next level as a sorcery to add its ability.)",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c01-positive",
+            "negative": "bandit-s-talent-c01-negative",
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "When this Class enters, each opponent discards two cards unless they discard a nonland card.",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c02-positive",
+            "negative": "bandit-s-talent-c02-negative",
+            "viewer": "bandit-s-talent-viewer"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "{B}: Level 2",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c03-positive",
+            "negative": "bandit-s-talent-c03-negative",
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
+          }
+        },
+        {
+          "clauseNumber": 4,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life.",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c04-positive",
+            "negative": "bandit-s-talent-c04-negative",
+            "viewer": "bandit-s-talent-viewer"
+          }
+        },
+        {
+          "clauseNumber": 5,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "{3}{B}: Level 3",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c05-positive",
+            "negative": "bandit-s-talent-c05-negative",
+            "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"]
+          }
+        },
+        {
+          "clauseNumber": 6,
+          "face": "front",
+          "faceName": "Bandit's Talent",
+          "text": "At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand.",
+          "requiredScenarioIds": {
+            "positive": "bandit-s-talent-c06-positive",
+            "negative": "bandit-s-talent-c06-negative",
+            "viewer": "bandit-s-talent-viewer-level-three-extra-draw"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "bandit-s-talent-normal-cast-activation",
+        "viewer": ["bandit-s-talent-viewer", "bandit-s-talent-viewer-level-three-extra-draw"],
+        "gameplayAi": "bandit-s-talent-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+      "oracleSha256": "21f251166fa3895f74a7ffd11f2914f0c02a73564ca5ab87a76680b43633bf48",
+      "cardName": "Bilbo's Gambit",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Bilbo's Gambit",
+          "text": "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "requiredScenarioIds": {
+            "positive": "bilbo-s-gambit-c01-positive",
+            "negative": "bilbo-s-gambit-c01-negative",
+            "viewer": "bilbo-s-gambit-viewer-gift-returns-spell"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Bilbo's Gambit",
+          "text": "Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+          "requiredScenarioIds": {
+            "positive": "bilbo-s-gambit-c02-positive",
+            "negative": "bilbo-s-gambit-c02-negative",
+            "viewer": "bilbo-s-gambit-viewer-gift-returns-spell"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "bilbo-s-gambit-normal-cast-activation",
+        "viewer": "bilbo-s-gambit-viewer-gift-returns-spell",
+        "gameplayAi": "bilbo-s-gambit-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Normal instant casting with an optional opponent gift choice",
+        "Gift Treasure token fulfillment before the spell effect",
+        "Targeted spell return to its owner’s hand and turn-scoped spell casting prohibition when gifted",
+        "Declined gift and illegal target handling, including copied spells"
+      ],
+      "engineTestIds": [
+        "pins both Oracle texts and makes Gift an opponent choice while casting normally",
+        "fulfills promised Treasure before returning the target, then locks every player out of spells for this turn",
+        "declining the gift bounces the spell but never creates Treasure or applies the spell lock",
+        "fulfills promised Treasure before returning the target, then locks every player out of spells for this turn",
+        "declining the gift bounces the spell but never creates Treasure or applies the spell lock",
+        "an all-illegal target fizzles before gift fulfillment and before the lock effect",
+        "returns a targeted spell copy by removing it from the stack without returning a physical card"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-gifts.test.ts",
+      "remainingViewerRequirements": [
+        "Verify that the promised gift applies the turn-scoped spell-casting prohibition to every player."
+      ]
+    },
+    {
+      "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
+      "oracleSha256": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93",
+      "cardName": "Bottomless Pit",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Bottomless Pit",
+          "text": "At the beginning of each player's upkeep, that player discards a card at random.",
+          "requiredScenarioIds": {
+            "positive": "bottomless-pit-c01-positive",
+            "negative": "bottomless-pit-c01-negative",
+            "viewer": "bottomless-pit-viewer-next-upkeep-random-discard"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "bottomless-pit-normal-cast-activation",
+        "viewer": "bottomless-pit-viewer-next-upkeep-random-discard",
+        "gameplayAi": "bottomless-pit-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "oracleSha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
+      "cardName": "Breena, the Demagogue",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Breena, the Demagogue",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "breena-the-demagogue-c01-positive",
+            "negative": "breena-the-demagogue-c01-negative",
+            "viewer": "breena-viewer-flying-blocker"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Breena, the Demagogue",
+          "text": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
+          "requiredScenarioIds": {
+            "positive": "breena-the-demagogue-c02-positive",
+            "negative": "breena-the-demagogue-c02-negative",
+            "viewer": "breena-viewer-opponent-life-aggregate"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "breena-the-demagogue-normal-cast-activation",
+        "viewer": ["breena-viewer-flying-blocker", "breena-viewer-opponent-life-aggregate"],
+        "gameplayAi": "breena-the-demagogue-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Triggered attack clause uses aggregate: 'byEventPlayer' and attackingPlayerIsEventPlayer: true, producing one trigger for each distinct defending opponent.",
+        "Intervening-if condition defendingOpponentHasMoreLifeThanAnother compares the defending opponent to the controller's other opponents at trigger creation and rechecks it on resolution.",
+        "The trigger targets a creature controlled by Breena's controller, draws one card for eventPlayer, and puts two +1/+1 counters on the target.",
+        "Ordinary cast path uses priority legality, colored and generic mana payment, the stack, and normal resolution."
+      ],
+      "engineTestIds": [
+        "breena-normal-cast: cast with legal mana, then one trigger per attacked opponent",
+        "breena-another-opponent: attacker life is irrelevant, each distinct defender is checked",
+        "breena-negative-tie: equal opponent life never triggers despite low attacker life",
+        "breena-negative-controller: attacking the controller does not qualify",
+        "breena-attacking-opponent-draws: a different attacker draws, controller receives counters",
+        "breena-resolution-recheck: changed opponent life prevents drawing and counters",
+        "breena-event-defender-survives-attacker-removal: removing attacking creature does not erase the attacked player",
+        "breena-illegal-counter-target: target leaving makes the whole trigger fail",
+        "breena-real-and-fixture-alias: every clause has legal authored IR"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-breena.test.ts"
+    },
+    {
+      "oracleId": "5d258409-28d3-4eac-9f1a-3e494db818bf",
+      "oracleSha256": "ad25a794244abd775a070eff00cdd3a8b80efa826b43b47d1f8d46d6f95849bc",
+      "cardName": "Cloak of Confusion",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Cloak of Confusion",
+          "text": "Enchant creature you control",
+          "requiredScenarioIds": {
+            "positive": "cloak-of-confusion-c01-positive",
+            "negative": "cloak-of-confusion-c01-negative",
+            "viewer": "cloak-of-confusion-viewer-no-damage-random-discard"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Cloak of Confusion",
+          "text": "Whenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.",
+          "requiredScenarioIds": {
+            "positive": "cloak-of-confusion-c02-positive",
+            "negative": "cloak-of-confusion-c02-negative",
+            "viewer": "cloak-of-confusion-viewer-no-damage-random-discard"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "cloak-of-confusion-normal-cast-activation",
+        "viewer": "cloak-of-confusion-viewer-no-damage-random-discard",
+        "gameplayAi": "cloak-of-confusion-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "6cbd36d9-de47-41b0-9ef4-a72ca01adccd",
+      "oracleSha256": "6106530fb8f86fed0553091e4eebc4238155e5193826f14fb676361b473dd717",
+      "cardName": "Curse of Disturbance",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Curse of Disturbance",
+          "text": "Enchant player",
+          "requiredScenarioIds": {
+            "positive": "curse-of-disturbance-c01-positive",
+            "negative": "curse-of-disturbance-c01-negative",
+            "viewer": "curse-of-disturbance-viewer-two-attackers-one-zombie"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Curse of Disturbance",
+          "text": "Whenever enchanted player is attacked, create a 2/2 black Zombie creature token. Each opponent attacking that player does the same.",
+          "requiredScenarioIds": {
+            "positive": "curse-of-disturbance-c02-positive",
+            "negative": "curse-of-disturbance-c02-negative",
+            "viewer": "curse-of-disturbance-viewer-two-attackers-one-zombie"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "curse-of-disturbance-normal-cast-activation",
+        "viewer": "curse-of-disturbance-viewer-two-attackers-one-zombie",
+        "gameplayAi": "curse-of-disturbance-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
+      "oracleSha256": "610cc74590705c15607689e64dd4afcb3eb4b411e256c58d99f39baa350377c2",
+      "cardName": "Dark Confidant",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Dark Confidant",
+          "text": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+          "requiredScenarioIds": {
+            "positive": "dark-confidant-c01-positive",
+            "negative": "dark-confidant-c01-negative",
+            "viewer": "dark-confidant-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "dark-confidant-normal-cast-activation",
+        "viewer": "dark-confidant-viewer",
+        "gameplayAi": "dark-confidant-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "37c06f89-db36-4937-9404-2b07cd22e1a6",
+      "oracleSha256": "9b94a7f24557052e39ba56e4a491a924a83f664f8eea7d2f37ff14dcd488877b",
+      "cardName": "Dawn's Truce",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Dawn's Truce",
+          "text": "Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.)",
+          "requiredScenarioIds": {
+            "positive": "dawn-s-truce-c01-positive",
+            "negative": "dawn-s-truce-c01-negative",
+            "viewer": "dawn-s-truce-viewer-gift-protects-permanents"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Dawn's Truce",
+          "text": "You and permanents you control gain hexproof until end of turn. If the gift was promised, permanents you control also gain indestructible until end of turn.",
+          "requiredScenarioIds": {
+            "positive": "dawn-s-truce-c02-positive",
+            "negative": "dawn-s-truce-c02-negative",
+            "viewer": "dawn-s-truce-viewer-gift-protects-permanents"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "dawn-s-truce-normal-cast-activation",
+        "viewer": "dawn-s-truce-viewer-gift-protects-permanents",
+        "gameplayAi": "dawn-s-truce-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Normal instant casting with an optional opponent gift choice",
+        "Gift card draw occurs before the spell’s protection effects",
+        "Hexproof for the caster and their permanents until end of turn",
+        "Gifted indestructible for the caster’s permanents, excluding it when the gift is declined",
+        "Gift recipient and protection behavior for copied spells"
+      ],
+      "engineTestIds": [
+        "pins both Oracle texts and makes Gift an opponent choice while casting normally",
+        "Dawn draws for the promised recipient before granting hexproof and gifted indestructible to a fixed set",
+        "Dawn still grants own hexproof when Gift is declined, without indestructible",
+        "gifted Dawn copy gives the original opponent the card and grants protection to the copy controller",
+        "Dawn draws for the promised recipient before granting hexproof and gifted indestructible to a fixed set",
+        "Dawn still grants own hexproof when Gift is declined, without indestructible",
+        "gifted Dawn copy gives the original opponent the card and grants protection to the copy controller"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-gifts.test.ts"
+    },
+    {
+      "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
+      "oracleSha256": "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea",
+      "cardName": "Deafening Silence",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Deafening Silence",
+          "text": "Each player can't cast more than one noncreature spell each turn.",
+          "requiredScenarioIds": {
+            "positive": "deafening-silence-c01-positive",
+            "negative": "deafening-silence-c01-negative",
+            "viewer": "deafening-silence-viewer-creature-exemption"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "deafening-silence-normal-cast-activation",
+        "viewer": "deafening-silence-viewer-creature-exemption",
+        "gameplayAi": "deafening-silence-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "0eaea4fd-a377-4541-9bdd-14921034a975",
+      "oracleSha256": "34ad95ef1162e46cb2fe6e2bad6fe4dd85b3430a6eb1f42ca199079bca18383e",
+      "cardName": "Doorkeeper Thrull",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Doorkeeper Thrull",
+          "text": "Flash",
+          "requiredScenarioIds": {
+            "positive": "doorkeeper-thrull-c01-positive",
+            "negative": "doorkeeper-thrull-c01-negative",
+            "viewer": "doorkeeper-thrull-viewer-flash-suppresses-incoming-entry"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Doorkeeper Thrull",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "doorkeeper-thrull-c02-positive",
+            "negative": "doorkeeper-thrull-c02-negative",
+            "viewer": [
+              "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger",
+              "doorkeeper-thrull-viewer-flying-blocker"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Doorkeeper Thrull",
+          "text": "Artifacts and creatures entering don't cause abilities to trigger.",
+          "requiredScenarioIds": {
+            "positive": "doorkeeper-thrull-c03-positive",
+            "negative": "doorkeeper-thrull-c03-negative",
+            "viewer": [
+              "doorkeeper-thrull-viewer-flash-suppresses-incoming-entry",
+              "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger"
+            ]
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "doorkeeper-thrull-normal-cast-activation",
+        "viewer": [
+          "doorkeeper-thrull-viewer-flash-suppresses-incoming-entry",
+          "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger",
+          "doorkeeper-thrull-viewer-flying-blocker"
+        ],
+        "gameplayAi": "doorkeeper-thrull-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flash and flying keyword projection",
+        "Suppresses enters triggers for artifact or creature entrants, including own entry; does not suppress land-entry triggers"
+      ],
+      "engineTestIds": [
+        "Doorkeeper Thrull suppresses own and watcher enters triggers for artifacts and creatures, not lands"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-entry.test.ts"
+    },
+    {
+      "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+      "oracleSha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
+      "cardName": "Duelist's Heritage",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Duelist's Heritage",
+          "text": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+          "requiredScenarioIds": {
+            "positive": "duelist-s-heritage-c01-positive",
+            "negative": "duelist-s-heritage-c01-negative",
+            "viewer": "duelists-heritage-viewer-single-optional-target"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "duelist-s-heritage-normal-cast-activation",
+        "viewer": "duelists-heritage-viewer-single-optional-target",
+        "gameplayAi": "duelist-s-heritage-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Triggered attack clause uses aggregate: true to create one trigger for one-or-more creatures attacking.",
+        "The trigger is optional and requires a target creature whose combat role is attacking.",
+        "The selected target gains double strike until end of turn.",
+        "Ordinary cast path uses priority legality, generic and white mana payment, the stack, and normal resolution."
+      ],
+      "engineTestIds": [
+        "models the exact pinned Oracle text",
+        "puts one optional target trigger on the stack when several creatures attack",
+        "allows the controller to decline the optional trigger",
+        "can target an opponent creature that is attacking and excludes a nonattacking creature",
+        "fizzles if the chosen attacker leaves before the trigger resolves"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-duelist.test.ts"
+    },
+    {
+      "oracleId": "33d405ea-7a9a-4970-b70f-9c05d90dd6f0",
+      "oracleSha256": "151b555caa2c21bf8b37d816d985fa9935506b3a58cf3c275074d5c26b438668",
+      "cardName": "Duress",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Duress",
+          "text": "Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card.",
+          "requiredScenarioIds": {
+            "positive": "duress-c01-positive",
+            "negative": "duress-c01-negative",
+            "viewer": "duress-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "duress-normal-cast-activation",
+        "viewer": "duress-viewer",
+        "gameplayAi": "duress-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "ef809e99-34a2-4471-8269-f56bf8037686",
+      "oracleSha256": "5b69db18aafa89cd067bbe5be9d0b6397b00200abe381fbfea927a3d6e682a91",
+      "cardName": "Geth's Grimoire",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Geth's Grimoire",
+          "text": "Whenever an opponent discards a card, you may draw a card.",
+          "requiredScenarioIds": {
+            "positive": "geth-s-grimoire-c01-positive",
+            "negative": "geth-s-grimoire-c01-negative",
+            "viewer": "geth-s-grimoire-viewer-hymn-discard-draw-payoff"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "geth-s-grimoire-normal-cast-activation",
+        "viewer": "geth-s-grimoire-viewer-hymn-discard-draw-payoff",
+        "gameplayAi": "geth-s-grimoire-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
+      "oracleSha256": "cb7031304a5cf6ff57f97f9590d97b3d91c0a66a4ac15937926bb0a4810837a5",
+      "cardName": "Hushbringer",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Hushbringer",
+          "text": "Flying, lifelink",
+          "requiredScenarioIds": {
+            "positive": "hushbringer-c01-positive",
+            "negative": "hushbringer-c01-negative",
+            "viewer": "hushbringer-viewer-suppresses-creature-entry-trigger"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Hushbringer",
+          "text": "Creatures entering or dying don't cause abilities to trigger.",
+          "requiredScenarioIds": {
+            "positive": "hushbringer-c02-positive",
+            "negative": "hushbringer-c02-negative",
+            "viewer": [
+              "hushbringer-viewer-suppresses-creature-death-trigger",
+              "hushbringer-viewer-suppresses-creature-entry-trigger"
+            ]
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "hushbringer-normal-cast-activation",
+        "viewer": [
+          "hushbringer-viewer-suppresses-creature-entry-trigger",
+          "hushbringer-viewer-suppresses-creature-death-trigger"
+        ],
+        "gameplayAi": "hushbringer-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flying and lifelink keyword projection",
+        "Suppresses creature enters and dies triggers while preserving replacement effects and suppression through simultaneous departure"
+      ],
+      "engineTestIds": [
+        "Hushbringer suppresses creature enters/dies, preserves enter-counter triggers, and its simultaneous death still suppresses",
+        "Hushbringer loses suppression with its abilities and the suppressed enter abilities resume"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-entry.test.ts",
+      "remainingViewerRequirements": []
+    },
+    {
+      "oracleId": "992d9a72-d34d-47d7-96fb-37f0efb515ef",
+      "oracleSha256": "d16287c5c9454bd70fa143c711594965f7cb5657930ab6e4eeaa6fafaab43c66",
+      "cardName": "Hymn to Tourach",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Hymn to Tourach",
+          "text": "Target player discards two cards at random.",
+          "requiredScenarioIds": {
+            "positive": "hymn-to-tourach-c01-positive",
+            "negative": "hymn-to-tourach-c01-negative",
+            "viewer": "hymn-to-tourach-viewer-two-random-discards"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "hymn-to-tourach-normal-cast-activation",
+        "viewer": "hymn-to-tourach-viewer-two-random-discards",
+        "gameplayAi": "hymn-to-tourach-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+      "oracleSha256": "34d0636699a90f6312b9cdc068cb5b822f51b5cf5cdca3cf669bda675df64582",
+      "cardName": "Hypnotic Specter",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Hypnotic Specter",
+          "text": "Flying",
+          "requiredScenarioIds": {
+            "positive": "hypnotic-specter-c01-positive",
+            "negative": "hypnotic-specter-c01-negative",
+            "viewer": "hypnotic-specter-viewer-flying-blocker"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Hypnotic Specter",
+          "text": "Whenever this creature deals damage to an opponent, that player discards a card at random.",
+          "requiredScenarioIds": {
+            "positive": "hypnotic-specter-c02-positive",
+            "negative": "hypnotic-specter-c02-negative",
+            "viewer": "hypnotic-specter-viewer-unblocked-combat-discard"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "hypnotic-specter-normal-cast-activation",
+        "viewer": [
+          "hypnotic-specter-viewer-flying-blocker",
+          "hypnotic-specter-viewer-unblocked-combat-discard"
+        ],
+        "gameplayAi": "hypnotic-specter-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
+      "oracleSha256": "ff07c155d9e445bf1175adebbfa3860a5c1efa0b21f705535e777b680797f890",
+      "cardName": "Imp's Mischief",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Imp's Mischief",
+          "text": "Change the target of target spell with a single target. You lose life equal to that spell's mana value.",
+          "requiredScenarioIds": {
+            "positive": "imp-s-mischief-c01-positive",
+            "negative": "imp-s-mischief-c01-negative",
+            "viewer": "imp-s-mischief-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "imp-s-mischief-normal-cast-activation",
+        "viewer": "imp-s-mischief-viewer",
+        "gameplayAi": "imp-s-mischief-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
+      "oracleSha256": "ec2e361baa13f02b293184d4bf02f337a0c17c88cff306fbad163b3909acd63b",
+      "cardName": "Karn, Argent Defender",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Karn, Argent Defender",
+          "text": "Artifacts and creatures entering the battlefield don't cause abilities to trigger.",
+          "requiredScenarioIds": {
+            "positive": "karn-argent-defender-c01-positive",
+            "negative": "karn-argent-defender-c01-negative",
+            "viewer": "karn-argent-defender-viewer-suppresses-artifact-creature-trigger"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "karn-argent-defender-normal-cast-activation",
+        "viewer": "karn-argent-defender-viewer-suppresses-artifact-creature-trigger",
+        "gameplayAi": "karn-argent-defender-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Artifact creature type and printed keywords projection",
+        "Suppresses enters triggers for artifact or creature entrants, including own entry; does not suppress land-entry triggers"
+      ],
+      "engineTestIds": [
+        "Karn, Argent Defender normally casts and applies the same artifact-or-creature enters filter"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-entry.test.ts"
+    },
+    {
+      "oracleId": "f4e32fc1-1b8d-441e-8e76-71f19f98e925",
+      "oracleSha256": "5b00b3e4eeb4eeac75b37fd67a7bb074f6cf1b6771d27f30b39cdb4cea7da74d",
+      "cardName": "Leyline of the Void",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Leyline of the Void",
+          "text": "If this card is in your opening hand, you may begin the game with it on the battlefield.",
+          "requiredScenarioIds": {
+            "positive": "leyline-of-the-void-c01-positive",
+            "negative": "leyline-of-the-void-c01-negative",
+            "viewer": "leyline-of-the-void-viewer-opening-hand-and-destruction"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Leyline of the Void",
+          "text": "If a card would be put into an opponent's graveyard from anywhere, exile it instead.",
+          "requiredScenarioIds": {
+            "positive": "leyline-of-the-void-c02-positive",
+            "negative": "leyline-of-the-void-c02-negative",
+            "viewer": "leyline-of-the-void-viewer-opening-hand-and-destruction"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "leyline-of-the-void-normal-cast-activation",
+        "viewer": "leyline-of-the-void-viewer-opening-hand-and-destruction",
+        "gameplayAi": "leyline-of-the-void-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "oracleSha256": "f31e4191d9a77e591944db00ae0e1ba6ed3809c0a66f3287bd97be79ddfe5571",
+      "cardName": "Library of Leng",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Library of Leng",
+          "text": "You have no maximum hand size.",
+          "requiredScenarioIds": {
+            "positive": "library-of-leng-c01-positive",
+            "negative": "library-of-leng-c01-negative",
+            "viewer": "library-of-leng-viewer-no-maximum-hand-size"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Library of Leng",
+          "text": "If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.",
+          "requiredScenarioIds": {
+            "positive": "library-of-leng-c02-positive",
+            "negative": "library-of-leng-c02-negative",
+            "viewer": "library-of-leng-viewer-effect-discard-and-draw"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "library-of-leng-normal-cast-activation",
+        "viewer": [
+          "library-of-leng-viewer-no-maximum-hand-size",
+          "library-of-leng-viewer-effect-discard-and-draw"
+        ],
+        "gameplayAi": "library-of-leng-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
+      "oracleSha256": "a57605b3abdc39782904af4ac586395623fb6f9e387bf9dc7333be186bbc0f13",
+      "cardName": "Liliana of the Veil",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Liliana of the Veil",
+          "text": "+1: Each player discards a card.",
+          "requiredScenarioIds": {
+            "positive": "liliana-of-the-veil-c01-positive",
+            "negative": "liliana-of-the-veil-c01-negative",
+            "viewer": "liliana-of-the-veil-viewer-each-player-discards"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Liliana of the Veil",
+          "text": "−2: Target player sacrifices a creature.",
+          "requiredScenarioIds": {
+            "positive": "liliana-of-the-veil-c02-positive",
+            "negative": "liliana-of-the-veil-c02-negative",
+            "viewer": "liliana-of-the-veil-viewer-targeted-sacrifice"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Liliana of the Veil",
+          "text": "−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.",
+          "requiredScenarioIds": {
+            "positive": "liliana-of-the-veil-c03-positive",
+            "negative": "liliana-of-the-veil-c03-negative",
+            "viewer": "liliana-of-the-veil-viewer-ultimate-piles"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "liliana-of-the-veil-normal-cast-activation",
+        "viewer": [
+          "liliana-of-the-veil-viewer-each-player-discards",
+          "liliana-of-the-veil-viewer-targeted-sacrifice",
+          "liliana-of-the-veil-viewer-ultimate-piles"
+        ],
+        "gameplayAi": "liliana-of-the-veil-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe",
+      "oracleSha256": "1843d5cf2f76658288cf48bd790bfda04a38ccfbfcaac07def9b12ca0fdd5f16",
+      "cardName": "Liliana, Waker of the Dead",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Liliana, Waker of the Dead",
+          "text": "+1: Each player discards a card. Each opponent who can't loses 3 life.",
+          "requiredScenarioIds": {
+            "positive": "liliana-waker-of-the-dead-c01-positive",
+            "negative": "liliana-waker-of-the-dead-c01-negative",
+            "viewer": "liliana-waker-of-the-dead-viewer-discard-life-loss"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Liliana, Waker of the Dead",
+          "text": "−3: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard.",
+          "requiredScenarioIds": {
+            "positive": "liliana-waker-of-the-dead-c02-positive",
+            "negative": "liliana-waker-of-the-dead-c02-negative",
+            "viewer": "liliana-waker-of-the-dead-viewer-graveyard-scaled-removal"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Liliana, Waker of the Dead",
+          "text": "−7: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\"",
+          "requiredScenarioIds": {
+            "positive": "liliana-waker-of-the-dead-c03-positive",
+            "negative": "liliana-waker-of-the-dead-c03-negative",
+            "viewer": "liliana-waker-of-the-dead-viewer-ultimate-emblem-reanimation"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "liliana-waker-of-the-dead-normal-cast-activation",
+        "viewer": [
+          "liliana-waker-of-the-dead-viewer-discard-life-loss",
+          "liliana-waker-of-the-dead-viewer-graveyard-scaled-removal",
+          "liliana-waker-of-the-dead-viewer-ultimate-emblem-reanimation"
+        ],
+        "gameplayAi": "liliana-waker-of-the-dead-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
+      "oracleSha256": "9a9f376d70f688a3c9319ffc71697a0a397d659b9e681f89327d93112211dbe1",
+      "cardName": "Mother of Runes",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Mother of Runes",
+          "text": "{T}: Target creature you control gains protection from the color of your choice until end of turn.",
+          "requiredScenarioIds": {
+            "positive": "mother-of-runes-c01-positive",
+            "negative": "mother-of-runes-c01-negative",
+            "viewer": "mother-of-runes-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "mother-of-runes-normal-cast-activation",
+        "viewer": "mother-of-runes-viewer",
+        "gameplayAi": "mother-of-runes-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe",
+      "oracleSha256": "304b0b1c7df5b09fbc24084a3cf9c15f64002fa89eb7364bf966168cd503314a",
+      "cardName": "Necrogen Mists",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Necrogen Mists",
+          "text": "At the beginning of each player's upkeep, that player discards a card.",
+          "requiredScenarioIds": {
+            "positive": "necrogen-mists-c01-positive",
+            "negative": "necrogen-mists-c01-negative",
+            "viewer": "necrogen-mists-viewer-next-upkeep-discard-choice"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "necrogen-mists-normal-cast-activation",
+        "viewer": "necrogen-mists-viewer-next-upkeep-discard-choice",
+        "gameplayAi": "necrogen-mists-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
+      "oracleSha256": "94486b101e3ab95e200fe5b1839ee3513fe9a59cb0e0184d17e77992ddf5465d",
+      "cardName": "Oppression",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Oppression",
+          "text": "Whenever a player casts a spell, that player discards a card.",
+          "requiredScenarioIds": {
+            "positive": "oppression-c01-positive",
+            "negative": "oppression-c01-negative",
+            "viewer": "oppression-viewer-opponent-cast-discard"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "oppression-normal-cast-activation",
+        "viewer": "oppression-viewer-opponent-cast-discard",
+        "gameplayAi": "oppression-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "c37051cc-6683-4dbb-b5ff-5c3a5bdab1df",
+      "oracleSha256": "907cddfb6e25833cdd784e159a07b112cd910c9f95d9887bc51ce79c917b1424",
+      "cardName": "Painful Quandary",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Painful Quandary",
+          "text": "Whenever an opponent casts a spell, that player loses 5 life unless they discard a card.",
+          "requiredScenarioIds": {
+            "positive": "painful-quandary-c01-positive",
+            "negative": "painful-quandary-c01-negative",
+            "viewer": "painful-quandary-viewer-opponent-cast-choice"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "painful-quandary-normal-cast-activation",
+        "viewer": "painful-quandary-viewer-opponent-cast-choice",
+        "gameplayAi": "painful-quandary-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Opponent spell-cast trigger",
+        "Optional discard choice to prevent five life loss",
+        "Empty-hand and controller-cast negative coverage"
+      ],
+      "engineTestIds": [
+        "pins each card hash and applies the local override",
+        "painful-quandary-c01-positive — an opponent may discard to avoid the five-life loss",
+        "painful-quandary-c01-positive — declining costs five life and two copies ask separately",
+        "painful-quandary-c01-negative — own casts do not trigger it, and an empty opponent hand loses five"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-discard-choices.test.ts"
+    },
+    {
+      "oracleId": "295fe873-ecb5-4d5e-a73c-3af6c478afc5",
+      "oracleSha256": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d",
+      "cardName": "Perch Protection",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Perch Protection",
+          "text": "Gift an extra turn (You may promise an opponent a gift as you cast this spell. If you do, they take an extra turn after this one.)",
+          "requiredScenarioIds": {
+            "positive": "perch-protection-c01-positive",
+            "negative": "perch-protection-c01-negative",
+            "viewer": "perch-protection-viewer-gift-phaseout-next-turn"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Perch Protection",
+          "text": "Create four 2/2 blue Bird creature tokens with flying. If the gift was promised, all permanents you control phase out, and until your next turn, your life total can't change and you gain protection from everything.",
+          "requiredScenarioIds": {
+            "positive": "perch-protection-c02-positive",
+            "negative": "perch-protection-c02-negative",
+            "viewer": "perch-protection-viewer-gift-phaseout-next-turn"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Perch Protection",
+          "text": "Exile Perch Protection.",
+          "requiredScenarioIds": {
+            "positive": "perch-protection-c03-positive",
+            "negative": "perch-protection-c03-negative",
+            "viewer": "perch-protection-viewer-gift-phaseout-next-turn"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "perch-protection-normal-cast-activation",
+        "viewer": "perch-protection-viewer-gift-phaseout-next-turn",
+        "gameplayAi": "perch-protection-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Normal casting with optional Gift an extra turn choice for an opponent; the recipient is scheduled for an extra turn.",
+        "Create four 2/2 blue Bird creature tokens with flying.",
+        "When the gift was promised, phase out permanents controlled by the caster and protect their life total and player-targeting until their next turn; phase those same objects in before untap.",
+        "Exile Perch Protection after its effects resolve."
+      ],
+      "engineTestIds": [
+        "white-black-control-perch.test.ts::casts normally, offers the extra-turn gift, creates four Birds, phases the controlled set and exiles itself",
+        "white-black-control-perch.test.ts::declining leaves the four Birds on the battlefield and does not phase or shield",
+        "white-black-control-perch.test.ts::queues multiple promised extra turns most-recent-first",
+        "white-black-control-perch.test.ts::runs extra turns in order, then resumes the interrupted normal turn rotation",
+        "white-black-control-perch.test.ts::skips an eliminated promised recipient without consuming the next recipient’s extra turn",
+        "white-black-control-perch.test.ts::locks life changes and player targeting, then expires before own untap and phases the same objects in",
+        "white-black-control-perch.test.ts::makes the shielded player an illegal target for every player source, including their own",
+        "white-black-control-perch.test.ts::prevents an opponent lifelink attacker from dealing damage or gaining life, while still allowing the attack",
+        "white-black-control-perch.test.ts::allows untargeted discard and filters positive pay-life activations while retaining zero-pay activations",
+        "white-black-control-perch.test.ts::turns off a phased source’s global static effect and discard trigger while it is away",
+        "phasing-elimination-contract.test.ts::keeps an owned permanent phased through the immediate extra and normal turns, then phases it in on the next applicable untap"
+      ],
+      "engineTestSourcePaths": [
+        "packages/engine/tests/white-black-control-perch.test.ts",
+        "packages/engine/tests/phasing-elimination-contract.test.ts"
+      ],
+      "remainingViewerRequirements": [
+        "The real Playwright run and retained viewer trace are pending; a registered scenario is not generated viewer evidence.",
+        "Add browser assertions for the life-total lock and protection-from-everything behavior."
+      ]
+    },
+    {
+      "oracleId": "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e",
+      "oracleSha256": "146d72b8e678921fad84434578e02fd647a18c6cf2733a55c2df2d45080cf066",
+      "cardName": "Planar Void",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Planar Void",
+          "text": "Whenever another card is put into a graveyard from anywhere, exile that card.",
+          "requiredScenarioIds": {
+            "positive": "planar-void-c01-positive",
+            "negative": "planar-void-c01-negative",
+            "viewer": "planar-void-viewer-destroyed-permanent"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "planar-void-normal-cast-activation",
+        "viewer": "planar-void-viewer-destroyed-permanent",
+        "gameplayAi": "planar-void-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+      "oracleSha256": "2c168d95b98fc29bee9fb1d7a562d50070400c32fe9b4476196eb820d301b472",
+      "cardName": "Promise of Loyalty",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Promise of Loyalty",
+          "text": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
+          "requiredScenarioIds": {
+            "positive": "promise-of-loyalty-c01-positive",
+            "negative": "promise-of-loyalty-c01-negative",
+            "viewer": "promise-of-loyalty-viewer-apnap-vow-and-sacrifice"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "promise-of-loyalty-normal-cast-activation",
+        "viewer": "promise-of-loyalty-viewer-apnap-vow-and-sacrifice",
+        "gameplayAi": "promise-of-loyalty-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
+      "oracleSha256": "069593a2fb3dd2d4d28b5741f452ef3bad6c9662a747880792f1daa37e96836f",
+      "cardName": "Rankle, Master of Pranks",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Rankle, Master of Pranks",
+          "text": "Flying, haste",
+          "requiredScenarioIds": {
+            "positive": "rankle-master-of-pranks-c01-positive",
+            "negative": "rankle-master-of-pranks-c01-negative",
+            "viewer": "rankle-master-of-pranks-viewer-all-three-modes"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Rankle, Master of Pranks",
+          "text": "Whenever Rankle deals combat damage to a player, choose any number —",
+          "requiredScenarioIds": {
+            "positive": "rankle-master-of-pranks-c02-positive",
+            "negative": "rankle-master-of-pranks-c02-negative",
+            "viewer": [
+              "rankle-master-of-pranks-viewer-all-three-modes",
+              "rankle-master-of-pranks-viewer-combat-modes"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Rankle, Master of Pranks",
+          "text": "• Each player discards a card.",
+          "requiredScenarioIds": {
+            "positive": "rankle-master-of-pranks-c03-positive",
+            "negative": "rankle-master-of-pranks-c03-negative",
+            "viewer": [
+              "rankle-master-of-pranks-viewer-all-three-modes",
+              "rankle-master-of-pranks-viewer-combat-modes"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 4,
+          "face": "front",
+          "faceName": "Rankle, Master of Pranks",
+          "text": "• Each player loses 1 life and draws a card.",
+          "requiredScenarioIds": {
+            "positive": "rankle-master-of-pranks-c04-positive",
+            "negative": "rankle-master-of-pranks-c04-negative",
+            "viewer": [
+              "rankle-master-of-pranks-viewer-all-three-modes",
+              "rankle-master-of-pranks-viewer-combat-modes"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 5,
+          "face": "front",
+          "faceName": "Rankle, Master of Pranks",
+          "text": "• Each player sacrifices a creature of their choice.",
+          "requiredScenarioIds": {
+            "positive": "rankle-master-of-pranks-c05-positive",
+            "negative": "rankle-master-of-pranks-c05-negative",
+            "viewer": "rankle-master-of-pranks-viewer-all-three-modes"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "rankle-master-of-pranks-normal-cast-activation",
+        "viewer": [
+          "rankle-master-of-pranks-viewer-all-three-modes",
+          "rankle-master-of-pranks-viewer-combat-modes"
+        ],
+        "gameplayAi": "rankle-master-of-pranks-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Flying and haste keyword projection",
+        "Combat-damage trigger and optional choose-any-number modal selection",
+        "Each-player discard mode",
+        "Each-player lose-one-life-and-draw mode",
+        "Each-player sacrifice-a-creature mode"
+      ],
+      "engineTestIds": [
+        "pins each card hash and applies the local override",
+        "rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+        "rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-discard-choices.test.ts",
+      "remainingViewerRequirements": []
+    },
+    {
+      "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
+      "oracleSha256": "e071417dfbbacce2cd007719b51c66433b5cb3fbf85cd829a9f3cc366e9a237e",
+      "cardName": "Rebuff the Wicked",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Rebuff the Wicked",
+          "text": "Counter target spell that targets a permanent you control.",
+          "requiredScenarioIds": {
+            "positive": "rebuff-the-wicked-c01-positive",
+            "negative": "rebuff-the-wicked-c01-negative",
+            "viewer": "rebuff-the-wicked-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "rebuff-the-wicked-normal-cast-activation",
+        "viewer": "rebuff-the-wicked-viewer",
+        "gameplayAi": "rebuff-the-wicked-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "8d24c12a-a300-4199-b2a9-3d5ead8df617",
+      "oracleSha256": "caa828b6f32adc5fd8882f6eac989c02e9a14c5b7d69d5e5946abe279ba88ac2",
+      "cardName": "Reluctant Role Model",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Reluctant Role Model",
+          "text": "Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it.",
+          "requiredScenarioIds": {
+            "positive": "reluctant-role-model-c01-positive",
+            "negative": "reluctant-role-model-c01-negative",
+            "viewer": "reluctant-role-model-viewer"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Reluctant Role Model",
+          "text": "Whenever this creature or another creature you control dies, if it had counters on it, put those counters on up to one target creature.",
+          "requiredScenarioIds": {
+            "positive": "reluctant-role-model-c02-positive",
+            "negative": "reluctant-role-model-c02-negative",
+            "viewer": "reluctant-role-model-viewer-death-counter-transfer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "reluctant-role-model-normal-cast-activation",
+        "viewer": [
+          "reluctant-role-model-viewer",
+          "reluctant-role-model-viewer-death-counter-transfer"
+        ],
+        "gameplayAi": "reluctant-role-model-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "f0449cbd-855c-4c20-a1f5-f76a395d8d39",
+      "oracleSha256": "619a7ea2fb69f1f2c07d5a2e0e1bffc1f5ef08ac77361f57e6483eccf439c443",
+      "cardName": "Reprieve",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Reprieve",
+          "text": "Return target spell to its owner's hand.",
+          "requiredScenarioIds": {
+            "positive": "reprieve-c01-positive",
+            "negative": "reprieve-c01-negative",
+            "viewer": "reprieve-viewer"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Reprieve",
+          "text": "Draw a card.",
+          "requiredScenarioIds": {
+            "positive": "reprieve-c02-positive",
+            "negative": "reprieve-c02-negative",
+            "viewer": "reprieve-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "reprieve-normal-cast-activation",
+        "viewer": "reprieve-viewer",
+        "gameplayAi": "reprieve-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+      "oracleSha256": "9519ed723522e91ca26f35969166d20f2c1e764dc274282a377c52851a63d2a4",
+      "cardName": "Rest in Peace",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Rest in Peace",
+          "text": "When this enchantment enters, exile all graveyards.",
+          "requiredScenarioIds": {
+            "positive": "rest-in-peace-c01-positive",
+            "negative": "rest-in-peace-c01-negative",
+            "viewer": "rest-in-peace-viewer"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Rest in Peace",
+          "text": "If a card or token would be put into a graveyard from anywhere, exile it instead.",
+          "requiredScenarioIds": {
+            "positive": "rest-in-peace-c02-positive",
+            "negative": "rest-in-peace-c02-negative",
+            "viewer": "rest-in-peace-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "rest-in-peace-normal-cast-activation",
+        "viewer": "rest-in-peace-viewer",
+        "gameplayAi": "rest-in-peace-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Normal enchantment cast and enters trigger exiles all graveyards",
+        "Replaces movement to graveyard from any zone with exile; handles tokens, simultaneous departure, and ability loss"
+      ],
+      "engineTestIds": [
+        "pins Oracle hashes and fully models both cards under the local overrides",
+        "rest-in-peace-c01-positive — normal cast resolves its enters trigger and exiles every graveyard",
+        "rest-in-peace-c02-positive — replaces hand discard, mill, spell resolution, and battlefield deaths",
+        "rest-in-peace-c03-positive/c04-negative — tokens cease, and simultaneous departure does not turn off replacement early",
+        "rest-in-peace-c05-negative — losing abilities or leaving the battlefield ends replacement coverage"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-graveyard.test.ts"
+    },
+    {
+      "oracleId": "ddbe0d17-5cac-417c-afc0-e4aebae83205",
+      "oracleSha256": "fe14aacd1b134c4f90f994409eb6d0a6852d23b46a9f486af258de9093058d22",
+      "cardName": "Restoration Magic",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Restoration Magic",
+          "text": "Tiered (Choose one additional cost.)",
+          "requiredScenarioIds": {
+            "positive": "restoration-magic-c01-positive",
+            "negative": "restoration-magic-c01-negative",
+            "viewer": [
+              "restoration-magic-viewer",
+              "restoration-magic-viewer-cure",
+              "restoration-magic-viewer-curaga"
+            ]
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Restoration Magic",
+          "text": "• Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.",
+          "requiredScenarioIds": {
+            "positive": "restoration-magic-c02-positive",
+            "negative": "restoration-magic-c02-negative",
+            "viewer": "restoration-magic-viewer-cure"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Restoration Magic",
+          "text": "• Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.",
+          "requiredScenarioIds": {
+            "positive": "restoration-magic-c03-positive",
+            "negative": "restoration-magic-c03-negative",
+            "viewer": "restoration-magic-viewer"
+          }
+        },
+        {
+          "clauseNumber": 4,
+          "face": "front",
+          "faceName": "Restoration Magic",
+          "text": "• Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.",
+          "requiredScenarioIds": {
+            "positive": "restoration-magic-c04-positive",
+            "negative": "restoration-magic-c04-negative",
+            "viewer": "restoration-magic-viewer-curaga"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "restoration-magic-normal-cast-activation",
+        "viewer": [
+          "restoration-magic-viewer",
+          "restoration-magic-viewer-cure",
+          "restoration-magic-viewer-curaga"
+        ],
+        "gameplayAi": "restoration-magic-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
+      "oracleSha256": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3",
+      "cardName": "Rule of Law",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Rule of Law",
+          "text": "Each player can't cast more than one spell each turn.",
+          "requiredScenarioIds": {
+            "positive": "rule-of-law-c01-positive",
+            "negative": "rule-of-law-c01-negative",
+            "viewer": "rule-of-law-viewer-single-spell-limit"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "rule-of-law-normal-cast-activation",
+        "viewer": "rule-of-law-viewer-single-spell-limit",
+        "gameplayAi": "rule-of-law-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "d54e4e37-042b-44a5-918d-757308545d4d",
+      "oracleSha256": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218",
+      "cardName": "Sejiri Shelter // Sejiri Glacier",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Sejiri Shelter",
+          "text": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "requiredScenarioIds": {
+            "positive": "sejiri-shelter-sejiri-glacier-c01-positive",
+            "negative": "sejiri-shelter-sejiri-glacier-c01-negative",
+            "viewer": "sejiri-shelter-sejiri-glacier-viewer"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "back",
+          "faceName": "Sejiri Glacier",
+          "text": "This land enters tapped.",
+          "requiredScenarioIds": {
+            "positive": "sejiri-shelter-sejiri-glacier-c02-positive",
+            "negative": "sejiri-shelter-sejiri-glacier-c02-negative",
+            "viewer": "sejiri-glacier-viewer-next-turn-mother-runes"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "back",
+          "faceName": "Sejiri Glacier",
+          "text": "{T}: Add {W}.",
+          "requiredScenarioIds": {
+            "positive": "sejiri-shelter-sejiri-glacier-c03-positive",
+            "negative": "sejiri-shelter-sejiri-glacier-c03-negative",
+            "viewer": "sejiri-glacier-viewer-next-turn-mother-runes"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "sejiri-shelter-sejiri-glacier-normal-cast-activation",
+        "viewer": [
+          "sejiri-shelter-sejiri-glacier-viewer",
+          "sejiri-glacier-viewer-next-turn-mother-runes"
+        ],
+        "gameplayAi": "sejiri-shelter-sejiri-glacier-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "52bd4331-67b6-4eb8-9566-e00359889fc6",
+      "oracleSha256": "994bae03a713184fd5257172464dc1836785328517d213136f2f45d5c4e89855",
+      "cardName": "Soul Snare",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Soul Snare",
+          "text": "{W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control.",
+          "requiredScenarioIds": {
+            "positive": "soul-snare-c01-positive",
+            "negative": "soul-snare-c01-negative",
+            "viewer": "soul-snare-viewer-exiles-planeswalker-attacker"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "soul-snare-normal-cast-activation",
+        "viewer": "soul-snare-viewer-exiles-planeswalker-attacker",
+        "gameplayAi": "soul-snare-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
+      "oracleSha256": "e15fa33bcd6283f55ec175f1ea4d8b2bb245aea1eecebaafd8cabe51bded8f84",
+      "cardName": "Stone of Erech",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Stone of Erech",
+          "text": "If a creature an opponent controls would die, exile it instead.",
+          "requiredScenarioIds": {
+            "positive": "stone-of-erech-c01-positive",
+            "negative": "stone-of-erech-c01-negative",
+            "viewer": "stone-of-erech-viewer-opponent-creature-death"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Stone of Erech",
+          "text": "{2}, {T}, Sacrifice Stone of Erech: Exile target player's graveyard. Draw a card.",
+          "requiredScenarioIds": {
+            "positive": "stone-of-erech-c02-positive",
+            "negative": "stone-of-erech-c02-negative",
+            "viewer": "stone-of-erech-viewer-activation"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "stone-of-erech-normal-cast-activation",
+        "viewer": [
+          "stone-of-erech-viewer-opponent-creature-death",
+          "stone-of-erech-viewer-activation"
+        ],
+        "gameplayAi": "stone-of-erech-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Opponent-creature death replacement exiles instead of graveyard movement",
+        "{2}, tap, sacrifice activated ability targets a player, exiles that graveyard, then draws"
+      ],
+      "engineTestIds": [
+        "stone-of-erech-c01-positive/c02-negative — applies to opponent-controlled current creatures only",
+        "stone-of-erech-c06-positive — its death replacement sees its own simultaneous departure",
+        "stone-of-erech-c03-positive/c04-negative — paid activation exiles any player graveyard, then draws",
+        "stone-of-erech-c05-positive — self is a legal target, including when its graveyard is empty"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-graveyard.test.ts"
+    },
+    {
+      "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
+      "oracleSha256": "3f874892d271ffd03fbd6abc86fc342537719e1d1a86765af3187ae7ca698d12",
+      "cardName": "Syphon Mind",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Syphon Mind",
+          "text": "Each other player discards a card. You draw a card for each card discarded this way.",
+          "requiredScenarioIds": {
+            "positive": "syphon-mind-c01-positive",
+            "negative": "syphon-mind-c01-negative",
+            "viewer": "syphon-mind-viewer-opponents-discard-and-draw"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "syphon-mind-normal-cast-activation",
+        "viewer": "syphon-mind-viewer-opponents-discard-and-draw",
+        "gameplayAi": "syphon-mind-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+      "oracleSha256": "390005effb7682d435bd1fffe5b17fd1603da3e0bac9a3fcb43d7c3f04d1d9f4",
+      "cardName": "Tergrid, God of Fright // Tergrid's Lantern",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Tergrid, God of Fright",
+          "text": "Menace",
+          "requiredScenarioIds": {
+            "positive": "tergrid-god-of-fright-tergrid-s-lantern-c01-positive",
+            "negative": "tergrid-god-of-fright-tergrid-s-lantern-c01-negative",
+            "viewer": "tergrid-front-viewer-menace-blocker"
+          },
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::pins both faces and casts the front normally with menace and a 4/5 body"
+          ],
+          "engineTestSourcePath": "packages/engine/tests/white-black-control-tergrid.test.ts"
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Tergrid, God of Fright",
+          "text": "Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.",
+          "requiredScenarioIds": {
+            "positive": "tergrid-god-of-fright-tergrid-s-lantern-c02-positive",
+            "negative": "tergrid-god-of-fright-tergrid-s-lantern-c02-negative",
+            "viewer": [
+              "tergrid-front-viewer-discards-permanent-card",
+              "tergrid-front-viewer-opponent-sacrifice"
+            ]
+          },
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::returns an opponent permanent card discarded by an actual effect, binding its graveyard incarnation",
+            "white-black-control-tergrid.test.ts::returns an opponent permanent sacrificed to a real sacrifice move, but not own or token permanents",
+            "white-black-control-tergrid.test.ts::does not return discarded nonpermanent cards or cards that never entered a graveyard from hand",
+            "white-black-control-tergrid.test.ts::binds the original graveyard incarnation and skips it after it leaves and returns"
+          ],
+          "engineTestSourcePath": "packages/engine/tests/white-black-control-tergrid.test.ts"
+        },
+        {
+          "clauseNumber": 3,
+          "face": "back",
+          "faceName": "Tergrid's Lantern",
+          "text": "{T}: Target player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card.",
+          "requiredScenarioIds": {
+            "positive": "tergrid-god-of-fright-tergrid-s-lantern-c03-positive",
+            "negative": "tergrid-god-of-fright-tergrid-s-lantern-c03-negative",
+            "viewer": [
+              "tergrid-lantern-viewer-target-loses-life",
+              "tergrid-lantern-viewer-discard-then-paid-untap"
+            ]
+          },
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::casts the back face for {3}{B} as the legendary artifact with only Lantern abilities",
+            "white-black-control-tergrid.test.ts::Lantern lets the target choose life loss even when sacrifice or discard is available",
+            "white-black-control-tergrid.test.ts::Lantern sacrifice excludes lands, discards when chosen, and loses life when neither alternative exists",
+            "white-black-control-tergrid.test.ts::Lantern discard still counts when Rest in Peace replaces its graveyard destination; {3}{B} untaps for repeat use"
+          ],
+          "engineTestSourcePath": "packages/engine/tests/white-black-control-tergrid.test.ts"
+        },
+        {
+          "clauseNumber": 4,
+          "face": "back",
+          "faceName": "Tergrid's Lantern",
+          "text": "{3}{B}: Untap Tergrid's Lantern.",
+          "requiredScenarioIds": {
+            "positive": "tergrid-god-of-fright-tergrid-s-lantern-c04-positive",
+            "negative": "tergrid-god-of-fright-tergrid-s-lantern-c04-negative",
+            "viewer": "tergrid-lantern-viewer-discard-then-paid-untap"
+          },
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::casts the back face for {3}{B} as the legendary artifact with only Lantern abilities",
+            "white-black-control-tergrid.test.ts::a copy of the back-face permanent spell copies only Tergrid's Lantern",
+            "white-black-control-tergrid.test.ts::Lantern discard still counts when Rest in Peace replaces its graveyard destination; {3}{B} untaps for repeat use"
+          ],
+          "engineTestSourcePath": "packages/engine/tests/white-black-control-tergrid.test.ts"
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "tergrid-god-of-fright-tergrid-s-lantern-normal-cast-activation",
+        "viewer": [
+          "tergrid-front-viewer-menace-blocker",
+          "tergrid-front-viewer-discards-permanent-card",
+          "tergrid-front-viewer-opponent-sacrifice",
+          "tergrid-lantern-viewer-target-loses-life",
+          "tergrid-lantern-viewer-discard-then-paid-untap"
+        ],
+        "gameplayAi": "tergrid-god-of-fright-tergrid-s-lantern-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Front face normally casts as a 4/5 legendary creature with menace.",
+        "Opponent nontoken permanent sacrifices and discarded permanent cards are offered for optional return from graveyard to battlefield under Tergrid; own, token, nonpermanent, replaced, and stale graveyard incarnations are excluded faithfully.",
+        "Back face normally casts as Tergrid's Lantern with its two activated abilities; copy, selected mode, land exclusion, replacement, and paid untap behavior are exercised."
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-tergrid.test.ts",
+      "engineTestIds": [
+        "white-black-control-tergrid.test.ts::pins both faces and casts the front normally with menace and a 4/5 body",
+        "white-black-control-tergrid.test.ts::casts the back face for {3}{B} as the legendary artifact with only Lantern abilities",
+        "white-black-control-tergrid.test.ts::a copy of the back-face permanent spell copies only Tergrid's Lantern",
+        "white-black-control-tergrid.test.ts::returns an opponent permanent card discarded by an actual effect, binding its graveyard incarnation",
+        "white-black-control-tergrid.test.ts::returns an opponent permanent sacrificed to a real sacrifice move, but not own or token permanents",
+        "white-black-control-tergrid.test.ts::does not return discarded nonpermanent cards or cards that never entered a graveyard from hand",
+        "white-black-control-tergrid.test.ts::binds the original graveyard incarnation and skips it after it leaves and returns",
+        "white-black-control-tergrid.test.ts::Lantern lets the target choose life loss even when sacrifice or discard is available",
+        "white-black-control-tergrid.test.ts::Lantern sacrifice excludes lands, discards when chosen, and loses life when neither alternative exists",
+        "white-black-control-tergrid.test.ts::Lantern discard still counts when Rest in Peace replaces its graveyard destination; {3}{B} untaps for repeat use",
+        "white-black-control-tergrid.test.ts::uses the chosen artifact face for opposing creature entry replacements"
+      ]
+    },
+    {
+      "oracleId": "e70f5520-1b9c-4351-8484-30f0dc692e01",
+      "oracleSha256": "85b6c7f3a24a701a82b107aa6b27a0a07cc0796d83f3dcc13d7bedfbd6870e31",
+      "cardName": "The Haunt of Hightower",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "The Haunt of Hightower",
+          "text": "Flying, lifelink",
+          "requiredScenarioIds": {
+            "positive": "the-haunt-of-hightower-c01-positive",
+            "negative": "the-haunt-of-hightower-c01-negative",
+            "viewer": "the-haunt-of-hightower-viewer-flying-blocker"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "The Haunt of Hightower",
+          "text": "Whenever The Haunt of Hightower attacks, defending player discards a card.",
+          "requiredScenarioIds": {
+            "positive": "the-haunt-of-hightower-c02-positive",
+            "negative": "the-haunt-of-hightower-c02-negative",
+            "viewer": "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "The Haunt of Hightower",
+          "text": "Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on The Haunt of Hightower.",
+          "requiredScenarioIds": {
+            "positive": "the-haunt-of-hightower-c03-positive",
+            "negative": "the-haunt-of-hightower-c03-negative",
+            "viewer": "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "the-haunt-of-hightower-normal-cast-activation",
+        "viewer": [
+          "the-haunt-of-hightower-viewer-flying-blocker",
+          "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat"
+        ],
+        "gameplayAi": "the-haunt-of-hightower-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5",
+      "oracleSha256": "d2e0f7e4f16b67aaa4e218a844393a9d167c546a9aab748d908b19661eeda516",
+      "cardName": "Thoughtseize",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Thoughtseize",
+          "text": "Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.",
+          "requiredScenarioIds": {
+            "positive": "thoughtseize-c01-positive",
+            "negative": "thoughtseize-c01-negative",
+            "viewer": "thoughtseize-viewer"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "thoughtseize-normal-cast-activation",
+        "viewer": "thoughtseize-viewer",
+        "gameplayAi": "thoughtseize-gameplay-ai"
+      }
+    },
+    {
+      "oracleId": "3d2bd4f6-174d-411a-b930-9161aeefd33a",
+      "oracleSha256": "e0975b6f80bbae0706c845c15bae881e181f8dda64878d0f101c568224c2d71a",
+      "cardName": "Tinybones Joins Up",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Tinybones Joins Up",
+          "text": "When Tinybones Joins Up enters, any number of target players each discard a card.",
+          "requiredScenarioIds": {
+            "positive": "tinybones-joins-up-c01-positive",
+            "negative": "tinybones-joins-up-c01-negative",
+            "viewer": "tinybones-joins-up-viewer-multi-player-etb-discard"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Tinybones Joins Up",
+          "text": "Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life.",
+          "requiredScenarioIds": {
+            "positive": "tinybones-joins-up-c02-positive",
+            "negative": "tinybones-joins-up-c02-negative",
+            "viewer": "tinybones-joins-up-viewer-legendary-entry-mill-life"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "tinybones-joins-up-normal-cast-activation",
+        "viewer": [
+          "tinybones-joins-up-viewer-multi-player-etb-discard",
+          "tinybones-joins-up-viewer-legendary-entry-mill-life"
+        ],
+        "gameplayAi": "tinybones-joins-up-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Enters trigger targets any number of players, each selected player discards a card",
+        "Controller legendary-creature entry trigger allows any number of target players to mill one and lose one life; handles empty libraries"
+      ],
+      "engineTestIds": [
+        "keeps both exact Oracle pins and parses the authored replacement abilities",
+        "Tinybones Joins Up is cast normally and its ETB counted selection can be empty",
+        "Tinybones Joins Up can select exactly one opponent and leaves every other hand alone",
+        "Tinybones Joins Up lets several players select and makes all discard choices before moving cards",
+        "skips a selected player who has lost before the discard trigger resolves",
+        "Tinybones Joins Up mill-and-life trigger handles empty libraries and only your legendary entries",
+        "Tinybones Joins Up ignores your nonlegendary creature and an opponent's legendary creature"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-tinybones.test.ts"
+    },
+    {
+      "oracleId": "008eda1f-b913-4f04-8c29-5e87c270149e",
+      "oracleSha256": "fa942a88eac3190440d190334f15b964ae56dfb0fb5bcc87d876b8df28cf4651",
+      "cardName": "Tinybones, Trinket Thief",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Tinybones, Trinket Thief",
+          "text": "At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.",
+          "requiredScenarioIds": {
+            "positive": "tinybones-trinket-thief-c01-positive",
+            "negative": "tinybones-trinket-thief-c01-negative",
+            "viewer": "tinybones-trinket-thief-viewer-opponent-discard-end-step"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Tinybones, Trinket Thief",
+          "text": "{4}{B}{B}: Each opponent with no cards in hand loses 10 life.",
+          "requiredScenarioIds": {
+            "positive": "tinybones-trinket-thief-c02-positive",
+            "negative": "tinybones-trinket-thief-c02-negative",
+            "viewer": "tinybones-trinket-thief-viewer-empty-hand-activation"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "tinybones-trinket-thief-normal-cast-activation",
+        "viewer": [
+          "tinybones-trinket-thief-viewer-opponent-discard-end-step",
+          "tinybones-trinket-thief-viewer-empty-hand-activation"
+        ],
+        "gameplayAi": "tinybones-trinket-thief-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Each end step checks whether an opponent discarded this turn, then draws one and loses one life",
+        "{4}{B}{B} activation causes each opponent with empty hand to lose ten life"
+      ],
+      "engineTestIds": [
+        "keeps both exact Oracle pins and parses the authored replacement abilities",
+        "Trinket Thief counts opponent discards from an actual effect, excludes own discards, then draws and loses once",
+        "counts a discard before Tinybones enters later in the same turn",
+        "does not trigger from own discard and resets the opponent tally at the next untap",
+        "counts an opponent cycling discard cost and an actual cleanup discard",
+        "resolves the paid six-mana activation against each opponent with an empty hand"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-tinybones.test.ts"
+    },
+    {
+      "oracleId": "55b72b1f-6463-406a-8824-d99a3c028285",
+      "oracleSha256": "b09bf3c311377c7f92e925e5eabbdd4aefb978e905e525d70acc5a8429dec5a2",
+      "cardName": "Vicious Rumors",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Vicious Rumors",
+          "text": "Vicious Rumors deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.",
+          "requiredScenarioIds": {
+            "positive": "vicious-rumors-c01-positive",
+            "negative": "vicious-rumors-c01-negative",
+            "viewer": "vicious-rumors-viewer-cast-results"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "vicious-rumors-normal-cast-activation",
+        "viewer": "vicious-rumors-viewer-cast-results",
+        "gameplayAi": "vicious-rumors-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Normal sorcery resolution",
+        "One damage per opponent followed by discard, mill, and one life gain",
+        "Empty-hand and empty-library handling; mill is not treated as discard"
+      ],
+      "engineTestIds": [
+        "vicious-rumors-c01-positive — damages opponents, then discards, mills, and gains one life",
+        "vicious-rumors-c01-negative — empty hands and libraries are safe; mills do not trigger discard"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-discard-choices.test.ts"
+    },
+    {
+      "oracleId": "00fdcc19-88ed-46c3-91f0-095806228105",
+      "oracleSha256": "45df10c919fc24aac9c6c7a0120063af74262ed0fd1d18776c39f852a54ad04d",
+      "cardName": "Waste Not",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Waste Not",
+          "text": "Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.",
+          "requiredScenarioIds": {
+            "positive": "waste-not-c01-positive",
+            "negative": "waste-not-c01-negative",
+            "viewer": "waste-not-viewer-opponent-discard-payoffs"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Waste Not",
+          "text": "Whenever an opponent discards a land card, add {B}{B}.",
+          "requiredScenarioIds": {
+            "positive": "waste-not-c02-positive",
+            "negative": "waste-not-c02-negative",
+            "viewer": "waste-not-viewer-opponent-discard-payoffs"
+          }
+        },
+        {
+          "clauseNumber": 3,
+          "face": "front",
+          "faceName": "Waste Not",
+          "text": "Whenever an opponent discards a noncreature, nonland card, draw a card.",
+          "requiredScenarioIds": {
+            "positive": "waste-not-c03-positive",
+            "negative": "waste-not-c03-negative",
+            "viewer": "waste-not-viewer-noncreature-nonland-draw"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "waste-not-normal-cast-activation",
+        "viewer": [
+          "waste-not-viewer-opponent-discard-payoffs",
+          "waste-not-viewer-noncreature-nonland-draw"
+        ],
+        "gameplayAi": "waste-not-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Opponent creature-card discard creates a black 2/2 Zombie token",
+        "Opponent land-card discard trigger adds {B}{B} on resolution",
+        "Opponent noncreature nonland discard draws a card; typed filters distinguish multitype cards"
+      ],
+      "engineTestIds": [
+        "uses all three exact wrapper hashes and models every printed clause",
+        "casts Waste Not and creates a black 2/2 Zombie after an opponent discards a creature",
+        "puts Waste Not black mana on the stack and adds {B}{B} only when that trigger resolves",
+        "casts Waste Not and draws one for an opponent noncreature, nonland discard, but not its own",
+        "dispatches both Waste Not triggers for a discarded creature land by its printed types"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-payoffs.test.ts"
+    },
+    {
+      "oracleId": "cf8bc2e3-2f22-45d3-9810-bc039202f41c",
+      "oracleSha256": "e6f95077a5da3657729c65b8c329cc5e93faffd0a530aee542abc934d02e7be7",
+      "cardName": "Whispers of Emrakul",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "clauseNumber": 1,
+          "face": "front",
+          "faceName": "Whispers of Emrakul",
+          "text": "Target opponent discards a card at random.",
+          "requiredScenarioIds": {
+            "positive": "whispers-of-emrakul-c01-positive",
+            "negative": "whispers-of-emrakul-c01-negative",
+            "viewer": "whispers-of-emrakul-viewer-delirium-random-discard"
+          }
+        },
+        {
+          "clauseNumber": 2,
+          "face": "front",
+          "faceName": "Whispers of Emrakul",
+          "text": "Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at random instead.",
+          "requiredScenarioIds": {
+            "positive": "whispers-of-emrakul-c02-positive",
+            "negative": "whispers-of-emrakul-c02-negative",
+            "viewer": "whispers-of-emrakul-viewer-delirium-random-discard"
+          }
+        }
+      ],
+      "requiredScenarioIds": {
+        "normalCastOrActivation": "whispers-of-emrakul-normal-cast-activation",
+        "viewer": "whispers-of-emrakul-viewer-delirium-random-discard",
+        "gameplayAi": "whispers-of-emrakul-gameplay-ai"
+      },
+      "implementationPrimitives": [
+        "Target opponent random discard",
+        "Delirium checks card types in controller graveyard and increases random discard to two; target validation excludes controller"
+      ],
+      "engineTestIds": [
+        "uses all three exact wrapper hashes and models every printed clause",
+        "casts Whispers normally and uses one random discard below delirium despite opponent types and the resolving spell",
+        "does not count the resolving Whispers of Emrakul as a Sorcery in its own graveyard",
+        "counts a multityped artifact creature as two of its own graveyard card types and replays randomly",
+        "offers Whispers of Emrakul only to opponents, excluding its controller as an illegal target"
+      ],
+      "engineTestSourcePath": "packages/engine/tests/white-black-control-payoffs.test.ts"
+    }
+  ]
+}

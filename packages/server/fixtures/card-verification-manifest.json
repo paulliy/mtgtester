@@ -2503,22 +2503,22 @@
       "name": "Duelist's Heritage",
       "oracleSha256": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
       "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-duelist-s-heritage"],
       "clauses": [
         {
-          "id": "duelists-heritage-attack-trigger",
           "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
           "implementation": [
-            "aggregate attacks trigger over creatures of any controller (CR 603.2c): one trigger per attack declaration however many creatures attack, including an opponent's attack; its one target is any attacking creature, yours or an opponent's, chosen as the trigger is put on the stack (a creature that did not attack is not offered); on resolution you decide whether to grant double strike until end of turn (CR 702.4), and declining grants nothing"
+            "Faithful authored behavior for Duelist's Heritage: Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."
           ],
           "engineTestIds": [
-            "duelists-heritage-pinned-oracle-supported",
-            "duelists-heritage-one-trigger-per-attack",
-            "duelists-heritage-target-attacking",
-            "duelists-heritage-opponent-attacker",
-            "duelists-heritage-may-decline",
-            "duelists-heritage-until-end-of-turn"
+            "white-black-control-duelist.test.ts::models the exact pinned Oracle text",
+            "white-black-control-duelist.test.ts::puts one optional target trigger on the stack when several creatures attack",
+            "white-black-control-duelist.test.ts::allows the controller to decline the optional trigger",
+            "white-black-control-duelist.test.ts::can target an opponent creature that is attacking and excludes a nonattacking creature",
+            "white-black-control-duelist.test.ts::fizzles if the chosen attacker leaves before the trigger resolves"
           ],
-          "viewerScenarioIds": ["duelists-heritage-viewer-double-strike-attacker"]
+          "engineTestSource": ["packages/engine/tests/white-black-control-duelist.test.ts"],
+          "viewerScenarioIds": ["duelists-heritage-viewer-single-optional-target"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2778,23 +2778,43 @@
       "name": "Breena, the Demagogue",
       "oracleSha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
       "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-breena-the-demagogue"],
       "clauses": [
         {
-          "id": "breena-attack-more-life",
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Breena, the Demagogue: Flying"],
+          "engineTestIds": [
+            "white-black-control-breena.test.ts::breena-real-and-fixture-alias: every clause has legal authored IR",
+            "white-black-control-breena.test.ts::breena-normal-cast: cast with legal mana, then one trigger per attacked opponent",
+            "white-black-control-breena.test.ts::breena-another-opponent: attacker life is irrelevant, each distinct defender is checked",
+            "white-black-control-breena.test.ts::breena-negative-tie: equal opponent life never triggers despite low attacker life",
+            "white-black-control-breena.test.ts::breena-negative-controller: attacking the controller does not qualify",
+            "white-black-control-breena.test.ts::breena-attacking-opponent-draws: a different attacker draws, controller receives counters",
+            "white-black-control-breena.test.ts::breena-resolution-recheck: changed opponent life prevents drawing and counters",
+            "white-black-control-breena.test.ts::breena-event-defender-survives-attacker-removal: removing attacking creature does not erase the attacked player",
+            "white-black-control-breena.test.ts::breena-counters-not-targeted: the counters are not targeted, so Breena leaving does not stop the draw"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-breena.test.ts"],
+          "viewerScenarioIds": ["breena-viewer-flying-blocker"]
+        },
+        {
           "oracleText": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
           "implementation": [
-            "an attackDeclared trigger for any player's attack, one firing per attacked opponent of yours (a planeswalker attack does not count), bound to the attacked player and the attacking player; the intervening-if that the attacked opponent has more life than another of your opponents is checked at the declaration and again on resolution; the attacking player, the event player, draws a card, and you choose a creature you control as it resolves (not targeted) and put two +1/+1 counters on it"
+            "Faithful authored behavior for Breena, the Demagogue: Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
           ],
           "engineTestIds": [
-            "breena-pinned-oracle-supported",
-            "breena-more-life",
-            "breena-you-attack",
-            "breena-planeswalker",
-            "breena-per-opponent",
-            "breena-intervening-if",
-            "breena-no-creature"
+            "white-black-control-breena.test.ts::breena-real-and-fixture-alias: every clause has legal authored IR",
+            "white-black-control-breena.test.ts::breena-normal-cast: cast with legal mana, then one trigger per attacked opponent",
+            "white-black-control-breena.test.ts::breena-another-opponent: attacker life is irrelevant, each distinct defender is checked",
+            "white-black-control-breena.test.ts::breena-negative-tie: equal opponent life never triggers despite low attacker life",
+            "white-black-control-breena.test.ts::breena-negative-controller: attacking the controller does not qualify",
+            "white-black-control-breena.test.ts::breena-attacking-opponent-draws: a different attacker draws, controller receives counters",
+            "white-black-control-breena.test.ts::breena-resolution-recheck: changed opponent life prevents drawing and counters",
+            "white-black-control-breena.test.ts::breena-event-defender-survives-attacker-removal: removing attacking creature does not erase the attacked player",
+            "white-black-control-breena.test.ts::breena-counters-not-targeted: the counters are not targeted, so Breena leaving does not stop the draw"
           ],
-          "viewerScenarioIds": ["breena-viewer-attack-more-life"]
+          "engineTestSource": ["packages/engine/tests/white-black-control-breena.test.ts"],
+          "viewerScenarioIds": ["breena-viewer-opponent-life-aggregate"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3029,18 +3049,24 @@
     "e1d294e8-67b1-4a4a-86b8-f98f28a327d9": {
       "name": "Promise of Loyalty",
       "oracleSha256": "2c168d95b98fc29bee9fb1d7a562d50070400c32fe9b4476196eb820d301b472",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
           "implementation": [
-            "explicitly unsupported; keep-one sacrifice and vow attack restriction unimplemented"
+            "Faithful authored behavior for Promise of Loyalty: Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it."
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "white-black-control-curse-promise.test.ts::promise-loyalty-c01 — normal cast gets APNAP choices from every creature player before counters or sacrifices change the board",
+            "white-black-control-curse-promise.test.ts::promise-loyalty-c02 — vow creature attack restriction excludes caster and their planeswalker but allows another opponent",
+            "white-black-control-curse-promise.test.ts::promise-loyalty-c02 — restriction follows a control change, ends with vow counter removal, and does not transfer to a blinked object"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-curse-promise.test.ts"],
+          "viewerScenarioIds": ["promise-of-loyalty-viewer-apnap-vow-and-sacrifice"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [],
+      "referenceAliases": ["oracle-promise-of-loyalty"]
     },
     "2598294c-a9a7-4bef-a562-23f297a80536": {
       "name": "Songbirds' Blessing",
@@ -5789,15 +5815,22 @@
     "2068185c-1b50-47d0-aa3f-bf505d199428": {
       "name": "Dark Confidant",
       "oracleSha256": "610cc74590705c15607689e64dd4afcb3eb4b411e256c58d99f39baa350377c2",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-dark-confidant"],
       "clauses": [
         {
           "oracleText": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
           "implementation": [
-            "explicitly unsupported; reveal-and-put-into-hand is implemented as a draw"
+            "Faithful authored behavior for Dark Confidant: At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value."
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "white-black-control-hand.test.ts::reveals and puts the top card into hand, loses its mana value, and does not draw",
+            "white-black-control-hand.test.ts::does nothing with an empty library and does not lose the game",
+            "white-black-control-hand.test.ts::does not trigger during an opponent’s upkeep",
+            "white-black-control-hand.test.ts::reveals a land with mana value zero and loses no life"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-hand.test.ts"],
+          "viewerScenarioIds": ["dark-confidant-viewer"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -9182,9 +9215,37 @@
             "marchesa-viewer-first-zone-exiled",
             "marchesa-viewer-simultaneous-deaths"
           ]
+        },
+        {
+          "id": "marchesa-dethrone",
+          "oracleText": "Dethrone",
+          "implementation": [
+            "Attack-event-only most-life qualification for Marchesa’s own dethrone; counter placement through the normal stack path"
+          ],
+          "engineTestIds": [
+            "marchesa-viewer-dethrone-response",
+            "marchesa-viewer-dethrone-negative"
+          ],
+          "viewerScenarioIds": [
+            "marchesa-viewer-dethrone-response",
+            "marchesa-viewer-dethrone-negative"
+          ]
+        },
+        {
+          "id": "marchesa-granted-dethrone",
+          "oracleText": "Other creatures you control have dethrone.",
+          "implementation": [
+            "Static grant uses the same attack-event qualification; normal paid Marchesa cast grants dethrone to a different attacking creature"
+          ],
+          "engineTestIds": ["marchesa-viewer-granted-dethrone"],
+          "viewerScenarioIds": ["marchesa-viewer-granted-dethrone"]
         }
       ],
-      "gameplayAiScenarioIds": []
+      "gameplayAiScenarioIds": [
+        "marchesa-viewer-dethrone-response",
+        "marchesa-viewer-dethrone-negative",
+        "marchesa-viewer-granted-dethrone"
+      ]
     },
     "ac2173f9-f223-440a-9231-fd98762bdc6f": {
       "name": "Force of Negation",
@@ -10190,6 +10251,1852 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "60433b48-d27f-413c-905c-43839b1943f1": {
+      "name": "Mother of Runes",
+      "oracleSha256": "9a9f376d70f688a3c9319ffc71697a0a397d659b9e681f89327d93112211dbe1",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-mother-of-runes"],
+      "clauses": [
+        {
+          "oracleText": "{T}: Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Faithful authored behavior for Mother of Runes: {T}: Target creature you control gains protection from the color of your choice until end of turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::mother-of-runes-c01/c02-positive — cast, summoning sickness, own/self targeting, tap cost, and resolution-time color choice",
+            "white-black-control-protection-stack.test.ts::mother-of-runes-c03/c04-positive — protection prevents white damage/targeting, survives source departure, blinks away, and expires at cleanup"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["mother-of-runes-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f5822e53-ddec-4c77-bcf4-091e35c1e731": {
+      "name": "Rebuff the Wicked",
+      "oracleSha256": "e071417dfbbacce2cd007719b51c66433b5cb3fbf85cd829a9f3cc366e9a237e",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-rebuff-the-wicked"],
+      "clauses": [
+        {
+          "oracleText": "Counter target spell that targets a permanent you control.",
+          "implementation": [
+            "Faithful authored behavior for Rebuff the Wicked: Counter target spell that targets a permanent you control."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::rebuff-the-wicked-c01/c02-positive — targets spells aimed at an ordinary or counted permanent you control",
+            "white-black-control-protection-stack.test.ts::rebuff-the-wicked-c03/c04-negative — ignores player/opponent-permanent/targetless spells and fizzles after control changes",
+            "white-black-control-protection-stack.test.ts::rebuff-the-wicked-c05-positive — uncounterable spells remain legal targets but cannot be countered"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["rebuff-the-wicked-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f0449cbd-855c-4c20-a1f5-f76a395d8d39": {
+      "name": "Reprieve",
+      "oracleSha256": "619a7ea2fb69f1f2c07d5a2e0e1bffc1f5ef08ac77361f57e6483eccf439c443",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-reprieve"],
+      "clauses": [
+        {
+          "oracleText": "Return target spell to its owner's hand.",
+          "implementation": [
+            "Faithful authored behavior for Reprieve: Return target spell to its owner's hand."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::reprieve-c01/c02-positive — returns its owner’s own spell, draws one, and removes a copy without making a card",
+            "white-black-control-protection-stack.test.ts::reprieve-c03/c04-negative — a gone target fizzles without drawing, but an uncounterable own spell is still returnable"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["reprieve-viewer"]
+        },
+        {
+          "oracleText": "Draw a card.",
+          "implementation": ["Faithful authored behavior for Reprieve: Draw a card."],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::reprieve-c01/c02-positive — returns its owner’s own spell, draws one, and removes a copy without making a card",
+            "white-black-control-protection-stack.test.ts::reprieve-c03/c04-negative — a gone target fizzles without drawing, but an uncounterable own spell is still returnable"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["reprieve-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d54e4e37-042b-44a5-918d-757308545d4d": {
+      "name": "Sejiri Shelter // Sejiri Glacier",
+      "oracleSha256": "2c459001fbd313a67f4cd39b878d4d1b1a854a24d191dba61fc8011d163cc218",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-sejiri-shelter-sejiri-glacier"],
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Faithful authored behavior for Sejiri Shelter // Sejiri Glacier: Target creature you control gains protection from the color of your choice until end of turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::sejiri-shelter-c01-positive — the normal spell targets only your creature and chooses color on resolution"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["sejiri-shelter-sejiri-glacier-viewer"]
+        },
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": [
+            "Faithful authored behavior for Sejiri Shelter // Sejiri Glacier: This land enters tapped."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::sejiri-shelter-c02-positive — plays the tapped Glacier face without exceeding the land-play limit"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["sejiri-glacier-viewer-next-turn-mother-runes"]
+        },
+        {
+          "oracleText": "{T}: Add {W}.",
+          "implementation": [
+            "Faithful authored behavior for Sejiri Shelter // Sejiri Glacier: {T}: Add {W}."
+          ],
+          "engineTestIds": [
+            "white-black-control-protection-stack.test.ts::sejiri-shelter-c02-positive — plays the tapped Glacier face without exceeding the land-play limit"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-protection-stack.test.ts"
+          ],
+          "viewerScenarioIds": ["sejiri-glacier-viewer-next-turn-mother-runes"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e": {
+      "name": "Planar Void",
+      "oracleSha256": "146d72b8e678921fad84434578e02fd647a18c6cf2733a55c2df2d45080cf066",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-planar-void"],
+      "clauses": [
+        {
+          "oracleText": "Whenever another card is put into a graveyard from anywhere, exile that card.",
+          "implementation": [
+            "Faithful authored behavior for Planar Void: Whenever another card is put into a graveyard from anywhere, exile that card."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard-triggers.test.ts::Planar Void queues once for real nonbattlefield entries and deaths, excludes itself and tokens",
+            "white-black-control-graveyard-triggers.test.ts::Planar Void exile trigger uses the exact graveyard incarnation and survives its source leaving",
+            "white-black-control-graveyard-triggers.test.ts::a simultaneous Planar Void departure does not trigger from the other card in that batch"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-graveyard-triggers.test.ts"
+          ],
+          "viewerScenarioIds": ["planar-void-viewer-destroyed-permanent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e70f5520-1b9c-4351-8484-30f0dc692e01": {
+      "name": "The Haunt of Hightower",
+      "oracleSha256": "85b6c7f3a24a701a82b107aa6b27a0a07cc0796d83f3dcc13d7bedfbd6870e31",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-the-haunt-of-hightower"],
+      "clauses": [
+        {
+          "oracleText": "Flying, lifelink",
+          "implementation": [
+            "Faithful authored behavior for The Haunt of Hightower: Flying, lifelink"
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard-triggers.test.ts::pins both Oracle hashes, normally casts both cards, and preserves Haunt flying/lifelink"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-graveyard-triggers.test.ts"
+          ],
+          "viewerScenarioIds": ["the-haunt-of-hightower-viewer-flying-blocker"]
+        },
+        {
+          "oracleText": "Whenever The Haunt of Hightower attacks, defending player discards a card.",
+          "implementation": [
+            "Faithful authored behavior for The Haunt of Hightower: Whenever The Haunt of Hightower attacks, defending player discards a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard-triggers.test.ts::Haunt attacks a player, gains lifelink value, and has the defending player discard",
+            "white-black-control-graveyard-triggers.test.ts::binds Haunt's attack discard to the defender as a player characteristic, not a card target"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-graveyard-triggers.test.ts"
+          ],
+          "viewerScenarioIds": [
+            "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat"
+          ]
+        },
+        {
+          "oracleText": "Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on The Haunt of Hightower.",
+          "implementation": [
+            "Faithful authored behavior for The Haunt of Hightower: Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on The Haunt of Hightower."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard-triggers.test.ts::Haunt counts each opponent-owned card entry, excluding own cards, tokens, and replacement exiles",
+            "white-black-control-graveyard-triggers.test.ts::a dying Haunt does not receive counters from simultaneous opponent-card entries",
+            "white-black-control-graveyard-triggers.test.ts::a Haunt blink does not let its old trigger put counters on the new permanent incarnation"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-graveyard-triggers.test.ts"
+          ],
+          "viewerScenarioIds": [
+            "the-haunt-of-hightower-viewer-defender-discard-planeswalker-combat"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "867def48-4be8-4056-bcf1-d6b00450b9a3": {
+      "name": "Library of Leng",
+      "oracleSha256": "f31e4191d9a77e591944db00ae0e1ba6ed3809c0a66f3287bd97be79ddfe5571",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-library-of-leng"],
+      "clauses": [
+        {
+          "oracleText": "You have no maximum hand size.",
+          "implementation": [
+            "Faithful authored behavior for Library of Leng: You have no maximum hand size."
+          ],
+          "engineTestIds": [
+            "white-black-control-library.test.ts::library-leng-c01-positive — casts normally and preserves more than seven cards through the real cleanup step"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-library.test.ts"],
+          "viewerScenarioIds": ["library-of-leng-viewer-no-maximum-hand-size"]
+        },
+        {
+          "oracleText": "If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.",
+          "implementation": [
+            "Faithful authored behavior for Library of Leng: If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard."
+          ],
+          "engineTestIds": [
+            "white-black-control-library.test.ts::library-leng-c02-positive — an effect discard may go to the top, stays private, and still counts as a discard",
+            "white-black-control-library.test.ts::library-leng-c02-negative — the affected player may decline, and another player cannot use your Library",
+            "white-black-control-library.test.ts::library-leng-c03-positive — random and multi-card effect discards ask separately for each card",
+            "white-black-control-library.test.ts::library-leng-c04-negative — costs, cycling, and cleanup discards cannot redirect to the library",
+            "white-black-control-library.test.ts::library-leng-c05-positive — hidden discards still trigger generic discard watchers but not type-based effects",
+            "white-black-control-library.test.ts::library-leng-c06-negative — hidden land identity does not produce Waste Not mana",
+            "white-black-control-library.test.ts::library-leng-c07-negative — hidden nonland discard does not draw through Waste Not",
+            "white-black-control-library.test.ts::library-leng-c08-negative — an effect discard cannot use Library after it leaves the battlefield",
+            "white-black-control-library.test.ts::library-leng-c09-positive — Library can keep a card out of a graveyard replacement, while declining still counts as a discard",
+            "white-black-control-library.test.ts::library-leng-c10-positive — a connive discard redirected to the library has unknown characteristics and adds no counter"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-library.test.ts"],
+          "viewerScenarioIds": ["library-of-leng-viewer-effect-discard-and-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f4e32fc1-1b8d-441e-8e76-71f19f98e925": {
+      "name": "Leyline of the Void",
+      "oracleSha256": "5b00b3e4eeb4eeac75b37fd67a7bb074f6cf1b6771d27f30b39cdb4cea7da74d",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-leyline-of-the-void"],
+      "clauses": [
+        {
+          "oracleText": "If this card is in your opening hand, you may begin the game with it on the battlefield.",
+          "implementation": [
+            "Faithful authored behavior for Leyline of the Void: If this card is in your opening hand, you may begin the game with it on the battlefield."
+          ],
+          "engineTestIds": [
+            "white-black-control-leyline.test.ts::leyline-c01 — pins the exact Oracle hash and models both printed clauses",
+            "white-black-control-leyline.test.ts::leyline-c05 — the opening-hand battlefield choice can be accepted or declined after mulligans",
+            "white-black-control-leyline.test.ts::leyline-c06 — opening-hand actions follow APNAP order and each player decides independently",
+            "white-black-control-leyline.test.ts::leyline-c07 — London mulligan keeps the seven-card hand and still offers Leyline afterward"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-leyline.test.ts"],
+          "viewerScenarioIds": ["leyline-of-the-void-viewer-opening-hand-and-destruction"]
+        },
+        {
+          "oracleText": "If a card would be put into an opponent's graveyard from anywhere, exile it instead.",
+          "implementation": [
+            "Faithful authored behavior for Leyline of the Void: If a card would be put into an opponent's graveyard from anywhere, exile it instead."
+          ],
+          "engineTestIds": [
+            "white-black-control-leyline.test.ts::leyline-c02 — normal cast resolves and affects opponent-owned cards from hand, library, and stack",
+            "white-black-control-leyline.test.ts::leyline-c03 — replacement follows owner, and leaves its controller’s own cards alone",
+            "white-black-control-leyline.test.ts::leyline-c04 — tokens are not exiled by this card’s replacement",
+            "white-black-control-leyline.test.ts::leyline-c08 — removing Leyline ends its replacement effect"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-leyline.test.ts"],
+          "viewerScenarioIds": ["leyline-of-the-void-viewer-opening-hand-and-destruction"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0ba134d8-ee7d-48ec-8dc6-57942b8e9261": {
+      "name": "Liliana of the Veil",
+      "oracleSha256": "a57605b3abdc39782904af4ac586395623fb6f9e387bf9dc7333be186bbc0f13",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-liliana-of-the-veil"],
+      "clauses": [
+        {
+          "oracleText": "+1: Each player discards a card.",
+          "implementation": [
+            "Faithful authored behavior for Liliana of the Veil: +1: Each player discards a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-veil-c01 — normal cast, +1 pays loyalty on announcement, and blocks all other loyalty abilities this turn",
+            "white-black-control-liliana.test.ts::liliana-veil-c02 — +1 has every player choose, including the controller"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-of-the-veil-viewer-each-player-discards"]
+        },
+        {
+          "oracleText": "−2: Target player sacrifices a creature.",
+          "implementation": [
+            "Faithful authored behavior for Liliana of the Veil: −2: Target player sacrifices a creature."
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-veil-c03 — -2 has the targeted player choose among creatures and ignores noncreatures"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-of-the-veil-viewer-targeted-sacrifice"]
+        },
+        {
+          "oracleText": "−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.",
+          "implementation": [
+            "Faithful authored behavior for Liliana of the Veil: −6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice."
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-veil-c04 — -6 partitions every target permanent, lets that player choose, and sacrifices one batch"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-of-the-veil-viewer-ultimate-piles"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e0df8e2a-96d2-4e4d-b065-aa2e162abbfe": {
+      "name": "Liliana, Waker of the Dead",
+      "oracleSha256": "1843d5cf2f76658288cf48bd790bfda04a38ccfbfcaac07def9b12ca0fdd5f16",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-liliana-waker-of-the-dead"],
+      "clauses": [
+        {
+          "oracleText": "+1: Each player discards a card. Each opponent who can't loses 3 life.",
+          "implementation": [
+            "Faithful authored behavior for Liliana, Waker of the Dead: +1: Each player discards a card. Each opponent who can't loses 3 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-waker-c01 — +1 charges opponents who cannot discard, but never charges its controller"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-waker-of-the-dead-viewer-discard-life-loss"]
+        },
+        {
+          "oracleText": "−3: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard.",
+          "implementation": [
+            "Faithful authored behavior for Liliana, Waker of the Dead: −3: Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard."
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-waker-c02 — -3 counts all own graveyard cards at resolution and expires at cleanup"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-waker-of-the-dead-viewer-graveyard-scaled-removal"]
+        },
+        {
+          "oracleText": "−7: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\"",
+          "implementation": [
+            "Faithful authored behavior for Liliana, Waker of the Dead: −7: You get an emblem with \"At the beginning of combat on your turn, put target creature card from a graveyard onto the battlefield under your control. It gains haste.\""
+          ],
+          "engineTestIds": [
+            "white-black-control-liliana.test.ts::liliana-waker-c03 — -7 emblem triggers on its controller’s combat, reanimates a creature from any graveyard with haste, and outlives Liliana",
+            "white-black-control-liliana.test.ts::liliana-waker-c04 — emblem cannot target a noncreature and fizzles if its target leaves the graveyard"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-liliana.test.ts"],
+          "viewerScenarioIds": ["liliana-waker-of-the-dead-viewer-ultimate-emblem-reanimation"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0e3ac581-3d78-4879-9afb-3db69c5c47a5": {
+      "name": "Archon of Absolution",
+      "oracleSha256": "9bd606953d9c7d2b28966ca403927c18bb825ffbfbac485fc051b9528b23014e",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-archon-of-absolution"],
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Archon of Absolution: Flying"],
+          "engineTestIds": [
+            "white-black-control-defenders.test.ts::pins complete Oracle definitions including flying and protection from white"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-defenders.test.ts"],
+          "viewerScenarioIds": ["archon-of-absolution-viewer-protection-blocker"]
+        },
+        {
+          "oracleText": "Protection from white (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything white.)",
+          "implementation": [
+            "Faithful authored behavior for Archon of Absolution: Protection from white (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything white.)"
+          ],
+          "engineTestIds": [
+            "white-black-control-defenders.test.ts::pins complete Oracle definitions including flying and protection from white"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-defenders.test.ts"],
+          "viewerScenarioIds": ["archon-of-absolution-viewer-protection-blocker"]
+        },
+        {
+          "oracleText": "Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+          "implementation": [
+            "Faithful authored behavior for Archon of Absolution: Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures."
+          ],
+          "engineTestIds": [
+            "white-black-control-defenders.test.ts::archon-absolution-c02 requires tax against both its controller and their planeswalker, but not another opponent",
+            "white-black-control-defenders.test.ts::archon-absolution-c02 pays the ordinary per-creature planeswalker attack tax"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-defenders.test.ts"],
+          "viewerScenarioIds": ["archon-of-absolution-viewer-taxes-planeswalker-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "52bd4331-67b6-4eb8-9566-e00359889fc6": {
+      "name": "Soul Snare",
+      "oracleSha256": "994bae03a713184fd5257172464dc1836785328517d213136f2f45d5c4e89855",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-soul-snare"],
+      "clauses": [
+        {
+          "oracleText": "{W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control.",
+          "implementation": [
+            "Faithful authored behavior for Soul Snare: {W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control."
+          ],
+          "engineTestIds": [
+            "white-black-control-defenders.test.ts::soul-snare-c01 pays W and sacrifices the normally cast enchantment to exile an attacker against ${defender}",
+            "white-black-control-defenders.test.ts::soul-snare-c01 rechecks an attacking planeswalker target when the defender changes control or leaves"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-defenders.test.ts"],
+          "viewerScenarioIds": ["soul-snare-viewer-exiles-planeswalker-attacker"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6cbd36d9-de47-41b0-9ef4-a72ca01adccd": {
+      "name": "Curse of Disturbance",
+      "oracleSha256": "6106530fb8f86fed0553091e4eebc4238155e5193826f14fb676361b473dd717",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-curse-of-disturbance"],
+      "clauses": [
+        {
+          "oracleText": "Enchant player",
+          "implementation": ["Faithful authored behavior for Curse of Disturbance: Enchant player"],
+          "engineTestIds": [
+            "white-black-control-curse-promise.test.ts::curse-disturbance-c01 — normal enchant-player cast and multiple attackers create one Zombie for the controller and each attacking opponent"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-curse-promise.test.ts"],
+          "viewerScenarioIds": ["curse-of-disturbance-viewer-two-attackers-one-zombie"]
+        },
+        {
+          "oracleText": "Whenever enchanted player is attacked, create a 2/2 black Zombie creature token. Each opponent attacking that player does the same.",
+          "implementation": [
+            "Faithful authored behavior for Curse of Disturbance: Whenever enchanted player is attacked, create a 2/2 black Zombie creature token. Each opponent attacking that player does the same."
+          ],
+          "engineTestIds": [
+            "white-black-control-curse-promise.test.ts::curse-disturbance-c01 — normal enchant-player cast and multiple attackers create one Zombie for the controller and each attacking opponent",
+            "white-black-control-curse-promise.test.ts::curse-disturbance-c01 — the curse controller attacking enchanted player gets only the controller Zombie",
+            "white-black-control-curse-promise.test.ts::curse-disturbance-c01 — attacks on another player or the enchanted player’s planeswalker do not trigger it",
+            "white-black-control-curse-promise.test.ts::curse-disturbance-c02 — the attack trigger resolves after its aura source leaves"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-curse-promise.test.ts"],
+          "viewerScenarioIds": ["curse-of-disturbance-viewer-two-attackers-one-zombie"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "33d405ea-7a9a-4970-b70f-9c05d90dd6f0": {
+      "name": "Duress",
+      "oracleSha256": "151b555caa2c21bf8b37d816d985fa9935506b3a58cf3c275074d5c26b438668",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-duress"],
+      "clauses": [
+        {
+          "oracleText": "Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card.",
+          "implementation": [
+            "Faithful authored behavior for Duress: Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card."
+          ],
+          "engineTestIds": [
+            "white-black-control-hand.test.ts::casts Duress, reveals every card, and lets its controller choose only a noncreature, nonland card",
+            "white-black-control-hand.test.ts::Duress reveals an empty hand without asking for a discard",
+            "white-black-control-hand.test.ts::Duress cannot target its caster",
+            "white-black-control-hand.test.ts::Duress reveals a creature-and-land-only hand but offers no discard choice"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-hand.test.ts"],
+          "viewerScenarioIds": ["duress-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5": {
+      "name": "Thoughtseize",
+      "oracleSha256": "d2e0f7e4f16b67aaa4e218a844393a9d167c546a9aab748d908b19661eeda516",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-thoughtseize"],
+      "clauses": [
+        {
+          "oracleText": "Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.",
+          "implementation": [
+            "Faithful authored behavior for Thoughtseize: Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-hand.test.ts::casts Thoughtseize and loses two life even when the target has no nonland card",
+            "white-black-control-hand.test.ts::Thoughtseize can choose and discard a creature from the target player’s hand",
+            "white-black-control-hand.test.ts::Thoughtseize may target its controller and discard from their own hand"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-hand.test.ts"],
+          "viewerScenarioIds": ["thoughtseize-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "53e88e64-6f82-4154-a66e-6aeb0154b368": {
+      "name": "Rule of Law",
+      "oracleSha256": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-rule-of-law"],
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "Faithful authored behavior for Rule of Law: Each player can't cast more than one spell each turn."
+          ],
+          "engineTestIds": [
+            "spell-cast-limit-contract.test.ts::casts the pinned Rule of Law and then blocks the same player’s second spell"
+          ],
+          "engineTestSource": ["packages/engine/tests/spell-cast-limit-contract.test.ts"],
+          "viewerScenarioIds": ["rule-of-law-viewer-single-spell-limit"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6284ef01-d17d-4584-aecb-1b841ae638e5": {
+      "name": "Deafening Silence",
+      "oracleSha256": "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-deafening-silence"],
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one noncreature spell each turn.",
+          "implementation": [
+            "Faithful authored behavior for Deafening Silence: Each player can't cast more than one noncreature spell each turn."
+          ],
+          "engineTestIds": [
+            "spell-cast-limit-contract.test.ts::casts pinned Deafening Silence and permits creature spells after its noncreature limit"
+          ],
+          "engineTestSource": ["packages/engine/tests/spell-cast-limit-contract.test.ts"],
+          "viewerScenarioIds": ["deafening-silence-viewer-creature-exemption"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "992d9a72-d34d-47d7-96fb-37f0efb515ef": {
+      "name": "Hymn to Tourach",
+      "oracleSha256": "d16287c5c9454bd70fa143c711594965f7cb5657930ab6e4eeaa6fafaab43c66",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-hymn-to-tourach"],
+      "clauses": [
+        {
+          "oracleText": "Target player discards two cards at random.",
+          "implementation": [
+            "Faithful authored behavior for Hymn to Tourach: Target player discards two cards at random."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::casts Hymn to Tourach normally and randomly discards exactly two from its target"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["hymn-to-tourach-viewer-two-random-discards"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "91e6fb47-59e4-4616-b8dd-3a7e30070074": {
+      "name": "Bottomless Pit",
+      "oracleSha256": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-bottomless-pit"],
+      "clauses": [
+        {
+          "oracleText": "At the beginning of each player's upkeep, that player discards a card at random.",
+          "implementation": [
+            "Faithful authored behavior for Bottomless Pit: At the beginning of each player's upkeep, that player discards a card at random."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::%s triggers only for the active player’s upkeep and discards as printed"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["bottomless-pit-viewer-next-upkeep-random-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "db25d48e-e5eb-4364-9d7a-f9757ee4ccbe": {
+      "name": "Necrogen Mists",
+      "oracleSha256": "304b0b1c7df5b09fbc24084a3cf9c15f64002fa89eb7364bf966168cd503314a",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-necrogen-mists"],
+      "clauses": [
+        {
+          "oracleText": "At the beginning of each player's upkeep, that player discards a card.",
+          "implementation": [
+            "Faithful authored behavior for Necrogen Mists: At the beginning of each player's upkeep, that player discards a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::%s triggers only for the active player’s upkeep and discards as printed"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["necrogen-mists-viewer-next-upkeep-discard-choice"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "759af941-f6a3-4726-91f2-9b1e4e55ea71": {
+      "name": "Hypnotic Specter",
+      "oracleSha256": "34d0636699a90f6312b9cdc068cb5b822f51b5cf5cdca3cf669bda675df64582",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-hypnotic-specter"],
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Hypnotic Specter: Flying"],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::Hypnotic Specter preserves flying and discards after combat damage to an opponent",
+            "white-black-control-discard.test.ts::Hypnotic Specter also sees actual noncombat damage to an opponent, but not zero or self damage"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["hypnotic-specter-viewer-flying-blocker"]
+        },
+        {
+          "oracleText": "Whenever this creature deals damage to an opponent, that player discards a card at random.",
+          "implementation": [
+            "Faithful authored behavior for Hypnotic Specter: Whenever this creature deals damage to an opponent, that player discards a card at random."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::Hypnotic Specter preserves flying and discards after combat damage to an opponent",
+            "white-black-control-discard.test.ts::Hypnotic Specter also sees actual noncombat damage to an opponent, but not zero or self damage"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["hypnotic-specter-viewer-unblocked-combat-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f488f679-f5d5-4e61-b0c8-0b0eb622df0d": {
+      "name": "Oppression",
+      "oracleSha256": "94486b101e3ab95e200fe5b1839ee3513fe9a59cb0e0184d17e77992ddf5465d",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-oppression"],
+      "clauses": [
+        {
+          "oracleText": "Whenever a player casts a spell, that player discards a card.",
+          "implementation": [
+            "Faithful authored behavior for Oppression: Whenever a player casts a spell, that player discards a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::Oppression triggers on an opponent’s cast and has that caster discard"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["oppression-viewer-opponent-cast-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "abc37d6c-6300-47b5-a679-9db5b83eb54f": {
+      "name": "Syphon Mind",
+      "oracleSha256": "3f874892d271ffd03fbd6abc86fc342537719e1d1a86765af3187ae7ca698d12",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-syphon-mind"],
+      "clauses": [
+        {
+          "oracleText": "Each other player discards a card. You draw a card for each card discarded this way.",
+          "implementation": [
+            "Faithful authored behavior for Syphon Mind: Each other player discards a card. You draw a card for each card discarded this way."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::Syphon Mind casts normally, opponents discard, and the controller draws once per actual discard"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["syphon-mind-viewer-opponents-discard-and-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ef809e99-34a2-4471-8269-f56bf8037686": {
+      "name": "Geth's Grimoire",
+      "oracleSha256": "5b69db18aafa89cd067bbe5be9d0b6397b00200abe381fbfea927a3d6e682a91",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-geth-s-grimoire"],
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent discards a card, you may draw a card.",
+          "implementation": [
+            "Faithful authored behavior for Geth's Grimoire: Whenever an opponent discards a card, you may draw a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard.test.ts::Geth's Grimoire triggers for opponent discards, is optional, and ignores its controller's discards"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard.test.ts"],
+          "viewerScenarioIds": ["geth-s-grimoire-viewer-hymn-discard-draw-payoff"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "535e2af0-7b08-4026-b1bf-87626407dd42": {
+      "name": "Archfiend of Ifnir",
+      "oracleSha256": "6c5032145f59037b03b32b5eb8f73eab0da3e75df607c7485f5531b4f3e7d6aa",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-archfiend-of-ifnir"],
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Archfiend of Ifnir: Flying"],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::uses all three exact wrapper hashes and models every printed clause",
+            "white-black-control-payoffs.test.ts::casts Archfiend of Ifnir normally and observes one own discard once for each opponent creature",
+            "white-black-control-payoffs.test.ts::does not trigger Archfiend for an opponent discard and keeps the controller discard scope",
+            "white-black-control-payoffs.test.ts::casts Archfiend and normally cycles another copy from hand, triggering exactly once",
+            "white-black-control-payoffs.test.ts::does not observe Archfiend cycling itself, but still pays the cycling cost and draws"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["archfiend-of-ifnir-viewer-flying-blocker"]
+        },
+        {
+          "oracleText": "Whenever you cycle or discard another card, put a -1/-1 counter on each creature your opponents control.",
+          "implementation": [
+            "Faithful authored behavior for Archfiend of Ifnir: Whenever you cycle or discard another card, put a -1/-1 counter on each creature your opponents control."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::uses all three exact wrapper hashes and models every printed clause",
+            "white-black-control-payoffs.test.ts::casts Archfiend of Ifnir normally and observes one own discard once for each opponent creature",
+            "white-black-control-payoffs.test.ts::does not trigger Archfiend for an opponent discard and keeps the controller discard scope",
+            "white-black-control-payoffs.test.ts::casts Archfiend and normally cycles another copy from hand, triggering exactly once",
+            "white-black-control-payoffs.test.ts::does not observe Archfiend cycling itself, but still pays the cycling cost and draws"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": [
+            "archfiend-of-ifnir-viewer-normal-cycling",
+            "archfiend-of-ifnir-viewer-cycle-counter"
+          ]
+        },
+        {
+          "oracleText": "Cycling {2} ({2}, Discard this card: Draw a card.)",
+          "implementation": [
+            "Faithful authored behavior for Archfiend of Ifnir: Cycling {2} ({2}, Discard this card: Draw a card.)"
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::uses all three exact wrapper hashes and models every printed clause",
+            "white-black-control-payoffs.test.ts::casts Archfiend of Ifnir normally and observes one own discard once for each opponent creature",
+            "white-black-control-payoffs.test.ts::does not trigger Archfiend for an opponent discard and keeps the controller discard scope",
+            "white-black-control-payoffs.test.ts::casts Archfiend and normally cycles another copy from hand, triggering exactly once",
+            "white-black-control-payoffs.test.ts::does not observe Archfiend cycling itself, but still pays the cycling cost and draws"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["archfiend-of-ifnir-viewer-normal-cycling"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ceef2d5a-77ea-4e56-9806-fd1a2d5be400": {
+      "name": "Archon of Emeria",
+      "oracleSha256": "621a6663ea180829baaabb0673010fe7177bbd7976d0d5f7099cb9beb4ad9a7f",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-archon-of-emeria"],
+      "clauses": [
+        {
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Archon of Emeria: Flying"],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Archon of Emeria normally casts, preserves flying, limits each player, and taps only opponents’ nonbasic lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["archon-of-emeria-viewer-opponent-nonbasic-land-entry"]
+        },
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "Faithful authored behavior for Archon of Emeria: Each player can't cast more than one spell each turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Archon of Emeria normally casts, preserves flying, limits each player, and taps only opponents’ nonbasic lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["archon-of-emeria-viewer-single-spell-limit"]
+        },
+        {
+          "oracleText": "Nonbasic lands your opponents control enter tapped.",
+          "implementation": [
+            "Faithful authored behavior for Archon of Emeria: Nonbasic lands your opponents control enter tapped."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Archon of Emeria normally casts, preserves flying, limits each player, and taps only opponents’ nonbasic lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["archon-of-emeria-viewer-opponent-nonbasic-land-entry"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "55f3c721-e13a-406e-bc8e-d6cdc91ac477": {
+      "name": "Authority of the Consuls",
+      "oracleSha256": "bd953a06e68d037b63a96351f987c6d1f253d650cff640bb04d7dec46506dd89",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-authority-of-the-consuls"],
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "Faithful authored behavior for Authority of the Consuls: Creatures your opponents control enter tapped."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Authority of the Consuls normally casts, taps opposing creature and token entries, and keeps its life trigger"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["authority-of-the-consuls-viewer-opponent-creature-entry"]
+        },
+        {
+          "oracleText": "Whenever a creature an opponent controls enters, you gain 1 life.",
+          "implementation": [
+            "Faithful authored behavior for Authority of the Consuls: Whenever a creature an opponent controls enters, you gain 1 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Authority of the Consuls normally casts, taps opposing creature and token entries, and keeps its life trigger"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["authority-of-the-consuls-viewer-opponent-creature-entry"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0eaea4fd-a377-4541-9bdd-14921034a975": {
+      "name": "Doorkeeper Thrull",
+      "oracleSha256": "34ad95ef1162e46cb2fe6e2bad6fe4dd85b3430a6eb1f42ca199079bca18383e",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-doorkeeper-thrull"],
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": ["Faithful authored behavior for Doorkeeper Thrull: Flash"],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Doorkeeper Thrull suppresses own and watcher enters triggers for artifacts and creatures, not lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["doorkeeper-thrull-viewer-flash-suppresses-incoming-entry"]
+        },
+        {
+          "oracleText": "Flying",
+          "implementation": ["Faithful authored behavior for Doorkeeper Thrull: Flying"],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Doorkeeper Thrull suppresses own and watcher enters triggers for artifacts and creatures, not lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": [
+            "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger",
+            "doorkeeper-thrull-viewer-flying-blocker"
+          ]
+        },
+        {
+          "oracleText": "Artifacts and creatures entering don't cause abilities to trigger.",
+          "implementation": [
+            "Faithful authored behavior for Doorkeeper Thrull: Artifacts and creatures entering don't cause abilities to trigger."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Doorkeeper Thrull suppresses own and watcher enters triggers for artifacts and creatures, not lands"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": [
+            "doorkeeper-thrull-viewer-flash-suppresses-incoming-entry",
+            "doorkeeper-thrull-viewer-suppresses-creature-entry-trigger"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3d21f710-6bbc-41ae-a8e5-02debe3e02bd": {
+      "name": "Hushbringer",
+      "oracleSha256": "cb7031304a5cf6ff57f97f9590d97b3d91c0a66a4ac15937926bb0a4810837a5",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-hushbringer"],
+      "clauses": [
+        {
+          "oracleText": "Flying, lifelink",
+          "implementation": ["Faithful authored behavior for Hushbringer: Flying, lifelink"],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Hushbringer suppresses creature enters/dies, preserves enter-counter triggers, and its simultaneous death still suppresses",
+            "white-black-control-entry.test.ts::Hushbringer loses suppression with its abilities and the suppressed enter abilities resume"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["hushbringer-viewer-suppresses-creature-entry-trigger"]
+        },
+        {
+          "oracleText": "Creatures entering or dying don't cause abilities to trigger.",
+          "implementation": [
+            "Faithful authored behavior for Hushbringer: Creatures entering or dying don't cause abilities to trigger."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Hushbringer suppresses creature enters/dies, preserves enter-counter triggers, and its simultaneous death still suppresses",
+            "white-black-control-entry.test.ts::Hushbringer loses suppression with its abilities and the suppressed enter abilities resume"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": [
+            "hushbringer-viewer-suppresses-creature-death-trigger",
+            "hushbringer-viewer-suppresses-creature-entry-trigger"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "aecc621f-67da-41a7-9d47-05ded302ae35": {
+      "name": "Karn, Argent Defender",
+      "oracleSha256": "ec2e361baa13f02b293184d4bf02f337a0c17c88cff306fbad163b3909acd63b",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-karn-argent-defender"],
+      "clauses": [
+        {
+          "oracleText": "Artifacts and creatures entering the battlefield don't cause abilities to trigger.",
+          "implementation": [
+            "Faithful authored behavior for Karn, Argent Defender: Artifacts and creatures entering the battlefield don't cause abilities to trigger."
+          ],
+          "engineTestIds": [
+            "white-black-control-entry.test.ts::Karn, Argent Defender normally casts and applies the same artifact-or-creature enters filter"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-entry.test.ts"],
+          "viewerScenarioIds": ["karn-argent-defender-viewer-suppresses-artifact-creature-trigger"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c37051cc-6683-4dbb-b5ff-5c3a5bdab1df": {
+      "name": "Painful Quandary",
+      "oracleSha256": "907cddfb6e25833cdd784e159a07b112cd910c9f95d9887bc51ce79c917b1424",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-painful-quandary"],
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent casts a spell, that player loses 5 life unless they discard a card.",
+          "implementation": [
+            "Faithful authored behavior for Painful Quandary: Whenever an opponent casts a spell, that player loses 5 life unless they discard a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::painful-quandary-c01-positive — an opponent may discard to avoid the five-life loss",
+            "white-black-control-discard-choices.test.ts::painful-quandary-c01-positive — declining costs five life and two copies ask separately",
+            "white-black-control-discard-choices.test.ts::painful-quandary-c01-negative — own casts do not trigger it, and an empty opponent hand loses five"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": ["painful-quandary-viewer-opponent-cast-choice"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e": {
+      "name": "Rankle, Master of Pranks",
+      "oracleSha256": "069593a2fb3dd2d4d28b5741f452ef3bad6c9662a747880792f1daa37e96836f",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-rankle-master-of-pranks"],
+      "clauses": [
+        {
+          "oracleText": "Flying, haste",
+          "implementation": [
+            "Faithful authored behavior for Rankle, Master of Pranks: Flying, haste"
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": ["rankle-master-of-pranks-viewer-all-three-modes"]
+        },
+        {
+          "oracleText": "Whenever Rankle deals combat damage to a player, choose any number —",
+          "implementation": [
+            "Faithful authored behavior for Rankle, Master of Pranks: Whenever Rankle deals combat damage to a player, choose any number —"
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": [
+            "rankle-master-of-pranks-viewer-all-three-modes",
+            "rankle-master-of-pranks-viewer-combat-modes"
+          ]
+        },
+        {
+          "oracleText": "• Each player discards a card.",
+          "implementation": [
+            "Faithful authored behavior for Rankle, Master of Pranks: • Each player discards a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": [
+            "rankle-master-of-pranks-viewer-all-three-modes",
+            "rankle-master-of-pranks-viewer-combat-modes"
+          ]
+        },
+        {
+          "oracleText": "• Each player loses 1 life and draws a card.",
+          "implementation": [
+            "Faithful authored behavior for Rankle, Master of Pranks: • Each player loses 1 life and draws a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": [
+            "rankle-master-of-pranks-viewer-all-three-modes",
+            "rankle-master-of-pranks-viewer-combat-modes"
+          ]
+        },
+        {
+          "oracleText": "• Each player sacrifices a creature of their choice.",
+          "implementation": [
+            "Faithful authored behavior for Rankle, Master of Pranks: • Each player sacrifices a creature of their choice."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c01/c02-positive — casts normally with flying and haste and offers zero, one, or all modes",
+            "white-black-control-discard-choices.test.ts::rankle-master-of-pranks-c02-negative — noncombat damage does not trigger the combat-damage modes"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": ["rankle-master-of-pranks-viewer-all-three-modes"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "55b72b1f-6463-406a-8824-d99a3c028285": {
+      "name": "Vicious Rumors",
+      "oracleSha256": "b09bf3c311377c7f92e925e5eabbdd4aefb978e905e525d70acc5a8429dec5a2",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-vicious-rumors"],
+      "clauses": [
+        {
+          "oracleText": "Vicious Rumors deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life.",
+          "implementation": [
+            "Faithful authored behavior for Vicious Rumors: Vicious Rumors deals 1 damage to each opponent. Each opponent discards a card, then mills a card. You gain 1 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-discard-choices.test.ts::vicious-rumors-c01-positive — damages opponents, then discards, mills, and gains one life",
+            "white-black-control-discard-choices.test.ts::vicious-rumors-c01-negative — empty hands and libraries are safe; mills do not trigger discard"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-discard-choices.test.ts"],
+          "viewerScenarioIds": ["vicious-rumors-viewer-cast-results"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "087f9ad7-e74f-40e2-8102-1ed2925d0418": {
+      "name": "Rest in Peace",
+      "oracleSha256": "9519ed723522e91ca26f35969166d20f2c1e764dc274282a377c52851a63d2a4",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-rest-in-peace"],
+      "clauses": [
+        {
+          "oracleText": "When this enchantment enters, exile all graveyards.",
+          "implementation": [
+            "Faithful authored behavior for Rest in Peace: When this enchantment enters, exile all graveyards."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard.test.ts::rest-in-peace-c01-positive — normal cast resolves its enters trigger and exiles every graveyard",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c02-positive — replaces hand discard, mill, spell resolution, and battlefield deaths",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c03-positive/c04-negative — tokens cease, and simultaneous departure does not turn off replacement early",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c05-negative — losing abilities or leaving the battlefield ends replacement coverage"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-graveyard.test.ts"],
+          "viewerScenarioIds": ["rest-in-peace-viewer"]
+        },
+        {
+          "oracleText": "If a card or token would be put into a graveyard from anywhere, exile it instead.",
+          "implementation": [
+            "Faithful authored behavior for Rest in Peace: If a card or token would be put into a graveyard from anywhere, exile it instead."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard.test.ts::rest-in-peace-c01-positive — normal cast resolves its enters trigger and exiles every graveyard",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c02-positive — replaces hand discard, mill, spell resolution, and battlefield deaths",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c03-positive/c04-negative — tokens cease, and simultaneous departure does not turn off replacement early",
+            "white-black-control-graveyard.test.ts::rest-in-peace-c05-negative — losing abilities or leaving the battlefield ends replacement coverage"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-graveyard.test.ts"],
+          "viewerScenarioIds": ["rest-in-peace-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "73dad679-1edb-41c9-9d43-56dc93c3e9fe": {
+      "name": "Stone of Erech",
+      "oracleSha256": "e15fa33bcd6283f55ec175f1ea4d8b2bb245aea1eecebaafd8cabe51bded8f84",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-stone-of-erech"],
+      "clauses": [
+        {
+          "oracleText": "If a creature an opponent controls would die, exile it instead.",
+          "implementation": [
+            "Faithful authored behavior for Stone of Erech: If a creature an opponent controls would die, exile it instead."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard.test.ts::stone-of-erech-c01-positive/c02-negative — applies to opponent-controlled current creatures only",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c03-positive/c04-negative — paid activation exiles any player graveyard, then draws",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c05-positive — self is a legal target, including when its graveyard is empty",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c06-positive — its death replacement sees its own simultaneous departure"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-graveyard.test.ts"],
+          "viewerScenarioIds": ["stone-of-erech-viewer-opponent-creature-death"]
+        },
+        {
+          "oracleText": "{2}, {T}, Sacrifice Stone of Erech: Exile target player's graveyard. Draw a card.",
+          "implementation": [
+            "Faithful authored behavior for Stone of Erech: {2}, {T}, Sacrifice Stone of Erech: Exile target player's graveyard. Draw a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-graveyard.test.ts::stone-of-erech-c01-positive/c02-negative — applies to opponent-controlled current creatures only",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c03-positive/c04-negative — paid activation exiles any player graveyard, then draws",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c05-positive — self is a legal target, including when its graveyard is empty",
+            "white-black-control-graveyard.test.ts::stone-of-erech-c06-positive — its death replacement sees its own simultaneous departure"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-graveyard.test.ts"],
+          "viewerScenarioIds": ["stone-of-erech-viewer-activation"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "00fdcc19-88ed-46c3-91f0-095806228105": {
+      "name": "Waste Not",
+      "oracleSha256": "45df10c919fc24aac9c6c7a0120063af74262ed0fd1d18776c39f852a54ad04d",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-waste-not"],
+      "clauses": [
+        {
+          "oracleText": "Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token.",
+          "implementation": [
+            "Faithful authored behavior for Waste Not: Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::casts Waste Not and creates a black 2/2 Zombie after an opponent discards a creature",
+            "white-black-control-payoffs.test.ts::puts Waste Not black mana on the stack and adds {B}{B} only when that trigger resolves",
+            "white-black-control-payoffs.test.ts::casts Waste Not and draws one for an opponent noncreature, nonland discard, but not its own",
+            "white-black-control-payoffs.test.ts::dispatches both Waste Not triggers for a discarded creature land by its printed types"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["waste-not-viewer-opponent-discard-payoffs"]
+        },
+        {
+          "oracleText": "Whenever an opponent discards a land card, add {B}{B}.",
+          "implementation": [
+            "Faithful authored behavior for Waste Not: Whenever an opponent discards a land card, add {B}{B}."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::casts Waste Not and creates a black 2/2 Zombie after an opponent discards a creature",
+            "white-black-control-payoffs.test.ts::puts Waste Not black mana on the stack and adds {B}{B} only when that trigger resolves",
+            "white-black-control-payoffs.test.ts::casts Waste Not and draws one for an opponent noncreature, nonland discard, but not its own",
+            "white-black-control-payoffs.test.ts::dispatches both Waste Not triggers for a discarded creature land by its printed types"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["waste-not-viewer-opponent-discard-payoffs"]
+        },
+        {
+          "oracleText": "Whenever an opponent discards a noncreature, nonland card, draw a card.",
+          "implementation": [
+            "Faithful authored behavior for Waste Not: Whenever an opponent discards a noncreature, nonland card, draw a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::casts Waste Not and creates a black 2/2 Zombie after an opponent discards a creature",
+            "white-black-control-payoffs.test.ts::puts Waste Not black mana on the stack and adds {B}{B} only when that trigger resolves",
+            "white-black-control-payoffs.test.ts::casts Waste Not and draws one for an opponent noncreature, nonland discard, but not its own",
+            "white-black-control-payoffs.test.ts::dispatches both Waste Not triggers for a discarded creature land by its printed types"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["waste-not-viewer-noncreature-nonland-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cf8bc2e3-2f22-45d3-9810-bc039202f41c": {
+      "name": "Whispers of Emrakul",
+      "oracleSha256": "e6f95077a5da3657729c65b8c329cc5e93faffd0a530aee542abc934d02e7be7",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-whispers-of-emrakul"],
+      "clauses": [
+        {
+          "oracleText": "Target opponent discards a card at random.",
+          "implementation": [
+            "Faithful authored behavior for Whispers of Emrakul: Target opponent discards a card at random."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::casts Whispers normally and uses one random discard below delirium despite opponent types and the resolving spell",
+            "white-black-control-payoffs.test.ts::does not count the resolving Whispers of Emrakul as a Sorcery in its own graveyard",
+            "white-black-control-payoffs.test.ts::counts a multityped artifact creature as two of its own graveyard card types and replays randomly",
+            "white-black-control-payoffs.test.ts::offers Whispers of Emrakul only to opponents, excluding its controller as an illegal target"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["whispers-of-emrakul-viewer-delirium-random-discard"]
+        },
+        {
+          "oracleText": "Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at random instead.",
+          "implementation": [
+            "Faithful authored behavior for Whispers of Emrakul: Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at random instead."
+          ],
+          "engineTestIds": [
+            "white-black-control-payoffs.test.ts::casts Whispers normally and uses one random discard below delirium despite opponent types and the resolving spell",
+            "white-black-control-payoffs.test.ts::does not count the resolving Whispers of Emrakul as a Sorcery in its own graveyard",
+            "white-black-control-payoffs.test.ts::counts a multityped artifact creature as two of its own graveyard card types and replays randomly",
+            "white-black-control-payoffs.test.ts::offers Whispers of Emrakul only to opponents, excluding its controller as an illegal target"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-payoffs.test.ts"],
+          "viewerScenarioIds": ["whispers-of-emrakul-viewer-delirium-random-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3d2bd4f6-174d-411a-b930-9161aeefd33a": {
+      "name": "Tinybones Joins Up",
+      "oracleSha256": "e0975b6f80bbae0706c845c15bae881e181f8dda64878d0f101c568224c2d71a",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-tinybones-joins-up"],
+      "clauses": [
+        {
+          "oracleText": "When Tinybones Joins Up enters, any number of target players each discard a card.",
+          "implementation": [
+            "Faithful authored behavior for Tinybones Joins Up: When Tinybones Joins Up enters, any number of target players each discard a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up is cast normally and its ETB counted selection can be empty",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up can select exactly one opponent and leaves every other hand alone",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up lets several players select and makes all discard choices before moving cards",
+            "white-black-control-tinybones.test.ts::skips a selected player who has lost before the discard trigger resolves",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up mill-and-life trigger handles empty libraries and only your legendary entries",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up ignores your nonlegendary creature and an opponent's legendary creature"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tinybones.test.ts"],
+          "viewerScenarioIds": ["tinybones-joins-up-viewer-multi-player-etb-discard"]
+        },
+        {
+          "oracleText": "Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life.",
+          "implementation": [
+            "Faithful authored behavior for Tinybones Joins Up: Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up is cast normally and its ETB counted selection can be empty",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up can select exactly one opponent and leaves every other hand alone",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up lets several players select and makes all discard choices before moving cards",
+            "white-black-control-tinybones.test.ts::skips a selected player who has lost before the discard trigger resolves",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up mill-and-life trigger handles empty libraries and only your legendary entries",
+            "white-black-control-tinybones.test.ts::Tinybones Joins Up ignores your nonlegendary creature and an opponent's legendary creature"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tinybones.test.ts"],
+          "viewerScenarioIds": ["tinybones-joins-up-viewer-legendary-entry-mill-life"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "008eda1f-b913-4f04-8c29-5e87c270149e": {
+      "name": "Tinybones, Trinket Thief",
+      "oracleSha256": "fa942a88eac3190440d190334f15b964ae56dfb0fb5bcc87d876b8df28cf4651",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-tinybones-trinket-thief"],
+      "clauses": [
+        {
+          "oracleText": "At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.",
+          "implementation": [
+            "Faithful authored behavior for Tinybones, Trinket Thief: At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-tinybones.test.ts::Trinket Thief counts opponent discards from an actual effect, excludes own discards, then draws and loses once",
+            "white-black-control-tinybones.test.ts::counts a discard before Tinybones enters later in the same turn",
+            "white-black-control-tinybones.test.ts::does not trigger from own discard and resets the opponent tally at the next untap",
+            "white-black-control-tinybones.test.ts::counts an opponent cycling discard cost and an actual cleanup discard",
+            "white-black-control-tinybones.test.ts::resolves the paid six-mana activation against each opponent with an empty hand"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tinybones.test.ts"],
+          "viewerScenarioIds": ["tinybones-trinket-thief-viewer-opponent-discard-end-step"]
+        },
+        {
+          "oracleText": "{4}{B}{B}: Each opponent with no cards in hand loses 10 life.",
+          "implementation": [
+            "Faithful authored behavior for Tinybones, Trinket Thief: {4}{B}{B}: Each opponent with no cards in hand loses 10 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-tinybones.test.ts::Trinket Thief counts opponent discards from an actual effect, excludes own discards, then draws and loses once",
+            "white-black-control-tinybones.test.ts::counts a discard before Tinybones enters later in the same turn",
+            "white-black-control-tinybones.test.ts::does not trigger from own discard and resets the opponent tally at the next untap",
+            "white-black-control-tinybones.test.ts::counts an opponent cycling discard cost and an actual cleanup discard",
+            "white-black-control-tinybones.test.ts::resolves the paid six-mana activation against each opponent with an empty hand"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tinybones.test.ts"],
+          "viewerScenarioIds": ["tinybones-trinket-thief-viewer-empty-hand-activation"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6": {
+      "name": "Imp's Mischief",
+      "oracleSha256": "ff07c155d9e445bf1175adebbfa3860a5c1efa0b21f705535e777b680797f890",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-imp-s-mischief"],
+      "clauses": [
+        {
+          "oracleText": "Change the target of target spell with a single target. You lose life equal to that spell's mana value.",
+          "implementation": [
+            "Faithful authored behavior for Imp's Mischief: Change the target of target spell with a single target. You lose life equal to that spell's mana value."
+          ],
+          "engineTestIds": [
+            "white-black-control-imp-restoration.test.ts::binds both exact Oracle hashes and parses each authored replacement",
+            "white-black-control-imp-restoration.test.ts::casts Imp normally, changes one target by occurrence identity, and loses the spell mana value even when no change is possible",
+            "white-black-control-imp-restoration.test.ts::redirects a single counted target and transfers its divided amount with the target identity",
+            "white-black-control-imp-restoration.test.ts::rejects targetless, multiple-occurrence, and ability targets as Imp target candidates",
+            "white-black-control-imp-restoration.test.ts::retains an existing now-illegal target when no alternative is legal, and uses the targeted spell controller/colors for a redirect"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-imp-restoration.test.ts"],
+          "viewerScenarioIds": ["imp-s-mischief-viewer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ddbe0d17-5cac-417c-afc0-e4aebae83205": {
+      "name": "Restoration Magic",
+      "oracleSha256": "fe14aacd1b134c4f90f994409eb6d0a6852d23b46a9f486af258de9093058d22",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-restoration-magic"],
+      "clauses": [
+        {
+          "oracleText": "Tiered (Choose one additional cost.)",
+          "implementation": [
+            "Faithful authored behavior for Restoration Magic: Tiered (Choose one additional cost.)"
+          ],
+          "engineTestIds": [
+            "white-black-control-imp-restoration.test.ts::binds both exact Oracle hashes and parses each authored replacement",
+            "white-black-control-imp-restoration.test.ts::casts Restoration tiers with their additional costs, targeting, life, and end-of-turn keyword grants",
+            "white-black-control-imp-restoration.test.ts::offers only affordable tiers before targets and a Cura whose only target leaves gives no life"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-imp-restoration.test.ts"],
+          "viewerScenarioIds": [
+            "restoration-magic-viewer",
+            "restoration-magic-viewer-cure",
+            "restoration-magic-viewer-curaga"
+          ]
+        },
+        {
+          "oracleText": "• Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.",
+          "implementation": [
+            "Faithful authored behavior for Restoration Magic: • Cure — {0} — Target permanent gains hexproof and indestructible until end of turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-imp-restoration.test.ts::binds both exact Oracle hashes and parses each authored replacement",
+            "white-black-control-imp-restoration.test.ts::casts Restoration tiers with their additional costs, targeting, life, and end-of-turn keyword grants"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-imp-restoration.test.ts"],
+          "viewerScenarioIds": ["restoration-magic-viewer-cure"]
+        },
+        {
+          "oracleText": "• Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.",
+          "implementation": [
+            "Faithful authored behavior for Restoration Magic: • Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-imp-restoration.test.ts::binds both exact Oracle hashes and parses each authored replacement",
+            "white-black-control-imp-restoration.test.ts::casts Restoration tiers with their additional costs, targeting, life, and end-of-turn keyword grants",
+            "white-black-control-imp-restoration.test.ts::offers only affordable tiers before targets and a Cura whose only target leaves gives no life"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-imp-restoration.test.ts"],
+          "viewerScenarioIds": ["restoration-magic-viewer"]
+        },
+        {
+          "oracleText": "• Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.",
+          "implementation": [
+            "Faithful authored behavior for Restoration Magic: • Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-imp-restoration.test.ts::binds both exact Oracle hashes and parses each authored replacement",
+            "white-black-control-imp-restoration.test.ts::pays Curaga’s exact {3}{W} tier, protects its fixed controller set, and gains six life"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-imp-restoration.test.ts"],
+          "viewerScenarioIds": ["restoration-magic-viewer-curaga"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8d24c12a-a300-4199-b2a9-3d5ead8df617": {
+      "name": "Reluctant Role Model",
+      "oracleSha256": "caa828b6f32adc5fd8882f6eac989c02e9a14c5b7d69d5e5946abe279ba88ac2",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-reluctant-role-model"],
+      "clauses": [
+        {
+          "oracleText": "Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it.",
+          "implementation": [
+            "Faithful authored behavior for Reluctant Role Model: Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it."
+          ],
+          "engineTestIds": [
+            "white-black-control-role-model.test.ts::pins and models the exact Oracle text; its normal cast does not grant printed flying or lifelink",
+            "white-black-control-role-model.test.ts::second-main Survival chooses a %s counter only when tapped",
+            "white-black-control-role-model.test.ts::does not trigger in the first or third main phase, for an opponent, or if untapped before resolution"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-role-model.test.ts"],
+          "viewerScenarioIds": ["reluctant-role-model-viewer"]
+        },
+        {
+          "oracleText": "Whenever this creature or another creature you control dies, if it had counters on it, put those counters on up to one target creature.",
+          "implementation": [
+            "Faithful authored behavior for Reluctant Role Model: Whenever this creature or another creature you control dies, if it had counters on it, put those counters on up to one target creature."
+          ],
+          "engineTestIds": [
+            "white-black-control-role-model.test.ts::pins and models the exact Oracle text; its normal cast does not grant printed flying or lifelink",
+            "white-black-control-role-model.test.ts::transfers every counter from its own death and another controlled creature, but not opponent/no-counter deaths",
+            "white-black-control-role-model.test.ts::allows zero or one target, skips a target that leaves, applies counter replacements/events, and tracks keyword counter timestamps"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-role-model.test.ts"],
+          "viewerScenarioIds": ["reluctant-role-model-viewer-death-counter-transfer"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5d258409-28d3-4eac-9f1a-3e494db818bf": {
+      "name": "Cloak of Confusion",
+      "oracleSha256": "ad25a794244abd775a070eff00cdd3a8b80efa826b43b47d1f8d46d6f95849bc",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-cloak-of-confusion"],
+      "clauses": [
+        {
+          "oracleText": "Enchant creature you control",
+          "implementation": [
+            "Faithful authored behavior for Cloak of Confusion: Enchant creature you control"
+          ],
+          "engineTestIds": [
+            "white-black-control-cloak.test.ts::pins Oracle, casts the Aura normally, and restricts its target to a creature you control"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-cloak.test.ts"],
+          "viewerScenarioIds": ["cloak-of-confusion-viewer-no-damage-random-discard"]
+        },
+        {
+          "oracleText": "Whenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.",
+          "implementation": [
+            "Faithful authored behavior for Cloak of Confusion: Whenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random."
+          ],
+          "engineTestIds": [
+            "white-black-control-cloak.test.ts::cloak-confusion-c02 offers the unblocked attacker a choice; accepting makes it assign no damage and discards one random card",
+            "white-black-control-cloak.test.ts::uses the seeded game random stream for the defender discard",
+            "white-black-control-cloak.test.ts::cloak-confusion-c02 is optional: declining deals combat damage and leaves the defender hand unchanged",
+            "white-black-control-cloak.test.ts::a creature that was blocked does not trigger even if its blocker leaves before damage",
+            "white-black-control-cloak.test.ts::accepting the choice suppresses both double-strike damage steps and lasts through another combat this turn only",
+            "white-black-control-cloak.test.ts::uses the actual controller of a planeswalker defender in a multiplayer combat",
+            "white-black-control-cloak.test.ts::keeps the queued attack event bound to its original creature if the Aura is reattached before resolution",
+            "white-black-control-cloak.test.ts::does nothing when the original attacking creature leaves before the queued trigger resolves"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-cloak.test.ts"],
+          "viewerScenarioIds": ["cloak-of-confusion-viewer-no-damage-random-discard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bcbe879a-4609-4493-bd7d-47c26d27e83c": {
+      "name": "Bandit's Talent",
+      "oracleSha256": "f806d0ae13bbfb7b4d6b8168dc45fad6a8ad31691ebe1701b48b8d5955dd69e3",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-bandit-s-talent"],
+      "clauses": [
+        {
+          "oracleText": "(Gain the next level as a sorcery to add its ability.)",
+          "implementation": [
+            "Faithful authored behavior for Bandit's Talent: (Gain the next level as a sorcery to add its ability.)"
+          ],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::pins the Oracle wrapper and enters through the normal cast with default Class level 1",
+            "white-black-control-bandit.test.ts::can only buy sequential levels at exact sorcery-speed costs and retains lower-level abilities"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": [
+            "bandit-s-talent-viewer",
+            "bandit-s-talent-viewer-level-three-extra-draw"
+          ]
+        },
+        {
+          "oracleText": "When this Class enters, each opponent discards two cards unless they discard a nonland card.",
+          "implementation": [
+            "Faithful authored behavior for Bandit's Talent: When this Class enters, each opponent discards two cards unless they discard a nonland card."
+          ],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::resolves the ETB discard alternative for each opponent, selecting APNAP before any card moves",
+            "white-black-control-bandit.test.ts::discards only cards actually held when an opponent has fewer than two cards or an empty hand"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": ["bandit-s-talent-viewer"]
+        },
+        {
+          "oracleText": "{B}: Level 2",
+          "implementation": ["Faithful authored behavior for Bandit's Talent: {B}: Level 2"],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::can only buy sequential levels at exact sorcery-speed costs and retains lower-level abilities",
+            "white-black-control-bandit.test.ts::Class level resets for a new battlefield incarnation"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": [
+            "bandit-s-talent-viewer",
+            "bandit-s-talent-viewer-level-three-extra-draw"
+          ]
+        },
+        {
+          "oracleText": "At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life.",
+          "implementation": [
+            "Faithful authored behavior for Bandit's Talent: At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life."
+          ],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::Level 2 upkeep intervening-if checks at queue and resolution, and a queued ability resolves after its Class leaves"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": ["bandit-s-talent-viewer"]
+        },
+        {
+          "oracleText": "{3}{B}: Level 3",
+          "implementation": ["Faithful authored behavior for Bandit's Talent: {3}{B}: Level 3"],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::can only buy sequential levels at exact sorcery-speed costs and retains lower-level abilities",
+            "white-black-control-bandit.test.ts::Class level resets for a new battlefield incarnation"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": [
+            "bandit-s-talent-viewer",
+            "bandit-s-talent-viewer-level-three-extra-draw"
+          ]
+        },
+        {
+          "oracleText": "At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand.",
+          "implementation": [
+            "Faithful authored behavior for Bandit's Talent: At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand."
+          ],
+          "engineTestIds": [
+            "white-black-control-bandit.test.ts::Level 3 draws once per opponent at one card or fewer at resolution and only on its controller’s draw step"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-bandit.test.ts"],
+          "viewerScenarioIds": ["bandit-s-talent-viewer-level-three-extra-draw"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b": {
+      "name": "Tergrid, God of Fright // Tergrid's Lantern",
+      "oracleSha256": "390005effb7682d435bd1fffe5b17fd1603da3e0bac9a3fcb43d7c3f04d1d9f4",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-tergrid-god-of-fright-tergrid-s-lantern"],
+      "clauses": [
+        {
+          "oracleText": "Menace",
+          "implementation": ["Faithful authored behavior for Tergrid, God of Fright: Menace"],
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::pins both faces and casts the front normally with menace and a 4/5 body"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tergrid.test.ts"],
+          "viewerScenarioIds": ["tergrid-front-viewer-menace-blocker"]
+        },
+        {
+          "oracleText": "Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.",
+          "implementation": [
+            "Faithful authored behavior for Tergrid, God of Fright: Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control."
+          ],
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::returns an opponent permanent card discarded by an actual effect, binding its graveyard incarnation",
+            "white-black-control-tergrid.test.ts::returns an opponent permanent sacrificed to a real sacrifice move, but not own or token permanents",
+            "white-black-control-tergrid.test.ts::does not return discarded nonpermanent cards or cards that never entered a graveyard from hand",
+            "white-black-control-tergrid.test.ts::binds the original graveyard incarnation and skips it after it leaves and returns"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tergrid.test.ts"],
+          "viewerScenarioIds": [
+            "tergrid-front-viewer-discards-permanent-card",
+            "tergrid-front-viewer-opponent-sacrifice"
+          ]
+        },
+        {
+          "oracleText": "{T}: Target player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card.",
+          "implementation": [
+            "Faithful authored behavior for Tergrid's Lantern: {T}: Target player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card."
+          ],
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::casts the back face for {3}{B} as the legendary artifact with only Lantern abilities",
+            "white-black-control-tergrid.test.ts::Lantern lets the target choose life loss even when sacrifice or discard is available",
+            "white-black-control-tergrid.test.ts::Lantern sacrifice excludes lands, discards when chosen, and loses life when neither alternative exists",
+            "white-black-control-tergrid.test.ts::Lantern discard still counts when Rest in Peace replaces its graveyard destination; {3}{B} untaps for repeat use"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tergrid.test.ts"],
+          "viewerScenarioIds": [
+            "tergrid-lantern-viewer-target-loses-life",
+            "tergrid-lantern-viewer-discard-then-paid-untap"
+          ]
+        },
+        {
+          "oracleText": "{3}{B}: Untap Tergrid's Lantern.",
+          "implementation": [
+            "Faithful authored behavior for Tergrid's Lantern: {3}{B}: Untap Tergrid's Lantern."
+          ],
+          "engineTestIds": [
+            "white-black-control-tergrid.test.ts::casts the back face for {3}{B} as the legendary artifact with only Lantern abilities",
+            "white-black-control-tergrid.test.ts::a copy of the back-face permanent spell copies only Tergrid's Lantern",
+            "white-black-control-tergrid.test.ts::Lantern discard still counts when Rest in Peace replaces its graveyard destination; {3}{B} untaps for repeat use"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-tergrid.test.ts"],
+          "viewerScenarioIds": ["tergrid-lantern-viewer-discard-then-paid-untap"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d31fd12f-b4dd-4bc3-ace4-703dabd0f607": {
+      "name": "Aven Interrupter",
+      "oracleSha256": "861efb2a0c89250b158e9f1b6ba71dbd3744cd4d72591457b2739ae8251c4000",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-aven-interrupter"],
+      "clauses": [
+        {
+          "oracleText": "Flash",
+          "implementation": ["Flash and flying keyword projection"],
+          "engineTestIds": [
+            "white-black-control-aven.test.ts::pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-aven.test.ts"],
+          "viewerScenarioIds": ["aven-interrupter-viewer-plots-opponent-spell"]
+        },
+        {
+          "oracleText": "Flying",
+          "implementation": [
+            "Enters trigger targets and exiles a spell, recording plot permission for a later turn"
+          ],
+          "engineTestIds": [
+            "white-black-control-aven.test.ts::pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-aven.test.ts"],
+          "viewerScenarioIds": ["aven-interrupter-viewer-flying-blocker"]
+        },
+        {
+          "oracleText": "When this creature enters, exile target spell. It becomes plotted. (Its owner may cast it as a sorcery on a later turn without paying its mana cost.)",
+          "implementation": [
+            "Plot timing, owner permission, free cast, X handling, and alternate-cost validation"
+          ],
+          "engineTestIds": [
+            "white-black-control-aven.test.ts::pins Oracle and normally casts Aven with flash to exile and plot an opposing spell without countering it",
+            "white-black-control-aven.test.ts::offers an owner-only later-turn plot cast as a sorcery, previews the {2} Aven tax, and pays it with the additional cost",
+            "white-black-control-aven.test.ts::does not offer plot in the same turn, off-turn, or while the stack is nonempty",
+            "white-black-control-aven.test.ts::exiles an uncounterable spell because this ability exiles instead of countering",
+            "white-black-control-aven.test.ts::makes a targeted spell copy cease to exist without creating a plotted card",
+            "white-black-control-aven.test.ts::clears plot permission when the exiled card leaves and returns to exile as a new incarnation"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-aven.test.ts"],
+          "viewerScenarioIds": [
+            "aven-interrupter-viewer-plots-opponent-spell",
+            "aven-interrupter-viewer-later-plot-cast-pays-tax"
+          ]
+        },
+        {
+          "oracleText": "Spells your opponents cast from graveyards or from exile cost {2} more to cast.",
+          "implementation": [
+            "Additional {2} cost for opposing graveyard and exile casts, with hand casts and own casts excluded"
+          ],
+          "engineTestIds": [
+            "white-black-control-aven.test.ts::adds {2} for opposing graveyard and exile casts, but not hand casts or the source controller",
+            "white-black-control-aven.test.ts::keeps X at zero on a plotted X spell and rejects a combined alternate cost",
+            "white-black-control-aven.test.ts::offers a plotted MDFC back face and applies the opposing Aven tax to its free plot cast"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-aven.test.ts"],
+          "viewerScenarioIds": ["aven-interrupter-viewer-later-plot-cast-pays-tax"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ef71ef07-8a35-41ec-a851-d95e9e3a221b": {
+      "name": "Bilbo's Gambit",
+      "oracleSha256": "21f251166fa3895f74a7ffd11f2914f0c02a73564ca5ab87a76680b43633bf48",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-bilbo-s-gambit"],
+      "clauses": [
+        {
+          "oracleText": "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "implementation": ["Normal instant casting with an optional opponent gift choice"],
+          "engineTestIds": [
+            "white-black-control-gifts.test.ts::pins both Oracle texts and makes Gift an opponent choice while casting normally",
+            "white-black-control-gifts.test.ts::fulfills promised Treasure before returning the target, then locks every player out of spells for this turn",
+            "white-black-control-gifts.test.ts::declining the gift bounces the spell but never creates Treasure or applies the spell lock"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+          "viewerScenarioIds": ["bilbo-s-gambit-viewer-gift-returns-spell"]
+        },
+        {
+          "oracleText": "Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+          "implementation": ["Gift Treasure token fulfillment before the spell effect"],
+          "engineTestIds": [
+            "white-black-control-gifts.test.ts::fulfills promised Treasure before returning the target, then locks every player out of spells for this turn",
+            "white-black-control-gifts.test.ts::declining the gift bounces the spell but never creates Treasure or applies the spell lock",
+            "white-black-control-gifts.test.ts::an all-illegal target fizzles before gift fulfillment and before the lock effect",
+            "white-black-control-gifts.test.ts::returns a targeted spell copy by removing it from the stack without returning a physical card"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+          "viewerScenarioIds": ["bilbo-s-gambit-viewer-gift-returns-spell"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "37c06f89-db36-4937-9404-2b07cd22e1a6": {
+      "name": "Dawn's Truce",
+      "oracleSha256": "9b94a7f24557052e39ba56e4a491a924a83f664f8eea7d2f37ff14dcd488877b",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-dawn-s-truce"],
+      "clauses": [
+        {
+          "oracleText": "Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.)",
+          "implementation": ["Normal instant casting with an optional opponent gift choice"],
+          "engineTestIds": [
+            "white-black-control-gifts.test.ts::pins both Oracle texts and makes Gift an opponent choice while casting normally",
+            "white-black-control-gifts.test.ts::Dawn draws for the promised recipient before granting hexproof and gifted indestructible to a fixed set",
+            "white-black-control-gifts.test.ts::Dawn still grants own hexproof when Gift is declined, without indestructible",
+            "white-black-control-gifts.test.ts::gifted Dawn copy gives the original opponent the card and grants protection to the copy controller"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+          "viewerScenarioIds": ["dawn-s-truce-viewer-gift-protects-permanents"]
+        },
+        {
+          "oracleText": "You and permanents you control gain hexproof until end of turn. If the gift was promised, permanents you control also gain indestructible until end of turn.",
+          "implementation": ["Gift card draw occurs before the spell’s protection effects"],
+          "engineTestIds": [
+            "white-black-control-gifts.test.ts::Dawn draws for the promised recipient before granting hexproof and gifted indestructible to a fixed set",
+            "white-black-control-gifts.test.ts::Dawn still grants own hexproof when Gift is declined, without indestructible",
+            "white-black-control-gifts.test.ts::gifted Dawn copy gives the original opponent the card and grants protection to the copy controller"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-gifts.test.ts"],
+          "viewerScenarioIds": ["dawn-s-truce-viewer-gift-protects-permanents"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "295fe873-ecb5-4d5e-a73c-3af6c478afc5": {
+      "name": "Perch Protection",
+      "oracleSha256": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d",
+      "implementationStatus": "implemented-unreviewed",
+      "referenceAliases": ["oracle-perch-protection"],
+      "clauses": [
+        {
+          "oracleText": "Gift an extra turn (You may promise an opponent a gift as you cast this spell. If you do, they take an extra turn after this one.)",
+          "implementation": [
+            "Normal instant casting with an optional opponent gift choice that queues the promised player?s extra turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-perch.test.ts::casts normally, offers the extra-turn gift, creates four Birds, phases the controlled set and exiles itself",
+            "white-black-control-perch.test.ts::declining leaves the four Birds on the battlefield and does not phase or shield",
+            "white-black-control-perch.test.ts::queues multiple promised extra turns most-recent-first",
+            "white-black-control-perch.test.ts::runs extra turns in order, then resumes the interrupted normal turn rotation",
+            "white-black-control-perch.test.ts::skips an eliminated promised recipient without consuming the next recipient’s extra turn"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-perch.test.ts"],
+          "viewerScenarioIds": ["perch-protection-viewer-gift-phaseout-next-turn"]
+        },
+        {
+          "oracleText": "Create four 2/2 blue Bird creature tokens with flying. If the gift was promised, all permanents you control phase out, and until your next turn, your life total can't change and you gain protection from everything.",
+          "implementation": [
+            "Four 2/2 blue Bird tokens with flying; on a promised gift, controlled permanents phase out and the controller?s life total and targeting are protected through the next turn."
+          ],
+          "engineTestIds": [
+            "white-black-control-perch.test.ts::casts normally, offers the extra-turn gift, creates four Birds, phases the controlled set and exiles itself",
+            "white-black-control-perch.test.ts::declining leaves the four Birds on the battlefield and does not phase or shield",
+            "white-black-control-perch.test.ts::locks life changes and player targeting, then expires before own untap and phases the same objects in",
+            "white-black-control-perch.test.ts::makes the shielded player an illegal target for every player source, including their own",
+            "white-black-control-perch.test.ts::prevents an opponent lifelink attacker from dealing damage or gaining life, while still allowing the attack",
+            "white-black-control-perch.test.ts::allows untargeted discard and filters positive pay-life activations while retaining zero-pay activations",
+            "white-black-control-perch.test.ts::turns off a phased source’s global static effect and discard trigger while it is away",
+            "phasing-elimination-contract.test.ts::keeps an owned permanent phased through the immediate extra and normal turns, then phases it in on the next applicable untap"
+          ],
+          "engineTestSource": [
+            "packages/engine/tests/white-black-control-perch.test.ts",
+            "packages/engine/tests/phasing-elimination-contract.test.ts"
+          ],
+          "viewerScenarioIds": ["perch-protection-viewer-gift-phaseout-next-turn"]
+        },
+        {
+          "oracleText": "Exile Perch Protection.",
+          "implementation": ["The resolving spell moves itself to exile."],
+          "engineTestIds": [
+            "white-black-control-perch.test.ts::casts normally, offers the extra-turn gift, creates four Birds, phases the controlled set and exiles itself",
+            "white-black-control-perch.test.ts::declining leaves the four Birds on the battlefield and does not phase or shield"
+          ],
+          "engineTestSource": ["packages/engine/tests/white-black-control-perch.test.ts"],
+          "viewerScenarioIds": ["perch-protection-viewer-gift-phaseout-next-turn"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "171a0a09-4aee-466c-aebd-3b0d4c1f51b4": {
+      "name": "Namor, Atlantean King",
+      "oracleSha256": "8f49c3a3c5992e8672714ddeb6cefbc9c87a0c1fed6b80e0272eda3883f643fa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "namor-higher-life-attack",
+          "oracleText": "Whenever Namor attacks a player who has more life than you, other creatures you control attacking that player get +2/+0 until end of turn.",
+          "implementation": [
+            "Attack-event-only higher-life qualification; explicit defending-player binding for the other friendly attackers; resolution survives source removal"
+          ],
+          "engineTestIds": ["namor-viewer-defender-bonus", "namor-viewer-source-removed"],
+          "viewerScenarioIds": ["namor-viewer-defender-bonus", "namor-viewer-source-removed"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["namor-viewer-defender-bonus", "namor-viewer-source-removed"]
+    },
+    "64c986f0-e786-419c-9b51-8c316c8fae0e": {
+      "name": "Scriv, the Obligator",
+      "oracleSha256": "0f73edd799205dbccd4459517e9a0e8c25f4e57a8c3767fb49a14742b4043129",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "scriv-contract",
+          "oracleText": "Whenever Scriv enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls. The token has enchant creature and \"Whenever enchanted creature attacks, it gets +2/+0 until end of turn if it's attacking one of your opponents. Otherwise, its controller loses 2 life.\"",
+          "implementation": [
+            "Normal cast and entry-trigger targeting creates Contract; its attack branch reads the exact original creature current or last-known defender; no pump of a departed incarnation"
+          ],
+          "engineTestIds": ["scriv-viewer-departed-attacker", "scriv-viewer-attacks-controller"],
+          "viewerScenarioIds": ["scriv-viewer-departed-attacker", "scriv-viewer-attacks-controller"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["scriv-viewer-departed-attacker", "scriv-viewer-attacks-controller"]
+    },
+    "eab71e4e-27c3-4c41-b95f-259c1d14b97a": {
+      "name": "Dragon Mage",
+      "oracleSha256": "7538fb83023a8f039c6c5e9ab24fc7d5fba9a0ec0f13defa7ff5f9136bdd3b1a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "dragon-mage-wheel",
+          "oracleText": "Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards.",
+          "implementation": [
+            "Generic printed clause; normal paid creature cast and production entry/combat path verified in the real Card Test Lab"
+          ],
+          "engineTestIds": ["dragon-mage-viewer-normal-cast-wheel"],
+          "viewerScenarioIds": ["dragon-mage-viewer-normal-cast-wheel"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["dragon-mage-viewer-normal-cast-wheel"]
+    },
+    "ef4b334b-8407-4147-b434-602e59806906": {
+      "name": "Hunted Phantasm",
+      "oracleSha256": "5db639eed21e5fba575b7576efaa1bf465568f35128c648fd81c36856e1b7536",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "hunted-phantasm-opponent-tokens",
+          "oracleText": "When this creature enters, target opponent creates five 1/1 red Goblin creature tokens.",
+          "implementation": [
+            "Generic printed clause; normal paid creature cast and production entry/combat path verified in the real Card Test Lab"
+          ],
+          "engineTestIds": ["hunted-phantasm-viewer-opponent-tokens"],
+          "viewerScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
+        }
+      ],
+      "gameplayAiScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
     }
   }
 }

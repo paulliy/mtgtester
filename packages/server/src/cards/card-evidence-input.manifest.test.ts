@@ -306,6 +306,22 @@ describe(
       });
     });
 
+    it('accepts the trusted secondary suite filename and rejects an unknown filename', async () => {
+      await withFixture(async (f) => {
+        const secondary = f.report.suites.find(
+          (suite) => suite.file === 'combat-trigger-regressions.spec.ts',
+        );
+        expect(secondary?.title).toBe('combat-trigger-regressions.spec.ts');
+        expect(secondary?.specs).toHaveLength(9);
+        expect(await loadViewerEvidence(f.paths, f.options)).toBeDefined();
+
+        secondary!.file = 'unknownfilename.spec.ts';
+        secondary!.title = 'unknownfilename.spec.ts';
+        f.seal();
+        await expect(loadViewerEvidence(f.paths, f.options)).rejects.toThrow(/catalog file/);
+      });
+    });
+
     it.each(['missing-nontarget', 'duplicate', 'failed', 'retry', 'afterAll'] as const)(
       'rejects %s catalog execution',
       async (kind) => {

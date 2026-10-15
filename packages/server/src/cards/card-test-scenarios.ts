@@ -21,7 +21,84 @@ import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } fr
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
 import { TARGET_UNTAP_SCENARIO_IDS, targetUntapScenario } from './target-untap-scenarios';
+import {
+  WHITE_BLACK_COMBAT_SCENARIO_IDS,
+  whiteBlackControlCombatScenario,
+} from './white-black-control-combat-scenarios';
+import {
+  WHITE_BLACK_HAND_SCENARIO_IDS,
+  whiteBlackControlHandScenario,
+} from './white-black-control-hand-scenarios';
+import {
+  WHITE_BLACK_ENTRY_SCENARIO_IDS,
+  whiteBlackControlEntryScenario,
+} from './white-black-control-entry-scenarios';
+import {
+  WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS,
+  whiteBlackControlDiscardExtensionScenario,
+} from './white-black-control-discard-extension-scenarios';
+import {
+  WHITE_BLACK_DEFENDER_SCENARIO_IDS,
+  whiteBlackControlDefenderScenario,
+} from './white-black-control-defender-scenarios';
+import {
+  WHITE_BLACK_SPELL_SCENARIO_IDS,
+  whiteBlackControlSpellScenario,
+} from './white-black-control-spell-scenarios';
+import {
+  WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS,
+  whiteBlackControlCounterClassScenario,
+} from './white-black-control-counter-class-scenarios';
+import {
+  WHITE_BLACK_FINAL_SCENARIO_IDS,
+  whiteBlackControlFinalScenario,
+} from './white-black-control-final-scenarios';
+import {
+  WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS,
+  whiteBlackControlPerchScenario,
+} from './white-black-control-perch-scenarios';
+import {
+  WHITE_BLACK_PROTECTION_SCENARIO_IDS,
+  whiteBlackControlProtectionScenario,
+} from './white-black-control-protection-scenarios';
+import {
+  WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS,
+  whiteBlackControlDiscardCoreScenario,
+} from './white-black-control-discard-core-scenarios';
+import {
+  WHITE_BLACK_GRAVEYARD_SCENARIO_IDS,
+  whiteBlackControlGraveyardScenario,
+} from './white-black-control-graveyard-scenarios';
+import {
+  WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS,
+  whiteBlackControlStaxScenario,
+} from './white-black-control-stax-scenarios';
+import {
+  WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS,
+  whiteBlackControlReplacementsScenario,
+} from './white-black-control-replacements-scenarios';
+import {
+  WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS,
+  whiteBlackControlLilianaScenario,
+} from './white-black-control-liliana-scenarios';
+import {
+  WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS,
+  whiteBlackControlRemainingCombatScenario,
+} from './white-black-control-remaining-combat-scenarios';
+import {
+  WHITE_BLACK_TERGRID_SCENARIO_IDS,
+  whiteBlackControlTergridScenario,
+} from './white-black-control-tergrid-scenarios';
+import {
+  WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS,
+  whiteBlackControlHandLimitScenario,
+} from './white-black-control-hand-limit-scenarios';
+import {
+  WHITE_BLACK_KEYWORD_SCENARIO_IDS,
+  whiteBlackControlKeywordScenario,
+} from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
 export interface CardTestScenario {
   metadata: CardTestScenarioMetadata;
@@ -12583,9 +12660,29 @@ function humanTorchScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
+  ...WHITE_BLACK_HAND_SCENARIO_IDS,
+  ...WHITE_BLACK_ENTRY_SCENARIO_IDS,
+  ...WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS,
+  ...WHITE_BLACK_DEFENDER_SCENARIO_IDS,
+  ...WHITE_BLACK_SPELL_SCENARIO_IDS,
+  ...WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS,
+  ...WHITE_BLACK_FINAL_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS,
+  ...WHITE_BLACK_PROTECTION_SCENARIO_IDS,
+  ...WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS,
+  ...WHITE_BLACK_GRAVEYARD_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS,
+  ...WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS,
+  ...WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS,
+  ...WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS,
+  ...WHITE_BLACK_TERGRID_SCENARIO_IDS,
+  ...WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS,
+  ...WHITE_BLACK_KEYWORD_SCENARIO_IDS,
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
   ...ZONE_CHANGE_TRIGGER_SCENARIO_IDS,
+  ...COMBAT_TRIGGER_SCENARIO_IDS,
   'mosswort-viewer-free-adventure-face',
   'mosswort-viewer-free-cast-stack',
   'mosswort-viewer-land-play-limit',
@@ -12910,6 +13007,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     ]),
   ),
   ...Object.fromEntries(
+    COMBAT_TRIGGER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => combatTriggerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
     SPELL_FACE_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => spellFaceScenario(id, gameId)]),
   ),
   ...Object.fromEntries(
@@ -12922,6 +13025,120 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     TARGET_UNTAP_SCENARIO_IDS.map((id) => [
       id,
       (gameId: GameId) => targetUntapScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_COMBAT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlCombatScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_HAND_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlHandScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_ENTRY_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlEntryScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DISCARD_EXTENSION_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDiscardExtensionScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DEFENDER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDefenderScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_SPELL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlSpellScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_COUNTER_CLASS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlCounterClassScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_FINAL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlFinalScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_PERCH_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlPerchScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_PROTECTION_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlProtectionScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_DISCARD_CORE_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlDiscardCoreScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_GRAVEYARD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlGraveyardScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_STAX_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlStaxScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_REPLACEMENTS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlReplacementsScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_CONTROL_LILIANA_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlLilianaScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_REMAINING_COMBAT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlRemainingCombatScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_TERGRID_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlTergridScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_HAND_LIMIT_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlHandLimitScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WHITE_BLACK_KEYWORD_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => whiteBlackControlKeywordScenario(id, gameId),
     ]),
   ),
   ...Object.fromEntries(

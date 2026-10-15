@@ -84,6 +84,7 @@ export interface SelectorCandidate {
   combatRole?: 'attacking' | 'blocking' | null;
   /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
+  attackingDefendingPlayerId?: string;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
   /**
@@ -96,6 +97,7 @@ export interface SelectorCandidate {
 
 /** The object a relative selector ("self", "you control") is resolved against. */
 export interface SelectorSource {
+  giftPromised?: boolean;
   /** Exact identities/facts when evaluating a resolving triggered ability. */
   objectId?: string;
   sourceFacts?: import('./source-identity').ObjectFacts;
@@ -218,6 +220,7 @@ export type Selector =
    * source's controller. Attack assignment is game state, like `combatRole`.
    */
   | { kind: 'attackingOpponent' }
+  | { kind: 'attackingYouOrYourPlaneswalker' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -281,6 +284,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'hasKeyword':
     case 'inCombat':
     case 'attackingEventPlayer':
+    case 'attackingYouOrYourPlaneswalker':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -411,6 +415,9 @@ export function selectMatches(
         candidate.attackingDefenderId != null &&
         candidate.attackingDefenderId !== source.controllerId
       );
+    case 'attackingYouOrYourPlaneswalker':
+      // The defending player when the attack is on that player, or on a planeswalker still in combat.
+      return candidate.attackingDefendingPlayerId === source.controllerId;
     case 'attackingEventPlayer':
       return (
         source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId

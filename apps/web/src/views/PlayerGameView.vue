@@ -1582,7 +1582,7 @@ function abandon(): void {
       </section>
 
       <aside class="rail">
-        <section class="decision">
+        <section class="decision" :data-request-id="request?.requestId">
           <template v-if="request">
             <DecisionPanel
               v-if="fallbackRequest && immediateActions.length === 0"

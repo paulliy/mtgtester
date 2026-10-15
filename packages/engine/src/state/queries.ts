@@ -1,3 +1,4 @@
+import { playerLifeLocked } from './phasing';
 import { counterCount } from './counters';
 import { assertNever } from '../utils/assert-never';
 import { assertManaRiders } from '../cards/mana-riders';
@@ -41,6 +42,7 @@ import type {
   GameContext,
 } from './types';
 import { spellManaValue } from './objects';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
 
 export function getDefByOracleId(
   ctx: GameContext,
@@ -239,8 +241,9 @@ export function cardZoneCandidate(
   ctx: GameContext,
   card: EngineCardObject,
   ownerId: PlayerId,
+  definition?: CardDefinition,
 ): SelectorCandidate {
-  const def = getDefByOracleId(ctx, card.oracleId, card.name);
+  const def = definition ?? getDefByOracleId(ctx, card.oracleId, card.name);
   return {
     cardId: card.cardId,
     controllerId: ownerId,
@@ -731,14 +734,22 @@ export function canPayNonManaCosts(
       case 'payLife': {
         // CR 119.4 / 119.4b: positive life payments need enough life; zero is always payable.
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
-        if (controller === undefined || (cost.amount > 0 && controller.life < cost.amount))
+        if (
+          controller === undefined ||
+          (cost.amount > 0 &&
+            (controller.life < cost.amount || playerLifeLocked(ctx, controller.id)))
+        )
           return false;
         break;
       }
       case 'payLifeValue': {
         const controller = ctx.state.players.find((p) => p.id === perm.controllerId);
         const amount = evaluateValue(ctx, cost.amount, { controllerId: perm.controllerId });
-        if (controller === undefined || (amount > 0 && controller.life < amount)) return false;
+        if (
+          controller === undefined ||
+          (amount > 0 && (controller.life < amount || playerLifeLocked(ctx, controller.id)))
+        )
+          return false;
         break;
       }
       case 'payEnergy': {
@@ -1130,8 +1141,9 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   const out: RuleStaticEntry[] = [];
   for (const perm of ctx.state.battlefield) {
     if (perm.faceDown) continue;
-    const def = ctx.defs.get(perm.oracleId);
-    if (def === undefined) continue;
+    const printed = ctx.defs.get(perm.oracleId);
+    if (printed === undefined) continue;
+    const def = selectedPermanentDefinition(printed, perm.face);
     const printedRuleStatics =
       perm.transformed && def.backFace !== undefined ? def.backFace.ruleStatics : def.ruleStatics;
     if (printedRuleStatics.length === 0 || computeCharacteristics(ctx, perm).loseAbilities)
@@ -1163,6 +1175,23 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
     }
   }
   return out;
+}
+
+/** Cost increases apply before reductions, including a zero alternative mana cost. */
+export function nonHandSpellCostIncreaseFor(
+  ctx: GameContext,
+  casterId: PlayerId,
+  zone: string,
+): number {
+  if (zone !== 'graveyard' && zone !== 'exile') return 0;
+  return gatherRuleStatics(ctx).reduce(
+    (total, entry) =>
+      total +
+      (entry.static.kind === 'opponentNonHandSpellCostIncrease' && entry.controllerId !== casterId
+        ? entry.static.amount
+        : 0),
+    0,
+  );
 }
 
 /** Number of land plays available to a player this turn, including the normal play. */
@@ -1200,8 +1229,24 @@ export function hasNoMaximumHandSize(ctx: GameContext, playerId: PlayerId): bool
   );
 }
 /** Does an active `cantCastSpells` rule static currently forbid `playerId` from casting? */
-export function castingSpellsBlockedFor(ctx: GameContext, playerId: PlayerId): boolean {
+export function castingSpellsBlockedFor(
+  ctx: GameContext,
+  playerId: PlayerId,
+  definition?: Pick<CardDefinition, 'types'>,
+): boolean {
+  if (ctx.state.spellsProhibitedTurn === ctx.state.turnNumber) return true;
   return gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind === 'spellCastLimit') {
+      const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+      if (player === undefined) return true;
+      if (entry.static.category === 'noncreature')
+        return (
+          definition !== undefined &&
+          !definition.types.includes('Creature') &&
+          player.noncreatureSpellsCastThisTurn >= entry.static.limit
+        );
+      return player.spellsCastThisTurn >= entry.static.limit;
+    }
     if (entry.static.kind !== 'cantCastSpells') return false;
     // "Your OPPONENTS can't cast spells" — the source's own controller is never blocked by it.
     // "PLAYERS can't cast spells" (Basandra) binds everyone, its controller included.

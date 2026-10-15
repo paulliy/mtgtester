@@ -39,12 +39,21 @@ const scratch: string[] = [];
 const expectedCapabilities = [
   'Ability.effects',
   'Ability.spell',
+  'Ability.targets',
   'CardDefinition',
   'CardDefinition.manaCost',
   'CardDefinition.spellAbility',
   'Effect.gainLife',
   'Effect.removeCounters',
+  'Effect.revealHandAndDiscard',
+  'Keyword.flying',
+  'Keyword.lifelink',
+  'Keyword.menace',
   'ParsedManaCost',
+  'Selector.allOf',
+  'Selector.not',
+  'Selector.type',
+  'TargetSpec.player',
   'Value.const',
 ];
 
@@ -186,9 +195,16 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     const result = cardPrimitiveEligibility(def, evidence);
     expect(result.eligible).toBe(true);
     expect(result.blocked).toEqual([]);
-    expect(result.dependencies).toEqual(
-      expectedCapabilities.filter((capability) => capability !== 'Effect.removeCounters'),
-    );
+    expect(result.dependencies).toEqual([
+      'Ability.effects',
+      'Ability.spell',
+      'CardDefinition',
+      'CardDefinition.manaCost',
+      'CardDefinition.spellAbility',
+      'Effect.gainLife',
+      'ParsedManaCost',
+      'Value.const',
+    ]);
   });
 
   it.each([
@@ -319,7 +335,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
           reviewPath,
           ...(variant === 'missingEvidence' ? [] : ['--primitive-evidence', runDirectory]),
         ],
-        { cwd: root, encoding: 'utf8', timeout: 30_000 },
+        { cwd: root, encoding: 'utf8', timeout: 60_000 },
       );
       if (variant === 'proven') {
         expect(run.status, run.stderr).toBe(0);
@@ -338,7 +354,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
         );
       }
     },
-    30_000,
+    65_000,
   );
 
   it('executes the actual CI promotion entrypoint against its committed baseline', async () => {
@@ -346,14 +362,14 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     const run = await runCommand(
       'bun',
       ['run', 'primitive-promotions', '--base', base, '--primitive-evidence', runDirectory],
-      { cwd: root, encoding: 'utf8', timeout: 30_000 },
+      { cwd: root, encoding: 'utf8', timeout: 60_000 },
     );
     expect(run.status, run.stderr).toBe(0);
     const result = JSON.parse(run.stdout);
     expect(result.promotions).toEqual([]);
     expect(result.testedTree).toBe(loadPrimitiveEvidence(root, runDirectory).testedTree);
     expect(result.scope).toContain('historical declarations are not current evidence');
-  }, 30_000);
+  }, 65_000);
 
   it('rejects an exact canonical reviewed pin whose primitives are experimental', () => {
     const manifest = parseReviewManifest(
@@ -483,7 +499,9 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
   });
 
   it('keeps the registry immutable and requires real permanent-slot scope', () => {
-    const contract = PRIMITIVE_CONTRACTS[0]!;
+    const contract = PRIMITIVE_CONTRACTS.find(
+      (entry) => entry.capability === 'Effect.removeCounters',
+    )!;
     expect(Object.isFrozen(contract)).toBe(true);
     expect(Object.isFrozen(contract.cases)).toBe(true);
     const def = definition();

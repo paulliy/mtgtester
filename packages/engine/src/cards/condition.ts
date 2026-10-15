@@ -1,9 +1,11 @@
+import { playerLifeLocked } from '../state/phasing';
 import { counterCount } from '../state/counters';
 import {
   eventObjectFacts,
   eventObjectState,
   sourceObjectFacts,
   sourceObjectState,
+  type ObjectFacts,
 } from './source-identity';
 import { assertNever } from '../utils/assert-never';
 import { evaluateValueIn } from '../effects/values';
@@ -30,7 +32,7 @@ import type { Value, ValueScope } from './value';
  */
 
 import type { GameGen } from '../decisions';
-import { loseLife, payManaCost } from '../effects/resolve';
+import { payLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
 import { allowanceFor, attackedPlaneswalker, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
@@ -50,6 +52,9 @@ import type { EnginePermanent } from '../state/types';
 export type Comparison = '>=' | '<=' | '==';
 
 export type Condition =
+  | { kind: 'giftPromised' }
+  | { kind: 'sourceClassLevel'; cmp: Comparison; n: number }
+  | { kind: 'eventPlayerHandSize'; cmp: Comparison; n: number }
   /**
    * "you control two or more other lands" — count the permanents matching `selector` within
    * `scope`, and compare. `scope` narrows *whose* permanents are counted before the selector
@@ -99,6 +104,7 @@ export type Condition =
   | { kind: 'excessDamageDealtTo'; scope: 'opponents' }
   /** "an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
   | { kind: 'opponentDealtDamageThisTurn'; minDamage: number }
+  | { kind: 'opponentDiscardedThisTurn' }
   /** "creatures you control have total power 10 or greater" (Mosswort Bridge). */
   | { kind: 'totalCreaturePower'; scope: 'you' | 'opponents' | 'all'; cmp: '>=' | '<='; n: number }
   | { kind: 'isUntapped' }
@@ -161,9 +167,12 @@ export type Condition =
   | { kind: 'notYourTurn' }
   /** "During your turn" — checked against the trigger source's controller. */
   | { kind: 'yourTurn' }
-  /** Attack trigger condition: the defending player has more life than the attacker’s controller. */
+  /** Dethrone: the defending player has the most life, or is tied for the most life. */
   | { kind: 'attackingPlayerHasMoreLife' }
+  /** The defending player has more life than the ability's controller. */
   | { kind: 'attackingPlayerHasMoreLifeThanYou' }
+  /** Breena: the attacked opponent has more life than another of your opponents. */
+  | { kind: 'defendingOpponentHasMoreLifeThanAnother' }
   /** The attack-trigger object is attacking an opponent of the ability's controller. */
   | { kind: 'triggerObjectAttackingOpponent' }
   /**
@@ -233,8 +242,12 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'opponentCount':
     case 'excessDamageDealtTo':
     case 'opponentDealtDamageThisTurn':
+    case 'opponentDiscardedThisTurn':
     case 'totalCreaturePower':
     case 'isUntapped':
+    case 'giftPromised':
+    case 'sourceClassLevel':
+    case 'eventPlayerHandSize':
     case 'wasKicked':
     case 'sourceWasCast':
     case 'announcedXAtLeast':
@@ -256,6 +269,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'yourTurn':
     case 'attackingPlayerHasMoreLife':
     case 'attackingPlayerHasMoreLifeThanYou':
+    case 'defendingOpponentHasMoreLifeThanAnother':
     case 'triggerObjectAttackingOpponent':
     case 'attackGroupAttackingYou':
     case 'attackWasNotAtYou':
@@ -303,6 +317,15 @@ export function evaluateCondition(
     controllerId: source.controllerId as PlayerId,
   };
   const sourceState = () => sourceObjectState(ctx, scope);
+  const defenderIdOf = (attacker: EnginePermanent | ObjectFacts | undefined) =>
+    attacker === undefined
+      ? undefined
+      : 'candidate' in attacker
+        ? (attacker.candidate.attackingDefenderId ?? undefined)
+        : // The attacked PLAYER; an attack on their planeswalker attacks no player (CR 508.1b).
+          attacker.attackingPlaneswalker === null
+          ? (attacker.attacking ?? undefined)
+          : undefined;
   switch (condition.kind) {
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
@@ -379,15 +402,8 @@ export function evaluateCondition(
       return ctx.state.currentTurnPlayer === source.controllerId;
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
-      const information = eventObjectState(ctx, scope);
-      const attacker =
-        information !== undefined && !('candidate' in information) ? information : undefined;
-      return (
-        attacker !== undefined &&
-        attacker.attacking !== null &&
-        attacker.attackingPlaneswalker === null &&
-        attacker.attacking !== source.controllerId
-      );
+      const defenderId = defenderIdOf(eventObjectState(ctx, scope));
+      return opponentsOf(ctx, source.controllerId).some((opponent) => opponent.id === defenderId);
     }
     case 'attackGroupAttackingYou': {
       let count = 0;
@@ -414,6 +430,10 @@ export function evaluateCondition(
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return ctx.state.excessDamageControllerIds.some((id) => opponentIds.has(id));
     }
+    case 'opponentDiscardedThisTurn':
+      return opponentsOf(ctx, source.controllerId).some(
+        (player) => (player.discardedCardsThisTurn ?? 0) > 0,
+      );
     case 'opponentDealtDamageThisTurn': {
       const opponentIds = new Set(opponentsOf(ctx, source.controllerId).map((p) => p.id));
       return Object.entries(ctx.state.damageDealtToPlayersThisTurn).some(
@@ -439,6 +459,22 @@ export function evaluateCondition(
       if (source?.cardId === undefined) return false;
       const perm = sourceState();
       return perm !== undefined && !perm.tapped;
+    }
+    case 'giftPromised':
+      return source.giftPromised === true;
+    case 'sourceClassLevel': {
+      const state = sourceState();
+      return state !== undefined && compare(state.classLevel ?? 1, condition.cmp, condition.n);
+    }
+    case 'eventPlayerHandSize': {
+      if (scope.eventPlayerId === undefined)
+        throw new Error('hand-size condition has no bound event player');
+      const player = ctx.state.players.find((candidate) => candidate.id === scope.eventPlayerId);
+      return (
+        player !== undefined &&
+        !player.hasLost &&
+        compare(player.hand.length, condition.cmp, condition.n)
+      );
     }
     case 'enteredThisTurn': {
       if (source?.cardId === undefined) return false;
@@ -499,11 +535,8 @@ export function evaluateCondition(
       // Printed dethrone: "attacks the player with the most life or tied for most life".
       const attacker =
         source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      // Dethrone (CR 702.104a) is about the player attacked, not their planeswalker.
-      if (attacker.attackingPlaneswalker !== null) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       if (defender === undefined) return false;
       const lives = ctx.state.players
         .filter((player) => !player.hasLost)
@@ -511,12 +544,23 @@ export function evaluateCondition(
       const mostLife = lives.length === 0 ? 0 : Math.max(...lives);
       return defender.life === mostLife;
     }
+    case 'defendingOpponentHasMoreLifeThanAnother': {
+      // The attacked player is an event fact, not the attacker's current combat assignment.
+      const defenderId = scope.triggerObjectFacts?.candidate.attackingDefenderId;
+      const opponents = ctx.state.players.filter(
+        (player) => !player.hasLost && player.id !== source.controllerId,
+      );
+      const defender = opponents.find((player) => player.id === defenderId);
+      return (
+        defender !== undefined &&
+        opponents.some((player) => player.id !== defender.id && defender.life > player.life)
+      );
+    }
     case 'attackingPlayerHasMoreLifeThanYou': {
-      const attacker = sourceState();
-      if (attacker !== undefined && 'candidate' in attacker) return false;
-      if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
-      if (attacker.attackingPlaneswalker !== null) return false;
-      const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
+      const attacker =
+        source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
+      const defenderId = defenderIdOf(attacker);
+      const defender = ctx.state.players.find((p) => p.id === defenderId && !p.hasLost);
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       return defender !== undefined && controller !== undefined && defender.life > controller.life;
     }
@@ -629,7 +673,8 @@ export function* resolveCondition(
       // this module, and importing back would close a runtime import cycle.
       const player = ctx.state.players.find((p) => p.id === source.controllerId);
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
-      if (condition.n > player.life) return false;
+      if (condition.n > player.life || (condition.n > 0 && playerLifeLocked(ctx, player.id)))
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
@@ -644,7 +689,7 @@ export function* resolveCondition(
         ],
       };
       if (outcome.index !== 0) return false;
-      loseLife(ctx, player, condition.n);
+      payLife(ctx, player, condition.n);
       emit(ctx, 'costPaid', { player: player.id, source: sourceName, life: condition.n });
       return true;
     }
@@ -677,7 +722,16 @@ export function* resolveCondition(
       if (player === undefined) throw new Error(`unknown player ${source.controllerId}`);
       const sources = manaSourcesFor(ctx, player.id);
       const allows = allowanceFor(ctx, player.id, { kind: 'other' });
-      if (!canPay(condition.cost, player.manaEntries, sources, allows, player.life)) return false;
+      if (
+        !canPay(
+          condition.cost,
+          player.manaEntries,
+          sources,
+          allows,
+          playerLifeLocked(ctx, player.id) ? 0 : player.life,
+        )
+      )
+        return false;
       const outcome = yield {
         decisionType: 'general',
         player: player.id,

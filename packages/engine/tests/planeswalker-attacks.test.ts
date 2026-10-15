@@ -12,6 +12,7 @@ import { evaluateCondition } from '../src/cards/condition';
 import type { CardDefinition } from '../src/cards/definition';
 import type { PendingDecision } from '../src/decisions';
 import { changeController, moveObject } from '../src/state/objects';
+import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
 import { createGame } from '../src/state/game';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { counterCount } from '../src/state/counters';
@@ -356,6 +357,29 @@ describe('a planeswalker removed from combat (CR 506.4, 506.4c, 510.1b)', () => 
     expect(loyaltyOf(target)).toBe(4);
     expect(ctx.state.players.every((p) => p.life === 40)).toBe(true);
   });
+
+  it('removes an attacked planeswalker that phases out, for good (CR 506.4)', () => {
+    const ctx = board('pw-phase');
+    const attacker = spawn(ctx, 'P1', bear());
+    const target = spawn(ctx, 'P2', walker());
+    spawn(ctx, 'P2', keywordCreature('Test Wall', '', '{2}', '1/4'));
+    let attacksWalkerAfterPhaseIn = true;
+    pump(runCombatPhase(ctx), (d) => {
+      const attack = attackWith('Test Bear', target.id)(d);
+      if (attack !== null) return attack;
+      if (d.decisionType === 'declareBlockers') {
+        phaseOutControlledPermanents(ctx, 'P2');
+        // Phasing back in does not put it back into combat.
+        phaseInAtUntap(ctx, 'P2');
+        attacksWalkerAfterPhaseIn = attackedPlaneswalker(ctx, attacker) !== null;
+        return declareBlocks(d, () => null);
+      }
+      return pick(d, /Pass|does not/);
+    });
+    expect(attacksWalkerAfterPhaseIn).toBe(false);
+    expect(loyaltyOf(target)).toBe(4);
+    expect(ctx.state.players.every((p) => p.life === 40)).toBe(true);
+  });
 });
 
 describe('attack taxes and goad scoped by target', () => {
@@ -406,6 +430,25 @@ describe('attack taxes and goad scoped by target', () => {
     expect(options).toEqual(['P3', 'P4']);
     expect(options).not.toContain(goaderWalker.id);
     expect(options).not.toContain(otherWalker.id);
+  });
+
+  it('keeps a creature goaded by every opponent off their planeswalkers: only a player obeys most goads (CR 508.1d)', () => {
+    const ctx = board('pw-goad-all');
+    const attacker = spawn(ctx, 'P1', bear());
+    attacker.goadedBy = ['P2', 'P3', 'P4'].map((goaderId) => ({
+      goaderId,
+      appliedTurn: ctx.state.turnNumber - 1,
+    }));
+    const walkers = ['P2', 'P3', 'P4'].map((id) => spawn(ctx, id, walker(`${id} Walker`)));
+    let options: string[] = [];
+    fight(ctx, (d) => {
+      if (d.decisionType !== 'declareAttackers') return null;
+      options = d.options[0]?.targets?.[0]?.options ?? [];
+      return declareAttacks(d, () => 'P2');
+    });
+    // Attacking any player obeys two of the three requirements; a planeswalker obeys none.
+    expect(options).toEqual(['P2', 'P3', 'P4']);
+    for (const planeswalker of walkers) expect(options).not.toContain(planeswalker.id);
   });
 
   it('lets a goaded creature attack any player or planeswalker when no non-goader player is attackable', () => {

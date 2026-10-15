@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "seed": "tier2-skill-01",
+  "maxTurns": 20,
+  "cutoff": true,
+  "firstEliminationTurn": null,
+  "missedLandDrops": 0,
+  "landDropOpportunities": 12,
+  "repeatedNonPassNoOps": 0,
+  "unusedManaEstimate": {
+    "P4": 2,
+    "P1": 5,
+    "P2": 0,
+    "P3": 1
+  },
+  "boardAtCutoff": [
+    {
+      "seat": "P1",
+      "life": 25,
+      "lands": 6,
+      "permanents": 12,
+      "handSize": 3,
+      "graveyardSize": 0,
+      "eliminated": false
+    },
+    {
+      "seat": "P2",
+      "life": 40,
+      "lands": 2,
+      "permanents": 6,
+      "handSize": 5,
+      "graveyardSize": 1,
+      "eliminated": false
+    },
+    {
+      "seat": "P3",
+      "life": 40,
+      "lands": 3,
+      "permanents": 7,
+      "handSize": 5,
+      "graveyardSize": 0,
+      "eliminated": false
+    },
+    {
+      "seat": "P4",
+      "life": 30,
+      "lands": 2,
+      "permanents": 4,
+      "handSize": 7,
+      "graveyardSize": 1,
+      "eliminated": false
+    }
+  ],
+  "ai": {
+    "totalDecisions": 120,
+    "totalCalls": 92,
+    "skippedCalls": 28,
+    "retries": 0,
+    "fallbacks": 0,
+    "totalPromptTokens": 260116,
+    "totalResponseTokens": 41747,
+    "avgLatencyMs": 15805
+  }
+}

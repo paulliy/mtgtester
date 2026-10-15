@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 25,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5652,6 +5652,131 @@
       "uniqueOracleIds": 3,
       "status": "unreviewed",
       "note": "Explicit support exclusions for three confirmed omitted or substituted spell faces. Pinned Oracle and negative engine evidence are recorded in the verification manifest; no completed-card claim."
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-aven.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-bandit.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-cloak.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-curse.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-defenders.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-discard-choices.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-discard.ts",
+      "uniqueOracleIds": 7,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-entry.ts",
+      "uniqueOracleIds": 5,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-gifts.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-graveyard-triggers.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-graveyard.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-hand.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-imp.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-leyline.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-library.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-liliana.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-payoffs.ts",
+      "uniqueOracleIds": 3,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-perch.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-promise.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-protection-stack.ts",
+      "uniqueOracleIds": 4,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-restoration.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-role-model.ts",
+      "uniqueOracleIds": 1,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-stax.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-tergrid.ts",
+      "uniqueOracleIds": 0,
+      "status": "unreviewed"
+    },
+    {
+      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-tinybones.ts",
+      "uniqueOracleIds": 2,
+      "status": "unreviewed"
     }
   ],
   "interpreterRestored": [
@@ -6613,6 +6738,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",
+      "name": "Dragon Mage",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "combat-trigger-parser-regressions",
+      "note": "Fixed-count wheel grammar corrected; the interpreter now reads the printed combat-damage trigger and discard-then-draw-seven effect. Remove the obsolete handled-line override. Existing pinned Draconic engine evidence and the new parser regressions cover the generic path; historical review labels are unchanged."
     }
   ]
 }

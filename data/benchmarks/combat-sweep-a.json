@@ -1,0 +1,248 @@
+{
+  "args": {
+    "games": 120,
+    "seed": "sweepA",
+    "topK": [
+      1,
+      2,
+      4,
+      16
+    ],
+    "maxAttackers": [],
+    "maxPermanents": [
+      12
+    ],
+    "turnCap": 200,
+    "gameTimeoutMs": 90000,
+    "verbose": false,
+    "json": "data/benchmarks/combat-sweep-a.json"
+  },
+  "results": [
+    {
+      "label": "shipped defaults",
+      "options": {},
+      "search": {
+        "wins": 61,
+        "combatDecisionMs": 2205.9959000000013,
+        "combatDecisions": 2516,
+        "totalMs": 9050.616700000013,
+        "totalDecisions": 14222,
+        "blockSearched": 634,
+        "blockDeclined": 34,
+        "splitSearched": 61,
+        "splitDeclined": 3
+      },
+      "control": {
+        "wins": 56,
+        "combatDecisionMs": 1498.865999999999,
+        "combatDecisions": 2544,
+        "totalMs": 6766.025700000013,
+        "totalDecisions": 12810,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5935
+    },
+    {
+      "label": "topK=1",
+      "options": {
+        "topK": 1
+      },
+      "search": {
+        "wins": 58,
+        "combatDecisionMs": 1928.5186999999978,
+        "combatDecisions": 2545,
+        "totalMs": 8226.777000000007,
+        "totalDecisions": 14244,
+        "blockSearched": 622,
+        "blockDeclined": 74,
+        "splitSearched": 61,
+        "splitDeclined": 3
+      },
+      "control": {
+        "wins": 59,
+        "combatDecisionMs": 1284.4808000000025,
+        "combatDecisions": 2500,
+        "totalMs": 6010.068600000003,
+        "totalDecisions": 12603,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5909
+    },
+    {
+      "label": "topK=2",
+      "options": {
+        "topK": 2
+      },
+      "search": {
+        "wins": 59,
+        "combatDecisionMs": 1899.4158000000027,
+        "combatDecisions": 2543,
+        "totalMs": 7858.775600000001,
+        "totalDecisions": 14231,
+        "blockSearched": 645,
+        "blockDeclined": 41,
+        "splitSearched": 62,
+        "splitDeclined": 4
+      },
+      "control": {
+        "wins": 58,
+        "combatDecisionMs": 1291.7494999999992,
+        "combatDecisions": 2546,
+        "totalMs": 5930.2667999999885,
+        "totalDecisions": 12796,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5936
+    },
+    {
+      "label": "topK=4",
+      "options": {
+        "topK": 4
+      },
+      "search": {
+        "wins": 61,
+        "combatDecisionMs": 1969.7820000000033,
+        "combatDecisions": 2518,
+        "totalMs": 7952.48470000001,
+        "totalDecisions": 14224,
+        "blockSearched": 632,
+        "blockDeclined": 38,
+        "splitSearched": 61,
+        "splitDeclined": 3
+      },
+      "control": {
+        "wins": 56,
+        "combatDecisionMs": 1293.2650999999978,
+        "combatDecisions": 2543,
+        "totalMs": 5988.112799999997,
+        "totalDecisions": 12809,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5935
+    },
+    {
+      "label": "topK=16",
+      "options": {
+        "topK": 16
+      },
+      "search": {
+        "wins": 61,
+        "combatDecisionMs": 1920.0647000000085,
+        "combatDecisions": 2516,
+        "totalMs": 7879.879400000001,
+        "totalDecisions": 14222,
+        "blockSearched": 634,
+        "blockDeclined": 34,
+        "splitSearched": 61,
+        "splitDeclined": 3
+      },
+      "control": {
+        "wins": 56,
+        "combatDecisionMs": 1298.4001000000017,
+        "combatDecisions": 2544,
+        "totalMs": 5915.774600000009,
+        "totalDecisions": 12810,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5935
+    },
+    {
+      "label": "maxPermanents=12",
+      "options": {
+        "maxCombatPermanents": 12
+      },
+      "search": {
+        "wins": 61,
+        "combatDecisionMs": 1943.8043000000043,
+        "combatDecisions": 2515,
+        "totalMs": 7880.049700000009,
+        "totalDecisions": 14222,
+        "blockSearched": 636,
+        "blockDeclined": 32,
+        "splitSearched": 61,
+        "splitDeclined": 2
+      },
+      "control": {
+        "wins": 56,
+        "combatDecisionMs": 1262.9385000000038,
+        "combatDecisions": 2544,
+        "totalMs": 5864.835699999991,
+        "totalDecisions": 12810,
+        "blockSearched": 0,
+        "blockDeclined": 0,
+        "splitSearched": 0,
+        "splitDeclined": 0
+      },
+      "games": 120,
+      "halted": 0,
+      "drawn": 0,
+      "errored": 2,
+      "timedOut": 1,
+      "errors": [
+        "error: engine bug: Granitic Titan — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object",
+        "error: engine bug: Glory Seeker — Dethrone — put a +1/+1 counter on this creature used 'triggerObject' with no trigger object"
+      ],
+      "totalTurns": 5935
+    }
+  ]
+}

@@ -17,7 +17,7 @@ const cases: {
   original: Partial<EnginePermanent>;
   returning: Partial<EnginePermanent>;
   expected: boolean;
-  liveOnly?: boolean;
+  combat?: boolean;
 }[] = [
   {
     name: 'untapped',
@@ -94,7 +94,7 @@ const cases: {
     original: { attacking: 'P2' },
     returning: { attacking: 'P2' },
     expected: true,
-    liveOnly: true,
+    combat: true,
   },
   {
     name: 'higher-life defender',
@@ -102,7 +102,7 @@ const cases: {
     original: { attacking: 'P2' },
     returning: { attacking: 'P2' },
     expected: true,
-    liveOnly: true,
+    combat: true,
   },
 ];
 
@@ -256,7 +256,7 @@ describe('source predicates retain the announced source incarnation', () => {
         ctx.state.activePlayerIndex = 0;
         ctx.state.phase = 'precombatMain';
         ctx.state.turnNumber = 1;
-        if (entry.liveOnly) {
+        if (entry.combat) {
           ctx.state.phase = 'combat';
           ctx.state.players[1]!.life = 50;
         }
@@ -338,8 +338,6 @@ describe('source predicates retain the announced source incarnation', () => {
           } else expect(returning).toBeUndefined();
         }
         pump(runPrioritySequence(ctx));
-        expect(player.life).toBe(
-          40 + (entry.expected && (!entry.liveOnly || move === 'live') ? 7 : 2),
-        );
+        expect(player.life).toBe(40 + (entry.expected ? 7 : 2));
       });
 });

@@ -54,6 +54,10 @@ function firstTargets(action: LegalAction): TargetChoice[] {
  */
 function attackDeclarationTargets(action: LegalAction, view: PlayerView): TargetChoice[] {
   const lifeBySeat = new Map(view.opponents.map((o) => [o.seat, o.life]));
+  for (const permanent of view.battlefield) {
+    const life = lifeBySeat.get(permanent.controller);
+    if (life !== undefined) lifeBySeat.set(permanent.id, life);
+  }
   return (action.targets ?? []).map((slot) => {
     const real = slot.options.filter((o) => o !== NO_ATTACK_TARGET);
     if (real.length === 0) {

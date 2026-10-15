@@ -17,6 +17,14 @@ const finite: Check = (value, path, issues) => {
   if (typeof value !== 'number' || !Number.isFinite(value))
     issue(path, issues, 'expected finite number');
 };
+const nonnegativeInteger: Check = (value, path, issues) => {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
+    issue(path, issues, 'expected nonnegative integer');
+};
+const positiveInteger: Check = (value, path, issues) => {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1)
+    issue(path, issues, 'expected positive integer');
+};
 const text: Check = (value, path, issues) => {
   if (typeof value !== 'string' || value.length === 0)
     issue(path, issues, 'expected nonempty string');
@@ -124,6 +132,7 @@ const selectorShapes = {
   combatRole: { role: oneOf('attacking', 'blocking') },
   attackingEventPlayer: {},
   attackingOpponent: {},
+  attackingYouOrYourPlaneswalker: {},
   enchantedByAuraYouControl: {},
   allOf: { of: arrayOf(selector) },
   anyOf: { of: arrayOf(selector) },
@@ -133,6 +142,7 @@ const selectorShapes = {
 const valueShapes = {
   const: { n: finite },
   cardTypesInAllGraveyards: {},
+  cardTypesInYourGraveyard: {},
   plus: { of: numberValue, n: finite },
   negate: { of: numberValue },
   times: { of: numberValue, n: finite },
@@ -204,6 +214,7 @@ const conditionShapes = {
   mayRevealCardFromHand: { subtypes: arrayOf(text) },
   excessDamageDealtTo: { scope: oneOf('opponents') },
   opponentDealtDamageThisTurn: { minDamage: finite },
+  opponentDiscardedThisTurn: {},
   totalCreaturePower: {
     scope: oneOf('you', 'opponents', 'all'),
     cmp: oneOf('>=', '<='),
@@ -235,6 +246,7 @@ const conditionShapes = {
   yourTurn: {},
   attackingPlayerHasMoreLife: {},
   attackingPlayerHasMoreLifeThanYou: {},
+  defendingOpponentHasMoreLifeThanAnother: {},
   triggerObjectAttackingOpponent: {},
   attackGroupAttackingYou: {
     planeswalkers: (value, path, issues) => {
@@ -251,6 +263,9 @@ const conditionShapes = {
   notFirstDrawInOwnDrawStep: {},
   cardsInYourGraveyard: { cmp: oneOf('>=', '<=', '=='), n: finite },
   sourceHasCounters: { counter: text, cmp: oneOf('>=', '<=', '=='), n: finite },
+  giftPromised: {},
+  sourceClassLevel: { cmp: oneOf('>=', '<=', '=='), n: finite },
+  eventPlayerHandSize: { cmp: oneOf('>=', '<=', '=='), n: finite },
   castSpellThisTurn: { category: oneOf('any', 'noncreature'), cmp: oneOf('>=', '<='), n: finite },
   not: { of: condition },
 } satisfies Shapes<Condition>;
@@ -314,6 +329,17 @@ const effectExpressions = {
   returnBlockedCreatureAtEndOfCombat: {},
   damageEachOtherOpponent: { amount: numberValue },
   grantProtectionEachUntilEot: { selector: selector },
+  grantChosenColorProtectionUntilEot: {},
+  returnSpellToOwnerHand: {},
+  exileSpellAndPlot: {},
+  prohibitSpellsThisTurn: {},
+  phaseOutAndProtectControllerUntilNextTurn: {},
+  controllerHexproofUntilEot: {},
+  changeSingleSpellTarget: {},
+  exileGraveyardEventCard: {},
+  sacrificeTargetPlayerCreature: {},
+  eachPlayerKeepsCreatureWithVow: {},
+  separatePermanentsIntoPilesThenSacrifice: {},
   dealDamage: { amount: numberValue },
   dealDamageUnlessSacrifice: { amount: numberValue },
   destroy: {},
@@ -324,6 +350,11 @@ const effectExpressions = {
   sacrificeAndDrawForPower: {},
   sacrificeGreatestEachOpponent: {},
   transferCountersFromTriggerObject: {},
+  transferCountersFromTriggerObjectToChosenCreatures: {},
+  mayForgoTriggerObjectCombatDamageForRandomDiscard: {},
+  gainClassLevel: { level: positiveInteger },
+  drawForOpponentsWithSmallHands: { maximum: nonnegativeInteger },
+  sacrificeNonlandOrDiscardOrLoseLife: { amount: numberValue },
   transferCountersFromSource: {},
   moveCounters: { counter: text, count: finite },
   bolster: { count: finite },
@@ -425,6 +456,14 @@ const effectExpressions = {
   discard: {},
   putFromHandOnLibraryTop: { count: numberValue },
   discardAtRandom: { count: numberValue },
+  discardTarget: { count: numberValue },
+  discardOrLoseLife: { amount: numberValue },
+  millEachPlayer: { count: numberValue },
+  eachPlayerLosesLifeAndDraws: { amount: numberValue, count: numberValue },
+  discardChosenPlayers: { count: numberValue },
+  millAndLoseLifeChosenPlayers: { count: numberValue, amount: numberValue },
+  revealHandAndDiscard: { filter: selector },
+  discardEachPlayer: { count: numberValue, opponentsUnableLoseLife: optional(numberValue) },
   mill: { count: numberValue },
   gainEnergy: { amount: numberValue },
   createEmblem: {},

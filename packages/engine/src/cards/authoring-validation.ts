@@ -157,6 +157,23 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       continue;
     }
     if (
+      spec.spellTargetsPermanentYouControl !== undefined &&
+      (spec.spellTargetsPermanentYouControl !== true ||
+        !['spell', 'noncreatureSpell'].includes(spec.kind))
+    )
+      issues.push({
+        path: `${at}.spellTargetsPermanentYouControl`,
+        message: 'permanent target restriction requires a stack spell target and true flag',
+      });
+    if (
+      spec.spellHasSingleTarget !== undefined &&
+      (spec.spellHasSingleTarget !== true || !['spell', 'noncreatureSpell'].includes(spec.kind))
+    )
+      issues.push({
+        path: `${at}.spellHasSingleTarget`,
+        message: 'single target restriction requires a stack spell target and true flag',
+      });
+    if (
       spec.controller !== undefined &&
       !['you', 'opponent', 'eventPlayer', 'activePlayer'].includes(spec.controller)
     )
@@ -365,7 +382,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     (typeof record['dynamic'] !== 'string' || !Object.hasOwn(dynamicManaKinds, record['dynamic']))
   )
     issues.push({ path: `${path}.dynamic`, message: 'unknown dynamic mana kind' });
-  if (record['kind'] === 'adventure' || record['kind'] === 'omen') {
+  if (
+    record['kind'] === 'adventure' ||
+    record['kind'] === 'omen' ||
+    (record['kind'] === 'mdfc' && record['spellFace'] !== undefined)
+  ) {
     try {
       spellFaceOf(record as unknown as AlternativeCast);
     } catch (error) {
@@ -407,11 +428,13 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         ? undefined
         : trigger === undefined
           ? scope?.providedEventObject
-          : trigger.subject?.kind !== 'permanent'
-            ? undefined
-            : ['putIntoGraveyardFromAnywhere', 'leavesGraveyard'].includes(trigger.when ?? '')
-              ? 'card'
-              : 'permanent';
+          : trigger.when === 'discardsCard'
+            ? 'card'
+            : trigger.subject?.kind !== 'permanent'
+              ? undefined
+              : ['putIntoGraveyardFromAnywhere', 'leavesGraveyard'].includes(trigger.when ?? '')
+                ? 'card'
+                : 'permanent';
     let eventPlayer = false;
     if (record['kind'] === 'triggered') {
       if (scope?.providedEventPlayer !== undefined) eventPlayer = scope.providedEventPlayer;
@@ -468,9 +491,138 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   // Typed value variants that consume ordinary target references, including nested arithmetic.
   const valueKind = record['kind'];
   if (
-    ['transferCountersFromTriggerObject', 'mayPayLifeForTriggerPowerAndCounter'].includes(
-      String(record['op']),
-    ) &&
+    valueKind === 'opponentNonHandSpellCostIncrease' &&
+    (!Number.isSafeInteger(record['amount']) || (record['amount'] as number) < 0)
+  )
+    issues.push({
+      path: `${path}.amount`,
+      message: 'spell cost increase requires a nonnegative integer',
+    });
+  if (valueKind === 'spellCastLimit') {
+    if (!['any', 'noncreature'].includes(record['category'] as string))
+      issues.push({
+        path: `${path}.category`,
+        message: 'spell cast limit requires a supported category',
+      });
+    if (!Number.isSafeInteger(record['limit']) || (record['limit'] as number) < 0)
+      issues.push({
+        path: `${path}.limit`,
+        message: 'spell cast limit requires a nonnegative integer',
+      });
+  }
+  if (valueKind === 'suppressObjectTriggers' || valueKind === 'otherPermanentsEnterTapped') {
+    validateExpression('selector', record['filter'], `${path}.filter`, issues);
+    if (
+      valueKind === 'suppressObjectTriggers' &&
+      (!Array.isArray(record['events']) ||
+        record['events'].length === 0 ||
+        record['events'].some((event) => event !== 'enters' && event !== 'dies'))
+    )
+      issues.push({
+        path: `${path}.events`,
+        message: 'suppression supports enters and dies events only',
+      });
+  }
+  if (valueKind === 'graveyardToExile') {
+    if (!['all', 'opponents'].includes(record['scope'] as string))
+      issues.push({
+        path: `${path}.scope`,
+        message: 'graveyard replacement requires all or opponents scope',
+      });
+    if (!['owner', 'controller'].includes(record['basis'] as string))
+      issues.push({
+        path: `${path}.basis`,
+        message: 'graveyard replacement requires owner or controller basis',
+      });
+    if (typeof record['includeTokens'] !== 'boolean')
+      issues.push({
+        path: `${path}.includeTokens`,
+        message: 'graveyard replacement requires explicit token handling',
+      });
+    if (
+      record['creatureFromBattlefieldOnly'] !== undefined &&
+      record['creatureFromBattlefieldOnly'] !== true
+    )
+      issues.push({
+        path: `${path}.creatureFromBattlefieldOnly`,
+        message: 'creature death restriction must be true when present',
+      });
+  }
+  if (['discardTarget', 'discardEachPlayer'].includes(String(record['op']))) {
+    if (record['atRandom'] !== undefined && record['atRandom'] !== true)
+      issues.push({
+        path: `${path}.atRandom`,
+        message: 'random discard flag must be true when present',
+      });
+    if (record['op'] === 'discardEachPlayer') {
+      if (!['all', 'opponents'].includes(record['scope'] as string))
+        issues.push({
+          path: `${path}.scope`,
+          message: 'discard requires all players or opponents',
+        });
+      if (record['drawForDiscarded'] !== undefined && record['drawForDiscarded'] !== true)
+        issues.push({
+          path: `${path}.drawForDiscarded`,
+          message: 'draw for discarded flag must be true when present',
+        });
+    }
+  }
+  if (
+    record['op'] === 'millEachPlayer' &&
+    !['all', 'opponents'].includes(record['scope'] as string)
+  )
+    issues.push({ path: `${path}.scope`, message: 'mill requires all players or opponents' });
+  if (
+    record['op'] === 'eachOpponentLosesLife' &&
+    record['emptyHandOnly'] !== undefined &&
+    record['emptyHandOnly'] !== true
+  )
+    issues.push({
+      path: `${path}.emptyHandOnly`,
+      message: 'empty hand restriction must be true when present',
+    });
+  if (record['op'] === 'exileGraveyardEventCard' && owningScope?.eventObject !== 'card')
+    issues.push({ path, message: 'graveyard event exile requires an owning card-zone event' });
+  if (
+    record['op'] === 'graveyardToBattlefield' &&
+    record['gainsHaste'] !== undefined &&
+    record['gainsHaste'] !== true
+  )
+    issues.push({ path: `${path}.gainsHaste`, message: 'haste grant must be true when present' });
+  if (
+    record['op'] === 'createTokenForPlayer' &&
+    record['opponentsOnly'] !== undefined &&
+    record['opponentsOnly'] !== true
+  )
+    issues.push({
+      path: `${path}.opponentsOnly`,
+      message: 'opponent restriction must be true when present',
+    });
+  if (
+    record['op'] === 'discardEachPlayer' &&
+    record['nonlandMaySatisfyCount'] !== undefined &&
+    (record['nonlandMaySatisfyCount'] !== true || record['atRandom'] !== undefined)
+  )
+    issues.push({
+      path: `${path}.nonlandMaySatisfyCount`,
+      message: 'nonland alternative requires chosen discards and a true flag',
+    });
+  if (
+    record['kind'] === 'attackTax' &&
+    record['includePlaneswalkers'] !== undefined &&
+    record['includePlaneswalkers'] !== true
+  )
+    issues.push({
+      path: `${path}.includePlaneswalkers`,
+      message: 'planeswalker attack tax must be true when present',
+    });
+  if (
+    [
+      'transferCountersFromTriggerObject',
+      'transferCountersFromTriggerObjectToChosenCreatures',
+      'mayForgoTriggerObjectCombatDamageForRandomDiscard',
+      'mayPayLifeForTriggerPowerAndCounter',
+    ].includes(String(record['op'])) &&
     owningScope?.eventObject !== 'permanent'
   )
     issues.push({
@@ -478,9 +630,12 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       message: 'implicit event effect requires an owning permanent event scope',
     });
   if (
-    ['eventPlayerDrawCount', 'notFirstDrawInOwnDrawStep', 'attackingEventPlayer'].includes(
-      String(valueKind),
-    ) &&
+    [
+      'eventPlayerDrawCount',
+      'eventPlayerHandSize',
+      'notFirstDrawInOwnDrawStep',
+      'attackingEventPlayer',
+    ].includes(String(valueKind)) &&
     owningScope?.eventPlayer !== true
   )
     issues.push({ path, message: 'event player information has no owning event player scope' });
@@ -488,9 +643,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     [
       'powerOfTriggerObject',
       'countersOnTriggerObject',
+      'aurasYouControlledAttachedToTriggerObject',
       'triggerObjectMatches',
       'triggerObjectHadToAttackThisCombat',
       'triggerObjectAttackingOpponent',
+      'defendingOpponentHasMoreLifeThanAnother',
     ].includes(String(valueKind)) &&
     owningScope?.eventObject !== 'permanent'
   )
@@ -521,7 +678,10 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     checkReference(
       record['target'],
       `${path}.target`,
-      { domains: ['permanent'], selection: 'ordinary' },
+      {
+        domains: valueKind === 'manaValueOfTarget' ? ['permanent', 'spell'] : ['permanent'],
+        selection: 'ordinary',
+      },
       owningScope,
       issues,
     );
@@ -653,14 +813,14 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     )
       validateExpression('selector', entry, `${path}.${key}`, issues);
     if (
-      ['condition', 'entersTappedUnless', 'castRestriction'].includes(key) &&
+      ['condition', 'eventCondition', 'entersTappedUnless', 'castRestriction'].includes(key) &&
       entry !== undefined
     ) {
       const before = issues.length;
       validateExpression('condition', entry, `${path}.${key}`, issues);
       if (
         issues.length === before &&
-        key === 'condition' &&
+        (key === 'condition' || key === 'eventCondition') &&
         record['op'] !== 'conditionalEffect' &&
         isChoiceCondition(entry as import('./condition').Condition)
       )
@@ -868,6 +1028,8 @@ export function validateCardDefinition(definition: CardDefinition): AuthoringIss
   ] as const)
     if (!Array.isArray(definition[field]))
       issues.push({ path: `definition.${field}`, message: `${field} must be an array` });
+  if (definition.gift !== undefined && !['treasure', 'card', 'extraTurn'].includes(definition.gift))
+    issues.push({ path: 'definition.gift', message: 'unsupported gift kind' });
   if (definition.manaCost !== null)
     validateManaCost(definition.manaCost, 'definition.manaCost', issues);
   if (!definition.modeled || definition.unmodeledReasons.length > 0)

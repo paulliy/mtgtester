@@ -32,6 +32,8 @@
  */
 
 import type { Color } from '@mtg/shared';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { counterCount, KEYWORD_COUNTERS } from '../state/counters';
 import { evaluateCondition } from '../cards/condition';
 import type { ManaAbilitySpec } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
@@ -95,9 +97,18 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
   const out: LayerEffect[] = [];
 
   for (const source of ctx.state.battlefield) {
+    for (const [counter, keyword] of Object.entries(KEYWORD_COUNTERS)) {
+      if (counterCount(source.counters, counter) <= 0) continue;
+      out.push({
+        applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
+        op: { layer: 6, addKeyword: keyword },
+        timestamp: source.counterTimestamps?.[counter] ?? source.timestamp,
+      });
+    }
     if (source.faceDown) continue;
-    const def = ctx.defs.get(source.oracleId);
-    if (def === undefined) continue;
+    const printed = ctx.defs.get(source.oracleId);
+    if (printed === undefined) continue;
+    const def = selectedPermanentDefinition(printed, source.face);
     // A bestowed Aura "becomes an Aura enchantment" (CR 702.103b): a type-changing effect that
     // replaces its card types and the creature types that went with them (CR 205.1a), in its
     // own timestamp order.
@@ -277,7 +288,7 @@ function printedManaValue(ctx: GameContext, perm: EnginePermanent): number | und
   // target's front-face `oracleId` but its CURRENT cost, which for a transformed target is the
   // back face's — so a copy of a back face reads 0 (CR 712.8e).
   if (perm.copyOriginal !== undefined) return manaValueOf(parseManaCost(perm.manaCost).cost);
-  return manaValueOf(def.manaCost);
+  return manaValueOf(selectedPermanentDefinition(def, perm.face).manaCost);
 }
 
 /** The one place a `SelectorCandidate` is built, so every selector reads the same fields. */
@@ -285,6 +296,7 @@ export function candidateOf(
   ctx: GameContext,
   perm: EnginePermanent,
   chars: Characteristics,
+  includeCombatDefender = false,
 ): SelectorCandidate {
   let isEnchanted = false;
   let isEquipped = false;
@@ -309,6 +321,24 @@ export function candidateOf(
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
   // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
   const manaValue = printedManaValue(ctx, perm);
+  // The defending player when this attacks the player, or a planeswalker that is still in combat
+  // (CR 506.4). Only event-time selector matching asks (`includeCombatDefender`): reading another
+  // permanent's characteristics here would recurse while the layers are being computed.
+  const attackedWalker =
+    perm.attackingPlaneswalker === null
+      ? undefined
+      : ctx.state.battlefield.find((permanent) => permanent.id === perm.attackingPlaneswalker);
+  const defendingPlayer =
+    perm.attacking === null
+      ? undefined
+      : perm.attackingPlaneswalker === null ||
+          (includeCombatDefender &&
+            !perm.attackedPlaneswalkerRemoved &&
+            attackedWalker !== undefined &&
+            attackedWalker.controllerId === perm.attacking &&
+            computeCharacteristics(ctx, attackedWalker).types.includes('Planeswalker'))
+        ? perm.attacking
+        : undefined;
 
   return {
     cardId: perm.cardId,
@@ -335,6 +365,7 @@ export function candidateOf(
     // The player attacked itself: null when it attacks a planeswalker, so "attacking you / an
     // opponent / that player" selectors don't match an attack on their planeswalker.
     attackingDefenderId: perm.attackingPlaneswalker === null ? perm.attacking : null,
+    ...(defendingPlayer === undefined ? {} : { attackingDefendingPlayerId: defendingPlayer }),
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
     counters: perm.counters,
   };
@@ -351,7 +382,11 @@ export function matchesSelector(
   selector: Selector,
   source: SelectorSource,
 ): boolean {
-  return selectMatches(candidateOf(ctx, perm, computeCharacteristics(ctx, perm)), selector, source);
+  return selectMatches(
+    candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true),
+    selector,
+    source,
+  );
 }
 
 function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
@@ -677,8 +712,9 @@ function runLayers(
 ): { map: Map<string, Characteristics>; usedGraveyards: boolean } {
   const work: WorkMap = new Map();
   for (const perm of perms) {
-    const def = ctx.defs.get(perm.oracleId);
-    if (def === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
+    const printed = ctx.defs.get(perm.oracleId);
+    if (printed === undefined) throw new Error(`engine bug: no def for ${perm.name}`);
+    const def = selectedPermanentDefinition(printed, perm.face);
     const landFace =
       perm.face === 'back'
         ? def.alternativeCasts?.find((alt) => alt.kind === 'mdfc')?.landFace
@@ -726,12 +762,6 @@ function runLayers(
           toughness = exiledDef.toughness ?? 0;
         }
       }
-    }
-    // Ability counters modify the current object after copiable/face-down characteristics are
-    // established. In particular, turning a permanent face down must not erase an existing
-    // indestructible counter's rules effect.
-    if ((perm.counters['indestructible'] ?? 0) > 0 && !keywords.includes('indestructible')) {
-      keywords.push('indestructible');
     }
     work.set(perm.cardId, {
       perm,

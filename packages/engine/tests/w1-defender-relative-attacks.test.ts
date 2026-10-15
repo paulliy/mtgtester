@@ -49,7 +49,7 @@ describe('Namor defender-relative attack trigger', () => {
     otherDefender.attacking = 'P3';
     opponentAttacker.attacking = 'P2';
 
-    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P2' }]);
+    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P1' }]);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     pump(runPrioritySequence(ctx));
 
@@ -59,21 +59,21 @@ describe('Namor defender-relative attack trigger', () => {
     expect(computeCharacteristics(ctx, opponentAttacker).power).toBe(2);
   });
 
-  it('checks the defending player life condition both when queued and when resolving', () => {
+  it('checks higher life only when the attack happens', () => {
     const ctx = pod();
     const namor = spawn(ctx, 'P1', card);
     const other = spawn(ctx, 'P1', bear());
     namor.attacking = 'P2';
     other.attacking = 'P2';
 
-    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P2' }]);
+    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P1' }]);
     expect(ctx.state.pendingTriggers).toHaveLength(0);
 
     ctx.state.players.find((player) => player.id === 'P2')!.life = 41;
-    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P2' }]);
+    queueTriggersForEvent(ctx, 'attacks', [{ permanent: namor, playerId: 'P1' }]);
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     ctx.state.players.find((player) => player.id === 'P2')!.life = 40;
     pump(runPrioritySequence(ctx));
-    expect(computeCharacteristics(ctx, other).power).toBe(2);
+    expect(computeCharacteristics(ctx, other).power).toBe(4);
   });
 });

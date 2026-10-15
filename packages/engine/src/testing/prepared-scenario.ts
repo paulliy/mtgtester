@@ -53,6 +53,16 @@ export interface PreparedScenarioSpec {
   stack?: Array<{ playerId: PlayerId; cardNames: string[] }>;
   /** Lab-only finite continuation used to exercise next-upkeep delayed triggers. */
   continueToNextUpkeep?: boolean;
+  /** Finish the arranged active turn, then run exactly the next surviving player's full turn. */
+  continueThroughNextTurn?: boolean;
+  /** Card Lab continuation: visit successive upkeeps, including a full rotation to your own. */
+  continueThroughUpkeeps?: number;
+  /** One subsequent turn's production untap, upkeep, draw and precombat main window. */
+  continueThroughNextPrecombatMain?: true;
+  /** Finite production turn beginnings/main windows, including inserted extra turns. */
+  continueThroughPrecombatMains?: number;
+  /** Advance to the next player and run their production beginning, main, and combat phases. */
+  continueThroughNextCombat?: true;
   /**
    * Lab-only finite continuation for combat triggers: after the arranged precombat-main priority
    * window closes, run this turn's combat phase through the production combat code, then end.

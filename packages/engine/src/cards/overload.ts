@@ -24,6 +24,8 @@ const targetFields = {
   graveyardOwnerSlot: 'unsupported',
   graveyardOwnerScope: 'unsupported',
   tapState: 'unsupported',
+  spellTargetsPermanentYouControl: 'unsupported',
+  spellHasSingleTarget: 'unsupported',
 } satisfies Record<keyof TargetSpec, FieldRole>;
 const returnFields = { op: 'lower', target: 'lower' } satisfies Record<
   keyof Extract<Effect, { op: 'returnToHand' }>,

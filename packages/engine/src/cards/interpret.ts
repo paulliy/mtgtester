@@ -1390,7 +1390,7 @@ function parseEffectSentence(
   // "...draws cards equal to the greatest number of cards a player discarded this way."
   {
     const m = s.match(
-      /^each player discards their hand, then draws (\\w+) cards$|^each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way$/,
+      /^each player discards their hand, then draws (\w+) cards$|^each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way$/,
     );
     if (m !== null) {
       if (m[1] === undefined)
@@ -2394,15 +2394,19 @@ function parseEffectSentence(
   // "create a 1/1 black and green Pest creature token with 'â€¦'" / "create that many Treasure
   // tokens" / "create a token that's a copy of it, except the token isn't legendary"
   {
-    const beneficiary = s.match(/^target (?:opponent|player) creates? (.+)$/);
+    const beneficiary = s.match(/^target (opponent|player) creates? (.+)$/);
     if (beneficiary !== null) {
-      const parsed = parseCreateTokenSentence(`create ${beneficiary[1] as string}`, card, opts);
+      const parsed = parseCreateTokenSentence(`create ${beneficiary[2] as string}`, card, opts);
       const token = parsed?.length === 1 && parsed[0]?.op === 'createToken' ? parsed[0] : null;
       if (token !== null) {
         return [
           {
             op: 'createTokenForPlayer',
-            target: alloc('player', undefined, 'opponent'),
+            target: alloc(
+              'player',
+              undefined,
+              beneficiary[1] === 'opponent' ? 'opponent' : undefined,
+            ),
             spec: token.spec,
             count: token.count,
           },
@@ -4687,6 +4691,7 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
   let heads: TriggerHead[];
   let body: string;
   let implicitCondition: Condition | undefined;
+  let eventCondition: Condition | undefined;
   const enterAndCast = firstLine.match(
     /^when (.+?) enters and whenever (you|an opponent|a player) casts? (.+?), (.*)$/,
   );
@@ -4792,10 +4797,12 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     if (attacksWhile !== null) {
       const parsed = parseConditionClause(attacksWhile[2] as string, card);
       if (parsed === null) return null;
-      implicitCondition = parsed;
+      eventCondition = parsed;
       body = attacksWhile[3] as string;
     } else if (attacksPlayerWithMoreLife !== null) {
-      implicitCondition = { kind: 'attackingPlayerHasMoreLifeThanYou' };
+      eventCondition = { kind: 'attackingPlayerHasMoreLifeThanYou' };
+      // "That player" in the effect refers to the attacked player, not the attacker.
+      heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
       body = attacksPlayerWithMoreLife[2] as string;
     } else {
       body = match[2] as string;
@@ -5327,7 +5334,11 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
 
   return heads.map((head) => ({
     kind: 'triggered' as const,
-    trigger: { ...head, ...(condition !== undefined ? { condition } : {}) } as TriggerSpec,
+    trigger: {
+      ...head,
+      ...(condition !== undefined ? { condition } : {}),
+      ...(eventCondition !== undefined ? { eventCondition } : {}),
+    } as TriggerSpec,
     optional,
     targets,
     effects,

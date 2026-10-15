@@ -77,7 +77,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
       "Songbirds' Blessing",
-      'Promise of Loyalty',
       'Mob Rule',
       'Caged Sun',
       'Hexmark Destroyer',
@@ -96,7 +95,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Twilight Diviner',
       'Siren Stormtamer',
       'Smokestack',
-      'Dark Confidant',
       'Kardur, Doomscourge',
       'Mana Sculpt',
       'Vindictive Lich',
@@ -121,7 +119,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Wear // Tear',
       'Cut a Deal',
       'Chaos Warp',
-      "Duelist's Heritage",
       'Humble Defector',
       'Teyo, Geometric Tactician',
       'Wishclaw Talisman',

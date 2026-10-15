@@ -5,6 +5,9 @@
  * (per `overrides/index.ts`'s rule 3).
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
 import { effectivePT, getDefByOracleId } from '../src/state/queries';
@@ -400,18 +403,13 @@ describe('Dream Pillager', () => {
 describe('Dragon Mage', () => {
   it('each player discards their hand, then draws seven cards on combat damage', () => {
     const ctx = pod('dragon-mage');
-    const mage = spawn(
-      ctx,
-      'P1',
-      oracle({
-        oracleId: 'eab71e4e-27c3-4c41-b95f-259c1d14b97a',
-        name: 'Dragon Mage',
-        typeLine: 'Creature — Dragon',
-        manaCost: '{4}{R}{R}',
-        power: '4',
-        toughness: '4',
-      }),
-    );
+    // The wheel now parses generically, so exercise the real printed card rather than an
+    // empty Oracle-text stub that depended on the removed override to supply its ability.
+    const fixture = JSON.parse(
+      readFileSync(join(import.meta.dirname, 'fixtures/combat-trigger-oracle.json'), 'utf8'),
+    ) as { cards: { card: OracleCard }[] };
+    const card = fixture.cards.find(({ card }) => card.name === 'Dragon Mage')!.card;
+    const mage = spawn(ctx, 'P1', card);
     p1(ctx).hand = [
       {
         id: 'h1',

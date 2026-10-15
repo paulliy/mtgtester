@@ -14,6 +14,7 @@ import type { GameGen } from '../decisions';
 import { emit } from '../log/log';
 import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
+import { playerLifeLocked } from '../state/phasing';
 import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { computeCharacteristics, matchesSelector } from './continuous';
@@ -78,6 +79,18 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
   const { recipient } = event;
   const targetControllerId = affectedPlayerId(event);
 
+  // Protection from everything (Teferi's Protection): all damage to the player is prevented,
+  // combat or not, while the player's shield lasts.
+  if (recipient.kind === 'player' && playerLifeLocked(ctx, recipient.player.id)) {
+    modifiers.push({
+      kind: 'prevention',
+      id: 'protectionFromEverything',
+      label: 'Protection from everything: prevent the damage',
+      reason: 'protectionFromEverything',
+      outcomeBearing: false,
+    });
+  }
+
   // The Fog-style combat shield: every combat damage, or combat damage to listed players.
   const shield = ctx.state.combatDamagePrevention;
   if (
@@ -89,7 +102,10 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     modifiers.push({
       kind: 'prevention',
       id: 'combatShield',
-      label: 'Prevent all combat damage this turn',
+      label:
+        tokenSpec === undefined
+          ? 'Prevent all combat damage this turn'
+          : 'Prevent all combat damage this turn, creating a token for each 1 damage prevented',
       reason: 'combatShield',
       outcomeBearing: tokenSpec !== undefined,
       ...(tokenSpec !== undefined && recipient.kind === 'player'

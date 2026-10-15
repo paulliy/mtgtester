@@ -1,3 +1,4 @@
+import { playerLifeLocked } from '../state/phasing';
 import { spellDefinitionOf } from '../state/queries';
 import type { ObjectId, PlayerId } from '@mtg/shared';
 import type { TargetKind, TargetSpec } from '../cards/ability';
@@ -5,6 +6,7 @@ import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
 import { selectMatches, selectorReadsSourcePower } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { spellTargetOccurrences } from '../stack/target-occurrences';
 import { offBattlefieldCdaPower } from '../effects/values';
 import { spellManaValue } from '../state/objects';
 import {
@@ -189,6 +191,19 @@ export function targetIsLegal(
       if (!matchesController(entry.controllerId)) return false;
       if (kind !== 'stackObject' && entry.kind !== 'spell') return false;
       if (kind === 'noncreatureSpell' && isCreatureSpell(ctx, entry)) return false;
+      if (spec.spellHasSingleTarget === true && spellTargetOccurrences(entry).length !== 1)
+        return false;
+      if (spec.spellTargetsPermanentYouControl === true) {
+        const targets = [...entry.targets, ...Object.values(entry.countTargets ?? {}).flat()];
+        if (
+          !targets.some((id) =>
+            ctx.state.battlefield.some(
+              (permanent) => permanent.id === id && permanent.controllerId === controllerId,
+            ),
+          )
+        )
+          return false;
+      }
       return (
         filter === undefined ||
         (entry.kind === 'spell' && spellMatchesSelector(ctx, entry, filter, controllerId))
@@ -201,6 +216,12 @@ export function targetIsLegal(
     return (
       (kind === 'player' || kind === 'anyTarget' || kind === 'playerOrPlaneswalker') &&
       !player.hasLost &&
+      (context.targeting === false || !playerLifeLocked(ctx, player.id)) &&
+      !(
+        context.targeting !== false &&
+        player.id !== controllerId &&
+        ctx.state.playerHexproofTurn?.[player.id] === ctx.state.turnNumber
+      ) &&
       matchesController(player.id) &&
       (filter === undefined || playerFilterAlwaysTrue(filter))
     );

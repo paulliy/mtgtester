@@ -58,11 +58,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "ae224dd26966964c62c7e515472182be5b8d5eb7eb9dc9213a0d25e5b95ba021",
-      "description": "DRAGON_MAGE_DEF"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "20576ec322029130b83f6d4d760b9d6ad4595334d6bb22926fdb97500d5ec8df",
       "description": "SPIT_FLAME_DEF"
     },
@@ -138,7 +133,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "9ea4e5bd74dc7f63e87f2bea708317627e5508a8c3a9e12ca00eedd7c07ff671",
+      "sha256": "542d0793445ff57b23d4eeb1b3ba406d6b1fef99af61bd06b7b89483c63e658c",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {
@@ -150,11 +145,6 @@
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "ff07edf450fcb85fadb77b64e739c284dc32bdd1c853641ce10ff68aeab6ee33",
       "description": "Demanding Dragon"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "3299d2a5d251194e488bc9ef327cc0d860fa48bf1c1883ff9f735253b3bd97c3",
-      "description": "Dragon Mage"
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
@@ -453,16 +443,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "69944fc3dd9573301909ab6398ce2feffc20f9f77e99b06004d417c9bef52508",
-      "description": "DETHRONE_TRIGGER"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "744e7ece87a5d2419ddee7d26e3f5fec7ea9c81ad348a8882348a8da0703924e",
-      "description": "MARCHESA"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "sha256": "f4c15dea37e88c8441b42ac7fbae2a01a6ae4e3944060f15343ed0a6258fdebe",
       "description": "Aether Channeler"
     },
@@ -505,21 +485,6 @@
       "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "sha256": "1449912b621ca7d584d9d297bbd5be686dac59557560f24321e010dce930f03a",
       "description": "Pawn of Ulamog"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "7fe9127ee06812730a0bd0d471852cea70f757a5ec4b1807a356eccd38498833",
-      "description": "registerMARCHESA_THE_BLACK_ROSEOverrides"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "2d92ecef53cfa5cc5c8cfb89d0540342d09f4ec92a1a96fd31edc5e33cbb9e52",
-      "description": "Dack's Duplicate"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
-      "sha256": "852348a7ecc59bbccc52317d0ca3783ef888050a356bd7059f14f06a3982cb97",
-      "description": "Marchesa, the Black Rose"
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
@@ -648,6 +613,11 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "3b1df7fbd875645f5d1b318b03113ca656b1222ea66f3d19c69a4b61194d97b5",
+      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "sha256": "bd02587928e75a26c676aff157613e37171e66b64834bdc737be233c318915d6",
       "description": "Crackling Doom"
     },
@@ -670,11 +640,6 @@
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "sha256": "4eefab1c6212e78ef1cb581c4e5c36b33ae8b2433d28eadbc3618e80edc8b469",
       "description": "Secret Rendezvous"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "3b1df7fbd875645f5d1b318b03113ca656b1222ea66f3d19c69a4b61194d97b5",
-      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
@@ -813,13 +778,13 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "9063f6329c900d7e4881256a7996528c22fb3ee4468de31c60794e5535e56c72",
-      "description": "Flickering Ward"
+      "sha256": "16b1d97d6c2834345806edb1041573cec946552528afc26c15d36cc66ec43bdb",
+      "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "16b1d97d6c2834345806edb1041573cec946552528afc26c15d36cc66ec43bdb",
-      "description": "registerSILVERQUILL_INFLUENCEOverrides"
+      "sha256": "9063f6329c900d7e4881256a7996528c22fb3ee4468de31c60794e5535e56c72",
+      "description": "Flickering Ward"
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",
