@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 33,
+      "uniqueOracleIds": 32,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6550,6 +6550,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed damage to you is implemented as damage to permanents you control): the executable override in coverage-pr06.ts watches damage dealt to you with the new playerDealtDamage event, queued from the shared player-damage path once per source's damage event when damage was actually dealt (prevented damage queues nothing, infect counts), only for sources an opponent controls, and the event player is the source's controller, who sacrifices a permanent of their choice among all their permanents. The bespoke sacrificePermanentOnDamage op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+      "name": "Delirium",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the cast-only-during-an-opponent's-turn restriction is omitted): the executable override in coverage-pr06.ts adds a castRestriction condition to the spell definition, notYourTurn, enforced both when the cast is offered and as it is cast; its target is a creature controlled by the player whose turn it is (the new activePlayer target controller, checked when chosen and on resolution); the creature taps and itself deals damage equal to its power to the player who controls it, and a shield on that one object, not on its controller, prevents combat damage dealt to it and by it for the rest of the turn, so a creature that leaves and returns is a new object and not covered (CR 400.7). The bespoke delirium op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

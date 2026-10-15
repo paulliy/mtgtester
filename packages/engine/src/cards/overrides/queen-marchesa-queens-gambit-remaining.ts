@@ -203,12 +203,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'You draw for each opponent, not for each opponent who drew a card.',
   );
   // Deflecting Palm: restored in coverage PR06 (see coverage-pr06.ts).
-  // Catalog audit queen-batch-3: opponent-turn restriction omitted.
-  unsupportedCard(
-    'a00e5eb6-b916-4cd6-8ff2-c02f4929abc7',
-    'Delirium',
-    "Cast-only-during-an-opponent's-turn is omitted.",
-  );
+  // Delirium: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-1: copies keep original targets; can't-be-copied is omitted.
   unsupportedCard(
     '99140891-face-4015-aacd-1309e87d8f9f',

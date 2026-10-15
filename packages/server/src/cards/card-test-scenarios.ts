@@ -12056,6 +12056,40 @@ function michikoKondaScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function deliriumScenario(gameId: GameId): CardTestScenario {
+  const delirium = pinnedFrom(COVERAGE_PR06, 'Delirium');
+  const lands = [SWAMP, MOUNTAIN, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'delirium-viewer-tap-damage-and-prevent',
+    title:
+      "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+    instructions: [
+      "It is P2's turn. Delirium is in your hand with a Swamp, a Mountain and a Plains on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both.",
+      'Pass priority until the declare attackers step, then cast Delirium targeting Lab Ox and let it resolve. Do not block.',
+    ],
+    expectedOutcome:
+      "Delirium was only castable on P2's turn. Lab Ox is tapped and deals 4 damage, its power, to P2, who is at 36. Lab Ox's 4 combat damage to you is prevented, while Lab Servo's 1 is not, so you are at 39. P3 and P4 are at 40.",
+    oracleSha256: delirium.sha256,
+    clauseIds: ['delirium-cast-restriction', 'delirium-tap-damage-and-prevent'],
+    decks: {
+      P1: [delirium.card, ...lands],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Delirium'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12316,6 +12350,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'deflecting-palm-viewer-chosen-source-reflects',
   'comeuppance-viewer-prevent-and-reflect',
   'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+  'delirium-viewer-tap-damage-and-prevent',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12643,6 +12678,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'deflecting-palm-viewer-chosen-source-reflects': deflectingPalmScenario,
   'comeuppance-viewer-prevent-and-reflect': comeuppanceScenario,
   'michiko-konda-viewer-damage-makes-opponent-sacrifice': michikoKondaScenario,
+  'delirium-viewer-tap-damage-and-prevent': deliriumScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

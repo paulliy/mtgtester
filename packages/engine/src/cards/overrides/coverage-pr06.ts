@@ -195,6 +195,46 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Delirium: castable only while it is another player's turn (a restriction on casting the spell
+  // at all). "That player" is the player whose turn it is, so the target is a creature that player
+  // controls, checked as it is chosen and again on resolution. The creature itself deals the
+  // damage, equal to its power, to the player who controls it; the shield on that one object
+  // (not on the controller) stops combat damage dealt to it and by it for the rest of the turn,
+  // and a creature that leaves is a new object the shield no longer covers (CR 400.7).
+  const delirium = targetSlots({ creature: { kind: 'creature', controller: 'activePlayer' } });
+  defineCard(
+    'a00e5eb6-b916-4cd6-8ff2-c02f4929abc7',
+    'Delirium',
+    [
+      "Cast this spell only during an opponent's turn.",
+      'Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn.',
+    ],
+    {
+      castRestriction: { kind: 'notYourTurn' },
+      spellAbility: spell({
+        targets: delirium.targets,
+        effects: [
+          { op: 'tapTarget', target: delirium.slot.creature },
+          {
+            op: 'dealDamage',
+            target: { controllerOf: delirium.slot.creature },
+            source: delirium.slot.creature,
+            amount: { kind: 'powerOfTarget', target: delirium.slot.creature },
+          },
+          {
+            op: 'createDamageShield',
+            target: delirium.slot.creature,
+            dealtTo: true,
+            dealtBy: true,
+            combatOnly: true,
+          },
+        ],
+        description:
+          'Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn',
+      }),
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

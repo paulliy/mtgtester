@@ -412,6 +412,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'deflecting-palm-viewer-chosen-source-reflects',
       'comeuppance-viewer-prevent-and-reflect',
       'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+      'delirium-viewer-tap-damage-and-prevent',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

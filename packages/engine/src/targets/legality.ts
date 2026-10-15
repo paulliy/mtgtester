@@ -124,6 +124,9 @@ export function targetIsLegal(
         return id !== controllerId && ctx.state.players.some((p) => p.id === id && !p.hasLost);
       case 'eventPlayer':
         return eventPlayerId !== undefined && id === eventPlayerId;
+      // "that player" in a spell cast only during an opponent's turn (Delirium).
+      case 'activePlayer':
+        return id === ctx.state.currentTurnPlayer;
       default:
         return assertNever(controller, 'target controller');
     }

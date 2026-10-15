@@ -124,7 +124,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Wear // Tear',
       'Cut a Deal',
       'Chaos Warp',
-      'Delirium',
       "Duelist's Heritage",
       'Humble Defector',
       'Teyo, Geometric Tactician',

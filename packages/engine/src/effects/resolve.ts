@@ -2715,22 +2715,6 @@ export function* executeAbility(
           keywords: ['flying'],
         };
         break;
-      case 'delirium': {
-        const targetId = ref(0);
-        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        if (target === undefined) break;
-        target.tapped = true;
-        queueTriggersForObject(ctx, 'becomesTapped', target);
-        yield* dealDamageToPlayer(
-          ctx,
-          source,
-          playerById(ctx, target.controllerId),
-          effectivePT(ctx, target).power,
-          { combat: false, sourceIsCommander: false, sourceHasLifelink: false },
-        );
-        ctx.state.combatDamagePrevention.players[target.controllerId] = true;
-        break;
-      }
       case 'gisela':
         emit(ctx, 'damageReplacement', {
           source: source.name,
@@ -3739,6 +3723,13 @@ export function* executeAbility(
         ctx.state.combatDamagePrevention.all = true;
         break;
       case 'createDamageShield': {
+        let shieldedId: ObjectId | undefined;
+        if (effect.target !== undefined) {
+          // A shield on one permanent, by object: nothing to shield once it is gone.
+          const shielded = ref(effect.target);
+          if (shielded === null) break;
+          shieldedId = shielded;
+        }
         let sourceObjectId: ObjectId | undefined;
         if (effect.chosenSource === true) {
           const chosen = yield* chooseDamageSource(ctx, controller.id, source);
@@ -3755,7 +3746,16 @@ export function* executeAbility(
         ctx.state.damageShields.push({
           id: `shield-${ctx.state.nextObjectNum++}`,
           effectSource,
-          playerId: controller.id,
+          ...(shieldedId !== undefined
+            ? {
+                object: {
+                  id: shieldedId,
+                  dealtTo: effect.dealtTo === true,
+                  dealtBy: effect.dealtBy === true,
+                },
+              }
+            : { playerId: controller.id }),
+          ...(effect.combatOnly === true ? { combatOnly: true as const } : {}),
           ...(sourceObjectId !== undefined ? { sourceObjectId } : {}),
           ...(effect.oneShot === true ? { oneShot: true as const } : {}),
           ...(effect.reflect !== undefined ? { reflect: effect.reflect } : {}),

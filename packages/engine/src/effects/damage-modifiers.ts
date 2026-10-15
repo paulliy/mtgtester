@@ -105,12 +105,19 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
   // "Prevent all damage that would be dealt to you ..." shields, oldest first. What each covers is
   // checked as the damage would be dealt: its player, or a planeswalker that player controls now.
   for (const damageShield of ctx.state.damageShields) {
+    if (damageShield.combatOnly === true && !event.combat) continue;
+    const shielded = damageShield.object;
     const covered =
-      recipient.kind === 'player'
-        ? damageShield.playerId === recipient.player.id
-        : damageShield.andPlaneswalkersTheyControl === true &&
-          recipient.permanent.controllerId === damageShield.playerId &&
-          computeCharacteristics(ctx, recipient.permanent).types.includes('Planeswalker');
+      shielded !== undefined
+        ? (shielded.dealtTo &&
+            recipient.kind === 'permanent' &&
+            recipient.permanent.id === shielded.id) ||
+          (shielded.dealtBy && sourceIsObject(ctx, event.source, shielded.id))
+        : recipient.kind === 'player'
+          ? damageShield.playerId === recipient.player.id
+          : damageShield.andPlaneswalkersTheyControl === true &&
+            recipient.permanent.controllerId === damageShield.playerId &&
+            computeCharacteristics(ctx, recipient.permanent).types.includes('Planeswalker');
     if (!covered) continue;
     if (
       damageShield.sourceObjectId !== undefined &&

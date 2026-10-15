@@ -776,3 +776,36 @@ describe('Michiko Konda Card Test Lab scenario', () => {
     replays('michiko-konda-viewer-damage-makes-opponent-sacrifice', steps);
   });
 });
+
+describe('Delirium Card Test Lab scenario', () => {
+  it("delirium-viewer-tap-damage-and-prevent — cast in P2's declare attackers step on Lab Ox: it is tapped, deals 4 to P2, its 4 combat damage to P1 is prevented, and Lab Servo's 1 is dealt", () => {
+    const steps: Step[] = [
+      {
+        action: 'Cast Delirium',
+        targets: ['Lab Ox'],
+        ready: (scenario) => scenario.engine.getState().step === 'declareAttackers',
+      },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'delirium-viewer-tap-damage-and-prevent',
+      steps,
+    );
+    expect(seat('P2').life).toBe(36);
+    expect(seat('P1').life).toBe(39);
+    for (const id of ['P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(
+      state.eventLog.filter((event) => event.type === 'damage').map((event) => event.payload),
+    ).toMatchObject([
+      { source: 'Lab Ox', target: 'P2', amount: 4, combat: false },
+      { source: 'Lab Servo', target: 'P1', amount: 1, combat: true },
+    ]);
+    expect(
+      state.eventLog.filter((event) => event.type === 'damagePrevented').map((e) => e.payload),
+    ).toMatchObject([{ source: 'Lab Ox', target: 'P1', amount: 4, reason: 'damageShield' }]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Delirium']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('delirium-viewer-tap-damage-and-prevent', steps);
+  });
+});

@@ -2427,13 +2427,31 @@
     "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7": {
       "name": "Delirium",
       "oracleSha256": "7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "delirium-cast-restriction",
           "oracleText": "Cast this spell only during an opponent's turn.",
-          "implementation": ["explicitly unsupported; opponent-turn restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "a castRestriction condition on the spell definition, notYourTurn, enforced both when the cast is offered and as it is cast (CR 601.3), in any opponent's turn and never on your own, however the spell would be cast"
+          ],
+          "engineTestIds": ["delirium-pinned-oracle-supported", "delirium-cast-timing"],
+          "viewerScenarioIds": ["delirium-viewer-tap-damage-and-prevent"]
+        },
+        {
+          "id": "delirium-tap-damage-and-prevent",
+          "oracleText": "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn.",
+          "implementation": [
+            "the target is a creature controlled by the player whose turn it is (that player), checked when chosen and on resolution; it taps, then the creature itself deals damage equal to its power as the spell resolves to the player who controls it, with lifelink and the like as that creature; a shield on that one permanent, by object, prevents combat damage dealt to it and combat damage it deals, to a player or a creature, until cleanup, while noncombat damage to it is still dealt, other creatures are unaffected, and a creature that leaves and returns is a new object not covered (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "delirium-pinned-oracle-supported",
+            "delirium-target-active-player",
+            "delirium-damage-by-creature",
+            "delirium-combat-shield",
+            "delirium-new-object"
+          ],
+          "viewerScenarioIds": ["delirium-viewer-tap-damage-and-prevent"]
         }
       ],
       "gameplayAiScenarioIds": []

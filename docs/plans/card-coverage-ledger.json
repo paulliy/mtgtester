@@ -906,6 +906,21 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+    "name": "Delirium",
+    "package": "PR06.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Cast-only-during-an-opponent's-turn is omitted."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
     "name": "Dollmaker's Shop // Porcelain Gallery",
     "package": "W10",

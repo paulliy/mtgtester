@@ -9067,3 +9067,38 @@ test('Michiko Konda: each opposing source that damages you makes its controller 
   await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
   await expect(permanent(page, 'Forest')).toHaveCount(0);
 });
+
+test("Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+  );
+  // Wait for the declare attackers step of P2's turn, then cast Delirium on the attacking Lab Ox.
+  await passUntil(page, page.getByText(/Combat · Declare attackers/).first());
+  const delirium = handCard(page, 'Delirium');
+  await expect(delirium).toHaveClass(/actionable/, { timeout: 15_000 });
+  await delirium.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Only the creatures of the player whose turn it is are on offer, and both are.
+  await expect(permanent(page, 'Lab Ox')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(page.getByText(/Lab Ox.* deals 4 to P2/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+});

@@ -2250,6 +2250,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

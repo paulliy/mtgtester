@@ -532,6 +532,15 @@ function* proposeCast(
     }
   }
   const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  // "Cast this spell only during an opponent's turn" holds however it is cast (CR 601.3).
+  if (
+    printedSpellDef.castRestriction !== undefined &&
+    !evaluateCondition(ctx, printedSpellDef.castRestriction, {
+      cardId: obj.cardId,
+      controllerId: player.id,
+    })
+  )
+    throw new Error('casting restriction is not met');
   // Without paying the mana cost, an X in the mana cost is 0 (CR 107.3b); an X announced only
   // for an additional cost ("pay X life", Toxic Deluge) is still chosen (CR 601.2b).
   if (

@@ -429,7 +429,7 @@ export interface TargetSpec {
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
    * multiply combinatorially with every kind above.
    */
-  controller?: 'you' | 'opponent' | 'eventPlayer';
+  controller?: 'you' | 'opponent' | 'eventPlayer' | 'activePlayer';
   /**
    * Additional characteristics after the target domain/kind check. Supports battlefield
    * permanents, stack spells, and graveyard cards (for example "Dragon permanent card").
@@ -649,7 +649,19 @@ export type Effect =
    */
   | {
       op: 'createDamageShield';
-      player: 'you';
+      /** Whose damage the shield prevents. Omitted for a shield on the creature `target` names. */
+      player?: 'you';
+      /**
+       * "Prevent all combat damage that would be dealt to and dealt by that creature this turn"
+       * (Delirium): the shield is on this one permanent, by object, not on a player.
+       */
+      target?: EffectRef;
+      /** Object shield: the damage it prevents is damage dealt to the permanent. */
+      dealtTo?: true;
+      /** Object shield: the damage it prevents is damage dealt by the permanent. */
+      dealtBy?: true;
+      /** Only combat damage is prevented. */
+      combatOnly?: true;
       /**
        * "A source of your choice" (Deflecting Palm, CR 609.7a): as it resolves its controller
        * chooses any permanent on the battlefield or spell on the stack, and only damage from that
@@ -701,7 +713,6 @@ export type Effect =
   | { op: 'drawTargetAndController'; target: EffectRef }
   | { op: 'combatCalligrapher' }
   | { op: 'inkshield' }
-  | { op: 'delirium' }
   | { op: 'gisela' }
   | { op: 'humbleDefector'; target: EffectRef }
   | { op: 'shadrixModes' }

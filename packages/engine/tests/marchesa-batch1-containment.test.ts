@@ -95,7 +95,6 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  Delirium: "Cast-only-during-an-opponent's-turn is omitted.",
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
@@ -281,6 +280,7 @@ describe('Marchesa catalog audit containment', () => {
     'Deflecting Palm',
     'Comeuppance',
     'Michiko Konda, Truth Seeker',
+    'Delirium',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

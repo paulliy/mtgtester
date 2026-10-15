@@ -536,8 +536,15 @@ export interface DamageShield {
   id: string;
   /** The spell or ability that created it, as last known information. */
   effectSource: import('../effects/resolve').EffectSource;
-  /** The player whose damage it prevents. */
-  playerId: PlayerId;
+  /** The player whose damage it prevents; absent for a shield on one permanent (`object`). */
+  playerId?: PlayerId;
+  /**
+   * A shield on one permanent, by object id (Delirium): damage dealt to it, by it, or both. It
+   * stops covering the permanent when it leaves, since a new object is not the same one (CR 400.7).
+   */
+  object?: { id: ObjectId; dealtTo: boolean; dealtBy: boolean };
+  /** Only combat damage is prevented. */
+  combatOnly?: true;
   /**
    * Only damage from this one object: a permanent or a spell on the stack, by its object id. A
    * source that changes zones is a new object and no longer matches (CR 400.7).

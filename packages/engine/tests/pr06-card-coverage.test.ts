@@ -4036,6 +4036,239 @@ describe('Michiko Konda, Truth Seeker', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.17 Delirium
+// ---------------------------------------------------------------------------------------------
+
+describe('Delirium', () => {
+  const { card } = pinned('Delirium');
+  const COST = [{ symbol: 'B' as const }, { symbol: 'R' as const }, ...generic(1)];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const BRUTE = (name: string, power: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9', oracleText: text });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const marked = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)?.damageMarked;
+
+  /** It is `turn`'s turn (P2 by default), in its precombat main phase. */
+  function turnOf(ctx: GameContext, turn: string) {
+    ctx.state.currentTurnPlayer = turn;
+    ctx.state.activePlayerIndex = Number(turn.slice(1)) - 1;
+  }
+
+  /** P1's option to cast Delirium, with its payload. */
+  function deliriumOption(ctx: GameContext) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    return { object, option: optionFor(ctx, 'P1', object.id) };
+  }
+
+  /** P1 casts Delirium at `targetId` and it resolves. */
+  function cast(ctx: GameContext, targetId: string) {
+    const { object, option } = deliriumOption(ctx);
+    expect(option, 'P1 casts Delirium').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    resolveTop(ctx);
+    return object;
+  }
+
+  /** P2's turn: `attackers` attack P1, whose `blocks` (blocker id to attacker id) stand. */
+  function combat(ctx: GameContext, attackers: string[], blocks: Record<string, string> = {}) {
+    turnOf(ctx, 'P2');
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P1' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it("delirium-pinned-oracle-supported — the override reads a cast restriction to an opponent's turn, a target creature the active player controls, damage from it equal to its power, and a shield on that creature", () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.castRestriction).toEqual({ kind: 'notYourTurn' });
+    expect(def.spellAbility!.targets).toEqual([{ kind: 'creature', controller: 'activePlayer' }]);
+    expect(def.spellAbility!.effects).toEqual([
+      { op: 'tapTarget', target: 0 },
+      {
+        op: 'dealDamage',
+        target: { controllerOf: 0 },
+        source: 0,
+        amount: { kind: 'powerOfTarget', target: 0 },
+      },
+      { op: 'createDamageShield', target: 0, dealtTo: true, dealtBy: true, combatOnly: true },
+    ]);
+  });
+
+  it("delirium-cast-timing — it is offered only during an opponent's turn, in any opponent's turn, and a forced cast on your own turn is rejected", () => {
+    const own = pod('delirium-own-turn');
+    spawn(own, 'P2', BRUTE('Lab Ogre', '3'));
+    // On your own turn "that player" would be you, and you have a creature to aim it at.
+    spawn(own, 'P1', BRUTE('Lab Mine', '1'));
+    turnOf(own, 'P1');
+    expect(deliriumOption(own).option).toBeUndefined();
+
+    const theirs = pod('delirium-their-turn');
+    const ogre = spawn(theirs, 'P2', BRUTE('Lab Ogre', '3'));
+    turnOf(theirs, 'P2');
+    const { option } = deliriumOption(theirs);
+    expect(option).toBeDefined();
+    const payload = option!.payload as PriorityActionPayload;
+    const slot = option!.targets![0]!.slot;
+
+    const third = pod('delirium-third-turn');
+    spawn(third, 'P3', BRUTE('Lab Ogre', '3'));
+    turnOf(third, 'P3');
+    expect(deliriumOption(third).option).toBeDefined();
+
+    // The same payload, forced on P1's own turn, is refused as it is cast.
+    turnOf(theirs, 'P1');
+    expect(() => takeAction(theirs, 'P1', payload, undefined, new Map([[slot, ogre.id]]))).toThrow(
+      'casting restriction is not met',
+    );
+    expect(theirs.state.stack).toEqual([]);
+  });
+
+  it("delirium-target-active-player — the target must be a creature the player whose turn it is controls, not yours and not another player's", () => {
+    const ctx = pod('delirium-target');
+    const active = spawn(ctx, 'P2', BRUTE('Lab Active', '3'));
+    const mine = spawn(ctx, 'P1', BRUTE('Lab Mine', '1'));
+    const other = spawn(ctx, 'P3', BRUTE('Lab Bystander', '1'));
+    turnOf(ctx, 'P2');
+    const { option } = deliriumOption(ctx);
+    expect(option!.targets![0]!.options).toEqual([active.id]);
+    expect(option!.targets![0]!.options).not.toContain(mine.id);
+    expect(option!.targets![0]!.options).not.toContain(other.id);
+
+    // It stops being legal on resolution if the creature changes hands in response.
+    const { object } = deliriumOption(ctx);
+    const again = optionFor(ctx, 'P1', object.id)!;
+    takeAction(
+      ctx,
+      'P1',
+      again.payload as PriorityActionPayload,
+      undefined,
+      new Map([[again.targets![0]!.slot, active.id]]),
+    );
+    onField(ctx, active.cardId)!.controllerId = 'P3';
+    resolveTop(ctx);
+    expect(life(ctx, 'P3')).toBe(40);
+    expect(onField(ctx, active.cardId)!.tapped).toBe(false);
+    expect(ctx.state.damageShields).toEqual([]);
+  });
+
+  it('delirium-damage-by-creature — it taps the creature, which deals damage equal to its power to the player, as itself: lifelink gains its controller the life, and the power is the one on resolution', () => {
+    const ctx = pod('delirium-damage');
+    const ogre = spawn(ctx, 'P2', BRUTE('Lab Ogre', '3'));
+    turnOf(ctx, 'P2');
+    const { object, option } = deliriumOption(ctx);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, ogre.id]]),
+    );
+    onField(ctx, ogre.cardId)!.counters['+1/+1'] = 2;
+    resolveTop(ctx);
+    expect(onField(ctx, ogre.cardId)!.tapped).toBe(true);
+    expect(life(ctx, 'P2')).toBe(35);
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(damageEvents(ctx).map((e) => e.payload)).toMatchObject([
+      { source: 'Lab Ogre', target: 'P2', amount: 5, combat: false },
+    ]);
+    expect(playerById(ctx, 'P1').graveyard.some((c) => c.cardId === object.cardId)).toBe(true);
+
+    const leech = pod('delirium-lifelink');
+    const lifelinker = spawn(leech, 'P2', BRUTE('Lab Leech', '3', 'Lifelink'));
+    turnOf(leech, 'P2');
+    cast(leech, lifelinker.id);
+    expect(life(leech, 'P2')).toBe(40);
+  });
+
+  it('delirium-combat-shield — this turn the creature neither deals nor takes combat damage, while another attacker and noncombat damage are unaffected', () => {
+    const ctx = pod('delirium-combat');
+    const target = spawn(ctx, 'P2', BRUTE('Lab Target', '4', 'Haste'));
+    const other = spawn(ctx, 'P2', BRUTE('Lab Other', '2', 'Haste'));
+    const wall = spawn(ctx, 'P1', BRUTE('Lab Wall', '3'));
+    const blocker = spawn(ctx, 'P1', BRUTE('Lab Second Wall', '3'));
+    turnOf(ctx, 'P2');
+    cast(ctx, target.id);
+    // The Delirium damage came out of P2's own life.
+    expect(life(ctx, 'P2')).toBe(36);
+    // A tapped creature can't attack, so untap it to make it attack: the shield, not the tap, is under test.
+    onField(ctx, target.cardId)!.tapped = false;
+    combat(ctx, [target.id, other.id], { [wall.id]: target.id, [blocker.id]: other.id });
+    // Dealt by the creature: the wall took nothing. Dealt to it: the wall's 3 did not mark it.
+    expect(marked(ctx, wall)).toBe(0);
+    expect(marked(ctx, target)).toBe(0);
+    // The other attacker and its blocker traded normally.
+    expect(marked(ctx, blocker)).toBe(2);
+    expect(marked(ctx, other)).toBe(3);
+    expect(life(ctx, 'P1')).toBe(40);
+
+    // Unblocked, the creature deals no combat damage to the player either.
+    const open = pod('delirium-unblocked');
+    const raider = spawn(open, 'P2', BRUTE('Lab Raider', '4', 'Haste'));
+    const free = spawn(open, 'P2', BRUTE('Lab Free', '2', 'Haste'));
+    turnOf(open, 'P2');
+    cast(open, raider.id);
+    onField(open, raider.cardId)!.tapped = false;
+    combat(open, [raider.id, free.id]);
+    expect(life(open, 'P1')).toBe(38);
+
+    // Noncombat damage to it is still dealt.
+    const burned = pod('delirium-noncombat');
+    const victim = spawn(burned, 'P2', BRUTE('Lab Victim', '3'));
+    turnOf(burned, 'P2');
+    cast(burned, victim.id);
+    const spell = conjure(burned, 'P1', LAB_BOLT, 'hand');
+    addMana(playerById(burned, 'P1'), red(1));
+    const bolt = optionFor(burned, 'P1', spell.id)!;
+    takeAction(
+      burned,
+      'P1',
+      bolt.payload as PriorityActionPayload,
+      undefined,
+      new Map([[bolt.targets![0]!.slot, victim.id]]),
+    );
+    settle(burned);
+    expect(marked(burned, victim)).toBe(3);
+  });
+
+  it('delirium-new-object — the shield is on that one object, so a creature that leaves and returns is no longer covered', () => {
+    const ctx = pod('delirium-blink');
+    const ogre = spawn(ctx, 'P2', BRUTE('Lab Ogre', '4', 'Haste'));
+    turnOf(ctx, 'P2');
+    cast(ctx, ogre.id);
+    pump(moveObject(ctx, ogre, { zone: 'hand' }));
+    const returned = playerById(ctx, 'P2').hand.find((c) => c.cardId === ogre.cardId)!;
+    pump(moveObject(ctx, returned, { zone: 'battlefield', controllerId: 'P2' }));
+    const fresh = onField(ctx, ogre.cardId)!;
+    expect(fresh.id).not.toBe(ogre.id);
+    combat(ctx, [fresh.id]);
+    expect(life(ctx, 'P1')).toBe(36);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4145,6 +4378,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Michiko Konda, Truth Seeker',
     sha256: 'cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Delirium',
+    sha256: '7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573',
+    clauseCount: 2,
     authored: true,
   },
   {

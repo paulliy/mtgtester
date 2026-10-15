@@ -186,6 +186,11 @@ export interface CardDefinition {
    * consumed when it is used.
    */
   castFromGraveyard?: true;
+  /**
+   * "Cast this spell only during an opponent's turn" (Delirium): a condition on the caster that
+   * must hold to cast the spell at all, checked when offering the cast and again as it is cast.
+   */
+  castRestriction?: Condition;
   /** "You may cast this spell without paying its mana cost if you control a commander." */
   commanderFreeCast?: boolean;
   /** Additional costs paid while announcing a spell (CR 601.2h), apart from its mana cost. */

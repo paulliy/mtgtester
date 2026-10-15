@@ -882,6 +882,13 @@ export function computePriorityOptions(
       }
     }
     const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
+    // "Cast this spell only during an opponent's turn": a restriction on casting it at all, in
+    // every way it can be cast (enforced again as it is cast, `casting/cast.ts`).
+    if (
+      def.castRestriction !== undefined &&
+      !evaluateCondition(ctx, def.castRestriction, { cardId: obj.cardId, controllerId: player.id })
+    )
+      return;
 
     const tax = fromCommand ? 2 * (player.commanderCastCount[obj.cardId] ?? 0) : 0;
     const reboundCast = fromExile && obj.reboundCastBy === player.id;

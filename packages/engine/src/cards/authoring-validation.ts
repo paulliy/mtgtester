@@ -158,7 +158,7 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
     }
     if (
       spec.controller !== undefined &&
-      !['you', 'opponent', 'eventPlayer'].includes(spec.controller)
+      !['you', 'opponent', 'eventPlayer', 'activePlayer'].includes(spec.controller)
     )
       issues.push({ path: `${at}.controller`, message: 'unknown target controller scope' });
     if (
@@ -652,7 +652,10 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       typeof entry !== 'string'
     )
       validateExpression('selector', entry, `${path}.${key}`, issues);
-    if (['condition', 'entersTappedUnless'].includes(key) && entry !== undefined) {
+    if (
+      ['condition', 'entersTappedUnless', 'castRestriction'].includes(key) &&
+      entry !== undefined
+    ) {
       const before = issues.length;
       validateExpression('condition', entry, `${path}.${key}`, issues);
       if (
