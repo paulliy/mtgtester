@@ -357,6 +357,9 @@ export function candidateOf(
     enteredThisTurn: perm.enteredTurnNumber === ctx.state.turnNumber,
     isCommander: perm.isCommander,
     ownerId: perm.ownerId,
+    // A face-down permanent has no name (CR 708.2); otherwise this is the current name, which a
+    // copy effect has already rewritten (CR 707.2).
+    ...(perm.faceDown ? {} : { name: perm.name }),
     isEnchanted,
     ...(auraControllerIds.length === 0 ? {} : { auraControllerIds }),
     isEquipped,

@@ -85,6 +85,11 @@ export interface SelectorCandidate {
   /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
   attackingDefendingPlayerId?: string;
+  /**
+   * Its current name (CR 201.2): the name a copy effect gave it, and none at all for a face-down
+   * permanent (CR 708.2). Absent when a builder does not know it, which never matches `name`.
+   */
+  name?: string;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
   /**
@@ -136,6 +141,12 @@ export type Selector =
   | { kind: 'type'; value: string }
   | { kind: 'subtype'; value: string }
   | { kind: 'supertype'; value: string }
+  /**
+   * "named Lightning Rager", "a card named Galactus, Devourer of Worlds": its current name,
+   * exactly (CR 201.2). Not event-only: a copy effect changes a name as game state, not through
+   * a layer this selector would be read inside.
+   */
+  | { kind: 'name'; value: string }
   | { kind: 'color'; value: Color }
   /**
    * "of the chosen color" (Caged Sun) — the color is per-permanent state
@@ -234,6 +245,7 @@ export const ofType = (value: string): Selector => ({ kind: 'type', value });
 export const ofSubtype = (value: string): Selector => ({ kind: 'subtype', value });
 export const ofSupertype = (value: string): Selector => ({ kind: 'supertype', value });
 export const ofColor = (value: Color): Selector => ({ kind: 'color', value });
+export const named = (value: string): Selector => ({ kind: 'name', value });
 export const CHOSEN_COLOR: Selector = { kind: 'chosenColor' };
 export const CHOSEN_TYPE: Selector = { kind: 'chosenType' };
 export const CHOSEN_SUBTYPE: Selector = { kind: 'chosenSubtype' };
@@ -302,6 +314,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'type':
     case 'subtype':
     case 'supertype':
+    case 'name':
     case 'color':
     case 'chosenColor':
     case 'chosenType':
@@ -346,6 +359,8 @@ export function selectMatches(
       return candidate.subtypes.includes(selector.value);
     case 'supertype':
       return candidate.supertypes.includes(selector.value);
+    case 'name':
+      return candidate.name !== undefined && candidate.name === selector.value;
     case 'color':
       return candidate.colors.includes(selector.value);
     case 'chosenColor':

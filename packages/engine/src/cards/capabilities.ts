@@ -1148,6 +1148,7 @@ const families = {
       type: true,
       subtype: true,
       supertype: true,
+      name: true,
       color: true,
       chosenColor: true,
       chosenType: true,

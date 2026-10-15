@@ -105,6 +105,7 @@ const selectorShapes = {
   type: { value: text },
   subtype: { value: text },
   supertype: { value: text },
+  name: { value: text },
   color: { value: color },
   chosenColor: {},
   chosenType: {},

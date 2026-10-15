@@ -262,6 +262,7 @@ export function cardZoneCandidate(
     enteredThisTurn: false,
     isCommander: card.isCommander,
     ownerId: card.ownerId,
+    name: card.name,
   };
 }
 
