@@ -150,6 +150,33 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Mangara, the Diplomat: the second-spell line (castsSpell, ordinal 2) and lifelink are read by
+  // the interpreter; the stored note about that line was a misreading of the Oracle text. The
+  // attack ability triggers once per declaration by an opponent. Its intervening-if (CR 603.4) is
+  // that two or more of that player's attackers are attacking you or a planeswalker you control,
+  // checked as the attack is declared and again on resolution against the creatures still
+  // attacking you and the planeswalkers still in combat.
+  extendCard(
+    'cbcb6d9a-6ae5-4bcd-8013-2b657553764a',
+    'Mangara, the Diplomat',
+    [
+      'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'opponent' },
+          {
+            condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 2 },
+            effects: [{ op: 'draw', count: constant(1) }],
+            description:
+              'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

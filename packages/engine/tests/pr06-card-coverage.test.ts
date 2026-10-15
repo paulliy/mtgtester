@@ -4792,6 +4792,164 @@ describe('Ever-Watching Threshold', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.08 Mangara, the Diplomat
+// ---------------------------------------------------------------------------------------------
+
+describe('Mangara, the Diplomat', () => {
+  const { card } = pinned('Mangara, the Diplomat');
+  const CANTRIP = oracle({
+    name: 'Lab Sip',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 1 life.',
+  });
+
+  /** P1 controls Mangara; each other player has three Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mangara = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', GRIZZLY('Lab P1 Bear'));
+    const bears = Object.fromEntries(
+      (['P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        [1, 2, 3].map((n) => spawn(ctx, id, GRIZZLY(`Lab ${id} Bear ${n}`))),
+      ]),
+    ) as Record<'P2' | 'P3' | 'P4', EnginePermanent[]>;
+    return { ctx, mangara, mine, bears };
+  }
+  const triggers = (ctx: GameContext) =>
+    ctx.state.eventLog.filter(
+      (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Mangara, the Diplomat',
+    ).length;
+
+  it('mangara-pinned-oracle-supported — the interpreter reads lifelink and the second-spell line, and the override adds one attack trigger with an intervening-if on two or more attackers at you or your planeswalkers', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('lifelink');
+    const heads = def.triggers.map((t) => t.trigger);
+    expect(heads).toContainEqual({
+      when: 'attackDeclared',
+      attacker: 'opponent',
+      condition: { kind: 'attackGroupAttackingYou', planeswalkers: true, cmp: '>=', n: 2 },
+    });
+    expect(heads).toContainEqual(
+      expect.objectContaining({ when: 'castsSpell', caster: 'opponent', ordinal: 2 }),
+    );
+    expect(def.triggers).toHaveLength(2);
+  });
+
+  it('mangara-two-attackers — you draw when an opponent attacks you with two or more creatures, and not with one, or with two split between you and someone else', () => {
+    const two = board('mangara-two');
+    turnOfPlayer(two.ctx, 'P2');
+    declareAndFight(two.ctx, { [two.bears.P2[0]!.id]: 'P1', [two.bears.P2[1]!.id]: 'P1' });
+    expect(handSize(two.ctx, 'P1')).toBe(1);
+    expect(triggers(two.ctx)).toBe(1);
+
+    const three = board('mangara-three');
+    turnOfPlayer(three.ctx, 'P2');
+    declareAndFight(three.ctx, {
+      [three.bears.P2[0]!.id]: 'P1',
+      [three.bears.P2[1]!.id]: 'P1',
+      [three.bears.P2[2]!.id]: 'P1',
+    });
+    expect(handSize(three.ctx, 'P1')).toBe(1);
+
+    const one = board('mangara-one');
+    turnOfPlayer(one.ctx, 'P2');
+    declareAndFight(one.ctx, { [one.bears.P2[0]!.id]: 'P1' });
+    expect(handSize(one.ctx, 'P1')).toBe(0);
+    expect(triggers(one.ctx)).toBe(0);
+
+    const split = board('mangara-split');
+    turnOfPlayer(split.ctx, 'P2');
+    declareAndFight(split.ctx, { [split.bears.P2[0]!.id]: 'P1', [split.bears.P2[1]!.id]: 'P3' });
+    expect(handSize(split.ctx, 'P1')).toBe(0);
+
+    const mine = board('mangara-own');
+    declareAndFight(mine.ctx, { [mine.mine.id]: 'P2' });
+    expect(handSize(mine.ctx, 'P1')).toBe(0);
+  });
+
+  it('mangara-planeswalkers — attackers at you and/or your planeswalkers together make two, while attackers at another player’s planeswalker do not count', () => {
+    const mixed = board('mangara-mixed');
+    const walker = spawn(mixed.ctx, 'P1', WALKER());
+    turnOfPlayer(mixed.ctx, 'P3');
+    declareAndFight(mixed.ctx, {
+      [mixed.bears.P3[0]!.id]: 'P1',
+      [mixed.bears.P3[1]!.id]: walker.id,
+    });
+    expect(handSize(mixed.ctx, 'P1')).toBe(1);
+
+    const onlyWalker = board('mangara-walker');
+    const mine = spawn(onlyWalker.ctx, 'P1', WALKER());
+    turnOfPlayer(onlyWalker.ctx, 'P3');
+    declareAndFight(onlyWalker.ctx, {
+      [onlyWalker.bears.P3[0]!.id]: mine.id,
+      [onlyWalker.bears.P3[1]!.id]: mine.id,
+    });
+    expect(handSize(onlyWalker.ctx, 'P1')).toBe(1);
+
+    const theirs = board('mangara-their-walker');
+    const other = spawn(theirs.ctx, 'P4', WALKER());
+    turnOfPlayer(theirs.ctx, 'P3');
+    declareAndFight(theirs.ctx, {
+      [theirs.bears.P3[0]!.id]: 'P1',
+      [theirs.bears.P3[1]!.id]: other.id,
+    });
+    expect(handSize(theirs.ctx, 'P1')).toBe(0);
+  });
+
+  it('mangara-resolution-check — checked again as it resolves: a creature destroyed, or whose planeswalker is, no longer counts', () => {
+    const gone = board('mangara-gone');
+    conjure(gone.ctx, 'P1', ZAP, 'hand');
+    turnOfPlayer(gone.ctx, 'P2');
+    const [first, second] = gone.bears.P2 as [EnginePermanent, EnginePermanent, EnginePermanent];
+    const zapped = respondWith(
+      gone.ctx,
+      { [first.id]: 'P1', [second.id]: 'P1' },
+      'Lab Zap',
+      first.id,
+    );
+    expect(zapped()).toBe(true);
+    expect(handSize(gone.ctx, 'P1')).toBe(0);
+    expect(gone.ctx.state.eventLog.some((e) => e.type === 'triggerConditionFailed')).toBe(true);
+
+    const walked = board('mangara-walker-gone');
+    const walker = spawn(walked.ctx, 'P1', WALKER());
+    conjure(walked.ctx, 'P1', RAZE, 'hand');
+    turnOfPlayer(walked.ctx, 'P2');
+    const razed = respondWith(
+      walked.ctx,
+      { [walked.bears.P2[0]!.id]: 'P1', [walked.bears.P2[1]!.id]: walker.id },
+      'Lab Raze',
+      walker.id,
+    );
+    expect(razed()).toBe(true);
+    expect(handSize(walked.ctx, 'P1')).toBe(0);
+  });
+
+  it('mangara-second-spell — you draw when an opponent casts their second spell each turn, and not their first or third, or your own', () => {
+    const ctx = board('mangara-spells').ctx;
+    turnOfPlayer(ctx, 'P2');
+    const cast = () => {
+      const object = conjure(ctx, 'P2', CANTRIP, 'hand');
+      const option = optionFor(ctx, 'P2', object.id);
+      expect(option, 'P2 casts Lab Sip').toBeDefined();
+      takeAction(ctx, 'P2', option!.payload as PriorityActionPayload);
+      settle(ctx);
+    };
+    cast();
+    expect(handSize(ctx, 'P1')).toBe(0);
+    cast();
+    expect(handSize(ctx, 'P1')).toBe(1);
+    cast();
+    expect(handSize(ctx, 'P1')).toBe(1);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -4926,6 +5084,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Ever-Watching Threshold',
     sha256: 'f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5',
+    clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Mangara, the Diplomat',
+    sha256: '23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a',
     clauseCount: 1,
     authored: true,
   },

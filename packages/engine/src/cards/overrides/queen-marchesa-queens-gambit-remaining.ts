@@ -286,12 +286,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
       ],
     },
   );
-  // Catalog audit queen-batch-2: attack restriction omitted; extra second-spell trigger added.
-  unsupportedCard(
-    'cbcb6d9a-6ae5-4bcd-8013-2b657553764a',
-    'Mangara, the Diplomat',
-    'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
-  );
+  // Mangara, the Diplomat: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     '18ed0c8a-db8f-4247-87c4-544b833f01bd',
     'Master of Ceremonies',

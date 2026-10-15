@@ -87,8 +87,6 @@ const REASONS: Record<string, string> = {
   'Combat Calligrapher':
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
-  'Mangara, the Diplomat':
-    'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
@@ -279,6 +277,7 @@ describe('Marchesa catalog audit containment', () => {
     'Delirium',
     'Firemane Commando',
     'Breena, the Demagogue',
+    'Mangara, the Diplomat',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

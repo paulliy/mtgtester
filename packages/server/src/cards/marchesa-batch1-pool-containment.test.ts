@@ -94,6 +94,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Land Tax',
       'Living Death',
       'Loran of the Third Path',
+      'Mangara, the Diplomat',
       'Martial Impetus',
       'Mask of Memory',
       'Michiko Konda, Truth Seeker',

@@ -8970,8 +8970,38 @@
   {
     "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
     "name": "Mangara, the Diplomat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
@@ -18264,8 +18294,38 @@
   {
     "oracleId": "oracle-mangara-the-diplomat",
     "name": "Mangara, the Diplomat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-marang-river-regent-coil-and-catch",

@@ -188,10 +188,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
   ]);
 
-  unimplemented('cbcb6d9a-6ae5-4bcd-8013-2b657553764a', 'Mangara, the Diplomat', [
-    'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.',
-    'Whenever an opponent casts their second spell each turn, draw a card.',
-  ]);
+  // Mangara, the Diplomat: restored in coverage PR06 (see coverage-pr06.ts).
 
   // Firemane Commando: restored in coverage PR06 (see coverage-pr06.ts).
 

@@ -2302,6 +2302,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+    "name": "Mangara, the Diplomat",
+    "package": "PR06.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
     "name": "Martial Impetus",
     "package": "PR05.08",

@@ -12315,6 +12315,44 @@ function everWatchingThresholdScenario(
   });
 }
 
+function mangaraScenario(gameId: GameId, attackers: 1 | 2): CardTestScenario {
+  const mangara = pinnedFrom(COVERAGE_PR06, 'Mangara, the Diplomat');
+  const two = attackers === 2;
+  return pr01Scenario(gameId, {
+    id: two ? 'mangara-viewer-two-attackers' : 'mangara-viewer-one-attacker',
+    title: two
+      ? 'Mangara: an opponent attacking you with two creatures draws you a card'
+      : 'Mangara: an opponent attacking you with one creature draws nothing',
+    instructions: [
+      two
+        ? 'It is P2’s turn. You control Mangara, the Diplomat. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.'
+        : 'It is P2’s turn. You control Mangara, the Diplomat. P2 controls Lab Ox (4/4) and attacks you with it. Do not block.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome: two
+      ? 'Two creatures attacked you, so Mangara’s ability triggered and you drew a card: your library is one card smaller. You took 5 and are at 35.'
+      : 'Only one creature attacked you, so the ability did not trigger and you drew nothing. You took 4 and are at 36.',
+    oracleSha256: mangara.sha256,
+    clauseIds: ['mangara-attack-draw'],
+    decks: {
+      P1: [mangara.card, FOREST, FOREST],
+      P2: [LAB_OX, ...(two ? [LAB_SERVO] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mangara, the Diplomat'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', ...(two ? ['Lab Servo'] : [])] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12584,6 +12622,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'ever-watching-threshold-viewer-attacked-you',
   'ever-watching-threshold-viewer-attacked-planeswalker',
   'ever-watching-threshold-viewer-attacked-elsewhere',
+  'mangara-viewer-two-attackers',
+  'mangara-viewer-one-attacker',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12925,6 +12965,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     everWatchingThresholdScenario(gameId, 'attacked-planeswalker'),
   'ever-watching-threshold-viewer-attacked-elsewhere': (gameId) =>
     everWatchingThresholdScenario(gameId, 'attacked-elsewhere'),
+  'mangara-viewer-two-attackers': (gameId) => mangaraScenario(gameId, 2),
+  'mangara-viewer-one-attacker': (gameId) => mangaraScenario(gameId, 1),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

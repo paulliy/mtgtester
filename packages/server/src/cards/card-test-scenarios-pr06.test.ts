@@ -915,3 +915,28 @@ describe('Ever-Watching Threshold Card Test Lab scenarios', () => {
     replays('ever-watching-threshold-viewer-attacked-elsewhere', steps);
   });
 });
+
+describe('Mangara Card Test Lab scenarios', () => {
+  it('mangara-viewer-two-attackers — P2 attacking you with two creatures draws you a card', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { scenario, state, seat } = run('mangara-viewer-two-attackers', steps);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P1').life).toBe(35);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('mangara-viewer-two-attackers', steps);
+  });
+
+  it('mangara-viewer-one-attacker — P2 attacking you with one creature does not trigger it', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { state, seat } = run('mangara-viewer-one-attacker', steps);
+    expect(seat('P1').hand).toHaveLength(0);
+    expect(seat('P1').life).toBe(36);
+    expect(
+      state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Mangara, the Diplomat',
+      ),
+    ).toHaveLength(0);
+    replays('mangara-viewer-one-attacker', steps);
+  });
+});

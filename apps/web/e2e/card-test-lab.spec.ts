@@ -9287,3 +9287,24 @@ test('Ever-Watching Threshold: an opponent attacking someone else draws nothing'
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('36');
 });
+
+test('Mangara: an opponent attacking you with two creatures draws you a card', async ({ page }) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(page, 'Mangara: an opponent attacking you with two creatures draws you a card');
+  // P2 attacks you with both creatures; decline to block with Mangara.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('35');
+});
+
+test('Mangara: an opponent attacking you with one creature draws nothing', async ({ page }) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(page, 'Mangara: an opponent attacking you with one creature draws nothing');
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+});

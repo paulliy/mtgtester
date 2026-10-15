@@ -2337,15 +2337,22 @@
     "cbcb6d9a-6ae5-4bcd-8013-2b657553764a": {
       "name": "Mangara, the Diplomat",
       "oracleSha256": "23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mangara-attack-draw",
           "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.",
           "implementation": [
-            "explicitly unsupported; any combat attack; extra second-spell trigger"
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you and the planeswalkers still in combat (a creature removed from combat or whose planeswalker was removed no longer counts); it draws one card for you; the interpreter owns lifelink and the second-spell trigger"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mangara-pinned-oracle-supported",
+            "mangara-two-attackers",
+            "mangara-planeswalkers",
+            "mangara-resolution-check",
+            "mangara-second-spell"
+          ],
+          "viewerScenarioIds": ["mangara-viewer-two-attackers", "mangara-viewer-one-attacker"]
         }
       ],
       "gameplayAiScenarioIds": []

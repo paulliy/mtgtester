@@ -118,7 +118,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Tomik, Wielder of Law',
       'Combat Calligrapher',
       'Malakir Rebirth // Malakir Mire',
-      'Mangara, the Diplomat',
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Cut a Deal',
