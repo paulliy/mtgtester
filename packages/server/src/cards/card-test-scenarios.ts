@@ -12862,6 +12862,73 @@ function erietteScenario(gameId: GameId, kind: 'restriction' | 'drain'): CardTes
   });
 }
 
+const LAB_RAGER = card({
+  oracleId: 'lab-lightning-rager',
+  name: 'Lightning Rager',
+  typeLine: 'Creature — Elemental',
+  manaCost: '{2}{R}',
+  cmc: 3,
+  colors: ['R'],
+  colorIdentity: ['R'],
+  power: '5',
+  toughness: '1',
+});
+
+function riteOfTheRagingStormScenario(
+  gameId: GameId,
+  kind: 'restriction' | 'token',
+): CardTestScenario {
+  const rite = pinnedFrom(COVERAGE_PR07, 'Rite of the Raging Storm');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `rite-of-the-raging-storm-viewer-${restriction ? 'named-cant-attack-you' : 'upkeep-token'}`,
+    title: restriction
+      ? 'Rite of the Raging Storm: a creature named Lightning Rager cannot attack you'
+      : "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Rite of the Raging Storm is on your battlefield, and P2 controls Lightning Rager (a 5/1 creature, not a token) and Lab Servo.',
+          'Pass priority and let P2’s attack play out: Lightning Rager cannot attack you, so it attacks P3 along with Lab Servo.',
+        ]
+      : [
+          'Rite of the Raging Storm is on your battlefield and it is your turn. Pass priority all the way through your turn.',
+          'At P2’s upkeep P2, not you, creates a 5/1 red Elemental token named Lightning Rager with trample and haste. It cannot attack you, so it attacks P3, and it is sacrificed at the beginning of P2’s end step.',
+        ],
+    expectedOutcome: restriction
+      ? 'Lightning Rager was not offered you as a defender, while Lab Servo, which is not named Lightning Rager, was. P2 attacked P3 with both: 5 and 1 damage, so P3 is at 34 and you are still at 40.'
+      : 'P2 had a Lightning Rager token with haste for its turn, attacked P3 with it for 5 (P3 is at 35, you are at 40), and no Lightning Rager is left on the battlefield after P2’s end step.',
+    oracleSha256: rite.sha256,
+    clauseIds: restriction
+      ? ['rite-of-the-raging-storm-named-cant-attack-you']
+      : ['rite-of-the-raging-storm-upkeep-token'],
+    decks: {
+      P1: [rite.card, FOREST, FOREST],
+      P2: restriction ? [LAB_RAGER, LAB_SERVO, FOREST, FOREST] : [FOREST, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Rite of the Raging Storm'] },
+        ...(restriction
+          ? [{ playerId: 'P2' as const, cardNames: ['Lightning Rager', 'Lab Servo'] }]
+          : []),
+      ],
+      ...(restriction
+        ? { continueThroughCombat: true }
+        : {
+            continueThroughCombat: true,
+            continueToPostcombatMain: true,
+            continueToEndStep: true,
+            continueThroughNextTurn: true,
+          }),
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13167,6 +13234,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'firkraag-viewer-goaded-damage-draws',
   'eriette-viewer-enchanted-cant-attack-you',
   'eriette-viewer-end-step-drain',
+  'rite-of-the-raging-storm-viewer-named-cant-attack-you',
+  'rite-of-the-raging-storm-viewer-upkeep-token',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13644,6 +13713,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'firkraag-viewer-goaded-damage-draws': (gameId) => firkraagScenario(gameId, 'damage'),
   'eriette-viewer-enchanted-cant-attack-you': (gameId) => erietteScenario(gameId, 'restriction'),
   'eriette-viewer-end-step-drain': (gameId) => erietteScenario(gameId, 'drain'),
+  'rite-of-the-raging-storm-viewer-named-cant-attack-you': (gameId) =>
+    riteOfTheRagingStormScenario(gameId, 'restriction'),
+  'rite-of-the-raging-storm-viewer-upkeep-token': (gameId) =>
+    riteOfTheRagingStormScenario(gameId, 'token'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

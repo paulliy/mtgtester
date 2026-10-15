@@ -12151,6 +12151,44 @@
         }
       ],
       "gameplayAiScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
+    },
+    "984f92dd-cb9b-4421-a8e6-75bfe566be10": {
+      "name": "Rite of the Raging Storm",
+      "oracleSha256": "8084d5a45cbb44df44eb1f24fae2549e89b2b59f375e1901b47aed4f9cf22725",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "rite-of-the-raging-storm-named-cant-attack-you",
+          "oracleText": "Creatures named Lightning Rager can't attack you or planeswalkers you control.",
+          "implementation": [
+            "authored attackRestriction rule static whose filter is the exact name Lightning Rager (the new name selector, reading the current name): any creature of that name, token or not and whoever controls it, a copy of one included, can't attack you or planeswalkers you control (CR 508.1c), while a differently named creature and a face-down creature (no name, CR 708.2) can"
+          ],
+          "engineTestIds": [
+            "rite-of-the-raging-storm-pinned-oracle-supported",
+            "rite-of-the-raging-storm-cant-attack-you",
+            "rite-of-the-raging-storm-copies-and-face-down",
+            "rite-of-the-raging-storm-two-rites",
+            "rite-of-the-raging-storm-whole-turn"
+          ],
+          "viewerScenarioIds": ["rite-of-the-raging-storm-viewer-named-cant-attack-you"]
+        },
+        {
+          "id": "rite-of-the-raging-storm-upkeep-token",
+          "oracleText": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "implementation": [
+            "authored upkeep trigger for each player's upkeep that creates the token for that player (the event player, not your own), a 5/1 red Elemental creature named Lightning Rager with trample, haste and its own end-step ability that sacrifices it at the beginning of the next end step, whoever's turn it is (CR 111, 603.7)"
+          ],
+          "engineTestIds": [
+            "rite-of-the-raging-storm-pinned-oracle-supported",
+            "rite-of-the-raging-storm-upkeep-token",
+            "rite-of-the-raging-storm-two-rites",
+            "rite-of-the-raging-storm-sacrifice",
+            "rite-of-the-raging-storm-whole-turn"
+          ],
+          "viewerScenarioIds": ["rite-of-the-raging-storm-viewer-upkeep-token"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

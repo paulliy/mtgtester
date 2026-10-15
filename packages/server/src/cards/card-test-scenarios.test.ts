@@ -530,6 +530,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'firkraag-viewer-goaded-damage-draws',
       'eriette-viewer-enchanted-cant-attack-you',
       'eriette-viewer-end-step-drain',
+      'rite-of-the-raging-storm-viewer-named-cant-attack-you',
+      'rite-of-the-raging-storm-viewer-upkeep-token',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

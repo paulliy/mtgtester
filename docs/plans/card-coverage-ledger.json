@@ -3074,16 +3074,17 @@
   {
     "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
     "name": "Rite of the Raging Storm",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Creatures named Lightning Rager can't attack you or planeswalkers you control.\"",
-      "unrecognized rules text: \"At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"\""
+    "package": "PR07.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",

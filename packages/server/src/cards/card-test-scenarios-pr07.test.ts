@@ -281,3 +281,54 @@ describe('Eriette of the Charmed Apple Card Test Lab scenarios', () => {
     replays('eriette-viewer-end-step-drain', steps);
   });
 });
+
+describe('Rite of the Raging Storm Card Test Lab scenarios', () => {
+  it("rite-of-the-raging-storm-viewer-named-cant-attack-you — P2's Lightning Rager is never offered you as a defender (Lab Servo is) and attacks P3", () => {
+    const steps: Step[] = [];
+    // Slot 0 is Lightning Rager, slot 1 is Lab Servo (battlefield order).
+    const offers: string[][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'rite-of-the-raging-storm-viewer-named-cant-attack-you',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offers).toHaveLength(2);
+    expect(offers[0]).not.toContain('P1');
+    expect(offers[0]).toContain('P3');
+    // Lab Servo, which is not named Lightning Rager, may attack you.
+    expect(offers[1]).toContain('P1');
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P3').life).toBe(34);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('rite-of-the-raging-storm-viewer-named-cant-attack-you', steps);
+  });
+
+  it('rite-of-the-raging-storm-viewer-upkeep-token — P2 gets a hasty Lightning Rager at upkeep, it attacks P3 and is sacrificed at the end step', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'rite-of-the-raging-storm-viewer-upkeep-token',
+      steps,
+    );
+    const created = state.eventLog.filter(
+      (event) =>
+        event.type === 'tokenCreated' && JSON.stringify(event.payload).includes('Lightning Rager'),
+    );
+    expect(created).toHaveLength(1);
+    expect(seat('P3').life).toBe(35);
+    expect(seat('P1').life).toBe(40);
+    // Sacrificed at P2's end step: no Lightning Rager remains, and it is not in a graveyard (tokens
+    // cease to exist).
+    expect(onBattlefield('Lightning Rager')).toEqual([]);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('rite-of-the-raging-storm-viewer-upkeep-token', steps);
+  });
+});

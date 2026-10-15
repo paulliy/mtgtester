@@ -8106,6 +8106,83 @@
     "def": {}
   },
   {
+    "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
+    "name": "Rite of the Raging Storm",
+    "handledLines": [
+      "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+      "Creatures named Lightning Rager can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "name",
+            "value": "Lightning Rager"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "trample",
+                  "haste"
+                ],
+                "name": "Lightning Rager",
+                "power": 5,
+                "subtypes": [
+                  "Elemental"
+                ],
+                "toughness": 1,
+                "triggers": [
+                  {
+                    "description": "At the beginning of the end step, sacrifice this token",
+                    "effects": [
+                      {
+                        "op": "sacrifice",
+                        "target": "source"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "each",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "typeLine": "Creature — Elemental",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
     "name": "Tomb Fortress",
     "handledLines": [
@@ -25627,6 +25704,83 @@
               "kind": "self"
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-rite-of-the-raging-storm",
+    "name": "Rite of the Raging Storm",
+    "handledLines": [
+      "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+      "Creatures named Lightning Rager can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "name",
+            "value": "Lightning Rager"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "trample",
+                  "haste"
+                ],
+                "name": "Lightning Rager",
+                "power": 5,
+                "subtypes": [
+                  "Elemental"
+                ],
+                "toughness": 1,
+                "triggers": [
+                  {
+                    "description": "At the beginning of the end step, sacrifice this token",
+                    "effects": [
+                      {
+                        "op": "sacrifice",
+                        "target": "source"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "each",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "typeLine": "Creature — Elemental",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
           }
         }
       ]

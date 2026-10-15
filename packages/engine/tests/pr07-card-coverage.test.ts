@@ -25,7 +25,8 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { beginEndStep, runCombatAndExtraCombats } from '../src/turn/turn';
+import { applyCopy } from '../src/state/objects';
+import { beginEndStep, queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
 import { playerById } from '../src/state/objects';
@@ -270,6 +271,16 @@ function endStepOf(ctx: GameContext, playerId: string, answer?: Answer) {
   turnOfPlayer(ctx, playerId);
   ctx.state.phase = 'ending';
   beginEndStep(ctx);
+  pump(priorityCheckpoint(ctx));
+  return settle(ctx, answer);
+}
+
+/** It is `playerId`'s upkeep: its beginning-of-upkeep triggers go on the stack and resolve. */
+function upkeepOf(ctx: GameContext, playerId: string, answer?: Answer) {
+  turnOfPlayer(ctx, playerId);
+  ctx.state.phase = 'beginning';
+  ctx.state.step = 'upkeep';
+  queueStepTriggers(ctx, 'upkeep');
   pump(priorityCheckpoint(ctx));
   return settle(ctx, answer);
 }
@@ -940,6 +951,142 @@ describe('Eriette of the Charmed Apple', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.21 Rite of the Raging Storm
+// ---------------------------------------------------------------------------------------------
+
+describe('Rite of the Raging Storm', () => {
+  const { card } = pinned('Rite of the Raging Storm');
+  const RAGER = (name = 'Lightning Rager') =>
+    oracle({ name, typeLine: 'Creature — Elemental', power: '5', toughness: '1' });
+
+  /** P1 controls Rite of the Raging Storm. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const rite = spawn(ctx, 'P1', card);
+    return { ctx, rite };
+  }
+
+  const ragers = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Lightning Rager' && perm.isToken);
+
+  it('rite-of-the-raging-storm-pinned-oracle-supported — the authored override carries the named restriction and the upkeep token under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'attackRestriction',
+        filter: { kind: 'name', value: 'Lightning Rager' },
+        includePlaneswalkers: true,
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    // Each player's upkeep, not only yours; the token is made for that player.
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'upkeep', player: 'each' });
+    const [effect] = def.triggers[0]!.effects;
+    expect(effect).toMatchObject({
+      op: 'createTokenForPlayer',
+      target: 'eventPlayer',
+      count: { kind: 'const', n: 1 },
+      spec: {
+        name: 'Lightning Rager',
+        types: ['Creature'],
+        subtypes: ['Elemental'],
+        colors: ['R'],
+        power: 5,
+        toughness: 1,
+        keywords: ['trample', 'haste'],
+      },
+    });
+  });
+
+  it("rite-of-the-raging-storm-cant-attack-you — creatures named Lightning Rager, whoever controls them, can't attack you or your planeswalkers; other creatures can", () => {
+    const { ctx } = board('rite-restriction');
+    const walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const otherWalker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    const rager = spawn(ctx, 'P2', RAGER());
+    const lookalike = spawn(ctx, 'P2', RAGER('Lightning Rager Fan'));
+    const offered = attackOptionsFor(ctx, 'P2', rager);
+    expect(offered.players.sort()).toEqual(['P3', 'P4']);
+    expect(offered.planeswalkers).toEqual([otherWalker.id]);
+    expect(offered.planeswalkers).not.toContain(walker.id);
+    expect(attackOptionsFor(ctx, 'P2', lookalike).players).toContain('P1');
+    // Your own Lightning Rager is not restricted against anyone else.
+    const mine = spawn(ctx, 'P1', RAGER());
+    expect(attackOptionsFor(ctx, 'P1', mine).players.sort()).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('rite-of-the-raging-storm-copies-and-face-down — a copy of a Lightning Rager has the name and is restricted, while a face-down creature has no name and is not', () => {
+    const { ctx } = board('rite-copy');
+    const rager = spawn(ctx, 'P3', RAGER());
+    const clay = spawn(ctx, 'P2', GRIZZLY('Lab Clay'));
+    expect(attackOptionsFor(ctx, 'P2', clay).players).toContain('P1');
+    applyCopy(ctx, clay, rager);
+    expect(attackOptionsFor(ctx, 'P2', clay).players).not.toContain('P1');
+    const hidden = spawn(ctx, 'P2', RAGER());
+    hidden.faceDown = true;
+    expect(attackOptionsFor(ctx, 'P2', hidden).players).toContain('P1');
+  });
+
+  it("rite-of-the-raging-storm-upkeep-token — at each player's upkeep THAT player creates the 5/1 red Elemental Lightning Rager with trample and haste", () => {
+    const { ctx } = board('rite-upkeep');
+    for (const id of ['P1', 'P2', 'P3']) upkeepOf(ctx, id);
+    const tokens = ragers(ctx);
+    expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P1', 'P2', 'P3']);
+    for (const token of tokens) {
+      const chars = computeCharacteristics(ctx, token);
+      expect(chars.power).toBe(5);
+      expect(chars.toughness).toBe(1);
+      expect(chars.colors).toEqual(['R']);
+      expect(chars.subtypes).toEqual(['Elemental']);
+      expect(chars.keywords).toEqual(expect.arrayContaining(['trample', 'haste']));
+    }
+    // A player who is not the active player gets nothing: P4's upkeep has not come.
+    expect(tokens.some((token) => token.controllerId === 'P4')).toBe(false);
+  });
+
+  it('rite-of-the-raging-storm-two-rites — each Rite makes its own token at each upkeep, and each restricts attacks on its own controller', () => {
+    const { ctx } = board('rite-two');
+    spawn(ctx, 'P3', card);
+    upkeepOf(ctx, 'P2');
+    expect(ragers(ctx).map((token) => token.controllerId)).toEqual(['P2', 'P2']);
+    // P1's and P3's Rites both forbid it: it can attack neither of them.
+    expect(attackOptionsFor(ctx, 'P2', ragers(ctx)[0]!).players).toEqual(['P4']);
+  });
+
+  it('rite-of-the-raging-storm-sacrifice — the token is sacrificed at the beginning of the next end step, whoever’s end step it is', () => {
+    const { ctx } = board('rite-sacrifice');
+    upkeepOf(ctx, 'P2');
+    expect(ragers(ctx)).toHaveLength(1);
+    endStepOf(ctx, 'P2');
+    expect(ragers(ctx)).toEqual([]);
+    // A token made at P2's upkeep that is still around at P3's end step is sacrificed then.
+    const second = board('rite-sacrifice-other-end-step');
+    upkeepOf(second.ctx, 'P2');
+    expect(ragers(second.ctx)).toHaveLength(1);
+    endStepOf(second.ctx, 'P3');
+    expect(ragers(second.ctx)).toEqual([]);
+  });
+
+  it('rite-of-the-raging-storm-whole-turn — P2 gets a Lightning Rager at upkeep, it attacks (haste) P3 but cannot attack P1, and it is sacrificed at the end step', () => {
+    const { ctx } = board('rite-turn');
+    upkeepOf(ctx, 'P2');
+    const [token] = ragers(ctx);
+    expect(token!.controllerId).toBe('P2');
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const offered = attackOptionsFor(ctx, 'P2', token!);
+    expect(offered.players.sort()).toEqual(['P3', 'P4']);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    fight(ctx, () => ({ [token!.id]: 'P3' }));
+    expect(playerById(ctx, 'P3').life).toBe(35);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    endStepOf(ctx, 'P2');
+    expect(ragers(ctx)).toEqual([]);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -982,6 +1129,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Eriette of the Charmed Apple',
     sha256: '427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Rite of the Raging Storm',
+    sha256: '8084d5a45cbb44df44eb1f24fae2549e89b2b59f375e1901b47aed4f9cf22725',
     clauseCount: 2,
     authored: true,
   },

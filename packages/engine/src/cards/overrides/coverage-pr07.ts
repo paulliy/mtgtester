@@ -7,14 +7,17 @@
 import {
   onAttacks,
   onEndStep,
+  onUpkeep,
   targetSlots,
   triggered,
   whenAttacks,
   whenPermanent,
 } from '../templates';
 import { allOfConditions } from '../condition';
+import type { TokenSpec } from '../ability';
 import { constant } from '../value';
-import { allOf, ofSubtype, ofType, SELF, YOURS } from '../selector';
+import { creatureToken } from '../tokens';
+import { allOf, named, ofSubtype, ofType, SELF, YOURS } from '../selector';
 import { defineCard } from './index';
 
 export function registerCoveragePr07Overrides(): void {
@@ -118,6 +121,58 @@ export function registerCoveragePr07Overrides(): void {
           ],
           description:
             'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control',
+        }),
+      ],
+    },
+  );
+
+  // Rite of the Raging Storm: the restriction names the creatures, so a Lightning Rager made by
+  // any other source is covered too, and a copy of one is not (a copy has the copied name).
+  // Each player's upkeep gives THAT player (not Rite's controller) the token, and the token's own
+  // ability sacrifices it at the beginning of the next end step, whoever's turn it is.
+  const LIGHTNING_RAGER: TokenSpec = {
+    ...creatureToken({
+      name: 'Lightning Rager',
+      subtypes: ['Elemental'],
+      colors: ['R'],
+      power: 5,
+      toughness: 1,
+      keywords: ['trample', 'haste'],
+    }),
+    triggers: [
+      triggered(onEndStep('each'), {
+        effects: [{ op: 'sacrifice', target: 'source' }],
+        description: 'At the beginning of the end step, sacrifice this token',
+      }),
+    ],
+  };
+  defineCard(
+    '984f92dd-cb9b-4421-a8e6-75bfe566be10',
+    'Rite of the Raging Storm',
+    [
+      "Creatures named Lightning Rager can't attack you or planeswalkers you control.",
+      'At the beginning of each player\'s upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and "At the beginning of the end step, sacrifice this token."',
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'attackRestriction',
+          filter: named('Lightning Rager'),
+          includePlaneswalkers: true,
+        },
+      ],
+      triggers: [
+        triggered(onUpkeep('each'), {
+          effects: [
+            {
+              op: 'createTokenForPlayer',
+              target: 'eventPlayer',
+              spec: LIGHTNING_RAGER,
+              count: constant(1),
+            },
+          ],
+          description:
+            'At the beginning of each player\'s upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and "At the beginning of the end step, sacrifice this token."',
         }),
       ],
     },

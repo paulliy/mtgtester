@@ -9691,3 +9691,34 @@ test('Eriette of the Charmed Apple: at your end step each opponent loses X life 
     ).toHaveText('38');
   }
 });
+
+test('Rite of the Raging Storm: a creature named Lightning Rager cannot attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Rite of the Raging Storm: a creature named Lightning Rager cannot attack you',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
+});
+
+test("Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Lightning Rager/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  // Sacrificed at the end step: no Lightning Rager is left on the battlefield.
+  await expect(permanent(page, 'Lightning Rager')).toHaveCount(0);
+});

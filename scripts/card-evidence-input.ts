@@ -2379,6 +2379,16 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Rite of the Raging Storm: a creature named Lightning Rager cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },
