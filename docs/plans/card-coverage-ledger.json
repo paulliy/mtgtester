@@ -1460,15 +1460,19 @@
   {
     "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
     "name": "Frontier Warmonger",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cba58942-b98c-45aa-8651-7dc666e31c93",

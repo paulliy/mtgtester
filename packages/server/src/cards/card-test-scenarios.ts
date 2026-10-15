@@ -12411,6 +12411,33 @@ function tomikAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function warmongerScenario(gameId: GameId): CardTestScenario {
+  const warmonger = pinnedFrom(COVERAGE_PR06, 'Frontier Warmonger');
+  return pr01Scenario(gameId, {
+    id: 'frontier-warmonger-viewer-menace',
+    title: 'Frontier Warmonger: the creatures attacking an opponent gain menace',
+    instructions: [
+      'Frontier Warmonger, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Ox only, leaving Lab Servo and Frontier Warmonger at home, and confirm.',
+    ],
+    expectedOutcome:
+      'The ability triggered for the creatures attacking P2: Lab Ox has menace until end of turn, while Lab Servo, which did not attack, does not. Lab Ox dealt 4 to P2, who is at 36.',
+    oracleSha256: warmonger.sha256,
+    clauseIds: ['frontier-warmonger-menace'],
+    decks: {
+      P1: [warmonger.card, LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Frontier Warmonger', 'Lab Ox', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12684,6 +12711,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'mangara-viewer-one-attacker',
   'tomik-viewer-affinity-for-planeswalkers',
   'tomik-viewer-attack-drain-and-draw',
+  'frontier-warmonger-viewer-menace',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13029,6 +13057,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mangara-viewer-one-attacker': (gameId) => mangaraScenario(gameId, 1),
   'tomik-viewer-affinity-for-planeswalkers': tomikAffinityScenario,
   'tomik-viewer-attack-drain-and-draw': tomikAttackScenario,
+  'frontier-warmonger-viewer-menace': warmongerScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

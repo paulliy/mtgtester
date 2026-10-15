@@ -9346,3 +9346,22 @@ test('Tomik: an opponent attacking you with two creatures loses 3 life and you d
   ).toHaveText('37');
   await expect(page.locator('.human-zone .life-badge')).toHaveText('35');
 });
+
+test('Frontier Warmonger: the creatures attacking an opponent gain menace', async ({ page }) => {
+  await runScenario(page, 'Frontier Warmonger: the creatures attacking an opponent gain menace');
+  await expect(permanent(page, 'Lab Ox')).not.toContainText(/menace/i);
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/gain menace until end of turn.* resolves/i).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('36');
+});

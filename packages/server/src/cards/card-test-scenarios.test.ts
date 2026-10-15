@@ -425,6 +425,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'mangara-viewer-one-attacker',
       'tomik-viewer-affinity-for-planeswalkers',
       'tomik-viewer-attack-drain-and-draw',
+      'frontier-warmonger-viewer-menace',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

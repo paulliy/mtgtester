@@ -967,3 +967,24 @@ describe('Tomik Card Test Lab scenarios', () => {
     replays('tomik-viewer-attack-drain-and-draw', steps);
   });
 });
+
+describe('Frontier Warmonger Card Test Lab scenario', () => {
+  it('frontier-warmonger-viewer-menace — Lab Ox, attacking P2, gains menace; Lab Servo, at home, does not', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['__no_attack__', 'P2', '__no_attack__'] },
+    ];
+    const { scenario, state, seat } = run('frontier-warmonger-viewer-menace', steps);
+    const grants = state.eventLog.filter((event) => event.type === 'grantKeyword');
+    expect(grants.map((event) => event.payload)).toMatchObject([
+      {
+        source: expect.stringContaining('Frontier Warmonger'),
+        targets: ['Lab Ox'],
+        keyword: 'menace',
+      },
+    ]);
+    expect(seat('P2').life).toBe(36);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('frontier-warmonger-viewer-menace', steps);
+  });
+});

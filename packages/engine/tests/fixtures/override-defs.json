@@ -7032,6 +7032,37 @@
     }
   },
   {
+    "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
+    "name": "Frontier Warmonger",
+    "handledLines": [
+      "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn",
+          "effects": [
+            {
+              "keyword": "menace",
+              "op": "grantKeywordToAttackGroupUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a",
     "name": "Scalelord Reckoner",
     "handledLines": [],
@@ -16333,6 +16364,37 @@
               }
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-frontier-warmonger",
+    "name": "Frontier Warmonger",
+    "handledLines": [
+      "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn",
+          "effects": [
+            {
+              "keyword": "menace",
+              "op": "grantKeywordToAttackGroupUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
           }
         }
       ]

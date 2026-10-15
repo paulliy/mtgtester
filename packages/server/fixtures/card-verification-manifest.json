@@ -10075,6 +10075,29 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "9cb741ae-14d6-4a8d-bfad-703abfe3682c": {
+      "name": "Frontier Warmonger",
+      "oracleSha256": "044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "frontier-warmonger-menace",
+          "oracleText": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+          "implementation": [
+            "an attackDeclared trigger for any player's attack, one firing per attacked opponent of yours with the attackers at that opponent or a planeswalker they control as its group (yours included, an attack on your own planeswalker not counting); the group is bound by object when it triggers and its creatures that are still on the battlefield gain menace until end of turn as it resolves, nothing else does"
+          ],
+          "engineTestIds": [
+            "frontier-warmonger-pinned-oracle-supported",
+            "frontier-warmonger-group",
+            "frontier-warmonger-per-opponent",
+            "frontier-warmonger-planeswalker",
+            "frontier-warmonger-binding"
+          ],
+          "viewerScenarioIds": ["frontier-warmonger-viewer-menace"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -5090,6 +5090,150 @@ describe('Tomik, Wielder of Law', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.23 Frontier Warmonger
+// ---------------------------------------------------------------------------------------------
+
+describe('Frontier Warmonger', () => {
+  const { card } = pinned('Frontier Warmonger');
+
+  /** P1 controls the Warmonger and a Bear; each other player has two Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const warmonger = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', GRIZZLY('Lab P1 Bear'));
+    const bears = Object.fromEntries(
+      (['P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        [1, 2].map((n) => spawn(ctx, id, GRIZZLY(`Lab ${id} Bear ${n}`))),
+      ]),
+    ) as Record<'P2' | 'P3' | 'P4', EnginePermanent[]>;
+    return { ctx, warmonger, mine, bears };
+  }
+  const triggers = (ctx: GameContext) =>
+    ctx.state.eventLog.filter(
+      (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Frontier Warmonger',
+    ).length;
+  /** Which of `creatures` have menace as the blockers are declared, that is during combat. */
+  function menaceAtBlocks(ctx: GameContext, attacks: Record<string, string>, ids: string[]) {
+    const seen = new Set<string>();
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+      if (decision.presentationBlockDeclaration !== undefined) {
+        for (const id of ids) {
+          const perm = ctx.state.battlefield.find((p) => p.id === id);
+          if (perm !== undefined && hasKeyword(ctx, perm, 'menace')) seen.add(id);
+        }
+        return declareBlocks(decision, () => null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return seen;
+  }
+
+  it('frontier-warmonger-pinned-oracle-supported — the override reads one attack trigger per attacked opponent of yours, counting planeswalker attacks, granting menace to exactly that group', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'attackDeclared',
+      attacker: 'any',
+      attacking: { who: 'opponent', planeswalkers: true },
+      perDefender: true,
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'grantKeywordToAttackGroupUntilEot', keyword: 'menace' },
+    ]);
+  });
+
+  it('frontier-warmonger-group — the creatures attacking an opponent of yours gain menace, and creatures attacking you or another target do not', () => {
+    const { ctx, bears } = board('warmonger-group');
+    turnOfPlayer(ctx, 'P2');
+    const [first, second] = bears.P2 as [EnginePermanent, EnginePermanent];
+    const seen = menaceAtBlocks(ctx, { [first.id]: 'P3', [second.id]: 'P1' }, [
+      first.id,
+      second.id,
+    ]);
+    expect([...seen]).toEqual([first.id]);
+    expect(triggers(ctx)).toBe(1);
+
+    // You are not your own opponent: your creatures attacking an opponent do get menace.
+    const mine = board('warmonger-mine');
+    const seenMine = menaceAtBlocks(mine.ctx, { [mine.mine.id]: 'P2' }, [mine.mine.id]);
+    expect([...seenMine]).toEqual([mine.mine.id]);
+  });
+
+  it('frontier-warmonger-per-opponent — one attack on two opponents triggers once for each group, and one on a single opponent is one trigger for all its attackers', () => {
+    const split = board('warmonger-split');
+    turnOfPlayer(split.ctx, 'P2');
+    const [a, b] = split.bears.P2 as [EnginePermanent, EnginePermanent];
+    const seenSplit = menaceAtBlocks(split.ctx, { [a.id]: 'P3', [b.id]: 'P4' }, [a.id, b.id]);
+    expect(seenSplit.size).toBe(2);
+    expect(triggers(split.ctx)).toBe(2);
+
+    const same = board('warmonger-same');
+    turnOfPlayer(same.ctx, 'P2');
+    const [c, d] = same.bears.P2 as [EnginePermanent, EnginePermanent];
+    const seenSame = menaceAtBlocks(same.ctx, { [c.id]: 'P3', [d.id]: 'P3' }, [c.id, d.id]);
+    expect(seenSame.size).toBe(2);
+    expect(triggers(same.ctx)).toBe(1);
+  });
+
+  it('frontier-warmonger-planeswalker — attacking an opponent’s planeswalker counts, attacking your own planeswalker does not', () => {
+    const theirs = board('warmonger-their-walker');
+    const walker = spawn(theirs.ctx, 'P3', WALKER());
+    turnOfPlayer(theirs.ctx, 'P2');
+    const bear = theirs.bears.P2[0]!;
+    expect([...menaceAtBlocks(theirs.ctx, { [bear.id]: walker.id }, [bear.id])]).toEqual([bear.id]);
+
+    const mine = board('warmonger-my-walker');
+    const own = spawn(mine.ctx, 'P1', WALKER());
+    turnOfPlayer(mine.ctx, 'P2');
+    const other = mine.bears.P2[0]!;
+    expect(menaceAtBlocks(mine.ctx, { [other.id]: own.id }, [other.id]).size).toBe(0);
+    expect(triggers(mine.ctx)).toBe(0);
+  });
+
+  it('frontier-warmonger-binding — the group is bound when it triggers: if one of those creatures is destroyed in response the rest still gain menace, a creature that entered later does not, and it all ends with the turn', () => {
+    const { ctx, bears } = board('warmonger-bound');
+    conjure(ctx, 'P1', ZAP, 'hand');
+    turnOfPlayer(ctx, 'P2');
+    const [first, second] = bears.P2 as [EnginePermanent, EnginePermanent];
+    const late = spawn(ctx, 'P2', GRIZZLY('Lab Late Bear'));
+    let zapped = false;
+    let menaceAtBlocks: boolean[] = [];
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) =>
+          id === first.id || id === second.id ? 'P3' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined) {
+        menaceAtBlocks = [hasKeyword(ctx, second, 'menace'), hasKeyword(ctx, late, 'menace')];
+        return declareBlocks(decision, () => null);
+      }
+      const zap = decision.options.findIndex(
+        (option) => decision.player === 'P1' && option.description.includes('Lab Zap'),
+      );
+      if (zap >= 0 && !zapped && ctx.state.stack.length > 0) {
+        zapped = true;
+        const slot = decision.options[zap]!.targets![0]!;
+        return { index: zap, targets: new Map([[slot.slot, first.id]]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(zapped).toBe(true);
+    expect(ctx.state.battlefield.includes(first)).toBe(false);
+    expect(menaceAtBlocks).toEqual([true, false]);
+    // Until end of turn: the turn is over and the grant is gone.
+    expect(hasKeyword(ctx, second, 'menace')).toBe(false);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -5237,6 +5381,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Tomik, Wielder of Law',
     sha256: 'aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Frontier Warmonger',
+    sha256: '044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de',
+    clauseCount: 1,
     authored: true,
   },
   {

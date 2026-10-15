@@ -206,6 +206,36 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Frontier Warmonger: triggers once for each opponent of yours that creatures attack, per
+  // declaration, for any player's attack, yours included. The group is exactly the creatures that
+  // attack that opponent or a planeswalker they control (an attack on a planeswalker is an attack on
+  // it for this card), bound when the ability triggers: "those creatures" gain menace until end of
+  // turn as it resolves, even if some have since left combat, and nothing else does.
+  defineCard(
+    '9cb741ae-14d6-4a8d-bfad-703abfe3682c',
+    'Frontier Warmonger',
+    [
+      'Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.',
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'any',
+            attacking: { who: 'opponent', planeswalkers: true },
+            perDefender: true,
+          },
+          {
+            effects: [{ op: 'grantKeywordToAttackGroupUntilEot', keyword: 'menace' }],
+            description:
+              'Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

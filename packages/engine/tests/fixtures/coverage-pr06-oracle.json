@@ -847,6 +847,40 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de",
+      "card": {
+        "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
+        "scryfallId": "824aa845-0523-4434-8992-bce42f5b2bcb",
+        "name": "Frontier Warmonger",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warrior"
+        ],
+        "oracleText": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

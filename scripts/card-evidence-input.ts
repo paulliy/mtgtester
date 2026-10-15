@@ -2310,6 +2310,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Tomik: an opponent attacking you with two creatures loses 3 life and you draw'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Warmonger: the creatures attacking an opponent gain menace'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);
