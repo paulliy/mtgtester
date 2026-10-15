@@ -116,8 +116,6 @@ const REASONS: Record<string, string> = {
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
-  'Lightning Runner':
-    'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -276,6 +274,7 @@ describe('Marchesa catalog audit containment', () => {
     'Mangara, the Diplomat',
     'Tomik, Wielder of Law',
     'Promise of Loyalty',
+    'Lightning Runner',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

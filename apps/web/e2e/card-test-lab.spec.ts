@@ -9575,3 +9575,42 @@ test('Promise of Loyalty: a vowed creature cannot attack its caster but can atta
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('36');
 });
+
+test('Lightning Runner: paying eight energy untaps your creatures and adds a combat phase', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lightning Runner' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The trigger gives {E}{E}, taking you to eight, and offers the payment.
+  const pay = page.getByRole('button', { name: 'Pay', exact: true });
+  await passUntil(page, pay);
+  await pay.click();
+
+  // Lab Ox untapped and the additional combat phase offers a second declaration.
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  for (const name of ['Lightning Runner', 'Lab Ox'])
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('28');
+});

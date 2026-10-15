@@ -22,6 +22,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { computeCharacteristics } from '../src/effects/continuous';
 import { runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
@@ -198,6 +199,46 @@ function attackOptionsFor(
   return offered;
 }
 
+/**
+ * Run the active player's combat phases (the regular one and any additional ones). `attacksFor`
+ * gives that combat's attacks (creature object id to a player id or planeswalker object id;
+ * everything else stays home), `onDeclare` sees the game just before each declaration, nobody
+ * blocks, and every player passes so triggers go on the stack and resolve through the normal
+ * priority loop. `answer` takes any other decision.
+ */
+function fight(
+  ctx: GameContext,
+  attacksFor: (combat: number) => Record<string, string>,
+  answer?: Answer,
+  onDeclare?: (combat: number) => void,
+) {
+  let combats = 0;
+  const run = pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+    if (decision.presentationAttackDeclaration !== undefined) {
+      const combat = combats++;
+      const attacks = attacksFor(combat);
+      onDeclare?.(combat);
+      return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+    }
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, () => null);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+  return { combats, decisions: run.decisions };
+}
+
+/** Pays energy when offered; with `decline`, always declines. */
+const payEnergy =
+  (decline = false): Answer =>
+  (decision) => {
+    const index = decision.options.findIndex((option) =>
+      decline ? option.type === 'decline' : /^Pay \d+ energy$/.test(option.description),
+    );
+    return { index: Math.max(index, 0), targets: new Map() };
+  };
+
 // ---------------------------------------------------------------------------------------------
 // PR07.04 Promise of Loyalty
 // ---------------------------------------------------------------------------------------------
@@ -336,6 +377,129 @@ describe('Promise of Loyalty', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.03 Lightning Runner
+// ---------------------------------------------------------------------------------------------
+
+describe('Lightning Runner', () => {
+  const { card } = pinned('Lightning Runner');
+  const TRINKET = oracle({ name: 'Lab Trinket', typeLine: 'Artifact', manaCost: '{1}' });
+  const BYSTANDER = GRIZZLY('Lab Bystander');
+
+  /**
+   * P1 controls the Runner (2/2 double strike, haste), a tapped Bear, a tapped Forest and a tapped
+   * Trinket; P2 controls a tapped Bystander. P1 has `energy` energy counters.
+   */
+  function board(seed: string, energy: number) {
+    const ctx = pod(seed);
+    const runner = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', GRIZZLY('Lab Bear'), { tapped: true });
+    const forestPermanent = spawn(ctx, 'P1', forest(), { tapped: true });
+    const trinket = spawn(ctx, 'P1', TRINKET, { tapped: true });
+    const bystander = spawn(ctx, 'P2', BYSTANDER, { tapped: true });
+    playerById(ctx, 'P1').energy = energy;
+    return { ctx, runner, bear, forestPermanent, trinket, bystander };
+  }
+
+  it('lightning-runner-pinned-oracle-supported — the authored override carries the attack trigger and the keywords still parse', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'attacks', subject: { kind: 'self' } });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'gainEnergy', amount: { kind: 'const', n: 2 } },
+      {
+        op: 'mayPayEnergy',
+        amount: { kind: 'const', n: 8 },
+        then: [
+          {
+            op: 'untapEach',
+            selector: {
+              kind: 'allOf',
+              of: [
+                { kind: 'type', value: 'Creature' },
+                { kind: 'controller', who: 'you' },
+              ],
+            },
+          },
+          { op: 'extraCombatPhase' },
+        ],
+      },
+    ]);
+    const { ctx, runner } = board('runner-keywords', 0);
+    const chars = computeCharacteristics(ctx, runner);
+    expect(chars.keywords).toEqual(expect.arrayContaining(['double strike', 'haste']));
+  });
+
+  it('lightning-runner-pay-eight — attacking gains two energy, then paying eight untaps only your creatures and adds a combat phase right after this one', () => {
+    const { ctx, runner, bear, forestPermanent, trinket, bystander } = board('runner-pay', 6);
+    const seen: { bear: boolean; bystander: boolean; land: boolean; trinket: boolean }[] = [];
+    const run = fight(
+      ctx,
+      () => ({ [runner.id]: 'P2' }),
+      payEnergy(),
+      () =>
+        seen.push({
+          bear: bear.tapped,
+          bystander: bystander.tapped,
+          land: forestPermanent.tapped,
+          trinket: trinket.tapped,
+        }),
+    );
+    // Two combat phases: the regular one and the additional one.
+    expect(run.combats).toBe(2);
+    // 6 + 2 = 8 energy, all paid; the untapped Runner then attacks again and gains two more.
+    expect(playerById(ctx, 'P1').energy).toBe(2);
+    // Before the second declaration the Bear is untapped; the opposing creature, the land and the
+    // artifact are not creatures you control, so they stay tapped.
+    expect(seen[0]).toEqual({ bear: true, bystander: true, land: true, trinket: true });
+    expect(seen[1]).toEqual({ bear: false, bystander: true, land: true, trinket: true });
+    // The untapped Runner attacked again: 4 double-strike damage in each combat.
+    expect(playerById(ctx, 'P2').life).toBe(40 - 8);
+    expect(ctx.state.extraCombatPhases).toBe(0);
+  });
+
+  it('lightning-runner-decline — declining the payment keeps the energy and adds no combat phase', () => {
+    const { ctx, runner, bear } = board('runner-decline', 6);
+    const run = fight(ctx, () => ({ [runner.id]: 'P2' }), payEnergy(true));
+    expect(run.combats).toBe(1);
+    expect(playerById(ctx, 'P1').energy).toBe(8);
+    expect(bear.tapped).toBe(true);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 4);
+  });
+
+  it('lightning-runner-short-of-energy — with fewer than eight energy after gaining two, no payment is offered and nothing happens', () => {
+    const { ctx, runner, bear } = board('runner-short', 5);
+    const run = fight(ctx, () => ({ [runner.id]: 'P2' }), payEnergy());
+    expect(run.combats).toBe(1);
+    expect(
+      run.decisions.some((decision) =>
+        decision.options.some((option) => option.type === 'payEnergy'),
+      ),
+    ).toBe(false);
+    expect(playerById(ctx, 'P1').energy).toBe(7);
+    expect(bear.tapped).toBe(true);
+  });
+
+  it('lightning-runner-chained — an additional combat made during an additional combat is also run, once each', () => {
+    const { ctx, runner } = board('runner-chain', 14);
+    const run = fight(ctx, () => ({ [runner.id]: 'P2' }), payEnergy());
+    // 14 + 2 = 16, pay 8; in the second combat 8 + 2 = 10, pay 8; in the third 2 + 2 = 4, no payment.
+    expect(run.combats).toBe(3);
+    expect(playerById(ctx, 'P1').energy).toBe(4);
+    expect(ctx.state.extraCombatPhases).toBe(0);
+  });
+
+  it("lightning-runner-opponent-attack — an opponent's creature attacking does not trigger it, and the Runner not attacking gains nothing", () => {
+    const { ctx, bystander } = board('runner-quiet', 6);
+    bystander.tapped = false;
+    turnOfPlayer(ctx, 'P2');
+    const run = fight(ctx, () => ({ [bystander.id]: 'P1' }));
+    expect(run.combats).toBe(1);
+    expect(playerById(ctx, 'P1').energy).toBe(6);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -362,6 +526,12 @@ const RESTORED: RestoredCard[] = [
     clauseCount: 1,
     authored: true,
     manifestOwnedByWhiteBlackControl: true,
+  },
+  {
+    name: 'Lightning Runner',
+    sha256: '3c1a95336f34a682447de952888e4e51c9a8490195569c715edf15cbba6b2b43',
+    clauseCount: 1,
+    authored: true,
   },
 ];
 

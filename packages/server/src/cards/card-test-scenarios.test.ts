@@ -525,6 +525,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'wall-of-tears-viewer-blocked-creature-returns',
       'human-torch-viewer-keywords-and-damage-copy',
       'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
+      'lightning-runner-viewer-pay-energy-extra-combat',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

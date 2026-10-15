@@ -12716,6 +12716,38 @@ function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function lightningRunnerScenario(gameId: GameId): CardTestScenario {
+  const runner = pinnedFrom(COVERAGE_PR07, 'Lightning Runner');
+  return pr01Scenario(gameId, {
+    id: 'lightning-runner-viewer-pay-energy-extra-combat',
+    title: 'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+    instructions: [
+      'Lightning Runner (2/2 double strike, haste) and a tapped Lab Ox (4/4) are on your battlefield, and you have six energy.',
+      'Pass priority to the declare attackers step and attack P2 with Lightning Runner. Its trigger gives you {E}{E}; pay eight energy when asked.',
+      'Lab Ox untaps and an additional combat phase follows this one. Attack P2 with both Lightning Runner and Lab Ox.',
+    ],
+    expectedOutcome:
+      'Lightning Runner dealt 4 damage in the first combat (double strike) and, with Lab Ox, 8 more in the additional combat: P2 is at 28. You paid all eight energy and gained two more when Lightning Runner attacked again, so you have 2.',
+    oracleSha256: runner.sha256,
+    clauseIds: ['lightning-runner-attack-trigger'],
+    decks: {
+      P1: [runner.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lightning Runner'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      energy: [{ playerId: 'P1', amount: 6 }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13016,6 +13048,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'wall-of-tears-viewer-blocked-creature-returns',
   'human-torch-viewer-keywords-and-damage-copy',
   'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
+  'lightning-runner-viewer-pay-energy-extra-combat',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13488,6 +13521,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'wall-of-tears-viewer-blocked-creature-returns': wallOfTearsScenario,
   'human-torch-viewer-keywords-and-damage-copy': humanTorchScenario,
   'promise-of-loyalty-viewer-vowed-creature-cant-attack-you': promiseOfLoyaltyScenario,
+  'lightning-runner-viewer-pay-energy-extra-combat': lightningRunnerScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

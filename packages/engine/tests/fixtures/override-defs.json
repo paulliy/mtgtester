@@ -2531,8 +2531,61 @@
   {
     "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
     "name": "Lightning Runner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you get {E}{E}, then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 8
+              },
+              "op": "mayPayEnergy",
+              "then": [
+                {
+                  "op": "untapEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "extraCombatPhase"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
@@ -21746,8 +21799,61 @@
   {
     "oracleId": "oracle-lightning-runner",
     "name": "Lightning Runner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you get {E}{E}, then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 8
+              },
+              "op": "mayPayEnergy",
+              "then": [
+                {
+                  "op": "untapEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "extraCombatPhase"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-liliana-of-the-veil",

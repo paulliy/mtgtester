@@ -2229,6 +2229,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
+    "name": "Lightning Runner",
+    "package": "PR07.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Untap all creatures you control is implemented as untapEach of all permanents you control."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
     "name": "Living Death",
     "package": "PR03.05",

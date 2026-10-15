@@ -5572,7 +5572,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 51,
+      "uniqueOracleIds": 50,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6759,6 +6759,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
+      "name": "Lightning Runner",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the untap was applied to every permanent you control): the authored override in coverage-pr07.ts gains two energy, then lets you pay eight; paying untaps only creatures you control and creates one additional combat phase after the current one. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
     }
   ]
 }

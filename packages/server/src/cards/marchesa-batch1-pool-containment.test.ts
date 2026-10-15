@@ -93,6 +93,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Killian, Ink Duelist',
       'Kor Spiritdancer',
       'Land Tax',
+      'Lightning Runner',
       'Living Death',
       'Loran of the Third Path',
       'Mangara, the Diplomat',

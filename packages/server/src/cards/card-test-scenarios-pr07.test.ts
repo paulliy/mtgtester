@@ -176,3 +176,36 @@ describe('Promise of Loyalty Card Test Lab scenario', () => {
     replays('promise-of-loyalty-viewer-vowed-creature-cant-attack-you', steps);
   });
 });
+
+describe('Lightning Runner Card Test Lab scenario', () => {
+  it('lightning-runner-viewer-pay-energy-extra-combat — paying eight energy untaps Lab Ox and runs a second combat phase in which both attack', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Pay 8 energy' },
+      { action: 'Declare attackers', targets: ['P2', 'P2'] },
+    ];
+    const declarations: number[] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'lightning-runner-viewer-pay-energy-extra-combat',
+      steps,
+      (request) => {
+        if (
+          request.legalActions.some((action) => action.description.startsWith('Declare attackers'))
+        )
+          declarations.push(
+            request.legalActions.find((action) =>
+              action.description.startsWith('Declare attackers'),
+            )!.targets?.length ?? 0,
+          );
+      },
+    );
+    // One eligible attacker in the first combat (Lab Ox is tapped), two in the additional one.
+    expect(declarations).toEqual([1, 2]);
+    expect(seat('P1').energy).toBe(2);
+    expect(seat('P2').life).toBe(28);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('lightning-runner-viewer-pay-energy-extra-combat', steps);
+  });
+});
