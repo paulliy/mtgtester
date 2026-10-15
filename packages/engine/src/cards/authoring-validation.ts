@@ -616,6 +616,24 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       path: `${path}.includePlaneswalkers`,
       message: 'planeswalker attack tax must be true when present',
     });
+  if (record['kind'] === 'attackRestriction') {
+    if (record['includePlaneswalkers'] !== true)
+      issues.push({
+        path: `${path}.includePlaneswalkers`,
+        message: 'an attack restriction covers planeswalkers and must say so',
+      });
+    const cost = record['cost'];
+    if (
+      cost !== undefined &&
+      (cost === null ||
+        typeof cost !== 'object' ||
+        (cost as Record<string, unknown>)['perCounterOnCreature'] !== true)
+    )
+      issues.push({
+        path: `${path}.cost`,
+        message: 'an attack restriction cost must be per counter on the creature',
+      });
+  }
   if (
     [
       'transferCountersFromTriggerObject',

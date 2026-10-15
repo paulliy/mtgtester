@@ -35,7 +35,7 @@ import {
   flushDamageReflections,
   permanentSource,
 } from '../effects/resolve';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -63,6 +63,7 @@ import {
   manaSourcesFor,
   triggersOf,
 } from '../state/queries';
+import type { RuleStaticEntry } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
 import { queueStepTriggers } from '../turn/turn';
@@ -130,22 +131,66 @@ function attackTaxApplies(
   );
 }
 
-function attackTax(ctx: GameContext, defendingPlayerId: PlayerId, atPlaneswalker: boolean): number {
+/**
+ * Does `creature` match this "can't attack you or planeswalkers you control" static, read from the
+ * static controller's point of view (Combat Calligrapher, Eriette, Rite of the Raging Storm,
+ * Nils)? The static is about attacks on its controller, and on their planeswalkers.
+ */
+function attackRestrictionApplies(
+  ctx: GameContext,
+  entry: RuleStaticEntry,
+  creature: EnginePermanent,
+  defendingPlayerId: PlayerId,
+): boolean {
+  return (
+    entry.static.kind === 'attackRestriction' &&
+    entry.controllerId === defendingPlayerId &&
+    matchesSelector(ctx, creature, entry.static.filter, {
+      cardId: entry.sourceCardId,
+      controllerId: entry.controllerId,
+    })
+  );
+}
+
+/**
+ * What `creature` pays to attack this defender (CR 508.1g): the flat tax, and, for a conditional
+ * restriction (Nils), one generic mana for each counter of any kind on that creature.
+ */
+function attackTax(
+  ctx: GameContext,
+  defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
+  creature: EnginePermanent,
+): number {
   return gatherRuleStatics(ctx).reduce((total, entry) => {
+    if (entry.static.kind === 'attackRestriction') {
+      if (
+        entry.static.cost === undefined ||
+        !attackRestrictionApplies(ctx, entry, creature, defendingPlayerId)
+      )
+        return total;
+      return (
+        total + Object.values(creature.counters).reduce((sum, count) => sum + Math.max(0, count), 0)
+      );
+    }
     if (!attackTaxApplies(entry, defendingPlayerId, atPlaneswalker)) return total;
     return entry.static.kind === 'attackTax' ? total + entry.static.amount : total;
   }, 0);
 }
 
+/** The joint cost of these creatures all attacking the same defender (CR 508.1g-h). */
 function attackCost(
   ctx: GameContext,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
-  count = 1,
+  creatures: readonly EnginePermanent[],
 ): ParsedManaCost {
   const cost = {
     ...emptyCost(),
-    generic: attackTax(ctx, defendingPlayerId, atPlaneswalker) * count,
+    generic: creatures.reduce(
+      (total, creature) => total + attackTax(ctx, defendingPlayerId, atPlaneswalker, creature),
+      0,
+    ),
   };
   const phyrexian = gatherRuleStatics(ctx).flatMap((entry) => {
     if (
@@ -156,7 +201,7 @@ function attackCost(
       return [];
     }
     const color = entry.static.phyrexianColor;
-    return Array.from({ length: count }, () => color);
+    return creatures.map(() => color);
   });
   return phyrexian.length > 0 ? { ...cost, phyrexian } : cost;
 }
@@ -169,12 +214,13 @@ function attackCost(
  */
 function canPayAttackTax(
   ctx: GameContext,
-  attackingPlayerId: PlayerId,
+  creature: EnginePermanent,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
 ): boolean {
-  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]);
   if (totalPips(cost) === 0) return true;
+  const attackingPlayerId = creature.controllerId;
   const player = playerById(ctx, attackingPlayerId);
   return canPay(
     cost,
@@ -199,15 +245,31 @@ function allAttackTargets(
 }
 
 /**
- * Promise of Loyalty: "Those creatures can't attack you or planeswalkers you control for as long
- * as they have a vow counter on them." The restriction covers the player and every planeswalker
- * that player controls.
+ * Hard attack restrictions (CR 508.1c), which always win over a requirement. Promise of Loyalty:
+ * "Those creatures can't attack you or planeswalkers you control for as long as they have a vow
+ * counter on them." And the statics that say the same of whatever matches a filter (Combat
+ * Calligrapher's Inklings, creatures enchanted by an Aura Eriette's controller controls, creatures
+ * named Lightning Rager): each covers the player and every planeswalker that player controls.
+ * Only the unconditional ones forbid; one with a cost is a tax (`attackTax`), never a ban.
  */
-function attackRestrictionAllows(creature: EnginePermanent, target: AttackTarget): boolean {
-  return !(creature.cantAttackPlayerWhileCounter ?? []).some(
-    (restriction) =>
-      restriction.playerId === target.player.id &&
-      counterCount(creature.counters, restriction.counter) > 0,
+function attackRestrictionAllows(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  target: AttackTarget,
+): boolean {
+  if (
+    (creature.cantAttackPlayerWhileCounter ?? []).some(
+      (restriction) =>
+        restriction.playerId === target.player.id &&
+        counterCount(creature.counters, restriction.counter) > 0,
+    )
+  )
+    return false;
+  return !gatherRuleStatics(ctx).some(
+    (entry) =>
+      entry.static.kind === 'attackRestriction' &&
+      entry.static.cost === undefined &&
+      attackRestrictionApplies(ctx, entry, creature, target.player.id),
   );
 }
 
@@ -244,13 +306,13 @@ function attackTargetsFor(
   opponents: readonly EnginePlayerState[],
 ): AttackTarget[] {
   const allowed = allAttackTargets(ctx, opponents).filter((t) =>
-    attackRestrictionAllows(creature, t),
+    attackRestrictionAllows(ctx, creature, t),
   );
   const payable = allowed.filter((t) =>
-    canPayAttackTax(ctx, creature.controllerId, t.player.id, t.planeswalker !== null),
+    canPayAttackTax(ctx, creature, t.player.id, t.planeswalker !== null),
   );
   const free = allowed.filter(
-    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
   return applyGoadScope(ctx, creature, payable, free);
 }
@@ -273,8 +335,8 @@ function freeAttackTargetsFor(
 ): AttackTarget[] {
   const free = allAttackTargets(ctx, opponents).filter(
     (t) =>
-      attackRestrictionAllows(creature, t) &&
-      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+      attackRestrictionAllows(ctx, creature, t) &&
+      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
   return applyGoadScope(ctx, creature, free, free);
 }
@@ -284,9 +346,9 @@ function* payAttackTax(
   attackingPlayerId: PlayerId,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
-  count: number,
+  creatures: readonly EnginePermanent[],
 ): GameGen<void> {
-  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, count);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, creatures);
   if (totalPips(cost) === 0) return;
   yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
 }
@@ -394,7 +456,7 @@ function buildAttackSubjects(
         .map((t) => ({
           playerId: t.player.id,
           life: t.player.life,
-          attackTax: attackTax(ctx, t.player.id, false),
+          attackTax: attackTax(ctx, t.player.id, false, creature),
         })),
       planeswalkers: legal.flatMap((t) =>
         t.planeswalker === null
@@ -405,7 +467,7 @@ function buildAttackSubjects(
                 controllerId: t.player.id,
                 name: t.planeswalker.name,
                 loyalty: counterCount(t.planeswalker.counters, 'loyalty'),
-                attackTax: attackTax(ctx, t.player.id, true),
+                attackTax: attackTax(ctx, t.player.id, true, creature),
               },
             ],
       ),
@@ -518,7 +580,7 @@ function validateAttackDeclaration(
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
-    const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures.length);
+    const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures);
     totalCost.generic += cost.generic;
     totalCost.phyrexian = [...(totalCost.phyrexian ?? []), ...(cost.phyrexian ?? [])];
   }
@@ -534,8 +596,8 @@ function validateAttackDeclaration(
   if (payable) return [];
   const violations: CombatViolation[] = [];
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
-    if (totalPips(attackCost(ctx, defenderId, atPlaneswalker)) === 0) continue;
     for (const creature of creatures) {
+      if (totalPips(attackCost(ctx, defenderId, atPlaneswalker, [creature])) === 0) continue;
       violations.push({
         subjectId: creature.id,
         kind: 'attackTax',
@@ -557,7 +619,7 @@ function* applyAttackDeclaration(
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): GameGen<void> {
   for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
-    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures.length);
+    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
     for (const creature of creatures) {
       const hadToAttack =
         hasAttackRequirement(ctx, creature) &&

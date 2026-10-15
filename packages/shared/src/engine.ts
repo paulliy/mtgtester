@@ -131,8 +131,9 @@ export interface AttackDeclarationSubject {
   name: string;
   power: number;
   toughness: number;
-  /** Legal defenders for this creature alone. `attackTax` is per-attacker; the total for a
-   * defender receiving several attackers is `attackTax * count`, checked jointly on submission. */
+  /** Legal defenders for this creature alone. `attackTax` is what THIS creature pays to attack
+   * that defender (it can differ by creature, e.g. by its counters); the total for a defender
+   * receiving several attackers is the sum over them, checked jointly on submission. */
   defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
   /**
    * Legal planeswalkers for this creature alone (CR 508.1b): planeswalkers its opponents control,

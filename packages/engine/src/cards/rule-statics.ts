@@ -156,6 +156,21 @@ export type RuleStatic =
    * on planeswalkers they control ("you or planeswalkers you control", Norn's Annex).
    */
   | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; includePlaneswalkers?: boolean }
+  /**
+   * "Creatures matching `filter` can't attack you or planeswalkers you control" (Combat
+   * Calligrapher, Eriette, Rite of the Raging Storm), or, with `cost`, "… unless their controller
+   * pays {X}" (Nils, Discipline Enforcer: X is the number of counters of all kinds on that
+   * creature). `filter` is read against the creature as it would attack, from this permanent's
+   * controller's point of view, and the restriction is about attacks on that controller only. A
+   * restriction always wins over an attack requirement (CR 508.1c), and a cost is paid per
+   * creature, never forced (CR 508.1d, 508.1g-h).
+   */
+  | {
+      kind: 'attackRestriction';
+      filter: Selector;
+      includePlaneswalkers: true;
+      cost?: { perCounterOnCreature: true };
+    }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }
