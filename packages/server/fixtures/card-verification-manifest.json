@@ -10156,6 +10156,40 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "d55cb52d-b35c-4602-a518-cd51f155a2d1": {
+      "name": "Human Torch",
+      "oracleSha256": "f335ec2abc29e719d8092c9d014a85aaf39073c6c40d93548a0d66f8846826a4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "human-torch-combat-keywords",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn.",
+          "implementation": [
+            "a beginning-of-combat step trigger on your turn with the intervening-if (CR 603.4) that you have cast a noncreature spell this turn, checked as combat begins and again on resolution; it grants Human Torch flying, double strike and haste until end of turn"
+          ],
+          "engineTestIds": [
+            "human-torch-pinned-oracle-supported",
+            "human-torch-keywords",
+            "human-torch-keywords-end"
+          ],
+          "viewerScenarioIds": ["human-torch-viewer-keywords-and-damage-copy"]
+        },
+        {
+          "id": "human-torch-attack-payment",
+          "oracleText": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent.",
+          "implementation": [
+            "an attack trigger whose payment is asked as it resolves (\"if you do\" is not a reflexive trigger) and, only if paid, grants Human Torch a triggered ability until end of turn: whenever it deals combat damage to a player, it, as the source, deals that much damage to each opponent of yours other than that player; each combat damage event copies on its own, so double strike copies again in the second step, and damage to a planeswalker or a blocker is not damage to an opponent"
+          ],
+          "engineTestIds": [
+            "human-torch-pay",
+            "human-torch-double-strike",
+            "human-torch-not-an-opponent"
+          ],
+          "viewerScenarioIds": ["human-torch-viewer-keywords-and-damage-copy"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

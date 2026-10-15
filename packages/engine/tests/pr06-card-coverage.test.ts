@@ -5505,6 +5505,226 @@ describe('Wall of Tears', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.27 Human Torch
+// ---------------------------------------------------------------------------------------------
+
+describe('Human Torch', () => {
+  const { card } = pinned('Human Torch');
+  const SIP = oracle({
+    name: 'Lab Sip',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 1 life.',
+  });
+  const SPIRIT = oracle({
+    name: 'Lab Spirit',
+    typeLine: 'Creature — Spirit',
+    manaCost: '{0}',
+    power: '1',
+    toughness: '1',
+  });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+
+  /** P1 controls a summoning-sick Human Torch and (with `lands`) the lands paying {R}{G}{W}{U}. */
+  function board(seed: string, lands = true) {
+    const ctx = pod(seed);
+    const torch = spawn(ctx, 'P1', card, { summoningSick: true });
+    if (lands)
+      for (const land of [mountain(), forest(), plains(), island()]) spawn(ctx, 'P1', land);
+    const bears = Object.fromEntries(
+      (['P2', 'P3', 'P4'] as const).map((id) => [id, spawn(ctx, id, GRIZZLY(`Lab ${id} Bear`))]),
+    ) as Record<'P2' | 'P3' | 'P4', EnginePermanent>;
+    return { ctx, torch, bears };
+  }
+  /** P1 casts `spell` from hand with no mana and lets it resolve. */
+  function castSpell(ctx: GameContext, playerId: string, spell: OracleCard) {
+    const object = conjure(ctx, playerId, spell, 'hand');
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts ${spell.name}`).toBeDefined();
+    takeAction(ctx, playerId, option!.payload as PriorityActionPayload);
+    settle(ctx);
+  }
+  /**
+   * P1's combat with Torch attacking `target`. Records Torch's keywords as blockers are declared,
+   * answers the pay prompt with `pay`, and lets `blockers` (blocker id to attacker id) stand.
+   */
+  function combat(
+    ctx: GameContext,
+    torch: EnginePermanent,
+    target: string,
+    pay: boolean,
+    blocks: Record<string, string> = {},
+  ) {
+    const seen: { keywords: string[]; prompts: string[] } = { keywords: [], prompts: [] };
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        // After the beginning of combat trigger resolved, as attackers are declared.
+        seen.keywords = [...computeCharacteristics(ctx, torch).keywords];
+        return declareAttacks(decision, (id) => (id === torch.id ? target : null));
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (id) => blocks[id] ?? null);
+      const payIndex = decision.options.findIndex((option) => /^Pay /.test(option.description));
+      if (payIndex >= 0) {
+        seen.prompts.push(decision.prompt);
+        const decline = decision.options.findIndex((option) =>
+          /^Don't pay$/.test(option.description),
+        );
+        return { index: pay ? payIndex : decline, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return seen;
+  }
+
+  it('human-torch-pinned-oracle-supported — the override reads an intervening-if beginning-of-combat grant of three keywords and an attack trigger whose payment grants a damage-copying trigger', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    const [combatTrigger, attackTrigger] = def.triggers as [Ability, Ability];
+    expect(combatTrigger.trigger).toEqual({
+      when: 'beginningOfCombat',
+      player: 'you',
+      condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+    });
+    expect(combatTrigger.effects.map((e) => (e as { keyword: string }).keyword)).toEqual([
+      'flying',
+      'double strike',
+      'haste',
+    ]);
+    const [pay] = attackTrigger.effects as [
+      { op: string; condition: unknown; then: { op: string; ability: Ability }[] },
+    ];
+    expect(pay.op).toBe('conditionalEffect');
+    expect(pay.condition).toMatchObject({ kind: 'mayPayMana' });
+    expect(pay.then[0]!.op).toBe('grantAbilityUntilEot');
+    expect(pay.then[0]!.ability.trigger).toEqual({
+      when: 'dealsCombatDamageToPlayer',
+      subject: { kind: 'self' },
+    });
+    expect(pay.then[0]!.ability.effects).toEqual([
+      { op: 'damageEachOtherOpponent', amount: { kind: 'damageDealt' } },
+    ]);
+  });
+
+  it('human-torch-keywords — with a noncreature spell cast this turn it gains flying, double strike and haste as combat begins, and with none (or only a creature spell) it does not', () => {
+    const noncreature = board('torch-noncreature', false);
+    castSpell(noncreature.ctx, 'P1', SIP);
+    const seen = combat(noncreature.ctx, noncreature.torch, 'P2', false);
+    expect(seen.keywords).toEqual(expect.arrayContaining(['flying', 'double strike', 'haste']));
+    // Haste let a summoning-sick Torch attack: it dealt double strike damage, 3 + 3.
+    expect(life(noncreature.ctx, 'P2')).toBe(34);
+
+    const none = board('torch-none', false);
+    const unseen = combat(none.ctx, none.torch, 'P2', false);
+    expect(unseen.keywords).not.toContain('flying');
+    expect(unseen.keywords).not.toContain('double strike');
+    expect(life(none.ctx, 'P2')).toBe(40); // summoning sick: it could not attack
+
+    const creature = board('torch-creature', false);
+    castSpell(creature.ctx, 'P1', SPIRIT);
+    expect(combat(creature.ctx, creature.torch, 'P2', false).keywords).not.toContain('haste');
+
+    // A noncreature spell an opponent cast is not yours.
+    const theirs = board('torch-their-spell', false);
+    castSpell(theirs.ctx, 'P2', SIP);
+    expect(combat(theirs.ctx, theirs.torch, 'P2', false).keywords).not.toContain('haste');
+  });
+
+  it('human-torch-keywords-end — the keywords last until end of turn only', () => {
+    const { ctx, torch } = board('torch-eot', false);
+    castSpell(ctx, 'P1', SIP);
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (id === torch.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(hasKeyword(ctx, torch, 'double strike')).toBe(false);
+    expect(hasKeyword(ctx, torch, 'flying')).toBe(false);
+  });
+
+  it('human-torch-pay — paying {R}{G}{W}{U} as it attacks makes each combat damage it deals to an opponent also damage each other opponent, and declining does nothing', () => {
+    const paid = board('torch-pay');
+    // Not summoning sick: attacking needs no haste for this clause.
+    paid.torch.summoningSick = false;
+    const seen = combat(paid.ctx, paid.torch, 'P2', true);
+    expect(seen.prompts).toHaveLength(1);
+    expect(life(paid.ctx, 'P2')).toBe(37);
+    expect(life(paid.ctx, 'P3')).toBe(37);
+    expect(life(paid.ctx, 'P4')).toBe(37);
+    expect(life(paid.ctx, 'P1')).toBe(40);
+    // The mana was spent: all four lands are tapped.
+    expect(
+      paid.ctx.state.battlefield.filter((p) => p.tapped && p.name !== 'Human Torch'),
+    ).toHaveLength(4);
+
+    const declined = board('torch-decline');
+    declined.torch.summoningSick = false;
+    combat(declined.ctx, declined.torch, 'P2', false);
+    expect(life(declined.ctx, 'P2')).toBe(37);
+    expect(life(declined.ctx, 'P3')).toBe(40);
+    expect(life(declined.ctx, 'P4')).toBe(40);
+
+    // Without the four colors there is no prompt at all.
+    const broke = board('torch-broke', false);
+    broke.torch.summoningSick = false;
+    expect(combat(broke.ctx, broke.torch, 'P2', true).prompts).toHaveLength(0);
+    expect(life(broke.ctx, 'P3')).toBe(40);
+  });
+
+  it('human-torch-double-strike — each combat damage event copies on its own, so double strike deals that much again to every other opponent', () => {
+    const { ctx, torch } = board('torch-double');
+    castSpell(ctx, 'P1', SIP);
+    combat(ctx, torch, 'P3', true);
+    expect(life(ctx, 'P3')).toBe(34);
+    expect(life(ctx, 'P2')).toBe(34);
+    expect(life(ctx, 'P4')).toBe(34);
+    // The copied damage is noncombat damage from Human Torch, dealt by the granted trigger.
+    const copies = ctx.state.eventLog.filter(
+      (e) =>
+        e.type === 'damage' &&
+        e.payload['combat'] === false &&
+        String(e.payload['source']).startsWith('Human Torch'),
+    );
+    expect(copies).toHaveLength(4);
+  });
+
+  it('human-torch-not-an-opponent — damage to a planeswalker, and a blocked Torch, copy nothing, and the grant is gone after the turn', () => {
+    const walked = board('torch-walker');
+    walked.torch.summoningSick = false;
+    const walker = spawn(walked.ctx, 'P2', WALKER());
+    combat(walked.ctx, walked.torch, walker.id, true);
+    expect(counterOf(walker)).toBe(2);
+    for (const id of ['P2', 'P3', 'P4']) expect(life(walked.ctx, id)).toBe(40);
+
+    const blocked = board('torch-blocked');
+    blocked.torch.summoningSick = false;
+    combat(blocked.ctx, blocked.torch, 'P2', true, { [blocked.bears.P2.id]: blocked.torch.id });
+    for (const id of ['P2', 'P3', 'P4']) expect(life(blocked.ctx, id)).toBe(40);
+
+    const turn = board('torch-turn');
+    turn.torch.summoningSick = false;
+    pump(runTurn(turn.ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (id === turn.torch.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pay = decision.options.findIndex((option) => /^Pay /.test(option.description));
+      if (pay >= 0) return { index: pay, targets: new Map() };
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(turn.ctx.state.effects.filter((e) => e.kind === 'grantAbility')).toEqual([]);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -5670,6 +5890,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Wall of Tears',
     sha256: '00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Human Torch',
+    sha256: 'f335ec2abc29e719d8092c9d014a85aaf39073c6c40d93548a0d66f8846826a4',
+    clauseCount: 2,
     authored: true,
   },
   {

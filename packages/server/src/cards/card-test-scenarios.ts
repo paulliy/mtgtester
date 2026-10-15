@@ -12550,6 +12550,38 @@ function wallOfTearsScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function humanTorchScenario(gameId: GameId): CardTestScenario {
+  const torch = pinnedFrom(COVERAGE_PR06, 'Human Torch');
+  const lands = [MOUNTAIN, FOREST, PLAINS, ISLAND];
+  return pr01Scenario(gameId, {
+    id: 'human-torch-viewer-keywords-and-damage-copy',
+    title:
+      'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+    instructions: [
+      'Human Torch (3/2), a Mountain, Forest, Plains and Island are on your battlefield, and Lab Free Trinket (a noncreature spell costing {0}) is in your hand.',
+      'Cast Lab Free Trinket and let it resolve, then move to combat: Human Torch gains flying, double strike and haste until end of turn at the beginning of combat.',
+      'Attack P2 with Human Torch. Pay {R}{G}{W}{U} when asked.',
+    ],
+    expectedOutcome:
+      'Human Torch dealt 3 combat damage to P2 in each of the two damage steps, and each time it dealt 3 more damage to each other opponent: P2, P3 and P4 are all at 34. The four lands are tapped.',
+    oracleSha256: torch.sha256,
+    clauseIds: ['human-torch-combat-keywords', 'human-torch-attack-payment'],
+    decks: {
+      P1: [torch.card, LAB_FREE_TRINKET, ...lands],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Lab Free Trinket'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Human Torch', ...lands.map((land) => land.name)] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12828,6 +12860,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tenuous-truce-viewer-you-attack',
   'tenuous-truce-viewer-they-attack',
   'wall-of-tears-viewer-blocked-creature-returns',
+  'human-torch-viewer-keywords-and-damage-copy',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13178,6 +13211,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tenuous-truce-viewer-you-attack': (gameId) => tenuousTruceScenario(gameId, 'you-attack'),
   'tenuous-truce-viewer-they-attack': (gameId) => tenuousTruceScenario(gameId, 'they-attack'),
   'wall-of-tears-viewer-blocked-creature-returns': wallOfTearsScenario,
+  'human-torch-viewer-keywords-and-damage-copy': humanTorchScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -2332,6 +2332,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

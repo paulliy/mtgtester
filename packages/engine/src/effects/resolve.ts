@@ -3946,6 +3946,14 @@ export function* executeAbility(
         });
         break;
       }
+      case 'damageEachOtherOpponent': {
+        const amount = amountOf(effect.amount);
+        for (const opponent of opponentsOf(ctx, controller.id)) {
+          if (opponent.id === scope.eventPlayerId) continue;
+          yield* dealDamageToObject(ctx, source, opponent.id, amount);
+        }
+        break;
+      }
       case 'damageEachPlayer': {
         // Earthquake's second half. Split from `damageEach` rather than folded in, because a
         // `Selector` describes permanents and players are not permanents.

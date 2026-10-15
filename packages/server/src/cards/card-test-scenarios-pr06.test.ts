@@ -1038,3 +1038,29 @@ describe('Wall of Tears Card Test Lab scenario', () => {
     replays('wall-of-tears-viewer-blocked-creature-returns', steps);
   });
 });
+
+describe('Human Torch Card Test Lab scenario', () => {
+  it('human-torch-viewer-keywords-and-damage-copy — a noncreature spell grants the keywords, and paying copies each of its two combat damages to the other opponents', () => {
+    const steps: Step[] = [
+      { action: 'Cast Lab Free Trinket' },
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Pay {' },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'human-torch-viewer-keywords-and-damage-copy',
+      steps,
+    );
+    for (const id of ['P2', 'P3', 'P4']) expect(seat(id).life, id).toBe(34);
+    expect(seat('P1').life).toBe(40);
+    for (const land of ['Mountain', 'Forest', 'Plains', 'Island'])
+      expect(onBattlefield(land)[0]?.tapped, land).toBe(true);
+    expect(
+      state.eventLog
+        .filter((event) => event.type === 'grantKeyword')
+        .map((event) => event.payload['keyword']),
+    ).toEqual(['flying', 'double strike', 'haste']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('human-torch-viewer-keywords-and-damage-copy', steps);
+  });
+});

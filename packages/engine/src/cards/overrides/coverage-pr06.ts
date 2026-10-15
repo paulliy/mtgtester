@@ -315,6 +315,65 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Human Torch: at the beginning of combat on your turn, if you've cast a noncreature spell this
+  // turn (an intervening-if, CR 603.4, checked as combat begins and as the ability resolves), it
+  // gains flying, double strike and haste until end of turn. Whenever it attacks, you may pay
+  // {R}{G}{W}{U}; "if you do" is not a reflexive trigger, so paying happens as the ability
+  // resolves and the grant follows at once: until end of turn it has a triggered ability, "whenever
+  // he deals combat damage to an opponent, he deals that much damage to each other opponent", from
+  // Human Torch as the source. It sees each combat damage event on its own, so double strike deals
+  // that much again in the second step. Damage to a planeswalker is not damage to an opponent.
+  defineCard(
+    'd55cb52d-b35c-4602-a518-cd51f155a2d1',
+    'Human Torch',
+    [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.",
+      'Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'beginningOfCombat', player: 'you' },
+          {
+            condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+            effects: [
+              { op: 'grantKeywordUntilEot', target: 'source', keyword: 'flying' },
+              { op: 'grantKeywordUntilEot', target: 'source', keyword: 'double strike' },
+              { op: 'grantKeywordUntilEot', target: 'source', keyword: 'haste' },
+            ],
+            description:
+              "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn",
+          },
+        ),
+        triggered(onAttacks(), {
+          effects: [
+            {
+              op: 'conditionalEffect',
+              condition: { kind: 'mayPayMana', cost: manaCost('{R}{G}{W}{U}') },
+              then: [
+                {
+                  op: 'grantAbilityUntilEot',
+                  target: 'source',
+                  ability: triggered(
+                    { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+                    {
+                      effects: [{ op: 'damageEachOtherOpponent', amount: { kind: 'damageDealt' } }],
+                      description:
+                        'Whenever he deals combat damage to an opponent, he deals that much damage to each other opponent',
+                    },
+                  ),
+                },
+              ],
+              else: [],
+            },
+          ],
+          description:
+            'Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent',
+        }),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

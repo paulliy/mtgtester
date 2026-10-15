@@ -776,6 +776,7 @@ const families = {
       grantKeywordToAttackGroupUntilEot: true,
       putCountersOnCreatureOfChoice: true,
       returnBlockedCreatureAtEndOfCombat: true,
+      damageEachOtherOpponent: true,
       grantProtectionEachUntilEot: true,
       dealDamage: true,
       dealDamageUnlessSacrifice: true,

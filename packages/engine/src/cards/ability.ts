@@ -877,6 +877,12 @@ export type Effect =
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
   | { op: 'damageEachPlayer'; amount: Value; source?: EffectRef }
   /**
+   * "It deals that much damage to each other opponent" (Human Torch): the source deals `amount`
+   * to each opponent of the ability's controller except the event player, the opponent it just
+   * dealt combat damage to.
+   */
+  | { op: 'damageEachOtherOpponent'; amount: Value }
+  /**
    * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). One
    * `destinations` entry per card that may be found — each independently offers "find or
    * decline" (CR 701.19c). `count` (Harvest Season's "up to X, where X is...") repeats

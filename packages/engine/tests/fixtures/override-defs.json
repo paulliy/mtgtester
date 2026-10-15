@@ -9612,6 +9612,106 @@
     }
   },
   {
+    "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
+    "name": "Human Torch",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.",
+      "Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn",
+          "effects": [
+            {
+              "keyword": "flying",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 1,
+                    "R": 1,
+                    "U": 1,
+                    "W": 1
+                  },
+                  "colorless": 0,
+                  "generic": 0
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "ability": {
+                    "description": "Whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+                    "effects": [
+                      {
+                        "amount": {
+                          "kind": "damageDealt"
+                        },
+                        "op": "damageEachOtherOpponent"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "subject": {
+                        "kind": "self"
+                      },
+                      "when": "dealsCombatDamageToPlayer"
+                    }
+                  },
+                  "op": "grantAbilityUntilEot",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "d5efba91-8400-41a3-91c6-cb5e81f07976",
     "name": "Iymrith, Desert Doom",
     "handledLines": [
@@ -17241,6 +17341,106 @@
               "kind": "self"
             },
             "when": "dealtDamage"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-human-torch",
+    "name": "Human Torch",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.",
+      "Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn",
+          "effects": [
+            {
+              "keyword": "flying",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 1,
+                    "R": 1,
+                    "U": 1,
+                    "W": 1
+                  },
+                  "colorless": 0,
+                  "generic": 0
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "ability": {
+                    "description": "Whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+                    "effects": [
+                      {
+                        "amount": {
+                          "kind": "damageDealt"
+                        },
+                        "op": "damageEachOtherOpponent"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "subject": {
+                        "kind": "self"
+                      },
+                      "when": "dealsCombatDamageToPlayer"
+                    }
+                  },
+                  "op": "grantAbilityUntilEot",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
           }
         }
       ]

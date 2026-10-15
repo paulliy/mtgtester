@@ -9433,3 +9433,41 @@ test('Wall of Tears: the creature it blocks returns to its owner’s hand at end
   await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
   await expect(permanent(page, 'Wall of Tears')).toHaveCount(1);
 });
+
+test('Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+  );
+  const trinket = handCard(page, 'Lab Free Trinket');
+  await expect(trinket).toHaveClass(/actionable/, { timeout: 15_000 });
+  await trinket.click();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Lab Free Trinket'));
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  // The beginning of combat trigger has resolved: Human Torch has the three keywords.
+  await expect(permanent(page, 'Human Torch')).toContainText(/double strike/i);
+  await expect(permanent(page, 'Human Torch')).toContainText(/flying/i);
+
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Human Torch' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  const pay = page.getByRole('button', { name: /^Pay \{/ });
+  await expect(pay).toBeVisible({ timeout: 15_000 });
+  await pay.click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const seat of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('34');
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
