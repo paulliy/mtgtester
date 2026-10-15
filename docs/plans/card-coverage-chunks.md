@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 to PR04 are complete, PR05 is in review and PR06 is next. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 to PR05 are complete, PR06 is in review and PR07 is next. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
@@ -9,16 +9,16 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR05 by interpreting every card in the committed
+numbers below were measured after PR06 by interpreting every card in the committed
 `packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
 `bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
 same numbers.
 
-| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | After PR04      | After PR05      | Remaining |
-| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------------- | --------------- | --------: |
-| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) | 612/802 (76.3%) | 635/802 (79.2%) |       167 |
-| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) |        11 |
-| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) | 707/906 (78.0%) | 730/906 (80.6%) |       176 |
+| Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | After PR04      | After PR05      | After PR06      | Remaining |
+| --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------: |
+| Fixture decks         | 511/802 (63.7%) | 539/802 (67.2%) | 572/802 (71.3%) | 565/802 (70.4%)  | 591/802 (73.7%) | 612/802 (76.3%) | 635/802 (79.2%) | 663/802 (82.7%) |       139 |
+| EDH staples           | 185/200 (92.5%) | 186/200 (93.0%) | 188/200 (94.0%) | 188/200 (94.0%)  | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) | 189/200 (94.5%) |        11 |
+| Combined unique cards | 604/906 (66.7%) | 633/906 (69.9%) | 666/906 (73.5%) | 659/906 (72.7%)  | 686/906 (75.7%) | 707/906 (78.0%) | 730/906 (80.6%) | 758/906 (83.7%) |       148 |
 
 PR01 and PR02 landed exactly as planned: all 29 and all 33 cards are modeled, no card regressed,
 and the remaining count for every deck matched the PR01 and PR02 columns below.
@@ -38,6 +38,11 @@ regressed: main plus those 27 cards gives exactly the 686 measured after PR03.
 PR04 modeled its 21 cards (707 measured). PR05 modeled 23 of its 26 cards; Spirit Mantle and
 Unquestioned Authority moved to PR11 and Tenuous Truce to PR06 (see the PR05 section). No card
 regressed: main plus those 23 cards gives exactly the 730 measured after PR05.
+
+PR06 modeled all 28 of its cards, including Human Torch and Tenuous Truce, which moved in from PR04
+and PR05 (758 measured). No card regressed: main plus those 28 cards gives exactly the 758
+measured after PR06, which is the planned 765 less the seven cards that main's quality merge had
+already reopened and no PR owns yet (one each for PRA and FF4, five for URD).
 
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
@@ -115,7 +120,7 @@ PR08 once PR02 and PR03 have landed. All other PRs follow the arrows.
 | PR03 | Zone-change history, LKI, death and return       |    27 |          20 |       1 | 693/906 (686 measured) |
 | PR04 | Counters and turn history                        |    21 |           5 |       0 | 714/906 (707 measured) |
 | PR05 | Auras, Equipment, attachment lifecycle           |    23 |          23 |       0 | 737/906 (730 measured) |
-| PR06 | Combat and damage events, damage prevention      |    28 |          21 |       0 |                765/906 |
+| PR06 | Combat and damage events, damage prevention      |    28 |          21 |       0 | 765/906 (758 measured) |
 | PR07 | Combat requirements, restrictions, extra combats |    26 |          11 |       0 |                791/906 |
 | PR08 | Control changes and multiplayer choices          |    23 |          10 |       1 |                814/906 |
 | PR09 | Library access and casting during resolution     |    31 |          13 |       1 |                845/906 |
@@ -431,6 +436,10 @@ player or planeswalker was attacked.
 ### PR06: Combat and damage events, damage prevention
 
 Depends on: PR04, for attack groups and history.
+
+Status: all 28 cards are modeled (758/906 measured; fixture decks 663/802, staples 189/200). The
+measured remaining count per deck matches the PR06 column above except PRA 26 (planned 25), FF4 25
+(planned 24) and URD 6 (planned 1), the seven cards that main reopened before PR03.
 
 - Attack-event scoping: which player or planeswalker was attacked, which defending player is
   bound, one trigger per group for "one or more creatures attack", and triggers on an opponent
