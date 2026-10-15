@@ -660,6 +660,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
+      "card": {
+        "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+        "scryfallId": "c86269cc-bf4d-44b4-ad4b-8356857c532f",
+        "name": "Firemane Commando",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Angel Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel",
+          "Soldier"
+        ],
+        "oracleText": "Flying\nWhenever you attack with two or more creatures, draw a card.\nWhenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

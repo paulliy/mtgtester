@@ -80,6 +80,18 @@ export interface ValueScope {
   stationPower?: number;
   /** Player involved in the firing event (for that-player-controlled targets). */
   eventPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: the attackers of the group that fired the trigger, by object, as declared —
+   * "those creatures" (Frontier Warmonger). Remembered, not re-derived (CR 603.7c).
+   */
+  attackGroupIds?: readonly string[];
+  /** `attackDeclared` with `perDefender`: the attacked player this firing is about (Breena). */
+  attackedPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: whether any creature of the declaring player's whole attack was attacking
+   * the watcher itself (not its planeswalkers) when declared — a fact about the declaration.
+   */
+  attackedWatcher?: boolean;
   /** Targets resolved for this ability, indexed by slot. */
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
@@ -126,6 +138,9 @@ export type TriggerScope = Pick<
   | 'manaSpent'
   | 'treasureManaSpent'
   | 'eventPlayerId'
+  | 'attackGroupIds'
+  | 'attackedPlayerId'
+  | 'attackedWatcher'
   | 'stationPower'
   | 'sourceCountersTotal'
   | 'triggerObjectId'

@@ -4133,10 +4133,10 @@ describe('Delirium', () => {
     const payload = option!.payload as PriorityActionPayload;
     const slot = option!.targets![0]!.slot;
 
-    const third = pod('delirium-third-turn');
-    spawn(third, 'P3', BRUTE('Lab Ogre', '3'));
-    turnOf(third, 'P3');
-    expect(deliriumOption(third).option).toBeDefined();
+    const later = pod('delirium-later-turn');
+    spawn(later, 'P3', BRUTE('Lab Ogre', '3'));
+    turnOf(later, 'P3');
+    expect(deliriumOption(later).option).toBeDefined();
 
     // The same payload, forced on P1's own turn, is refused as it is cast.
     turnOf(theirs, 'P1');
@@ -4269,6 +4269,217 @@ describe('Delirium', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Attack declaration helpers (cards that watch a whole attack)
+// ---------------------------------------------------------------------------------------------
+
+const WALKER = (name = 'Lab Walker') =>
+  oracle({
+    name,
+    typeLine: 'Planeswalker — Lab',
+    manaCost: '{3}',
+    cmc: 3,
+    loyalty: '5',
+    oracleText: '',
+  });
+const GRIZZLY = (name: string) =>
+  oracle({ name, typeLine: 'Creature — Bear', power: '2', toughness: '2' });
+
+/** It is `playerId`'s turn, before combat. */
+function turnOfPlayer(ctx: GameContext, playerId: string): void {
+  ctx.state.currentTurnPlayer = playerId;
+  ctx.state.activePlayerIndex = Number(playerId.slice(1)) - 1;
+}
+
+/**
+ * The active player declares `attacks` (creature object id to a player id or planeswalker object
+ * id; everything else stays home), nobody blocks, and every player passes, so triggers go on the
+ * stack and resolve through the normal priority loop. `answer` takes any other decision.
+ */
+function declareAndFight(
+  ctx: GameContext,
+  attacks: Record<string, string>,
+  answer?: Answer,
+  blocks: Record<string, string> = {},
+) {
+  return pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+    if (decision.presentationAttackDeclaration !== undefined)
+      return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+}
+
+const ZAP = oracle({
+  name: 'Lab Zap',
+  typeLine: 'Instant',
+  manaCost: '{0}',
+  oracleText: 'Destroy target creature.',
+});
+const handSize = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
+const counterOf = (perm: EnginePermanent, kind = 'loyalty') => perm.counters[kind] ?? 0;
+
+// ---------------------------------------------------------------------------------------------
+// PR06.19 Firemane Commando
+// ---------------------------------------------------------------------------------------------
+
+describe('Firemane Commando', () => {
+  const { card } = pinned('Firemane Commando');
+
+  /** P1 controls the Commando; every player has `bears` Bears ready to attack. */
+  function board(seed: string, bears = 2) {
+    const ctx = pod(seed);
+    const commando = spawn(ctx, 'P1', card);
+    const bearsOf = Object.fromEntries(
+      (['P1', 'P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        Array.from({ length: bears }, (_, i) => spawn(ctx, id, GRIZZLY(`Lab ${id} Bear ${i + 1}`))),
+      ]),
+    ) as Record<'P1' | 'P2' | 'P3' | 'P4', EnginePermanent[]>;
+    return { ctx, commando, bearsOf };
+  }
+  const at = (creatures: EnginePermanent[], target: string) =>
+    Object.fromEntries(creatures.map((c) => [c.id, target]));
+
+  it('firemane-commando-pinned-oracle-supported — authored triggers watch a whole attack by you and by another player, the second drawing for the attacker unless none attacked you', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers.map((t) => t.trigger)).toEqual([
+      { when: 'attackDeclared', attacker: 'you', minAttackers: 2 },
+      { when: 'attackDeclared', attacker: 'otherPlayer', minAttackers: 2 },
+    ]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'draw', count: { kind: 'const', n: 1 } }]);
+    expect(def.triggers[1]!.effects).toEqual([
+      {
+        op: 'conditionalEffect',
+        condition: { kind: 'attackWasNotAtYou' },
+        then: [{ op: 'draw', count: { kind: 'const', n: 1 }, player: 'eventPlayer' }],
+        else: [],
+      },
+    ]);
+  });
+
+  it('firemane-commando-own-attack — you draw once when you attack with two or more creatures, and not with one', () => {
+    const one = board('firemane-one');
+    declareAndFight(one.ctx, at([one.bearsOf.P1[0]!], 'P2'));
+    expect(handSize(one.ctx, 'P1')).toBe(0);
+
+    const two = board('firemane-two');
+    declareAndFight(two.ctx, at(two.bearsOf.P1, 'P2'));
+    expect(handSize(two.ctx, 'P1')).toBe(1);
+    expect(two.ctx.state.stack).toEqual([]);
+
+    // Two or more counts the whole attack, whatever each creature attacks: one trigger, one card.
+    const split = board('firemane-split', 3);
+    declareAndFight(split.ctx, {
+      [split.bearsOf.P1[0]!.id]: 'P2',
+      [split.bearsOf.P1[1]!.id]: 'P3',
+      [split.bearsOf.P1[2]!.id]: 'P4',
+    });
+    expect(handSize(split.ctx, 'P1')).toBe(1);
+  });
+
+  it('firemane-commando-other-player-attack — another player attacking an opponent with two creatures draws a card for that player, while the controller draws nothing', () => {
+    const { ctx, bearsOf } = board('firemane-other');
+    turnOfPlayer(ctx, 'P2');
+    declareAndFight(ctx, at(bearsOf.P2, 'P3'));
+    expect(handSize(ctx, 'P2')).toBe(1);
+    expect(handSize(ctx, 'P1')).toBe(0);
+    expect(handSize(ctx, 'P3')).toBe(0);
+
+    // One attacker is not two: no draw.
+    const lone = board('firemane-other-one');
+    turnOfPlayer(lone.ctx, 'P2');
+    declareAndFight(lone.ctx, at([lone.bearsOf.P2[0]!], 'P3'));
+    expect(handSize(lone.ctx, 'P2')).toBe(0);
+  });
+
+  it('firemane-commando-not-at-you — no card when any of those creatures attacked you, however the rest attacked', () => {
+    const { ctx, bearsOf } = board('firemane-at-you');
+    turnOfPlayer(ctx, 'P2');
+    declareAndFight(ctx, {
+      [bearsOf.P2[0]!.id]: 'P1',
+      [bearsOf.P2[1]!.id]: 'P3',
+    });
+    expect(handSize(ctx, 'P2')).toBe(0);
+    // The ability still triggered and went on the stack: it is a resolution check, not an intervening-if.
+    expect(
+      ctx.state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Firemane Commando',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('firemane-commando-planeswalker — attacking your planeswalker is not attacking you, so they draw', () => {
+    const { ctx, bearsOf } = board('firemane-walker');
+    const walker = spawn(ctx, 'P1', WALKER());
+    turnOfPlayer(ctx, 'P2');
+    declareAndFight(ctx, at(bearsOf.P2, walker.id));
+    expect(handSize(ctx, 'P2')).toBe(1);
+    expect(counterOf(walker)).toBe(1);
+  });
+
+  it('firemane-commando-snapshot — the check is on the declaration: the trigger goes on the stack even when it will draw nothing, and a creature destroyed in response still attacked you', () => {
+    const triggered = (ctx: GameContext) =>
+      ctx.state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Firemane Commando',
+      ).length;
+
+    const { ctx, bearsOf } = board('firemane-snapshot');
+    turnOfPlayer(ctx, 'P2');
+    declareAndFight(ctx, { [bearsOf.P2[0]!.id]: 'P1', [bearsOf.P2[1]!.id]: 'P3' });
+    expect(triggered(ctx)).toBe(1);
+    expect(handSize(ctx, 'P2')).toBe(0);
+
+    // In response to the trigger, P1 destroys the one creature that attacked P1: it is gone from
+    // combat, but it did attack P1, so P2 still draws nothing.
+    let zapped = false;
+    const later = board('firemane-snapshot-2');
+    turnOfPlayer(later.ctx, 'P2');
+    const [doomed, safe] = later.bearsOf.P2 as [EnginePermanent, EnginePermanent];
+    conjure(later.ctx, 'P1', ZAP, 'hand');
+    pump(runCombatAndExtraCombats(later.ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) =>
+          id === doomed.id ? 'P1' : id === safe.id ? 'P3' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const zap = decision.options.findIndex(
+        (option) => decision.player === 'P1' && option.description.includes('Lab Zap'),
+      );
+      if (zap >= 0 && !zapped && later.ctx.state.stack.length > 0) {
+        zapped = true;
+        const slot = decision.options[zap]!.targets![0]!;
+        return { index: zap, targets: new Map([[slot.slot, doomed.id]]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(zapped).toBe(true);
+    expect(later.ctx.state.battlefield.includes(doomed)).toBe(false);
+    expect(handSize(later.ctx, 'P2')).toBe(0);
+  });
+
+  it('firemane-commando-whole-game — the trigger goes on the stack as the attack is declared and resolves for the right player', () => {
+    const { ctx, bearsOf } = board('firemane-game');
+    declareAndFight(ctx, at(bearsOf.P1, 'P2'));
+    const events = ctx.state.eventLog.filter(
+      (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Firemane Commando',
+    );
+    expect(events).toHaveLength(1);
+    expect(String(events[0]!.payload['description'])).toContain('two or more creatures');
+    expect(handSize(ctx, 'P1')).toBe(1);
+  });
+});
+
+// @@CARDS@@
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -4383,6 +4594,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Delirium',
     sha256: '7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Firemane Commando',
+    sha256: '20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a',
     clauseCount: 2,
     authored: true,
   },

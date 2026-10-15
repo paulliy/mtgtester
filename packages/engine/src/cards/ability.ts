@@ -535,6 +535,17 @@ export type Effect =
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
   /**
+   * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
+   * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
+   * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).
+   */
+  | { op: 'grantKeywordToAttackGroupUntilEot'; keyword: KeywordAbility }
+  /**
+   * "You put `count` `counter` counters on a creature you control" (Breena): chosen as it
+   * resolves, not targeted; nothing happens if you control no creature.
+   */
+  | { op: 'putCountersOnCreatureOfChoice'; counter: string; count: number }
+  /**
    * "Creatures you control gain protection from each color until end of turn" (Akroma's Will).
    * Separate from `grantKeywordEachUntilEot` because protection carries an ARGUMENT: it is not a
    * `KeywordAbility` name, and layer 6 applies it through `addProtection`, not `addKeyword`.
@@ -1683,7 +1694,27 @@ export type TriggerHead =
    * 702.90b). `player` is the damaged player. The event player is the SOURCE's controller, and
    * `sourceController: 'opponent'` limits it to sources the watcher's controller's opponents control.
    */
-  | { when: 'playerDealtDamage'; player: 'you' | 'each'; sourceController?: 'opponent' };
+  | { when: 'playerDealtDamage'; player: 'you' | 'each'; sourceController?: 'opponent' }
+  /**
+   * "Whenever a player attacks ..." (Firemane Commando, Breena, Mangara, Ever-Watching Threshold,
+   * Frontier Warmonger, Tenuous Truce): queued once as an attack declaration is made (CR 508.2a),
+   * for each player who declared attackers that `attacker` names, relative to the watcher's
+   * controller. The event player is the attacking player.
+   *
+   * The attackers form a group whose size is checked when the event happens (`minAttackers`,
+   * default 1 — a trigger condition, not an intervening-if) and which the ability's value scope
+   * remembers by object. `attacking` narrows the group to creatures attacking a given player (and
+   * optionally that player's planeswalkers); `perDefender` makes one group, and one firing, per
+   * attacked player instead of one per attacking player, with `attackedPlayerId` bound to it.
+   * An attack on a planeswalker is never an attack on its controller (CR 506.2).
+   */
+  | {
+      when: 'attackDeclared';
+      attacker: 'you' | 'opponent' | 'otherPlayer' | 'any' | 'enchantedPlayer';
+      attacking?: { who: 'you' | 'opponent' | 'enchantedPlayer'; planeswalkers: boolean };
+      perDefender?: boolean;
+      minAttackers?: number;
+    };
 
 /**
  * When a triggered ability fires.

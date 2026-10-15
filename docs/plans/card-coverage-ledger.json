@@ -1203,6 +1203,23 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
+    "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+    "name": "Firemane Commando",
+    "package": "PR06.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
     "name": "First Family",
     "package": "PR04.11",

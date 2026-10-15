@@ -12135,6 +12135,73 @@ function planeswalkerAttackScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function firemaneOwnAttackScenario(gameId: GameId): CardTestScenario {
+  const commando = pinnedFrom(COVERAGE_PR06, 'Firemane Commando');
+  return pr01Scenario(gameId, {
+    id: 'firemane-commando-viewer-own-attack',
+    title: 'Firemane Commando: attacking with two creatures draws you a card',
+    instructions: [
+      'Firemane Commando, Lab Ox (4/4) and Lab Servo (1/1) are on your battlefield. Your library holds Forests.',
+      'Pass priority until the declare attackers step, then attack P2 with both Lab Ox and Lab Servo and confirm. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'Attacking with two creatures triggered Firemane Commando once and you drew a card: your library is one card smaller. P2 took 5 and is at 35, and P3 and P4 are at 40.',
+    oracleSha256: commando.sha256,
+    clauseIds: ['firemane-commando-you-attack'],
+    decks: {
+      P1: [commando.card, LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Firemane Commando', 'Lab Ox', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function firemaneOtherAttackScenario(gameId: GameId, defender: PlayerId): CardTestScenario {
+  const commando = pinnedFrom(COVERAGE_PR06, 'Firemane Commando');
+  const atYou = defender === 'P1';
+  return pr01Scenario(gameId, {
+    id: atYou
+      ? 'firemane-commando-viewer-other-attack-at-you'
+      : 'firemane-commando-viewer-other-attack-elsewhere',
+    title: atYou
+      ? 'Firemane Commando: another player who attacked you draws nothing'
+      : 'Firemane Commando: another player attacking someone else draws a card',
+    instructions: [
+      atYou
+        ? 'It is P2’s turn. You control Firemane Commando; P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both. Do not block.'
+        : 'It is P2’s turn. You control Firemane Commando; P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks P3 with both.',
+      'Pass priority and let the attack play out.',
+    ],
+    expectedOutcome: atYou
+      ? 'P2 attacked with two creatures, but they attacked you, so Firemane Commando’s ability resolved and P2 drew nothing: P2’s library is unchanged. You took 5 and are at 35.'
+      : 'P2 attacked with two creatures and none attacked you, so P2 drew a card: P2’s library is one card smaller. P3 took 5 and is at 35, and you are untouched at 40.',
+    oracleSha256: commando.sha256,
+    clauseIds: ['firemane-commando-other-attack'],
+    decks: {
+      P1: [commando.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Firemane Commando'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything(defender) },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12397,6 +12464,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'michiko-konda-viewer-damage-makes-opponent-sacrifice',
   'delirium-viewer-tap-damage-and-prevent',
   'planeswalker-attack-viewer-loyalty',
+  'firemane-commando-viewer-own-attack',
+  'firemane-commando-viewer-other-attack-elsewhere',
+  'firemane-commando-viewer-other-attack-at-you',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12726,6 +12796,11 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'michiko-konda-viewer-damage-makes-opponent-sacrifice': michikoKondaScenario,
   'delirium-viewer-tap-damage-and-prevent': deliriumScenario,
   'planeswalker-attack-viewer-loyalty': planeswalkerAttackScenario,
+  'firemane-commando-viewer-own-attack': firemaneOwnAttackScenario,
+  'firemane-commando-viewer-other-attack-elsewhere': (gameId) =>
+    firemaneOtherAttackScenario(gameId, 'P3'),
+  'firemane-commando-viewer-other-attack-at-you': (gameId) =>
+    firemaneOtherAttackScenario(gameId, 'P1'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

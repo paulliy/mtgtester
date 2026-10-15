@@ -41,7 +41,12 @@ import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { counterCount } from '../state/counters';
-import { playerById, queueTriggersForEvent, queueTriggersForObject } from '../state/objects';
+import {
+  playerById,
+  queueAttackDeclarationTriggers,
+  queueTriggersForEvent,
+  queueTriggersForObject,
+} from '../state/objects';
 import {
   attackedPlaneswalker,
   colorsOf,
@@ -690,6 +695,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
     'attacks',
     declared.map((permanent) => ({ permanent, playerId: permanent.controllerId })),
   );
+  queueAttackDeclarationTriggers(ctx, declared);
   emit(ctx, 'attackersDeclared', { count: declared.length }, ap.id);
 }
 

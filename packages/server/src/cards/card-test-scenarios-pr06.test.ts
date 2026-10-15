@@ -820,3 +820,43 @@ describe('Planeswalker attack Card Test Lab scenario', () => {
     expect(state.stack).toEqual([]);
   });
 });
+
+describe('Firemane Commando Card Test Lab scenarios', () => {
+  it('firemane-commando-viewer-own-attack — attacking P2 with Lab Ox and Lab Servo triggers it once and draws you one card', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['__no_attack__', 'P2', 'P2'] }];
+    const { scenario, state, seat } = run('firemane-commando-viewer-own-attack', steps);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P2').life).toBe(35);
+    for (const id of ['P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('firemane-commando-viewer-own-attack', steps);
+  });
+
+  it('firemane-commando-viewer-other-attack-elsewhere — P2 attacking P3 with two creatures draws P2 a card and you nothing', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat } = run('firemane-commando-viewer-other-attack-elsewhere', steps);
+    expect(seat('P2').hand).toHaveLength(1);
+    expect(seat('P1').hand).toHaveLength(0);
+    expect(seat('P3').life).toBe(35);
+    expect(seat('P1').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('firemane-commando-viewer-other-attack-elsewhere', steps);
+  });
+
+  it('firemane-commando-viewer-other-attack-at-you — P2 attacking you resolves the ability but P2 draws nothing', () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { scenario, state, seat } = run('firemane-commando-viewer-other-attack-at-you', steps);
+    expect(seat('P2').hand).toHaveLength(0);
+    expect(seat('P1').life).toBe(35);
+    expect(
+      state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Firemane Commando',
+      ),
+    ).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('firemane-commando-viewer-other-attack-at-you', steps);
+  });
+});

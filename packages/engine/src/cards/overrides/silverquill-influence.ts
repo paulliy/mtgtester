@@ -193,10 +193,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Whenever an opponent casts their second spell each turn, draw a card.',
   ]);
 
-  unimplemented('ac675899-25bb-4f06-9c8c-bf188024495f', 'Firemane Commando', [
-    'Whenever you attack with two or more creatures, draw a card.',
-    'Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.',
-  ]);
+  // Firemane Commando: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('0c85b8f7-0bd0-4680-9ec5-d4b110460a54', 'Fabled Passage', [
     '{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.',

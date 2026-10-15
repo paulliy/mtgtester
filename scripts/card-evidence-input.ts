@@ -2262,6 +2262,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       'Planeswalker attack: Lab Ox attacks Lab Walker through the player board and its loyalty drops',
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: attacking with two creatures draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player attacking someone else draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player who attacked you draws nothing'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

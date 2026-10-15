@@ -1477,13 +1477,37 @@
     "ac675899-25bb-4f06-9c8c-bf188024495f": {
       "name": "Firemane Commando",
       "oracleSha256": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "firemane-commando-you-attack",
+          "oracleText": "Whenever you attack with two or more creatures, draw a card.",
+          "implementation": [
+            "an attackDeclared trigger for attacks you declare, once per declaration with the whole attack as its group and a trigger-time minimum of two attackers (any targets, planeswalkers included), drawing one card for you"
+          ],
+          "engineTestIds": [
+            "firemane-commando-pinned-oracle-supported",
+            "firemane-commando-own-attack",
+            "firemane-commando-whole-game"
+          ],
+          "viewerScenarioIds": ["firemane-commando-viewer-own-attack"]
+        },
+        {
+          "id": "firemane-commando-other-attack",
           "oracleText": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
-          "implementation": ["explicitly unsupported; both triggers make you draw"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "an attackDeclared trigger for attacks declared by any other player with a trigger-time minimum of two attackers; on resolution the attacking player, the event player, draws one card unless any creature of that attack attacked you (the player, not your planeswalkers) when it was declared, a fact snapshotted with the declaration, so a creature later removed from combat still attacked you; the ability goes on the stack either way"
+          ],
+          "engineTestIds": [
+            "firemane-commando-other-player-attack",
+            "firemane-commando-not-at-you",
+            "firemane-commando-planeswalker",
+            "firemane-commando-snapshot"
+          ],
+          "viewerScenarioIds": [
+            "firemane-commando-viewer-other-attack-elsewhere",
+            "firemane-commando-viewer-other-attack-at-you"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

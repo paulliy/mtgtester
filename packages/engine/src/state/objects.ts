@@ -1,6 +1,6 @@
 import { counterCount, setCounterCount } from './counters';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { spellDefinitionOf } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -2646,6 +2646,113 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
     ctx.state.creaturesDiedThisTurn += 1;
   }
   queueTriggersForObject(ctx, 'dies', perm);
+}
+
+/**
+ * Queue the `attackDeclared` triggers (CR 508.2a) for one declaration: `declared` is every creature
+ * declared as an attacker, of any player. Per watcher ability and attacking player the attackers
+ * form a group — all of that player's attackers, or only those attacking the player `attacking`
+ * names, one group per attacked player with `perDefender`. The group's size is a trigger
+ * condition checked now (`minAttackers`), and the group is remembered by object for resolution.
+ */
+export function queueAttackDeclarationTriggers(
+  ctx: GameContext,
+  declared: readonly EnginePermanent[],
+): void {
+  if (declared.length === 0) return;
+  assertTriggerEventFamily('attackDeclared', 'attackDeclaration');
+  const attackingPlayers = [...new Set(declared.map((a) => a.controllerId))];
+  for (const source of ctx.state.battlefield) {
+    for (const ability of triggersOf(ctx, source)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== 'attackDeclared') continue;
+      const watcherId = source.controllerId;
+      const enchantedPlayerId =
+        source.attachedTo !== null && ctx.state.players.some((p) => p.id === source.attachedTo)
+          ? source.attachedTo
+          : undefined;
+      const opponentIds = new Set(opponentsOf(ctx, watcherId).map((p) => p.id));
+      const targetPlayerOf = (
+        who: 'you' | 'opponent' | 'enchantedPlayer',
+        id: PlayerId,
+      ): boolean =>
+        who === 'you'
+          ? id === watcherId
+          : who === 'opponent'
+            ? opponentIds.has(id)
+            : id === enchantedPlayerId;
+      for (const attackingPlayerId of attackingPlayers) {
+        const attackerOk =
+          spec.attacker === 'you'
+            ? attackingPlayerId === watcherId
+            : spec.attacker === 'opponent'
+              ? opponentIds.has(attackingPlayerId)
+              : spec.attacker === 'otherPlayer'
+                ? attackingPlayerId !== watcherId
+                : spec.attacker === 'enchantedPlayer'
+                  ? attackingPlayerId === enchantedPlayerId
+                  : true;
+        if (!attackerOk) continue;
+        const mine = declared.filter((a) => a.controllerId === attackingPlayerId);
+        // Attacking a planeswalker is not attacking its controller (CR 506.2); one removed from
+        // combat attacks nothing.
+        const filter = spec.attacking;
+        const members =
+          filter === undefined
+            ? mine
+            : mine.filter(
+                (a) =>
+                  a.attacking !== null &&
+                  targetPlayerOf(filter.who, a.attacking) &&
+                  (a.attackingPlaneswalker === null ||
+                    (filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null)),
+              );
+        const groups: { members: EnginePermanent[]; attackedPlayerId?: PlayerId }[] =
+          spec.perDefender === true
+            ? [...new Set(members.map((a) => a.attacking as PlayerId))].map((defenderId) => ({
+                members: members.filter((a) => a.attacking === defenderId),
+                attackedPlayerId: defenderId,
+              }))
+            : [{ members }];
+        for (const group of groups) {
+          if (group.members.length < (spec.minAttackers ?? 1)) continue;
+          const groupScope = {
+            eventPlayerId: attackingPlayerId,
+            attackGroupIds: group.members.map((a) => a.id),
+            ...(group.attackedPlayerId === undefined
+              ? {}
+              : { attackedPlayerId: group.attackedPlayerId }),
+            attackedWatcher: mine.some(
+              (a) => a.attacking === watcherId && a.attackingPlaneswalker === null,
+            ),
+            triggerCount: group.members.length,
+          } satisfies TriggerScope;
+          const from: SelectorSource = {
+            cardId: source.cardId,
+            objectId: source.id,
+            controllerId: watcherId,
+            attachedToCardId: null,
+            ...groupScope,
+          };
+          if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from))
+            continue;
+          const copies = 1 + additionalTypedTriggerCopies(ctx, source);
+          for (let copy = 0; copy < copies; copy++) {
+            ctx.state.pendingTriggers.push({
+              controllerId: watcherId,
+              sourceCardId: source.cardId,
+              sourceObjectId: source.id,
+              sourceOracleId: source.oracleId,
+              sourceName: source.name,
+              ability,
+              scope: groupScope,
+            });
+            debug(ctx, 'stack', `attackDeclared trigger queued: ${source.name}`);
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

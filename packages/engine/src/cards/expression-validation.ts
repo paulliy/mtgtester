@@ -236,6 +236,15 @@ const conditionShapes = {
   attackingPlayerHasMoreLife: {},
   attackingPlayerHasMoreLifeThanYou: {},
   triggerObjectAttackingOpponent: {},
+  attackGroupAttackingYou: {
+    planeswalkers: (value, path, issues) => {
+      if (typeof value !== 'boolean') issues.push({ path, message: 'expected a boolean' });
+    },
+    cmp: oneOf('>=', '<=', '=='),
+    n: finite,
+  },
+  attackWasNotAtYou: {},
+  attackedPlayerHasMoreLifeThanAnotherOpponent: {},
   allOf: { of: arrayOf(condition) },
   anyOf: { of: arrayOf(condition) },
   eventPlayerDrawCount: { cmp: oneOf('>=', '<=', '=='), n: finite },
@@ -300,6 +309,8 @@ const effectExpressions = {
   pumpEachUntilEot: { selector: selector, power: numericExpression, toughness: numericExpression },
   doublePowerAndToughnessEachUntilEot: { selector: selector },
   grantKeywordEachUntilEot: { selector: selector },
+  grantKeywordToAttackGroupUntilEot: {},
+  putCountersOnCreatureOfChoice: { count: finite },
   grantProtectionEachUntilEot: { selector: selector },
   dealDamage: { amount: numberValue },
   dealDamageUnlessSacrifice: { amount: numberValue },

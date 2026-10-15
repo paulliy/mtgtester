@@ -813,13 +813,13 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "887d399844de268289f268ce451c15f5d8b9627ec1218726a57c5a593f8002eb",
-      "description": "registerSILVERQUILL_INFLUENCEOverrides"
+      "sha256": "9063f6329c900d7e4881256a7996528c22fb3ee4468de31c60794e5535e56c72",
+      "description": "Flickering Ward"
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "9063f6329c900d7e4881256a7996528c22fb3ee4468de31c60794e5535e56c72",
-      "description": "Flickering Ward"
+      "sha256": "28fba9e882bffa9696b235cb5b70e62b6fabc8f2487f621f1ecd18c41334130c",
+      "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {
       "file": "packages/engine/src/cards/overrides/token-triumph.ts",

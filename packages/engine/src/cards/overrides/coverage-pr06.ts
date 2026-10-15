@@ -49,6 +49,47 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Firemane Commando: both abilities trigger once as the attack is declared, when that player
+  // declares two or more attackers, whoever or whatever they attack (planeswalkers included). The
+  // count is a trigger condition checked as the attack is declared, not an intervening-if. "They"
+  // in the second is the attacking player, who draws unless any of those creatures attacked YOU,
+  // the player and not your planeswalkers, as declared, so a creature later removed from combat
+  // still attacked you. That is judged as the ability resolves, from the declaration.
+  defineCard(
+    'ac675899-25bb-4f06-9c8c-bf188024495f',
+    'Firemane Commando',
+    [
+      'Whenever you attack with two or more creatures, draw a card.',
+      'Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'attackDeclared', attacker: 'you', minAttackers: 2 },
+          {
+            effects: [{ op: 'draw', count: constant(1) }],
+            description: 'Whenever you attack with two or more creatures, draw a card',
+          },
+        ),
+        triggered(
+          { when: 'attackDeclared', attacker: 'otherPlayer', minAttackers: 2 },
+          {
+            effects: [
+              {
+                op: 'conditionalEffect',
+                condition: { kind: 'attackWasNotAtYou' },
+                then: [{ op: 'draw', count: constant(1), player: 'eventPlayer' }],
+                else: [],
+              },
+            ],
+            description:
+              'Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

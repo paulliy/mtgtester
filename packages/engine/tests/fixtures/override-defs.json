@@ -7559,8 +7559,62 @@
   {
     "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
     "name": "Firemane Commando",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+      "Whenever you attack with two or more creatures, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you",
+          "effects": [
+            {
+              "condition": {
+                "kind": "attackWasNotAtYou"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "otherPlayer",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "ac844303-487b-49e9-9170-02892153ca6a",
@@ -15547,8 +15601,62 @@
   {
     "oracleId": "oracle-firemane-commando",
     "name": "Firemane Commando",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+      "Whenever you attack with two or more creatures, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you",
+          "effects": [
+            {
+              "condition": {
+                "kind": "attackWasNotAtYou"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "otherPlayer",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-firkraag-cunning-instigator",

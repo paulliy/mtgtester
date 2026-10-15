@@ -69,8 +69,6 @@ const REASONS: Record<string, string> = {
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
-  'Firemane Commando':
-    'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
   'Armored Skyhunter': 'Equipment filter is any artifact, and attach is omitted.',
   "Defacing Duskmage // Vandal's Edit":
     'Prepare is implemented as a pump trigger on any draw step.',
@@ -281,6 +279,7 @@ describe('Marchesa catalog audit containment', () => {
     'Comeuppance',
     'Michiko Konda, Truth Seeker',
     'Delirium',
+    'Firemane Commando',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

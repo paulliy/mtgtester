@@ -111,6 +111,11 @@ export interface SelectorSource {
   triggerObjectCardId?: string;
   /** Player whose action caused the event, for event-relative conditions. */
   eventPlayerId?: string;
+  /** `attackDeclared` firing: the group's attackers by object, and the attacked player, if any. */
+  attackGroupIds?: readonly string[];
+  attackedPlayerId?: string;
+  /** `attackDeclared` firing: whether any attacker of the whole attack attacked the watcher. */
+  attackedWatcher?: boolean;
   /** Mana spent to cast the spell a cast trigger is about, for `compareValues` (Increment). */
   manaSpent?: number;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */

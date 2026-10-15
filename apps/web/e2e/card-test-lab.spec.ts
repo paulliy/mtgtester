@@ -9135,3 +9135,69 @@ test('Planeswalker attack: Lab Ox attacks Lab Walker through the player board an
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('40');
 });
+
+/** The latest library size of `seat` in the live snapshots, and its first. */
+function trackLibrary(page: Page, seat: string): { first: () => number; last: () => number } {
+  const sizes: number[] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type !== 'playerStateSnapshot' && frame.type !== 'stateSnapshot') return;
+      const size = frame.payload.state.seats.find((s) => s.seat === seat)?.librarySize;
+      if (size !== undefined) sizes.push(size);
+    }),
+  );
+  return { first: () => sizes[0]!, last: () => sizes.at(-1)! };
+}
+
+test('Firemane Commando: attacking with two creatures draws you a card', async ({ page }) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(page, 'Firemane Commando: attacking with two creatures draws you a card');
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  for (const name of ['Lab Ox', 'Lab Servo']) {
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  }
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('35');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+});
+
+test('Firemane Commando: another player attacking someone else draws a card', async ({ page }) => {
+  const library = trackLibrary(page, 'P2');
+  await runScenario(page, 'Firemane Commando: another player attacking someone else draws a card');
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
+
+test('Firemane Commando: another player who attacked you draws nothing', async ({ page }) => {
+  const library = trackLibrary(page, 'P2');
+  await runScenario(page, 'Firemane Commando: another player who attacked you draws nothing');
+  // P2 attacks you with both creatures; decline to block with Firemane Commando.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('35');
+  await expect(
+    page.getByText(/Firemane Commando — Whenever another player attacks.* resolves/i).first(),
+  ).toBeVisible();
+});

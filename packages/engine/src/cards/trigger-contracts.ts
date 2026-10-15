@@ -6,7 +6,7 @@ import { assertNever } from '../utils/assert-never';
 /** Every event belongs to an explicit dispatcher; new events require classification. */
 export function triggerEventFamily(
   when: TriggerHead['when'],
-): 'object' | 'cast' | 'step' | 'player' {
+): 'object' | 'cast' | 'step' | 'player' | 'attackDeclaration' {
   switch (when) {
     case 'enters':
     case 'dies':
@@ -44,6 +44,8 @@ export function triggerEventFamily(
     case 'damagePreventedToPlayer':
     case 'playerDealtDamage':
       return 'player';
+    case 'attackDeclared':
+      return 'attackDeclaration';
     default:
       return assertNever(when, 'trigger event dispatcher');
   }
@@ -78,6 +80,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'foretells':
     case 'damagePreventedToPlayer':
     case 'playerDealtDamage':
+    case 'attackDeclared':
     case 'upkeep':
     case 'endStep':
     case 'untapStep':
@@ -140,7 +143,9 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
-        : ['player', ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : [])]),
+        : family === 'attackDeclaration'
+          ? ['attacker', 'attacking', 'perDefender', 'minAttackers']
+          : ['player', ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : [])]),
   ];
   for (const key of Object.keys(head))
     if (!allowed.includes(key))
@@ -271,6 +276,40 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       !['graveyard', 'notHand'].includes(head['castFrom'] as string)
     )
       issues.push({ path: `${path}.castFrom`, message: 'unknown spell origin restriction' });
+  } else if (family === 'attackDeclaration') {
+    if (
+      !['you', 'opponent', 'otherPlayer', 'any', 'enchantedPlayer'].includes(
+        head['attacker'] as string,
+      )
+    )
+      issues.push({
+        path: `${path}.attacker`,
+        message: 'attack trigger requires an attacker scope',
+      });
+    const attacking = head['attacking'];
+    if (attacking !== undefined) {
+      const record =
+        attacking !== null && typeof attacking === 'object' && !Array.isArray(attacking)
+          ? (attacking as Record<string, unknown>)
+          : undefined;
+      if (
+        record === undefined ||
+        !['you', 'opponent', 'enchantedPlayer'].includes(record['who'] as string) ||
+        typeof record['planeswalkers'] !== 'boolean' ||
+        Object.keys(record).some((key) => !['who', 'planeswalkers'].includes(key))
+      )
+        issues.push({ path: `${path}.attacking`, message: 'attacked-player filter is malformed' });
+    }
+    if (head['perDefender'] !== undefined && head['perDefender'] !== true)
+      issues.push({ path: `${path}.perDefender`, message: 'per-defender grouping is a flag' });
+    if (
+      head['minAttackers'] !== undefined &&
+      (!Number.isSafeInteger(head['minAttackers']) || (head['minAttackers'] as number) < 1)
+    )
+      issues.push({
+        path: `${path}.minAttackers`,
+        message: 'attacker count must be a positive integer',
+      });
   } else if (
     !(
       head['when'] === 'drawsCard'

@@ -1655,6 +1655,42 @@ export function* executeAbility(
         });
         break;
       }
+      case 'grantKeywordToAttackGroupUntilEot': {
+        const group = (scope.attackGroupIds ?? [])
+          .map((id) => findPermanent(ctx, id))
+          .filter((p): p is EnginePermanent => p !== undefined);
+        if (group.length > 0) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: describeMassEffect(group, `gain ${effect.keyword}`),
+            targetCardIds: group.map((p) => p.cardId),
+            kind: 'grantKeyword',
+            keyword: effect.keyword,
+            timestamp: ctx.state.nextTimestamp++,
+          });
+        }
+        emit(ctx, 'grantKeyword', {
+          source: source.name,
+          targets: group.map((p) => p.name),
+          keyword: effect.keyword,
+        });
+        break;
+      }
+      case 'putCountersOnCreatureOfChoice': {
+        const candidates = ctx.state.battlefield.filter(
+          (perm) => perm.controllerId === controller.id && isCreaturePermanent(ctx, perm),
+        );
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: choose a creature you control to put ${effect.count} ${effect.counter} counters on`,
+          cards: candidates,
+          type: 'putCounters',
+          verb: 'Choose',
+        });
+        if (chosen !== null) addCounters(ctx, source, chosen, effect.counter, effect.count);
+        break;
+      }
       case 'grantProtectionEachUntilEot': {
         // Same shape as `grantKeywordEachUntilEot`; the affected set is fixed at resolution
         // (CR 611.2c), so a creature that enters afterwards is not protected.
