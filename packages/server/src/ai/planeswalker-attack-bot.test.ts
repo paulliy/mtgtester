@@ -13,7 +13,7 @@ const WALKER = oracle({
 const BEAR = oracle({ name: 'Lab Bear', typeLine: 'Creature — Bear', manaCost: '{G}', cmc: 1 });
 
 describe('heuristic bots in games with planeswalkers', () => {
-  it('finishes a game with planeswalkers in every deck without crashing or an illegal answer', () => {
+  it('finishes a game where they are offered planeswalker attack targets, without crashing or an illegal answer', () => {
     const seats = [0, 1, 2, 3].map(() => ({
       cards: [...copies(12, forest), ...copies(10, () => BEAR), ...copies(6, () => WALKER)],
     }));
@@ -24,19 +24,24 @@ describe('heuristic bots in games with planeswalkers', () => {
         new HeuristicDecisionProvider(`pw-${seat}`, () => engine.view(seat)),
       ]),
     );
-    let planeswalkerAttacks = 0;
+    // The bots must have been offered planeswalker attack targets, and the game must reach its
+    // end (the turn cap) rather than run out of iterations. Whether a bot chooses a planeswalker
+    // is a strategy matter; every answer it gives is checked by the engine on submission.
+    let planeswalkerOffers = 0;
+    let finished = false;
     for (let i = 0; i < 30_000; i += 1) {
       const step = engine.advance();
-      if (step.kind === 'gameOver') break;
+      if (step.kind === 'gameOver') {
+        finished = true;
+        break;
+      }
       if (step.kind !== 'decision') continue;
+      const subjects = step.request.presentation?.attackDeclaration?.subjects ?? [];
+      if (subjects.some((subject) => subject.planeswalkers.length > 0)) planeswalkerOffers += 1;
       engine.submit(bots.get(step.request.decidingPlayer)!.decide(step.request));
     }
-    for (const event of engine.getState().eventLog) {
-      if (event.type === 'attack' && event.payload['planeswalker'] !== undefined) {
-        planeswalkerAttacks += 1;
-      }
-    }
+    expect(finished).toBe(true);
     expect(engine.getState().turnNumber).toBeGreaterThan(5);
-    expect(planeswalkerAttacks).toBeGreaterThanOrEqual(0);
+    expect(planeswalkerOffers).toBeGreaterThan(0);
   }, 120_000);
 });
