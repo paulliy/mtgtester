@@ -2222,6 +2222,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Thundermaw Hellkite: damage and tap the fliers your opponents control'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Backlash: tap an untapped creature and it hits its controller'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

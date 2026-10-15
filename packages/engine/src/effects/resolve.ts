@@ -1339,6 +1339,12 @@ export function* executeAbility(
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
   const ref = (r: EffectRef): ObjectId | null => {
+    if (typeof r === 'object') {
+      // The controller of a targeted permanent, as of resolution (a player id, like 'eventPlayer').
+      const permanentId = ref(r.controllerOf);
+      const permanent = permanentId === null ? undefined : findPermanent(ctx, permanentId);
+      return permanent === undefined ? null : (permanent.controllerId as unknown as ObjectId);
+    }
     if (r === 'source') return sourcePermanent()?.id ?? null;
     if (r === 'eventPlayer') {
       if (scope.eventPlayerId === undefined)
@@ -2630,25 +2636,6 @@ export function* executeAbility(
         ctx.state.lifeFloorPlayers[controller.id] = true;
         emit(ctx, 'lifeFloor', { player: controller.id, minimum: 1 });
         break;
-      case 'tapAndDamageController': {
-        const targetId = ref(effect.target);
-        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        if (target === undefined) break;
-        target.tapped = true;
-        queueTriggersForObject(ctx, 'becomesTapped', target);
-        dealDamageToPlayer(
-          ctx,
-          source,
-          playerById(ctx, target.controllerId),
-          effectivePT(ctx, target).power,
-          {
-            combat: false,
-            sourceIsCommander: false,
-            sourceHasLifelink: false,
-          },
-        );
-        break;
-      }
       case 'drawForEachOpponent':
         for (const opponent of opponentsOf(ctx, controller.id)) yield* drawCards(ctx, opponent, 1);
         yield* drawCards(ctx, controller, opponentsOf(ctx, controller.id).length);

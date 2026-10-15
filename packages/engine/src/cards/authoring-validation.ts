@@ -62,6 +62,24 @@ function checkReference(
   issues: AuthoringIssue[],
 ): void {
   if (value === undefined && contract.optional === true) return;
+  if (value !== null && typeof value === 'object') {
+    // "Controller of target N": the player who controls the permanent in an ordinary slot.
+    const inner = (value as { controllerOf?: unknown }).controllerOf;
+    if (!contract.domains.includes('player'))
+      issues.push({
+        path,
+        message: 'controller reference is incompatible with this effect domain',
+      });
+    else
+      checkReference(
+        inner,
+        `${path}.controllerOf`,
+        { domains: ['permanent'], selection: 'ordinary' },
+        scope,
+        issues,
+      );
+    return;
+  }
   if (typeof value === 'string') {
     if (value === 'triggerObject' && scope?.eventObject === undefined) {
       issues.push({ path, message: 'event object reference has no owning event scope' });

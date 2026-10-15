@@ -345,7 +345,6 @@ const effectExpressions = {
   replicateCopies: {},
   copyEachTargetedSpell: {},
   angelGrace: {},
-  tapAndDamageController: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},
   combatCalligrapher: {},

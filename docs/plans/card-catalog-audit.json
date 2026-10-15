@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 38,
+      "uniqueOracleIds": 37,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6515,6 +6515,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the tap applies to all opposing fliers rather than the damaged set; a misreading, because Gatherer ruling 2017-11-17 says \"those creatures\" are the creatures with flying your opponents control, not the creatures dealt damage, so a flier whose damage is prevented is still tapped): the executable override in coverage-pr06.ts damages and taps the same opposing-fliers selector as the enter trigger resolves, with this creature as the damage source. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+      "name": "Backlash",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed untapped-creature targeting is implemented as any creature): the executable override in coverage-pr06.ts targets a creature with the new tapState untapped restriction, honored when the target is chosen and again on resolution (CR 608.2b), taps it, and has that creature deal damage equal to its power to the new controllerOf reference, the player who controls it as Backlash resolves. The bespoke tapAndDamageController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

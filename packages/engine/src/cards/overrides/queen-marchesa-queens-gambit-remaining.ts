@@ -138,12 +138,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   );
   // Arcbond: restored in coverage PR06 (see coverage-pr06.ts).
-  // Catalog audit queen-batch-4: untapped restriction omitted.
-  unsupportedCard(
-    '3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c',
-    'Backlash',
-    'Untapped-creature targeting is implemented as any creature.',
-  );
+  // Backlash: restored in coverage PR06 (see coverage-pr06.ts).
   // Brash Taunter: "that much damage" is the amount dealt in the triggering event, dealt by the
   // Taunter itself to a target opponent. "Another target creature" is any creature but the
   // Taunter, whoever controls it, so the fight target carries an OTHER filter (CR 701.14).

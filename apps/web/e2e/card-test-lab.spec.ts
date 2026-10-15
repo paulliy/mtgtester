@@ -8910,3 +8910,29 @@ test('Thundermaw Hellkite: damage and tap the fliers your opponents control', as
     page.getByText(/Thundermaw Hellkite.* deals 1 to Lab Sturdy Flier/).first(),
   ).toBeVisible();
 });
+
+test('Backlash: tap an untapped creature and it hits its controller', async ({ page }) => {
+  await runScenario(page, 'Backlash: tap an untapped creature and it hits its controller');
+  const backlash = handCard(page, 'Backlash');
+  await expect(backlash).toHaveClass(/actionable/, { timeout: 15_000 });
+  await backlash.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  // Both creatures are untapped, so both are on offer; choose P2's Lab Ox.
+  await expect(permanent(page, 'Lab Servo')).toHaveClass(/targetable/);
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Servo').locator('.tap-badge')).toHaveCount(0);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('36');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});

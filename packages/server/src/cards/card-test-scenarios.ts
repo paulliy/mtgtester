@@ -11784,6 +11784,37 @@ function thundermawHellkiteScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function backlashScenario(gameId: GameId): CardTestScenario {
+  const backlash = pinnedFrom(COVERAGE_PR06, 'Backlash');
+  const lands = [SWAMP, MOUNTAIN, MOUNTAIN];
+  return pr01Scenario(gameId, {
+    id: 'backlash-viewer-tap-and-reflect',
+    title: 'Backlash: tap an untapped creature and it hits its controller',
+    instructions: [
+      'Backlash is in your hand with a Swamp and two Mountains on your battlefield. P2 controls Lab Ox (4/4) and P3 controls Lab Servo (1/1).',
+      "Cast Backlash targeting Lab Ox (P2's creature) and let it resolve.",
+    ],
+    expectedOutcome:
+      'Lab Ox becomes tapped and deals 4 damage, equal to its power, to its controller P2, who is at 36. Lab Servo stays untapped and P3, P4 and you are at 40.',
+    oracleSha256: backlash.sha256,
+    clauseIds: ['backlash-tap-and-damage'],
+    decks: {
+      P1: [backlash.card, ...lands],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: [LAB_SERVO, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Backlash'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Servo'] },
+      ],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12038,6 +12069,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'territorial-aetherkite-viewer-pay-energy-damage',
   'arcbond-viewer-reflect-damage',
   'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+  'backlash-viewer-tap-and-reflect',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12359,6 +12391,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'territorial-aetherkite-viewer-pay-energy-damage': territorialAetherkiteScenario,
   'arcbond-viewer-reflect-damage': arcbondScenario,
   'thundermaw-hellkite-viewer-damage-and-tap-fliers': thundermawHellkiteScenario,
+  'backlash-viewer-tap-and-reflect': backlashScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

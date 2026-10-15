@@ -49,6 +49,35 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
+  // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
+  // nothing. The creature itself deals the damage, equal to its power after being tapped, to the
+  // player who controls it as Backlash resolves.
+  const backlash = targetSlots({ creature: { kind: 'creature', tapState: 'untapped' } });
+  defineCard(
+    '3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c',
+    'Backlash',
+    [
+      'Tap target untapped creature. That creature deals damage equal to its power to its controller.',
+    ],
+    {
+      spellAbility: spell({
+        targets: backlash.targets,
+        effects: [
+          { op: 'tapTarget', target: backlash.slot.creature },
+          {
+            op: 'dealDamage',
+            target: { controllerOf: backlash.slot.creature },
+            source: backlash.slot.creature,
+            amount: { kind: 'powerOfTarget', target: backlash.slot.creature },
+          },
+        ],
+        description:
+          'Tap target untapped creature. That creature deals damage equal to its power to its controller',
+      }),
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

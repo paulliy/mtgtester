@@ -406,6 +406,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'territorial-aetherkite-viewer-pay-energy-damage',
       'arcbond-viewer-reflect-damage',
       'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+      'backlash-viewer-tap-and-reflect',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

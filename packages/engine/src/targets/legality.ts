@@ -209,6 +209,9 @@ export function targetIsLegal(
     !matchesController(permanent.controllerId)
   )
     return false;
+  // "Untapped" / "tapped" (CR 608.2b: re-checked on resolution through the same predicate).
+  if (spec.tapState !== undefined && (spec.tapState === 'tapped') !== permanent.tapped)
+    return false;
   if (context.targeting !== false) {
     if (hasKeyword(ctx, permanent, 'shroud')) return false;
     if (permanent.controllerId !== controllerId && hasKeyword(ctx, permanent, 'hexproof'))

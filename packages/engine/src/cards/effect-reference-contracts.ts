@@ -134,7 +134,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   replicateCopies: {},
   copyEachTargetedSpell: { targetSlot: many(spell) },
   angelGrace: {},
-  tapAndDamageController: { target: permanent },
   drawForEachOpponent: {},
   drawTargetAndController: { target: player },
   combatCalligrapher: {},

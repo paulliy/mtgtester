@@ -2639,6 +2639,137 @@ describe('Thundermaw Hellkite', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.02 Backlash
+// ---------------------------------------------------------------------------------------------
+
+describe('Backlash', () => {
+  const { card } = pinned('Backlash');
+  const COST = [{ symbol: 'B' as const }, { symbol: 'R' as const }, ...generic(1)];
+  const BRUTE = (name: string, power = '3', text = '') =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9', oracleText: text });
+
+  /** P2 controls `target`, P3 a bystander; P1 casts Backlash. */
+  function board(seed: string, targetCard: OracleCard = BRUTE('Lab Target')) {
+    const ctx = pod(seed);
+    const target = spawn(ctx, 'P2', targetCard);
+    const bystander = spawn(ctx, 'P3', BRUTE('Lab Bystander'));
+    return { ctx, target, bystander };
+  }
+
+  /** P1 casts Backlash at `targetId` and leaves it on the stack. */
+  function cast(ctx: GameContext, targetId: string) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Backlash').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return { object, option: option! };
+  }
+
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+
+  it('backlash-pinned-oracle-supported — the override targets an untapped creature, taps it, and has that creature deal damage equal to its power to its controller', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.spellAbility!.targets).toEqual([{ kind: 'creature', tapState: 'untapped' }]);
+    expect(def.spellAbility!.effects).toEqual([
+      { op: 'tapTarget', target: 0 },
+      {
+        op: 'dealDamage',
+        target: { controllerOf: 0 },
+        source: 0,
+        amount: { kind: 'powerOfTarget', target: 0 },
+      },
+    ]);
+  });
+
+  it('backlash-untapped-only — a tapped creature is not a legal target, and with only tapped creatures Backlash cannot be cast', () => {
+    const { ctx, target, bystander } = board('backlash-untapped');
+    onField(ctx, bystander.cardId)!.tapped = true;
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option).toBeDefined();
+    const offered = option!.targets![0]!.options;
+    expect(offered).toContain(target.id);
+    expect(offered).not.toContain(bystander.id);
+
+    onField(ctx, target.cardId)!.tapped = true;
+    expect(optionFor(ctx, 'P1', object.id)).toBeUndefined();
+  });
+
+  it('backlash-tapped-in-response — a target that became tapped is illegal on resolution, so Backlash does nothing and deals no damage', () => {
+    const { ctx, target } = board('backlash-response');
+    const { object } = cast(ctx, target.id);
+    onField(ctx, target.cardId)!.tapped = true;
+    resolveTop(ctx);
+    expect(damageEvents(ctx)).toEqual([]);
+    expect(life(ctx, 'P2')).toBe(40);
+    expect(ctx.state.stack).toEqual([]);
+    expect(playerById(ctx, 'P1').graveyard.some((c) => c.cardId === object.cardId)).toBe(true);
+  });
+
+  it('backlash-tap-and-damage — it taps the creature, which deals damage equal to its power to its controller, and to no one else', () => {
+    const { ctx, target, bystander } = board('backlash-basic');
+    cast(ctx, target.id);
+    resolveTop(ctx);
+    expect(onField(ctx, target.cardId)?.tapped).toBe(true);
+    expect(life(ctx, 'P2')).toBe(37);
+    for (const id of ['P1', 'P3', 'P4']) expect(life(ctx, id), id).toBe(40);
+    expect(onField(ctx, bystander.cardId)?.tapped).toBe(false);
+    expect(damageEvents(ctx)).toHaveLength(1);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('backlash-source-is-creature — the creature deals the damage: lifelink gains its controller the life back, and infect gives poison instead of life loss', () => {
+    const lifelink = board('backlash-lifelink', BRUTE('Lab Leech', '3', 'Lifelink'));
+    cast(lifelink.ctx, lifelink.target.id);
+    resolveTop(lifelink.ctx);
+    expect(life(lifelink.ctx, 'P2')).toBe(40);
+    expect(life(lifelink.ctx, 'P1')).toBe(40);
+    expect(String(damageEvents(lifelink.ctx)[0]?.payload['source'])).toContain('Lab Leech');
+
+    const infect = board('backlash-infect', BRUTE('Lab Plaguer', '3', 'Infect'));
+    cast(infect.ctx, infect.target.id);
+    resolveTop(infect.ctx);
+    expect(life(infect.ctx, 'P2')).toBe(40);
+    expect(playerById(infect.ctx, 'P2').poisonCounters).toBe(3);
+  });
+
+  it("backlash-power-at-resolution — the damage is the creature's power as Backlash resolves, after it was changed in response", () => {
+    const { ctx, target } = board('backlash-power');
+    cast(ctx, target.id);
+    onField(ctx, target.cardId)!.counters['+1/+1'] = 2;
+    resolveTop(ctx);
+    expect(life(ctx, 'P2')).toBe(35);
+  });
+
+  it('backlash-controller-at-resolution — the player who controls the creature as Backlash resolves takes the damage, and your own creature hurts you', () => {
+    const { ctx, target } = board('backlash-control');
+    cast(ctx, target.id);
+    onField(ctx, target.cardId)!.controllerId = 'P3';
+    resolveTop(ctx);
+    expect(life(ctx, 'P3')).toBe(37);
+    expect(life(ctx, 'P2')).toBe(40);
+
+    const own = pod('backlash-own');
+    const mine = spawn(own, 'P1', BRUTE('Lab Mine', '2'));
+    cast(own, mine.id);
+    resolveTop(own);
+    expect(life(own, 'P1')).toBe(38);
+    expect(onField(own, mine.cardId)?.tapped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2700,6 +2831,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Flameblast Dragon',
     sha256: '0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Backlash',
+    sha256: '116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5',
+    clauseCount: 1,
     authored: true,
   },
   {

@@ -31,6 +31,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Arcane Denial',
       'Arcbond',
       'Attune with Aether',
+      'Backlash',
       'Beacon of Unrest',
       'Bespoke Battlewagon',
       'Blasphemous Edict',

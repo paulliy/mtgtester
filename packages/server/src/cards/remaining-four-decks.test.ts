@@ -132,7 +132,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Selfless Squire',
       'Teyo, Geometric Tactician',
       'Wishclaw Talisman',
-      'Backlash',
       'Brash Taunter',
       'Breena, the Demagogue',
       'Deflecting Palm',

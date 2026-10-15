@@ -174,10 +174,12 @@ const shapes = {
     totalManaValueAtMost: leaf,
     graveyardOwnerSlot: leaf,
     graveyardOwnerScope: leaf,
+    tapState: leaf,
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     op: leaf,
-    target: leaf,
+    // An `EffectRef`: a slot, a named referent, or `{ controllerOf: slot }`.
+    target: { union: [leaf, { object: { controllerOf: leaf } }] },
     power: { union: [leaf, { node: 'Value' }] },
     toughness: { union: [leaf, { node: 'Value' }] },
     keyword: leaf,
@@ -802,7 +804,6 @@ const families = {
       replicateCopies: true,
       copyEachTargetedSpell: true,
       angelGrace: true,
-      tapAndDamageController: true,
       drawForEachOpponent: true,
       drawTargetAndController: true,
       combatCalligrapher: true,

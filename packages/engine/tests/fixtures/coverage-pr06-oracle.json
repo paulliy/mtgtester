@@ -422,6 +422,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
+      "card": {
+        "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+        "scryfallId": "dadf030d-5451-43fc-bf0c-c1629fdf88ec",
+        "name": "Backlash",
+        "manaCost": "{1}{B}{R}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Tap target untapped creature. That creature deals damage equal to its power to its controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

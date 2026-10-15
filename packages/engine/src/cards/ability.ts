@@ -461,6 +461,12 @@ export interface TargetSpec {
    */
   graveyardOwnerSlot?: number;
   graveyardOwnerScope?: 'controller' | 'opponent' | 'any';
+  /**
+   * "Target untapped creature" (Backlash) — the tapped state a battlefield permanent must have
+   * when chosen and again as the spell or ability resolves (CR 608.2b). Selectors deliberately
+   * cannot read tapped-ness (see selector.ts), so it lives on the target spec.
+   */
+  tapState?: 'untapped' | 'tapped';
 }
 
 /**
@@ -488,7 +494,13 @@ export type EffectRef =
    * event (`ValueScope.eventPlayerId`), referenced directly rather than through a target slot
    * (CR text never says "target player" here — it is a reference, like `'triggerObject'`).
    */
-  | 'eventPlayer';
+  | 'eventPlayer'
+  /**
+   * "its controller" / "that creature's controller" (Backlash) — the player who controls the
+   * permanent in the named target slot as the ability resolves, referenced directly rather than
+   * through a player target slot.
+   */
+  | { controllerOf: number };
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -663,7 +675,6 @@ export type Effect =
     }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }
   | { op: 'angelGrace' }
-  | { op: 'tapAndDamageController'; target: EffectRef }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
   | { op: 'combatCalligrapher' }

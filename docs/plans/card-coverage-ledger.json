@@ -239,6 +239,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+    "name": "Backlash",
+    "package": "PR06.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Untapped-creature targeting is implemented as any creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "57d0c688-6206-4c83-9fcb-27fd29e2a9ed",
     "name": "Basri's Lieutenant",
     "package": "W8",

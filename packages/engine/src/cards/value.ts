@@ -30,6 +30,8 @@ export function assertNumericReference(
   reference: EffectRef,
 ): asserts reference is number | 'source' | 'triggerObject' {
   if (typeof reference === 'number') return;
+  if (typeof reference === 'object')
+    throw new Error('numeric controller references have no supported lifetime contract');
   switch (reference) {
     case 'source':
     case 'triggerObject':

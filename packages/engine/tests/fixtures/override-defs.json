@@ -2729,8 +2729,38 @@
   {
     "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
     "name": "Backlash",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Tap target untapped creature. That creature deals damage equal to its power to its controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Tap target untapped creature. That creature deals damage equal to its power to its controller",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature",
+            "tapState": "untapped"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb",
@@ -12448,8 +12478,38 @@
   {
     "oracleId": "oracle-backlash",
     "name": "Backlash",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Tap target untapped creature. That creature deals damage equal to its power to its controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Tap target untapped creature. That creature deals damage equal to its power to its controller",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature",
+            "tapState": "untapped"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-baxter-building",

@@ -2567,13 +2567,24 @@
     "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c": {
       "name": "Backlash",
       "oracleSha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Tap target untapped creature.",
-          "implementation": ["explicitly unsupported; any creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "backlash-tap-and-damage",
+          "oracleText": "Tap target untapped creature. That creature deals damage equal to its power to its controller.",
+          "implementation": [
+            "instant targeting an untapped creature, checked when chosen and again as it resolves (CR 608.2b, a creature tapped in response makes the only target illegal and the spell does nothing); it taps the creature, then the creature itself deals damage equal to its power as Backlash resolves to the player who controls it then"
+          ],
+          "engineTestIds": [
+            "backlash-pinned-oracle-supported",
+            "backlash-untapped-only",
+            "backlash-tapped-in-response",
+            "backlash-tap-and-damage",
+            "backlash-source-is-creature",
+            "backlash-power-at-resolution",
+            "backlash-controller-at-resolution"
+          ],
+          "viewerScenarioIds": ["backlash-viewer-tap-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []

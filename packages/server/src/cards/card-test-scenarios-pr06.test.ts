@@ -613,3 +613,24 @@ describe('Thundermaw Hellkite Card Test Lab scenario', () => {
     replays('thundermaw-hellkite-viewer-damage-and-tap-fliers', steps);
   });
 });
+
+describe('Backlash Card Test Lab scenario', () => {
+  it('backlash-viewer-tap-and-reflect — only untapped creatures are offered, and Lab Ox is tapped and deals its 4 power to its controller P2', () => {
+    const steps: Step[] = [{ action: 'Cast Backlash', targets: ['Lab Ox'] }];
+    const { scenario, state, seat, onBattlefield } = run('backlash-viewer-tap-and-reflect', steps);
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.tapped).toBe(true);
+    const [servo] = onBattlefield('Lab Servo');
+    expect(servo?.tapped).toBe(false);
+    expect(seat('P2').life).toBe(36);
+    for (const id of ['P1', 'P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    const hits = state.eventLog.filter((event) => event.type === 'damage');
+    expect(hits).toHaveLength(1);
+    expect(hits[0]?.payload).toMatchObject({ target: 'P2', amount: 4 });
+    expect(String(hits[0]?.payload['source'])).toContain('Lab Ox');
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Backlash']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('backlash-viewer-tap-and-reflect', steps);
+  });
+});
