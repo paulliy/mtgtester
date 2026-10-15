@@ -5234,6 +5234,153 @@ describe('Frontier Warmonger', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.28 Tenuous Truce
+// ---------------------------------------------------------------------------------------------
+
+describe('Tenuous Truce', () => {
+  const { card } = pinned('Tenuous Truce');
+
+  /** P1's Truce enchanting P2; every player has a Bear and P1 and P3 a planeswalker. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const aura = spawn(ctx, 'P1', card);
+    aura.attachedTo = 'P2';
+    const bears = Object.fromEntries(
+      (['P1', 'P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        spawn(ctx, id, GRIZZLY(`Lab ${id} Bear`)),
+      ]),
+    ) as Record<'P1' | 'P2' | 'P3' | 'P4', EnginePermanent>;
+    const walkers = {
+      P1: spawn(ctx, 'P1', WALKER('Lab P1 Walker')),
+      P2: spawn(ctx, 'P2', WALKER('Lab P2 Walker')),
+      P3: spawn(ctx, 'P3', WALKER('Lab P3 Walker')),
+    };
+    return { ctx, aura, bears, walkers };
+  }
+  const present = (ctx: GameContext, aura: EnginePermanent) => ctx.state.battlefield.includes(aura);
+  /** `playerId`'s whole turn, attacking with `attacks`; nobody blocks. */
+  function turnWith(ctx: GameContext, playerId: string, attacks: Record<string, string> = {}) {
+    turnOfPlayer(ctx, playerId);
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => attacks[id] ?? null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  it('tenuous-truce-pinned-oracle-supported — the interpreter reads Enchant opponent, and the override adds the enchanted end-step draw and two attack triggers that sacrifice the Aura', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.spellAbility?.targets).toEqual([{ kind: 'player', controller: 'opponent' }]);
+    expect(def.triggers.map((t) => t.trigger)).toEqual([
+      { when: 'endStep', player: 'enchanted' },
+      {
+        when: 'attackDeclared',
+        attacker: 'you',
+        attacking: { who: 'enchantedPlayer', planeswalkers: true },
+      },
+      {
+        when: 'attackDeclared',
+        attacker: 'enchantedPlayer',
+        attacking: { who: 'you', planeswalkers: true },
+      },
+    ]);
+    expect(def.triggers[1]!.effects).toEqual([{ op: 'sacrifice', target: 'source' }]);
+  });
+
+  it('tenuous-truce-enchant-opponent — it is cast targeting an opponent only and enters attached to that player', () => {
+    const ctx = pod('truce-cast');
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }, ...generic(1)]);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Tenuous Truce').toBeDefined();
+    expect([...option!.targets![0]!.options].sort()).toEqual(['P2', 'P3', 'P4']);
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, 'P3']]),
+    );
+    resolveTop(ctx);
+    const aura = ctx.state.battlefield.find((perm) => perm.name === 'Tenuous Truce');
+    expect(aura?.attachedTo).toBe('P3');
+    expect(aura?.controllerId).toBe('P1');
+  });
+
+  it('tenuous-truce-end-step — you and the enchanted opponent each draw at that opponent’s end step, and no one draws at anyone else’s', () => {
+    const { ctx, aura } = board('truce-draw');
+    turnWith(ctx, 'P2');
+    // P2 draws for the turn, then the Aura's draw: two cards. You draw one.
+    expect(handSize(ctx, 'P2')).toBe(2);
+    expect(handSize(ctx, 'P1')).toBe(1);
+    expect(present(ctx, aura)).toBe(true);
+
+    const other = board('truce-other-turn');
+    turnWith(other.ctx, 'P3');
+    expect(handSize(other.ctx, 'P3')).toBe(1);
+    expect(handSize(other.ctx, 'P1')).toBe(0);
+    turnWith(other.ctx, 'P1');
+    expect(handSize(other.ctx, 'P1')).toBe(1);
+  });
+
+  it('tenuous-truce-you-attack — you attacking the enchanted opponent, or their planeswalker, sacrifices the Aura; attacking anyone else does not', () => {
+    const player = board('truce-you-player');
+    turnWith(player.ctx, 'P1', { [player.bears.P1.id]: 'P2' });
+    expect(present(player.ctx, player.aura)).toBe(false);
+    expect(player.ctx.state.players[0]!.graveyard.some((c) => c.name === 'Tenuous Truce')).toBe(
+      true,
+    );
+
+    const walker = board('truce-you-walker');
+    turnWith(walker.ctx, 'P1', { [walker.bears.P1.id]: walker.walkers.P2.id });
+    expect(present(walker.ctx, walker.aura)).toBe(false);
+
+    const elsewhere = board('truce-you-elsewhere');
+    turnWith(elsewhere.ctx, 'P1', { [elsewhere.bears.P1.id]: 'P3' });
+    expect(present(elsewhere.ctx, elsewhere.aura)).toBe(true);
+    const elsewhereWalker = board('truce-you-other-walker');
+    turnWith(elsewhereWalker.ctx, 'P1', {
+      [elsewhereWalker.bears.P1.id]: elsewhereWalker.walkers.P3.id,
+    });
+    expect(present(elsewhereWalker.ctx, elsewhereWalker.aura)).toBe(true);
+  });
+
+  it('tenuous-truce-they-attack — the enchanted opponent attacking you, or your planeswalker, sacrifices the Aura; attacking anyone else, or another player attacking you, does not', () => {
+    const player = board('truce-they-player');
+    turnWith(player.ctx, 'P2', { [player.bears.P2.id]: 'P1' });
+    expect(present(player.ctx, player.aura)).toBe(false);
+
+    const walker = board('truce-they-walker');
+    turnWith(walker.ctx, 'P2', { [walker.bears.P2.id]: walker.walkers.P1.id });
+    expect(present(walker.ctx, walker.aura)).toBe(false);
+
+    const elsewhere = board('truce-they-elsewhere');
+    turnWith(elsewhere.ctx, 'P2', { [elsewhere.bears.P2.id]: 'P3' });
+    expect(present(elsewhere.ctx, elsewhere.aura)).toBe(true);
+
+    const third = board('truce-third-player');
+    turnWith(third.ctx, 'P3', { [third.bears.P3.id]: 'P1' });
+    expect(present(third.ctx, third.aura)).toBe(true);
+  });
+
+  it('tenuous-truce-sacrificed-before-end-step — once sacrificed it no longer draws at the enchanted opponent’s end step', () => {
+    const { ctx, aura, bears } = board('truce-gone');
+    turnWith(ctx, 'P1', { [bears.P1.id]: 'P2' });
+    expect(present(ctx, aura)).toBe(false);
+    const before = handSize(ctx, 'P1');
+    turnWith(ctx, 'P2');
+    expect(handSize(ctx, 'P1')).toBe(before);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -5387,6 +5534,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Frontier Warmonger',
     sha256: '044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Tenuous Truce',
+    sha256: '95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45',
+    clauseCount: 2,
     authored: true,
   },
   {

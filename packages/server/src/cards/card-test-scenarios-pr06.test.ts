@@ -988,3 +988,36 @@ describe('Frontier Warmonger Card Test Lab scenario', () => {
     replays('frontier-warmonger-viewer-menace', steps);
   });
 });
+
+describe('Tenuous Truce Card Test Lab scenarios', () => {
+  it('tenuous-truce-viewer-end-step — at P2’s end step you and P2 each draw a card and the Aura stays', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat, onBattlefield } = run('tenuous-truce-viewer-end-step', steps);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P2').hand).toHaveLength(1);
+    expect(onBattlefield('Tenuous Truce')[0]?.attachedTo).toBe('P2');
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('tenuous-truce-viewer-end-step', steps);
+  });
+
+  it('tenuous-truce-viewer-you-attack — attacking the enchanted P2 sacrifices the Aura', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const { state, seat, onBattlefield } = run('tenuous-truce-viewer-you-attack', steps);
+    expect(onBattlefield('Tenuous Truce')).toHaveLength(0);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Tenuous Truce']);
+    expect(seat('P2').life).toBe(36);
+    expect(state.stack).toEqual([]);
+    replays('tenuous-truce-viewer-you-attack', steps);
+  });
+
+  it('tenuous-truce-viewer-they-attack — the enchanted P2 attacking you sacrifices the Aura', () => {
+    const steps: Step[] = [];
+    const { state, seat, onBattlefield } = run('tenuous-truce-viewer-they-attack', steps);
+    expect(onBattlefield('Tenuous Truce')).toHaveLength(0);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Tenuous Truce']);
+    expect(seat('P1').life).toBe(36);
+    expect(state.stack).toEqual([]);
+    replays('tenuous-truce-viewer-they-attack', steps);
+  });
+});

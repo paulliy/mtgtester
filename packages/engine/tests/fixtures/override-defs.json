@@ -10818,6 +10818,83 @@
     }
   },
   {
+    "oracleId": "f0bf2923-aea2-4bac-b061-64bc84437ef1",
+    "name": "Tenuous Truce",
+    "handledLines": [
+      "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+      "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of enchanted opponent's end step, you and that player each draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "enchanted",
+            "when": "endStep"
+          }
+        },
+        {
+          "description": "When you attack enchanted opponent or a planeswalker they control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "enchantedPlayer"
+            },
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "When enchanted opponent attacks you or a planeswalker you control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "enchantedPlayer",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "you"
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b",
     "name": "Nova Flame",
     "handledLines": [
@@ -22216,6 +22293,83 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "oracle-tenuous-truce",
+    "name": "Tenuous Truce",
+    "handledLines": [
+      "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+      "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of enchanted opponent's end step, you and that player each draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "enchanted",
+            "when": "endStep"
+          }
+        },
+        {
+          "description": "When you attack enchanted opponent or a planeswalker they control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "enchantedPlayer"
+            },
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "When enchanted opponent attacks you or a planeswalker you control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "enchantedPlayer",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "you"
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-territorial-aetherkite",

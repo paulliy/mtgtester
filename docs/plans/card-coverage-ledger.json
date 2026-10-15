@@ -3586,17 +3586,21 @@
   {
     "oracleId": "f0bf2923-aea2-4bac-b061-64bc84437ef1",
     "name": "Tenuous Truce",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR06.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Enchant opponent\"",
       "unrecognized rules text: \"At the beginning of enchanted opponent's end step, you and that player each draw a card.\"",
       "unrecognized rules text: \"When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",

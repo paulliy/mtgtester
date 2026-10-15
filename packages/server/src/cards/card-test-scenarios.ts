@@ -12438,6 +12438,66 @@ function warmongerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function tenuousTruceScenario(
+  gameId: GameId,
+  kind: 'end-step' | 'you-attack' | 'they-attack',
+): CardTestScenario {
+  const truce = pinnedFrom(COVERAGE_PR06, 'Tenuous Truce');
+  const titles = {
+    'end-step': 'Tenuous Truce: at the enchanted opponent’s end step you and they each draw',
+    'you-attack': 'Tenuous Truce: attacking the enchanted opponent sacrifices the Aura',
+    'they-attack': 'Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura',
+  } as const;
+  const theirTurn = kind !== 'you-attack';
+  return pr01Scenario(gameId, {
+    id: `tenuous-truce-viewer-${kind}`,
+    title: titles[kind],
+    instructions:
+      kind === 'end-step'
+        ? [
+            'It is P2’s turn. Your Tenuous Truce already enchants P2.',
+            'Pass priority until P2’s end step and let the trigger resolve.',
+          ]
+        : kind === 'you-attack'
+          ? [
+              'Your Tenuous Truce already enchants P2, and you control Lab Ox (4/4).',
+              'Pass priority until the declare attackers step, then attack P2 with Lab Ox and confirm. Nobody blocks.',
+            ]
+          : [
+              'It is P2’s turn. Your Tenuous Truce already enchants P2. P2 controls Lab Ox (4/4) and attacks you with it. You control no creatures.',
+              'Pass priority and let the attack play out.',
+            ],
+    expectedOutcome:
+      kind === 'end-step'
+        ? 'At the enchanted opponent’s end step you drew a card and P2 drew a card: each library is one card smaller, and Tenuous Truce is still attached.'
+        : kind === 'you-attack'
+          ? 'You attacked the enchanted opponent, so Tenuous Truce was sacrificed: it is in your graveyard. P2 took 4 and is at 36.'
+          : 'The enchanted opponent attacked you, so Tenuous Truce was sacrificed: it is in your graveyard. You took 4 and are at 36.',
+    oracleSha256: truce.sha256,
+    clauseIds:
+      kind === 'end-step' ? ['tenuous-truce-end-step-draw'] : ['tenuous-truce-attack-sacrifice'],
+    decks: {
+      P1: [truce.card, ...(kind === 'you-attack' ? [LAB_OX] : []), FOREST, FOREST],
+      P2: [...(kind === 'they-attack' ? [LAB_OX] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(theirTurn ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Tenuous Truce'], enchantedPlayerId: 'P2' },
+        ...(kind === 'you-attack' ? [{ playerId: 'P1' as const, cardNames: ['Lab Ox'] }] : []),
+        ...(kind === 'they-attack' ? [{ playerId: 'P2' as const, cardNames: ['Lab Ox'] }] : []),
+      ],
+      ...(kind === 'end-step' ? { continueToEndStep: true } : { continueThroughCombat: true }),
+    },
+    ...(kind === 'they-attack'
+      ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') } }
+      : {}),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12712,6 +12772,9 @@ export const CARD_TEST_SCENARIO_IDS = [
   'tomik-viewer-affinity-for-planeswalkers',
   'tomik-viewer-attack-drain-and-draw',
   'frontier-warmonger-viewer-menace',
+  'tenuous-truce-viewer-end-step',
+  'tenuous-truce-viewer-you-attack',
+  'tenuous-truce-viewer-they-attack',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13058,6 +13121,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'tomik-viewer-affinity-for-planeswalkers': tomikAffinityScenario,
   'tomik-viewer-attack-drain-and-draw': tomikAttackScenario,
   'frontier-warmonger-viewer-menace': warmongerScenario,
+  'tenuous-truce-viewer-end-step': (gameId) => tenuousTruceScenario(gameId, 'end-step'),
+  'tenuous-truce-viewer-you-attack': (gameId) => tenuousTruceScenario(gameId, 'you-attack'),
+  'tenuous-truce-viewer-they-attack': (gameId) => tenuousTruceScenario(gameId, 'they-attack'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

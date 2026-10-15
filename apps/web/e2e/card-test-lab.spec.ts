@@ -9365,3 +9365,47 @@ test('Frontier Warmonger: the creatures attacking an opponent gain menace', asyn
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('36');
 });
+
+test('Tenuous Truce: at the enchanted opponent’s end step you and they each draw', async ({
+  page,
+}) => {
+  const mine = trackLibrary(page, 'P1');
+  const theirs = trackLibrary(page, 'P2');
+  await runScenario(
+    page,
+    'Tenuous Truce: at the enchanted opponent’s end step you and they each draw',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(mine.first() - mine.last()).toBe(1);
+  expect(theirs.first() - theirs.last()).toBe(1);
+  await expect(permanent(page, 'Tenuous Truce')).toHaveCount(1);
+});
+
+test('Tenuous Truce: attacking the enchanted opponent sacrifices the Aura', async ({ page }) => {
+  await runScenario(page, 'Tenuous Truce: attacking the enchanted opponent sacrifices the Aura');
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Tenuous Truce')).toHaveCount(0);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('36');
+});
+
+test('Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Tenuous Truce')).toHaveCount(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('36');
+});

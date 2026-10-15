@@ -117,6 +117,7 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
       const source = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,

@@ -1665,7 +1665,11 @@ export type TriggerHead =
    */
   | {
       when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat';
-      player: 'you' | 'each';
+      /**
+       * `'enchanted'`: only the step of the player this Aura enchants ("at the beginning of enchanted
+       * opponent's end step", Tenuous Truce); the event player is that player.
+       */
+      player: 'you' | 'each' | 'enchanted';
     }
   /**
    * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at

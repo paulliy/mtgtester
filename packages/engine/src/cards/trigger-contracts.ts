@@ -316,7 +316,9 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         ? ['you', 'each', 'opponent']
         : head['when'] === 'foretells'
           ? ['you']
-          : ['you', 'each']
+          : family === 'step' && !['mainPhase', 'precombatMain'].includes(head['when'] as string)
+            ? ['you', 'each', 'enchanted']
+            : ['you', 'each']
     ).includes(head['player'] as string)
   )
     issues.push({ path: `${path}.player`, message: 'trigger requires a supported player scope' });

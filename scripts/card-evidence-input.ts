@@ -2314,6 +2314,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Frontier Warmonger: the creatures attacking an opponent gain menace'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: at the enchanted opponent’s end step you and they each draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: attacking the enchanted opponent sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

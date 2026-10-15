@@ -236,6 +236,60 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Tenuous Truce: "Enchant opponent" is read by the interpreter (the Aura's one target is an
+  // opponent, and it is attached to that player). At the beginning of the enchanted opponent's end
+  // step, and only theirs, you and that player each draw a card. The sacrifice is two triggers on
+  // the attackDeclared event: when you declare an attack with any creature at the enchanted
+  // opponent or a planeswalker they control, or when they declare any attacker at you or a
+  // planeswalker you control; the Aura sacrifices itself.
+  extendCard(
+    'f0bf2923-aea2-4bac-b061-64bc84437ef1',
+    'Tenuous Truce',
+    [
+      "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+      'When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'endStep', player: 'enchanted' },
+          {
+            effects: [
+              { op: 'draw', count: constant(1) },
+              { op: 'draw', count: constant(1), player: 'eventPlayer' },
+            ],
+            description:
+              "At the beginning of enchanted opponent's end step, you and that player each draw a card",
+          },
+        ),
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'you',
+            attacking: { who: 'enchantedPlayer', planeswalkers: true },
+          },
+          {
+            effects: [{ op: 'sacrifice', target: 'source' }],
+            description:
+              'When you attack enchanted opponent or a planeswalker they control, sacrifice this Aura',
+          },
+        ),
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'enchantedPlayer',
+            attacking: { who: 'you', planeswalkers: true },
+          },
+          {
+            effects: [{ op: 'sacrifice', target: 'source' }],
+            description:
+              'When enchanted opponent attacks you or a planeswalker you control, sacrifice this Aura',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the
