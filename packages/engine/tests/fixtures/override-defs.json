@@ -9786,6 +9786,76 @@
     }
   },
   {
+    "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
+    "name": "Life of the Party",
+    "handledLines": [
+      "When ~ enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+      "Whenever ~ attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Life of the Party attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "target": "source",
+              "toughness": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "When Life of the Party enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "eachOpponent": true,
+              "goadedForRestOfGame": true,
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              }
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b2f09e41-0a91-4fb6-8804-874b3a5166b0",
     "name": "Rogue Refiner",
     "handledLines": [
@@ -22578,6 +22648,76 @@
         },
         {
           "kind": "effectDiscardMayGoToLibraryTop"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-life-of-the-party",
+    "name": "Life of the Party",
+    "handledLines": [
+      "When ~ enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+      "Whenever ~ attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Life of the Party attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "target": "source",
+              "toughness": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "When Life of the Party enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "eachOpponent": true,
+              "goadedForRestOfGame": true,
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              }
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
         }
       ]
     }

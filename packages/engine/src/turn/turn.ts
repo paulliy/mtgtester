@@ -75,7 +75,9 @@ function untapStep(ctx: GameContext): void {
     if (perm.goadedBy !== undefined) {
       const remainingGoads = perm.goadedBy.filter(
         (requirement) =>
-          requirement.goaderId !== ap.id || requirement.appliedTurn >= ctx.state.turnNumber,
+          requirement.permanent === true ||
+          requirement.goaderId !== ap.id ||
+          requirement.appliedTurn >= ctx.state.turnNumber,
       );
       if (remainingGoads.length > 0) perm.goadedBy = remainingGoads;
       else delete perm.goadedBy;

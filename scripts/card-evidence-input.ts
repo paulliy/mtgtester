@@ -2423,6 +2423,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: the attacker gets +X/+0 for the creatures you control'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: each opponent creates a goaded copy of it'],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

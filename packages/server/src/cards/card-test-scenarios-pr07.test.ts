@@ -482,3 +482,44 @@ describe('Toby, Beastie Befriender Card Test Lab scenarios', () => {
     replays('toby-viewer-flying-with-four-tokens', steps);
   });
 });
+
+describe('Life of the Party Card Test Lab scenarios', () => {
+  it('life-of-the-party-viewer-attack-pump — attacking alone with three creatures, it hits for 0 + 3', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2', '__no_attack__', '__no_attack__'] },
+    ];
+    const { scenario, state, seat } = run('life-of-the-party-viewer-attack-pump', steps);
+    expect(seat('P2').life).toBe(37);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('life-of-the-party-viewer-attack-pump', steps);
+  });
+
+  it('life-of-the-party-viewer-goaded-copies — each opponent gets a copy, and P2’s goaded copy attacks someone other than you', () => {
+    const offers: string[][] = [];
+    const steps: Step[] = [
+      { action: 'Cast Life of the Party' },
+      { action: 'Declare attackers', targets: ['__no_attack__'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'life-of-the-party-viewer-goaded-copies',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    const tokens = onBattlefield('Life of the Party').filter((perm) => perm.controllerId !== 'P1');
+    expect(tokens.map((perm) => perm.controllerId).sort()).toEqual(['P2', 'P3', 'P4']);
+    expect(offers).toHaveLength(1);
+    expect(offers[0]).not.toContain('P1');
+    expect(offers[0]).not.toContain('__no_attack__');
+    expect(seat('P1').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('life-of-the-party-viewer-goaded-copies', steps);
+  });
+});

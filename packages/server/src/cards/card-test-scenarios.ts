@@ -13143,6 +13143,64 @@ function tobyScenario(gameId: GameId, kind: 'block' | 'flying'): CardTestScenari
   });
 }
 
+function lifeOfThePartyScenario(gameId: GameId, kind: 'pump' | 'copies'): CardTestScenario {
+  const party = pinnedFrom(COVERAGE_PR07, 'Life of the Party');
+  const pump = kind === 'pump';
+  return pr01Scenario(gameId, {
+    id: pump ? 'life-of-the-party-viewer-attack-pump' : 'life-of-the-party-viewer-goaded-copies',
+    title: pump
+      ? 'Life of the Party: the attacker gets +X/+0 for the creatures you control'
+      : 'Life of the Party: each opponent creates a goaded copy of it',
+    instructions: pump
+      ? [
+          'Life of the Party, Lab Servo and Lab Bird are on your battlefield. Pass priority to the declare attackers step and attack P2 with Life of the Party alone, then confirm.',
+          'Its attack trigger resolves: it gets +X/+0 where X is the three creatures you control.',
+        ]
+      : [
+          'Life of the Party is in your hand with a Mountain and three Forests on your battlefield. Cast it and let it and its enters trigger resolve.',
+          'Each opponent creates a token copy of it under their own control, goaded by you for the rest of the game. Declare no attackers in your own combat; then on P2’s turn P2’s copy must attack, and can’t attack you.',
+        ],
+    expectedOutcome: pump
+      ? 'Life of the Party attacked as a 3/1 (0 power plus 3): P2 took 3 and is at 37.'
+      : 'P2, P3 and P4 each control a Life of the Party token. P2’s goaded copy attacked another player, not you, so you are still at 40.',
+    oracleSha256: party.sha256,
+    clauseIds: pump ? ['life-of-the-party-attack-pump'] : ['life-of-the-party-goaded-copies'],
+    decks: {
+      P1: pump
+        ? [party.card, LAB_SERVO, LAB_BIRD, FOREST, FOREST]
+        : [party.card, MOUNTAIN, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: pump
+      ? {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Life of the Party', 'Lab Servo', 'Lab Bird'] },
+          ],
+          continueThroughCombat: true,
+        }
+      : {
+          hand: [{ playerId: 'P1', cardNames: ['Life of the Party'] }],
+          battlefield: [{ playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest', 'Forest'] }],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        },
+    ...(pump
+      ? {}
+      : {
+          decisionProviderOverrides: {
+            P2: attackPlayerWithEverything('P1'),
+            P3: neverBlocks(),
+            P4: neverBlocks(),
+          },
+        }),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13457,6 +13515,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'goblin-spymaster-viewer-opponent-end-step-token',
   'toby-viewer-beast-cant-block-alone',
   'toby-viewer-flying-with-four-tokens',
+  'life-of-the-party-viewer-attack-pump',
+  'life-of-the-party-viewer-goaded-copies',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13947,6 +14007,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'goblin-spymaster-viewer-opponent-end-step-token': goblinSpymasterScenario,
   'toby-viewer-beast-cant-block-alone': (gameId) => tobyScenario(gameId, 'block'),
   'toby-viewer-flying-with-four-tokens': (gameId) => tobyScenario(gameId, 'flying'),
+  'life-of-the-party-viewer-attack-pump': (gameId) => lifeOfThePartyScenario(gameId, 'pump'),
+  'life-of-the-party-viewer-goaded-copies': (gameId) => lifeOfThePartyScenario(gameId, 'copies'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

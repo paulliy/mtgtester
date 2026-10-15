@@ -1091,6 +1091,17 @@ export type Effect =
       toughnessOverride?: number | Value;
       addKeywords?: KeywordAbility[];
       sacrificeAt?: 'endStep';
+      /**
+       * "Each opponent creates a token that's a copy of it" (Life of the Party): each opponent of
+       * the ability's controller is the creator and controls their own copies, and any
+       * replacement of THEIR token creation applies.
+       */
+      eachOpponent?: true;
+      /**
+       * "The tokens are goaded for the rest of the game": the ability's controller goads each copy
+       * and the goad never expires on its own (CR 701.15, 800.4a).
+       */
+      goadedForRestOfGame?: true;
     }
   /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
   | {

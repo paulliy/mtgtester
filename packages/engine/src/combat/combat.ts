@@ -78,19 +78,21 @@ function creaturesOf(ctx: GameContext, playerId: PlayerId): EnginePermanent[] {
   return controlledPermanents(ctx, playerId).filter((p) => isCreaturePermanent(ctx, p));
 }
 
+/** The players whose goad applies to this creature: one who has left the game goads nothing (CR 800.4a). */
 function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId> {
   const chars = computeCharacteristics(ctx, creature);
-  return new Set([
-    ...(creature.goadedBy ?? []).map((requirement) => requirement.goaderId),
-    ...(chars.staticGoadedBy ?? []),
-  ]);
+  return new Set(
+    [
+      ...(creature.goadedBy ?? []).map((requirement) => requirement.goaderId),
+      ...(chars.staticGoadedBy ?? []),
+    ].filter((goaderId) => !playerById(ctx, goaderId).hasLost),
+  );
 }
 
 function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): boolean {
   const chars = computeCharacteristics(ctx, creature);
   return (
-    (creature.goadedBy?.length ?? 0) > 0 ||
-    (chars.staticGoadedBy?.length ?? 0) > 0 ||
+    goaderIdsFor(ctx, creature).size > 0 ||
     creature.mustAttackThisTurn === true ||
     chars.mustAttackEachCombat === true
   );

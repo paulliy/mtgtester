@@ -193,10 +193,27 @@ function findCardInAnyGraveyard(ctx: GameContext, id: ObjectId): EngineCardObjec
 }
 
 /** Apply CR 701.15a/d: one player contributes at most one active goad requirement. */
-function addGoadRequirement(ctx: GameContext, perm: EnginePermanent, goaderId: PlayerId): void {
+function addGoadRequirement(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  goaderId: PlayerId,
+  permanent = false,
+): void {
   const existing = perm.goadedBy ?? [];
-  if (existing.some((requirement) => requirement.goaderId === goaderId)) return;
-  perm.goadedBy = [...existing, { goaderId, appliedTurn: ctx.state.turnNumber }];
+  const same = existing.find((requirement) => requirement.goaderId === goaderId);
+  if (same !== undefined) {
+    // A goad that lasts for the rest of the game replaces one that would have expired.
+    if (permanent && same.permanent !== true) same.permanent = true;
+    return;
+  }
+  perm.goadedBy = [
+    ...existing,
+    {
+      goaderId,
+      appliedTurn: ctx.state.turnNumber,
+      ...(permanent ? { permanent: true as const } : {}),
+    },
+  ];
 }
 
 /**
@@ -4995,9 +5012,27 @@ export function* executeAbility(
       }
       case 'createTokenCopyOf': {
         const t = ref(effect.ref);
-        const original = t === null ? undefined : findPermanent(ctx, t);
+        const live = t === null ? undefined : findPermanent(ctx, t);
         // The referent may have left before this resolved. `'triggerObject'` is not a target
-        // (CR 115.10a), so that is a no-op rather than a fizzle.
+        // (CR 115.10a), so that is a no-op rather than a fizzle. A trigger that copies ITS OWN
+        // source ("each opponent creates a copy of it") still copies it with its last known
+        // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
+        // which for a copy is the copied definition.
+        const lastKnownSourceDef = ctx.defs.get(source.oracleId);
+        const original =
+          live ??
+          (effect.ref === 'source' && lastKnownSourceDef !== undefined
+            ? ({
+                id: source.id ?? source.cardId,
+                cardId: source.cardId,
+                oracleId: source.oracleId,
+                name: source.name,
+                typeLine: lastKnownSourceDef.typeLine,
+                oracleText: '',
+                manaCost: null,
+                transformed: false,
+              } as unknown as EnginePermanent)
+            : undefined);
         if (original === undefined) break;
         const baseSpec = tokenSpecCopying(ctx, original, effect.exceptNonLegendary === true);
         const spec = {
@@ -5025,8 +5060,20 @@ export function* executeAbility(
             ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...effect.addKeywords])] }
             : {}),
         };
+        if (effect.eachOpponent === true) {
+          // Each opponent, in turn order from the active player, creates their own copies.
+          for (const opponent of opponentsOf(ctx, controller.id)) {
+            for (const token of createTokens(ctx, spec, amountOf(effect.count), opponent.id)) {
+              if (effect.goadedForRestOfGame === true)
+                addGoadRequirement(ctx, token, controller.id, true);
+            }
+          }
+          break;
+        }
         for (let i = 0; i < amountOf(effect.count); i++) {
           const token = createToken(ctx, spec, controller.id);
+          if (effect.goadedForRestOfGame === true)
+            addGoadRequirement(ctx, token, controller.id, true);
           if (effect.sacrificeAt === 'endStep') {
             ctx.state.delayedTriggers.push({
               id: `dt-${ctx.state.nextObjectNum++}`,

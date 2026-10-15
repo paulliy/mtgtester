@@ -2272,16 +2272,20 @@
   {
     "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
     "name": "Life of the Party",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.18",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control.\"",
       "unrecognized rules text: \"When this creature enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",

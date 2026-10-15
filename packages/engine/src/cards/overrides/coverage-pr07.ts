@@ -351,4 +351,49 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Life of the Party: the attack trigger's X is the number of creatures you control as it
+  // resolves. The enters trigger is an intervening-if (CR 603.4) about the permanent that
+  // entered: with a token it never triggers. EACH opponent creates their own copy (so any
+  // replacement of THEIR token creation applies and the copy is theirs), and the ability's
+  // controller goads every copy for the rest of the game. It copies Life of the Party with its
+  // last known copiable values if it has already left the battlefield (CR 608.2h).
+  defineCard(
+    'b2d1f87b-a11f-43eb-8b89-b48945320d73',
+    'Life of the Party',
+    [
+      'Whenever ~ attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control.',
+      "When ~ enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+    ],
+    {
+      triggers: [
+        triggered(onAttacks(), {
+          effects: [
+            {
+              op: 'pumpUntilEot',
+              target: 'source',
+              power: { kind: 'countPermanents', selector: ofType('Creature'), scope: 'you' },
+              toughness: 0,
+            },
+          ],
+          description:
+            'Whenever Life of the Party attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control',
+        }),
+        triggered(onEtb(), {
+          condition: { kind: 'sourceMatches', selector: { kind: 'not', of: IS_TOKEN } },
+          effects: [
+            {
+              op: 'createTokenCopyOf',
+              ref: 'source',
+              count: constant(1),
+              eachOpponent: true,
+              goadedForRestOfGame: true,
+            },
+          ],
+          description:
+            "When Life of the Party enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game",
+        }),
+      ],
+    },
+  );
 }

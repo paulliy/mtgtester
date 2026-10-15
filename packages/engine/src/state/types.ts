@@ -47,6 +47,12 @@ export interface GoadRequirement {
   goaderId: PlayerId;
   /** Global turn number on which this requirement was created. */
   appliedTurn: number;
+  /**
+   * "Goaded for the rest of the game" (Life of the Party's tokens): never expires at the goader's
+   * next turn. It still ends when the creature leaves the battlefield, and when the goader leaves
+   * the game (CR 800.4a).
+   */
+  permanent?: true;
 }
 
 export interface EngineObject extends GameObject {

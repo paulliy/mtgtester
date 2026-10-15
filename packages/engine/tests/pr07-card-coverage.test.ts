@@ -25,8 +25,13 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { applyCopy } from '../src/state/objects';
-import { beginEndStep, queueStepTriggers, runCombatAndExtraCombats } from '../src/turn/turn';
+import { applyCopy, createToken, moveObject, tokenSpecCopying } from '../src/state/objects';
+import {
+  beginEndStep,
+  queueStepTriggers,
+  runBeginningAndPrecombatMain,
+  runCombatAndExtraCombats,
+} from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
 import { playerById } from '../src/state/objects';
@@ -218,6 +223,8 @@ function mustAttackIn(
   ctx: GameContext,
   playerId: string,
   creatures: readonly EnginePermanent[],
+  /** Receives the players each creature may be declared against. */
+  defendersSeen: Record<string, string[]> = {},
 ): Record<string, boolean | undefined> {
   turnOfPlayer(ctx, playerId);
   ctx.state.phase = 'precombatMain';
@@ -226,10 +233,13 @@ function mustAttackIn(
   for (const creature of creatures) creature.tapped = false;
   pump(runCombatAndExtraCombats(ctx), (decision) => {
     if (decision.presentationAttackDeclaration !== undefined) {
-      for (const creature of creatures)
-        seen[creature.id] = decision.presentationAttackDeclaration.subjects.find(
-          (subject) => subject.subjectId === creature.id,
-        )?.mustAttack;
+      for (const creature of creatures) {
+        const subject = decision.presentationAttackDeclaration.subjects.find(
+          (candidate) => candidate.subjectId === creature.id,
+        );
+        seen[creature.id] = subject?.mustAttack;
+        defendersSeen[creature.id] = subject?.defenders.map((defender) => defender.playerId) ?? [];
+      }
       return declareAttacks(decision, (subjectId, subject) => {
         if (!subject.mustAttack) return null;
         return subject.defenders[0]?.playerId ?? subject.planeswalkers[0]?.objectId ?? null;
@@ -1934,6 +1944,169 @@ describe('Toby, Beastie Befriender', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.18 Life of the Party
+// ---------------------------------------------------------------------------------------------
+
+describe('Life of the Party', () => {
+  const { card } = pinned('Life of the Party');
+  const COST = [{ symbol: 'R' as const }, ...generic(3)];
+
+  const copies = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === card.name && perm.isToken);
+  const goaders = (perm: EnginePermanent) => (perm.goadedBy ?? []).map((entry) => entry.goaderId);
+
+  /** P1 casts Life of the Party and every trigger resolves. */
+  function cast(seed: string) {
+    const ctx = pod(seed);
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    settle(ctx);
+    const party = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    return { ctx, party };
+  }
+
+  it('life-of-the-party-pinned-oracle-supported — the authored override carries the attack pump and the enters trigger under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'pumpUntilEot',
+        target: 'source',
+        power: { kind: 'countPermanents', scope: 'you' },
+        toughness: 0,
+      },
+    ]);
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'enters',
+      condition: { kind: 'sourceMatches', selector: { kind: 'not', of: { kind: 'isToken' } } },
+    });
+    expect(def.triggers[1]!.effects).toMatchObject([
+      { op: 'createTokenCopyOf', ref: 'source', eachOpponent: true, goadedForRestOfGame: true },
+    ]);
+  });
+
+  it('life-of-the-party-attack-pump — it gets +X/+0 where X counts the creatures you control as the trigger resolves, and only it', () => {
+    const ctx = pod('lotp-pump');
+    const party = spawn(ctx, 'P1', card);
+    const bears = [1, 2].map((n) => spawn(ctx, 'P1', GRIZZLY(`P1 Bear ${n}`)));
+    spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    fight(ctx, () => ({ [party.id]: 'P2' }));
+    // Three creatures of yours: it hit for 0 + 3, and the Bears stayed 2/2.
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(computeCharacteristics(ctx, bears[0]!).power).toBe(2);
+    // A creature that arrives before the trigger resolves counts: X is read on resolution.
+    ctx.state.effects = [];
+    party.tapped = false;
+    spawn(ctx, 'P1', GRIZZLY('P1 Extra'));
+    const [ability] = interpretCard(card).triggers;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: party.cardId, oracleId: card.oracleId, name: card.name, controllerId: 'P1' },
+        ability!,
+        [],
+      ),
+    );
+    expect(computeCharacteristics(ctx, party).power).toBe(4);
+    expect(computeCharacteristics(ctx, party).toughness).toBe(1);
+  });
+
+  it('life-of-the-party-copies — each opponent creates and controls a token copy; you get none, and the copies make no more', () => {
+    const { ctx, party } = cast('lotp-copies');
+    const tokens = copies(ctx);
+    expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P2', 'P3', 'P4']);
+    expect(tokens.every((token) => token.ownerId === token.controllerId)).toBe(true);
+    // The printed abilities are copied.
+    for (const token of tokens) {
+      const chars = computeCharacteristics(ctx, token);
+      expect(chars.keywords).toEqual(expect.arrayContaining(['first strike', 'trample', 'haste']));
+      expect(chars.triggers).toHaveLength(2);
+    }
+    expect(ctx.state.battlefield.filter((perm) => perm.name === card.name)).toHaveLength(4);
+    expect(party.isToken).toBe(false);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('life-of-the-party-token-no-copies — a token Life of the Party entering makes no copies, because the enters trigger needs a nontoken', () => {
+    const { ctx, party } = cast('lotp-token');
+    expect(copies(ctx)).toHaveLength(3);
+    createToken(ctx, tokenSpecCopying(ctx, party, false), 'P1');
+    settle(ctx);
+    expect(copies(ctx)).toHaveLength(4);
+    expect(copies(ctx).filter((token) => token.controllerId === 'P1')).toHaveLength(1);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('life-of-the-party-goaded-forever — the copies are goaded by you, must attack and never you, and the goad survives your own turns', () => {
+    const { ctx } = cast('lotp-goad');
+    const tokens = copies(ctx);
+    for (const token of tokens) {
+      expect(goaders(token)).toEqual(['P1']);
+      token.summoningSick = false;
+    }
+    // A goad that ends at your next turn, for contrast, is gone after your untap step...
+    const ordinary = spawn(ctx, 'P3', GRIZZLY('P3 Ordinary'));
+    ordinary.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber - 1 }];
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 4;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(ordinary.goadedBy).toBeUndefined();
+    // ...while the copies are still goaded for the rest of the game.
+    for (const token of tokens) expect(goaders(token)).toEqual(['P1']);
+    const p2Token = tokens.find((token) => token.controllerId === 'P2')!;
+    const offered: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P2', [p2Token], offered)).toEqual({ [p2Token.id]: true });
+    expect(offered[p2Token.id]).not.toContain('P1');
+    expect(offered[p2Token.id]).toContain('P3');
+    // And on every later turn of theirs.
+    ctx.state.turnNumber += 4;
+    expect(mustAttackIn(ctx, 'P2', [p2Token])).toEqual({ [p2Token.id]: true });
+  });
+
+  it('life-of-the-party-goader-leaves — when you leave the game the goad ends, and the copies are no longer required to attack', () => {
+    const { ctx } = cast('lotp-goader-gone');
+    const p3Token = copies(ctx).find((token) => token.controllerId === 'P3')!;
+    p3Token.summoningSick = false;
+    expect(mustAttackIn(ctx, 'P3', [p3Token])).toEqual({ [p3Token.id]: true });
+    playerById(ctx, 'P1').hasLost = true;
+    expect(mustAttackIn(ctx, 'P3', [p3Token])).toEqual({ [p3Token.id]: false });
+  });
+
+  it('life-of-the-party-left-before-resolving — if it leaves the battlefield with the trigger on the stack, the opponents still create copies of it', () => {
+    const ctx = pod('lotp-gone');
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    // It dies with the trigger on the stack.
+    const party = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    pump(moveObject(ctx, party, { zone: 'graveyard' }));
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === object.cardId)).toBe(false);
+    resolveTop(ctx);
+    const tokens = copies(ctx);
+    expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P2', 'P3', 'P4']);
+    for (const token of tokens) expect(goaders(token)).toEqual(['P1']);
+    expect(computeCharacteristics(ctx, tokens[0]!).keywords).toContain('haste');
+  });
+
+  it('life-of-the-party-whole-game — cast it, the opponents get goaded copies, and on a copy’s controller’s turn it attacks someone else', () => {
+    const { ctx } = cast('lotp-chain');
+    const p4Token = copies(ctx).find((token) => token.controllerId === 'P4')!;
+    p4Token.summoningSick = false;
+    turnOfPlayer(ctx, 'P4');
+    ctx.state.turnNumber += 3;
+    const before = ['P1', 'P2', 'P3'].map((id) => playerById(ctx, id).life);
+    fight(ctx, () => ({ [p4Token.id]: 'P2' }));
+    const after = ['P1', 'P2', 'P3'].map((id) => playerById(ctx, id).life);
+    expect(after[0]).toBe(before[0]);
+    // Haste and first strike aside, it hit P2: 0 power + the X of its attack trigger (4 creatures).
+    expect(after[1]).toBeLessThan(before[1]!);
+    expect(p4Token.tapped).toBe(true);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2006,6 +2179,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Toby, Beastie Befriender',
     sha256: 'ab14f8f89747265e1dc7c2837a49999e1ab57539f9ff54794f332d4f8da17ab0',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Life of the Party',
+    sha256: '6244452d742f3bd5bb3fe11e45312ee784ee2f7b695ea8b0dff970658c43243c',
     clauseCount: 2,
     authored: true,
   },

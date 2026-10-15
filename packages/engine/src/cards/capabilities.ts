@@ -262,6 +262,8 @@ const shapes = {
     addTypes: { array: leaf },
     addKeywords: { array: leaf },
     sacrificeAt: leaf,
+    eachOpponent: leaf,
+    goadedForRestOfGame: leaf,
     untilEot: leaf,
     addSupertypes: { array: leaf },
     nameOverride: leaf,

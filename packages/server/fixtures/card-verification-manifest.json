@@ -12285,6 +12285,43 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "b2d1f87b-a11f-43eb-8b89-b48945320d73": {
+      "name": "Life of the Party",
+      "oracleSha256": "6244452d742f3bd5bb3fe11e45312ee784ee2f7b695ea8b0dff970658c43243c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "life-of-the-party-attack-pump",
+          "oracleText": "Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control.",
+          "implementation": [
+            "authored attack trigger that gives Life of the Party itself +X/+0 until end of turn, where X is the number of creatures you control, counted as the trigger resolves"
+          ],
+          "engineTestIds": [
+            "life-of-the-party-pinned-oracle-supported",
+            "life-of-the-party-attack-pump"
+          ],
+          "viewerScenarioIds": ["life-of-the-party-viewer-attack-pump"]
+        },
+        {
+          "id": "life-of-the-party-goaded-copies",
+          "oracleText": "When this creature enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+          "implementation": [
+            "authored enters trigger with an intervening-if (checked as it triggers and as it resolves, CR 603.4) that the source is not a token; each opponent of the controller, as the creator, creates their own token copy under their own control (createTokenCopyOf eachOpponent), copied from the source's last known copiable values if it has already left the battlefield (CR 608.2h), and the ability's controller goads every copy for the rest of the game (goadedForRestOfGame: a goad flagged permanent is not removed at the goader's next turn, CR 701.15, and ends when the goader leaves the game, CR 800.4a); the copies' own enters triggers do nothing because they are tokens"
+          ],
+          "engineTestIds": [
+            "life-of-the-party-pinned-oracle-supported",
+            "life-of-the-party-copies",
+            "life-of-the-party-token-no-copies",
+            "life-of-the-party-goaded-forever",
+            "life-of-the-party-goader-leaves",
+            "life-of-the-party-left-before-resolving",
+            "life-of-the-party-whole-game"
+          ],
+          "viewerScenarioIds": ["life-of-the-party-viewer-goaded-copies"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -9869,3 +9869,50 @@ test('Toby, Beastie Befriender: creature tokens have flying while you control fo
   await expect(permanent(page, 'Beast')).toContainText(/flying/i);
   await expect(permanent(page, 'Servo')).toContainText(/flying/i);
 });
+
+test('Life of the Party: the attacker gets +X/+0 for the creatures you control', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Life of the Party: the attacker gets +X/+0 for the creatures you control',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Life of the Party', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+});
+
+test('Life of the Party: each opponent creates a goaded copy of it', async ({ page }) => {
+  await runScenario(page, 'Life of the Party: each opponent creates a goaded copy of it');
+  const party = handCard(page, 'Life of the Party');
+  await expect(party).toHaveClass(/actionable/);
+  await party.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Each opponent now controls a copy.
+  for (const seat of ['P2', 'P3', 'P4'])
+    await passStackUntil(
+      page,
+      page
+        .locator(`.opponent[data-seat="${seat}"]`)
+        .getByRole('img', { name: 'Life of the Party', exact: true }),
+    );
+  // Your own combat: attack with nothing.
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  // P2's goaded copy had to attack, and not you.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
