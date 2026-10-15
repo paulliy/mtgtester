@@ -536,6 +536,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'nils-viewer-counters-attack-tax',
       'combat-calligrapher-viewer-inkling-cant-attack-you',
       'combat-calligrapher-viewer-attacker-creates-inkling',
+      'goblin-spymaster-viewer-opponent-end-step-token',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

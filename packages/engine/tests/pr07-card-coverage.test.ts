@@ -211,6 +211,39 @@ function attackOptionsFor(
 }
 
 /**
+ * Whether `playerId` is required to attack with each of `creatures` in the next declaration, by
+ * object id. Everything else, including the creatures with no requirement, stays home.
+ */
+function mustAttackIn(
+  ctx: GameContext,
+  playerId: string,
+  creatures: readonly EnginePermanent[],
+): Record<string, boolean | undefined> {
+  turnOfPlayer(ctx, playerId);
+  ctx.state.phase = 'precombatMain';
+  ctx.state.step = null;
+  const seen: Record<string, boolean | undefined> = {};
+  for (const creature of creatures) creature.tapped = false;
+  pump(runCombatAndExtraCombats(ctx), (decision) => {
+    if (decision.presentationAttackDeclaration !== undefined) {
+      for (const creature of creatures)
+        seen[creature.id] = decision.presentationAttackDeclaration.subjects.find(
+          (subject) => subject.subjectId === creature.id,
+        )?.mustAttack;
+      return declareAttacks(decision, (subjectId, subject) => {
+        if (!subject.mustAttack) return null;
+        return subject.defenders[0]?.playerId ?? subject.planeswalkers[0]?.objectId ?? null;
+      });
+    }
+    if (decision.presentationBlockDeclaration !== undefined)
+      return declareBlocks(decision, () => null);
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(pass, 0), targets: new Map() };
+  });
+  return seen;
+}
+
+/**
  * Run the active player's combat phases (the regular one and any additional ones). `attacksFor`
  * gives that combat's attacks (creature object id to a player id or planeswalker object id;
  * everything else stays home), `onDeclare` sees the game just before each declaration, nobody
@@ -1505,6 +1538,130 @@ describe('Combat Calligrapher', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.14 Goblin Spymaster
+// ---------------------------------------------------------------------------------------------
+
+describe('Goblin Spymaster', () => {
+  const { card } = pinned('Goblin Spymaster');
+
+  /** P1 controls Goblin Spymaster; every player has a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const spymaster = spawn(ctx, 'P1', card);
+    const bears = {
+      P1: spawn(ctx, 'P1', GRIZZLY('P1 Bear')),
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+    };
+    return { ctx, spymaster, bears };
+  }
+
+  const goblins = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Goblin' && perm.isToken);
+
+  it("goblin-spymaster-pinned-oracle-supported — the authored override makes the token for the event player at each opponent's end step under both ids", () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'endStep', player: 'opponent' });
+    const [effect] = def.triggers[0]!.effects;
+    expect(effect).toMatchObject({
+      op: 'createTokenForPlayer',
+      target: 'eventPlayer',
+      count: { kind: 'const', n: 1 },
+      spec: {
+        name: 'Goblin',
+        types: ['Creature'],
+        subtypes: ['Goblin'],
+        colors: ['R'],
+        power: 1,
+        toughness: 1,
+        staticEffects: [
+          {
+            affects: { kind: 'allOf' },
+            op: { layer: 6, setMustAttackEachCombat: true },
+          },
+        ],
+      },
+    });
+  });
+
+  it("goblin-spymaster-opponent-end-step — at each opponent's end step THAT player creates a 1/1 red Goblin; your own end step makes nothing", () => {
+    const { ctx } = board('spymaster-end-step');
+    endStepOf(ctx, 'P1');
+    expect(goblins(ctx)).toEqual([]);
+    endStepOf(ctx, 'P2');
+    endStepOf(ctx, 'P3');
+    const tokens = goblins(ctx);
+    expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P2', 'P3']);
+    for (const token of tokens) {
+      const chars = computeCharacteristics(ctx, token);
+      expect(chars.power).toBe(1);
+      expect(chars.toughness).toBe(1);
+      expect(chars.colors).toEqual(['R']);
+      expect(chars.subtypes).toEqual(['Goblin']);
+    }
+    // P4's end step has not come, and P1 never got one.
+    expect(tokens.some((token) => ['P1', 'P4'].includes(token.controllerId))).toBe(false);
+  });
+
+  it("goblin-spymaster-token-forces-attack — the token's controller's creatures, the token included and ones that arrive later, attack each combat if able; nobody else's do", () => {
+    const { ctx, bears } = board('spymaster-forced');
+    endStepOf(ctx, 'P2');
+    const [token] = goblins(ctx);
+    token!.summoningSick = false;
+    const later = spawn(ctx, 'P2', GRIZZLY('P2 Latecomer'));
+    const seen = mustAttackIn(ctx, 'P2', [token!, bears.P2, later]);
+    expect(seen).toEqual({ [token!.id]: true, [bears.P2.id]: true, [later.id]: true });
+    // Another player's creatures, and Goblin Spymaster's controller's, are not affected.
+    expect(mustAttackIn(ctx, 'P3', [bears.P3])).toEqual({ [bears.P3.id]: false });
+    expect(mustAttackIn(ctx, 'P1', [bears.P1])).toEqual({ [bears.P1.id]: false });
+  });
+
+  it('goblin-spymaster-token-control — "you" is whoever controls the token: under another player\'s control it forces that player\'s creatures instead', () => {
+    const { ctx, bears } = board('spymaster-control');
+    endStepOf(ctx, 'P2');
+    const [token] = goblins(ctx);
+    token!.controllerId = 'P3';
+    expect(mustAttackIn(ctx, 'P3', [bears.P3])).toEqual({ [bears.P3.id]: true });
+    expect(mustAttackIn(ctx, 'P2', [bears.P2])).toEqual({ [bears.P2.id]: false });
+  });
+
+  it('goblin-spymaster-token-leaves — the requirement ends when the token leaves the battlefield, and Goblin Spymaster leaving does not end it', () => {
+    const { ctx, spymaster, bears } = board('spymaster-leaves');
+    endStepOf(ctx, 'P2');
+    const [token] = goblins(ctx);
+    // The Spymaster itself is not what keeps the requirement: it is the token's own ability.
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== spymaster.id);
+    expect(mustAttackIn(ctx, 'P2', [bears.P2])).toEqual({ [bears.P2.id]: true });
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== token!.id);
+    expect(mustAttackIn(ctx, 'P2', [bears.P2])).toEqual({ [bears.P2.id]: false });
+  });
+
+  it('goblin-spymaster-whole-game — cast it, let P2 reach the end step, and P2 gets a Goblin that makes P2 attack on its next turn', () => {
+    const ctx = pod('spymaster-chain');
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const cast = castFromHand(ctx, 'P1', card, [{ symbol: 'R' }, ...generic(2)]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === cast.cardId)).toBe(true);
+    endStepOf(ctx, 'P2');
+    const [token] = goblins(ctx);
+    expect(token?.controllerId).toBe('P2');
+    expect(ctx.state.stack).toEqual([]);
+    // P2's next combat: the Bear must attack, and so must the Goblin once it can.
+    ctx.state.turnNumber += 4;
+    token!.summoningSick = false;
+    expect(mustAttackIn(ctx, 'P2', [bear, token!])).toEqual({
+      [bear.id]: true,
+      [token!.id]: true,
+    });
+    // They did attack: the declaration was made for them.
+    expect(bear.tapped).toBe(true);
+    expect(token!.tapped).toBe(true);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -1566,6 +1723,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Combat Calligrapher',
     sha256: '14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Goblin Spymaster',
+    sha256: 'dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736',
+    clauseCount: 1,
     authored: true,
   },
 ];

@@ -9793,3 +9793,20 @@ test('Combat Calligrapher: a player attacking an opponent of yours creates a tap
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('34');
 });
+
+test("Goblin Spymaster: at an opponent's end step that player creates a Goblin token", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Goblin Spymaster: at an opponent's end step that player creates a Goblin token",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  // P2 created the Goblin, so it is on P2's side of the board and none is on yours.
+  await expect(
+    page.locator('.opponent[data-seat="P2"]').getByRole('img', { name: 'Goblin', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.human-zone').getByRole('img', { name: 'Goblin', exact: true }),
+  ).toHaveCount(0);
+});

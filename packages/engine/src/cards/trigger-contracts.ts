@@ -375,8 +375,8 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
                 'you',
                 'each',
                 'enchanted',
-                // "At the beginning of each opponent's upkeep".
-                ...(head['when'] === 'upkeep' ? ['opponent'] : []),
+                // "At the beginning of each opponent's upkeep / end step".
+                ...(head['when'] === 'upkeep' || head['when'] === 'endStep' ? ['opponent'] : []),
               ]
             : ['you', 'each']
     ).includes(head['player'] as string)

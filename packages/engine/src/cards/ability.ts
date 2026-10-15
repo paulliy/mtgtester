@@ -13,6 +13,8 @@ import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
+import type { StaticEffect } from './continuous-types';
+import type { RuleStatic } from './rule-statics';
 
 /** A ward payment (CR 702.21b). Target legality never depends on ability to pay it. */
 export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; amount: number };
@@ -1589,6 +1591,13 @@ export interface TokenSpec {
   triggers?: Ability[];
   manaAbilities?: ManaAbilitySpec[];
   activatedAbilities?: ActivatedAbility[];
+  /**
+   * The token's own static abilities ("Creatures you control attack each combat if able."). A
+   * selector in them is relative to the token's controller; they end when the token leaves.
+   */
+  staticEffects?: StaticEffect[];
+  /** The token's own rule-modifying statics ("This token can't attack or block alone."). */
+  ruleStatics?: RuleStatic[];
   legendary?: boolean;
   /** Apply haste to each token created from this spec until the current end step. */
   grantHasteUntilEot?: boolean;

@@ -12227,6 +12227,30 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "ec08df88-3c13-4940-a090-0c502b9b12f1": {
+      "name": "Goblin Spymaster",
+      "oracleSha256": "dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "goblin-spymaster-opponent-end-step-token",
+          "oracleText": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "implementation": [
+            "authored end-step trigger for each opponent's end step that creates the token for that player (the event player, not Goblin Spymaster's controller): a 1/1 red Goblin creature whose own static ability, new TokenSpec staticEffects, makes every creature its controller controls attack each combat if able (CR 508.1d); it covers creatures that player gets later, follows the token if control of it changes, and ends when the token leaves the battlefield, whatever happens to Goblin Spymaster"
+          ],
+          "engineTestIds": [
+            "goblin-spymaster-pinned-oracle-supported",
+            "goblin-spymaster-opponent-end-step",
+            "goblin-spymaster-token-forces-attack",
+            "goblin-spymaster-token-control",
+            "goblin-spymaster-token-leaves",
+            "goblin-spymaster-whole-game"
+          ],
+          "viewerScenarioIds": ["goblin-spymaster-viewer-opponent-end-step-token"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

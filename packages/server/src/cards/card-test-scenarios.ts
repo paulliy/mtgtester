@@ -13039,6 +13039,34 @@ function combatCalligrapherScenario(
   });
 }
 
+function goblinSpymasterScenario(gameId: GameId): CardTestScenario {
+  const spymaster = pinnedFrom(COVERAGE_PR07, 'Goblin Spymaster');
+  return pr01Scenario(gameId, {
+    id: 'goblin-spymaster-viewer-opponent-end-step-token',
+    title: "Goblin Spymaster: at an opponent's end step that player creates a Goblin token",
+    instructions: [
+      'It is P2’s turn and Goblin Spymaster is on your battlefield.',
+      'Pass priority through P2’s turn. At the beginning of P2’s end step, P2 (not you) creates a 1/1 red Goblin creature token with “Creatures you control attack each combat if able.”',
+    ],
+    expectedOutcome:
+      'P2 controls a Goblin token; you do not. From P2’s next combat on, every creature P2 controls must attack if able.',
+    oracleSha256: spymaster.sha256,
+    clauseIds: ['goblin-spymaster-opponent-end-step-token'],
+    decks: {
+      P1: [spymaster.card, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Goblin Spymaster'] }],
+      continueToEndStep: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13350,6 +13378,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'nils-viewer-counters-attack-tax',
   'combat-calligrapher-viewer-inkling-cant-attack-you',
   'combat-calligrapher-viewer-attacker-creates-inkling',
+  'goblin-spymaster-viewer-opponent-end-step-token',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13837,6 +13866,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     combatCalligrapherScenario(gameId, 'restriction'),
   'combat-calligrapher-viewer-attacker-creates-inkling': (gameId) =>
     combatCalligrapherScenario(gameId, 'token'),
+  'goblin-spymaster-viewer-opponent-end-step-token': goblinSpymasterScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

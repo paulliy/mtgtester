@@ -358,6 +358,8 @@ const shapes = {
     triggers: { array: { node: 'Ability' } },
     manaAbilities: { array: { node: 'ManaAbilitySpec' } },
     activatedAbilities: { array: { node: 'ActivatedAbility' } },
+    staticEffects: { array: { node: 'StaticEffect' } },
+    ruleStatics: { array: { node: 'RuleStatic' } },
     legendary: leaf,
     grantHasteUntilEot: leaf,
     manaCost: { node: 'ParsedManaCost' },

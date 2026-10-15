@@ -13462,6 +13462,72 @@
     }
   },
   {
+    "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
+    "name": "Goblin Spymaster",
+    "handledLines": [
+      "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Goblin",
+                "power": 1,
+                "staticEffects": [
+                  {
+                    "affects": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        }
+                      ]
+                    },
+                    "op": {
+                      "layer": 6,
+                      "setMustAttackEachCombat": true
+                    }
+                  }
+                ],
+                "subtypes": [
+                  "Goblin"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Goblin",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
     "handledLines": [
@@ -20907,6 +20973,72 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-goblin-spymaster",
+    "name": "Goblin Spymaster",
+    "handledLines": [
+      "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Goblin",
+                "power": 1,
+                "staticEffects": [
+                  {
+                    "affects": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        }
+                      ]
+                    },
+                    "op": {
+                      "layer": 6,
+                      "setMustAttackEachCombat": true
+                    }
+                  }
+                ],
+                "subtypes": [
+                  "Goblin"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Goblin",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "endStep"
+          }
+        }
+      ]
     }
   },
   {

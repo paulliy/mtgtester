@@ -252,6 +252,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736",
+      "card": {
+        "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
+        "scryfallId": "1687ea64-fcc0-4bd8-aa7e-3c893d4ef2a8",
+        "name": "Goblin Spymaster",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Goblin Rogue",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin",
+          "Rogue"
+        ],
+        "oracleText": "First strike\nAt the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

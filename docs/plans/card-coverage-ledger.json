@@ -1708,15 +1708,19 @@
   {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.14",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",

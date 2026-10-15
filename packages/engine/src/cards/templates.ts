@@ -240,7 +240,7 @@ export function onUpkeep(player: 'you' | 'each' = 'you'): TriggerHead {
 }
 
 /** "At the beginning of your/each end step". */
-export function onEndStep(player: 'you' | 'each' = 'you'): TriggerHead {
+export function onEndStep(player: 'you' | 'each' | 'opponent' = 'you'): TriggerHead {
   return { when: 'endStep', player };
 }
 

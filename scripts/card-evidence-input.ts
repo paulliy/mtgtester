@@ -2409,6 +2409,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Goblin Spymaster: at an opponent's end step that player creates a Goblin token"],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

@@ -266,4 +266,46 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Goblin Spymaster: the token is made for the opponent whose end step it is, not for Spymaster's
+  // controller. Its static is the token's own ability, so "you" is whoever controls the token: it
+  // covers creatures that player controls later on, and ends when the token leaves the battlefield.
+  const GOBLIN_SPY: TokenSpec = {
+    ...creatureToken({
+      name: 'Goblin',
+      subtypes: ['Goblin'],
+      colors: ['R'],
+      power: 1,
+      toughness: 1,
+    }),
+    staticEffects: [
+      {
+        affects: allOf(ofType('Creature'), YOURS),
+        op: { layer: 6, setMustAttackEachCombat: true },
+      },
+    ],
+  };
+  defineCard(
+    'ec08df88-3c13-4940-a090-0c502b9b12f1',
+    'Goblin Spymaster',
+    [
+      'At the beginning of each opponent\'s end step, that player creates a 1/1 red Goblin creature token with "Creatures you control attack each combat if able."',
+    ],
+    {
+      triggers: [
+        triggered(onEndStep('opponent'), {
+          effects: [
+            {
+              op: 'createTokenForPlayer',
+              target: 'eventPlayer',
+              spec: GOBLIN_SPY,
+              count: constant(1),
+            },
+          ],
+          description:
+            'At the beginning of each opponent\'s end step, that player creates a 1/1 red Goblin creature token with "Creatures you control attack each combat if able."',
+        }),
+      ],
+    },
+  );
 }

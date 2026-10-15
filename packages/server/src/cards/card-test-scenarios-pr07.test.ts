@@ -412,3 +412,23 @@ describe('Combat Calligrapher Card Test Lab scenarios', () => {
     replays('combat-calligrapher-viewer-attacker-creates-inkling', steps);
   });
 });
+
+describe('Goblin Spymaster Card Test Lab scenarios', () => {
+  it('goblin-spymaster-viewer-opponent-end-step-token — at P2’s end step P2 creates the Goblin token, and you do not', () => {
+    const steps: Step[] = [];
+    const { scenario, state, onBattlefield } = run(
+      'goblin-spymaster-viewer-opponent-end-step-token',
+      steps,
+    );
+    const goblins = onBattlefield('Goblin');
+    expect(goblins).toHaveLength(1);
+    expect(goblins[0]?.controllerId).toBe('P2');
+    const created = state.eventLog.filter(
+      (event) => event.type === 'tokenCreated' && JSON.stringify(event.payload).includes('Goblin'),
+    );
+    expect(created).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('goblin-spymaster-viewer-opponent-end-step-token', steps);
+  });
+});
