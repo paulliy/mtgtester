@@ -8981,3 +8981,34 @@ test('Selfless Squire: prevent the damage to you and grow by that much', async (
   await expect(page.getByText(/Lab Shock.* prevented/i).first()).toBeVisible();
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+test("Deflecting Palm: prevent a chosen creature's damage and reflect it", async ({ page }) => {
+  await runScenario(page, "Deflecting Palm: prevent a chosen creature's damage and reflect it");
+  const palm = handCard(page, 'Deflecting Palm');
+  await expect(palm).toHaveClass(/actionable/, { timeout: 15_000 });
+  await palm.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  // The source is chosen as Deflecting Palm resolves: every permanent is on offer.
+  const choosing = page.getByText(/choose a source of damage/i).first();
+  await passStackUntil(page, choosing);
+  await expect(page.locator('.panel-group').filter({ hasText: 'Lab Servo' })).toHaveCount(1);
+  await page
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'Choose' })
+    .click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Deflecting Palm.* deals 4 to P2/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+});

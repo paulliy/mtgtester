@@ -26,6 +26,9 @@ const oneOf =
   (value, path, issues) => {
     if (!values.includes(value as string)) issue(path, issues, 'expected ' + values.join(' | '));
   };
+const flag: Check = (value, path, issues) => {
+  if (value !== true) issue(path, issues, 'expected true');
+};
 const optional =
   (check: Check): Check =>
   (value, path, issues) => {
@@ -340,7 +343,12 @@ const effectExpressions = {
   goadEachOpponent: {},
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
-  createDamageShield: { player: oneOf('you') },
+  createDamageShield: {
+    player: oneOf('you'),
+    chosenSource: optional(flag),
+    oneShot: optional(flag),
+    reflect: optional(oneOf('toSourceController')),
+  },
   preventCombatDamageToController: {},
   copyTargetSpell: {},
   replicateCopies: {},
@@ -351,7 +359,6 @@ const effectExpressions = {
   combatCalligrapher: {},
   inkshield: {},
   delirium: {},
-  deflectingPalm: {},
   gisela: {},
   humbleDefector: {},
   shadrixModes: {},

@@ -409,6 +409,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'backlash-viewer-tap-and-reflect',
       'guard-gomazoa-viewer-blocks-and-takes-no-damage',
       'selfless-squire-viewer-prevent-and-grow',
+      'deflecting-palm-viewer-chosen-source-reflects',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

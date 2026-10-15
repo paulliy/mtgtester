@@ -3332,6 +3332,256 @@ describe('Selfless Squire', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.05 Deflecting Palm
+// ---------------------------------------------------------------------------------------------
+
+describe('Deflecting Palm', () => {
+  const { card } = pinned('Deflecting Palm');
+  const COST = [{ symbol: 'R' as const }, { symbol: 'W' as const }];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const OGRE = (name: string, power: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9', oracleText: text });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const damagePayloads = (ctx: GameContext) => damageEvents(ctx).map((event) => event.payload);
+
+  /** The decision's option whose description is exactly `name`. */
+  const choose =
+    (name: string): Answer =>
+    (decision) => {
+      const index = decision.options.findIndex((option) => option.description === name);
+      expect(
+        index,
+        `${name} is offered among ${decision.options.map((o) => o.description)}`,
+      ).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    };
+
+  /** P1 casts Deflecting Palm with the stack as it is and leaves it on the stack. */
+  function castPalm(ctx: GameContext) {
+    const object = conjure(ctx, 'P1', card, 'hand');
+    addMana(playerById(ctx, 'P1'), COST);
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Deflecting Palm').toBeDefined();
+    takeAction(ctx, 'P1', option!.payload as PriorityActionPayload);
+    return object;
+  }
+
+  /** On P2's turn P1 casts Palm, choosing `source`; it resolves. */
+  function palmChoosing(ctx: GameContext, source: string) {
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const object = castPalm(ctx);
+    resolveTop(ctx, choose(source));
+    return object;
+  }
+
+  /** `turn`'s combat: each creature in `attackers` attacks P1, who does not block. */
+  function attackP1(ctx: GameContext, attackers: string[], answer?: Answer, turn = 'P2') {
+    ctx.state.currentTurnPlayer = turn;
+    ctx.state.activePlayerIndex = Number(turn.slice(1)) - 1;
+    pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P1' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    });
+  }
+
+  /** `playerId` casts Lab Bolt at `targetId`, leaving it on the stack. */
+  function castBolt(ctx: GameContext, playerId: string, targetId: string) {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return object;
+  }
+
+  it("deflecting-palm-pinned-oracle-supported — the override reads a one-shot shield for a chosen source that reflects the prevented damage to that source's controller", () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.spellAbility!.targets).toEqual([]);
+    expect(def.spellAbility!.effects).toEqual([
+      {
+        op: 'createDamageShield',
+        player: 'you',
+        chosenSource: true,
+        oneShot: true,
+        reflect: 'toSourceController',
+      },
+    ]);
+  });
+
+  it("deflecting-palm-chosen-source — the chosen creature's combat damage to you is prevented and Deflecting Palm deals that much to its controller, after the combat damage and as itself", () => {
+    const ctx = pod('palm-combat');
+    const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '3'));
+    const palm = palmChoosing(ctx, 'Lab Ogre');
+    attackP1(ctx, [ogre.id]);
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(37);
+    // Choosing offered every permanent, and the damage that was dealt is Palm's alone.
+    expect(damagePayloads(ctx)).toMatchObject([
+      { source: 'Deflecting Palm', target: 'P2', amount: 3, combat: false },
+    ]);
+    expect(String(damagePayloads(ctx)[0]!['sourceCardId'])).toBe(palm.cardId);
+    expect(ctx.state.damageShields).toEqual([]);
+    expect(ctx.state.damageReflections).toEqual([]);
+  });
+
+  it('deflecting-palm-chosen-source — damage from a different source is not prevented, and the shield is still there for the chosen one', () => {
+    const ctx = pod('palm-other-source');
+    const chosen = spawn(ctx, 'P2', OGRE('Lab Chosen', '3'));
+    const other = spawn(ctx, 'P3', OGRE('Lab Other', '2'));
+    palmChoosing(ctx, 'Lab Chosen');
+    ctx.state.currentTurnPlayer = 'P3';
+    ctx.state.activePlayerIndex = 2;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === other.id ? 'P1' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      return {
+        index: Math.max(
+          decision.options.findIndex((o) => o.type === 'pass'),
+          0,
+        ),
+        targets: new Map(),
+      };
+    });
+    expect(life(ctx, 'P1')).toBe(38);
+    expect(life(ctx, 'P3')).toBe(40);
+    expect(ctx.state.damageShields).toHaveLength(1);
+    expect(chosen.cardId).toBeDefined();
+  });
+
+  it('deflecting-palm-one-shot — only the first damage from the chosen source is prevented: a double striker is stopped once and hits you the second time', () => {
+    const ctx = pod('palm-one-shot');
+    const striker = spawn(ctx, 'P2', OGRE('Lab Striker', '3', 'Double strike'));
+    palmChoosing(ctx, 'Lab Striker');
+    attackP1(ctx, [striker.id]);
+    expect(life(ctx, 'P1')).toBe(37);
+    // Reflected 3 to P2 after the first-strike step; the regular step's 3 reached P1.
+    expect(life(ctx, 'P2')).toBe(37);
+    expect(ctx.state.damageShields).toEqual([]);
+  });
+
+  it('deflecting-palm-this-turn — the shield ends with the turn', () => {
+    const ctx = pod('palm-next-turn');
+    spawn(ctx, 'P2', OGRE('Lab Ogre', '3'));
+    palmChoosing(ctx, 'Lab Ogre');
+    ctx.state.currentTurnPlayer = 'P1';
+    ctx.state.activePlayerIndex = 0;
+    pump(runTurn(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) return declareNoAttacks(decision);
+      return pick(decision, /Pass|Discard|does not/);
+    });
+    expect(ctx.state.damageShields).toEqual([]);
+  });
+
+  it('deflecting-palm-chosen-source — a chosen spell on the stack is prevented and reflected to its controller, and the choice also offers permanents', () => {
+    const ctx = pod('palm-spell');
+    const prowler = spawn(ctx, 'P2', OGRE('Lab Prowler', '1'));
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.activePlayerIndex = 1;
+    const offered: string[][] = [];
+    castBolt(ctx, 'P2', 'P1');
+    castPalm(ctx);
+    resolveTop(ctx, (decision) => {
+      offered.push(decision.options.map((o) => o.description));
+      return {
+        index: decision.options.findIndex((o) => o.description === 'Lab Bolt (spell)'),
+        targets: new Map(),
+      };
+    });
+    resolveTop(ctx);
+    expect(offered[0]).toEqual(expect.arrayContaining(['Lab Prowler', 'Lab Bolt (spell)']));
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(37);
+    expect(damagePayloads(ctx)).toMatchObject([
+      { source: 'Deflecting Palm', target: 'P2', amount: 3 },
+    ]);
+    expect(onField(ctx, prowler.cardId)).toBeDefined();
+  });
+
+  it('deflecting-palm-new-object — a chosen permanent that leaves and returns is a new object, so its damage is no longer prevented', () => {
+    const ctx = pod('palm-new-object');
+    const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '3'));
+    palmChoosing(ctx, 'Lab Ogre');
+    pump(moveObject(ctx, ogre, { zone: 'hand' }));
+    const returned = playerById(ctx, 'P2').hand.find((c) => c.cardId === ogre.cardId);
+    expect(returned).toBeDefined();
+    pump(moveObject(ctx, returned!, { zone: 'battlefield', controllerId: 'P2' }));
+    const fresh = onField(ctx, ogre.cardId)!;
+    expect(fresh.id).not.toBe(ogre.id);
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(fresh), playerById(ctx, 'P1'), 3, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    expect(life(ctx, 'P1')).toBe(37);
+    expect(ctx.state.damageShields).toHaveLength(1);
+  });
+
+  it('deflecting-palm-reflection-target — the damage goes to the controller of the source, not to another opponent', () => {
+    const ctx = pod('palm-controller');
+    const ogre = spawn(ctx, 'P3', OGRE('Lab Ogre', '4'));
+    palmChoosing(ctx, 'Lab Ogre');
+    attackP1(ctx, [ogre.id], undefined, 'P3');
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(life(ctx, 'P2')).toBe(40);
+    expect(life(ctx, 'P3')).toBe(36);
+  });
+
+  it('deflecting-palm-order-choice — Deflecting Palm and a Fog-style combat shield both prevent the damage, and the choice decides whether the Palm is used up and reflects', () => {
+    const play = (pickText: RegExp) => {
+      const ctx = pod(`palm-order-${pickText.source}`);
+      const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '3'));
+      palmChoosing(ctx, 'Lab Ogre');
+      ctx.state.combatDamagePrevention = { all: false, players: { P1: true } };
+      const asked: PendingDecision[] = [];
+      attackP1(ctx, [ogre.id], (decision) => {
+        asked.push(decision);
+        return {
+          index: decision.options.findIndex((o) => pickText.test(o.description)),
+          targets: new Map(),
+        };
+      });
+      return { ctx, asked };
+    };
+    const palmFirst = play(/Deflecting Palm/);
+    expect(palmFirst.asked).toHaveLength(1);
+    expect(palmFirst.asked[0]!.player).toBe('P1');
+    expect(life(palmFirst.ctx, 'P2')).toBe(37);
+    expect(palmFirst.ctx.state.damageShields).toEqual([]);
+    const shieldFirst = play(/Prevent all combat damage/);
+    expect(shieldFirst.asked).toHaveLength(1);
+    expect(life(shieldFirst.ctx, 'P2')).toBe(40);
+    expect(shieldFirst.ctx.state.damageShields).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3423,6 +3673,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Selfless Squire',
     sha256: 'debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: 'Deflecting Palm',
+    sha256: '3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a',
+    clauseCount: 2,
     authored: true,
   },
   {

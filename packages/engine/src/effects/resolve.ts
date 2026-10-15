@@ -61,7 +61,7 @@ import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard, type ChooseCardSpec } from './choose';
-import { applyDamageModifiers } from './damage-modifiers';
+import { applyDamageModifiers, chooseDamageSource } from './damage-modifiers';
 import {
   additionalTypedTriggerCopies,
   applyCopy,
@@ -2745,9 +2745,6 @@ export function* executeAbility(
         ctx.state.combatDamagePrevention.players[target.controllerId] = true;
         break;
       }
-      case 'deflectingPalm':
-        ctx.state.combatDamagePrevention.players[controller.id] = true;
-        break;
       case 'gisela':
         emit(ctx, 'damageReplacement', {
           source: source.name,
@@ -3755,13 +3752,32 @@ export function* executeAbility(
       case 'preventCombatDamageAll':
         ctx.state.combatDamagePrevention.all = true;
         break;
-      case 'createDamageShield':
+      case 'createDamageShield': {
+        let sourceObjectId: ObjectId | undefined;
+        if (effect.chosenSource === true) {
+          const chosen = yield* chooseDamageSource(ctx, controller.id, source);
+          if (chosen === null) break;
+          sourceObjectId = chosen;
+        }
+        // The shield keeps the effect's source as last known information, without the stack
+        // object or targets that exist only while this resolution runs.
+        const {
+          resolvingStackObject: _stackObject,
+          resolutionTargets: _targets,
+          ...effectSource
+        } = source;
         ctx.state.damageShields.push({
           id: `shield-${ctx.state.nextObjectNum++}`,
-          effectSource: source,
+          effectSource,
           playerId: controller.id,
+          ...(sourceObjectId !== undefined ? { sourceObjectId } : {}),
+          ...(effect.oneShot === true ? { oneShot: true as const } : {}),
+          ...(effect.reflect === 'toSourceController'
+            ? { reflectToSourceController: true as const }
+            : {}),
         });
         break;
+      }
       case 'preventCombatDamageToController':
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         break;
@@ -6189,6 +6205,26 @@ export function* executeAbility(
       default:
         assertNever(effect, 'Effect executor');
     }
+    // Damage an effect owes for preventing damage is dealt right after that damage event, not
+    // as a trigger (Deflecting Palm's rulings).
+    yield* flushDamageReflections(ctx);
+  }
+}
+
+/**
+ * Deal the damage that prevention effects queued as "deals that much damage to ..." (Deflecting
+ * Palm). It is dealt by the preventing effect as last known, through the same damage pipeline, so
+ * it can itself be modified or prevented, which may queue more.
+ */
+export function* flushDamageReflections(ctx: GameContext): GameGen<void> {
+  while (ctx.state.damageReflections.length > 0) {
+    const reflection = ctx.state.damageReflections.shift()!;
+    yield* dealDamageToObject(
+      ctx,
+      reflection.effectSource,
+      reflection.toPlayerId as unknown as ObjectId,
+      reflection.amount,
+    );
   }
 }
 
@@ -7785,6 +7821,7 @@ export function* applyManaRider(
         sourceHasLifelink: traits.lifelink,
         sourceHasInfect: traits.infect,
       });
+      yield* flushDamageReflections(ctx);
       return;
     case 'gainLife':
       // A mana rider has no ability scope, so its amount must be board-answerable.

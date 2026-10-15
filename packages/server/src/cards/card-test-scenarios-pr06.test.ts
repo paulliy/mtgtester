@@ -691,3 +691,35 @@ describe('Selfless Squire Card Test Lab scenario', () => {
     replays('selfless-squire-viewer-prevent-and-grow', steps);
   });
 });
+
+describe('Deflecting Palm Card Test Lab scenario', () => {
+  it("deflecting-palm-viewer-chosen-source-reflects — Lab Ox is chosen, its 4 combat damage to P1 is prevented and reflected to P2, while Lab Servo's 1 is dealt", () => {
+    const steps: Step[] = [{ action: 'Cast Deflecting Palm' }, { action: 'Lab Ox' }];
+    const offered: string[][] = [];
+    const { scenario, state, seat } = run(
+      'deflecting-palm-viewer-chosen-source-reflects',
+      steps,
+      (request) => {
+        if (request.prompt.includes('choose a source of damage'))
+          offered.push(request.legalActions.map((action) => action.description));
+      },
+    );
+    expect(offered).toHaveLength(1);
+    expect(offered[0]).toEqual(expect.arrayContaining(['Lab Ox', 'Lab Servo']));
+    expect(seat('P1').life).toBe(39);
+    expect(seat('P2').life).toBe(36);
+    for (const id of ['P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    const hits = state.eventLog.filter((event) => event.type === 'damage');
+    expect(hits.map((event) => event.payload)).toMatchObject([
+      { source: 'Lab Servo', target: 'P1', amount: 1, combat: true },
+      { source: 'Deflecting Palm', target: 'P2', amount: 4, combat: false },
+    ]);
+    expect(
+      state.eventLog.filter((event) => event.type === 'damagePrevented').map((e) => e.payload),
+    ).toMatchObject([{ source: 'Lab Ox', target: 'P1', amount: 4, reason: 'damageShield' }]);
+    expect(seat('P1').graveyard.map((card) => card.name)).toEqual(['Deflecting Palm']);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('deflecting-palm-viewer-chosen-source-reflects', steps);
+  });
+});

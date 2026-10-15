@@ -9,10 +9,10 @@
  * (CR 616.1f), and the rest are re-checked after each one.
  */
 
-import type { Color, PlayerId } from '@mtg/shared';
+import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { emit } from '../log/log';
-import { plainOption, presentedSource } from '../present';
+import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
 import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
@@ -105,12 +105,31 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
   if (recipient.kind === 'player') {
     for (const damageShield of ctx.state.damageShields) {
       if (damageShield.playerId !== recipient.player.id) continue;
+      if (
+        damageShield.sourceObjectId !== undefined &&
+        !sourceIsObject(ctx, event.source, damageShield.sourceObjectId)
+      )
+        continue;
+      const owed = damageShield.reflectToSourceController === true;
       modifiers.push({
         kind: 'prevention',
         id: `shield:${damageShield.id}`,
-        label: `${damageShield.effectSource.name}: prevent all damage to ${recipient.player.id}`,
+        label: `${damageShield.effectSource.name}: prevent ${damageShield.sourceObjectId === undefined ? 'all' : 'that'} damage to ${recipient.player.id}`,
         reason: 'damageShield',
-        outcomeBearing: false,
+        // Reflection and one-shot shields have consequences beyond the amount prevented.
+        outcomeBearing: owed || damageShield.oneShot === true,
+        onPrevented: (prevented) => {
+          if (damageShield.oneShot === true)
+            ctx.state.damageShields = ctx.state.damageShields.filter(
+              (entry) => entry.id !== damageShield.id,
+            );
+          if (owed)
+            ctx.state.damageReflections.push({
+              effectSource: damageShield.effectSource,
+              toPlayerId: event.source.controllerId,
+              amount: prevented,
+            });
+        },
       });
     }
   }
@@ -208,6 +227,56 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     );
   }
   return modifiers;
+}
+
+/** Is `source` this object: a permanent, or a spell on the stack, by object id (CR 400.7)? */
+function sourceIsObject(ctx: GameContext, source: EffectSource, objectId: ObjectId): boolean {
+  if (source.resolvingStackObject !== undefined) return source.resolvingStackObject.id === objectId;
+  if (source.id !== undefined) return source.id === objectId;
+  // Combat and fight damage name the card; the object is the one on the battlefield now.
+  return ctx.state.battlefield.some((p) => p.id === objectId && p.cardId === source.cardId);
+}
+
+/**
+ * "A source of your choice" (CR 609.7a): the controller picks any permanent on the battlefield or
+ * spell on the stack. Returns its object id, or null when there is nothing to choose.
+ */
+export function* chooseDamageSource(
+  ctx: GameContext,
+  playerId: PlayerId,
+  effectSource: EffectSource,
+): GameGen<ObjectId | null> {
+  const candidates: { id: ObjectId; option: ReturnType<typeof cardOption> }[] = [];
+  for (const perm of ctx.state.battlefield)
+    candidates.push({
+      id: perm.id,
+      option: cardOption(ctx, perm, {
+        type: 'damageSource',
+        description: perm.name,
+        verb: 'Choose',
+        role: 'select',
+      }),
+    });
+  for (const entry of ctx.state.stack)
+    if (entry.kind === 'spell' && entry.card !== null)
+      candidates.push({
+        id: entry.id,
+        option: cardOption(ctx, entry.card, {
+          type: 'damageSource',
+          description: `${entry.card.name} (spell)`,
+          verb: 'Choose',
+          role: 'select',
+        }),
+      });
+  if (candidates.length === 0) return null;
+  const outcome = yield {
+    decisionType: 'general',
+    player: playerId,
+    prompt: `${effectSource.name}: choose a source of damage`,
+    presentationSource: presentedSource(ctx, effectSource),
+    options: candidates.map((candidate) => candidate.option),
+  };
+  return candidates[outcome.index]?.id ?? null;
 }
 
 /** Does a permanent watch "damage that would be dealt to" `playerId` "is prevented"? */

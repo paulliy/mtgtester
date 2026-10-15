@@ -538,6 +538,22 @@ export interface DamageShield {
   effectSource: import('../effects/resolve').EffectSource;
   /** The player whose damage it prevents. */
   playerId: PlayerId;
+  /**
+   * Only damage from this one object: a permanent or a spell on the stack, by its object id. A
+   * source that changes zones is a new object and no longer matches (CR 400.7).
+   */
+  sourceObjectId?: ObjectId;
+  /** "The next time ... would deal damage": removed as soon as it prevents damage. */
+  oneShot?: true;
+  /** "If damage is prevented this way, <the effect source> deals that much damage to that source's controller." */
+  reflectToSourceController?: true;
+}
+
+/** Damage an effect owes because it prevented damage, dealt right after the prevented event. */
+export interface DamageReflection {
+  effectSource: import('../effects/resolve').EffectSource;
+  toPlayerId: PlayerId;
+  amount: number;
 }
 
 export interface EngineState extends GameState {
@@ -602,6 +618,8 @@ export interface EngineState extends GameState {
    * pipeline (`effects/damage-modifiers.ts`) for the damage it covers.
    */
   damageShields: DamageShield[];
+  /** Reflections queued by prevention, drained by `flushDamageReflections` (transient). */
+  damageReflections: DamageReflection[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   /**

@@ -2234,6 +2234,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Selfless Squire: prevent the damage to you and grow by that much'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Deflecting Palm: prevent a chosen creature's damage and reflect it"],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

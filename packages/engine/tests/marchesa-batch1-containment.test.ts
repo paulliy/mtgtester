@@ -106,8 +106,6 @@ const REASONS: Record<string, string> = {
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   'Breena, the Demagogue':
     'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
-  'Deflecting Palm':
-    'Source choice and reflection are implemented as unscoped combat-damage prevention.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
@@ -284,6 +282,7 @@ describe('Marchesa catalog audit containment', () => {
     'Thundermaw Hellkite',
     'Backlash',
     'Selfless Squire',
+    'Deflecting Palm',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

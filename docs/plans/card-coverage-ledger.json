@@ -872,6 +872,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+    "name": "Deflecting Palm",
+    "package": "PR06.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Source choice and reflection are implemented as unscoped combat-damage prevention."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
     "name": "Dollmaker's Shop // Porcelain Gallery",
     "package": "W10",

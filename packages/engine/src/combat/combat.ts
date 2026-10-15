@@ -31,6 +31,7 @@ import {
   combatDamageTraits,
   dealDamageToCreature,
   dealDamageToPlayer,
+  flushDamageReflections,
   permanentSource,
 } from '../effects/resolve';
 import { computeCharacteristics } from '../effects/continuous';
@@ -1166,6 +1167,9 @@ function* dealCombatDamage(
       }
     }
   }
+
+  // Damage a prevention owes (Deflecting Palm) is dealt once every combat damage in the step has.
+  yield* flushDamageReflections(ctx);
 
   queueTriggersForEvent(
     ctx,

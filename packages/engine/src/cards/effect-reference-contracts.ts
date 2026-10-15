@@ -140,7 +140,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   combatCalligrapher: {},
   inkshield: {},
   delirium: {},
-  deflectingPalm: { target: permanent },
   gisela: {},
   humbleDefector: { target: player },
   shadrixModes: {},

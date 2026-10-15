@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 36,
+      "uniqueOracleIds": 35,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6529,6 +6529,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter): the executable override in coverage-pr06.ts creates a damage shield on enter that prevents all damage, combat and noncombat, from every source to you for the rest of the turn through the damage modifier pipeline (CR 615), and a second trigger, queued once per prevention applied to damage to you from any source, puts that many +1/+1 counters on this creature. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+      "name": "Deflecting Palm",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed source choice and reflection are implemented as unscoped combat-damage prevention): the executable override in coverage-pr06.ts has its controller choose a permanent or spell as it resolves (CR 609.7a) and creates a one-shot damage shield for damage from exactly that object to you, any damage and not only combat, which ends when it first prevents damage; a source that changes zones is a new object (CR 400.7). The prevented amount is queued and dealt by Deflecting Palm to that source's controller right after the prevented damage event, after all combat damage in the step, through the same damage pipeline. The bespoke deflectingPalm op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

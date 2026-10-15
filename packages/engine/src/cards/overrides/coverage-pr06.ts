@@ -115,6 +115,34 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Deflecting Palm: as it resolves, its controller chooses the source (CR 609.7a): a permanent or
+  // a spell, tracked by object, so a source that changes zones is a new object (CR 400.7). The
+  // shield prevents the next damage from it to you and ends then. The prevented amount is dealt
+  // to that source's controller by Deflecting Palm right after the prevented damage, not as a
+  // trigger.
+  defineCard(
+    'dc5dffc8-fac5-4956-bac4-1ad2cc16f6be',
+    'Deflecting Palm',
+    [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source's controller.",
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'createDamageShield',
+            player: 'you',
+            chosenSource: true,
+            oneShot: true,
+            reflect: 'toSourceController',
+          },
+        ],
+        description:
+          "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller",
+      }),
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

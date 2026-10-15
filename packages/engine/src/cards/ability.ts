@@ -647,7 +647,20 @@ export type Effect =
    * lasts until the turn's cleanup step. It applies to damage that would be dealt after it is
    * created, combat or not, from any source.
    */
-  | { op: 'createDamageShield'; player: 'you' }
+  | {
+      op: 'createDamageShield';
+      player: 'you';
+      /**
+       * "A source of your choice" (Deflecting Palm, CR 609.7a): as it resolves its controller
+       * chooses any permanent on the battlefield or spell on the stack, and only damage from that
+       * object is prevented.
+       */
+      chosenSource?: true;
+      /** "The next time ... would deal damage": the shield ends when it first prevents damage. */
+      oneShot?: true;
+      /** "... deals that much damage to that source's controller": dealt as the damage is prevented. */
+      reflect?: 'toSourceController';
+    }
   | { op: 'preventCombatDamageToController' }
   | { op: 'copyTargetSpell'; target: number }
   /**
@@ -686,7 +699,6 @@ export type Effect =
   | { op: 'combatCalligrapher' }
   | { op: 'inkshield' }
   | { op: 'delirium' }
-  | { op: 'deflectingPalm'; target: EffectRef }
   | { op: 'gisela' }
   | { op: 'humbleDefector'; target: EffectRef }
   | { op: 'shadrixModes' }

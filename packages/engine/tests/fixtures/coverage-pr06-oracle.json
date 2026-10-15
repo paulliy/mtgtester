@@ -527,6 +527,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
+      "card": {
+        "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+        "scryfallId": "c5bda1a7-537f-4a80-95a0-c45eb127969b",
+        "name": "Deflecting Palm",
+        "manaCost": "{R}{W}",
+        "cmc": 2,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

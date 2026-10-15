@@ -2685,13 +2685,37 @@
     "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be": {
       "name": "Deflecting Palm",
       "oracleSha256": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
-          "implementation": ["explicitly unsupported; unscoped combat prevention"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "deflecting-palm-chosen-source",
+          "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage.",
+          "implementation": [
+            "as it resolves its controller chooses any permanent on the battlefield or spell on the stack (CR 609.7a) and a one-shot shield is created for damage from exactly that object to you, combat or not, until the turn's cleanup step; it ends when it first prevents damage, damage from any other source is not prevented, and a chosen permanent that changes zones is a new object that is no longer covered (CR 400.7); when it applies together with another effect on the same damage and the order changes the outcome, you choose the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "deflecting-palm-pinned-oracle-supported",
+            "deflecting-palm-chosen-source",
+            "deflecting-palm-one-shot",
+            "deflecting-palm-this-turn",
+            "deflecting-palm-new-object",
+            "deflecting-palm-order-choice"
+          ],
+          "viewerScenarioIds": ["deflecting-palm-viewer-chosen-source-reflects"]
+        },
+        {
+          "id": "deflecting-palm-reflection",
+          "oracleText": "If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+          "implementation": [
+            "the prevented amount is queued as the damage is prevented and dealt by Deflecting Palm, as last known, to the controller of the damage source, not as a trigger: immediately after the prevented damage event for a spell or ability, and after all combat damage of that step for combat damage; it goes through the same damage pipeline and nothing is dealt when nothing was prevented"
+          ],
+          "engineTestIds": [
+            "deflecting-palm-pinned-oracle-supported",
+            "deflecting-palm-chosen-source",
+            "deflecting-palm-reflection-target",
+            "deflecting-palm-order-choice"
+          ],
+          "viewerScenarioIds": ["deflecting-palm-viewer-chosen-source-reflects"]
         }
       ],
       "gameplayAiScenarioIds": []

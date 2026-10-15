@@ -11907,6 +11907,39 @@ function selflessSquireScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function deflectingPalmScenario(gameId: GameId): CardTestScenario {
+  const palm = pinnedFrom(COVERAGE_PR06, 'Deflecting Palm');
+  const lands = [MOUNTAIN, PLAINS];
+  return pr01Scenario(gameId, {
+    id: 'deflecting-palm-viewer-chosen-source-reflects',
+    title: "Deflecting Palm: prevent a chosen creature's damage and reflect it",
+    instructions: [
+      "It is P2's turn and Deflecting Palm is in your hand with a Mountain and a Plains on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1) and attacks you with both.",
+      'When you get priority, cast Deflecting Palm and choose Lab Ox as the source. Nobody blocks.',
+    ],
+    expectedOutcome:
+      "Lab Ox's 4 combat damage to you is prevented and Deflecting Palm deals 4 damage to P2, the controller of Lab Ox, after combat damage: P2 is at 36. Lab Servo's 1 damage is not prevented, so you are at 39. P3 and P4 are at 40.",
+    oracleSha256: palm.sha256,
+    clauseIds: ['deflecting-palm-chosen-source', 'deflecting-palm-reflection'],
+    decks: {
+      P1: [palm.card, ...lands],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Deflecting Palm'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12164,6 +12197,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'backlash-viewer-tap-and-reflect',
   'guard-gomazoa-viewer-blocks-and-takes-no-damage',
   'selfless-squire-viewer-prevent-and-grow',
+  'deflecting-palm-viewer-chosen-source-reflects',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12488,6 +12522,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'backlash-viewer-tap-and-reflect': backlashScenario,
   'guard-gomazoa-viewer-blocks-and-takes-no-damage': guardGomazoaScenario,
   'selfless-squire-viewer-prevent-and-grow': selflessSquireScenario,
+  'deflecting-palm-viewer-chosen-source-reflects': deflectingPalmScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

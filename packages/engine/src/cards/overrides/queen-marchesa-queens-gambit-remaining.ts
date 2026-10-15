@@ -207,12 +207,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Cut a Deal',
     'You draw for each opponent, not for each opponent who drew a card.',
   );
-  // Catalog audit queen-batch-4: source choice and reflection omitted.
-  unsupportedCard(
-    'dc5dffc8-fac5-4956-bac4-1ad2cc16f6be',
-    'Deflecting Palm',
-    'Source choice and reflection are implemented as unscoped combat-damage prevention.',
-  );
+  // Deflecting Palm: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-3: opponent-turn restriction omitted.
   unsupportedCard(
     'a00e5eb6-b916-4cd6-8ff2-c02f4929abc7',

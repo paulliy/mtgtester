@@ -317,6 +317,9 @@ const shapes = {
     optional: leaf,
     exceptTriggerObject: leaf,
     objectId: leaf,
+    chosenSource: leaf,
+    oneShot: leaf,
+    reflect: leaf,
   } satisfies Fields<Objects<Effect>>,
   TokenSpec: {
     name: leaf,
@@ -810,7 +813,6 @@ const families = {
       combatCalligrapher: true,
       inkshield: true,
       delirium: true,
-      deflectingPalm: true,
       gisela: true,
       humbleDefector: true,
       shadrixModes: true,

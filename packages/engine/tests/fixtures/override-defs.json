@@ -9853,8 +9853,25 @@
   {
     "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
     "name": "Deflecting Palm",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller",
+        "effects": [
+          {
+            "chosenSource": true,
+            "oneShot": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceController"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "de1cfa83-2049-48ab-b093-2f120a3ef4f2",
@@ -14556,8 +14573,25 @@
   {
     "oracleId": "oracle-deflecting-palm",
     "name": "Deflecting Palm",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller",
+        "effects": [
+          {
+            "chosenSource": true,
+            "oneShot": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceController"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-deflecting-swat",
