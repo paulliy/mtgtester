@@ -83,8 +83,20 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * put onto the battlefield with it (that object's id), or nothing (`null`) if none was.
    */
   reanimatedHostId?: ObjectId | null;
-  /** Player this creature is attacking, while in combat. */
+  /**
+   * The DEFENDING PLAYER while in combat: the player this creature attacks, or the controller of
+   * the planeswalker it attacks (CR 508.1b). Non-null exactly when this is an attacking creature.
+   */
   attacking: PlayerId | null;
+  /** The planeswalker this attacker attacks (CR 508.1b); null when it attacks the player. */
+  attackingPlaneswalker: ObjectId | null;
+  /**
+   * Sticky: the attacked planeswalker has been removed from combat (CR 506.4) — it left the
+   * battlefield, changed controller, or stopped being a planeswalker. The creature stays an
+   * attacking creature and can be blocked, but attacks nothing and deals no combat damage
+   * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
+   */
+  attackedPlaneswalkerRemoved: boolean;
   /** Attacker this creature is blocking, while in combat. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */

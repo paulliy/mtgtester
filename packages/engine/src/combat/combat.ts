@@ -29,6 +29,7 @@ import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { DecisionOutcome, EngineActionOption, GameGen } from '../decisions';
 import {
   combatDamageTraits,
+  dealCombatDamageToPlaneswalker,
   dealDamageToCreature,
   dealDamageToPlayer,
   flushDamageReflections,
@@ -39,14 +40,17 @@ import { payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
+import { counterCount } from '../state/counters';
 import { playerById, queueTriggersForEvent, queueTriggersForObject } from '../state/objects';
 import {
+  attackedPlaneswalker,
   colorsOf,
   controlledPermanents,
   effectivePT,
   findPermanent,
   hasKeyword,
   hasProtectionFrom,
+  isAttackingPlayer,
   isCreaturePermanent,
   playersInApnapOrder,
   allowanceFor,
@@ -92,18 +96,54 @@ function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   return true;
 }
 
-function attackTax(ctx: GameContext, defendingPlayerId: PlayerId): number {
+/**
+ * What a creature attacks (CR 508.1b): a player, or a planeswalker that player controls. Tax
+ * statics are scoped to one or both — Ghostly Prison and Propaganda tax only attacks on their
+ * controller, Norn's Annex also taxes attacks on that player's planeswalkers.
+ */
+interface AttackTarget {
+  player: EnginePlayerState;
+  planeswalker: EnginePermanent | null;
+}
+
+/** The chosen attack, resolved to its defending player and planeswalker. */
+interface AttackChoice {
+  defenderId: PlayerId;
+  planeswalkerId: ObjectId | null;
+}
+
+function attackTaxApplies(
+  entry: { controllerId: PlayerId; static: { kind: string; includePlaneswalkers?: boolean } },
+  defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
+): boolean {
+  return (
+    entry.controllerId === defendingPlayerId &&
+    entry.static.kind === 'attackTax' &&
+    (!atPlaneswalker || entry.static.includePlaneswalkers === true)
+  );
+}
+
+function attackTax(ctx: GameContext, defendingPlayerId: PlayerId, atPlaneswalker: boolean): number {
   return gatherRuleStatics(ctx).reduce((total, entry) => {
-    if (entry.controllerId !== defendingPlayerId || entry.static.kind !== 'attackTax') return total;
-    return total + entry.static.amount;
+    if (!attackTaxApplies(entry, defendingPlayerId, atPlaneswalker)) return total;
+    return entry.static.kind === 'attackTax' ? total + entry.static.amount : total;
   }, 0);
 }
 
-function attackCost(ctx: GameContext, defendingPlayerId: PlayerId, count = 1): ParsedManaCost {
-  const cost = { ...emptyCost(), generic: attackTax(ctx, defendingPlayerId) * count };
+function attackCost(
+  ctx: GameContext,
+  defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
+  count = 1,
+): ParsedManaCost {
+  const cost = {
+    ...emptyCost(),
+    generic: attackTax(ctx, defendingPlayerId, atPlaneswalker) * count,
+  };
   const phyrexian = gatherRuleStatics(ctx).flatMap((entry) => {
     if (
-      entry.controllerId !== defendingPlayerId ||
+      !attackTaxApplies(entry, defendingPlayerId, atPlaneswalker) ||
       entry.static.kind !== 'attackTax' ||
       entry.static.phyrexianColor === undefined
     ) {
@@ -125,8 +165,9 @@ function canPayAttackTax(
   ctx: GameContext,
   attackingPlayerId: PlayerId,
   defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
 ): boolean {
-  const cost = attackCost(ctx, defendingPlayerId);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker);
   if (totalPips(cost) === 0) return true;
   const player = playerById(ctx, attackingPlayerId);
   return canPay(
@@ -138,19 +179,51 @@ function canPayAttackTax(
   );
 }
 
+/** Every player this creature's controller could attack, and every planeswalker they control (CR 508.1b). */
+function allAttackTargets(
+  ctx: GameContext,
+  opponents: readonly EnginePlayerState[],
+): AttackTarget[] {
+  return opponents.flatMap((player) => [
+    { player, planeswalker: null },
+    ...controlledPermanents(ctx, player.id)
+      .filter((p) => computeCharacteristics(ctx, p).types.includes('Planeswalker'))
+      .map((planeswalker) => ({ player, planeswalker })),
+  ]);
+}
+
+/**
+ * Goad (CR 701.15b): the creature attacks a PLAYER other than the goader if able. Attacking any
+ * planeswalker does not satisfy that, so while some non-goader player is attackable only those
+ * players are legal; otherwise it still attacks if able — any player or planeswalker, goader's
+ * included.
+ */
+function applyGoadScope(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  candidates: AttackTarget[],
+): AttackTarget[] {
+  const goaderIds = goaderIdsFor(ctx, creature);
+  if (goaderIds.size === 0) return candidates;
+  const preferred = candidates.filter(
+    (t) => t.planeswalker === null && !goaderIds.has(t.player.id),
+  );
+  return preferred.length > 0 ? preferred : candidates;
+}
+
 function attackTargetsFor(
   ctx: GameContext,
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
-): EnginePlayerState[] {
-  const payable = opponents.filter((opp) => canPayAttackTax(ctx, creature.controllerId, opp.id));
-  const goaderIds = goaderIdsFor(ctx, creature);
-  const preferred = payable.filter((opp) => !goaderIds.has(opp.id));
-  return preferred.length > 0 ? preferred : payable;
+): AttackTarget[] {
+  const payable = allAttackTargets(ctx, opponents).filter((t) =>
+    canPayAttackTax(ctx, creature.controllerId, t.player.id, t.planeswalker !== null),
+  );
+  return applyGoadScope(ctx, creature, payable);
 }
 
 /**
- * Opponents this creature could attack **for free** — used only to decide whether a goad
+ * Targets this creature could attack **for free** — used only to decide whether a goad
  * requirement is mandatory, never to build the offered menu (that's `attackTargetsFor`,
  * gated on affordability instead). CR 508.1d: "If a creature can't attack unless a player
  * pays a cost, that player is not required to pay that cost, even if attacking with that
@@ -164,20 +237,21 @@ function freeAttackTargetsFor(
   ctx: GameContext,
   creature: EnginePermanent,
   opponents: readonly EnginePlayerState[],
-): EnginePlayerState[] {
-  const free = opponents.filter((opp) => totalPips(attackCost(ctx, opp.id)) === 0);
-  const goaderIds = goaderIdsFor(ctx, creature);
-  const preferred = free.filter((opp) => !goaderIds.has(opp.id));
-  return preferred.length > 0 ? preferred : free;
+): AttackTarget[] {
+  const free = allAttackTargets(ctx, opponents).filter(
+    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+  );
+  return applyGoadScope(ctx, creature, free);
 }
 
 function* payAttackTax(
   ctx: GameContext,
   attackingPlayerId: PlayerId,
   defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
   count: number,
 ): GameGen<void> {
-  const cost = attackCost(ctx, defendingPlayerId, count);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, count);
   if (totalPips(cost) === 0) return;
   yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
 }
@@ -227,12 +301,16 @@ function blockersInCombat(ctx: GameContext): EnginePermanent[] {
 function commitAttacker(
   ctx: GameContext,
   creature: EnginePermanent,
-  defenderId: PlayerId,
+  choice: AttackChoice,
   apId: PlayerId,
   hadToAttack = false,
 ): void {
+  const { defenderId, planeswalkerId } = choice;
+  const planeswalker = planeswalkerId === null ? undefined : findPermanent(ctx, planeswalkerId);
   if (hadToAttack) creature.hadToAttackThisCombat = true;
   creature.attacking = defenderId;
+  creature.attackingPlaneswalker = planeswalkerId;
+  creature.attackedPlaneswalkerRemoved = false;
   creature.statuses.push('attacking');
   if (!hasKeyword(ctx, creature, 'vigilance')) {
     creature.tapped = true; // CR 508.1f
@@ -241,10 +319,15 @@ function commitAttacker(
   emit(
     ctx,
     'attack',
-    { attacker: creature.name, attackerCardId: creature.cardId, defender: defenderId },
+    {
+      attacker: creature.name,
+      attackerCardId: creature.cardId,
+      defender: defenderId,
+      ...(planeswalker !== undefined ? { planeswalker: planeswalker.name } : {}),
+    },
     apId,
   );
-  debug(ctx, 'combat', `${creature.name} attacks ${defenderId}`);
+  debug(ctx, 'combat', `${creature.name} attacks ${planeswalker?.name ?? defenderId}`);
 }
 
 /**
@@ -271,11 +354,26 @@ function buildAttackSubjects(
       name: creature.name,
       power: pt.power,
       toughness: pt.toughness,
-      defenders: legal.map((opp) => ({
-        playerId: opp.id,
-        life: opp.life,
-        attackTax: attackTax(ctx, opp.id),
-      })),
+      defenders: legal
+        .filter((t) => t.planeswalker === null)
+        .map((t) => ({
+          playerId: t.player.id,
+          life: t.player.life,
+          attackTax: attackTax(ctx, t.player.id, false),
+        })),
+      planeswalkers: legal.flatMap((t) =>
+        t.planeswalker === null
+          ? []
+          : [
+              {
+                objectId: t.planeswalker.id,
+                controllerId: t.player.id,
+                name: t.planeswalker.name,
+                loyalty: counterCount(t.planeswalker.counters, 'loyalty'),
+                attackTax: attackTax(ctx, t.player.id, true),
+              },
+            ],
+      ),
       mustAttack,
       hasTriggers: triggersOf(ctx, creature).length > 0,
     };
@@ -307,41 +405,66 @@ function buildAttackOption(subjects: readonly AttackDeclarationSubject[]): Engin
     },
     targets: subjects.map((s, i) => ({
       slot: i,
-      options: [...s.defenders.map((d) => d.playerId), ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
+      options: [
+        ...s.defenders.map((d) => d.playerId),
+        ...s.planeswalkers.map((p) => p.objectId),
+        ...(s.mustAttack ? [] : [NO_ATTACK_TARGET]),
+      ],
     })),
   };
 }
 
-/** Read a proposed declaration back out of the outcome's per-slot target choices. */
+/** Read a proposed declaration back out of the outcome's per-slot target choices. A chosen
+ * planeswalker id resolves to its controller as the defending player (CR 508.1b). */
 function readAttackAssignment(
+  ctx: GameContext,
   outcome: DecisionOutcome,
   eligible: readonly EnginePermanent[],
-): Map<ObjectId, PlayerId | null> {
-  const assignment = new Map<ObjectId, PlayerId | null>();
+): Map<ObjectId, AttackChoice | null> {
+  const assignment = new Map<ObjectId, AttackChoice | null>();
   for (let i = 0; i < eligible.length; i++) {
     const creature = eligible[i] as EnginePermanent;
     const chosen = outcome.targets.get(i);
+    if (chosen === undefined || chosen === NO_ATTACK_TARGET) {
+      assignment.set(creature.id, null);
+      continue;
+    }
+    const planeswalker = ctx.state.players.some((p) => p.id === chosen)
+      ? undefined
+      : findPermanent(ctx, chosen as ObjectId);
     assignment.set(
       creature.id,
-      chosen === undefined || chosen === NO_ATTACK_TARGET ? null : (chosen as PlayerId),
+      planeswalker !== undefined
+        ? { defenderId: planeswalker.controllerId, planeswalkerId: planeswalker.id }
+        : { defenderId: chosen as PlayerId, planeswalkerId: null },
     );
   }
   return assignment;
 }
 
+/** Attackers sharing a defending player and whether it is a planeswalker of theirs: one tax group. */
+interface AttackGroup {
+  defenderId: PlayerId;
+  atPlaneswalker: boolean;
+  creatures: EnginePermanent[];
+}
+
 function groupByDefender(
   eligible: readonly EnginePermanent[],
-  assignment: ReadonlyMap<ObjectId, PlayerId | null>,
-): Map<PlayerId, EnginePermanent[]> {
-  const byDefender = new Map<PlayerId, EnginePermanent[]>();
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+): AttackGroup[] {
+  const groups = new Map<string, AttackGroup>();
   for (const creature of eligible) {
-    const defenderId = assignment.get(creature.id);
-    if (defenderId === null || defenderId === undefined) continue;
-    const group = byDefender.get(defenderId);
-    if (group === undefined) byDefender.set(defenderId, [creature]);
-    else group.push(creature);
+    const choice = assignment.get(creature.id);
+    if (choice === null || choice === undefined) continue;
+    const atPlaneswalker = choice.planeswalkerId !== null;
+    const key = `${choice.defenderId}|${atPlaneswalker ? 'planeswalker' : 'player'}`;
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, { defenderId: choice.defenderId, atPlaneswalker, creatures: [creature] });
+    } else group.creatures.push(creature);
   }
-  return byDefender;
+  return [...groups.values()];
 }
 
 /**
@@ -355,12 +478,12 @@ function validateAttackDeclaration(
   ctx: GameContext,
   attackingPlayerId: PlayerId,
   eligible: readonly EnginePermanent[],
-  assignment: ReadonlyMap<ObjectId, PlayerId | null>,
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): CombatViolation[] {
-  const byDefender = groupByDefender(eligible, assignment);
+  const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
-  for (const [defenderId, creatures] of byDefender) {
-    const cost = attackCost(ctx, defenderId, creatures.length);
+  for (const { defenderId, atPlaneswalker, creatures } of groups) {
+    const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures.length);
     totalCost.generic += cost.generic;
     totalCost.phyrexian = [...(totalCost.phyrexian ?? []), ...(cost.phyrexian ?? [])];
   }
@@ -375,13 +498,15 @@ function validateAttackDeclaration(
   );
   if (payable) return [];
   const violations: CombatViolation[] = [];
-  for (const [defenderId, creatures] of byDefender) {
-    if (totalPips(attackCost(ctx, defenderId)) === 0) continue;
+  for (const { defenderId, atPlaneswalker, creatures } of groups) {
+    if (totalPips(attackCost(ctx, defenderId, atPlaneswalker)) === 0) continue;
     for (const creature of creatures) {
       violations.push({
         subjectId: creature.id,
         kind: 'attackTax',
-        message: `Not enough mana to pay the combined attack tax for every creature attacking ${defenderId} at once`,
+        message: `Not enough mana to pay the combined attack tax for every creature attacking ${
+          atPlaneswalker ? `${defenderId}'s planeswalkers` : defenderId
+        } at once`,
       });
     }
   }
@@ -394,16 +519,21 @@ function* applyAttackDeclaration(
   ap: EnginePlayerState,
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
-  assignment: ReadonlyMap<ObjectId, PlayerId | null>,
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): GameGen<void> {
-  const byDefender = groupByDefender(eligible, assignment);
-  for (const [defenderId, creatures] of byDefender) {
-    yield* payAttackTax(ctx, ap.id, defenderId, creatures.length);
+  for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
+    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures.length);
     for (const creature of creatures) {
       const hadToAttack =
         hasAttackRequirement(ctx, creature) &&
         freeAttackTargetsFor(ctx, creature, opponents).length > 0;
-      commitAttacker(ctx, creature, defenderId, ap.id, hadToAttack);
+      commitAttacker(
+        ctx,
+        creature,
+        assignment.get(creature.id) as AttackChoice,
+        ap.id,
+        hadToAttack,
+      );
     }
   }
 }
@@ -421,8 +551,8 @@ function repairAttackDeclaration(
   attackingPlayerId: PlayerId,
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
-  assignment: ReadonlyMap<ObjectId, PlayerId | null>,
-): Map<ObjectId, PlayerId | null> {
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+): Map<ObjectId, AttackChoice | null> {
   const repaired = new Map(assignment);
   let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
   let guard = eligible.length + 1;
@@ -437,9 +567,12 @@ function repairAttackDeclaration(
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
     const mustAttack =
       hasAttackRequirement(ctx, pick) && freeAttackTargetsFor(ctx, pick, opponents).length > 0;
+    const free = mustAttack ? freeAttackTargetsFor(ctx, pick, opponents)[0] : undefined;
     repaired.set(
       pick.id,
-      mustAttack ? (freeAttackTargetsFor(ctx, pick, opponents)[0]?.id ?? null) : null,
+      free === undefined
+        ? null
+        : { defenderId: free.player.id, planeswalkerId: free.planeswalker?.id ?? null },
     );
     violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
   }
@@ -473,7 +606,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   if (eligible.length > 0) {
     const MAX_PROPOSALS = 2;
     let rejection: CombatRejection | undefined;
-    let lastAssignment: Map<ObjectId, PlayerId | null> = new Map();
+    let lastAssignment: Map<ObjectId, AttackChoice | null> = new Map();
     let applied = false;
 
     for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
@@ -491,7 +624,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
           ...(rejection !== undefined ? { rejection } : {}),
         },
       };
-      lastAssignment = readAttackAssignment(outcome, eligible);
+      lastAssignment = readAttackAssignment(ctx, outcome, eligible);
       // Defense in depth: `Engine.submit()` already refuses a response missing a value for a
       // slot with more than one legal option (which `mustAttack` guarantees for a goaded
       // creature's slot — CR 508.1d, item 19), but code driving this generator directly (tests,
@@ -533,7 +666,11 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   for (const perm of declared) perm.attackedThisTurn = true;
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
+    // The defending player is woken for an attack on their planeswalker too (CR 509.1).
     playerById(ctx, defId).yieldUntilEndOfTurn = false;
+    // "Whenever enchanted player is attacked" (CR 508.3b) needs a creature attacking the player
+    // itself; attacking only their planeswalkers doesn't.
+    if (!declared.some((a) => isAttackingPlayer(a, defId))) continue;
     const auras = ctx.state.battlefield.filter((p) => p.attachedTo === defId);
     for (const aura of auras) {
       queueTriggersForEvent(ctx, 'enchantedPlayerAttacked', [{ permanent: aura, playerId: ap.id }]);
@@ -823,8 +960,29 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
   // `runCombatPhase` immediately before each combat damage step instead.
 }
 
+/**
+ * Where an attacker's combat damage goes when it is not (or no longer) assigned to a blocker: the
+ * player it attacks, the planeswalker it attacks, or nowhere — an attacker whose planeswalker was
+ * removed from combat attacks no player or planeswalker (CR 506.4c) and has no one to assign
+ * damage to (CR 510.1b, 702.19c).
+ */
+type CombatRecipient =
+  { kind: 'player'; id: PlayerId } | { kind: 'planeswalker'; permanent: EnginePermanent };
+
+function combatRecipientOf(ctx: GameContext, attacker: EnginePermanent): CombatRecipient | null {
+  if (attacker.attacking === null) return null;
+  if (attacker.attackingPlaneswalker === null) return { kind: 'player', id: attacker.attacking };
+  const permanent = attackedPlaneswalker(ctx, attacker);
+  return permanent === null ? null : { kind: 'planeswalker', permanent };
+}
+
+/** The key a recipient has in a damage division and a trampler's `combatDamageSplit.targets`. */
+function recipientKey(recipient: CombatRecipient): ObjectId {
+  return recipient.kind === 'player' ? recipient.id : recipient.permanent.id;
+}
+
 /** Per-attacker chosen division of combat damage among its 2+ live blockers, and — for a
- * trampler — the defending player (keyed by id, `attacker.attacking`). Only ever has an entry
+ * trampler — the player or planeswalker it attacks (keyed by id, see `recipientKey`). Only ever has an entry
  * for an attacker with 2+ live blockers; `dealCombatDamage` falls back to CR 510.1c's forced
  * single-recipient/no-recipient cases for everything else. */
 type DamageDivisions = ReadonlyMap<ObjectId, ReadonlyMap<ObjectId, number>>;
@@ -844,6 +1002,7 @@ function resolveDamageDivision(
   liveBlockers: readonly EnginePermanent[],
   power: number,
   targets: readonly ObjectId[],
+  recipientId: ObjectId | null,
   outcome: DecisionOutcome,
 ): Map<ObjectId, number> {
   const raw = outcome.combatDamageSplit ?? {};
@@ -857,8 +1016,7 @@ function resolveDamageDivision(
     Object.keys(raw).every((id) => targets.includes(id)) &&
     targets.every((id) => Number.isInteger(raw[id] ?? 0) && (raw[id] ?? 0) >= 0) &&
     targets.reduce((total, id) => total + (raw[id] ?? 0), 0) === power;
-  const playerId = attacker.attacking;
-  const playerAmount = playerId !== null ? (raw[playerId] ?? 0) : 0;
+  const playerAmount = recipientId !== null ? (raw[recipientId] ?? 0) : 0;
   const lethalSatisfied =
     playerAmount === 0 || liveBlockers.every((b) => (raw[b.id] ?? 0) >= lethalFor(b));
 
@@ -898,6 +1056,7 @@ function* assignDamageDivisions(
     if (power <= 0) continue;
     const liveBlockers = liveBlockersOf(ctx, attacker);
     const trample = hasKeyword(ctx, attacker, 'trample');
+    const recipient = combatRecipientOf(ctx, attacker);
     if (liveBlockers.length === 0) continue;
     if (liveBlockers.length === 1) {
       const blocker = liveBlockers[0]!;
@@ -907,17 +1066,17 @@ function* assignDamageDivisions(
         : hasKeyword(ctx, attacker, 'deathtouch')
           ? Math.min(1, remaining)
           : remaining;
-      if (!trample || attacker.attacking === null || power <= lethal) continue;
+      if (!trample || recipient === null || power <= lethal) continue;
     }
     const targets: ObjectId[] = liveBlockers.map((b) => b.id);
-    if (trample && attacker.attacking !== null) targets.push(attacker.attacking);
+    if (trample && recipient !== null) targets.push(recipientKey(recipient));
 
     const outcome = yield {
       decisionType: 'assignCombatDamage',
       player: attacker.controllerId,
       prompt:
         `${attacker.name} (${power} power) is blocked by ${liveBlockers.length} creatures: ` +
-        `divide its combat damage among them${trample ? ', or the defending player once every blocker has lethal (trample)' : ''}.`,
+        `divide its combat damage among them${trample && recipient !== null ? `, or ${recipient.kind === 'player' ? 'the defending player' : recipient.permanent.name} once every blocker has lethal (trample)` : ''}.`,
       options: targets.map((id) => ({
         type: 'assignDamage',
         description: `All ${power} damage to ${damageTargetName(ctx, id)}`,
@@ -925,7 +1084,15 @@ function* assignDamageDivisions(
       })),
       combatDamageSplit: { amount: power, targets },
     };
-    const division = resolveDamageDivision(ctx, attacker, liveBlockers, power, targets, outcome);
+    const division = resolveDamageDivision(
+      ctx,
+      attacker,
+      liveBlockers,
+      power,
+      targets,
+      recipient === null ? null : recipientKey(recipient),
+      outcome,
+    );
     divisions.set(attacker.id, division);
     emit(
       ctx,
@@ -984,6 +1151,8 @@ interface DamageAssignment {
   source: EnginePermanent;
   targetCreature: EnginePermanent | null;
   targetPlayer: PlayerId | null;
+  /** The planeswalker an attacker deals combat damage to (CR 120.3c). */
+  targetPlaneswalker: EnginePermanent | null;
   amount: number;
 }
 
@@ -1030,23 +1199,31 @@ function* dealCombatDamage(
 
     const liveBlockers = liveBlockersOf(ctx, attacker);
     const wasBlocked = attacker.blockedByOrdered.length > 0;
+    // The player or planeswalker it attacks; null once its planeswalker was removed from combat,
+    // so an unblocked attacker deals no damage (CR 510.1b) and a trampler has no excess to assign.
+    const recipient = combatRecipientOf(ctx, attacker);
+    const toRecipient = (recipientAmount: number): DamageAssignment | null =>
+      recipient === null
+        ? null
+        : {
+            source: attacker,
+            targetCreature: null,
+            targetPlayer: recipient.kind === 'player' ? recipient.id : null,
+            targetPlaneswalker: recipient.kind === 'planeswalker' ? recipient.permanent : null,
+            amount: recipientAmount,
+          };
 
     if (!wasBlocked) {
-      if (attacker.attacking !== null) {
-        assignments.push({
-          source: attacker,
-          targetCreature: null,
-          targetPlayer: attacker.attacking,
-          amount: power,
-        });
-      }
+      const assignment = toRecipient(power);
+      if (assignment !== null) assignments.push(assignment);
       continue;
     }
 
     const division = divisions.get(attacker.id);
     if (division !== undefined) {
       // 2+ live blockers: use the chosen arbitrary division exactly (CR 510.1c) — including,
-      // with trample, however much of it (if any) the controller sent to the defending player.
+      // with trample, however much of it (if any) the controller sent to the defending player
+      // or the planeswalker it attacks.
       for (const blocker of liveBlockers) {
         const amount = division.get(blocker.id) ?? 0;
         if (amount > 0) {
@@ -1054,54 +1231,45 @@ function* dealCombatDamage(
             source: attacker,
             targetCreature: blocker,
             targetPlayer: null,
+            targetPlaneswalker: null,
             amount,
           });
         }
       }
-      const playerAmount =
-        attacker.attacking === null ? 0 : (division.get(attacker.attacking) ?? 0);
-      if (playerAmount > 0 && attacker.attacking !== null) {
-        assignments.push({
-          source: attacker,
-          targetCreature: null,
-          targetPlayer: attacker.attacking,
-          amount: playerAmount,
-        });
+      const recipientAmount = recipient === null ? 0 : (division.get(recipientKey(recipient)) ?? 0);
+      if (recipientAmount > 0) {
+        const assignment = toRecipient(recipientAmount);
+        if (assignment !== null) assignments.push(assignment);
       }
       continue;
     }
 
     // Remaining 0/1-blocker cases are forced; any trample excess choice was handled above.
-    // With zero live blockers, trample sends all remaining damage to the defending player once the
-    // blocker is gone — even if that happened in the first-strike step and this is the regular step.
+    // With zero live blockers, trample sends all remaining damage to the defending player (or the
+    // planeswalker) once the blocker is gone — even if that happened in the first-strike step and
+    // this is the regular step.
     const [only] = liveBlockers;
     if (only !== undefined) {
       const bpt = effectivePT(ctx, only);
       const remaining = Math.max(0, bpt.toughness - only.damageMarked);
       const lethal = only.damagedByDeathtouch ? 0 : deathtouch ? Math.min(1, remaining) : remaining;
-      const toBlocker = trample ? Math.min(power, lethal) : power;
+      // Without anyone to send trample excess to, all of the damage is assigned to the blocker.
+      const toBlocker = trample && recipient !== null ? Math.min(power, lethal) : power;
       assignments.push({
         source: attacker,
         targetCreature: only,
         targetPlayer: null,
+        targetPlaneswalker: null,
         amount: toBlocker,
       });
       const excess = power - toBlocker;
-      if (excess > 0 && trample && attacker.attacking !== null) {
-        assignments.push({
-          source: attacker,
-          targetCreature: null,
-          targetPlayer: attacker.attacking,
-          amount: excess,
-        });
+      if (excess > 0) {
+        const assignment = toRecipient(excess);
+        if (assignment !== null) assignments.push(assignment);
       }
-    } else if (trample && attacker.attacking !== null) {
-      assignments.push({
-        source: attacker,
-        targetCreature: null,
-        targetPlayer: attacker.attacking,
-        amount: power,
-      });
+    } else if (trample) {
+      const assignment = toRecipient(power);
+      if (assignment !== null) assignments.push(assignment);
     }
   }
 
@@ -1115,6 +1283,7 @@ function* dealCombatDamage(
       source: blocker,
       targetCreature: target,
       targetPlayer: null,
+      targetPlaneswalker: null,
       amount: power,
     });
   }
@@ -1141,6 +1310,16 @@ function* dealCombatDamage(
         sourceColors: traits.colors,
         dealtTotals: damageToCreatures,
       });
+    } else if (a.targetPlaneswalker !== null) {
+      // Damage to a planeswalker is not damage to a player: no commander damage, no "deals combat
+      // damage to a player" trigger, no monarch steal — it only removes loyalty (CR 120.3c).
+      yield* dealCombatDamageToPlaneswalker(
+        ctx,
+        permanentSource(a.source),
+        a.targetPlaneswalker,
+        a.amount,
+        { sourceHasLifelink: traits.lifelink, sourceColors: traits.colors },
+      );
     } else if (a.targetPlayer !== null) {
       const dealt = yield* dealDamageToPlayer(
         ctx,
@@ -1197,6 +1376,8 @@ function firstStrikeStepNeeded(ctx: GameContext): boolean {
 function endCombatCleanup(ctx: GameContext): void {
   for (const perm of ctx.state.battlefield) {
     perm.attacking = null;
+    perm.attackingPlaneswalker = null;
+    perm.attackedPlaneswalkerRemoved = false;
     perm.blocking = null;
     perm.blockedByOrdered = [];
     perm.dealtFirstStrikeDamage = false;

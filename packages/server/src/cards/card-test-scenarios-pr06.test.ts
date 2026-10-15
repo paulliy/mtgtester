@@ -809,3 +809,14 @@ describe('Delirium Card Test Lab scenario', () => {
     replays('delirium-viewer-tap-damage-and-prevent', steps);
   });
 });
+
+describe('Planeswalker attack Card Test Lab scenario', () => {
+  it('planeswalker-attack-viewer-loyalty — Lab Ox attacks Lab Walker, whose loyalty drops from 5 to 1 while P2 stays at 40', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['Lab Walker'] }];
+    const { state, seat, onBattlefield } = run('planeswalker-attack-viewer-loyalty', steps);
+    expect(onBattlefield('Lab Walker')[0]?.counters['loyalty']).toBe(1);
+    expect(seat('P2').life).toBe(40);
+    replays('planeswalker-attack-viewer-loyalty', steps);
+    expect(state.stack).toEqual([]);
+  });
+});

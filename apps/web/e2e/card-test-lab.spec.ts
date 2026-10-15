@@ -9102,3 +9102,36 @@ test("Delirium: during an opponent's attack, tap its creature, hit it back and s
     ).toHaveText('40');
   }
 });
+
+test('Planeswalker attack: Lab Ox attacks Lab Walker through the player board and its loyalty drops', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(
+    page,
+    'Attacking a planeswalker: unblocked combat damage removes loyalty, not life',
+  );
+  await expect(permanent(page, 'Lab Walker')).toContainText('loyalty×5', { timeout: 15_000 });
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  // The planeswalker is offered by name, next to the opponents, and chosen instead of P2.
+  const row = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Ox' });
+  await expect(row.getByRole('button', { name: 'Lab Walker' })).toBeVisible();
+  await row.getByRole('button', { name: 'Lab Walker' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Walker')).toContainText('loyalty×1');
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Lab Walker')?.counters['loyalty']).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});

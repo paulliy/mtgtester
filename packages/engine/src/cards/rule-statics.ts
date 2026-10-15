@@ -135,8 +135,12 @@ export type RuleStatic =
       multiplier: number;
       addition: number;
     }
-  /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color }
+  /**
+   * "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison):
+   * taxes attacks on this permanent's controller only. `includePlaneswalkers` also taxes attacks
+   * on planeswalkers they control ("you or planeswalkers you control", Norn's Annex).
+   */
+  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; includePlaneswalkers?: boolean }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

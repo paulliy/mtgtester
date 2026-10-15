@@ -75,6 +75,49 @@ export function findPermanent(ctx: GameContext, id: ObjectId): EnginePermanent |
   return ctx.state.battlefield.find((p) => p.id === id);
 }
 
+/**
+ * The planeswalker this attacker is attacking, or null when it attacks the player or attacks
+ * nothing. CR 506.4: an attacked planeswalker is removed from combat when it leaves the
+ * battlefield, changes controller (away from the defending player), or stops being a planeswalker;
+ * that is recorded on the attacker (sticky), so a planeswalker that comes back is not attacked
+ * again. The creature stays an attacking creature either way (CR 506.4c).
+ */
+export function attackedPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+): EnginePermanent | null {
+  if (perm.attackingPlaneswalker === null || perm.attackedPlaneswalkerRemoved) return null;
+  const walker = findPermanent(ctx, perm.attackingPlaneswalker);
+  if (
+    walker === undefined ||
+    walker.controllerId !== perm.attacking ||
+    !computeCharacteristics(ctx, walker).types.includes('Planeswalker')
+  ) {
+    perm.attackedPlaneswalkerRemoved = true;
+    return null;
+  }
+  return walker;
+}
+
+/** Is this creature attacking `playerId` itself, not a planeswalker that player controls? */
+export function isAttackingPlayer(perm: EnginePermanent, playerId: PlayerId): boolean {
+  return perm.attacking === playerId && perm.attackingPlaneswalker === null;
+}
+
+/**
+ * Is this creature attacking `playerId` or a planeswalker `playerId` controls ("attacking you
+ * and/or planeswalkers you control")? One whose planeswalker was removed from combat attacks
+ * neither (CR 506.4c).
+ */
+export function isAttackingPlayerOrTheirPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  playerId: PlayerId,
+): boolean {
+  if (perm.attacking !== playerId) return false;
+  return perm.attackingPlaneswalker === null || attackedPlaneswalker(ctx, perm) !== null;
+}
+
 /** Current card types include Creature after the layer system (Mutavault, etc.). */
 export function isCreaturePermanent(ctx: GameContext, perm: EnginePermanent): boolean {
   return computeCharacteristics(ctx, perm).types.includes('Creature');

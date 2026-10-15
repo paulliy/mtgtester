@@ -12090,6 +12090,51 @@ function deliriumScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * Engine capability (no card): a creature attacks an opponent's planeswalker through the real
+ * declare-attackers UI, and the unblocked combat damage removes loyalty instead of hitting the player.
+ */
+const LAB_WALKER = {
+  ...card({
+    oracleId: 'lab-walker',
+    name: 'Lab Walker',
+    typeLine: 'Planeswalker — Lab',
+    manaCost: '{3}',
+    cmc: 3,
+  }),
+  loyalty: '5',
+};
+function planeswalkerAttackScenario(gameId: GameId): CardTestScenario {
+  return pr01Scenario(gameId, {
+    id: 'planeswalker-attack-viewer-loyalty',
+    title: 'Attacking a planeswalker: unblocked combat damage removes loyalty, not life',
+    instructions: [
+      'You control Lab Ox (4/4). P2 controls Lab Walker, a planeswalker with 5 loyalty, and nothing that can block.',
+      'Pass priority until the declare attackers step, then declare Lab Ox attacking Lab Walker (not P2) and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Ox dealt 4 combat damage to Lab Walker, which is at 1 loyalty. P2 is still at 40 life.',
+    oracleSha256: createHash('sha256')
+      .update('Planeswalker attack (CR 506.2, 508.1b, 510.1)')
+      .digest('hex'),
+    clauseIds: ['planeswalker-attack-loyalty'],
+    decks: {
+      P1: [LAB_OX, FOREST, FOREST],
+      P2: [LAB_WALKER, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Lab Walker'] },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12351,6 +12396,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'comeuppance-viewer-prevent-and-reflect',
   'michiko-konda-viewer-damage-makes-opponent-sacrifice',
   'delirium-viewer-tap-damage-and-prevent',
+  'planeswalker-attack-viewer-loyalty',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12679,6 +12725,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'comeuppance-viewer-prevent-and-reflect': comeuppanceScenario,
   'michiko-konda-viewer-damage-makes-opponent-sacrifice': michikoKondaScenario,
   'delirium-viewer-tap-damage-and-prevent': deliriumScenario,
+  'planeswalker-attack-viewer-loyalty': planeswalkerAttackScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

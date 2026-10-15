@@ -243,8 +243,17 @@ export function changeController(
   perm.timestamp = ctx.state.nextTimestamp++;
   perm.summoningSick = true;
   perm.attacking = null;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
   perm.blocking = null;
   perm.statuses = perm.statuses.filter((status) => status !== 'attacking' && status !== 'blocking');
+  // A planeswalker that changes controller is removed from combat (CR 506.4): creatures attacking
+  // it stay attacking but attack nothing. Marked here, not lazily, so regaining it can't undo that.
+  for (const attacker of ctx.state.battlefield) {
+    if (attacker.attackingPlaneswalker === perm.id && attacker.attacking !== controllerId) {
+      attacker.attackedPlaneswalkerRemoved = true;
+    }
+  }
 }
 
 /** What a face-down permanent is called while face down (CR 708.2a). */
@@ -362,6 +371,8 @@ export function makePermanent(
     summoningSick: true,
     attachedTo: null,
     attacking: null,
+    attackingPlaneswalker: null,
+    attackedPlaneswalkerRemoved: false,
     blocking: null,
     blockedByOrdered: [],
     damagedByDeathtouch: false,
@@ -396,6 +407,8 @@ export function consumeRegenerationShield(
   perm.damagedByDeathtouch = false;
   perm.tapped = true;
   perm.attacking = null;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
   perm.blocking = null;
   perm.blockedByOrdered = [];
   perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
@@ -1863,6 +1876,14 @@ export function queueTriggersForEvent(
         )
           return false;
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
+          return false;
+        // "...attack an opponent" (Firkraag) is about attacking the player; a creature attacking
+        // only a planeswalker of theirs isn't attacking that opponent.
+        if (
+          when === 'attacks' &&
+          spec.aggregate === 'byEventPlayer' &&
+          s.permanent.attackingPlaneswalker !== null
+        )
           return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId

@@ -367,6 +367,112 @@ export function* dealDamageToPlayer(
   return amount;
 }
 
+/**
+ * Damage to a planeswalker removes that many loyalty counters, and damage to a battle that many
+ * defense counters, instead of marking damage (CR 120.3c/h). Runs through the damage modifier
+ * pipeline like every damage event, so combat damage can be prevented, doubled or halved here too.
+ * Returns the damage actually dealt.
+ */
+function* dealDamageToLoyaltyOrDefense(
+  ctx: GameContext,
+  source: EffectSource,
+  perm: EnginePermanent,
+  counterKind: 'loyalty' | 'defense',
+  amount: number,
+  opts: { combat: boolean; sourceHasLifelink: boolean; sourceColors: readonly Color[] },
+): GameGen<number> {
+  if (amount <= 0) return 0;
+  amount = (yield* applyDamageModifiers(ctx, {
+    source,
+    recipient: { kind: 'permanent', permanent: perm },
+    amount,
+    combat: opts.combat,
+    sourceColors: opts.sourceColors,
+  })).amount;
+  if (amount <= 0) return 0;
+  const have = counterCount(perm.counters, counterKind);
+  if (counterKind === 'loyalty' && amount > have)
+    ctx.state.excessDamageControllerIds.push(perm.controllerId);
+  setCounterCount(perm.counters, counterKind, Math.max(0, have - amount));
+  // Lifelink applies to damage dealt to any object or player (CR 702.15b).
+  if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  emit(ctx, 'damage', {
+    source: source.name,
+    sourceCardId: source.cardId,
+    target: perm.name,
+    targetCardId: perm.cardId,
+    amount,
+    combat: opts.combat,
+  });
+  return amount;
+}
+
+/** Combat damage from `source` to the planeswalker it is attacking (CR 120.3c, 510.2). */
+export function* dealCombatDamageToPlaneswalker(
+  ctx: GameContext,
+  source: EffectSource,
+  perm: EnginePermanent,
+  amount: number,
+  opts: { sourceHasLifelink: boolean; sourceColors: readonly Color[] },
+): GameGen<number> {
+  return yield* dealDamageToLoyaltyOrDefense(ctx, source, perm, 'loyalty', amount, {
+    combat: true,
+    ...opts,
+  });
+}
+
+/**
+ * Where a creature put onto the battlefield attacking attacks (CR 508.4): its controller chooses
+ * one of `defenderIds`, or (when the text allows) a planeswalker one of them controls. Asks only
+ * when there is more than one choice.
+ */
+function* chooseEnteringAttackTarget(
+  ctx: GameContext,
+  controller: EnginePlayerState,
+  sourceName: string,
+  defenderIds: readonly PlayerId[],
+  allowPlaneswalkers: boolean,
+): GameGen<{ defenderId: PlayerId; planeswalkerId: ObjectId | null }> {
+  const choices: { defenderId: PlayerId; planeswalker: EnginePermanent | null }[] =
+    defenderIds.flatMap((defenderId) => [
+      { defenderId, planeswalker: null },
+      ...(allowPlaneswalkers
+        ? ctx.state.battlefield
+            .filter(
+              (p) =>
+                p.controllerId === defenderId &&
+                computeCharacteristics(ctx, p).types.includes('Planeswalker'),
+            )
+            .map((planeswalker) => ({ defenderId, planeswalker }))
+        : []),
+    ]);
+  let chosen = choices[0] as (typeof choices)[number];
+  if (choices.length > 1) {
+    const outcome = yield {
+      decisionType: 'general',
+      player: controller.id,
+      prompt: `${sourceName}: choose who the token attacks`,
+      options: choices.map(({ defenderId, planeswalker }) =>
+        planeswalker === null
+          ? playerOption(defenderId, defenderId, {
+              type: 'choosePlayer',
+              description: `Attack ${defenderId}`,
+              payload: defenderId,
+              verb: 'Attack',
+            })
+          : cardOption(ctx, planeswalker, {
+              type: 'choosePlaneswalker',
+              description: `Attack ${planeswalker.name}`,
+              payload: planeswalker.id,
+              verb: 'Attack',
+            }),
+      ),
+    };
+    chosen = choices[outcome.index] ?? chosen;
+  }
+  return { defenderId: chosen.defenderId, planeswalkerId: chosen.planeswalker?.id ?? null };
+}
+
 /** Deal non-combat damage from `source` to whichever kind of object `id` names. */
 function* dealDamageToObject(
   ctx: GameContext,
@@ -409,28 +515,10 @@ function* dealDamageToObject(
       ? 'defense'
       : null;
   if (counterKind !== null) {
-    if (amount <= 0) return;
-    amount = (yield* applyDamageModifiers(ctx, {
-      source,
-      recipient: { kind: 'permanent', permanent: perm },
-      amount,
+    yield* dealDamageToLoyaltyOrDefense(ctx, source, perm, counterKind, amount, {
       combat: false,
+      sourceHasLifelink,
       sourceColors,
-    })).amount;
-    if (amount <= 0) return;
-    const have = counterCount(perm.counters, counterKind);
-    if (counterKind === 'loyalty' && amount > have)
-      ctx.state.excessDamageControllerIds.push(perm.controllerId);
-    setCounterCount(perm.counters, counterKind, Math.max(0, have - amount));
-    // Lifelink applies to damage dealt to any object or player (CR 702.15b).
-    if (sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
-    emit(ctx, 'damage', {
-      source: source.name,
-      sourceCardId: source.cardId,
-      target: perm.name,
-      targetCardId: perm.cardId,
-      amount,
-      combat: false,
     });
     return;
   }
@@ -2697,6 +2785,9 @@ export function* executeAbility(
         );
         token.tapped = true;
         token.attacking = attacker.attacking;
+        // It attacks what its attacker attacks, planeswalker included (CR 508.4a).
+        token.attackingPlaneswalker = attacker.attackingPlaneswalker;
+        token.attackedPlaneswalkerRemoved = attacker.attackedPlaneswalkerRemoved;
         token.statuses.push('attacking');
         break;
       }
@@ -4192,23 +4283,15 @@ export function* executeAbility(
           return player !== undefined && !player.hasLost && id !== controller.id;
         });
         if (defenders.length === 0) break;
-        let defenderId = defenders[0] as PlayerId;
-        if (defenders.length > 1) {
-          const outcome = yield {
-            decisionType: 'general',
-            player: controller.id,
-            prompt: `${source.name}: choose who the token attacks`,
-            options: defenders.map((id) =>
-              playerOption(id, id, {
-                type: 'choosePlayer',
-                description: `Attack ${id}`,
-                payload: id,
-                verb: 'Attack',
-              }),
-            ),
-          };
-          defenderId = defenders[outcome.index] ?? defenderId;
-        }
+        // "Tapped and attacking" names no player (CR 508.4): its controller chooses which defending
+        // player, or planeswalker one of them controls, it attacks.
+        const attackChoice = yield* chooseEnteringAttackTarget(
+          ctx,
+          controller,
+          source.name,
+          defenders,
+          true,
+        );
         const spec = {
           ...effect.spec,
           ...(effect.powerOverride === undefined ? {} : { power: amountOf(effect.powerOverride) }),
@@ -4221,7 +4304,8 @@ export function* executeAbility(
         for (let i = 0; i < count * multiplier; i++) {
           const token = createToken(ctx, spec, controller.id, false, false, false);
           token.tapped = true;
-          token.attacking = defenderId;
+          token.attacking = attackChoice.defenderId;
+          token.attackingPlaneswalker = attackChoice.planeswalkerId;
           token.statuses.push('attacking');
           created.push(token);
         }
@@ -4289,6 +4373,12 @@ export function* executeAbility(
         const multiplier = tokenCreationMultiplierFor(ctx, controller.id);
         const created: EnginePermanent[] = [];
         for (const opponent of opponents) {
+          // Adeline: "attacking that player or a planeswalker they control" — one choice per
+          // opponent for the whole batch; the others name only the player.
+          const attackChoice =
+            effect.attacking === true && effect.orPlaneswalker === true
+              ? yield* chooseEnteringAttackTarget(ctx, controller, source.name, [opponent.id], true)
+              : { defenderId: opponent.id, planeswalkerId: null };
           for (let i = 0; i < multiplier; i++) {
             const token = createToken(ctx, effect.spec, controller.id, false, false);
             created.push(token);
@@ -4297,7 +4387,8 @@ export function* executeAbility(
               // put onto the battlefield already attacking, so it was never declared as an
               // attacker (CR 508.4) — but it is still tapped, exactly as printed.
               token.tapped = true;
-              token.attacking = opponent.id;
+              token.attacking = attackChoice.defenderId;
+              token.attackingPlaneswalker = attackChoice.planeswalkerId;
               token.statuses.push('attacking');
             }
           }

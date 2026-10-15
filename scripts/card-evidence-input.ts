@@ -2256,6 +2256,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Planeswalker attack: Lab Ox attacks Lab Walker through the player board and its loyalty drops',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

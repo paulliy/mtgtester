@@ -134,6 +134,18 @@ export interface AttackDeclarationSubject {
   /** Legal defenders for this creature alone. `attackTax` is per-attacker; the total for a
    * defender receiving several attackers is `attackTax * count`, checked jointly on submission. */
   defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
+  /**
+   * Legal planeswalkers for this creature alone (CR 508.1b): planeswalkers its opponents control,
+   * each offered as a slot option by its `objectId` alongside the `defenders` player ids.
+   * `attackTax` is the tax for attacking this planeswalker specifically.
+   */
+  planeswalkers: Array<{
+    objectId: ObjectId;
+    controllerId: PlayerId;
+    name: string;
+    loyalty: number;
+    attackTax: number;
+  }>;
   mustAttack: boolean;
   /** A creature that puts something on the stack when it attacks is worth attacking with at
    * any power — counts *every* trigger on the creature, not only attack triggers, so it

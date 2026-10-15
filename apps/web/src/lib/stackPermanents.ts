@@ -21,6 +21,7 @@ export function stackKey(p: SpectatorPermanent): string {
     p.tapped ? 'tapped' : 'untapped',
     p.summoningSick ? 'sick' : 'ready',
     p.attacking ?? 'none',
+    p.attackingPlaneswalker ?? 'none',
     p.blocking ?? 'none',
     p.damageMarked,
     p.power ?? '-',

@@ -968,7 +968,13 @@ export type Effect =
   /** Create one token already attached to an announced permanent target. */
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }
   /** Create one token for each opponent, optionally attacking that opponent. */
-  | { op: 'createTokenForEachOpponent'; spec: TokenSpec; attacking?: boolean }
+  | {
+      op: 'createTokenForEachOpponent';
+      spec: TokenSpec;
+      attacking?: boolean;
+      /** "...attacking that player or a planeswalker they control" (Adeline). */
+      orPlaneswalker?: boolean;
+    }
   | { op: 'createTokenForPlayer'; target: EffectRef; spec: TokenSpec; count: Value }
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
   /**

@@ -82,7 +82,9 @@ const counterText = computed(() =>
 const marks = computed(() => {
   const out: string[] = [];
   if (props.permanent.attacking !== null) {
-    out.push(`⚔ ${props.nameById?.get(props.permanent.attacking) ?? props.permanent.attacking}`);
+    // An attack on a planeswalker names the planeswalker, not its controller.
+    const target = props.permanent.attackingPlaneswalker ?? props.permanent.attacking;
+    out.push(`⚔ ${props.nameById?.get(target) ?? target}`);
   }
   if (props.permanent.blocking !== null) {
     out.push(`🛡 ${props.nameById?.get(props.permanent.blocking) ?? props.permanent.blocking}`);

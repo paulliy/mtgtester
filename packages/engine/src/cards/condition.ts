@@ -368,6 +368,7 @@ export function evaluateCondition(
       return (
         attacker !== undefined &&
         attacker.attacking !== null &&
+        attacker.attackingPlaneswalker === null &&
         attacker.attacking !== source.controllerId
       );
     }
@@ -464,6 +465,8 @@ export function evaluateCondition(
         source.triggerObjectCardId === undefined ? sourceState() : eventObjectState(ctx, scope);
       if (attacker !== undefined && 'candidate' in attacker) return false;
       if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
+      // Dethrone (CR 702.104a) is about the player attacked, not their planeswalker.
+      if (attacker.attackingPlaneswalker !== null) return false;
       const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
       if (defender === undefined) return false;
       const lives = ctx.state.players
@@ -476,6 +479,7 @@ export function evaluateCondition(
       const attacker = sourceState();
       if (attacker !== undefined && 'candidate' in attacker) return false;
       if (attacker?.attacking === null || attacker?.attacking === undefined) return false;
+      if (attacker.attackingPlaneswalker !== null) return false;
       const defender = ctx.state.players.find((p) => p.id === attacker.attacking);
       const controller = ctx.state.players.find((p) => p.id === source.controllerId);
       return defender !== undefined && controller !== undefined && defender.life > controller.life;

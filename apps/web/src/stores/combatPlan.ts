@@ -118,7 +118,10 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
         'attackers',
         attackDeclaration.subjects.map((s) => ({
           subjectId: s.subjectId,
-          optionIds: s.defenders.map((d) => d.playerId),
+          optionIds: [
+            ...s.defenders.map((d) => d.playerId),
+            ...s.planeswalkers.map((p) => p.objectId),
+          ],
           mustAct: s.mustAttack,
         })),
         attackDeclaration.rejection,
@@ -180,7 +183,9 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
       const targets: TargetChoice[] = decl.subjects.map((subject, slot) => {
         const chosen = assignment.value.get(subject.subjectId);
         const fallback = subject.mustAttack
-          ? (subject.defenders[0]?.playerId ?? NO_ATTACK_TARGET)
+          ? (subject.defenders[0]?.playerId ??
+            subject.planeswalkers[0]?.objectId ??
+            NO_ATTACK_TARGET)
           : NO_ATTACK_TARGET;
         return { slot, choice: chosen ?? fallback };
       });

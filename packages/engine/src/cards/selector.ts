@@ -82,7 +82,7 @@ export interface SelectorCandidate {
   inCombat?: boolean;
   /** Combat status is independent of layers, so continuous statics may read it. */
   combatRole?: 'attacking' | 'blocking' | null;
-  /** The player or planeswalker this permanent is attacking, when it is an attacker. */
+  /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;

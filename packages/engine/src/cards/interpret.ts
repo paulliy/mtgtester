@@ -4225,11 +4225,20 @@ function parseCreateTokenSentence(
   // Per-opponent attacking tokens (Adeline, Ainok Strike Leader, Endless Foot Assault).
   {
     const attacking = s.match(
-      /^create (?:a|an) (.+?) token that(?:'s| is) tapped and attacking that player(?: or a planeswalker they control)?$/,
+      /^create (?:a|an) (.+?) token that(?:'s| is) tapped and attacking that player( or a planeswalker they control)?$/,
     );
     if (attacking !== null) {
       const spec = parseTokenFace((attacking[1] as string) + ' token', card);
-      if (spec !== null) return [{ op: 'createTokenForEachOpponent', spec, attacking: true }];
+      if (spec !== null) {
+        return [
+          {
+            op: 'createTokenForEachOpponent',
+            spec,
+            attacking: true,
+            ...(attacking[2] !== undefined ? { orPlaneswalker: true } : {}),
+          },
+        ];
+      }
     }
   }
   const copy = s.match(/^create (a|that many|\w+) tokens? that's a copy of it(, except .+)?$/i);
