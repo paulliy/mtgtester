@@ -171,6 +171,30 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Michiko Konda, Truth Seeker: watches damage dealt to YOU, not to your permanents, from sources an
+  // opponent controls, once per source's damage event and only for damage actually dealt. The event
+  // player is the source's controller, so the one who sacrifices is the opponent whose source
+  // dealt it, choosing among all their permanents.
+  defineCard(
+    'fbe190eb-fd4b-40e7-9a17-48c96b60f653',
+    'Michiko Konda, Truth Seeker',
+    [
+      'Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'playerDealtDamage', player: 'you', sourceController: 'opponent' },
+          {
+            effects: [{ op: 'eventPlayerSacrificesPermanents', count: 1 }],
+            description:
+              'Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice',
+          },
+        ),
+      ],
+    },
+  );
+
   // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
   // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
   // is prevented, protection from red for one, is still tapped. Both instructions use that same

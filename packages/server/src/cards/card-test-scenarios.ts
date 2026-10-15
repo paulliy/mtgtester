@@ -11998,6 +11998,64 @@ function comeuppanceScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * An opponent seat that casts `spell` the first time it may (aimed at P1), attacks `defender` with
+ * everything, and answers any sacrifice choice by sacrificing a permanent whose name contains
+ * `sacrifice`, passing otherwise.
+ */
+function castAttackAndSacrifice(
+  spell: string,
+  defender: PlayerId,
+  sacrifice: string,
+): DecisionProvider {
+  const cast = castWhenAble(spell);
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const pick = request.legalActions.find(
+        (action) => action.type === 'sacrifice' && action.description.includes(sacrifice),
+      );
+      if (pick !== undefined) return { requestId: request.requestId, actionId: pick.id };
+      const attacking = request.legalActions.some((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      return attacking ? attack.decide(request) : cast.decide(request);
+    },
+  };
+}
+
+function michikoKondaScenario(gameId: GameId): CardTestScenario {
+  const michiko = pinnedFrom(COVERAGE_PR06, 'Michiko Konda, Truth Seeker');
+  return pr01Scenario(gameId, {
+    id: 'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+    title: 'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+    instructions: [
+      "It is P2's turn. Michiko Konda is on your battlefield. P2 controls Lab Ox, a Mountain and two Forests, holds Lab Shock, and chooses to sacrifice a Forest whenever it must sacrifice.",
+      'Pass priority. P2 casts Lab Shock at you, then attacks you with Lab Ox. When asked to declare blockers, do not block with Michiko Konda.',
+    ],
+    expectedOutcome:
+      "Each of the two sources that dealt damage to you triggers Michiko Konda: Lab Shock's 2 damage makes P2 sacrifice a Forest, and Lab Ox's 4 combat damage makes P2 sacrifice the other Forest. You are at 34 and P2 keeps Lab Ox and the Mountain. P3 and P4 are at 40.",
+    oracleSha256: michiko.sha256,
+    clauseIds: ['michiko-konda-damage-sacrifice'],
+    decks: {
+      P1: [michiko.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SHOCK, MOUNTAIN, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Lab Shock'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Michiko Konda, Truth Seeker'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Mountain', 'Forest', 'Forest'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castAttackAndSacrifice('Lab Shock', 'P1', 'Forest') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12257,6 +12315,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'selfless-squire-viewer-prevent-and-grow',
   'deflecting-palm-viewer-chosen-source-reflects',
   'comeuppance-viewer-prevent-and-reflect',
+  'michiko-konda-viewer-damage-makes-opponent-sacrifice',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12583,6 +12642,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'selfless-squire-viewer-prevent-and-grow': selflessSquireScenario,
   'deflecting-palm-viewer-chosen-source-reflects': deflectingPalmScenario,
   'comeuppance-viewer-prevent-and-reflect': comeuppanceScenario,
+  'michiko-konda-viewer-damage-makes-opponent-sacrifice': michikoKondaScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

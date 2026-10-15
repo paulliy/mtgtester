@@ -2298,6 +2298,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+    "name": "Michiko Konda, Truth Seeker",
+    "package": "PR06.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Damage-to-you is implemented as damage to permanents you control."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "a86117c1-b83d-4350-9a10-a23b7e67e1bd",
     "name": "Mikey & Leo, Chaos & Order",
     "package": "PR04.15",

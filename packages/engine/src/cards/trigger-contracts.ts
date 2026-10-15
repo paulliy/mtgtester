@@ -42,6 +42,7 @@ export function triggerEventFamily(
     case 'drawsCard':
     case 'foretells':
     case 'damagePreventedToPlayer':
+    case 'playerDealtDamage':
       return 'player';
     default:
       return assertNever(when, 'trigger event dispatcher');
@@ -76,6 +77,7 @@ export function triggerProvidesEventPlayer(when: TriggerHead['when']): boolean {
     case 'drawsCard':
     case 'foretells':
     case 'damagePreventedToPlayer':
+    case 'playerDealtDamage':
     case 'upkeep':
     case 'endStep':
     case 'untapStep':
@@ -138,7 +140,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         ]
       : family === 'cast'
         ? ['caster', 'filter', 'targetFilter', 'ordinal', 'castFrom']
-        : ['player']),
+        : ['player', ...(head['when'] === 'playerDealtDamage' ? ['sourceController'] : [])]),
   ];
   for (const key of Object.keys(head))
     if (!allowed.includes(key))
@@ -279,6 +281,11 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
     ).includes(head['player'] as string)
   )
     issues.push({ path: `${path}.player`, message: 'trigger requires a supported player scope' });
+  if (head['sourceController'] !== undefined && head['sourceController'] !== 'opponent')
+    issues.push({
+      path: `${path}.sourceController`,
+      message: 'source controller restriction must be opponent',
+    });
   if (head['condition'] !== undefined)
     validateExpression('condition', head['condition'], `${path}.condition`, issues);
 }

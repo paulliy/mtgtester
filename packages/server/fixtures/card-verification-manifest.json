@@ -2329,13 +2329,23 @@
     "fbe190eb-fd4b-40e7-9a17-48c96b60f653": {
       "name": "Michiko Konda, Truth Seeker",
       "oracleSha256": "cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "michiko-konda-damage-sacrifice",
           "oracleText": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.",
-          "implementation": ["explicitly unsupported; damage to permanents you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "trigger on a new playerDealtDamage event queued from the shared player-damage path once per source's damage event, only when damage was actually dealt (prevented damage queues nothing; infect still counts), combat or not; it fires only for the controller as the damaged player and only for sources an opponent controls, so your own sources, damage to your creatures and damage to other players do nothing; the event player is the source's controller, so that opponent alone sacrifices a permanent of their choice among all their permanents, one per trigger (two attackers make two)"
+          ],
+          "engineTestIds": [
+            "michiko-konda-pinned-oracle-supported",
+            "michiko-konda-combat-damage",
+            "michiko-konda-noncombat-damage",
+            "michiko-konda-no-damage-no-trigger",
+            "michiko-konda-only-opponents-sources-to-you",
+            "michiko-konda-multiplayer"
+          ],
+          "viewerScenarioIds": ["michiko-konda-viewer-damage-makes-opponent-sacrifice"]
         }
       ],
       "gameplayAiScenarioIds": []

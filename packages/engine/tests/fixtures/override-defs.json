@@ -11151,8 +11151,29 @@
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
     "name": "Michiko Konda, Truth Seeker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice",
+          "effects": [
+            {
+              "count": 1,
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "sourceController": "opponent",
+            "when": "playerDealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fd03f20a-d365-48fb-8b2a-ad4b502a0045",
@@ -18144,8 +18165,29 @@
   {
     "oracleId": "oracle-michiko-konda-truth-seeker",
     "name": "Michiko Konda, Truth Seeker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice",
+          "effects": [
+            {
+              "count": 1,
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "sourceController": "opponent",
+            "when": "playerDealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-midnight-clock",

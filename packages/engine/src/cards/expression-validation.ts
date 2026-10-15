@@ -367,7 +367,6 @@ const effectExpressions = {
   breenaAttack: {},
   drawTargetAndControllerN: {},
   schemingSymmetry: {},
-  sacrificePermanentOnDamage: {},
   kambal: {},
   destroyAndCreateTokensEqualToManaValue: {},
   exile: {},

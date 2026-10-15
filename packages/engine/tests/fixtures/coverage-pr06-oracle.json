@@ -591,6 +591,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47",
+      "card": {
+        "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+        "scryfallId": "99c56bf0-ad9f-4419-902c-f3a3880c716c",
+        "name": "Michiko Konda, Truth Seeker",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Advisor"
+        ],
+        "oracleText": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

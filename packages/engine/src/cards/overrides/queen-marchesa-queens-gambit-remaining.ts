@@ -310,12 +310,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     MASTER,
   );
-  // Catalog audit queen-batch-2: player damage watched as permanents you control.
-  unsupportedCard(
-    'fbe190eb-fd4b-40e7-9a17-48c96b60f653',
-    'Michiko Konda, Truth Seeker',
-    'Damage-to-you is implemented as damage to permanents you control.',
-  );
+  // Michiko Konda, Truth Seeker: restored in coverage PR06 (see coverage-pr06.ts).
   // Mistveil Plains: restored in coverage PR02. The interpreter reads the bottom-of-library
   // activation (graveyardToLibraryBottom) and its two-white-permanents condition.
   // Catalog audit queen-batch-1: power uses all graveyards, not opponents' graveyards.

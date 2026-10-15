@@ -369,6 +369,7 @@ const shapes = {
     ordinal: leaf,
     castFrom: leaf,
     player: leaf,
+    sourceController: leaf,
   } satisfies Fields<Objects<TriggerSpec>>,
   Ability: {
     kind: leaf,
@@ -821,7 +822,6 @@ const families = {
       breenaAttack: true,
       drawTargetAndControllerN: true,
       schemingSymmetry: true,
-      sacrificePermanentOnDamage: true,
       kambal: true,
       destroyAndCreateTokensEqualToManaValue: true,
       exile: true,
@@ -1057,6 +1057,7 @@ const families = {
       becomesCrewed: true,
       foretells: true,
       damagePreventedToPlayer: true,
+      playerDealtDamage: true,
     } satisfies Record<Extract<TriggerSpec['when'], string | number>, true>,
   },
   Ability: {

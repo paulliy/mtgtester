@@ -146,7 +146,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   breenaAttack: { target: permanent },
   drawTargetAndControllerN: { target: player },
   schemingSymmetry: {},
-  sacrificePermanentOnDamage: { target: permanent },
   kambal: {},
   destroyAndCreateTokensEqualToManaValue: { target: permanent },
   exile: { target: permanent },

@@ -3873,6 +3873,169 @@ describe('Comeuppance', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.09 Michiko Konda, Truth Seeker
+// ---------------------------------------------------------------------------------------------
+
+describe('Michiko Konda, Truth Seeker', () => {
+  const { card } = pinned('Michiko Konda, Truth Seeker');
+  const COST = [{ symbol: 'W' as const }, ...generic(3)];
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const OGRE = (name: string, power: string, text = '') =>
+    oracle({ name, typeLine: 'Creature — Ogre', power, toughness: '9', oracleText: text });
+  const FODDER = (n: number) =>
+    oracle({ name: `Lab Fodder ${n}`, typeLine: 'Artifact', manaCost: '{1}' });
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const fodderOf = (ctx: GameContext, id: string) =>
+    ctx.state.battlefield.filter((p) => p.controllerId === id && p.name.startsWith('Lab Fodder'));
+
+  /** The sacrifice decisions asked, and answered by sacrificing the first Lab Fodder on offer. */
+  function sacrificing(asked: PendingDecision[]): Answer {
+    return (decision) => {
+      // Only the sacrifice choices are recorded; ordering two simultaneous triggers is another.
+      if (decision.options.some((option) => option.type === 'sacrifice')) asked.push(decision);
+      const index = decision.options.findIndex((option) =>
+        option.description.includes('Lab Fodder'),
+      );
+      return { index: Math.max(index, 0), targets: new Map() };
+    };
+  }
+
+  /** P1 controls Michiko on the battlefield; `holders` each control two Lab Fodder. */
+  function board(seed: string, holders: string[] = ['P2', 'P3']) {
+    const ctx = pod(seed);
+    const michiko = spawn(ctx, 'P1', card);
+    for (const holder of holders) for (const n of [1, 2]) spawn(ctx, holder, FODDER(n));
+    return { ctx, michiko };
+  }
+
+  /** `playerId` casts Lab Bolt at `targetId` and the stack settles. */
+  function bolt(ctx: GameContext, playerId: string, targetId: string, answer?: Answer) {
+    const object = conjure(ctx, playerId, LAB_BOLT, 'hand');
+    addMana(playerById(ctx, playerId), red(1));
+    const option = optionFor(ctx, playerId, object.id);
+    expect(option, `${playerId} casts Lab Bolt`).toBeDefined();
+    takeAction(
+      ctx,
+      playerId,
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx, answer);
+  }
+
+  /** `turn`'s combat: each creature in `attackers` attacks P1, who does not block. */
+  function attackP1(ctx: GameContext, attackers: string[], answer?: Answer, turn = 'P2') {
+    ctx.state.currentTurnPlayer = turn;
+    ctx.state.activePlayerIndex = Number(turn.slice(1)) - 1;
+    pump(runCombatAndExtraCombats(ctx), (decision, count) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P1' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    });
+  }
+
+  it('michiko-konda-pinned-oracle-supported — the override reads a trigger on damage dealt to you by a source an opponent controls, making that player sacrifice a permanent of their choice', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'playerDealtDamage',
+      player: 'you',
+      sourceController: 'opponent',
+    });
+    expect(def.triggers[0]!.targets).toEqual([]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'eventPlayerSacrificesPermanents', count: 1 }]);
+  });
+
+  it('michiko-konda-combat-damage — cast through the stack, each opposing attacker that deals combat damage to you makes its controller sacrifice a permanent of their choice: two attackers, two sacrifices', () => {
+    const ctx = pod('michiko-combat');
+    const castObject = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    expect(onField(ctx, castObject.cardId)).toBeDefined();
+    const a = spawn(ctx, 'P2', OGRE('Lab Ogre A', '3'));
+    const b = spawn(ctx, 'P2', OGRE('Lab Ogre B', '2'));
+    for (const n of [1, 2, 3]) spawn(ctx, 'P2', FODDER(n));
+    const asked: PendingDecision[] = [];
+    attackP1(ctx, [a.id, b.id], sacrificing(asked));
+    expect(life(ctx, 'P1')).toBe(35);
+    expect(asked).toHaveLength(2);
+    expect(asked.every((decision) => decision.player === 'P2')).toBe(true);
+    expect(fodderOf(ctx, 'P2')).toHaveLength(1);
+    // The sacrificing player chose among every permanent they control, not just creatures.
+    expect(asked[0]!.options.map((o) => o.description)).toEqual(
+      expect.arrayContaining(['Sacrifice Lab Ogre A', 'Sacrifice Lab Fodder 1']),
+    );
+  });
+
+  it("michiko-konda-noncombat-damage — damage from an opponent's spell triggers it too, and an infect source counts because the damage is still dealt", () => {
+    const { ctx } = board('michiko-bolt', ['P2']);
+    const asked: PendingDecision[] = [];
+    bolt(ctx, 'P2', 'P1', sacrificing(asked));
+    expect(life(ctx, 'P1')).toBe(37);
+    expect(asked).toHaveLength(1);
+    expect(fodderOf(ctx, 'P2')).toHaveLength(1);
+
+    const infect = board('michiko-infect', ['P2']);
+    const plaguer = spawn(infect.ctx, 'P2', OGRE('Lab Plaguer', '2', 'Infect'));
+    const poisoned: PendingDecision[] = [];
+    attackP1(infect.ctx, [plaguer.id], sacrificing(poisoned));
+    expect(playerById(infect.ctx, 'P1').poisonCounters).toBe(2);
+    expect(life(infect.ctx, 'P1')).toBe(40);
+    expect(poisoned).toHaveLength(1);
+  });
+
+  it('michiko-konda-no-damage-no-trigger — prevented damage deals none, so nothing triggers', () => {
+    const { ctx } = board('michiko-prevented', ['P2']);
+    const ogre = spawn(ctx, 'P2', OGRE('Lab Ogre', '3'));
+    ctx.state.combatDamagePrevention = { all: false, players: { P1: true } };
+    const asked: PendingDecision[] = [];
+    attackP1(ctx, [ogre.id], sacrificing(asked));
+    expect(life(ctx, 'P1')).toBe(40);
+    expect(asked).toEqual([]);
+    expect(fodderOf(ctx, 'P2')).toHaveLength(2);
+  });
+
+  it('michiko-konda-only-opponents-sources-to-you — your own source, damage to your creature, and damage to another player do not trigger it', () => {
+    const { ctx } = board('michiko-others', ['P2', 'P3']);
+    const mine = spawn(ctx, 'P1', OGRE('Lab Mine', '1'));
+    const asked: PendingDecision[] = [];
+    const answer = sacrificing(asked);
+    bolt(ctx, 'P1', 'P1', answer);
+    bolt(ctx, 'P2', mine.id, answer);
+    bolt(ctx, 'P2', 'P3', answer);
+    expect(life(ctx, 'P1')).toBe(37);
+    expect(asked).toEqual([]);
+    expect(fodderOf(ctx, 'P2')).toHaveLength(2);
+    expect(fodderOf(ctx, 'P3')).toHaveLength(2);
+  });
+
+  it('michiko-konda-multiplayer — the opponent whose source dealt the damage sacrifices, not the other opponents', () => {
+    const { ctx } = board('michiko-multiplayer');
+    const asked: PendingDecision[] = [];
+    bolt(ctx, 'P3', 'P1', sacrificing(asked));
+    expect(asked).toHaveLength(1);
+    expect(asked[0]!.player).toBe('P3');
+    expect(fodderOf(ctx, 'P3')).toHaveLength(1);
+    expect(fodderOf(ctx, 'P2')).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -3976,6 +4139,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Comeuppance',
     sha256: 'c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: 'Michiko Konda, Truth Seeker',
+    sha256: 'cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47',
+    clauseCount: 1,
     authored: true,
   },
   {

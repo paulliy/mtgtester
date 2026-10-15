@@ -93,6 +93,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Loran of the Third Path',
       'Martial Impetus',
       'Mask of Memory',
+      'Michiko Konda, Truth Seeker',
       'Mistveil Plains',
       'Mordant Dragon',
       'Myriad Landscape',

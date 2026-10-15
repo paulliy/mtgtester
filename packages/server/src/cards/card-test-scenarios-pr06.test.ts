@@ -755,3 +755,24 @@ describe('Comeuppance Card Test Lab scenario', () => {
     replays('comeuppance-viewer-prevent-and-reflect', steps);
   });
 });
+
+describe('Michiko Konda Card Test Lab scenario', () => {
+  it("michiko-konda-viewer-damage-makes-opponent-sacrifice — Lab Shock's damage and Lab Ox's combat damage each make P2 sacrifice a Forest, and nothing else is sacrificed", () => {
+    const steps: Step[] = [{ action: 'Declare blockers', targets: ['__no_block__'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'michiko-konda-viewer-damage-makes-opponent-sacrifice',
+      steps,
+    );
+    expect(seat('P1').life).toBe(34);
+    expect(onBattlefield('Forest').filter((forest) => forest.controllerId === 'P2')).toHaveLength(
+      0,
+    );
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(onBattlefield('Mountain')).toHaveLength(1);
+    expect(seat('P2').graveyard.filter((card) => card.name === 'Forest')).toHaveLength(2);
+    for (const id of ['P3', 'P4']) expect(seat(id).life, id).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('michiko-konda-viewer-damage-makes-opponent-sacrifice', steps);
+  });
+});

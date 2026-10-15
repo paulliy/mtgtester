@@ -91,8 +91,6 @@ const REASONS: Record<string, string> = {
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
   'Mangara, the Diplomat':
     'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
-  'Michiko Konda, Truth Seeker':
-    'Damage-to-you is implemented as damage to permanents you control.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
@@ -282,6 +280,7 @@ describe('Marchesa catalog audit containment', () => {
     'Selfless Squire',
     'Deflecting Palm',
     'Comeuppance',
+    'Michiko Konda, Truth Seeker',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

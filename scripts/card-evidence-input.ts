@@ -2244,6 +2244,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
       'Comeuppance: prevent the damage and deal it back to the creature and the controller',
     ],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

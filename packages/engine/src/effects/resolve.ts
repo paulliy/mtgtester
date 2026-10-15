@@ -361,6 +361,9 @@ export function* dealDamageToPlayer(
     combat: opts.combat,
     commanderDamage: opts.combat && opts.sourceIsCommander,
   });
+  // "Whenever a source ... deals damage to you" watches damage actually dealt, once per source's
+  // damage event, infect included (CR 702.90b).
+  queuePlayerTriggersForEvent(ctx, 'playerDealtDamage', target.id, amount, source.controllerId);
   return amount;
 }
 
@@ -2654,23 +2657,6 @@ export function* executeAbility(
           if (chosen !== null)
             yield* moveObject(ctx, chosen, { zone: 'library', libraryPosition: 'top' });
         }
-        break;
-      }
-      case 'sacrificePermanentOnDamage': {
-        const targetId = ref(effect.target);
-        const target =
-          targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-        if (target === undefined) break;
-        const permanents = ctx.state.battlefield.filter((perm) => perm.controllerId === target.id);
-        const chosen = yield* chooseCard(ctx, {
-          player: target.id,
-          prompt: `${source.name}: sacrifice a permanent`,
-          cards: permanents,
-          type: 'sacrifice',
-          verb: 'Sacrifice',
-        });
-        if (chosen !== null)
-          yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
         break;
       }
       case 'kambal': {

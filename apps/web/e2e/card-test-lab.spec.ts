@@ -9041,3 +9041,29 @@ test('Comeuppance: prevent the damage and deal it back to the creature and the c
     ).toHaveText('40');
   }
 });
+
+test('Michiko Konda: each opposing source that damages you makes its controller sacrifice', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+  );
+  // P2 casts Lab Shock at you and attacks with Lab Ox; decline to block with Michiko Konda.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('34');
+  await expect(page.getByText(/Michiko Konda.* sacrifice/i).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('40');
+  }
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(permanent(page, 'Forest')).toHaveCount(0);
+});

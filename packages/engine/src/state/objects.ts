@@ -2646,9 +2646,11 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard' | 'foretells' | 'damagePreventedToPlayer',
+  when: 'gainsLife' | 'drawsCard' | 'foretells' | 'damagePreventedToPlayer' | 'playerDealtDamage',
   playerId: PlayerId,
   amount?: number,
+  /** `playerDealtDamage`: who controls the source that dealt the damage; it is the event player. */
+  sourceControllerId?: PlayerId,
 ): void {
   assertTriggerEventFamily(when, 'player');
   for (const perm of ctx.state.battlefield) {
@@ -2661,10 +2663,20 @@ export function queuePlayerTriggersForEvent(
         !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === playerId)
       )
         continue;
+      if (
+        spec.when === 'playerDealtDamage' &&
+        spec.sourceController === 'opponent' &&
+        !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === sourceControllerId)
+      )
+        continue;
+      const eventPlayerId =
+        spec.when === 'playerDealtDamage' && sourceControllerId !== undefined
+          ? sourceControllerId
+          : playerId;
       const source: SelectorSource = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,
-        eventPlayerId: playerId,
+        eventPlayerId,
       };
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
       const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
@@ -2677,7 +2689,7 @@ export function queuePlayerTriggersForEvent(
           sourceName: perm.name,
           ability,
           scope: {
-            eventPlayerId: playerId,
+            eventPlayerId,
             ...(amount !== undefined ? { damageDealt: amount } : {}),
           },
         });

@@ -709,7 +709,6 @@ export type Effect =
   | { op: 'breenaAttack'; target: EffectRef }
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
   | { op: 'schemingSymmetry' }
-  | { op: 'sacrificePermanentOnDamage'; target: EffectRef }
   | { op: 'kambal' }
   | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
@@ -1660,7 +1659,14 @@ export type TriggerHead =
    * prevention applied to one damage event to the player, carrying the amount it prevented
    * (`damageDealt` in the ability's value scope).
    */
-  | { when: 'damagePreventedToPlayer'; player: 'you' | 'each' };
+  | { when: 'damagePreventedToPlayer'; player: 'you' | 'each' }
+  /**
+   * "Whenever a source an opponent controls deals damage to you" (Michiko Konda): queued once per
+   * source's damage event to a player, only if damage was actually dealt (infect counts, CR
+   * 702.90b). `player` is the damaged player. The event player is the SOURCE's controller, and
+   * `sourceController: 'opponent'` limits it to sources the watcher's controller's opponents control.
+   */
+  | { when: 'playerDealtDamage'; player: 'you' | 'each'; sourceController?: 'opponent' };
 
 /**
  * When a triggered ability fires.
