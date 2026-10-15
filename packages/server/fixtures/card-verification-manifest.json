@@ -6137,15 +6137,38 @@
     "81dad7c5-5950-4c45-adb0-cf1a15a74250": {
       "name": "Firkraag, Cunning Instigator",
       "oracleSha256": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "firkraag-dragon-attack-goad",
+          "oracleText": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.",
+          "implementation": [
+            "authored attacks trigger with byEventPlayer grouping: one trigger for each opponent attacked by one or more Dragons you control (a Dragon attacking only a planeswalker, a non-Dragon, and an opponent's Dragon do not trigger it), whose target is a creature that attacked player controls and which is goaded by you (CR 701.15)"
+          ],
+          "engineTestIds": [
+            "firkraag-pinned-oracle-supported",
+            "firkraag-dragons-attack-goad",
+            "firkraag-each-opponent",
+            "firkraag-negatives",
+            "firkraag-goad-then-damage"
+          ],
+          "viewerScenarioIds": ["firkraag-viewer-dragon-attack-goads"]
+        },
+        {
+          "id": "firkraag-forced-attack-damage",
           "oracleText": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card.",
           "implementation": [
-            "explicitly unsupported; intervening-if checks Firkraag not the damaging creature"
+            "authored dealsCombatDamageToPlayer trigger for any creature with an intervening-if (CR 603.4) on the damaging creature, not on Firkraag: it had to attack this combat and the damaged player is one of your opponents; checked as it triggers and as it resolves, from last known information if the creature has left the battlefield (CR 608.2h); the creature may be any player's, yours included"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "firkraag-pinned-oracle-supported",
+            "firkraag-draw-and-counter",
+            "firkraag-damage-negatives",
+            "firkraag-any-creature",
+            "firkraag-last-known-information",
+            "firkraag-goad-then-damage"
+          ],
+          "viewerScenarioIds": ["firkraag-viewer-goaded-damage-draws"]
         }
       ],
       "gameplayAiScenarioIds": []

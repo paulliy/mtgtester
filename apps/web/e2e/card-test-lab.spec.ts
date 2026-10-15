@@ -9614,3 +9614,50 @@ test('Lightning Runner: paying eight energy untaps your creatures and adds a com
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('28');
 });
+
+test('Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Firkraag' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The trigger targets a creature the attacked player controls; goad Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/goad/i).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+});
+
+test('Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card', async ({
+  page,
+}) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(permanent(page, 'Firkraag, Cunning Instigator')).toContainText('4/4');
+});

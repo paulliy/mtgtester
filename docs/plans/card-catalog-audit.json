@@ -5628,7 +5628,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
-      "uniqueOracleIds": 5,
+      "uniqueOracleIds": 4,
       "reviewedOracleIds": 6,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6766,6 +6766,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the untap was applied to every permanent you control): the authored override in coverage-pr07.ts gains two energy, then lets you pay eight; paying untaps only creatures you control and creates one additional combat phase after the current one. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+      "name": "Firkraag, Cunning Instigator",
+      "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the intervening-if checks Firkraag rather than the damaging creature, and the stale name-keyed interpreter branch that did not clear its own reasons): the authored override in coverage-pr07.ts triggers once for each opponent attacked by Dragons you control and goads a creature that opponent controls, and puts the intervening-if on the creature that dealt the damage (it had to attack this combat and the damaged player is one of your opponents), checked as it triggers and resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
     }
   ]
 }

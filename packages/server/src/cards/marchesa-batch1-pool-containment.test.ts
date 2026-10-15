@@ -64,6 +64,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Fabled Passage',
       'Fallen Ideal',
       'Firemane Commando',
+      'Firkraag, Cunning Instigator',
       'Flameblast Dragon',
       'Flare of Denial',
       'Flare of Malice',

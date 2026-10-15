@@ -42,8 +42,6 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Firkraag, Cunning Instigator':
-    'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
   'Kardur, Doomscourge':
     'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
@@ -275,6 +273,7 @@ describe('Marchesa catalog audit containment', () => {
     'Tomik, Wielder of Law',
     'Promise of Loyalty',
     'Lightning Runner',
+    'Firkraag, Cunning Instigator',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

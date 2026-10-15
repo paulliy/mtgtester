@@ -88,7 +88,6 @@ import {
   SAC_SELF,
   TAP,
   triggered,
-  whenAttacks,
   whenEnters,
   whenPermanent,
 } from './templates';
@@ -7589,29 +7588,6 @@ export function interpretCard(card: OracleCard): CardDefinition {
       triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
         description: 'Flying ETB haste',
-      }),
-    );
-    reasons.length = 0;
-  } else if (card.name === 'Firkraag, Cunning Instigator') {
-    triggers.push(
-      triggered(whenAttacks(allOf(ofSubtype('Dragon'), YOURS), { aggregate: true }), {
-        targets: [{ kind: 'creature', controller: 'opponent' }],
-        effects: [{ op: 'goad', target: 0 }],
-        description: 'Dragon attack goad',
-      }),
-      triggered(whenPermanent('dealsCombatDamageToPlayer', ofType('Creature')), {
-        effects: [
-          {
-            op: 'conditionalEffect',
-            condition: { kind: 'hadToAttackThisCombat' },
-            then: [
-              { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 },
-              { op: 'draw', count: constant(1) },
-            ],
-            else: [],
-          },
-        ],
-        description: 'Combat damage draw & counter',
       }),
     );
     reasons.length = 0;

@@ -12748,6 +12748,58 @@ function lightningRunnerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function firkraagScenario(gameId: GameId, kind: 'goad' | 'damage'): CardTestScenario {
+  const firkraag = pinnedFrom(COVERAGE_PR07, 'Firkraag, Cunning Instigator');
+  const titles = {
+    goad: 'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+    damage:
+      'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+  } as const;
+  return pr01Scenario(gameId, {
+    id: `firkraag-viewer-${kind === 'goad' ? 'dragon-attack-goads' : 'goaded-damage-draws'}`,
+    title: titles[kind],
+    instructions:
+      kind === 'goad'
+        ? [
+            'Firkraag, Cunning Instigator (3/3 flying Dragon) is on your battlefield. P2 controls Lab Ox (4/4) and Lab Servo (1/1).',
+            'Pass priority to the declare attackers step and attack P2 with Firkraag. Put its trigger on Lab Ox and let it resolve.',
+          ]
+        : [
+            'It is P2’s turn. Firkraag, Cunning Instigator is on your battlefield, and P2 controls Lab Ox (4/4), which you have goaded.',
+            'Pass priority and let the attack play out: Lab Ox must attack, and cannot attack you, so it attacks P3.',
+          ],
+    expectedOutcome:
+      kind === 'goad'
+        ? 'The goad trigger resolved on Lab Ox, which is now goaded by you; Lab Servo is not goaded. Firkraag dealt 3 damage to P2, who is at 37.'
+        : 'Lab Ox, which had to attack, dealt 4 combat damage to P3, one of your opponents, so Firkraag has a +1/+1 counter and you drew a card. P3 is at 36.',
+    oracleSha256: firkraag.sha256,
+    clauseIds:
+      kind === 'goad' ? ['firkraag-dragon-attack-goad'] : ['firkraag-forced-attack-damage'],
+    decks: {
+      P1: [firkraag.card, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, ...(kind === 'goad' ? [LAB_SERVO] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(kind === 'damage' ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Firkraag, Cunning Instigator'] },
+        {
+          playerId: 'P2',
+          cardNames: kind === 'goad' ? ['Lab Ox', 'Lab Servo'] : ['Lab Ox'],
+          ...(kind === 'damage' ? { goadedBy: 'P1' as const } : {}),
+        },
+      ],
+      continueThroughCombat: true,
+    },
+    ...(kind === 'damage'
+      ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } }
+      : {}),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13049,6 +13101,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'human-torch-viewer-keywords-and-damage-copy',
   'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
   'lightning-runner-viewer-pay-energy-extra-combat',
+  'firkraag-viewer-dragon-attack-goads',
+  'firkraag-viewer-goaded-damage-draws',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13522,6 +13576,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'human-torch-viewer-keywords-and-damage-copy': humanTorchScenario,
   'promise-of-loyalty-viewer-vowed-creature-cant-attack-you': promiseOfLoyaltyScenario,
   'lightning-runner-viewer-pay-energy-extra-combat': lightningRunnerScenario,
+  'firkraag-viewer-dragon-attack-goads': (gameId) => firkraagScenario(gameId, 'goad'),
+  'firkraag-viewer-goaded-damage-draws': (gameId) => firkraagScenario(gameId, 'damage'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

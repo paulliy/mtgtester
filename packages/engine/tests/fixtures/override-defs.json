@@ -6867,8 +6867,93 @@
   {
     "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
     "name": "Firkraag, Cunning Instigator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.",
+      "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls",
+          "effects": [
+            {
+              "op": "goad",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "triggerObjectHadToAttackThisCombat"
+                },
+                {
+                  "kind": "triggerObjectAttackingOpponent"
+                }
+              ]
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
@@ -19413,8 +19498,93 @@
   {
     "oracleId": "oracle-firkraag-cunning-instigator",
     "name": "Firkraag, Cunning Instigator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.",
+      "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls",
+          "effects": [
+            {
+              "op": "goad",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "triggerObjectHadToAttackThisCombat"
+                },
+                {
+                  "kind": "triggerObjectAttackingOpponent"
+                }
+              ]
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-flameblast-dragon",

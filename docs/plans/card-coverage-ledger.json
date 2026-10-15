@@ -1241,6 +1241,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+    "name": "Firkraag, Cunning Instigator",
+    "package": "PR07.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
     "name": "First Family",
     "package": "PR04.11",

@@ -70,6 +70,47 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
+      "card": {
+        "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+        "scryfallId": "b55e624b-6f6a-42ae-89aa-0cc62ee55a31",
+        "name": "Firkraag, Cunning Instigator",
+        "manaCost": "{3}{U}{R}",
+        "cmc": 5,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying, haste\nWhenever one or more Dragons you control attack an opponent, goad target creature that player controls.\nWhenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Goad",
+          "Haste"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -526,6 +526,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'human-torch-viewer-keywords-and-damage-copy',
       'promise-of-loyalty-viewer-vowed-creature-cant-attack-you',
       'lightning-runner-viewer-pay-energy-extra-combat',
+      'firkraag-viewer-dragon-attack-goads',
+      'firkraag-viewer-goaded-damage-draws',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

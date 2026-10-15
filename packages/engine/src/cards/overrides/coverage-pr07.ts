@@ -4,9 +4,10 @@
  * audit inventory; the cards PR07 restores are gated by `tests/pr07-card-coverage.test.ts`.
  */
 
-import { onAttacks, triggered } from '../templates';
+import { onAttacks, targetSlots, triggered, whenAttacks, whenPermanent } from '../templates';
+import { allOfConditions } from '../condition';
 import { constant } from '../value';
-import { allOf, ofType, YOURS } from '../selector';
+import { allOf, ofSubtype, ofType, SELF, YOURS } from '../selector';
 import { defineCard } from './index';
 
 export function registerCoveragePr07Overrides(): void {
@@ -35,6 +36,45 @@ export function registerCoveragePr07Overrides(): void {
           ],
           description:
             'Whenever this creature attacks, you get {E}{E}, then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase',
+        }),
+      ],
+    },
+  );
+
+  // Firkraag, Cunning Instigator: the first ability triggers once for each opponent attacked by
+  // one or more of your Dragons (a planeswalker attack is not an attack on that opponent), and
+  // the goaded creature is one that opponent controls. The second is an intervening-if about the
+  // creature that dealt the damage, not Firkraag (CR 603.4): it must have been required to attack
+  // this combat, and the damage went to one of YOUR opponents, which can be a player another
+  // opponent's creature attacked. Both are checked as the ability triggers and as it resolves,
+  // from last known information if that creature has left the battlefield (CR 608.2h).
+  const goad = targetSlots({ creature: { kind: 'creature', controller: 'eventPlayer' } });
+  defineCard(
+    '81dad7c5-5950-4c45-adb0-cf1a15a74250',
+    'Firkraag, Cunning Instigator',
+    [
+      'Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.',
+      'Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.',
+    ],
+    {
+      triggers: [
+        triggered(whenAttacks(allOf(ofSubtype('Dragon'), YOURS), { aggregate: 'byEventPlayer' }), {
+          targets: goad.targets,
+          effects: [{ op: 'goad', target: goad.slot.creature }],
+          description:
+            'Whenever one or more Dragons you control attack an opponent, goad target creature that player controls',
+        }),
+        triggered(whenPermanent('dealsCombatDamageToPlayer', ofType('Creature')), {
+          condition: allOfConditions(
+            { kind: 'triggerObjectHadToAttackThisCombat' },
+            { kind: 'triggerObjectAttackingOpponent' },
+          ),
+          effects: [
+            { op: 'putCountersEach', selector: SELF, counter: '+1/+1', count: 1 },
+            { op: 'draw', count: constant(1) },
+          ],
+          description:
+            'Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card',
         }),
       ],
     },

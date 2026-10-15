@@ -209,3 +209,40 @@ describe('Lightning Runner Card Test Lab scenario', () => {
     replays('lightning-runner-viewer-pay-energy-extra-combat', steps);
   });
 });
+
+describe('Firkraag Card Test Lab scenarios', () => {
+  it('firkraag-viewer-dragon-attack-goads — attacking P2 with Firkraag goads the chosen Lab Ox, not Lab Servo', () => {
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P2'] },
+      { action: 'Targets for Firkraag', targets: ['Lab Ox'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run(
+      'firkraag-viewer-dragon-attack-goads',
+      steps,
+    );
+    // Goad is public in the event log: one goad, on Lab Ox, by Firkraag's controller's trigger.
+    expect(
+      state.eventLog.filter((event) => event.type === 'goad').map((event) => event.payload),
+    ).toMatchObject([{ target: 'Lab Ox', source: expect.stringContaining('Firkraag') }]);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(seat('P2').life).toBe(37);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('firkraag-viewer-dragon-attack-goads', steps);
+  });
+
+  it('firkraag-viewer-goaded-damage-draws — the goaded Lab Ox attacks P3 (not you), so Firkraag gets a counter and you draw', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'firkraag-viewer-goaded-damage-draws',
+      steps,
+    );
+    expect(seat('P3').life).toBe(36);
+    expect(seat('P1').life).toBe(40);
+    expect(onBattlefield('Firkraag, Cunning Instigator')[0]?.counters['+1/+1']).toBe(1);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('firkraag-viewer-goaded-damage-draws', steps);
+  });
+});

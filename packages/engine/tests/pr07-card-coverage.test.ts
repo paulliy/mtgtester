@@ -239,6 +239,18 @@ const payEnergy =
     return { index: Math.max(index, 0), targets: new Map() };
   };
 
+/** Aim every targeted trigger at `target` (a player id or a permanent's object id). */
+const aimAt =
+  (target: string, offered?: string[][]): Answer =>
+  (decision) => {
+    const slot = decision.options[0]?.targets?.[0];
+    if (slot === undefined) return { index: 0, targets: new Map() };
+    offered?.push([...slot.options]);
+    return { index: 0, targets: new Map([[slot.slot, target]]) };
+  };
+
+const handSize = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
+
 // ---------------------------------------------------------------------------------------------
 // PR07.04 Promise of Loyalty
 // ---------------------------------------------------------------------------------------------
@@ -500,6 +512,258 @@ describe('Lightning Runner', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.07 Firkraag, Cunning Instigator
+// ---------------------------------------------------------------------------------------------
+
+describe('Firkraag, Cunning Instigator', () => {
+  const { card } = pinned('Firkraag, Cunning Instigator');
+  const DRAGON = oracle({
+    name: 'Lab Dragon',
+    typeLine: 'Creature — Dragon',
+    manaCost: '{0}',
+    power: '2',
+    toughness: '2',
+    oracleText: 'Flying',
+  });
+  const ZAP = oracle({
+    name: 'Lab Zap',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'Destroy target creature.',
+  });
+
+  /** P1 controls Firkraag and a Lab Dragon; every opponent controls a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const firkraag = spawn(ctx, 'P1', card);
+    const dragon = spawn(ctx, 'P1', DRAGON);
+    const bears = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Bear')),
+    };
+    // A second creature each, so a goad target is a real choice.
+    const spares = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Spare')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Spare')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Spare')),
+    };
+    return { ctx, firkraag, dragon, bears, spares };
+  }
+
+  const goaders = (perm: EnginePermanent) => (perm.goadedBy ?? []).map((entry) => entry.goaderId);
+
+  it('firkraag-pinned-oracle-supported — the authored override carries both abilities under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    // One shared firing for each opponent attacked, aimed at a creature that opponent controls.
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'attacks',
+      aggregate: 'byEventPlayer',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'subtype', value: 'Dragon' },
+            { kind: 'controller', who: 'you' },
+          ],
+        },
+      },
+    });
+    expect(def.triggers[0]!.targets).toEqual([{ kind: 'creature', controller: 'eventPlayer' }]);
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'goad', target: 0 }]);
+    // The intervening-if is about the creature that dealt the damage.
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'dealsCombatDamageToPlayer',
+      condition: {
+        kind: 'allOf',
+        of: [
+          { kind: 'triggerObjectHadToAttackThisCombat' },
+          { kind: 'triggerObjectAttackingOpponent' },
+        ],
+      },
+    });
+    expect(def.triggers[1]!.effects).toEqual([
+      { op: 'putCountersEach', selector: { kind: 'self' }, counter: '+1/+1', count: 1 },
+      { op: 'draw', count: { kind: 'const', n: 1 } },
+    ]);
+  });
+
+  it('firkraag-dragons-attack-goad — two Dragons attacking one opponent trigger once; the target is a creature that opponent controls and it is goaded by you', () => {
+    const { ctx, firkraag, dragon, bears, spares } = board('firkraag-goad');
+    const offered: string[][] = [];
+    const run = fight(
+      ctx,
+      () => ({ [firkraag.id]: 'P2', [dragon.id]: 'P2' }),
+      aimAt(bears.P2.id, offered),
+    );
+    expect(run.combats).toBe(1);
+    expect(offered.map((options) => options.sort())).toEqual([[bears.P2.id, spares.P2.id].sort()]);
+    expect(goaders(bears.P2)).toEqual(['P1']);
+    expect(goaders(spares.P2)).toEqual([]);
+    expect(goaders(bears.P3)).toEqual([]);
+    expect(goaders(bears.P4)).toEqual([]);
+  });
+
+  it('firkraag-each-opponent — Dragons attacking two opponents trigger once for each, aimed at that opponent’s creatures only', () => {
+    const { ctx, firkraag, dragon, bears, spares } = board('firkraag-two-opponents');
+    const offered: string[][] = [];
+    const answer: Answer = (decision) => {
+      // Aim each trigger at the first creature it can target.
+      const slot = decision.options[0]?.targets?.[0];
+      if (slot === undefined) return { index: 0, targets: new Map() };
+      offered.push([...slot.options]);
+      return { index: 0, targets: new Map([[slot.slot, [...slot.options].sort()[0]!]]) };
+    };
+    fight(ctx, () => ({ [firkraag.id]: 'P2', [dragon.id]: 'P3' }), answer);
+    // One trigger per attacked opponent, each limited to that opponent's own creatures.
+    expect(offered.map((options) => options.sort()).sort()).toEqual(
+      [[bears.P2.id, spares.P2.id].sort(), [bears.P3.id, spares.P3.id].sort()].sort(),
+    );
+    const goaded = ctx.state.battlefield.filter((perm) => goaders(perm).length > 0);
+    expect(goaded.map((perm) => perm.controllerId).sort()).toEqual(['P2', 'P3']);
+    expect(goaded.every((perm) => goaders(perm)[0] === 'P1')).toBe(true);
+    expect(goaders(bears.P4)).toEqual([]);
+  });
+
+  it('firkraag-negatives — a non-Dragon attacking, an opponent’s Dragon attacking, or a Dragon attacking only a planeswalker does not trigger the goad', () => {
+    const { ctx, firkraag, dragon, bears } = board('firkraag-no-trigger');
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    const walker = spawn(ctx, 'P2', WALKER('P2 Walker'));
+    // A non-Dragon attacks a player; both Dragons attack only a planeswalker.
+    const offered: string[][] = [];
+    fight(
+      ctx,
+      () => ({ [bear.id]: 'P2', [firkraag.id]: walker.id, [dragon.id]: walker.id }),
+      aimAt(bears.P2.id, offered),
+    );
+    expect(offered).toEqual([]);
+    expect(goaders(bears.P2)).toEqual([]);
+    // An opponent's Dragon attacking does not trigger it either (it is not a Dragon you control).
+    const rival = spawn(ctx, 'P2', DRAGON);
+    turnOfPlayer(ctx, 'P2');
+    fight(ctx, () => ({ [rival.id]: 'P3' }), aimAt(bears.P3.id, offered));
+    expect(offered).toEqual([]);
+    expect(goaders(bears.P3)).toEqual([]);
+  });
+
+  it('firkraag-draw-and-counter — a creature that had to attack deals combat damage to one of your opponents: Firkraag gets a +1/+1 counter and you draw', () => {
+    const { ctx, firkraag, bears } = board('firkraag-damage');
+    // P2's Bear is goaded by you: it must attack, and not you.
+    bears.P2.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber }];
+    turnOfPlayer(ctx, 'P2');
+    const before = handSize(ctx, 'P1');
+    fight(ctx, () => ({ [bears.P2.id]: 'P3' }));
+    expect(playerById(ctx, 'P3').life).toBe(38);
+    expect(firkraag.counters['+1/+1']).toBe(1);
+    expect(handSize(ctx, 'P1')).toBe(before + 1);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('firkraag-damage-negatives — no counter or card when the creature did not have to attack, when the damaged player is not your opponent, or when the damage goes to a planeswalker', () => {
+    const { ctx, firkraag, bears } = board('firkraag-damage-negatives');
+    const before = handSize(ctx, 'P1');
+    // Not required to attack: a plain attack on P3.
+    turnOfPlayer(ctx, 'P2');
+    fight(ctx, () => ({ [bears.P2.id]: 'P3' }));
+    expect(playerById(ctx, 'P3').life).toBe(38);
+    // Required to attack (goaded by P3), but it hits YOU, who are not your own opponent.
+    bears.P2.tapped = false;
+    bears.P2.goadedBy = [{ goaderId: 'P3', appliedTurn: ctx.state.turnNumber }];
+    fight(ctx, () => ({ [bears.P2.id]: 'P1' }));
+    expect(playerById(ctx, 'P1').life).toBe(38);
+    // Required to attack, but it attacks a planeswalker, which is not damage to a player.
+    const walker = spawn(ctx, 'P4', WALKER('P4 Walker'));
+    bears.P2.tapped = false;
+    bears.P2.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber }];
+    fight(ctx, () => ({ [bears.P2.id]: walker.id }));
+    expect(firkraag.counters['+1/+1']).toBeUndefined();
+    expect(handSize(ctx, 'P1')).toBe(before);
+  });
+
+  it('firkraag-any-creature — your own creature that had to attack counts too, hitting an opponent', () => {
+    const { ctx, firkraag, dragon, bears } = board('firkraag-own-creature');
+    dragon.goadedBy = [{ goaderId: 'P2', appliedTurn: ctx.state.turnNumber }];
+    const before = handSize(ctx, 'P1');
+    // Goaded by P2, the Dragon may not attack P2: it attacks P3.
+    fight(ctx, () => ({ [dragon.id]: 'P3' }), aimAt(bears.P3.id));
+    expect(firkraag.counters['+1/+1']).toBe(1);
+    expect(handSize(ctx, 'P1')).toBe(before + 1);
+  });
+
+  it('firkraag-last-known-information — the intervening-if still holds when the damaging creature has left the battlefield before the trigger resolves', () => {
+    const { ctx, firkraag, bears } = board('firkraag-lki');
+    bears.P2.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber }];
+    turnOfPlayer(ctx, 'P2');
+    const zap = conjure(ctx, 'P1', ZAP, 'hand');
+    const before = handSize(ctx, 'P1');
+    let cast = false;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === bears.P2.id ? 'P3' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      // With the Firkraag trigger on the stack, destroy the Bear in response.
+      const option = decision.options.findIndex(
+        (candidate) => decision.player === 'P1' && candidate.description.includes('Lab Zap'),
+      );
+      if (option >= 0 && !cast && ctx.state.stack.length > 0) {
+        cast = true;
+        const slot = decision.options[option]!.targets![0]!;
+        return { index: option, targets: new Map([[slot.slot, bears.P2.id]]) };
+      }
+      const pass = decision.options.findIndex((candidate) => candidate.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(cast).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.id === bears.P2.id)).toBe(false);
+    expect(firkraag.counters['+1/+1']).toBe(1);
+    // The Zap left your hand, and you drew from Firkraag.
+    expect(handSize(ctx, 'P1')).toBe(before);
+    expect(playerById(ctx, 'P1').graveyard.map((entry) => entry.cardId)).toContain(zap.cardId);
+  });
+
+  it('firkraag-goad-then-damage — cast Firkraag, attack with it, goad through the stack, then the goaded creature must attack on its controller’s turn and pays you off', () => {
+    const ctx = pod('firkraag-chain');
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    spawn(ctx, 'P3', GRIZZLY('P3 Bear'));
+    const firkraagObject = castFromHand(ctx, 'P1', card, [
+      { symbol: 'U' },
+      { symbol: 'R' },
+      ...generic(3),
+    ]);
+    pump(resolveTopOfStack(ctx));
+    const firkraag = ctx.state.battlefield.find((perm) => perm.cardId === firkraagObject.cardId)!;
+    // Haste: it attacks this turn; its trigger puts a goad on P2's Bear.
+    fight(ctx, () => ({ [firkraag.id]: 'P2' }), aimAt(bear.id));
+    expect(goaders(bear)).toEqual(['P1']);
+    // P2's turn: the goaded Bear must attack, and not P1.
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    const before = handSize(ctx, 'P1');
+    let mustAttack = false;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId, subject) => {
+          if (subjectId !== bear.id) return null;
+          mustAttack = subject.mustAttack;
+          expect(subject.defenders.map((defender) => defender.playerId)).not.toContain('P1');
+          return 'P3';
+        });
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((candidate) => candidate.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(mustAttack).toBe(true);
+    expect(firkraag.counters['+1/+1']).toBe(1);
+    expect(handSize(ctx, 'P1')).toBe(before + 1);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -531,6 +795,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Lightning Runner',
     sha256: '3c1a95336f34a682447de952888e4e51c9a8490195569c715edf15cbba6b2b43',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Firkraag, Cunning Instigator',
+    sha256: 'c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579',
+    clauseCount: 2,
     authored: true,
   },
 ];
