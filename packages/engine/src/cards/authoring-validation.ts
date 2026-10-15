@@ -62,6 +62,24 @@ function checkReference(
   issues: AuthoringIssue[],
 ): void {
   if (value === undefined && contract.optional === true) return;
+  if (value !== null && typeof value === 'object') {
+    // "Controller of target N": the player who controls the permanent in an ordinary slot.
+    const inner = (value as { controllerOf?: unknown }).controllerOf;
+    if (!contract.domains.includes('player'))
+      issues.push({
+        path,
+        message: 'controller reference is incompatible with this effect domain',
+      });
+    else
+      checkReference(
+        inner,
+        `${path}.controllerOf`,
+        { domains: ['permanent'], selection: 'ordinary' },
+        scope,
+        issues,
+      );
+    return;
+  }
   if (typeof value === 'string') {
     if (value === 'triggerObject' && scope?.eventObject === undefined) {
       issues.push({ path, message: 'event object reference has no owning event scope' });
@@ -157,7 +175,7 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       });
     if (
       spec.controller !== undefined &&
-      !['you', 'opponent', 'eventPlayer'].includes(spec.controller)
+      !['you', 'opponent', 'eventPlayer', 'activePlayer'].includes(spec.controller)
     )
       issues.push({ path: `${at}.controller`, message: 'unknown target controller scope' });
     if (
@@ -591,11 +609,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     });
   if (
     record['kind'] === 'attackTax' &&
-    record['alsoPlaneswalkersYouControl'] !== undefined &&
-    record['alsoPlaneswalkersYouControl'] !== true
+    record['includePlaneswalkers'] !== undefined &&
+    record['includePlaneswalkers'] !== true
   )
     issues.push({
-      path: `${path}.alsoPlaneswalkersYouControl`,
+      path: `${path}.includePlaneswalkers`,
       message: 'planeswalker attack tax must be true when present',
     });
   if (
@@ -795,7 +813,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     )
       validateExpression('selector', entry, `${path}.${key}`, issues);
     if (
-      ['condition', 'eventCondition', 'entersTappedUnless'].includes(key) &&
+      ['condition', 'eventCondition', 'entersTappedUnless', 'castRestriction'].includes(key) &&
       entry !== undefined
     ) {
       const before = issues.length;

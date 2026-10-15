@@ -5565,14 +5565,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 52,
+      "uniqueOracleIds": 51,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5586,14 +5586,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 35,
+      "uniqueOracleIds": 34,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 39,
+      "uniqueOracleIds": 30,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 25,
+      "uniqueOracleIds": 23,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 36,
+      "uniqueOracleIds": 32,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5628,7 +5628,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
-      "uniqueOracleIds": 6,
+      "uniqueOracleIds": 5,
       "reviewedOracleIds": 6,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5686,11 +5686,6 @@
     {
       "sourceFile": "packages/engine/src/cards/overrides/white-black-control-discard.ts",
       "uniqueOracleIds": 7,
-      "status": "unreviewed"
-    },
-    {
-      "sourceFile": "packages/engine/src/cards/overrides/white-black-control-duelist.ts",
-      "uniqueOracleIds": 0,
       "status": "unreviewed"
     },
     {
@@ -5781,11 +5776,6 @@
     {
       "sourceFile": "packages/engine/src/cards/overrides/white-black-control-tinybones.ts",
       "uniqueOracleIds": 2,
-      "status": "unreviewed"
-    },
-    {
-      "sourceFile": "packages/engine/src/cards/overrides/white-black-control.ts",
-      "uniqueOracleIds": 1,
       "status": "unreviewed"
     }
   ],
@@ -6594,6 +6584,160 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr05",
       "note": "Registration deleted (the shadowed unimplemented placeholder, whose fail-closed unsupportedCard in silverquill-influence-remaining.ts is also gone): the interpreter reads Enchant creature card in a graveyard as an Aura spell whose target is a creature card in any graveyard that stays a legal host while it remains there, and reads the enters trigger as one effect that, if the Aura is still on the battlefield, swaps its host to the creature returned from that graveyard under its controller's control, attaches with a new timestamp (CR 613.7e) and sets up a delayed trigger on the Aura object that makes that creature's controller sacrifice it when the Aura leaves the battlefield. A creature with protection from black returns but cannot be enchanted (CR 702.16c), so the Aura goes to the graveyard and the creature is sacrificed. Engine and Card Test Lab evidence in packages/engine/tests/pr05-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+      "name": "Dragon Tempest",
+      "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from the enchantment): the interpreter reads Whenever a creature you control with flying enters, it gains haste until end of turn, and reads Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as damage dealt by the entering Dragon itself (last known information if it has left the battlefield, CR 608.2h) with X counted as the trigger resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+      "name": "Scourge of Valkas",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage came from Scourge): the interpreter reads Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control, as an enters trigger on this creature or another Dragon you control whose any-target damage is dealt by the entering creature itself (last known information if it left the battlefield, CR 608.2h) with X counted as the trigger resolves, plus Flying and the {R} +1/+0 pump. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+      "name": "Tomb Blade",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in necron-dynasties-remaining.ts is replaced by an executable override): the combat-damage rider is authored as an untargeted dealsCombatDamageToPlayer trigger whose effect acts on the event player, the player this creature dealt combat damage to, who chooses to sacrifice a creature they control or lose life equal to the number of creatures they control as it resolves. Flying and Unearth stay interpreted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+      "name": "Thunderbreak Regent",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed eventPlayer was unset on becomes-targeted events): the targeting spell or ability's controller is now bound as the event player of becomes-targeted triggers, and the interpreter reads Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player as a becomesTargeted trigger on a Dragon you control whose dealDamage goes to the event player, dealt by the Regent. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+      "name": "Flameblast Dragon",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage target is chosen before you decide to pay X; a misreading, because \"If you do\" is not a reflexive trigger and only \"when you do\" is, CR 603.12): the executable override in coverage-pr06.ts is an attack trigger on this creature with an any-target slot chosen when the trigger goes on the stack (CR 603.3d), whose effect offers the {X}{R} payment as it resolves, deals X damage as this creature, and offers paying X=0 separately from declining. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+      "name": "Territorial Aetherkite",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the damage is a reflexive trigger implemented as the same resolution): the executable override in coverage-pr06.ts gets {E}{E} on entering, then offers paying any amount of energy from one up to all of it, and paying creates a separate reflexive trigger (CR 603.12) that goes on the stack with its own priority window and carries the energy paid, so that as it resolves this creature deals that much damage to each other creature, as last known if it has left the battlefield. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
+      "name": "Arcbond",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the delayed damage is dealt by Arcbond): the executable override in coverage-pr06.ts registers a this-turn delayed trigger keyed to the chosen creature object, and each time it is dealt damage that creature, with last known information if it has left the battlefield, deals that much damage to each other creature and each player; damageEach and damageEachPlayer now resolve an explicit source that way, and the bespoke arcbond and arcbondDamage ops are deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
+      "name": "Thundermaw Hellkite",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the tap applies to all opposing fliers rather than the damaged set; a misreading, because Gatherer ruling 2017-11-17 says \"those creatures\" are the creatures with flying your opponents control, not the creatures dealt damage, so a flier whose damage is prevented is still tapped): the executable override in coverage-pr06.ts damages and taps the same opposing-fliers selector as the enter trigger resolves, with this creature as the damage source. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+      "name": "Backlash",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed untapped-creature targeting is implemented as any creature): the executable override in coverage-pr06.ts targets a creature with the new tapState untapped restriction, honored when the target is chosen and again on resolution (CR 608.2b), taps it, and has that creature deal damage equal to its power to the new controllerOf reference, the player who controls it as Backlash resolves. The bespoke tapAndDamageController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
+      "name": "Selfless Squire",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter): the executable override in coverage-pr06.ts creates a damage shield on enter that prevents all damage, combat and noncombat, from every source to you for the rest of the turn through the damage modifier pipeline (CR 615), and a second trigger, queued once per prevention applied to damage to you from any source, puts that many +1/+1 counters on this creature. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+      "name": "Deflecting Palm",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed source choice and reflection are implemented as unscoped combat-damage prevention): the executable override in coverage-pr06.ts has its controller choose a permanent or spell as it resolves (CR 609.7a) and creates a one-shot damage shield for damage from exactly that object to you, any damage and not only combat, which ends when it first prevents damage; a source that changes zones is a new object (CR 400.7). The prevented amount is queued and dealt by Deflecting Palm to that source's controller right after the prevented damage event, after all combat damage in the step, through the same damage pipeline. The bespoke deflectingPalm op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+      "name": "Comeuppance",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed all-damage prevention and reflection are implemented as preventCombatDamageToController): the executable override in coverage-pr06.ts creates a damage shield for the turn that prevents all damage, combat and noncombat, to you and to the planeswalkers you control as the damage would be dealt, from sources you do not control, through the damage modifier pipeline. Each prevented amount is dealt by Comeuppance right after the prevented damage event to the source itself when it is a creature as the damage would be dealt (only while it is still that object on the battlefield) and otherwise to the source's controller. Reflections that prevent each other forever, with no choice in between, are an unbreakable mandatory loop and end the game as a draw (CR 104.4b). The bespoke preventCombatDamageToController op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+      "name": "Michiko Konda, Truth Seeker",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed damage to you is implemented as damage to permanents you control): the executable override in coverage-pr06.ts watches damage dealt to you with the new playerDealtDamage event, queued from the shared player-damage path once per source's damage event when damage was actually dealt (prevented damage queues nothing, infect counts), only for sources an opponent controls, and the event player is the source's controller, who sacrifices a permanent of their choice among all their permanents. The bespoke sacrificePermanentOnDamage op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+      "name": "Delirium",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the cast-only-during-an-opponent's-turn restriction is omitted): the executable override in coverage-pr06.ts adds a castRestriction condition to the spell definition, notYourTurn, enforced both when the cast is offered and as it is cast; its target is a creature controlled by the player whose turn it is (the new activePlayer target controller, checked when chosen and on resolution); the creature taps and itself deals damage equal to its power to the player who controls it, and a shield on that one object, not on its controller, prevents combat damage dealt to it and by it for the rest of the turn, so a creature that leaves and returns is a new object and not covered (CR 400.7). The bespoke delirium op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+      "name": "Firemane Commando",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder; the fail-closed unsupportedCard in silverquill-influence-remaining.ts is replaced by an executable override): both abilities are authored on the new attackDeclared event, queued once as an attack is declared for each player who declared attackers, with the attackers as a group whose size (two or more) is checked when the event happens and which is remembered by object. The first draws for you when you attack; the second draws for the attacking player, another player, as it resolves unless any creature of that attack attacked you, the player and not your planeswalkers, as declared. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+      "name": "Firemane Commando",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the fail-closed unsupportedCard in silverquill-influence-remaining.ts by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the life comparison is defender versus attacker, and the shadowed unimplemented placeholder): the executable override in coverage-pr06.ts uses the attackDeclared event with per-defender grouping, so it triggers once for each opponent of yours attacked by at least one creature of any player's attack, yours included, and an attack on a planeswalker is not an attack on its controller. The intervening-if, checked at the declaration and as it resolves, is that the attacked opponent has more life than at least one other opponent of yours; the attacking player draws and you choose, as it resolves, a creature you control for the two +1/+1 counters. The bespoke breenaAttack op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+      "name": "Mangara, the Diplomat",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard and the shadowed unimplemented placeholder): the interpreter reads lifelink and the second-spell trigger (castsSpell, ordinal 2) from the card, so the stored blocker about the second-spell trigger was a misreading of the Oracle text, and the override in coverage-pr06.ts extends it with the attack ability on the attackDeclared event. It triggers once per declaration by an opponent with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or planeswalkers you control, checked at the declaration and again on resolution against the creatures still attacking you and the planeswalkers still in combat. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+      "name": "Mangara, the Diplomat",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the queen-marchesa-queens-gambit-remaining.ts entry."
+    },
+    {
+      "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+      "name": "Tomik, Wielder of Law",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed a self-attack drain, and the shadowed unimplemented placeholder): the interpreter's affinity parse is generalized from artifacts to artifacts and planeswalkers (a costReduction of generic mana for each planeswalker you control, CR 702.41a), and the override in coverage-pr06.ts extends the card with the attack ability on the attackDeclared event: once per declaration by an opponent, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or planeswalkers you control, checked at the declaration and again on resolution; that opponent, the event player, loses 3 life and you draw a card. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+      "name": "Tomik, Wielder of Law",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
     },
     {
       "oracleId": "eab71e4e-27c3-4c41-b95f-259c1d14b97a",

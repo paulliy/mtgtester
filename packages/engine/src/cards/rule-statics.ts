@@ -135,6 +135,11 @@ export type RuleStatic =
   | { kind: 'damageDoubledToOpponents'; sourceControllerOnly?: true }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
+  /**
+   * "Prevent all combat damage that would be dealt to this creature" (Guard Gomazoa) — a CR 615
+   * prevention effect of the permanent itself, so it stops with the permanent's abilities.
+   */
+  | { kind: 'preventCombatDamageToSelf' }
   /** "If an effect would create one or more tokens under your control, it creates twice that many instead." */
   | { kind: 'tokenCountMultiplier'; multiplier: number }
   /** A CR 616 replacement for counters placed on a matching permanent. */
@@ -145,13 +150,12 @@ export type RuleStatic =
       multiplier: number;
       addition: number;
     }
-  /** "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison). */
-  | {
-      kind: 'attackTax';
-      amount: number;
-      phyrexianColor?: Color;
-      alsoPlaneswalkersYouControl?: true;
-    }
+  /**
+   * "Creatures can't attack you unless their controller pays {N} per creature" (Ghostly Prison):
+   * taxes attacks on this permanent's controller only. `includePlaneswalkers` also taxes attacks
+   * on planeswalkers they control ("you or planeswalkers you control", Norn's Annex).
+   */
+  | { kind: 'attackTax'; amount: number; phyrexianColor?: Color; includePlaneswalkers?: boolean }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

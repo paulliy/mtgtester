@@ -64,6 +64,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     summoningSick: perm.summoningSick && isCreature,
     attachedTo: perm.attachedTo,
     attacking: perm.attacking,
+    attackingPlaneswalker: perm.attackedPlaneswalkerRemoved ? null : perm.attackingPlaneswalker,
     blocking: perm.blocking,
     blockedBy: [...perm.blockedByOrdered],
     keywords: [

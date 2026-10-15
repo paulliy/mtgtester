@@ -77,6 +77,49 @@ export function findPermanent(ctx: GameContext, id: ObjectId): EnginePermanent |
   return ctx.state.battlefield.find((p) => p.id === id);
 }
 
+/**
+ * The planeswalker this attacker is attacking, or null when it attacks the player or attacks
+ * nothing. CR 506.4: an attacked planeswalker is removed from combat when it leaves the
+ * battlefield, changes controller (away from the defending player), or stops being a planeswalker;
+ * that is recorded on the attacker (sticky), so a planeswalker that comes back is not attacked
+ * again. The creature stays an attacking creature either way (CR 506.4c).
+ */
+export function attackedPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+): EnginePermanent | null {
+  if (perm.attackingPlaneswalker === null || perm.attackedPlaneswalkerRemoved) return null;
+  const walker = findPermanent(ctx, perm.attackingPlaneswalker);
+  if (
+    walker === undefined ||
+    walker.controllerId !== perm.attacking ||
+    !computeCharacteristics(ctx, walker).types.includes('Planeswalker')
+  ) {
+    perm.attackedPlaneswalkerRemoved = true;
+    return null;
+  }
+  return walker;
+}
+
+/** Is this creature attacking `playerId` itself, not a planeswalker that player controls? */
+export function isAttackingPlayer(perm: EnginePermanent, playerId: PlayerId): boolean {
+  return perm.attacking === playerId && perm.attackingPlaneswalker === null;
+}
+
+/**
+ * Is this creature attacking `playerId` or a planeswalker `playerId` controls ("attacking you
+ * and/or planeswalkers you control")? One whose planeswalker was removed from combat attacks
+ * neither (CR 506.4c).
+ */
+export function isAttackingPlayerOrTheirPlaneswalker(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  playerId: PlayerId,
+): boolean {
+  if (perm.attacking !== playerId) return false;
+  return perm.attackingPlaneswalker === null || attackedPlaneswalker(ctx, perm) !== null;
+}
+
 /** Current card types include Creature after the layer system (Mutavault, etc.). */
 export function isCreaturePermanent(ctx: GameContext, perm: EnginePermanent): boolean {
   return computeCharacteristics(ctx, perm).types.includes('Creature');
@@ -1424,34 +1467,6 @@ export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): num
     if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) multiplier *= 2;
   }
   return multiplier;
-}
-
-/** Apply every active target-aware damage replacement to one damage event. */
-export function damageAmountAfterReplacements(
-  ctx: GameContext,
-  sourceCardId: string,
-  targetControllerId: PlayerId,
-  amount: number,
-  sourceControllerId?: PlayerId,
-): number {
-  const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
-  for (const entry of gatherRuleStatics(ctx)) {
-    if (entry.static.kind === 'damageDoubled') {
-      if (sourcePerm === undefined) continue;
-      const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
-      if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) amount *= 2;
-    } else if (entry.static.kind === 'damageDoubledToOpponents') {
-      if (
-        targetControllerId !== entry.controllerId &&
-        (entry.static.sourceControllerOnly !== true ||
-          (sourceControllerId ?? sourcePerm?.controllerId) === entry.controllerId)
-      )
-        amount *= 2;
-    } else if (entry.static.kind === 'damageHalvedToYou') {
-      if (targetControllerId === entry.controllerId) amount = Math.floor(amount / 2);
-    }
-  }
-  return amount;
 }
 
 /** The multiplicative token replacement effects active for tokens created under `controllerId`. */

@@ -112,7 +112,8 @@ export function queueStepTriggers(
     | 'mainPhase'
     | 'precombatMain'
     | 'secondMainPhase'
-    | 'beginningOfCombat',
+    | 'beginningOfCombat'
+    | 'endOfCombat',
 ): void {
   assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;
@@ -121,6 +122,7 @@ export function queueStepTriggers(
       const spec = ability.trigger;
       if (spec === undefined || spec.when !== when) continue;
       if (spec.player === 'you' && perm.controllerId !== apId) continue;
+      if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
       if (spec.player === 'opponent' && perm.controllerId === apId) continue;
       const source = {
         cardId: perm.cardId,
@@ -279,6 +281,7 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     }
     expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
+    ctx.state.damageShields = [];
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").

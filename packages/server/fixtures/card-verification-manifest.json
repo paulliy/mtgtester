@@ -1477,13 +1477,37 @@
     "ac675899-25bb-4f06-9c8c-bf188024495f": {
       "name": "Firemane Commando",
       "oracleSha256": "20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "firemane-commando-you-attack",
+          "oracleText": "Whenever you attack with two or more creatures, draw a card.",
+          "implementation": [
+            "an attackDeclared trigger for attacks you declare, once per declaration with the whole attack as its group and a trigger-time minimum of two attackers (any targets, planeswalkers included), drawing one card for you"
+          ],
+          "engineTestIds": [
+            "firemane-commando-pinned-oracle-supported",
+            "firemane-commando-own-attack",
+            "firemane-commando-whole-game"
+          ],
+          "viewerScenarioIds": ["firemane-commando-viewer-own-attack"]
+        },
+        {
+          "id": "firemane-commando-other-attack",
           "oracleText": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
-          "implementation": ["explicitly unsupported; both triggers make you draw"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "an attackDeclared trigger for attacks declared by any other player with a trigger-time minimum of two attackers; on resolution the attacking player, the event player, draws one card unless any creature of that attack attacked you (the player, not your planeswalkers) when it was declared, a fact snapshotted with the declaration, so a creature later removed from combat still attacked you; the ability goes on the stack either way"
+          ],
+          "engineTestIds": [
+            "firemane-commando-other-player-attack",
+            "firemane-commando-not-at-you",
+            "firemane-commando-planeswalker",
+            "firemane-commando-snapshot"
+          ],
+          "viewerScenarioIds": [
+            "firemane-commando-viewer-other-attack-elsewhere",
+            "firemane-commando-viewer-other-attack-at-you"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2143,13 +2167,25 @@
     "2ef0961a-0543-4371-8c2a-333881b735e5": {
       "name": "Tomik, Wielder of Law",
       "oracleSha256": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "tomik-affinity-for-planeswalkers",
+          "oracleText": "Affinity for planeswalkers",
+          "implementation": [
+            "the interpreter reads affinity for planeswalkers as a selfOnly costReduction of generic mana for each planeswalker you control (an opponent's do not count), so it never reduces {W}{B}"
+          ],
+          "engineTestIds": ["tomik-pinned-oracle-supported", "tomik-affinity"],
+          "viewerScenarioIds": ["tomik-viewer-affinity-for-planeswalkers"]
+        },
+        {
+          "id": "tomik-attack-drain-and-draw",
           "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.",
-          "implementation": ["explicitly unsupported; self-attack drain; Affinity omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you and the planeswalkers still in combat; the attacking opponent, the event player, loses 3 life and you draw one card"
+          ],
+          "engineTestIds": ["tomik-attack-trigger", "tomik-planeswalkers"],
+          "viewerScenarioIds": ["tomik-viewer-attack-drain-and-draw"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2207,13 +2243,48 @@
     "01f29158-2dc9-4b9d-b726-add5d3fd5782": {
       "name": "Comeuppance",
       "oracleSha256": "c51d55e7df204a7b74f5ccfe5f5a58b4349adecad02f0c0fe15b2b1940059d75",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "comeuppance-prevention",
           "oracleText": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control.",
-          "implementation": ["explicitly unsupported; combat-damage prevention only"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "a damage shield for the turn, through the damage modifier pipeline, covering you and each planeswalker you control as the damage would be dealt (one that arrives later this turn is covered, one you stop controlling is not), combat or noncombat, from sources you do not control as it would be dealt; damage from your own sources, to your creatures and to other players is not prevented; it ends at cleanup; when it applies with another effect on the same damage and the order changes the outcome, you choose the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-your-sources",
+            "comeuppance-planeswalkers",
+            "comeuppance-this-turn",
+            "comeuppance-order-choice"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
+        },
+        {
+          "id": "comeuppance-creature-reflection",
+          "oracleText": "If damage from a creature source is prevented this way, Comeuppance deals that much damage to that creature.",
+          "implementation": [
+            "when the source is a creature as the damage would be dealt (as it is on the battlefield, else as last known), Comeuppance deals the prevented amount to that creature right after the prevented damage event, or after all combat damage of the step; only while it is still that object on the battlefield, so a creature that has left takes nothing and its controller is not damaged instead"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-creature-source",
+            "comeuppance-order-choice"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
+        },
+        {
+          "id": "comeuppance-noncreature-reflection",
+          "oracleText": "If damage from a noncreature source is prevented this way, Comeuppance deals that much damage to the source's controller.",
+          "implementation": [
+            "when the source is not a creature (a spell, or an ability of a noncreature permanent), Comeuppance deals the prevented amount to the source's controller right after the prevented damage event; two such shields that prevent and reflect each other's damage forever with no choice between are a mandatory loop and the game is a draw (CR 104.4b)"
+          ],
+          "engineTestIds": [
+            "comeuppance-pinned-oracle-supported",
+            "comeuppance-noncreature-source",
+            "comeuppance-mandatory-loop"
+          ],
+          "viewerScenarioIds": ["comeuppance-viewer-prevent-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2278,15 +2349,22 @@
     "cbcb6d9a-6ae5-4bcd-8013-2b657553764a": {
       "name": "Mangara, the Diplomat",
       "oracleSha256": "23cad2e1c9fb1f941dc492639a8b70d798f9f8dd018480d3bb38c767a1ed3a0a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mangara-attack-draw",
           "oracleText": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.",
           "implementation": [
-            "explicitly unsupported; any combat attack; extra second-spell trigger"
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that two or more of that player's attackers are attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you and the planeswalkers still in combat (a creature removed from combat or whose planeswalker was removed no longer counts); it draws one card for you; the interpreter owns lifelink and the second-spell trigger"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mangara-pinned-oracle-supported",
+            "mangara-two-attackers",
+            "mangara-planeswalkers",
+            "mangara-resolution-check",
+            "mangara-second-spell"
+          ],
+          "viewerScenarioIds": ["mangara-viewer-two-attackers", "mangara-viewer-one-attacker"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2294,13 +2372,23 @@
     "fbe190eb-fd4b-40e7-9a17-48c96b60f653": {
       "name": "Michiko Konda, Truth Seeker",
       "oracleSha256": "cb2ada5b8d71925822fca64f34bed81777cfff96d71c183470213cb575282a47",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "michiko-konda-damage-sacrifice",
           "oracleText": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice.",
-          "implementation": ["explicitly unsupported; damage to permanents you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "trigger on a new playerDealtDamage event queued from the shared player-damage path once per source's damage event, only when damage was actually dealt (prevented damage queues nothing; infect still counts), combat or not; it fires only for the controller as the damaged player and only for sources an opponent controls, so your own sources, damage to your creatures and damage to other players do nothing; the event player is the source's controller, so that opponent alone sacrifices a permanent of their choice among all their permanents, one per trigger (two attackers make two)"
+          ],
+          "engineTestIds": [
+            "michiko-konda-pinned-oracle-supported",
+            "michiko-konda-combat-damage",
+            "michiko-konda-noncombat-damage",
+            "michiko-konda-no-damage-no-trigger",
+            "michiko-konda-only-opponents-sources-to-you",
+            "michiko-konda-multiplayer"
+          ],
+          "viewerScenarioIds": ["michiko-konda-viewer-damage-makes-opponent-sacrifice"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2382,13 +2470,31 @@
     "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7": {
       "name": "Delirium",
       "oracleSha256": "7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "delirium-cast-restriction",
           "oracleText": "Cast this spell only during an opponent's turn.",
-          "implementation": ["explicitly unsupported; opponent-turn restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "a castRestriction condition on the spell definition, notYourTurn, enforced both when the cast is offered and as it is cast (CR 601.3), in any opponent's turn and never on your own, however the spell would be cast"
+          ],
+          "engineTestIds": ["delirium-pinned-oracle-supported", "delirium-cast-timing"],
+          "viewerScenarioIds": ["delirium-viewer-tap-damage-and-prevent"]
+        },
+        {
+          "id": "delirium-tap-damage-and-prevent",
+          "oracleText": "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn.",
+          "implementation": [
+            "the target is a creature controlled by the player whose turn it is (that player), checked when chosen and on resolution; it taps, then the creature itself deals damage equal to its power as the spell resolves to the player who controls it, with lifelink and the like as that creature; a shield on that one permanent, by object, prevents combat damage dealt to it and combat damage it deals, to a player or a creature, until cleanup, while noncombat damage to it is still dealt, other creatures are unaffected, and a creature that leaves and returns is a new object not covered (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "delirium-pinned-oracle-supported",
+            "delirium-target-active-player",
+            "delirium-damage-by-creature",
+            "delirium-combat-shield",
+            "delirium-new-object"
+          ],
+          "viewerScenarioIds": ["delirium-viewer-tap-damage-and-prevent"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2434,13 +2540,41 @@
     "7d079c78-b2a9-444f-ab54-c61c041baa6d": {
       "name": "Selfless Squire",
       "oracleSha256": "debd579414a52e7e7cc408bd06d4bf3f3862f42f108196365a37c3f6d72dc6a6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "selfless-squire-flash",
+          "oracleText": "Flash",
+          "implementation": ["keyword flash (interpreted)"],
+          "engineTestIds": ["selfless-squire-pinned-oracle-supported"],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
+        },
+        {
+          "id": "selfless-squire-shield",
           "oracleText": "When this creature enters, prevent all damage that would be dealt to you this turn.",
-          "implementation": ["explicitly unsupported; combat prevention only; counters omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "enter trigger that creates a damage shield for its controller: through the damage modifier pipeline it prevents every damage event to that player, combat and noncombat, from any source, from the moment it resolves until the turn's cleanup step (CR 514.2); damage to your creatures or to other players is not covered, and it does not carry into the next turn"
+          ],
+          "engineTestIds": [
+            "selfless-squire-pinned-oracle-supported",
+            "selfless-squire-shield",
+            "selfless-squire-this-turn",
+            "selfless-squire-order-choice"
+          ],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
+        },
+        {
+          "id": "selfless-squire-counters",
+          "oracleText": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature.",
+          "implementation": [
+            "trigger of the permanent on a new damagePreventedToPlayer event, queued once per prevention applied to one source's damage to its controller (any prevention: the shield or a combat shield), putting that many +1/+1 counters on it; it works while the Squire is on the battlefield whether or not its own shield is the prevention, and not for damage prevented to another player; when the order of a replacement and a prevention changes the amount prevented, the damaged player chooses the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "selfless-squire-pinned-oracle-supported",
+            "selfless-squire-counters",
+            "selfless-squire-order-choice"
+          ],
+          "viewerScenarioIds": ["selfless-squire-viewer-prevent-and-grow"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2540,13 +2674,26 @@
     "01790829-cc03-430f-a899-2f274b7dbf62": {
       "name": "Arcbond",
       "oracleSha256": "c9f9a7fd462c5e9860928053ebcbc0d98b77f2fe5342f50eef740c4aa7fd24c3",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
-          "implementation": ["explicitly unsupported; damage source is Arcbond"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "arcbond-delayed-reflection",
+          "oracleText": "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player.",
+          "implementation": [
+            "instant with a creature target slot that registers a this-turn delayed trigger keyed to that creature object (a blinked creature is a new object, CR 400.7), controlled by Arcbond's controller; each time the creature is dealt damage (simultaneous combat damage is one event, CR 510.2, 603.2c) the creature, as the damage source with last known information if it has left the battlefield (CR 608.2h), deals that much damage to each other creature and each player simultaneously"
+          ],
+          "engineTestIds": [
+            "arcbond-pinned-oracle-supported",
+            "arcbond-damage-everything",
+            "arcbond-source-is-creature",
+            "arcbond-creature-died",
+            "arcbond-each-time",
+            "arcbond-this-turn-only",
+            "arcbond-blinked",
+            "arcbond-target-gone",
+            "arcbond-combat-damage-once"
+          ],
+          "viewerScenarioIds": ["arcbond-viewer-reflect-damage"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2554,13 +2701,24 @@
     "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c": {
       "name": "Backlash",
       "oracleSha256": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Tap target untapped creature.",
-          "implementation": ["explicitly unsupported; any creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "backlash-tap-and-damage",
+          "oracleText": "Tap target untapped creature. That creature deals damage equal to its power to its controller.",
+          "implementation": [
+            "instant targeting an untapped creature, checked when chosen and again as it resolves (CR 608.2b, a creature tapped in response makes the only target illegal and the spell does nothing); it taps the creature, then the creature itself deals damage equal to its power as Backlash resolves to the player who controls it then"
+          ],
+          "engineTestIds": [
+            "backlash-pinned-oracle-supported",
+            "backlash-untapped-only",
+            "backlash-tapped-in-response",
+            "backlash-tap-and-damage",
+            "backlash-source-is-creature",
+            "backlash-power-at-resolution",
+            "backlash-controller-at-resolution"
+          ],
+          "viewerScenarioIds": ["backlash-viewer-tap-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2568,13 +2726,50 @@
     "3e41648f-c5a9-4b26-b97e-8176fe5e9c85": {
       "name": "Brash Taunter",
       "oracleSha256": "811ca00fb845c5c1d6c5a9e1e67d6114c45a9af8f482ad5de6d04549f9dd130c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "brash-taunter-indestructible",
+          "oracleText": "Indestructible",
+          "implementation": [
+            "keyword indestructible (interpreted): lethal damage is marked but the creature is not destroyed (CR 702.12b)"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-indestructible"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
+        },
+        {
+          "id": "brash-taunter-reflect-damage",
+          "oracleText": "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+          "implementation": [
+            "dealtDamage trigger on this creature with one target opponent slot (never its controller) whose dealDamage uses the damage dealt in that event as the amount and the Taunter as the source; combat, spell and fight damage all trigger it once per damage event (all combat damage in a step is one event with the summed amount, CR 510.2 and 603.2c, even from two blockers), and damage of 0 triggers nothing"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-fight-reflects-damage",
+            "brash-taunter-spell-damage-amount",
+            "brash-taunter-combat-damage-amount",
+            "brash-taunter-simultaneous-combat-damage",
+            "brash-taunter-target-opponent",
+            "brash-taunter-no-damage-no-trigger"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
+        },
+        {
+          "id": "brash-taunter-fight",
           "oracleText": "{2}{R}, {T}: This creature fights another target creature.",
-          "implementation": ["explicitly unsupported; can target this creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated ability costing {2}{R} and {T} with one creature target filtered to any creature other than this one, whoever controls it, whose fight effect makes this creature and the target each deal damage equal to its power to the other (CR 701.14); it is not offered without the mana or when tapped"
+          ],
+          "engineTestIds": [
+            "brash-taunter-pinned-oracle-supported",
+            "brash-taunter-fight-other-creature",
+            "brash-taunter-fight-reflects-damage",
+            "brash-taunter-no-damage-no-trigger"
+          ],
+          "viewerScenarioIds": ["brash-taunter-viewer-fight-and-reflect"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2597,7 +2792,7 @@
             "white-black-control-breena.test.ts::breena-attacking-opponent-draws: a different attacker draws, controller receives counters",
             "white-black-control-breena.test.ts::breena-resolution-recheck: changed opponent life prevents drawing and counters",
             "white-black-control-breena.test.ts::breena-event-defender-survives-attacker-removal: removing attacking creature does not erase the attacked player",
-            "white-black-control-breena.test.ts::breena-illegal-counter-target: target leaving makes the whole trigger fail"
+            "white-black-control-breena.test.ts::breena-counters-not-targeted: the counters are not targeted, so Breena leaving does not stop the draw"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-breena.test.ts"],
           "viewerScenarioIds": ["breena-viewer-flying-blocker"]
@@ -2616,7 +2811,7 @@
             "white-black-control-breena.test.ts::breena-attacking-opponent-draws: a different attacker draws, controller receives counters",
             "white-black-control-breena.test.ts::breena-resolution-recheck: changed opponent life prevents drawing and counters",
             "white-black-control-breena.test.ts::breena-event-defender-survives-attacker-removal: removing attacking creature does not erase the attacked player",
-            "white-black-control-breena.test.ts::breena-illegal-counter-target: target leaving makes the whole trigger fail"
+            "white-black-control-breena.test.ts::breena-counters-not-targeted: the counters are not targeted, so Breena leaving does not stop the draw"
           ],
           "engineTestSource": ["packages/engine/tests/white-black-control-breena.test.ts"],
           "viewerScenarioIds": ["breena-viewer-opponent-life-aggregate"]
@@ -2627,13 +2822,37 @@
     "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be": {
       "name": "Deflecting Palm",
       "oracleSha256": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
-          "implementation": ["explicitly unsupported; unscoped combat prevention"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "deflecting-palm-chosen-source",
+          "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage.",
+          "implementation": [
+            "as it resolves its controller chooses any permanent on the battlefield or spell on the stack (CR 609.7a) and a one-shot shield is created for damage from exactly that object to you, combat or not, until the turn's cleanup step; it ends when it first prevents damage, damage from any other source is not prevented, and a chosen permanent that changes zones is a new object that is no longer covered (CR 400.7); when it applies together with another effect on the same damage and the order changes the outcome, you choose the order (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "deflecting-palm-pinned-oracle-supported",
+            "deflecting-palm-chosen-source",
+            "deflecting-palm-one-shot",
+            "deflecting-palm-this-turn",
+            "deflecting-palm-new-object",
+            "deflecting-palm-order-choice"
+          ],
+          "viewerScenarioIds": ["deflecting-palm-viewer-chosen-source-reflects"]
+        },
+        {
+          "id": "deflecting-palm-reflection",
+          "oracleText": "If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+          "implementation": [
+            "the prevented amount is queued as the damage is prevented and dealt by Deflecting Palm, as last known, to the controller of the damage source, not as a trigger: immediately after the prevented damage event for a spell or ability, and after all combat damage of that step for combat damage; it goes through the same damage pipeline and nothing is dealt when nothing was prevented"
+          ],
+          "engineTestIds": [
+            "deflecting-palm-pinned-oracle-supported",
+            "deflecting-palm-chosen-source",
+            "deflecting-palm-reflection-target",
+            "deflecting-palm-order-choice"
+          ],
+          "viewerScenarioIds": ["deflecting-palm-viewer-chosen-source-reflects"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4238,15 +4457,32 @@
     "4f63d306-cc14-405c-8424-d8990c670c74": {
       "name": "Territorial Aetherkite",
       "oracleSha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "territorial-aetherkite-flying-haste",
+          "oracleText": "Flying, haste",
+          "implementation": ["keywords flying and haste (interpreted)"],
+          "engineTestIds": ["territorial-aetherkite-pinned-oracle-supported"],
+          "viewerScenarioIds": ["territorial-aetherkite-viewer-pay-energy-damage"]
+        },
+        {
+          "id": "territorial-aetherkite-energy-damage",
           "oracleText": "When this creature enters, you get {E}{E} (two energy counters). Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature.",
           "implementation": [
-            "explicitly unsupported; reflexive damage implemented as same-resolution then"
+            "authored enter trigger: gets {E}{E}, then may pay any amount from one up to all the energy you have; paying fires a reflexive trigger (CR 603.12) that goes on the stack as its own object, with its own priority window, carrying the energy paid, and as it resolves this creature deals that much damage to each other creature (the set read then, last known information if it has left the battlefield, CR 608.2h); declining fires nothing"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "territorial-aetherkite-pinned-oracle-supported",
+            "territorial-aetherkite-gain-energy",
+            "territorial-aetherkite-decline",
+            "territorial-aetherkite-pay-any-amount",
+            "territorial-aetherkite-reflexive-trigger",
+            "territorial-aetherkite-damage-amount",
+            "territorial-aetherkite-aetherkite-gone",
+            "territorial-aetherkite-whole-game"
+          ],
+          "viewerScenarioIds": ["territorial-aetherkite-viewer-pay-energy-damage"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4459,13 +4695,36 @@
     "b9bacb46-fd1d-459b-81c2-d7d08fe73848": {
       "name": "Dragon Tempest",
       "oracleSha256": "cb94ffadd9ec7da7b016f68309f21ef28565cd589b728d83d2c5d33f41f84e13",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "dragon-tempest-flying-haste",
+          "oracleText": "Whenever a creature you control with flying enters, it gains haste until end of turn.",
+          "implementation": [
+            "interpreted enters trigger for a creature you control with flying whose grantKeywordUntilEot gives the entering creature haste (CR 702.10); a creature without flying and a creature an opponent controls do not trigger it, and no other creature gains haste"
+          ],
+          "engineTestIds": [
+            "dragon-tempest-pinned-oracle-supported",
+            "dragon-tempest-flying-haste"
+          ],
+          "viewerScenarioIds": ["dragon-tempest-viewer-dragon-deals-damage"]
+        },
+        {
+          "id": "dragon-tempest-dragon-damage",
           "oracleText": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
-          "implementation": ["explicitly unsupported; damage source is this enchantment"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted enters trigger for a Dragon you control with one any-target slot whose dealDamage uses the entering Dragon as the damage source (its color, lifelink and protection interactions apply), using last known information if it left the battlefield before resolution (CR 608.2h); X is the number of Dragons you control, counted as the trigger resolves; a non-Dragon creature and an opponent's Dragon do not trigger it"
+          ],
+          "engineTestIds": [
+            "dragon-tempest-pinned-oracle-supported",
+            "dragon-tempest-dragon-is-source",
+            "dragon-tempest-dragon-is-source-color",
+            "dragon-tempest-dragon-count",
+            "dragon-tempest-dragon-gone",
+            "dragon-tempest-dragon-trigger-conditions",
+            "dragon-tempest-cast-dragon"
+          ],
+          "viewerScenarioIds": ["dragon-tempest-viewer-dragon-deals-damage"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4679,13 +4938,34 @@
     "3180ee4f-66d7-4b73-bc10-9ee0c790ec18": {
       "name": "Flameblast Dragon",
       "oracleSha256": "0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "flameblast-dragon-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["flameblast-dragon-pinned-oracle-supported"],
+          "viewerScenarioIds": ["flameblast-dragon-viewer-target-then-pay-x"]
+        },
+        {
+          "id": "flameblast-dragon-attack-payment",
           "oracleText": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target.",
-          "implementation": ["explicitly unsupported; target chosen before pay X"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attack trigger on this creature with an any-target slot: \"if you do\" is not a reflexive trigger (only \"when you do\" is, CR 603.12), so the target is chosen when the trigger goes on the stack (CR 603.3d) and, only if it is still legal as the trigger resolves, X is chosen and {X}{R} paid (CR 107.3b); declining and paying X=0 are separate choices, and the Dragon deals X damage as the source, by last known information if it has left the battlefield (CR 608.2h)"
+          ],
+          "engineTestIds": [
+            "flameblast-dragon-pinned-oracle-supported",
+            "flameblast-dragon-target-before-payment",
+            "flameblast-dragon-whole-game",
+            "flameblast-dragon-decline",
+            "flameblast-dragon-pay-x",
+            "flameblast-dragon-pay-zero",
+            "flameblast-dragon-affordability",
+            "flameblast-dragon-target-illegal",
+            "flameblast-dragon-dragon-gone",
+            "flameblast-dragon-only-itself"
+          ],
+          "viewerScenarioIds": ["flameblast-dragon-viewer-target-then-pay-x"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4693,13 +4973,30 @@
     "bb04f927-0348-4a14-9e74-381f18083f6a": {
       "name": "Thunderbreak Regent",
       "oracleSha256": "474f43d9d886bf106e263b10dd214cd579f62aa9dcd1e0e47df42c69b5a14657",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "thunderbreak-regent-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["thunderbreak-regent-pinned-oracle-supported"],
+          "viewerScenarioIds": ["thunderbreak-regent-viewer-opponent-targets-dragon"]
+        },
+        {
+          "id": "thunderbreak-regent-targeted-trigger",
           "oracleText": "Whenever a Dragon you control becomes the target of a spell or ability an opponent controls, this creature deals 3 damage to that player.",
-          "implementation": ["explicitly unsupported; eventPlayer unset on becomes-targeted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "interpreted becomesTargeted trigger for a Dragon you control (the Regent itself included), queued only when the spell or ability that targets it is controlled by an opponent (CR 603.3d); the event player is the controller of that spell or ability, so dealDamage 3 from the Regent goes to that opponent alone and never to another opponent; your own spells and abilities, non-Dragon targets and an opponent's Dragons do not trigger it"
+          ],
+          "engineTestIds": [
+            "thunderbreak-regent-pinned-oracle-supported",
+            "thunderbreak-regent-opponent-spell",
+            "thunderbreak-regent-opponent-ability",
+            "thunderbreak-regent-regent-itself",
+            "thunderbreak-regent-no-trigger",
+            "thunderbreak-regent-targeting-player"
+          ],
+          "viewerScenarioIds": ["thunderbreak-regent-viewer-opponent-targets-dragon"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4707,13 +5004,48 @@
     "63394e24-a456-4cc6-9885-8c62447b050a": {
       "name": "Tyrant's Familiar",
       "oracleSha256": "c5d073e500e8090f478e0095df9dde5215600f5bcb347d0fbdbbe526b8c020c4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls.",
-          "implementation": ["explicitly unsupported; eventPlayer is the attacking player"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "tyrants-familiar-keywords",
+          "oracleText": "Flying, haste",
+          "implementation": ["keywords flying and haste (interpreted)"],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
+        },
+        {
+          "id": "tyrants-familiar-lieutenant-pump",
+          "oracleText": "As long as you control your commander, this creature gets +2/+2",
+          "implementation": [
+            "layer 7 static +2/+2 on this creature gated by controlsYourCommander (CR 903.7): it applies only while a commander you own is on the battlefield under your control, so a stolen commander, another player's commander and an absent commander give nothing, and it ends when the commander leaves"
+          ],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-lieutenant-active",
+            "tyrants-familiar-commander-control"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
+        },
+        {
+          "id": "tyrants-familiar-lieutenant-trigger",
+          "oracleText": "has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+          "implementation": [
+            "layer 6 static granting this creature an attack trigger under the same controlsYourCommander condition, so it exists only while you control your commander; the trigger reads the defending player as the player this creature attacks (the event player), targets only a creature that player controls, and the Familiar deals the 7 damage itself (CR 508.1b)"
+          ],
+          "engineTestIds": [
+            "tyrants-familiar-pinned-oracle-supported",
+            "tyrants-familiar-no-commander",
+            "tyrants-familiar-lieutenant-active",
+            "tyrants-familiar-defending-player",
+            "tyrants-familiar-seven-damage",
+            "tyrants-familiar-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["tyrants-familiar-viewer-lieutenant-attack"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4813,15 +5145,44 @@
     "0a147009-a57c-4ac1-ab81-d8bd8b737631": {
       "name": "Scourge of Valkas",
       "oracleSha256": "b870fa6ef4866f453377d14c044c5ebdd8d5a336d798e8f6b63846df5bac377c",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "scourge-of-valkas-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["scourge-of-valkas-pinned-oracle-supported"],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
+        },
+        {
+          "id": "scourge-of-valkas-enters-damage",
           "oracleText": "Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
           "implementation": [
-            "explicitly unsupported; damage source is this creature not the entering Dragon"
+            "interpreted enters trigger whose subject is this creature or another Dragon you control (an opponent's Dragon and a non-Dragon do not trigger it) with one any-target slot, whose dealDamage uses the entering creature as the damage source (its color, lifelink and protection apply), with last known information if it left the battlefield before resolution (CR 608.2h); X is the number of Dragons you control, counted as the trigger resolves, and every Scourge you control triggers separately"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "scourge-of-valkas-pinned-oracle-supported",
+            "scourge-of-valkas-self-enters",
+            "scourge-of-valkas-other-dragon-source",
+            "scourge-of-valkas-source-color",
+            "scourge-of-valkas-dragon-count",
+            "scourge-of-valkas-dragon-gone",
+            "scourge-of-valkas-trigger-conditions",
+            "scourge-of-valkas-two-scourges"
+          ],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
+        },
+        {
+          "id": "scourge-of-valkas-red-pump",
+          "oracleText": "{R}: This creature gets +1/+0 until end of turn.",
+          "implementation": [
+            "interpreted activated ability costing {R} (timing any) that gives this creature +1/+0 until end of turn (CR 611.2a), repeatable for each {R} paid and not payable with colorless mana"
+          ],
+          "engineTestIds": [
+            "scourge-of-valkas-pinned-oracle-supported",
+            "scourge-of-valkas-red-pump"
+          ],
+          "viewerScenarioIds": ["scourge-of-valkas-viewer-dragons-deal-damage"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5413,13 +5774,40 @@
     "c857de66-f4e0-4e97-ad01-fac623af8225": {
       "name": "Tomb Blade",
       "oracleSha256": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "tomb-blade-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["tomb-blade-pinned-oracle-supported", "tomb-blade-unearth"],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
+        },
+        {
+          "id": "tomb-blade-combat-damage-rider",
           "oracleText": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.",
-          "implementation": ["explicitly unsupported; combat-damage life loss targets any player"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "dealsCombatDamageToPlayer trigger on this creature with no target: the effect acts on the event player, the player this creature dealt combat damage to; as it resolves that player chooses between sacrificing a creature they control, which avoids the loss, and losing life equal to the number of creatures they control at that moment; with no creatures there is nothing to sacrifice and no life is lost, other opponents are never affected, and no trigger happens when no combat damage is dealt to a player"
+          ],
+          "engineTestIds": [
+            "tomb-blade-pinned-oracle-supported",
+            "tomb-blade-decline-loses-life",
+            "tomb-blade-sacrifice-instead",
+            "tomb-blade-no-creatures",
+            "tomb-blade-damaged-player-only",
+            "tomb-blade-count-at-resolution",
+            "tomb-blade-no-combat-damage"
+          ],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
+        },
+        {
+          "id": "tomb-blade-unearth",
+          "oracleText": "Unearth {6}{B}{B}",
+          "implementation": [
+            "interpreted Unearth {6}{B}{B} (CR 702.84a): activated from the graveyard at sorcery speed, it returns the card to the battlefield with haste"
+          ],
+          "engineTestIds": ["tomb-blade-pinned-oracle-supported", "tomb-blade-unearth"],
+          "viewerScenarioIds": ["tomb-blade-viewer-sacrifice-or-lose"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -5476,15 +5864,41 @@
     "e958144e-01bc-46ff-8f56-ddf2eb098630": {
       "name": "Thundermaw Hellkite",
       "oracleSha256": "6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "thundermaw-hellkite-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["thundermaw-hellkite-pinned-oracle-supported"],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
+        },
+        {
+          "id": "thundermaw-hellkite-haste",
+          "oracleText": "Haste",
+          "implementation": ["keyword haste (interpreted)"],
+          "engineTestIds": [
+            "thundermaw-hellkite-pinned-oracle-supported",
+            "thundermaw-hellkite-whole-game"
+          ],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
+        },
+        {
+          "id": "thundermaw-hellkite-enters-damage-tap",
           "oracleText": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures.",
           "implementation": [
-            "explicitly unsupported; tap applies to all opposing fliers not the damaged set"
+            "authored enter trigger: this creature deals 1 damage to each creature with flying your opponents control and taps the same set; \"those creatures\" is the creatures with flying your opponents control, not the creatures dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage is prevented is still tapped, and the set cannot change between the two instructions of one resolution; last known information if this creature has left the battlefield (CR 608.2h)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "thundermaw-hellkite-pinned-oracle-supported",
+            "thundermaw-hellkite-damage-and-tap",
+            "thundermaw-hellkite-source",
+            "thundermaw-hellkite-tap-not-damage-bound",
+            "thundermaw-hellkite-set-at-resolution",
+            "thundermaw-hellkite-hellkite-gone",
+            "thundermaw-hellkite-whole-game"
+          ],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -9627,6 +10041,213 @@
             "captain-america-skybound-needs-two-others"
           ],
           "viewerScenarioIds": ["captain-america-skybound-viewer-battalion"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "085016ee-4429-453f-b7f3-d61065f1214e": {
+      "name": "Invisible Woman",
+      "oracleSha256": "e669176870f40516af34d6c86e4ece9afc834da055d65e93f0331026408ddd2c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "invisible-woman-wall-token",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a 0/3 colorless Wall creature token with defender and reach.",
+          "implementation": [
+            "interpreted beginning-of-combat trigger on your turn with an intervening-if that you have cast a noncreature spell this turn (CR 603.4): it creates a 0/3 colorless Wall creature token with defender and reach, and nothing without such a spell"
+          ],
+          "engineTestIds": [
+            "invisible-woman-pinned-oracle-supported",
+            "invisible-woman-wall-token"
+          ],
+          "viewerScenarioIds": ["invisible-woman-viewer-pay-pump-unblockable"]
+        },
+        {
+          "id": "invisible-woman-attack-payment",
+          "oracleText": "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn.",
+          "implementation": [
+            "aggregate attacks trigger over your creatures: one trigger for the whole declaration however many attack, and none for an opponent's attack (CR 603.2c); as it resolves you may pay {R}{G}{W}{U}, and only paying fires a reflexive trigger (CR 603.12) that goes on the stack and then chooses any one creature (yours or an opponent's); as that reflexive trigger resolves the target gets +1/+0 until end of turn for each creature you control at that moment (toughness unchanged) and can't be blocked this turn; declining or being unable to pay creates no trigger and asks for no target"
+          ],
+          "engineTestIds": [
+            "invisible-woman-pinned-oracle-supported",
+            "invisible-woman-once-per-attack",
+            "invisible-woman-decline",
+            "invisible-woman-cannot-pay",
+            "invisible-woman-pay-then-target",
+            "invisible-woman-count-at-resolution"
+          ],
+          "viewerScenarioIds": ["invisible-woman-viewer-pay-pump-unblockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7c565975-aebc-4599-ac32-5594c718e2cb": {
+      "name": "Guard Gomazoa",
+      "oracleSha256": "c74c28c601c8f2f0527f10baab04b1fe96da7dd1ebac4bff48d4909fffb22eeb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "guard-gomazoa-keywords",
+          "oracleText": "Defender, flying",
+          "implementation": ["keywords defender and flying (interpreted)"],
+          "engineTestIds": ["guard-gomazoa-pinned-oracle-supported"],
+          "viewerScenarioIds": ["guard-gomazoa-viewer-blocks-and-takes-no-damage"]
+        },
+        {
+          "id": "guard-gomazoa-prevent-combat-damage",
+          "oracleText": "Prevent all combat damage that would be dealt to this creature.",
+          "implementation": [
+            "interpreted preventCombatDamageToSelf rule static, collected by the damage modifier pipeline as a prevention of combat damage to that permanent only, whoever deals it, in every combat damage step; noncombat damage is not prevented and the static stops applying while the creature has lost all abilities (layer 6); when it applies together with another effect on the same damage and the order changes the outcome, the damaged permanent's controller chooses the order (CR 616.1), and when the order cannot matter nothing is asked"
+          ],
+          "engineTestIds": [
+            "guard-gomazoa-pinned-oracle-supported",
+            "guard-gomazoa-combat-prevented",
+            "guard-gomazoa-noncombat-damage",
+            "guard-gomazoa-loses-abilities",
+            "damage-modifiers-order-choice"
+          ],
+          "viewerScenarioIds": ["guard-gomazoa-viewer-blocks-and-takes-no-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c6639b52-b51d-46e7-a83c-c4621b1cecaa": {
+      "name": "Ever-Watching Threshold",
+      "oracleSha256": "f91221e3d2d8a8761c35115ed9e63e8bf90737cb6ac40a697aed18fb15a93af5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "ever-watching-threshold-attacked",
+          "oracleText": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.",
+          "implementation": [
+            "an attackDeclared trigger for an opponent's attack, once per declaration, with the intervening-if (CR 603.4) that at least one creature of that attack is attacking you or a planeswalker you control, checked as the attack is declared and again on resolution against the creatures still attacking you or a planeswalker still in combat; it draws one card for you"
+          ],
+          "engineTestIds": [
+            "ever-watching-threshold-pinned-oracle-supported",
+            "ever-watching-threshold-attacks-you",
+            "ever-watching-threshold-planeswalker",
+            "ever-watching-threshold-resolution-check"
+          ],
+          "viewerScenarioIds": [
+            "ever-watching-threshold-viewer-attacked-you",
+            "ever-watching-threshold-viewer-attacked-planeswalker",
+            "ever-watching-threshold-viewer-attacked-elsewhere"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9cb741ae-14d6-4a8d-bfad-703abfe3682c": {
+      "name": "Frontier Warmonger",
+      "oracleSha256": "044d015a5eddb088abf9886152e757d272a25c2beea3f16771376e4fe2c229de",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "frontier-warmonger-menace",
+          "oracleText": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+          "implementation": [
+            "an attackDeclared trigger for any player's attack, one firing per attacked opponent of yours with the attackers at that opponent or a planeswalker they control as its group (yours included, an attack on your own planeswalker not counting); the group is bound by object when it triggers and its creatures that are still on the battlefield gain menace until end of turn as it resolves, nothing else does"
+          ],
+          "engineTestIds": [
+            "frontier-warmonger-pinned-oracle-supported",
+            "frontier-warmonger-group",
+            "frontier-warmonger-per-opponent",
+            "frontier-warmonger-planeswalker",
+            "frontier-warmonger-binding"
+          ],
+          "viewerScenarioIds": ["frontier-warmonger-viewer-menace"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f0bf2923-aea2-4bac-b061-64bc84437ef1": {
+      "name": "Tenuous Truce",
+      "oracleSha256": "95353ba0725d65be6feae67f59b0d786e508ea3715860f75f4c70ef848999a45",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "tenuous-truce-end-step-draw",
+          "oracleText": "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+          "implementation": [
+            "the interpreter reads Enchant opponent (the Aura's one target is an opponent, attached to that player); a step trigger with the new enchanted player filter fires only at the beginning of the enchanted player's end step, with that player as the event player: you draw a card and then that player draws a card; no other player's end step triggers it"
+          ],
+          "engineTestIds": [
+            "tenuous-truce-pinned-oracle-supported",
+            "tenuous-truce-enchant-opponent",
+            "tenuous-truce-end-step",
+            "tenuous-truce-sacrificed-before-end-step"
+          ],
+          "viewerScenarioIds": ["tenuous-truce-viewer-end-step"]
+        },
+        {
+          "id": "tenuous-truce-attack-sacrifice",
+          "oracleText": "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.",
+          "implementation": [
+            "two attackDeclared triggers that sacrifice the Aura itself: one when you declare an attack with any creature at the enchanted opponent or a planeswalker they control, and one when the enchanted opponent declares any attacker at you or a planeswalker you control; an attack on anyone else, or by another player, does nothing"
+          ],
+          "engineTestIds": ["tenuous-truce-you-attack", "tenuous-truce-they-attack"],
+          "viewerScenarioIds": [
+            "tenuous-truce-viewer-you-attack",
+            "tenuous-truce-viewer-they-attack"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5825d718-6a32-4f4c-9b56-1a50051cfe28": {
+      "name": "Wall of Tears",
+      "oracleSha256": "00f50e798f0e2fb5bc6f144abb87651c501e511007b14a3c2c99ad434e1aa9cd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "wall-of-tears-block-return",
+          "oracleText": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+          "implementation": [
+            "a blocks trigger on the Wall itself, queued with the creature it blocked bound by object, that creates a delayed trigger for the beginning of the new end-of-combat step (CR 511.1, 603.7) returning that exact creature to its OWNER's hand; the delayed trigger does not depend on the Wall, so it fires even if the Wall died in combat or left, and does nothing if the creature left and returned as a new object (CR 400.7); the interpreter owns defender"
+          ],
+          "engineTestIds": [
+            "wall-of-tears-pinned-oracle-supported",
+            "wall-of-tears-blocks",
+            "wall-of-tears-unblocked",
+            "wall-of-tears-independent",
+            "wall-of-tears-new-object",
+            "wall-of-tears-bounce-owner"
+          ],
+          "viewerScenarioIds": ["wall-of-tears-viewer-blocked-creature-returns"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d55cb52d-b35c-4602-a518-cd51f155a2d1": {
+      "name": "Human Torch",
+      "oracleSha256": "f335ec2abc29e719d8092c9d014a85aaf39073c6c40d93548a0d66f8846826a4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "human-torch-combat-keywords",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn.",
+          "implementation": [
+            "a beginning-of-combat step trigger on your turn with the intervening-if (CR 603.4) that you have cast a noncreature spell this turn, checked as combat begins and again on resolution; it grants Human Torch flying, double strike and haste until end of turn"
+          ],
+          "engineTestIds": [
+            "human-torch-pinned-oracle-supported",
+            "human-torch-keywords",
+            "human-torch-keywords-end"
+          ],
+          "viewerScenarioIds": ["human-torch-viewer-keywords-and-damage-copy"]
+        },
+        {
+          "id": "human-torch-attack-payment",
+          "oracleText": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent.",
+          "implementation": [
+            "an attack trigger whose payment is asked as it resolves (\"if you do\" is not a reflexive trigger) and, only if paid, grants Human Torch a triggered ability until end of turn: whenever it deals combat damage to a player, it, as the source, deals that much damage to each opponent of yours other than that player; each combat damage event copies on its own, so double strike copies again in the second step, and damage to a planeswalker or a blocker is not damage to an opponent"
+          ],
+          "engineTestIds": [
+            "human-torch-pay",
+            "human-torch-double-strike",
+            "human-torch-not-an-opponent"
+          ],
+          "viewerScenarioIds": ["human-torch-viewer-keywords-and-damage-copy"]
         }
       ],
       "gameplayAiScenarioIds": []

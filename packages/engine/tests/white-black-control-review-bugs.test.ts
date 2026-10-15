@@ -163,10 +163,13 @@ function attackDefenders(game: GameContext, seat: string, attacker: EnginePerman
   pump(runCombatPhase(game), (decision) => {
     if (decision.decisionType === 'declareAttackers') {
       if (decision.player === seat) {
-        defenders =
-          decision.presentationAttackDeclaration?.subjects
-            .find((s) => s.subjectId === attacker.id)
-            ?.defenders.map((d) => d.defenderId ?? d.playerId) ?? [];
+        const subject = decision.presentationAttackDeclaration?.subjects.find(
+          (s) => s.subjectId === attacker.id,
+        );
+        defenders = [
+          ...(subject?.defenders.map((d) => d.playerId) ?? []),
+          ...(subject?.planeswalkers.map((p) => p.objectId) ?? []),
+        ];
       }
       return declareAttacks(decision, () => null);
     }

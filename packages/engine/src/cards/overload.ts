@@ -23,6 +23,7 @@ const targetFields = {
   totalManaValueAtMost: 'unsupported',
   graveyardOwnerSlot: 'unsupported',
   graveyardOwnerScope: 'unsupported',
+  tapState: 'unsupported',
   spellTargetsPermanentYouControl: 'unsupported',
   spellHasSingleTarget: 'unsupported',
 } satisfies Record<keyof TargetSpec, FieldRole>;

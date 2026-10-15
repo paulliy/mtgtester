@@ -207,11 +207,13 @@ describe('Flumph', () => {
     const youHand = playerOf(ctx, 'P1').hand.length;
     const p2Hand = playerOf(ctx, 'P2').hand.length;
     const p3Hand = playerOf(ctx, 'P3').hand.length;
-    dealDamageToCreature(ctx, permanentSource(spawn(ctx, 'P2', bear())), flumph, 1, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(spawn(ctx, 'P2', bear())), flumph, 1, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     pump(runPrioritySequence(ctx), (decision) => {
       const p2 = decision.options.findIndex((option) => option.description.includes('P2'));
       return { index: p2 >= 0 ? p2 : 0, targets: new Map() };
@@ -226,11 +228,13 @@ describe('Flumph', () => {
     spawn(ctx, 'P1', card);
     const other = spawn(ctx, 'P1', bear());
     const youHand = playerOf(ctx, 'P1').hand.length;
-    dealDamageToCreature(ctx, permanentSource(other), other, 1, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(other), other, 1, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     pump(runPrioritySequence(ctx));
     expect(playerOf(ctx, 'P1').hand.length).toBe(youHand);
   });
@@ -253,16 +257,20 @@ describe('Gisela, Blade of Goldnight', () => {
       'P2',
       oracle({ name: 'Ox', typeLine: 'Creature — Ox', power: '0', toughness: '9' }),
     );
-    dealDamageToCreature(ctx, permanentSource(source), yours, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
-    dealDamageToCreature(ctx, permanentSource(source), theirs, 3, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), yours, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    pump(
+      dealDamageToCreature(ctx, permanentSource(source), theirs, 3, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(yours.damageMarked).toBe(1);
     expect(theirs.damageMarked).toBe(6);
   });
@@ -273,16 +281,20 @@ describe('Gisela, Blade of Goldnight', () => {
     const source = spawn(ctx, 'P2', bear());
     const youLife = playerOf(ctx, 'P1').life;
     const oppLife = playerOf(ctx, 'P2').life;
-    dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 3, {
-      combat: false,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
-    dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P2'), 3, {
-      combat: false,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 3, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P2'), 3, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(playerOf(ctx, 'P1').life).toBe(youLife - 1);
     expect(playerOf(ctx, 'P2').life).toBe(oppLife - 6);
   });
@@ -296,11 +308,13 @@ describe('Inkshield', () => {
     resolveSpell(ctx, card);
     const attacker = spawn(ctx, 'P2', bear());
     const life = playerOf(ctx, 'P1').life;
-    dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P1'), 3, {
-      combat: true,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P1'), 3, {
+        combat: true,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(playerOf(ctx, 'P1').life).toBe(life);
     expect(ctx.state.battlefield.filter((permanent) => permanent.name === 'Inkling')).toHaveLength(
       3,
@@ -313,16 +327,20 @@ describe('Inkshield', () => {
     const source = spawn(ctx, 'P2', bear());
     const youLife = playerOf(ctx, 'P1').life;
     const oppLife = playerOf(ctx, 'P2').life;
-    dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 2, {
-      combat: false,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
-    dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P2'), 2, {
-      combat: true,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 2, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P2'), 2, {
+        combat: true,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(playerOf(ctx, 'P1').life).toBe(youLife - 2);
     expect(playerOf(ctx, 'P2').life).toBe(oppLife - 2);
     expect(ctx.state.battlefield.some((permanent) => permanent.name === 'Inkling')).toBe(false);

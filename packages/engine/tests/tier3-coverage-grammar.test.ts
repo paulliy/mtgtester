@@ -325,7 +325,7 @@ describe('Tier 3 residual generic grammar', () => {
 
     for (const card of cards) {
       const def = interpretCard(card);
-      if (['Black Bolt Test', 'Dingus Staff Test'].includes(card.name)) {
+      if (card.name === 'Dingus Staff Test') {
         expect(def.modeled, card.name).toBe(false);
         expect(def.unmodeledReasons.join('; ')).toContain(
           'event player reference has no owning event player scope',

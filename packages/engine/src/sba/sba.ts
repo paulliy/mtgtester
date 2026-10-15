@@ -99,6 +99,8 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       perm.timestamp = s.nextTimestamp++;
       perm.summoningSick = true;
       perm.attacking = null;
+      perm.attackingPlaneswalker = null;
+      perm.attackedPlaneswalkerRemoved = false;
       perm.blocking = null;
       perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
     }
@@ -123,7 +125,11 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // An attacker whose blocker left stays blocked (CR 509.1h); the departed blocker just no
     // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
-      if (perm.attacking === player.id) perm.attacking = null;
+      if (perm.attacking === player.id) {
+        perm.attacking = null;
+        perm.attackingPlaneswalker = null;
+        perm.attackedPlaneswalkerRemoved = false;
+      }
       if (perm.blocking !== null && leavingIds.has(perm.blocking)) perm.blocking = null;
     }
 

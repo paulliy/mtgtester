@@ -28,6 +28,7 @@ const caseIds: Record<string, string> = {
   Insolence: 'insolence-event-player-contained',
   'Scalelord Reckoner': 'scalelord-reckoner-event-player-contained',
 };
+const becomesTargeted = ['Black Bolt, Inhuman King', 'Scalelord Reckoner'];
 const names = [
   'Black Bolt, Inhuman King',
   'Blur of Blades',
@@ -49,7 +50,11 @@ describe('printed clauses with unsupported event-player provenance remain contai
         const def = interpretCard(card);
         expect(def.modeled).toBe(false);
         expect(def.unmodeledReasons.join('; ')).toContain(
-          'event player reference has no owning event player scope',
+          // The two becomes-targeted cards are read now that the targeting player is bound as the
+          // event player (coverage PR06), and are contained explicitly until they have evidence.
+          becomesTargeted.includes(name)
+            ? 'explicitly unsupported: No focused engine or Card Test Lab evidence yet'
+            : 'event player reference has no owning event player scope',
         );
         const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(8, forest) }))));
         ctx.state.currentTurnPlayer = 'P1';

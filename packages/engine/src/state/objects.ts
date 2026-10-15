@@ -2,7 +2,7 @@ import { counterCount, setCounterCount } from './counters';
 import { playerLifeLocked } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { spellDefinitionOf } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -271,10 +271,17 @@ export function changeController(
   perm.timestamp = ctx.state.nextTimestamp++;
   perm.summoningSick = true;
   perm.attacking = null;
-  delete perm.attackingPlayerId;
-  delete perm.attackingPlaneswalkerControlChanges;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
   perm.blocking = null;
   perm.statuses = perm.statuses.filter((status) => status !== 'attacking' && status !== 'blocking');
+  // A planeswalker that changes controller is removed from combat (CR 506.4): creatures attacking
+  // it stay attacking but attack nothing. Marked here, not lazily, so regaining it can't undo that.
+  for (const attacker of ctx.state.battlefield) {
+    if (attacker.attackingPlaneswalker === perm.id && attacker.attacking !== controllerId) {
+      attacker.attackedPlaneswalkerRemoved = true;
+    }
+  }
 }
 
 /** What a face-down permanent is called while face down (CR 708.2a). */
@@ -416,6 +423,8 @@ export function makePermanent(
     summoningSick: true,
     attachedTo: null,
     attacking: null,
+    attackingPlaneswalker: null,
+    attackedPlaneswalkerRemoved: false,
     blocking: null,
     blockedByOrdered: [],
     damagedByDeathtouch: false,
@@ -450,6 +459,8 @@ export function consumeRegenerationShield(
   perm.damagedByDeathtouch = false;
   perm.tapped = true;
   perm.attacking = null;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
   perm.blocking = null;
   perm.blockedByOrdered = [];
   perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
@@ -1798,6 +1809,8 @@ export interface TriggerEventSubject {
    * the watching permanent's own controller, which nothing else in `TriggerEventSubject` names.
    */
   sourceControllerId?: PlayerId;
+  /** `blocks`: the attacking creature this blocker blocked, by object. */
+  blockedObjectId?: ObjectId;
   /** `leavesBattlefield`: the zone this permanent went to. */
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
@@ -2120,6 +2133,14 @@ export function queueTriggersForEvent(
           return false;
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
+        // "...attack an opponent" (Firkraag) is about attacking the player; a creature attacking
+        // only a planeswalker of theirs isn't attacking that opponent.
+        if (
+          when === 'attacks' &&
+          spec.aggregate === 'byEventPlayer' &&
+          s.permanent.attackingPlaneswalker !== null
+        )
+          return false;
         return spec.subject.kind === 'self'
           ? source.cardId === s.permanent.cardId
           : matchesSelector(ctx, s.permanent, spec.subject.selector, from);
@@ -2196,7 +2217,7 @@ export function queueTriggersForEvent(
             'defendingPlayerIsEventPlayer' in spec &&
             spec.defendingPlayerIsEventPlayer === true &&
             first.permanent.attacking !== null
-              ? (first.permanent.attackingPlayerId ?? first.permanent.attacking)
+              ? first.permanent.attacking
               : 'attackingPlayerIsEventPlayer' in spec && spec.attackingPlayerIsEventPlayer === true
                 ? first.playerId
                 : spec.aggregate === 'byEventPlayer'
@@ -2232,6 +2253,9 @@ export function queueTriggersForEvent(
           const scope: TriggerScope = {
             ...(spec.aggregate !== undefined ? { triggerCount: group.length } : {}),
             ...(eventPlayerId !== undefined ? { eventPlayerId } : {}),
+            ...(first.blockedObjectId !== undefined
+              ? { blockedObjectId: first.blockedObjectId }
+              : {}),
             ...(spec.subject.kind !== 'self' ? eventObjectScope(ctx, first.permanent) : {}),
             ...(amounts.length > 0
               ? { damageDealt: amounts.reduce((sum, s) => sum + (s.amount ?? 0), 0) }
@@ -2321,7 +2345,7 @@ export function queueTriggersForEvent(
         for (const subject of matched) {
           const eventPlayerId =
             spec.defendingPlayerIsEventPlayer === true && subject.permanent.attacking !== null
-              ? (subject.permanent.attackingPlayerId ?? subject.permanent.attacking)
+              ? subject.permanent.attacking
               : subject.playerId;
           const scope: TriggerScope = {
             ...eventObjectScope(ctx, subject.permanent),
@@ -2926,6 +2950,113 @@ function queueLeaveBattlefieldTriggers(ctx: GameContext, obj: EngineObject, to: 
 }
 
 /**
+ * Queue the `attackDeclared` triggers (CR 508.2a) for one declaration: `declared` is every creature
+ * declared as an attacker, of any player. Per watcher ability and attacking player the attackers
+ * form a group — all of that player's attackers, or only those attacking the player `attacking`
+ * names, one group per attacked player with `perDefender`. The group's size is a trigger
+ * condition checked now (`minAttackers`), and the group is remembered by object for resolution.
+ */
+export function queueAttackDeclarationTriggers(
+  ctx: GameContext,
+  declared: readonly EnginePermanent[],
+): void {
+  if (declared.length === 0) return;
+  assertTriggerEventFamily('attackDeclared', 'attackDeclaration');
+  const attackingPlayers = [...new Set(declared.map((a) => a.controllerId))];
+  for (const source of ctx.state.battlefield) {
+    for (const ability of triggersOf(ctx, source)) {
+      const spec = ability.trigger;
+      if (spec === undefined || spec.when !== 'attackDeclared') continue;
+      const watcherId = source.controllerId;
+      const enchantedPlayerId =
+        source.attachedTo !== null && ctx.state.players.some((p) => p.id === source.attachedTo)
+          ? source.attachedTo
+          : undefined;
+      const opponentIds = new Set(opponentsOf(ctx, watcherId).map((p) => p.id));
+      const targetPlayerOf = (
+        who: 'you' | 'opponent' | 'enchantedPlayer',
+        id: PlayerId,
+      ): boolean =>
+        who === 'you'
+          ? id === watcherId
+          : who === 'opponent'
+            ? opponentIds.has(id)
+            : id === enchantedPlayerId;
+      for (const attackingPlayerId of attackingPlayers) {
+        const attackerOk =
+          spec.attacker === 'you'
+            ? attackingPlayerId === watcherId
+            : spec.attacker === 'opponent'
+              ? opponentIds.has(attackingPlayerId)
+              : spec.attacker === 'otherPlayer'
+                ? attackingPlayerId !== watcherId
+                : spec.attacker === 'enchantedPlayer'
+                  ? attackingPlayerId === enchantedPlayerId
+                  : true;
+        if (!attackerOk) continue;
+        const mine = declared.filter((a) => a.controllerId === attackingPlayerId);
+        // Attacking a planeswalker is not attacking its controller (CR 506.2); one removed from
+        // combat attacks nothing.
+        const filter = spec.attacking;
+        const members =
+          filter === undefined
+            ? mine
+            : mine.filter(
+                (a) =>
+                  a.attacking !== null &&
+                  targetPlayerOf(filter.who, a.attacking) &&
+                  (a.attackingPlaneswalker === null ||
+                    (filter.planeswalkers && attackedPlaneswalker(ctx, a) !== null)),
+              );
+        const groups: { members: EnginePermanent[]; attackedPlayerId?: PlayerId }[] =
+          spec.perDefender === true
+            ? [...new Set(members.map((a) => a.attacking as PlayerId))].map((defenderId) => ({
+                members: members.filter((a) => a.attacking === defenderId),
+                attackedPlayerId: defenderId,
+              }))
+            : [{ members }];
+        for (const group of groups) {
+          if (group.members.length < (spec.minAttackers ?? 1)) continue;
+          const groupScope = {
+            eventPlayerId: attackingPlayerId,
+            attackGroupIds: group.members.map((a) => a.id),
+            ...(group.attackedPlayerId === undefined
+              ? {}
+              : { attackedPlayerId: group.attackedPlayerId }),
+            attackedWatcher: mine.some(
+              (a) => a.attacking === watcherId && a.attackingPlaneswalker === null,
+            ),
+            triggerCount: group.members.length,
+          } satisfies TriggerScope;
+          const from: SelectorSource = {
+            cardId: source.cardId,
+            objectId: source.id,
+            controllerId: watcherId,
+            attachedToCardId: null,
+            ...groupScope,
+          };
+          if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from))
+            continue;
+          const copies = 1 + additionalTypedTriggerCopies(ctx, source);
+          for (let copy = 0; copy < copies; copy++) {
+            ctx.state.pendingTriggers.push({
+              controllerId: watcherId,
+              sourceCardId: source.cardId,
+              sourceObjectId: source.id,
+              sourceOracleId: source.oracleId,
+              sourceName: source.name,
+              ability,
+              scope: groupScope,
+            });
+            debug(ctx, 'stack', `attackDeclared trigger queued: ${source.name}`);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * "Until SOURCE leaves the battlefield" (Conclave Tribunal, CR 610.2b): when the source itself
  * leaves — regardless of where it goes — every card it exiled this way comes back, under the control
  * of its owner (CR 610.3c). Each return is a normal zone change (a NEW object, "enters"
@@ -2944,9 +3075,11 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
 
 export function queuePlayerTriggersForEvent(
   ctx: GameContext,
-  when: 'gainsLife' | 'drawsCard' | 'foretells',
+  when: 'gainsLife' | 'drawsCard' | 'foretells' | 'damagePreventedToPlayer' | 'playerDealtDamage',
   playerId: PlayerId,
   amount?: number,
+  /** `playerDealtDamage`: who controls the source that dealt the damage; it is the event player. */
+  sourceControllerId?: PlayerId,
 ): void {
   assertTriggerEventFamily(when, 'player');
   for (const perm of ctx.state.battlefield) {
@@ -2959,10 +3092,20 @@ export function queuePlayerTriggersForEvent(
         !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === playerId)
       )
         continue;
+      if (
+        spec.when === 'playerDealtDamage' &&
+        spec.sourceController === 'opponent' &&
+        !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === sourceControllerId)
+      )
+        continue;
+      const eventPlayerId =
+        spec.when === 'playerDealtDamage' && sourceControllerId !== undefined
+          ? sourceControllerId
+          : playerId;
       const source: SelectorSource = {
         cardId: perm.cardId,
         controllerId: perm.controllerId,
-        eventPlayerId: playerId,
+        eventPlayerId,
       };
       if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
       const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
@@ -2975,7 +3118,7 @@ export function queuePlayerTriggersForEvent(
           sourceName: perm.name,
           ability,
           scope: {
-            eventPlayerId: playerId,
+            eventPlayerId,
             ...(amount !== undefined ? { damageDealt: amount } : {}),
           },
         });

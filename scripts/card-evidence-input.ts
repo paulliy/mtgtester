@@ -2177,6 +2177,172 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Body Launderer: it dies and returns Lab Servo, not Lab Ox'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Dragon Tempest: the entering Dragon deals the damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Scourge of Valkas: it and another Dragon each deal X damage as they enter'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Tyrant's Familiar: lieutenant attack hits a creature of the player it attacks"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Brash Taunter: fight Lab Ox, then reflect the damage at P3'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomb Blade: the damaged player sacrifices a creature or loses life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Duelist's Heritage: one trigger per attack, double strike for the attacker you pick",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thunderbreak Regent: the opponent who targets your Dragon takes 3'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Invisible Woman: pay {R}{G}{W}{U} when you attack, then pump and evade'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Flameblast Dragon: choose the target, then pay {X}{R} for X damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Territorial Aetherkite: pay energy and damage each other creature'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Arcbond: the chosen creature reflects the damage it is dealt'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thundermaw Hellkite: damage and tap the fliers your opponents control'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Backlash: tap an untapped creature and it hits its controller'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Guard Gomazoa: blocks Lab Ox and takes no combat damage'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Selfless Squire: prevent the damage to you and grow by that much'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Deflecting Palm: prevent a chosen creature's damage and reflect it"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Comeuppance: prevent the damage and deal it back to the creature and the controller',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Michiko Konda: each opposing source that damages you makes its controller sacrifice',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Delirium: during an opponent's attack, tap its creature, hit it back and stop its combat damage",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Planeswalker attack: Lab Ox attacks Lab Walker through the player board and its loyalty drops',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: attacking with two creatures draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player attacking someone else draws a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Firemane Commando: another player who attacked you draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking you draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Ever-Watching Threshold: an opponent attacking your planeswalker draws you a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Ever-Watching Threshold: an opponent attacking someone else draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mangara: an opponent attacking you with two creatures draws you a card'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Mangara: an opponent attacking you with one creature draws nothing'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: affinity for planeswalkers makes it cost {W}{B} with one planeswalker'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tomik: an opponent attacking you with two creatures loses 3 life and you draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Frontier Warmonger: the creatures attacking an opponent gain menace'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: at the enchanted opponent’s end step you and they each draw'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: attacking the enchanted opponent sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Tenuous Truce: the enchanted opponent attacking you sacrifices the Aura'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Wall of Tears: the creature it blocks returns to its owner’s hand at end of combat',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Human Torch: a noncreature spell grants flying, double strike and haste, and paying copies its damage',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

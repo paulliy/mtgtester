@@ -321,18 +321,24 @@ export function candidateOf(
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
   // `cardZoneCandidate` applies the same rule via `spellManaValue(def, undefined)`.
   const manaValue = printedManaValue(ctx, perm);
-  const defendingSeat = ctx.state.players.find((player) => player.id === perm.attacking);
-  const defendingPermanent = ctx.state.battlefield.find(
-    (permanent) => permanent.id === perm.attacking,
-  );
+  // The defending player when this attacks the player, or a planeswalker that is still in combat
+  // (CR 506.4). Only event-time selector matching asks (`includeCombatDefender`): reading another
+  // permanent's characteristics here would recurse while the layers are being computed.
+  const attackedWalker =
+    perm.attackingPlaneswalker === null
+      ? undefined
+      : ctx.state.battlefield.find((permanent) => permanent.id === perm.attackingPlaneswalker);
   const defendingPlayer =
-    defendingSeat?.id ??
-    (includeCombatDefender &&
-    defendingPermanent !== undefined &&
-    computeCharacteristics(ctx, defendingPermanent).types.includes('Planeswalker') &&
-    (defendingPermanent.controlChanges?.length ?? 0) === perm.attackingPlaneswalkerControlChanges
-      ? defendingPermanent.controllerId
-      : undefined);
+    perm.attacking === null
+      ? undefined
+      : perm.attackingPlaneswalker === null ||
+          (includeCombatDefender &&
+            !perm.attackedPlaneswalkerRemoved &&
+            attackedWalker !== undefined &&
+            attackedWalker.controllerId === perm.attacking &&
+            computeCharacteristics(ctx, attackedWalker).types.includes('Planeswalker'))
+        ? perm.attacking
+        : undefined;
 
   return {
     cardId: perm.cardId,
@@ -356,8 +362,9 @@ export function candidateOf(
     isEquipped,
     inCombat: perm.attacking !== null || perm.blocking !== null,
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
-    attackingDefenderId: perm.attacking,
-    attackingDefenderIsPlayer: defendingSeat !== undefined,
+    // The player attacked itself: null when it attacks a planeswalker, so "attacking you / an
+    // opponent / that player" selectors don't match an attack on their planeswalker.
+    attackingDefenderId: perm.attackingPlaneswalker === null ? perm.attacking : null,
     ...(defendingPlayer === undefined ? {} : { attackingDefendingPlayerId: defendingPlayer }),
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),
     counters: perm.counters,

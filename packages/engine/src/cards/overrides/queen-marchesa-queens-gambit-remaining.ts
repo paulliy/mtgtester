@@ -1,7 +1,8 @@
 /** Remaining authored overrides for queen-marchesa-queens-gambit.txt. */
 
 import type { CardDefinition } from '../definition';
-import { activated, manaCost, TAP, targetSlots, triggered } from '../templates';
+import { activated, mana, manaCost, TAP, targetSlots, triggered, whenAttacks } from '../templates';
+import { OTHER, ofType } from '../selector';
 import { TREASURE } from '../tokens';
 import { constant } from '../value';
 import { defineCard, unsupportedCard } from './index';
@@ -136,42 +137,52 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     "Angel's Grace",
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   );
-  // Catalog audit queen-batch-4: delayed damage is dealt by Arcbond, not the creature.
-  unsupportedCard(
-    '01790829-cc03-430f-a899-2f274b7dbf62',
-    'Arcbond',
-    'The delayed damage is dealt by Arcbond, not by the chosen creature.',
-  );
-  // Catalog audit queen-batch-4: untapped restriction omitted.
-  unsupportedCard(
-    '3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c',
-    'Backlash',
-    'Untapped-creature targeting is implemented as any creature.',
-  );
-  // Catalog audit queen-batch-4: another-target fight can target this creature.
-  unsupportedCard(
+  // Arcbond: restored in coverage PR06 (see coverage-pr06.ts).
+  // Backlash: restored in coverage PR06 (see coverage-pr06.ts).
+  // Brash Taunter: "that much damage" is the amount dealt in the triggering event, dealt by the
+  // Taunter itself to a target opponent. "Another target creature" is any creature but the
+  // Taunter, whoever controls it, so the fight target carries an OTHER filter (CR 701.14).
+  const reflect = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
+  const fightTarget = targetSlots({ creature: { kind: 'creature', filter: OTHER } });
+  defineCard(
     '3e41648f-c5a9-4b26-b97e-8176fe5e9c85',
     'Brash Taunter',
-    'Another-target fight can target this creature.',
+    [
+      'Whenever this creature is dealt damage, it deals that much damage to target opponent.',
+      '{2}{R}, {T}: ~ fights another target creature.',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'dealtDamage', subject: { kind: 'self' } },
+          {
+            targets: reflect.targets,
+            effects: [
+              { op: 'dealDamage', target: reflect.slot.opponent, amount: { kind: 'damageDealt' } },
+            ],
+            description:
+              'Whenever this creature is dealt damage, it deals that much damage to target opponent',
+          },
+        ),
+      ],
+      activatedAbilities: [
+        activated({
+          costs: [mana('{2}{R}'), TAP],
+          targets: fightTarget.targets,
+          effects: [{ op: 'fight', first: 'source', second: fightTarget.slot.creature }],
+          description: 'This creature fights another target creature',
+        }),
+      ],
+    },
   );
-  // Catalog audit queen-batch-4: life comparison is attacker vs defender.
-  unsupportedCard(
-    'd11e627b-8a48-411d-a261-2c9a02a758ba',
-    'Breena, the Demagogue',
-    'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
-  );
+  // Breena, the Demagogue: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-2: Inklings-cannot-attack-you omitted; trigger unscoped.
   unsupportedCard(
     'ee7ebbc1-2f9e-4867-a522-424869b6d772',
     'Combat Calligrapher',
     'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   );
-  // Catalog audit queen-batch-2: reflection and planeswalker prevention omitted.
-  unsupportedCard(
-    '01f29158-2dc9-4b9d-b726-add5d3fd5782',
-    'Comeuppance',
-    'All-damage prevention and reflection are implemented as preventCombatDamageToController.',
-  );
+  // Comeuppance: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     'ee81f37b-2a81-46d7-8d2f-9091123846c4',
     'Crackling Doom',
@@ -186,29 +197,43 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Cut a Deal',
     'You draw for each opponent, not for each opponent who drew a card.',
   );
-  // Catalog audit queen-batch-4: source choice and reflection omitted.
-  unsupportedCard(
-    'dc5dffc8-fac5-4956-bac4-1ad2cc16f6be',
-    'Deflecting Palm',
-    'Source choice and reflection are implemented as unscoped combat-damage prevention.',
-  );
-  // Catalog audit queen-batch-3: opponent-turn restriction omitted.
-  unsupportedCard(
-    'a00e5eb6-b916-4cd6-8ff2-c02f4929abc7',
-    'Delirium',
-    "Cast-only-during-an-opponent's-turn is omitted.",
-  );
+  // Deflecting Palm: restored in coverage PR06 (see coverage-pr06.ts).
+  // Delirium: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-1: copies keep original targets; can't-be-copied is omitted.
   unsupportedCard(
     '99140891-face-4015-aacd-1309e87d8f9f',
     'Display of Power',
     'Cannot-be-copied is omitted, and copies keep original targets instead of choosing new ones.',
   );
-  // Catalog audit queen-batch-3: optional once-per-attack-group is a per-attacker grant.
-  unsupportedCard(
+  // Duelist's Heritage: "one or more creatures attack" is one trigger for the whole declaration
+  // (CR 603.2c), whoever attacks. The target is any attacking creature, chosen as the trigger goes
+  // on the stack; "you may" is decided on resolution (CR 603.5).
+  const heritage = targetSlots({
+    attacker: { kind: 'creature', filter: { kind: 'combatRole', role: 'attacking' } },
+  });
+  defineCard(
     '5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb',
     "Duelist's Heritage",
-    'Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature.',
+    [
+      'Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.',
+    ],
+    {
+      triggers: [
+        triggered(whenAttacks(ofType('Creature'), { aggregate: true }), {
+          targets: heritage.targets,
+          optional: true,
+          effects: [
+            {
+              op: 'grantKeywordUntilEot',
+              target: heritage.slot.attacker,
+              keyword: 'double strike',
+            },
+          ],
+          description:
+            'Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn',
+        }),
+      ],
+    },
   );
   defineCard(
     'bc328acc-8521-4581-88c3-99a7cb2c1cdb',
@@ -261,12 +286,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
       ],
     },
   );
-  // Catalog audit queen-batch-2: attack restriction omitted; extra second-spell trigger added.
-  unsupportedCard(
-    'cbcb6d9a-6ae5-4bcd-8013-2b657553764a',
-    'Mangara, the Diplomat',
-    'Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added.',
-  );
+  // Mangara, the Diplomat: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     '18ed0c8a-db8f-4247-87c4-544b833f01bd',
     'Master of Ceremonies',
@@ -275,12 +295,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     MASTER,
   );
-  // Catalog audit queen-batch-2: player damage watched as permanents you control.
-  unsupportedCard(
-    'fbe190eb-fd4b-40e7-9a17-48c96b60f653',
-    'Michiko Konda, Truth Seeker',
-    'Damage-to-you is implemented as damage to permanents you control.',
-  );
+  // Michiko Konda, Truth Seeker: restored in coverage PR06 (see coverage-pr06.ts).
   // Mistveil Plains: restored in coverage PR02. The interpreter reads the bottom-of-library
   // activation (graveyardToLibraryBottom) and its two-white-permanents condition.
   // Catalog audit queen-batch-1: power uses all graveyards, not opponents' graveyards.
@@ -319,12 +334,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ['unrecognized rules text: "You and target opponent each draw three cards."'],
     SECRET_RENDEZVOUS,
   );
-  // Catalog audit queen-batch-3: all-damage prevention and counters omitted.
-  unsupportedCard(
-    '7d079c78-b2a9-444f-ab54-c61c041baa6d',
-    'Selfless Squire',
-    'All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter.',
-  );
+  // Selfless Squire: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-5: optional choose-two is mandatory; duplicate modes allowed.
   unsupportedCard(
     '2143f413-7baa-4fd6-a7ca-32f52bfa553f',

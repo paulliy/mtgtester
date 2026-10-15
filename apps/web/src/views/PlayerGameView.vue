@@ -255,6 +255,12 @@ function seatLabel(seatId: string): string {
   return seat === undefined ? seatId : seat.label;
 }
 
+/** An attack option is an opponent's seat, or a planeswalker (named, not shown as a raw id). */
+function attackTargetLabel(optionId: string): string {
+  const seat = state.value?.seats.find((s) => s.seat === optionId);
+  return seat !== undefined ? seat.label : (nameById.value.get(optionId) ?? optionId);
+}
+
 const nameById = computed(() => {
   const names = new Map<string, string>();
   for (const seat of state.value?.seats ?? []) {
@@ -1492,7 +1498,7 @@ function abandon(): void {
                     >
                       {{
                         combatPlan.kind === 'attackers'
-                          ? (nameById.get(optionId) ?? seatLabel(optionId))
+                          ? attackTargetLabel(optionId)
                           : (nameById.get(optionId) ?? optionId)
                       }}
                     </button>

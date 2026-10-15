@@ -28,10 +28,18 @@ export function phaseOutControlledPermanents(ctx: GameContext, playerId: PlayerI
   }
   const leaving = ctx.state.battlefield.filter((perm) => ids.has(perm.id));
   ctx.state.battlefield = ctx.state.battlefield.filter((perm) => !ids.has(perm.id));
+  // CR 506.4: a planeswalker that phases out is removed from combat. Mark it now, not lazily:
+  // it phases back in later with the same object id and must not re-enter the attack.
+  for (const attacker of ctx.state.battlefield) {
+    if (attacker.attackingPlaneswalker !== null && ids.has(attacker.attackingPlaneswalker))
+      attacker.attackedPlaneswalkerRemoved = true;
+  }
   for (const permanent of leaving) {
     // CR 702.26f: tracking this object with a "for as long as" duration ends here.
     delete permanent.cantAttackPlayerWhileCounter;
     permanent.attacking = null;
+    permanent.attackingPlaneswalker = null;
+    permanent.attackedPlaneswalkerRemoved = false;
     permanent.blocking = null;
     permanent.statuses = permanent.statuses.filter(
       (status) => status !== 'attacking' && status !== 'blocking',

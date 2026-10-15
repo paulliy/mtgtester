@@ -370,9 +370,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     'You have no maximum hand size.',
   ]);
 
-  unimplemented('c857de66-f4e0-4e97-ad01-fac623af8225', 'Tomb Blade', [
-    'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.',
-  ]);
+  // Tomb Blade: restored in coverage PR06 (see necron-dynasties-remaining.ts).
 
   unimplemented('986f510c-e2ec-423e-a443-51a169939558', 'Tomb Fortress', [
     '{2}{B}{B}{B}, {T}, Exile this land: Mill four cards, then return a creature card from your graveyard to the battlefield. Activate only as a sorcery.',

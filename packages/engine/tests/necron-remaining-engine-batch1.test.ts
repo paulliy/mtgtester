@@ -177,16 +177,20 @@ describe('Darkness', () => {
     const attacker = spawn(ctx, 'P2', bear());
     const youLife = playerOf(ctx, 'P1').life;
     const oppLife = playerOf(ctx, 'P2').life;
-    dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P1'), 3, {
-      combat: true,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
-    dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P2'), 2, {
-      combat: true,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P1'), 3, {
+        combat: true,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(attacker), playerOf(ctx, 'P2'), 2, {
+        combat: true,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(playerOf(ctx, 'P1').life).toBe(youLife);
     expect(playerOf(ctx, 'P2').life).toBe(oppLife);
   });
@@ -203,11 +207,13 @@ describe('Darkness', () => {
     );
     const source = spawn(ctx, 'P2', bear());
     const life = playerOf(ctx, 'P1').life;
-    dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 3, {
-      combat: false,
-      sourceIsCommander: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToPlayer(ctx, permanentSource(source), playerOf(ctx, 'P1'), 3, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(playerOf(ctx, 'P1').life).toBe(life - 3);
   });
 });

@@ -105,16 +105,16 @@ function combat(
     if (decision.decisionType === 'declareAttackers')
       return declareAttacks(decision, (id) => (id === attacker.id ? 'P1' : null));
     if (decision.decisionType === 'declareBlockers') return declareNoBlocks(decision);
-    if (decision.options.some((option) => option.type === 'applyDamagePrevention')) {
+    if (decision.options.some((option) => option.type === 'damageModifier')) {
       prompts++;
       expect(decision.player).toBe('P1');
       expect(ctx.state.players.map((player) => player.life)).toEqual([40, 40, 40, 40]);
       expect(decision.options.map((option) => option.description)).toEqual([
-        'Apply protection from everything first',
-        'Apply Inkshield first',
+        'Protection from everything: prevent the damage',
+        'Prevent all combat damage this turn, creating a token for each 1 damage prevented',
       ]);
       return {
-        index: decision.options.findIndex((option) => option.description.includes(choice)),
+        index: choice === 'Inkshield' ? 1 : 0,
         targets: new Map(),
       };
     }

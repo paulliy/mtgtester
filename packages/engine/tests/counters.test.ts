@@ -236,12 +236,14 @@ describe('enters with counters (CR 614.1c replacement)', () => {
 
     const victim = ctx.state.players.find((p) => p.id === 'P2');
     if (victim === undefined) throw new Error('test bug');
-    dealDamageToPlayer(
-      ctx,
-      { cardId: gev.cardId, name: gev.name, oracleId: gev.oracleId, controllerId: 'P1' },
-      victim,
-      1,
-      { combat: false, sourceIsCommander: false, sourceHasLifelink: false },
+    pump(
+      dealDamageToPlayer(
+        ctx,
+        { cardId: gev.cardId, name: gev.name, oracleId: gev.oracleId, controllerId: 'P1' },
+        victim,
+        1,
+        { combat: false, sourceIsCommander: false, sourceHasLifelink: false },
+      ),
     );
     expect(ctx.state.lifeLostThisTurn['P2']).toBe(true);
 

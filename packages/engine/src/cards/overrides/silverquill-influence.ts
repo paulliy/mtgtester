@@ -162,10 +162,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     FLICKERING_WARD_DEF,
   );
 
-  unimplemented('2ef0961a-0543-4371-8c2a-333881b735e5', 'Tomik, Wielder of Law', [
-    'Affinity for planeswalkers',
-    'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card.',
-  ]);
+  // Tomik, Wielder of Law: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd', 'Pearl-Ear, Imperial Advisor', [
     'Enchantment spells you cast have affinity for Auras.',
@@ -188,15 +185,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield.',
   ]);
 
-  unimplemented('cbcb6d9a-6ae5-4bcd-8013-2b657553764a', 'Mangara, the Diplomat', [
-    'Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.',
-    'Whenever an opponent casts their second spell each turn, draw a card.',
-  ]);
+  // Mangara, the Diplomat: restored in coverage PR06 (see coverage-pr06.ts).
 
-  unimplemented('ac675899-25bb-4f06-9c8c-bf188024495f', 'Firemane Commando', [
-    'Whenever you attack with two or more creatures, draw a card.',
-    'Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.',
-  ]);
+  // Firemane Commando: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('0c85b8f7-0bd0-4680-9ec5-d4b110460a54', 'Fabled Passage', [
     '{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.',
@@ -257,9 +248,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Angelic Destiny: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('d11e627b-8a48-411d-a261-2c9a02a758ba', 'Breena, the Demagogue', [
-    'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.',
-  ]);
+  // Breena, the Demagogue: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('eb735501-19e7-4910-aa6a-6667fff6f4e5', 'Study Hall', [
     "{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it's been cast from the command zone this game.",

@@ -11,7 +11,7 @@ export function registerWhiteBlackControlDefenderOverrides(): void {
     [
       'unrecognized rules text: "Creatures can\'t attack you or planeswalkers you control unless their controller pays {1} for each of those creatures."',
     ],
-    { ruleStatics: [{ kind: 'attackTax', amount: 1, alsoPlaneswalkersYouControl: true }] },
+    { ruleStatics: [{ kind: 'attackTax', amount: 1, includePlaneswalkers: true }] },
     'Taxes each attacking creature against you or your planeswalkers; preserves parsed flying and protection from white.',
   );
   replaceCard(

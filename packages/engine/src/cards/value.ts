@@ -30,6 +30,8 @@ export function assertNumericReference(
   reference: EffectRef,
 ): asserts reference is number | 'source' | 'triggerObject' {
   if (typeof reference === 'number') return;
+  if (typeof reference === 'object')
+    throw new Error('numeric controller references have no supported lifetime contract');
   switch (reference) {
     case 'source':
     case 'triggerObject':
@@ -79,6 +81,20 @@ export interface ValueScope {
   stationPower?: number;
   /** Player involved in the firing event (for that-player-controlled targets). */
   eventPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: the attackers of the group that fired the trigger, by object, as declared —
+   * "those creatures" (Frontier Warmonger). Remembered, not re-derived (CR 603.7c).
+   */
+  attackGroupIds?: readonly string[];
+  /** `blocks`: the creature this blocker blocked, by object (Wall of Tears). */
+  blockedObjectId?: string;
+  /** `attackDeclared` with `perDefender`: the attacked player this firing is about (Breena). */
+  attackedPlayerId?: PlayerId;
+  /**
+   * `attackDeclared`: whether any creature of the declaring player's whole attack was attacking
+   * the watcher itself (not its planeswalkers) when declared — a fact about the declaration.
+   */
+  attackedWatcher?: boolean;
   /** Targets resolved for this ability, indexed by slot. */
   targets?: readonly string[];
   /** Card id of the object that fired the trigger. */
@@ -118,12 +134,17 @@ export interface ValueScope {
 export type TriggerScope = Pick<
   ValueScope,
   | 'damageDealt'
+  | 'energyPaid'
   | 'triggerCount'
   | 'spellManaValue'
   | 'spellColorCount'
   | 'manaSpent'
   | 'treasureManaSpent'
   | 'eventPlayerId'
+  | 'attackGroupIds'
+  | 'blockedObjectId'
+  | 'attackedPlayerId'
+  | 'attackedWatcher'
   | 'stationPower'
   | 'sourceCountersTotal'
   | 'triggerObjectId'

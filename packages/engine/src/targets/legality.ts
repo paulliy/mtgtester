@@ -126,6 +126,9 @@ export function targetIsLegal(
         return id !== controllerId && ctx.state.players.some((p) => p.id === id && !p.hasLost);
       case 'eventPlayer':
         return eventPlayerId !== undefined && id === eventPlayerId;
+      // "that player" in a spell cast only during an opponent's turn (Delirium).
+      case 'activePlayer':
+        return id === ctx.state.currentTurnPlayer;
       default:
         return assertNever(controller, 'target controller');
     }
@@ -229,6 +232,9 @@ export function targetIsLegal(
     !permanentMatchesKind(ctx, permanent, kind) ||
     !matchesController(permanent.controllerId)
   )
+    return false;
+  // "Untapped" / "tapped" (CR 608.2b: re-checked on resolution through the same predicate).
+  if (spec.tapState !== undefined && (spec.tapState === 'tapped') !== permanent.tapped)
     return false;
   if (context.targeting !== false) {
     if (hasKeyword(ctx, permanent, 'shroud')) return false;

@@ -29,6 +29,7 @@ const strikes = reactive(new Map<ObjectId, StrikeVector>());
 const timers = new Map<ObjectId, ReturnType<typeof setTimeout>>();
 let prevDamage = new Map<ObjectId, number>();
 let prevLife = new Map<PlayerId, number>();
+let prevLoyalty = new Map<ObjectId, number>();
 
 export function useCombatStrikes() {
   const { anchorFor } = useBoardAnchors();
@@ -74,11 +75,28 @@ export function useCombatStrikes() {
       }
     }
 
+    // A planeswalker that lost loyalty was struck by the unblocked attackers aimed at it.
+    for (const walker of battlefield) {
+      const loyalty = walker.counters['loyalty'];
+      if (loyalty === undefined) continue;
+      const before = prevLoyalty.get(walker.id) ?? loyalty;
+      if (loyalty >= before) continue;
+      for (const attacker of battlefield) {
+        if (attacker.attackingPlaneswalker === walker.id && attacker.blockedBy.length === 0) {
+          pending.push({ source: attacker.id, target: walker.id });
+        }
+      }
+    }
+
     for (const seat of state.seats) {
       const before = prevLife.get(seat.seat) ?? seat.life;
       if (seat.life >= before) continue;
       for (const attacker of battlefield) {
-        if (attacker.attacking === seat.seat && attacker.blockedBy.length === 0) {
+        if (
+          attacker.attacking === seat.seat &&
+          (attacker.attackingPlaneswalker ?? null) === null &&
+          attacker.blockedBy.length === 0
+        ) {
           pending.push({ source: attacker.id, target: seat.seat });
         }
       }
@@ -86,6 +104,11 @@ export function useCombatStrikes() {
 
     prevDamage = new Map(battlefield.map((p) => [p.id, p.damageMarked]));
     prevLife = new Map(state.seats.map((s) => [s.seat, s.life]));
+    prevLoyalty = new Map(
+      battlefield.flatMap((p) =>
+        p.counters['loyalty'] === undefined ? [] : [[p.id, p.counters['loyalty']] as const],
+      ),
+    );
 
     for (const { source, target } of pending) trigger(source, target);
   }
@@ -112,4 +135,5 @@ export function resetCombatStrikes(): void {
   strikes.clear();
   prevDamage = new Map();
   prevLife = new Map();
+  prevLoyalty = new Map();
 }

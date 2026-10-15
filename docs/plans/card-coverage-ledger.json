@@ -187,6 +187,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
+    "name": "Arcbond",
+    "package": "PR06.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The delayed damage is dealt by Arcbond, not by the chosen creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
     "name": "Attune with Aether",
     "package": "PR01.02",
@@ -219,6 +236,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
+    "name": "Backlash",
+    "package": "PR06.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Untapped-creature targeting is implemented as any creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -394,6 +428,38 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "3e41648f-c5a9-4b26-b97e-8176fe5e9c85",
+    "name": "Brash Taunter",
+    "package": "PR06.16",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Another-target fight can target this creature."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+    "name": "Breena, the Demagogue",
+    "package": "PR06.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "60fc89a1-cc6f-4a32-84c3-09abf7a4a1df",
@@ -636,6 +702,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
+    "name": "Comeuppance",
+    "package": "PR06.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: All-damage prevention and reflection are implemented as preventCombatDamageToController."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e938ee4c-d5df-4d93-bd61-9e518fb1dc30",
     "name": "Conclave Tribunal",
     "package": "PR02.06",
@@ -823,6 +906,38 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+    "name": "Deflecting Palm",
+    "package": "PR06.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Source choice and reflection are implemented as unscoped combat-damage prevention."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+    "name": "Delirium",
+    "package": "PR06.17",
+    "status": "modeled-focused-tests-passed",
+    "blockers": ["explicitly unsupported: Cast-only-during-an-opponent's-turn is omitted."],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
     "name": "Dollmaker's Shop // Porcelain Gallery",
     "package": "W10",
@@ -850,6 +965,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
+    "name": "Dragon Tempest",
+    "package": "PR06.18",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Dragon-dealt damage is implemented as damage from this enchantment."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "06b77a80-4968-4385-960a-fb66bb4faa94",
@@ -898,6 +1030,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+    "name": "Duelist's Heritage",
+    "package": "PR06.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Once-per-attack-group optional double strike is implemented as a per-attacker grant on any creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -1000,15 +1149,19 @@
   {
     "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
     "name": "Ever-Watching Threshold",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
@@ -1071,6 +1224,23 @@
     "snapshotStatus": "interpreter only; no override registration"
   },
   {
+    "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+    "name": "Firemane Commando",
+    "package": "PR06.19",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
     "name": "First Family",
     "package": "PR04.11",
@@ -1100,6 +1270,23 @@
     "interpretationTests": ["packages/engine/tests/w1-filtered-zone-counts.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
+    "name": "Flameblast Dragon",
+    "package": "PR06.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The damage target is chosen before you decide to pay X. (A misreading: \"If you do\" is not a reflexive trigger, only \"when you do\" is (CR 603.12), so the target is chosen when the trigger goes on the stack and X is chosen and paid on resolution.)"
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
@@ -1273,15 +1460,19 @@
   {
     "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
     "name": "Frontier Warmonger",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cba58942-b98c-45aa-8651-7dc666e31c93",
@@ -1542,15 +1733,19 @@
   {
     "oracleId": "7c565975-aebc-4599-ac32-5594c718e2cb",
     "name": "Guard Gomazoa",
-    "package": "W8",
-    "status": "pending",
+    "package": "PR06.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Prevent all combat damage that would be dealt to this creature.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated, unchanged"
   },
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
@@ -1622,16 +1817,20 @@
   {
     "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
     "name": "Human Torch",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.27",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.\"",
       "unrecognized rules text: \"Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
@@ -1741,15 +1940,19 @@
   {
     "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
     "name": "Invisible Woman",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.25",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cd0c8db0-67ee-483b-8298-455cce35fef7",
@@ -2107,6 +2310,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+    "name": "Mangara, the Diplomat",
+    "package": "PR06.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Two-or-more attacking you is implemented as any combat attack, and a second-spell trigger is added."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "c8decfdf-1421-4649-acde-5215e7f08bb9",
     "name": "Martial Impetus",
     "package": "PR05.08",
@@ -2154,6 +2374,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
+    "name": "Michiko Konda, Truth Seeker",
+    "package": "PR06.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Damage-to-you is implemented as damage to permanents you control."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "a86117c1-b83d-4350-9a10-a23b7e67e1bd",
@@ -2962,6 +3199,23 @@
     "snapshotStatus": "overrides deleted; override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
+    "name": "Scourge of Valkas",
+    "package": "PR06.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The entering Dragon is the damage source, implemented as damage from this creature."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "a3b3b9ae-1e48-481d-80a5-7e2a26cf2f50",
     "name": "Screams from Within",
     "package": "PR05.12",
@@ -3017,6 +3271,23 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
+    "name": "Selfless Squire",
+    "package": "PR06.20",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: All-damage prevention and the prevented-damage counters are implemented as preventCombatDamageToController on enter."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "546201d0-3fa5-44e4-a526-ab0945711e49",
@@ -3319,17 +3590,38 @@
   {
     "oracleId": "f0bf2923-aea2-4bac-b061-64bc84437ef1",
     "name": "Tenuous Truce",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR06.28",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Enchant opponent\"",
       "unrecognized rules text: \"At the beginning of enchanted opponent's end step, you and that player each draw a card.\"",
       "unrecognized rules text: \"When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
+    "name": "Territorial Aetherkite",
+    "package": "PR06.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The damage is a reflexive trigger after payment, implemented as the same resolution."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f8e17f4f-080d-4bba-bd05-ca27e94ccecc",
@@ -3429,6 +3721,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
+    "name": "Thunderbreak Regent",
+    "package": "PR06.12",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "f55334d9-1ec2-4667-bf28-5a0384d6f053",
     "name": "Thunderfoot Baloth",
     "package": "PR01.13",
@@ -3447,6 +3756,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
+    "name": "Thundermaw Hellkite",
+    "package": "PR06.13",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Tap applies to all opposing fliers, not only creatures dealt that damage. (A misreading: Gatherer ruling 2017-11-17 says \"those creatures\" are the creatures with flying your opponents control, not the creatures dealt damage, so a flier whose damage is prevented is still tapped.)"
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
     "name": "Toby, Beastie Befriender",
     "package": "W6",
@@ -3459,6 +3785,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
+    "name": "Tomb Blade",
+    "package": "PR06.14",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Combat-damage life loss targets any player, not the damaged player."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
@@ -3476,6 +3819,23 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr01-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
+    "name": "Tomik, Wielder of Law",
+    "package": "PR06.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Affinity and opponent-attacks trigger are implemented as a self-attack drain."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -3551,6 +3911,23 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
+    "name": "Tyrant's Familiar",
+    "package": "PR06.15",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Defending-player creature targeting uses eventPlayer, which is the attacking player."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
@@ -3745,15 +4122,19 @@
   {
     "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
     "name": "Wall of Tears",
-    "package": "W3",
-    "status": "pending",
+    "package": "PR06.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "6556c4c0-b10d-4208-821b-0c0a49abd188",

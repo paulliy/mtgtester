@@ -138,6 +138,8 @@ const MODELED = [
   'Skycloud Expanse',
   'Thrakkus the Butcher',
   'Vaevictis Asmadi, the Dire',
+  // Coverage PR06: the entering Dragon is the damage source.
+  'Dragon Tempest',
 ].sort();
 
 describe('The Ur-Dragon deck â€” model coverage', () => {

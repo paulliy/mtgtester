@@ -437,7 +437,7 @@ export interface TargetSpec {
    * unrestricted slot. Kept as a field rather than more `TargetKind` literals, which would
    * multiply combinatorially with every kind above.
    */
-  controller?: 'you' | 'opponent' | 'eventPlayer';
+  controller?: 'you' | 'opponent' | 'eventPlayer' | 'activePlayer';
   /**
    * Additional characteristics after the target domain/kind check. Supports battlefield
    * permanents, stack spells, and graveyard cards (for example "Dragon permanent card").
@@ -469,6 +469,12 @@ export interface TargetSpec {
    */
   graveyardOwnerSlot?: number;
   graveyardOwnerScope?: 'controller' | 'opponent' | 'any';
+  /**
+   * "Target untapped creature" (Backlash) — the tapped state a battlefield permanent must have
+   * when chosen and again as the spell or ability resolves (CR 608.2b). Selectors deliberately
+   * cannot read tapped-ness (see selector.ts), so it lives on the target spec.
+   */
+  tapState?: 'untapped' | 'tapped';
 }
 
 /**
@@ -496,7 +502,13 @@ export type EffectRef =
    * event (`ValueScope.eventPlayerId`), referenced directly rather than through a target slot
    * (CR text never says "target player" here — it is a reference, like `'triggerObject'`).
    */
-  | 'eventPlayer';
+  | 'eventPlayer'
+  /**
+   * "its controller" / "that creature's controller" (Backlash) — the player who controls the
+   * permanent in the named target slot as the ability resolves, referenced directly rather than
+   * through a player target slot.
+   */
+  | { controllerOf: number };
 
 /**
  * One atomic mechanical primitive. Targeted primitives carry `target`: an `EffectRef` naming
@@ -530,6 +542,24 @@ export type Effect =
   /** Snapshot each matching creature's current P/T and add that much again until end of turn. */
   | { op: 'doublePowerAndToughnessEachUntilEot'; selector: Selector }
   | { op: 'grantKeywordEachUntilEot'; selector: Selector; keyword: KeywordAbility }
+  /**
+   * "Those creatures gain `keyword` until end of turn" for an `attackDeclared` trigger (Frontier
+   * Warmonger): exactly the creatures of the firing's attack group, bound when it fired and still
+   * on the battlefield as the same objects (CR 400.7); the set is fixed at resolution (CR 611.2c).
+   */
+  | { op: 'grantKeywordToAttackGroupUntilEot'; keyword: KeywordAbility }
+  /**
+   * "You put `count` `counter` counters on a creature you control" (Breena): chosen as it
+   * resolves, not targeted; nothing happens if you control no creature.
+   */
+  | { op: 'putCountersOnCreatureOfChoice'; counter: string; count: number }
+  /**
+   * "Return that creature to its owner's hand at end of combat" for a `blocks` trigger (Wall of
+   * Tears): creates a delayed trigger for the end of combat step (CR 511) that returns the
+   * creature this blocker blocked, remembered by object, so one that left and came back as a new
+   * object is not returned (CR 400.7). The delayed trigger does not depend on the blocker.
+   */
+  | { op: 'returnBlockedCreatureAtEndOfCombat' }
   /**
    * "Creatures you control gain protection from each color until end of turn" (Akroma's Will).
    * Separate from `grantKeywordEachUntilEot` because protection carries an ARGUMENT: it is not a
@@ -655,7 +685,41 @@ export type Effect =
   | { op: 'goadEachOpponent' }
   | { op: 'createTreasureForDeaths' }
   | { op: 'preventCombatDamageAll' }
-  | { op: 'preventCombatDamageToController' }
+  /**
+   * "Prevent all damage that would be dealt to you this turn" (Selfless Squire): a shield that
+   * lasts until the turn's cleanup step. It applies to damage that would be dealt after it is
+   * created, combat or not, from any source.
+   */
+  | {
+      op: 'createDamageShield';
+      /** Whose damage the shield prevents. Omitted for a shield on the creature `target` names. */
+      player?: 'you';
+      /**
+       * "Prevent all combat damage that would be dealt to and dealt by that creature this turn"
+       * (Delirium): the shield is on this one permanent, by object, not on a player.
+       */
+      target?: EffectRef;
+      /** Object shield: the damage it prevents is damage dealt to the permanent. */
+      dealtTo?: true;
+      /** Object shield: the damage it prevents is damage dealt by the permanent. */
+      dealtBy?: true;
+      /** Only combat damage is prevented. */
+      combatOnly?: true;
+      /**
+       * "A source of your choice" (Deflecting Palm, CR 609.7a): as it resolves its controller
+       * chooses any permanent on the battlefield or spell on the stack, and only damage from that
+       * object is prevented.
+       */
+      chosenSource?: true;
+      /** "The next time ... would deal damage": the shield ends when it first prevents damage. */
+      oneShot?: true;
+      /** "... deals that much damage to that source's controller": dealt as the damage is prevented. */
+      reflect?: 'toSourceController' | 'toSourceCreatureElseController';
+      /** "... dealt to you and planeswalkers you control": the shield covers those too. */
+      andPlaneswalkersYouControl?: true;
+      /** "... by sources you don't control", checked as the damage would be dealt. */
+      sources?: 'youDontControl';
+    }
   | { op: 'copyTargetSpell'; target: number }
   /**
    * Replicate's cast trigger (CR 702.56a): copy the spell `count` times, each copy's controller
@@ -688,23 +752,16 @@ export type Effect =
     }
   | { op: 'copyEachTargetedSpell'; targetSlot: number }
   | { op: 'angelGrace' }
-  | { op: 'arcbond'; target: EffectRef }
-  | { op: 'arcbondDamage' }
-  | { op: 'tapAndDamageController'; target: EffectRef }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
   | { op: 'combatCalligrapher' }
   | { op: 'inkshield' }
-  | { op: 'delirium' }
-  | { op: 'deflectingPalm'; target: EffectRef }
   | { op: 'gisela' }
   | { op: 'humbleDefector'; target: EffectRef }
   | { op: 'shadrixModes' }
   | { op: 'masterOfCeremonies' }
-  | { op: 'breenaAttack'; target: EffectRef }
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
   | { op: 'schemingSymmetry' }
-  | { op: 'sacrificePermanentOnDamage'; target: EffectRef }
   | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
@@ -727,6 +784,13 @@ export type Effect =
    * own ability and announces its own targets then (CR 603.3d); declining fires nothing.
    */
   | { op: 'mayPayManaThenReflexive'; cost: ParsedManaCost; then: Ability }
+  /**
+   * "You may pay one or more {E}. When you do, …" (Territorial Aetherkite) — a reflexive trigger
+   * (CR 603.12) on an energy payment of any amount from `min` up to all the energy you have,
+   * made while this ability resolves. Paying fires `then`, which goes on the stack as its own
+   * ability and reads the amount paid as `energyPaid`; declining fires nothing.
+   */
+  | { op: 'mayPayEnergyThenReflexive'; min: number; then: Ability }
   /**
    * "Put a +1/+1 counter on Lockjaw. When you do, …" (CR 603.12): `then` triggers only if the
    * counters were actually put on the source — not if it left the battlefield first.
@@ -855,7 +919,13 @@ export type Effect =
       exceptSource?: true;
     }
   /** "~ deals X damage to each creature without flying AND EACH PLAYER" (Earthquake). */
-  | { op: 'damageEachPlayer'; amount: Value }
+  | { op: 'damageEachPlayer'; amount: Value; source?: EffectRef }
+  /**
+   * "It deals that much damage to each other opponent" (Human Torch): the source deals `amount`
+   * to each opponent of the ability's controller except the event player, the opponent it just
+   * dealt combat damage to.
+   */
+  | { op: 'damageEachOtherOpponent'; amount: Value }
   /**
    * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). One
    * `destinations` entry per card that may be found — each independently offers "find or
@@ -965,7 +1035,13 @@ export type Effect =
   /** Create one token already attached to an announced permanent target. */
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }
   /** Create one token for each opponent, optionally attacking that opponent. */
-  | { op: 'createTokenForEachOpponent'; spec: TokenSpec; attacking?: boolean }
+  | {
+      op: 'createTokenForEachOpponent';
+      spec: TokenSpec;
+      attacking?: boolean;
+      /** "...attacking that player or a planeswalker they control" (Adeline). */
+      orPlaneswalker?: boolean;
+    }
   | {
       op: 'createTokenForPlayer';
       target: EffectRef;
@@ -1660,8 +1736,12 @@ export type TriggerHead =
    * `beginningOfCombat` is CR 507.1's begin combat step, queued the same way.
    */
   | {
-      when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat';
-      player: 'you' | 'each' | 'opponent';
+      when: 'upkeep' | 'endStep' | 'untapStep' | 'drawStep' | 'beginningOfCombat' | 'endOfCombat';
+      /**
+       * `'enchanted'`: only the step of the player this Aura enchants ("at the beginning of enchanted
+       * opponent's end step", Tenuous Truce); the event player is that player.
+       */
+      player: 'you' | 'each' | 'enchanted' | 'opponent';
     }
   /**
    * "At the beginning of each of your main phases" (Frontier Siege's Khans mode) — fires at
@@ -1677,7 +1757,40 @@ export type TriggerHead =
   /** "Whenever you gain life" (Dawn of Hope) — player-scoped, like the step triggers above. */
   | { when: 'gainsLife'; player: 'you' | 'each' }
   | { when: 'drawsCard'; player: 'you' | 'each' | 'opponent' }
-  | { when: 'foretells'; player: 'you' };
+  | { when: 'foretells'; player: 'you' }
+  /**
+   * "Whenever damage that would be dealt to you is prevented" (Selfless Squire): queued once per
+   * prevention applied to one damage event to the player, carrying the amount it prevented
+   * (`damageDealt` in the ability's value scope).
+   */
+  | { when: 'damagePreventedToPlayer'; player: 'you' | 'each' }
+  /**
+   * "Whenever a source an opponent controls deals damage to you" (Michiko Konda): queued once per
+   * source's damage event to a player, only if damage was actually dealt (infect counts, CR
+   * 702.90b). `player` is the damaged player. The event player is the SOURCE's controller, and
+   * `sourceController: 'opponent'` limits it to sources the watcher's controller's opponents control.
+   */
+  | { when: 'playerDealtDamage'; player: 'you' | 'each'; sourceController?: 'opponent' }
+  /**
+   * "Whenever a player attacks ..." (Firemane Commando, Breena, Mangara, Ever-Watching Threshold,
+   * Frontier Warmonger, Tenuous Truce): queued once as an attack declaration is made (CR 508.2a),
+   * for each player who declared attackers that `attacker` names, relative to the watcher's
+   * controller. The event player is the attacking player.
+   *
+   * The attackers form a group whose size is checked when the event happens (`minAttackers`,
+   * default 1 — a trigger condition, not an intervening-if) and which the ability's value scope
+   * remembers by object. `attacking` narrows the group to creatures attacking a given player (and
+   * optionally that player's planeswalkers); `perDefender` makes one group, and one firing, per
+   * attacked player instead of one per attacking player, with `attackedPlayerId` bound to it.
+   * An attack on a planeswalker is never an attack on its controller (CR 506.2).
+   */
+  | {
+      when: 'attackDeclared';
+      attacker: 'you' | 'opponent' | 'otherPlayer' | 'any' | 'enchantedPlayer';
+      attacking?: { who: 'you' | 'opponent' | 'enchantedPlayer'; planeswalkers: boolean };
+      perDefender?: boolean;
+      minAttackers?: number;
+    };
 
 /**
  * When a triggered ability fires.

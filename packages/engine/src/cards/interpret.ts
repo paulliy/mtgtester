@@ -1851,6 +1851,22 @@ function parseEffectSentence(
         },
       ];
     }
+    // "it deals X damage to any target, where X is the number of Dragons you control" (Scourge of
+    // Valkas): "it" is the creature that triggered this, the damage source with last known
+    // information (CR 608.2h), and X is counted as the ability resolves.
+    const itDealsX = s.match(/^it deals x damage to any target, where x is (.+)$/);
+    if (itDealsX !== null && opts.triggerObject === true) {
+      const count = parseDynamicCountValue(itDealsX[1] as string, card, opts);
+      if (count === null) return null;
+      return [
+        {
+          op: 'dealDamage',
+          target: alloc('anyTarget'),
+          amount: count,
+          source: 'triggerObject',
+        },
+      ];
+    }
     {
       const targetHandDamage = s.match(
         /^~ deals damage to target player equal to the number of cards in that player's hand$/,
@@ -1878,6 +1894,14 @@ function parseEffectSentence(
         s === '~ deals x damage to each opponent, where x is the number of colors that spell is'
       ) {
         return [{ op: 'eachOpponentDamage', amount: { kind: 'spellColorCount' } }];
+      }
+      // "this creature deals 3 damage to that player" (Thunderbreak Regent): the event's player,
+      // here the controller of the spell or ability that targeted the Dragon.
+      const toThatPlayer = s.match(/^~ deals (\d+) damage to that player$/);
+      if (toThatPlayer !== null) {
+        return [
+          { op: 'dealDamage', target: 'eventPlayer', amount: constant(Number(toThatPlayer[1])) },
+        ];
       }
       if (s === '~ deals damage equal to its power to that player') {
         return [{ op: 'dealDamage', target: 'eventPlayer', amount: { kind: 'powerOfSource' } }];
@@ -4205,11 +4229,20 @@ function parseCreateTokenSentence(
   // Per-opponent attacking tokens (Adeline, Ainok Strike Leader, Endless Foot Assault).
   {
     const attacking = s.match(
-      /^create (?:a|an) (.+?) token that(?:'s| is) tapped and attacking that player(?: or a planeswalker they control)?$/,
+      /^create (?:a|an) (.+?) token that(?:'s| is) tapped and attacking that player( or a planeswalker they control)?$/,
     );
     if (attacking !== null) {
       const spec = parseTokenFace((attacking[1] as string) + ' token', card);
-      if (spec !== null) return [{ op: 'createTokenForEachOpponent', spec, attacking: true }];
+      if (spec !== null) {
+        return [
+          {
+            op: 'createTokenForEachOpponent',
+            spec,
+            attacking: true,
+            ...(attacking[2] !== undefined ? { orPlaneswalker: true } : {}),
+          },
+        ];
+      }
     }
   }
   const copy = s.match(/^create (a|that many|\w+) tokens? that's a copy of it(, except .+)?$/i);
@@ -6877,13 +6910,18 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   ) {
     return [{ kind: 'damageDoubledToOpponents', sourceControllerOnly: true }];
   }
-  if (lower === 'affinity for artifacts') {
+  if (lower === 'prevent all combat damage that would be dealt to this creature') {
+    return [{ kind: 'preventCombatDamageToSelf' }];
+  }
+  // Affinity for [permanent type] (CR 702.41a): costs {1} less for each such permanent you control.
+  const affinity = lower.match(/^affinity for (artifacts|planeswalkers)$/);
+  if (affinity !== null) {
     return [
       {
         kind: 'costReduction',
         amount: {
           kind: 'countPermanents',
-          selector: allOf(ofType('Artifact'), YOURS),
+          selector: allOf(ofType(affinity[1] === 'artifacts' ? 'Artifact' : 'Planeswalker'), YOURS),
           scope: 'all',
         },
         selfOnly: true,
@@ -7546,21 +7584,11 @@ export function interpretCard(card: OracleCard): CardDefinition {
     mdfcLandFace === null ? undefined : [mdfcLandFace];
 
   if (card.name === 'Dragon Tempest') {
+    // Only the haste line is bespoke; the Dragon damage line is read by the effect grammar.
     triggers.push(
       triggered(whenEnters(allOf(ofType('Creature'), withKeyword('flying'), YOURS)), {
         effects: [{ op: 'grantKeywordUntilEot', keyword: 'haste', target: 'triggerObject' }],
         description: 'Flying ETB haste',
-      }),
-      triggered(whenEnters(allOf(ofSubtype('Dragon'), YOURS)), {
-        targets: [{ kind: 'anyTarget' }],
-        effects: [
-          {
-            op: 'dealDamage',
-            target: 0,
-            amount: { kind: 'countPermanents', selector: ofSubtype('Dragon'), scope: 'you' },
-          },
-        ],
-        description: 'Dragon ETB damage equal to Dragon count',
       }),
     );
     reasons.length = 0;
@@ -8903,6 +8931,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
   // clear reasons after the ordinary line pass, which otherwise records the bespoke lines again.
   if (
     [
+      'Dragon Tempest',
       'Orb of Dragonkind',
       'Rivaz of the Claw',
       'Sarkhan, Dragon Ascendant',

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { LegalAction, PermanentView, PlayerView } from '@mtg/shared';
 import { NO_BLOCK_TARGET } from '@mtg/shared';
-import { searchBlockAssignment, searchDamageSplit, staticBlockChoices } from './combat-search';
+import {
+  searchBlockAssignment,
+  searchDamageSplit,
+  staticBlockChoices,
+  staticDamageSplit,
+} from './combat-search';
 import { WEIGHTS } from './weights';
 
 /**
@@ -289,5 +294,24 @@ describe('searchDamageSplit — deathtouch is what Phase 4 could not see', () =>
       battlefield: [creature('bA', 'P2', 3, 3), creature('bB', 'P2', 3, 3)],
     });
     expect(searchDamageSplit({ amount: 4, targets: ['bA', 'bB'] }, v)).toBeNull();
+  });
+});
+
+describe('staticDamageSplit with a planeswalker as the trample recipient', () => {
+  it('sends the excess to the planeswalker and never treats it as a blocker', () => {
+    const walker: PermanentView = {
+      id: 'pw1',
+      controller: 'P2',
+      name: 'Walker',
+      power: null,
+      toughness: null,
+      tapped: false,
+      status: [],
+    };
+    const v = view({ battlefield: [creature('b1', 'P2', 1, 2), walker] });
+    expect(staticDamageSplit({ amount: 5, targets: ['b1', 'pw1'] }, v)).toEqual({
+      b1: 2,
+      pw1: 3,
+    });
   });
 });

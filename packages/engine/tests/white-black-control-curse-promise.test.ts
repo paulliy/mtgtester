@@ -370,8 +370,10 @@ function attackOptions(
         const subject = decision.presentationAttackDeclaration?.subjects.find(
           (entry) => entry.subjectId === attacker.id,
         );
-        offered =
-          subject?.defenders.map((defender) => defender.defenderId ?? defender.playerId) ?? [];
+        offered = [
+          ...(subject?.defenders.map((defender) => defender.playerId) ?? []),
+          ...(subject?.planeswalkers.map((planeswalker) => planeswalker.objectId) ?? []),
+        ];
         return declareAttacks(decision, () => null);
       }
       return decision.decisionType === 'declareAttackers'

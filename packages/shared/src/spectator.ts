@@ -51,8 +51,10 @@ export interface SpectatorPermanent extends SpectatorCard {
   statuses: PermanentStatus[];
   summoningSick: boolean;
   attachedTo: ObjectId | null;
-  /** Set while in combat: the player this creature is attacking. */
+  /** Set while in combat: the player this creature is attacking (the planeswalker's controller when it attacks a planeswalker). */
   attacking: PlayerId | null;
+  /** Set while in combat: the planeswalker this creature is attacking, when it attacks one. */
+  attackingPlaneswalker?: ObjectId | null;
   /** Set while in combat: the attacker this creature is blocking. */
   blocking: ObjectId | null;
   /** For attackers: blockers in damage-assignment order (CR 509.2). */

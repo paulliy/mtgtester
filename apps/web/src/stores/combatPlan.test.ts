@@ -52,6 +52,7 @@ function attackRequest(
           power: 2,
           toughness: 2,
           defenders: OPPONENTS.map((p) => ({ playerId: p, life: 40, attackTax: 0 })),
+          planeswalkers: [],
           mustAttack: false,
           hasTriggers: false,
         })),

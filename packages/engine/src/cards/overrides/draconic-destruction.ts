@@ -3,7 +3,7 @@
  */
 
 import { constant } from '../value';
-import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost } from '../templates';
+import { EXILE_SELF_FROM_GRAVEYARD, mana, manaCost, targetSlots, triggered } from '../templates';
 import { defineCard, unsupportedCard } from './index';
 import { allOf, anyOf, not, ofSubtype, ofType, SELF, withKeyword, YOURS } from '../selector';
 
@@ -445,11 +445,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     },
   );
 
-  unsupportedCard(
-    '3180ee4f-66d7-4b73-bc10-9ee0c790ec18',
-    'Flameblast Dragon',
-    'The damage target is chosen before you decide to pay X.',
-  );
+  // Flameblast Dragon: restored in coverage PR06 (see coverage-pr06.ts).
 
   defineCard(
     '00de57d2-7cb6-4337-9bc6-f6711e4dfabf',
@@ -655,11 +651,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     'The +1 does not make it legendary or red.',
   );
 
-  unsupportedCard(
-    '0a147009-a57c-4ac1-ab81-d8bd8b737631',
-    'Scourge of Valkas',
-    'The entering Dragon is the damage source, implemented as damage from this creature.',
-  );
+  // Scourge of Valkas: restored in coverage PR06 (no override remains).
 
   defineCard(
     'f63278e0-3c67-421d-87ce-67725e5e74df',
@@ -679,23 +671,56 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
     STEEL_HELLKITE_DEF,
   );
 
-  unsupportedCard(
-    'bb04f927-0348-4a14-9e74-381f18083f6a',
-    'Thunderbreak Regent',
-    'Damage to the targeting opponent uses eventPlayer, which is unset on becomes-targeted events.',
-  );
+  // Thunderbreak Regent: restored in coverage PR06 (no override remains).
 
-  // Catalog audit draconic-batch-4: tap is a second selector pass, not the damaged set.
-  unsupportedCard(
-    'e958144e-01bc-46ff-8f56-ddf2eb098630',
-    'Thundermaw Hellkite',
-    'Tap applies to all opposing fliers, not only creatures dealt that damage.',
-  );
+  // Thundermaw Hellkite: restored in coverage PR06 (see coverage-pr06.ts).
 
-  unsupportedCard(
+  // Tyrant's Familiar: Lieutenant (CR 903.7). While you control your own commander it gets +2/+2
+  // and has an attack trigger; both exist only under that condition. The trigger's "defending
+  // player" is the player this creature attacks (the event player), not its controller, and the
+  // 7 damage is dealt by the Familiar itself.
+  const lieutenantHit = targetSlots({ creature: { kind: 'creature', controller: 'eventPlayer' } });
+  defineCard(
     '63394e24-a456-4cc6-9885-8c62447b050a',
     "Tyrant's Familiar",
-    'Defending-player creature targeting uses eventPlayer, which is the attacking player.',
+    [
+      'As long as you control your commander, this creature gets +2/+2 and has "Whenever this creature attacks, it deals 7 damage to target creature defending player controls."',
+    ],
+    {
+      staticEffects: [
+        {
+          affects: SELF,
+          op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+          condition: { kind: 'controlsYourCommander' },
+        },
+        {
+          affects: SELF,
+          op: {
+            layer: 6,
+            addTrigger: triggered(
+              {
+                when: 'attacks',
+                subject: { kind: 'self' },
+                defendingPlayerIsEventPlayer: true,
+              },
+              {
+                targets: lieutenantHit.targets,
+                effects: [
+                  {
+                    op: 'dealDamage',
+                    target: lieutenantHit.slot.creature,
+                    amount: constant(7),
+                  },
+                ],
+                description:
+                  'Whenever this creature attacks, it deals 7 damage to target creature defending player controls',
+              },
+            ),
+          },
+          condition: { kind: 'controlsYourCommander' },
+        },
+      ],
+    },
   );
 
   defineCard(

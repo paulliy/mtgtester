@@ -113,7 +113,7 @@ export function whiteBlackControlCombatScenario(id: string, gameId: GameId): Car
         `Cast ${entry.card.name} from your hand and let it resolve.`,
         'Declare both Lab Attack Witnesses attacking P2.',
         entry.card.name === 'Breena, the Demagogue'
-          ? 'Resolve the single Breena trigger and target a creature you control.'
+          ? 'Resolve the single Breena trigger and choose a creature you control for the counters.'
           : "Accept Duelist's Heritage's optional trigger and target one attacking creature.",
         'Let combat finish.',
       ],

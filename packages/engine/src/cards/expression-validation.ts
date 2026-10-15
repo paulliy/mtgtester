@@ -34,6 +34,9 @@ const oneOf =
   (value, path, issues) => {
     if (!values.includes(value as string)) issue(path, issues, 'expected ' + values.join(' | '));
   };
+const flag: Check = (value, path, issues) => {
+  if (value !== true) issue(path, issues, 'expected true');
+};
 const optional =
   (check: Check): Check =>
   (value, path, issues) => {
@@ -245,6 +248,15 @@ const conditionShapes = {
   attackingPlayerHasMoreLifeThanYou: {},
   defendingOpponentHasMoreLifeThanAnother: {},
   triggerObjectAttackingOpponent: {},
+  attackGroupAttackingYou: {
+    planeswalkers: (value, path, issues) => {
+      if (typeof value !== 'boolean') issues.push({ path, message: 'expected a boolean' });
+    },
+    cmp: oneOf('>=', '<=', '=='),
+    n: finite,
+  },
+  attackWasNotAtYou: {},
+  attackedPlayerHasMoreLifeThanAnotherOpponent: {},
   allOf: { of: arrayOf(condition) },
   anyOf: { of: arrayOf(condition) },
   eventPlayerDrawCount: { cmp: oneOf('>=', '<=', '=='), n: finite },
@@ -312,6 +324,10 @@ const effectExpressions = {
   pumpEachUntilEot: { selector: selector, power: numericExpression, toughness: numericExpression },
   doublePowerAndToughnessEachUntilEot: { selector: selector },
   grantKeywordEachUntilEot: { selector: selector },
+  grantKeywordToAttackGroupUntilEot: {},
+  putCountersOnCreatureOfChoice: { count: finite },
+  returnBlockedCreatureAtEndOfCombat: {},
+  damageEachOtherOpponent: { amount: numberValue },
   grantProtectionEachUntilEot: { selector: selector },
   grantChosenColorProtectionUntilEot: {},
   returnSpellToOwnerHand: {},
@@ -371,28 +387,32 @@ const effectExpressions = {
   goadEachOpponent: {},
   createTreasureForDeaths: {},
   preventCombatDamageAll: {},
-  preventCombatDamageToController: {},
+  createDamageShield: {
+    player: optional(oneOf('you')),
+    target: optional(reference),
+    dealtTo: optional(flag),
+    dealtBy: optional(flag),
+    combatOnly: optional(flag),
+    chosenSource: optional(flag),
+    oneShot: optional(flag),
+    reflect: optional(oneOf('toSourceController', 'toSourceCreatureElseController')),
+    andPlaneswalkersYouControl: optional(flag),
+    sources: optional(oneOf('youDontControl')),
+  },
   copyTargetSpell: {},
   replicateCopies: {},
   copyEachTargetedSpell: {},
   angelGrace: {},
-  arcbond: {},
-  arcbondDamage: {},
-  tapAndDamageController: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},
   combatCalligrapher: {},
   inkshield: {},
-  delirium: {},
-  deflectingPalm: {},
   gisela: {},
   humbleDefector: {},
   shadrixModes: {},
   masterOfCeremonies: {},
-  breenaAttack: {},
   drawTargetAndControllerN: {},
   schemingSymmetry: {},
-  sacrificePermanentOnDamage: {},
   kambal: {},
   destroyAndCreateTokensEqualToManaValue: {},
   exile: {},
@@ -403,6 +423,7 @@ const effectExpressions = {
   sacrificeOneThen: { selector: selector },
   sacrificeSourceThenReflexive: {},
   mayPayManaThenReflexive: {},
+  mayPayEnergyThenReflexive: { min: finite },
   putCountersOnSourceThenReflexive: { counter: text, count: finite },
   gainControlTarget: {},
   putCounters: { count: numericExpression },

@@ -132,7 +132,18 @@ export function digestOf(
     // it returned the same cached characteristics, and ward is read during targeting/payment.
     h = mix(h, perm.tapped ? 1 : 0);
     // Combat-dependent statics must expire even if no other characteristic input changes.
-    h = mix(h, perm.attacking !== null ? 1 : perm.blocking !== null ? 2 : 0);
+    // `attackingDefenderId` also reads whether it attacks a planeswalker, and whether that one is
+    // still in combat.
+    h = mix(
+      h,
+      perm.attacking !== null
+        ? 1 +
+            (perm.attackingPlaneswalker !== null ? 2 : 0) +
+            (perm.attackedPlaneswalkerRemoved ? 4 : 0)
+        : perm.blocking !== null
+          ? 8
+          : 0,
+    );
     // The `hadToAttackThisCombat` condition reads this per-combat flag.
     h = mix(h, perm.hadToAttackThisCombat === true ? 1 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming

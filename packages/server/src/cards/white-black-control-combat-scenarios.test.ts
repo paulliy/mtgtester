@@ -66,6 +66,12 @@ function runScenario(id: string): RunResult {
         expect(slot.options).toContain(alpha!.id);
         targetChoices.push(alpha!.id);
       }
+    } else if (request.legalActions.some((candidate) => candidate.type === 'putCounters')) {
+      // Breena's counters go on a creature chosen as the ability resolves, not a target.
+      action = request.legalActions.find(
+        (candidate) => candidate.description === 'Choose Lab Attack Witness Alpha',
+      );
+      expect(action).toBeDefined();
     } else if (request.legalActions.some((candidate) => candidate.description === 'Yes')) {
       action = request.legalActions.find((candidate) => candidate.description === 'Yes');
     }
@@ -138,7 +144,9 @@ describe('white-black control prepared combat scenarios', () => {
             ?.counters['+1/+1'] ?? 0,
         ).toBe(0);
         expect(
-          first.decisionTrace.filter((decision) => decision.decisionType === 'chooseTargets'),
+          first.decisionTrace.filter(
+            (decision) => decision.action === 'Choose Lab Attack Witness Alpha',
+          ),
         ).toHaveLength(1);
       } else {
         const view = first.engine.view('P1');

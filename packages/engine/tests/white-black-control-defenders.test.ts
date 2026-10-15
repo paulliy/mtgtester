@@ -141,9 +141,8 @@ describe('white black defender cards', () => {
         oracle({ name: 'Snare Walker', typeLine: 'Planeswalker', loyalty: '8' }),
       );
       const attacker = spawn(ctx, 'P2', bear());
-      attacker.attacking = defender === 'you' ? 'P1' : walker.id;
-      attacker.attackingPlayerId = 'P1';
-      if (defender === 'walker') attacker.attackingPlaneswalkerControlChanges = 0;
+      attacker.attacking = 'P1';
+      if (defender === 'walker') attacker.attackingPlaneswalker = walker.id;
       const unrelated = spawn(ctx, 'P2', bear());
       unrelated.attacking = 'P3';
       const player = ctx.state.players[0]!;
@@ -176,9 +175,8 @@ describe('white black defender cards', () => {
         oracle({ name: 'Changing Walker', typeLine: 'Planeswalker', loyalty: '8' }),
       );
       const attacker = spawn(ctx, 'P2', bear());
-      attacker.attacking = walker.id;
-      attacker.attackingPlayerId = 'P1';
-      attacker.attackingPlaneswalkerControlChanges = 0;
+      attacker.attacking = 'P1';
+      attacker.attackingPlaneswalker = walker.id;
       const player = ctx.state.players[0]!;
       const action = computePriorityOptions(ctx, player).find((option) => {
         const p = option.payload as PriorityActionPayload;

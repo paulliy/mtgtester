@@ -33,7 +33,6 @@ const CATALOG_CONTAINED = new Set([
   'Saheeli, Radiant Creator',
   'Saheeli, Sublime Artificer',
   'Aetherworks Marvel',
-  'Territorial Aetherkite',
   'Duplicant',
   'Adaptive Omnitool',
   'Druid of Purification',

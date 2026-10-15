@@ -615,8 +615,13 @@ export function staticDamageSplit(
   view: PlayerView,
 ): Record<ObjectId, number> {
   const permById = new Map(view.battlefield.map((p) => [p.id, p]));
-  const blockerIds = spec.targets.filter((id) => permById.has(id));
-  const playerTargetId = spec.targets.find((id) => !permById.has(id));
+  // A trampler's excess goes to the player or planeswalker it attacks. A planeswalker is on the
+  // battlefield but is no blocker, so blockers are the targets that are creatures.
+  const blockerIds = spec.targets.filter((id) => {
+    const perm = permById.get(id);
+    return perm !== undefined && toCreature(perm) !== null;
+  });
+  const playerTargetId = spec.targets.find((id) => !blockerIds.includes(id));
   const lethalFor = (id: ObjectId): number => Math.max(1, permById.get(id)?.toughness ?? 1);
 
   const ordered = [...blockerIds].sort((a, b) => lethalFor(a) - lethalFor(b));

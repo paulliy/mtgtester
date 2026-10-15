@@ -83,14 +83,22 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * put onto the battlefield with it (that object's id), or nothing (`null`) if none was.
    */
   reanimatedHostId?: ObjectId | null;
-  /** Player this creature is attacking, while in combat. */
+  /**
+   * The DEFENDING PLAYER while in combat: the player this creature attacks, or the controller of
+   * the planeswalker it attacks (CR 508.1b). Non-null exactly when this is an attacking creature.
+   */
   attacking: PlayerId | null;
+  /** The planeswalker this attacker attacks (CR 508.1b); null when it attacks the player. */
+  attackingPlaneswalker: ObjectId | null;
+  /**
+   * Sticky: the attacked planeswalker has been removed from combat (CR 506.4) — it left the
+   * battlefield, changed controller, or stopped being a planeswalker. The creature stays an
+   * attacking creature and can be blocked, but attacks nothing and deals no combat damage
+   * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
+   */
+  attackedPlaneswalkerRemoved: boolean;
   /** A chosen assignment prohibition lasts through all combats of this turn. */
   assignsNoCombatDamageTurn?: number;
-  /** Actual defending player, also when `attacking` names a planeswalker. */
-  attackingPlayerId?: PlayerId;
-  /** Captured control-change generation: a planeswalker changing control leaves combat. */
-  attackingPlaneswalkerControlChanges?: number;
   /** A resolved effect's fixed attack prohibition, active while the named counter remains. */
   cantAttackPlayerWhileCounter?: Array<{ playerId: PlayerId; counter: string }>;
   /** Attacker this creature is blocking, while in combat. */
@@ -549,6 +557,52 @@ export interface DelayedTrigger {
   player?: 'you';
 }
 
+/** "Prevent all damage that would be dealt to you this turn" and its relatives (CR 615). */
+export interface DamageShield {
+  id: string;
+  /** The spell or ability that created it, as last known information. */
+  effectSource: import('../effects/resolve').EffectSource;
+  /** The player whose damage it prevents; absent for a shield on one permanent (`object`). */
+  playerId?: PlayerId;
+  /**
+   * A shield on one permanent, by object id (Delirium): damage dealt to it, by it, or both. It
+   * stops covering the permanent when it leaves, since a new object is not the same one (CR 400.7).
+   */
+  object?: { id: ObjectId; dealtTo: boolean; dealtBy: boolean };
+  /** Only combat damage is prevented. */
+  combatOnly?: true;
+  /**
+   * Only damage from this one object: a permanent or a spell on the stack, by its object id. A
+   * source that changes zones is a new object and no longer matches (CR 400.7).
+   */
+  sourceObjectId?: ObjectId;
+  /** "The next time ... would deal damage": removed as soon as it prevents damage. */
+  oneShot?: true;
+  /** Also covers damage to planeswalkers its player controls, checked as the damage would be dealt. */
+  andPlaneswalkersTheyControl?: true;
+  /** Only damage from sources that this player does not control, checked as it would be dealt. */
+  sourceNotControlledBy?: PlayerId;
+  /**
+   * "If damage is prevented this way, <the effect source> deals that much damage to ...": to that
+   * source's controller, or (Comeuppance) to the source itself when it is a creature as the damage
+   * would be dealt and otherwise to its controller.
+   */
+  reflect?: 'toSourceController' | 'toSourceCreatureElseController';
+}
+
+/** Damage an effect owes because it prevented damage, dealt right after the prevented event. */
+export interface DamageReflection {
+  effectSource: import('../effects/resolve').EffectSource;
+  /** A player or a permanent (object id) to deal the damage to. */
+  toId: string;
+  amount: number;
+  /**
+   * The (shield, recipient, amount) steps that led here from the original damage event. A step
+   * that repeats is a mandatory loop with no choice in it (CR 104.4b).
+   */
+  chain: string[];
+}
+
 export interface EngineState extends GameState {
   players: EnginePlayerState[];
   battlefield: EnginePermanent[];
@@ -607,6 +661,16 @@ export interface EngineState extends GameState {
     players: Record<PlayerId, boolean>;
     tokenSpecs?: Record<PlayerId, import('../cards/ability').TokenSpec>;
   };
+  /**
+   * Damage prevention shields created by resolving spells and abilities, oldest first, cleared as
+   * the turn's "until end of turn" effects end (CR 514.2). Each is collected by the damage modifier
+   * pipeline (`effects/damage-modifiers.ts`) for the damage it covers.
+   */
+  damageShields: DamageShield[];
+  /** Reflections queued by prevention, drained by `flushDamageReflections` (transient). */
+  damageReflections: DamageReflection[];
+  /** The chain of the reflection being dealt right now, empty for an original damage event. */
+  damageChain: string[];
   /** Players protected from dropping below 1 life until the end of the turn (Angel's Grace). */
   lifeFloorPlayers: Record<PlayerId, boolean>;
   spellsProhibitedTurn?: number;

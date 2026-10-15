@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { interpretCard } from '../src/cards/interpret';
-import { registerWhiteBlackControlDuelistOverrides } from '../src/cards/overrides/white-black-control-duelist';
 import { runCombatPhase } from '../src/combat/combat';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
@@ -30,10 +29,6 @@ const heritage: OracleCard = (() => {
   if (card === undefined) throw new Error("Missing pinned Oracle card: Duelist's Heritage");
   return card;
 })();
-
-// The existing registry contains explicit containment; install the replacement locally until
-// the root registry is wired to the new deck registration. Once wired, use its normal entry.
-if (!interpretCard(heritage).modeled) registerWhiteBlackControlDuelistOverrides();
 
 const regularAttacker = (name: string) =>
   oracle({

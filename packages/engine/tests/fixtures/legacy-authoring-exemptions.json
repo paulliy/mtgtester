@@ -133,6 +133,11 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "sha256": "542d0793445ff57b23d4eeb1b3ba406d6b1fef99af61bd06b7b89483c63e658c",
+      "description": "registerDRACONIC_DESTRUCTIONOverrides"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
       "sha256": "70b35b7ede83ecbd5c045330e17ef843515faadc5809406a048e0593cb7c9616",
       "description": "Clan Defiance"
     },
@@ -323,7 +328,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "c0877dd40ce8c0c27cea6ef24cdc6eeb267456b2a879df12feb139de52070a28",
+      "sha256": "9cce2f7d905c553ce7cc1cc7d7dff017ae2d8759b02eaffa1863201c0218451b",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -573,7 +578,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "sha256": "6b3bfdfcad10a6ba6e404f50e10c88c6e37a7c305cd5fd12fe97b0895cf2014b",
+      "sha256": "5fdde87ec4381553e881167d9b5b0f2d0ce83d2078e2a75cc7c675a74d02a0c3",
       "description": "registerNECRON_DYNASTIESOverrides"
     },
     {
@@ -608,7 +613,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "2784208a96464d3285dc6de83ce3d684daf875d4a20a9bbd63c6e20268b0e633",
+      "sha256": "3b1df7fbd875645f5d1b318b03113ca656b1222ea66f3d19c69a4b61194d97b5",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
@@ -773,7 +778,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "887d399844de268289f268ce451c15f5d8b9627ec1218726a57c5a593f8002eb",
+      "sha256": "16b1d97d6c2834345806edb1041573cec946552528afc26c15d36cc66ec43bdb",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {
@@ -893,7 +898,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/urdragon.ts",
-      "sha256": "e0d6edea2bd3e8bd20fac081ab57da57a6a7084008ccd422e469c84de88cb211",
+      "sha256": "28c3587277c58300ce2823033c2f75259a3b31e8708e988b0c9d192a84490319",
       "description": "registerURDRAGONOverrides"
     },
     {
@@ -1015,11 +1020,6 @@
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
       "sha256": "898e22922a6925fda6b527ed0bcd20394fc9f83a4507913993ee8099867dbcb9",
       "description": "Zopandrel, Hunger Dominus"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "d027d31a154eb12543ee9a1f485804a1b39bcd2bc9b545bdbc941b4e1230aa53",
-      "description": "registerDRACONIC_DESTRUCTIONOverrides"
     }
   ]
 }

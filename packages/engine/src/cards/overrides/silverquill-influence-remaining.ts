@@ -171,12 +171,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // Fallen Ideal: restored in coverage PR05. Grants flying and the sacrifice ability to the
   // enchanted creature, which may sacrifice itself; returns this card to its owner's hand from the
   // graveyard.
-  // Catalog audit silverquill-remaining-batch-1: both triggers make you draw.
-  unsupportedCard(
-    'ac675899-25bb-4f06-9c8c-bf188024495f',
-    'Firemane Commando',
-    'Both attack triggers make you draw, ignoring the other-player and not-attacked-you clauses.',
-  );
+  // Firemane Commando: restored in coverage PR06 (see coverage-pr06.ts).
   // Forum Filibuster: restored in coverage PR05. The interpreter reads the Inkling token and its
   // reflexive return of an Aura or Equipment card attached to that token, so no override remains.
   // Ghoulish Impetus: restored in coverage PR05. The interpreter reads the +1/+1, deathtouch and
@@ -364,12 +359,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
       },
     ],
   });
-  // Catalog audit silverquill-remaining-batch-2: current Oracle is affinity + opponent-attacks.
-  unsupportedCard(
-    '2ef0961a-0543-4371-8c2a-333881b735e5',
-    'Tomik, Wielder of Law',
-    'Affinity and opponent-attacks trigger are implemented as a self-attack drain.',
-  );
+  // Tomik, Wielder of Law: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     '71c52bf5-2a5d-488e-8b15-7ef290e4b77d',
     'War Room',

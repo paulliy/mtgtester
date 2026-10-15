@@ -224,11 +224,13 @@ describe('Hornet Nest', () => {
   it('nest-makes-insects-equal-to-damage-dealt', () => {
     const ctx = pod('nest-damage');
     const nest = spawn(ctx, 'P1', card);
-    dealDamageToCreature(ctx, permanentSource(spawn(ctx, 'P2', bear())), nest, 2, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(spawn(ctx, 'P2', bear())), nest, 2, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     resolvePending(ctx);
     const insects = ctx.state.battlefield.filter(
@@ -247,11 +249,13 @@ describe('Hornet Nest', () => {
     const ctx = pod('nest-other');
     spawn(ctx, 'P1', card);
     const other = spawn(ctx, 'P1', bear());
-    dealDamageToCreature(ctx, permanentSource(other), other, 1, {
-      combat: false,
-      sourceHasDeathtouch: false,
-      sourceHasLifelink: false,
-    });
+    pump(
+      dealDamageToCreature(ctx, permanentSource(other), other, 1, {
+        combat: false,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
     expect(ctx.state.pendingTriggers).toHaveLength(0);
     expect(ctx.state.battlefield.some((permanent) => permanent.name === 'Insect')).toBe(false);
   });

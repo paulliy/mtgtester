@@ -99,8 +99,8 @@ function run(id: string): ScenarioRun {
       const chosen: string[] = [];
       for (const [index, slot] of (declaration!.targets ?? []).entries()) {
         const subject = subjects[index];
-        const defender = subject?.defenders.find((candidate) => candidate.name === targetName);
-        const defenderId = defender?.defenderId ?? defender?.playerId;
+        const defender = subject?.planeswalkers.find((candidate) => candidate.name === targetName);
+        const defenderId = defender?.objectId;
         expect(
           defenderId,
           `${subject?.name} should have the intended planeswalker defender`,

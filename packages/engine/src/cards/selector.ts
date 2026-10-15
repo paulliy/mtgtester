@@ -82,9 +82,8 @@ export interface SelectorCandidate {
   inCombat?: boolean;
   /** Combat status is independent of layers, so continuous statics may read it. */
   combatRole?: 'attacking' | 'blocking' | null;
-  /** The player or planeswalker this permanent is attacking, when it is an attacker. */
+  /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
-  attackingDefenderIsPlayer?: boolean;
   attackingDefendingPlayerId?: string;
   /** Does this permanent have any counter of any kind on it (Rishkar, Peema Renegade)? */
   hasAnyCounter?: boolean;
@@ -114,6 +113,11 @@ export interface SelectorSource {
   triggerObjectCardId?: string;
   /** Player whose action caused the event, for event-relative conditions. */
   eventPlayerId?: string;
+  /** `attackDeclared` firing: the group's attackers by object, and the attacked player, if any. */
+  attackGroupIds?: readonly string[];
+  attackedPlayerId?: string;
+  /** `attackDeclared` firing: whether any attacker of the whole attack attacked the watcher. */
+  attackedWatcher?: boolean;
   /** Mana spent to cast the spell a cast trigger is about, for `compareValues` (Increment). */
   manaSpent?: number;
   /** The source's `chosenOption` (Caged Sun's color, …), for the `chosenColor` selector. */
@@ -409,14 +413,11 @@ export function selectMatches(
     case 'attackingOpponent':
       return (
         candidate.attackingDefenderId != null &&
-        candidate.attackingDefenderIsPlayer !== false &&
         candidate.attackingDefenderId !== source.controllerId
       );
     case 'attackingYouOrYourPlaneswalker':
-      return (
-        candidate.attackingDefenderId != null &&
-        candidate.attackingDefendingPlayerId === source.controllerId
-      );
+      // The defending player when the attack is on that player, or on a planeswalker still in combat.
+      return candidate.attackingDefendingPlayerId === source.controllerId;
     case 'attackingEventPlayer':
       return (
         source.eventPlayerId !== undefined && candidate.attackingDefenderId === source.eventPlayerId

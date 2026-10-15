@@ -41,9 +41,12 @@ describe('planeswalker combat defender contract', () => {
     const result = pump(runCombatPhase(ctx), (d) => {
       if (d.decisionType === 'declareAttackers') {
         const subject = d.presentationAttackDeclaration!.subjects[0]!;
+        expect(subject.defenders.find((defender) => defender.playerId === 'P2')).toMatchObject({
+          life: 40,
+        });
         expect(
-          subject.defenders.find((defender) => defender.defenderId === walker.id),
-        ).toMatchObject({ playerId: 'P2', life: 40, name: walker.name });
+          subject.planeswalkers.find((planeswalker) => planeswalker.objectId === walker.id),
+        ).toMatchObject({ controllerId: 'P2', name: walker.name });
         expect(d.options[0]!.targets![0]!.options).toContain(walker.id);
         return declareAttacks(d, () => walker.id);
       }

@@ -5402,7 +5402,7 @@
       "colorless": 0,
       "generic": 1
     },
-    "modeled": false,
+    "modeled": true,
     "name": "Dragon Tempest",
     "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
     "power": null,
@@ -5450,22 +5450,33 @@
         }
       },
       {
-        "description": "Dragon ETB damage equal to Dragon count",
+        "description": "Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.",
         "effects": [
           {
             "amount": {
               "kind": "countPermanents",
               "scope": "you",
               "selector": {
-                "kind": "subtype",
-                "value": "Dragon"
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  }
+                ]
               }
             },
             "op": "dealDamage",
+            "source": "triggerObject",
             "target": 0
           }
         ],
         "kind": "triggered",
+        "optional": false,
         "targets": [
           {
             "kind": "anyTarget"
@@ -5478,12 +5489,12 @@
               "kind": "allOf",
               "of": [
                 {
-                  "kind": "subtype",
-                  "value": "Dragon"
-                },
-                {
                   "kind": "controller",
                   "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
                 }
               ]
             }
@@ -5496,11 +5507,7 @@
     "types": [
       "Enchantment"
     ],
-    "unmodeledReasons": [
-      "unrecognized rules text: \"Whenever a creature you control with flying enters, it gains haste until end of turn.\"",
-      "unrecognized rules text: \"Whenever a Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control.\"",
-      "explicitly unsupported: Dragon-dealt damage is implemented as damage from this enchantment."
-    ]
+    "unmodeledReasons": []
   },
   {
     "activatedAbilities": [],

@@ -167,7 +167,8 @@ function describeWardCost(cost: WardCost): string {
 /**
  * "Becomes the target of a spell or ability" (Thunderbreak Regent, CR 603.3d) — every
  * permanent named in `targets` just became a target, regardless of whose. `queueTriggersForEvent`
- * itself enforces "an opponent controls" against `sourceControllerId`.
+ * itself enforces "an opponent controls" against `sourceControllerId`, and the controller of the
+ * targeting spell or ability is the event player, "that player" in the trigger's text.
  */
 export function queueBecomesTargetedTriggers(
   ctx: GameContext,
@@ -177,7 +178,7 @@ export function queueBecomesTargetedTriggers(
   const subjects = [...new Set(targets)]
     .map((id) => ctx.state.battlefield.find((p) => p.id === id))
     .filter((p): p is EnginePermanent => p !== undefined)
-    .map((permanent) => ({ permanent, sourceControllerId }));
+    .map((permanent) => ({ permanent, sourceControllerId, playerId: sourceControllerId }));
   queueTriggersForEvent(ctx, 'becomesTargeted', subjects);
 }
 
@@ -563,6 +564,15 @@ function* proposeCast(
     }
   }
   const printedSpellDef = selectedSpellDefinition(def, selectedAlternative);
+  // "Cast this spell only during an opponent's turn" holds however it is cast (CR 601.3).
+  if (
+    printedSpellDef.castRestriction !== undefined &&
+    !evaluateCondition(ctx, printedSpellDef.castRestriction, {
+      cardId: obj.cardId,
+      controllerId: player.id,
+    })
+  )
+    throw new Error('casting restriction is not met');
   if (castingSpellsBlockedFor(ctx, player.id, printedSpellDef))
     throw new Error('casting spells is prohibited');
   // Without paying the mana cost, an X in the mana cost is 0 (CR 107.3b); an X announced only

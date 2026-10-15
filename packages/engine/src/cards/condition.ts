@@ -34,7 +34,7 @@ import type { Value, ValueScope } from './value';
 import type { GameGen } from '../decisions';
 import { payLife, payManaCost } from '../effects/resolve';
 import { emit } from '../log/log';
-import { allowanceFor, manaSourcesFor, opponentsOf } from '../state/queries';
+import { allowanceFor, attackedPlaneswalker, manaSourcesFor, opponentsOf } from '../state/queries';
 import type { GameContext } from '../state/types';
 import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -175,6 +175,20 @@ export type Condition =
   | { kind: 'defendingOpponentHasMoreLifeThanAnother' }
   /** The attack-trigger object is attacking an opponent of the ability's controller. */
   | { kind: 'triggerObjectAttackingOpponent' }
+  /**
+   * `attackDeclared` firing: at least/most `n` creatures of the group are CURRENTLY attacking the
+   * ability's controller, or (with `planeswalkers`) a planeswalker they control — a creature
+   * removed from combat, or whose planeswalker was, no longer counts (Mangara, Tomik, Ever-Watching
+   * Threshold: "attacking you and/or planeswalkers you control").
+   */
+  | { kind: 'attackGroupAttackingYou'; planeswalkers: boolean; cmp: Comparison; n: number }
+  /** `attackDeclared` firing: none of the declared attackers attacked the ability's controller. */
+  | { kind: 'attackWasNotAtYou' }
+  /**
+   * `attackDeclared` firing with `perDefender`: the attacked player has more life than at least
+   * one other opponent of the ability's controller (Breena). A player who left the game is no one.
+   */
+  | { kind: 'attackedPlayerHasMoreLifeThanAnotherOpponent' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'eventPlayerDrawCount'; cmp: Comparison; n: number }
@@ -257,6 +271,9 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'attackingPlayerHasMoreLifeThanYou':
     case 'defendingOpponentHasMoreLifeThanAnother':
     case 'triggerObjectAttackingOpponent':
+    case 'attackGroupAttackingYou':
+    case 'attackWasNotAtYou':
+    case 'attackedPlayerHasMoreLifeThanAnotherOpponent':
     case 'eventPlayerDrawCount':
     case 'notFirstDrawInOwnDrawStep':
     case 'cardsInYourGraveyard':
@@ -304,8 +321,11 @@ export function evaluateCondition(
     attacker === undefined
       ? undefined
       : 'candidate' in attacker
-        ? attacker.candidate.attackingDefenderId
-        : attacker.attacking;
+        ? (attacker.candidate.attackingDefenderId ?? undefined)
+        : // The attacked PLAYER; an attack on their planeswalker attacks no player (CR 508.1b).
+          attacker.attackingPlaneswalker === null
+          ? (attacker.attacking ?? undefined)
+          : undefined;
   switch (condition.kind) {
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
@@ -384,6 +404,25 @@ export function evaluateCondition(
       if (source.triggerObjectCardId === undefined) return false;
       const defenderId = defenderIdOf(eventObjectState(ctx, scope));
       return opponentsOf(ctx, source.controllerId).some((opponent) => opponent.id === defenderId);
+    }
+    case 'attackGroupAttackingYou': {
+      let count = 0;
+      for (const id of source.attackGroupIds ?? []) {
+        const attacker = ctx.state.battlefield.find((p) => p.id === id);
+        if (attacker === undefined || attacker.attacking !== source.controllerId) continue;
+        if (attacker.attackingPlaneswalker === null) count++;
+        else if (condition.planeswalkers && attackedPlaneswalker(ctx, attacker) !== null) count++;
+      }
+      return compare(count, condition.cmp, condition.n);
+    }
+    case 'attackWasNotAtYou':
+      return source.attackedWatcher !== true;
+    case 'attackedPlayerHasMoreLifeThanAnotherOpponent': {
+      const attacked = ctx.state.players.find((p) => p.id === source.attackedPlayerId);
+      if (attacked === undefined) return false;
+      return opponentsOf(ctx, source.controllerId).some(
+        (other) => other.id !== attacked.id && attacked.life > other.life,
+      );
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);

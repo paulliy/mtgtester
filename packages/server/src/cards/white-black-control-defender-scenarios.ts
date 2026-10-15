@@ -133,10 +133,10 @@ function targetWalkerProvider(walkerName: string): DecisionProvider {
         const subjects = request.presentation?.attackDeclaration?.subjects ?? [];
         if (action !== undefined) {
           const targets = (action.targets ?? []).map((slot, index) => {
-            const walker = subjects[index]?.defenders.find(
-              (defender) => defender.name === walkerName,
+            const walker = subjects[index]?.planeswalkers.find(
+              (planeswalker) => planeswalker.name === walkerName,
             );
-            const choice = walker?.defenderId ?? walker?.playerId;
+            const choice = walker?.objectId;
             return {
               slot: slot.slot,
               choice:

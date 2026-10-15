@@ -10,7 +10,7 @@ import { addMana } from '../src/mana/pool';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
-import { moveObject, queueTriggersForEvent } from '../src/state/objects';
+import { moveObject, queueAttackDeclarationTriggers } from '../src/state/objects';
 import { runPrioritySequence } from '../src/turn/priority';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -36,11 +36,7 @@ function attack(
     attacker.attacking = defender;
     return attacker;
   });
-  queueTriggersForEvent(
-    ctx,
-    'attacks',
-    attackers.map((permanent) => ({ permanent, playerId: owner })),
-  );
+  queueAttackDeclarationTriggers(ctx, attackers);
   return attackers;
 }
 describe('Breena faithful defending-opponent life comparison', () => {
@@ -130,15 +126,16 @@ describe('Breena faithful defending-opponent life comparison', () => {
     expect(ctx.state.players[2]!.hand).toHaveLength(1);
     expect(breena.counters['+1/+1']).toBe(2);
   });
-  it('breena-illegal-counter-target: target leaving makes the whole trigger fail', () => {
+  it('breena-counters-not-targeted: the counters are not targeted, so Breena leaving does not stop the draw', () => {
+    // Oracle: "you put two +1/+1 counters on a creature you control" -- no target.
     const ctx = pod(),
       breena = spawn(ctx, 'P1', card);
     attack(ctx, 'P3', ['P2']);
     pump(priorityCheckpoint(ctx));
-    expect(ctx.state.stack[0]!.targets).toEqual([breena.id]);
+    expect(ctx.state.stack[0]!.targets).toEqual([]);
     pump(moveObject(ctx, breena, { zone: 'exile' }));
     pump(resolveTopOfStack(ctx));
-    expect(ctx.state.players[2]!.hand).toHaveLength(0);
+    expect(ctx.state.players[2]!.hand).toHaveLength(1);
   });
   it('breena-real-and-fixture-alias: every clause has legal authored IR', () => {
     for (const oracleId of [card.oracleId, fixtureOracleId(card.name)]) {

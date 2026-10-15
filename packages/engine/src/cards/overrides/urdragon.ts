@@ -6,11 +6,7 @@ import { manaCost } from '../templates';
 import { allOf, anyOf, IS_COMMANDER, not, ofSubtype, ofType, SELF, YOURS } from '../selector';
 
 export function registerURDRAGONOverrides(): void {
-  unsupportedCard(
-    'b9bacb46-fd1d-459b-81c2-d7d08fe73848',
-    'Dragon Tempest',
-    'Dragon-dealt damage is implemented as damage from this enchantment.',
-  );
+  // Dragon Tempest: restored in coverage PR06 (no override remains).
 
   const iymrithDef = {
     staticEffects: [

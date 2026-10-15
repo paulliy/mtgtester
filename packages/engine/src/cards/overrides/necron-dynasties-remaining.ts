@@ -1,6 +1,15 @@
 /** Remaining authored overrides for necron-dynasties.txt. */
 
-import { EXILE_SELF, TAP, activated, mana, manaCost, spell } from '../templates';
+import {
+  EXILE_SELF,
+  TAP,
+  activated,
+  mana,
+  manaCost,
+  onCombatDamageToPlayer,
+  spell,
+  triggered,
+} from '../templates';
 import { constant } from '../value';
 import type { TokenSpec } from '../ability';
 import { allOf, anyOf, ofType, not, SELF, YOURS } from '../selector';
@@ -322,11 +331,24 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Their Number Is Legion: restored in coverage PR02. The interpreter reads the tapped tokens,
   // the artifact-count life gain, the self-exile and the graveyard cast permission.
-  // Catalog audit necron-remaining-batch-7: combat-damage rider targets any player.
-  unsupportedCard(
+  // Tomb Blade: "that player" is the player this creature dealt combat damage to (the event
+  // player), not a target; the creature count is taken as the trigger resolves, and that player
+  // chooses whether to sacrifice one of their own creatures instead of losing the life.
+  defineCard(
     'c857de66-f4e0-4e97-ad01-fac623af8225',
     'Tomb Blade',
-    'Combat-damage life loss targets any player, not the damaged player.',
+    [
+      'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice.',
+    ],
+    {
+      triggers: [
+        triggered(onCombatDamageToPlayer(), {
+          effects: [{ op: 'tombBladeHit', target: 'eventPlayer' }],
+          description:
+            'Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice',
+        }),
+      ],
+    },
   );
   // Coverage PR01: the creature card is chosen on resolution, after the mill, with no target.
   defineCard(

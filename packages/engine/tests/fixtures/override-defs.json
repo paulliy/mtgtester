@@ -256,8 +256,64 @@
   {
     "oracleId": "01790829-cc03-430f-a899-2f274b7dbf62",
     "name": "Arcbond",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. Whenever it is dealt damage this turn, it deals that much damage to each other creature and each player",
+        "effects": [
+          {
+            "ability": {
+              "description": "That creature deals that much damage to each other creature and each player",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "exceptSource": true,
+                  "op": "damageEach",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "source": "triggerObject"
+                },
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "op": "damageEachPlayer",
+                  "source": "triggerObject"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "permanent",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "when": "dealtDamage"
+              }
+            },
+            "expiry": "cleanup",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "dealtDamage"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "0192ba05-6144-4fec-a803-462ecdf64195",
@@ -331,8 +387,25 @@
   {
     "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
     "name": "Comeuppance",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control",
+        "effects": [
+          {
+            "andPlaneswalkersYouControl": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceCreatureElseController",
+            "sources": "youDontControl"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
@@ -559,6 +632,87 @@
     "def": {}
   },
   {
+    "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
+    "name": "Invisible Woman",
+    "handledLines": [
+      "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may pay {R}{G}{W}{U}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "op": "mayPayManaThenReflexive",
+              "then": {
+                "description": "When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn",
+                "effects": [
+                  {
+                    "op": "pumpUntilEot",
+                    "power": {
+                      "kind": "countPermanents",
+                      "scope": "you",
+                      "selector": {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    },
+                    "target": 0,
+                    "toughness": 0
+                  },
+                  {
+                    "op": "cantBeBlockedUntilEot",
+                    "target": 0
+                  }
+                ],
+                "kind": "spell",
+                "targets": [
+                  {
+                    "kind": "creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "086b2564-9114-4ba2-94fd-b490f98f38a7",
     "name": "Chain Reaction",
     "handledLines": [
@@ -663,12 +817,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "0a147009-a57c-4ac1-ab81-d8bd8b737631",
-    "name": "Scourge of Valkas",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
@@ -846,8 +994,8 @@
     "def": {
       "ruleStatics": [
         {
-          "alsoPlaneswalkersYouControl": true,
           "amount": 1,
+          "includePlaneswalkers": true,
           "kind": "attackTax"
         }
       ]
@@ -2308,8 +2456,46 @@
   {
     "oracleId": "2ef0961a-0543-4371-8c2a-333881b735e5",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLifeTarget",
+              "target": "eventPlayer"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
@@ -2437,8 +2623,46 @@
   {
     "oracleId": "3180ee4f-66d7-4b73-bc10-9ee0c790ec18",
     "name": "Flameblast Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target",
+          "effects": [
+            {
+              "op": "mayPayXThenDealDamage",
+              "target": 0,
+              "templatedCost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0,
+                "x": 1
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "31cb87bf-1020-4fd5-95f7-8ecb197d823b",
@@ -3212,8 +3436,38 @@
   {
     "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
     "name": "Backlash",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Tap target untapped creature. That creature deals damage equal to its power to its controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Tap target untapped creature. That creature deals damage equal to its power to its controller",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature",
+            "tapState": "untapped"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "3e2ae59a-40a1-46ca-8f24-3231ebd4e4eb",
@@ -3297,8 +3551,82 @@
   {
     "oracleId": "3e41648f-c5a9-4b26-b97e-8176fe5e9c85",
     "name": "Brash Taunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+      "{2}{R}, {T}: ~ fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This creature fights another target creature",
+            "effects": [
+              {
+                "first": "source",
+                "op": "fight",
+                "second": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "other"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever this creature is dealt damage, it deals that much damage to target opponent",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
@@ -3686,8 +4014,62 @@
   {
     "oracleId": "4f63d306-cc14-405c-8424-d8990c670c74",
     "name": "Territorial Aetherkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you get {E}{E} . Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, you get {E}{E}. Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "min": 1,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "When you do, this creature deals that much damage to each other creature",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "energyPaid"
+                    },
+                    "op": "damageEach",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "other"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "kind": "spell",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "4fca09ac-8134-43d9-a84b-686db5e2bf69",
@@ -4112,6 +4494,33 @@
     }
   },
   {
+    "oracleId": "5825d718-6a32-4f4c-9b56-1a50051cfe28",
+    "name": "Wall of Tears",
+    "handledLines": [
+      "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat",
+          "effects": [
+            {
+              "op": "returnBlockedCreatureAtEndOfCombat"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "blocks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "58d7b8b3-ac47-4805-8259-4ba8e70d7dc3",
     "name": "Primal Might",
     "handledLines": [
@@ -4332,12 +4741,12 @@
     "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
     "name": "Duelist's Heritage",
     "handledLines": [
-      "unrecognized rules text: \"Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.\""
+      "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."
     ],
     "def": {
       "triggers": [
         {
-          "description": "Target attacking creature gains double strike until end of turn",
+          "description": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn",
           "effects": [
             {
               "keyword": "double strike",
@@ -4686,8 +5095,65 @@
   {
     "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
     "name": "Tyrant's Familiar",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 7
+                  },
+                  "op": "dealDamage",
+                  "target": 0
+                }
+              ],
+              "kind": "triggered",
+              "targets": [
+                {
+                  "controller": "eventPlayer",
+                  "kind": "creature"
+                }
+              ],
+              "trigger": {
+                "defendingPlayerIsEventPlayer": true,
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "attacks"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
@@ -6186,8 +6652,50 @@
   {
     "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
     "name": "Selfless Squire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, prevent all damage that would be dealt to you this turn.",
+      "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, prevent all damage that would be dealt to you this turn",
+          "effects": [
+            {
+              "op": "createDamageShield",
+              "player": "you"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "damagePreventedToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "7e00b0cd-d212-4604-ba07-da21f4fe00b0",
@@ -7647,6 +8155,7 @@
       "ruleStatics": [
         {
           "amount": 0,
+          "includePlaneswalkers": true,
           "kind": "attackTax",
           "phyrexianColor": "W"
         }
@@ -8096,10 +8605,88 @@
     }
   },
   {
-    "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
-    "name": "Delirium",
+    "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
+    "name": "Frontier Warmonger",
+    "handledLines": [
+      "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn",
+          "effects": [
+            {
+              "keyword": "menace",
+              "op": "grantKeywordToAttackGroupUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "9da65d66-71f0-4e17-a1f9-6da6cd1cfa8a",
+    "name": "Scalelord Reckoner",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7",
+    "name": "Delirium",
+    "handledLines": [
+      "Cast this spell only during an opponent's turn.",
+      "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "notYourTurn"
+      },
+      "spellAbility": {
+        "description": "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          },
+          {
+            "combatOnly": true,
+            "dealtBy": true,
+            "dealtTo": true,
+            "op": "createDamageShield",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "activePlayer",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "a07483b4-c04f-42a4-b979-8b77c11fa8f5",
@@ -8167,6 +8754,12 @@
   {
     "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
     "name": "Reverberate",
+    "handledLines": [],
+    "def": {}
+  },
+  {
+    "oracleId": "a30f30e3-dbbf-4cb2-b3d0-76f57dffb2dd",
+    "name": "Black Bolt, Inhuman King",
     "handledLines": [],
     "def": {}
   },
@@ -8633,8 +9226,62 @@
   {
     "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
     "name": "Firemane Commando",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+      "Whenever you attack with two or more creatures, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you",
+          "effects": [
+            {
+              "condition": {
+                "kind": "attackWasNotAtYou"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "otherPlayer",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "ac844303-487b-49e9-9170-02892153ca6a",
@@ -9187,12 +9834,6 @@
     }
   },
   {
-    "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
-    "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "b9c58cfb-b7d5-4e86-a5d3-efb07192aa22",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -9296,12 +9937,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "bb04f927-0348-4a14-9e74-381f18083f6a",
-    "name": "Thunderbreak Regent",
-    "handledLines": [],
-    "def": {}
   },
   {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
@@ -10047,6 +10682,41 @@
     "def": {}
   },
   {
+    "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
+    "name": "Ever-Watching Threshold",
+    "handledLines": [
+      "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 1,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c68faebc-b2cd-461b-b93e-e1fcd4816810",
     "name": "Midnight Clock",
     "handledLines": [
@@ -10085,8 +10755,30 @@
   {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
     "name": "Tomb Blade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice",
+          "effects": [
+            {
+              "op": "tombBladeHit",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "c8f1e3bd-bbf0-4750-b054-03553fc61850",
@@ -10256,8 +10948,38 @@
   {
     "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
     "name": "Mangara, the Diplomat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
@@ -10625,7 +11347,7 @@
     "def": {
       "triggers": [
         {
-          "description": "The attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "description": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control",
           "effects": [
             {
               "count": {
@@ -10638,43 +11360,22 @@
             {
               "count": 2,
               "counter": "+1/+1",
-              "op": "putCounters",
-              "target": 0
+              "op": "putCountersOnCreatureOfChoice"
             }
           ],
           "kind": "triggered",
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              },
-              "kind": "creature"
-            }
-          ],
+          "targets": [],
           "trigger": {
-            "aggregate": "byEventPlayer",
-            "attackingPlayerIsEventPlayer": true,
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
             "condition": {
-              "kind": "defendingOpponentHasMoreLifeThanAnother"
+              "kind": "attackedPlayerHasMoreLifeThanAnotherOpponent"
             },
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "type",
-                "value": "Creature"
-              }
-            },
-            "when": "attacks"
+            "perDefender": true,
+            "when": "attackDeclared"
           }
         }
       ]
@@ -10952,6 +11653,106 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "d55cb52d-b35c-4602-a518-cd51f155a2d1",
+    "name": "Human Torch",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.",
+      "Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn",
+          "effects": [
+            {
+              "keyword": "flying",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 1,
+                    "R": 1,
+                    "U": 1,
+                    "W": 1
+                  },
+                  "colorless": 0,
+                  "generic": 0
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "ability": {
+                    "description": "Whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+                    "effects": [
+                      {
+                        "amount": {
+                          "kind": "damageDealt"
+                        },
+                        "op": "damageEachOtherOpponent"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "subject": {
+                        "kind": "self"
+                      },
+                      "when": "dealsCombatDamageToPlayer"
+                    }
+                  },
+                  "op": "grantAbilityUntilEot",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
     }
   },
   {
@@ -11537,8 +12338,25 @@
   {
     "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
     "name": "Deflecting Palm",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller",
+        "effects": [
+          {
+            "chosenSource": true,
+            "oneShot": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceController"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ddbe0d17-5cac-417c-afc0-e4aebae83205",
@@ -12239,8 +13057,70 @@
   {
     "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
     "name": "Thundermaw Hellkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "damageEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
@@ -12603,6 +13483,83 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "f0bf2923-aea2-4bac-b061-64bc84437ef1",
+    "name": "Tenuous Truce",
+    "handledLines": [
+      "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+      "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of enchanted opponent's end step, you and that player each draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "enchanted",
+            "when": "endStep"
+          }
+        },
+        {
+          "description": "When you attack enchanted opponent or a planeswalker they control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "enchantedPlayer"
+            },
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "When enchanted opponent attacks you or a planeswalker you control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "enchantedPlayer",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "you"
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b",
@@ -13281,8 +14238,29 @@
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
     "name": "Michiko Konda, Truth Seeker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice",
+          "effects": [
+            {
+              "count": 1,
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "sourceController": "opponent",
+            "when": "playerDealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "fd03f20a-d365-48fb-8b2a-ad4b502a0045",
@@ -14409,8 +15387,64 @@
   {
     "oracleId": "oracle-arcbond",
     "name": "Arcbond",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose target creature. Whenever it is dealt damage this turn, it deals that much damage to each other creature and each player",
+        "effects": [
+          {
+            "ability": {
+              "description": "That creature deals that much damage to each other creature and each player",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "exceptSource": true,
+                  "op": "damageEach",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "source": "triggerObject"
+                },
+                {
+                  "amount": {
+                    "kind": "damageDealt"
+                  },
+                  "op": "damageEachPlayer",
+                  "source": "triggerObject"
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "subject": {
+                  "kind": "permanent",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                },
+                "when": "dealtDamage"
+              }
+            },
+            "expiry": "cleanup",
+            "op": "registerDelayedTrigger",
+            "target": 0,
+            "when": "dealtDamage"
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-archfiend-of-ifnir",
@@ -14548,8 +15582,8 @@
     "def": {
       "ruleStatics": [
         {
-          "alsoPlaneswalkersYouControl": true,
           "amount": 1,
+          "includePlaneswalkers": true,
           "kind": "attackTax"
         }
       ]
@@ -14793,8 +15827,38 @@
   {
     "oracleId": "oracle-backlash",
     "name": "Backlash",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Tap target untapped creature. That creature deals damage equal to its power to its controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Tap target untapped creature. That creature deals damage equal to its power to its controller",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "creature",
+            "tapState": "untapped"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-bandit-s-talent",
@@ -15233,6 +16297,12 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-black-bolt-inhuman-king",
+    "name": "Black Bolt, Inhuman King",
+    "handledLines": [],
+    "def": {}
+  },
+  {
     "oracleId": "oracle-blasphemous-act",
     "name": "Blasphemous Act",
     "handledLines": [
@@ -15532,8 +16602,82 @@
   {
     "oracleId": "oracle-brash-taunter",
     "name": "Brash Taunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature is dealt damage, it deals that much damage to target opponent.",
+      "{2}{R}, {T}: ~ fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "This creature fights another target creature",
+            "effects": [
+              {
+                "first": "source",
+                "op": "fight",
+                "second": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "other"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever this creature is dealt damage, it deals that much damage to target opponent",
+          "effects": [
+            {
+              "amount": {
+                "kind": "damageDealt"
+              },
+              "op": "dealDamage",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-breena-the-demagogue",
@@ -15544,7 +16688,7 @@
     "def": {
       "triggers": [
         {
-          "description": "The attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "description": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control",
           "effects": [
             {
               "count": {
@@ -15557,43 +16701,22 @@
             {
               "count": 2,
               "counter": "+1/+1",
-              "op": "putCounters",
-              "target": 0
+              "op": "putCountersOnCreatureOfChoice"
             }
           ],
           "kind": "triggered",
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              },
-              "kind": "creature"
-            }
-          ],
+          "targets": [],
           "trigger": {
-            "aggregate": "byEventPlayer",
-            "attackingPlayerIsEventPlayer": true,
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
             "condition": {
-              "kind": "defendingOpponentHasMoreLifeThanAnother"
+              "kind": "attackedPlayerHasMoreLifeThanAnotherOpponent"
             },
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "type",
-                "value": "Creature"
-              }
-            },
-            "when": "attacks"
+            "perDefender": true,
+            "when": "attackDeclared"
           }
         }
       ]
@@ -16460,8 +17583,25 @@
   {
     "oracleId": "oracle-comeuppance",
     "name": "Comeuppance",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control. If damage from a creature source is prevented this way, ~ deals that much damage to that creature. If damage from a noncreature source is prevented this way, ~ deals that much damage to the source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Prevent all damage that would be dealt to you and planeswalkers you control this turn by sources you don't control",
+        "effects": [
+          {
+            "andPlaneswalkersYouControl": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceCreatureElseController",
+            "sources": "youDontControl"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-commander-s-insignia",
@@ -17205,8 +18345,25 @@
   {
     "oracleId": "oracle-deflecting-palm",
     "name": "Deflecting Palm",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, ~ deals that much damage to that source's controller."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller",
+        "effects": [
+          {
+            "chosenSource": true,
+            "oneShot": true,
+            "op": "createDamageShield",
+            "player": "you",
+            "reflect": "toSourceController"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-deflecting-swat",
@@ -17217,8 +18374,49 @@
   {
     "oracleId": "oracle-delirium",
     "name": "Delirium",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Cast this spell only during an opponent's turn.",
+      "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "notYourTurn"
+      },
+      "spellAbility": {
+        "description": "Tap target creature that player controls. That creature deals damage equal to its power to the player. Prevent all combat damage that would be dealt to and dealt by the creature this turn",
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          },
+          {
+            "amount": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "op": "dealDamage",
+            "source": 0,
+            "target": {
+              "controllerOf": 0
+            }
+          },
+          {
+            "combatOnly": true,
+            "dealtBy": true,
+            "dealtTo": true,
+            "op": "createDamageShield",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "activePlayer",
+            "kind": "creature"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-demanding-dragon",
@@ -17390,12 +18588,6 @@
     }
   },
   {
-    "oracleId": "oracle-dragon-tempest",
-    "name": "Dragon Tempest",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-dream-pillager",
     "name": "Dream Pillager",
     "handledLines": [],
@@ -17411,12 +18603,12 @@
     "oracleId": "oracle-duelist-s-heritage",
     "name": "Duelist's Heritage",
     "handledLines": [
-      "unrecognized rules text: \"Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.\""
+      "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn."
     ],
     "def": {
       "triggers": [
         {
-          "description": "Target attacking creature gains double strike until end of turn",
+          "description": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn",
           "effects": [
             {
               "keyword": "double strike",
@@ -17866,6 +19058,41 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-ever-watching-threshold",
+    "name": "Ever-Watching Threshold",
+    "handledLines": [
+      "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks, if they attacked you and/or a planeswalker you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 1,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-fabled-passage",
     "name": "Fabled Passage",
     "handledLines": [
@@ -18073,8 +19300,62 @@
   {
     "oracleId": "oracle-firemane-commando",
     "name": "Firemane Commando",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+      "Whenever you attack with two or more creatures, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack with two or more creatures, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you",
+          "effects": [
+            {
+              "condition": {
+                "kind": "attackWasNotAtYou"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "draw",
+                  "player": "eventPlayer"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "otherPlayer",
+            "minAttackers": 2,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-firkraag-cunning-instigator",
@@ -18085,8 +19366,46 @@
   {
     "oracleId": "oracle-flameblast-dragon",
     "name": "Flameblast Dragon",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target",
+          "effects": [
+            {
+              "op": "mayPayXThenDealDamage",
+              "target": 0,
+              "templatedCost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0,
+                "x": 1
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "anyTarget"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-flare-of-denial",
@@ -18501,6 +19820,37 @@
               }
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-frontier-warmonger",
+    "name": "Frontier Warmonger",
+    "handledLines": [
+      "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn",
+          "effects": [
+            {
+              "keyword": "menace",
+              "op": "grantKeywordToAttackGroupUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
           }
         }
       ]
@@ -19279,6 +20629,106 @@
     }
   },
   {
+    "oracleId": "oracle-human-torch",
+    "name": "Human Torch",
+    "handledLines": [
+      "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, ~ gains flying, double strike, and haste until end of turn.",
+      "Whenever ~ attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, Human Torch gains flying, double strike, and haste until end of turn",
+          "effects": [
+            {
+              "keyword": "flying",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "double strike",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            },
+            {
+              "keyword": "haste",
+              "op": "grantKeywordUntilEot",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "Whenever Human Torch attacks, you may pay {R}{G}{W}{U}. If you do, until end of turn, whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+          "effects": [
+            {
+              "condition": {
+                "cost": {
+                  "colored": {
+                    "B": 0,
+                    "G": 1,
+                    "R": 1,
+                    "U": 1,
+                    "W": 1
+                  },
+                  "colorless": 0,
+                  "generic": 0
+                },
+                "kind": "mayPayMana"
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "ability": {
+                    "description": "Whenever he deals combat damage to an opponent, he deals that much damage to each other opponent",
+                    "effects": [
+                      {
+                        "amount": {
+                          "kind": "damageDealt"
+                        },
+                        "op": "damageEachOtherOpponent"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "subject": {
+                        "kind": "self"
+                      },
+                      "when": "dealsCombatDamageToPlayer"
+                    }
+                  },
+                  "op": "grantAbilityUntilEot",
+                  "target": "source"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-humble-defector",
     "name": "Humble Defector",
     "handledLines": [],
@@ -19551,6 +21001,87 @@
     "name": "Intermediate Chirography",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-invisible-woman",
+    "name": "Invisible Woman",
+    "handledLines": [
+      "Whenever you attack, you may pay {R}{G}{W}{U}. When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever you attack, you may pay {R}{G}{W}{U}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 1,
+                  "U": 1,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "op": "mayPayManaThenReflexive",
+              "then": {
+                "description": "When you do, target creature gets +1/+0 until end of turn for each creature you control and can't be blocked this turn",
+                "effects": [
+                  {
+                    "op": "pumpUntilEot",
+                    "power": {
+                      "kind": "countPermanents",
+                      "scope": "you",
+                      "selector": {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    },
+                    "target": 0,
+                    "toughness": 0
+                  },
+                  {
+                    "op": "cantBeBlockedUntilEot",
+                    "target": 0
+                  }
+                ],
+                "kind": "spell",
+                "targets": [
+                  {
+                    "kind": "creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "aggregate": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-iymrith-desert-doom",
@@ -20854,8 +22385,38 @@
   {
     "oracleId": "oracle-mangara-the-diplomat",
     "name": "Mangara, the Diplomat",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-marang-river-regent-coil-and-catch",
@@ -21090,8 +22651,29 @@
   {
     "oracleId": "oracle-michiko-konda-truth-seeker",
     "name": "Michiko Konda, Truth Seeker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice",
+          "effects": [
+            {
+              "count": 1,
+              "op": "eventPlayerSacrificesPermanents"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "sourceController": "opponent",
+            "when": "playerDealtDamage"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-midnight-clock",
@@ -21837,6 +23419,7 @@
       "ruleStatics": [
         {
           "amount": 0,
+          "includePlaneswalkers": true,
           "kind": "attackTax",
           "phyrexianColor": "W"
         }
@@ -23906,14 +25489,14 @@
     }
   },
   {
-    "oracleId": "oracle-scheming-symmetry",
-    "name": "Scheming Symmetry",
+    "oracleId": "oracle-scalelord-reckoner",
+    "name": "Scalelord Reckoner",
     "handledLines": [],
     "def": {}
   },
   {
-    "oracleId": "oracle-scourge-of-valkas",
-    "name": "Scourge of Valkas",
+    "oracleId": "oracle-scheming-symmetry",
+    "name": "Scheming Symmetry",
     "handledLines": [],
     "def": {}
   },
@@ -24252,8 +25835,50 @@
   {
     "oracleId": "oracle-selfless-squire",
     "name": "Selfless Squire",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, prevent all damage that would be dealt to you this turn.",
+      "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, prevent all damage that would be dealt to you this turn",
+          "effects": [
+            {
+              "op": "createDamageShield",
+              "player": "you"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever damage that would be dealt to you is prevented, put that many +1/+1 counters on this creature",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "counter": "+1/+1",
+              "op": "putCounters",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "damagePreventedToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-servant-of-the-conduit",
@@ -25415,6 +27040,83 @@
     }
   },
   {
+    "oracleId": "oracle-tenuous-truce",
+    "name": "Tenuous Truce",
+    "handledLines": [
+      "At the beginning of enchanted opponent's end step, you and that player each draw a card.",
+      "When you attack enchanted opponent or a planeswalker they control or when they attack you or a planeswalker you control, sacrifice this Aura."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of enchanted opponent's end step, you and that player each draw a card",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "enchanted",
+            "when": "endStep"
+          }
+        },
+        {
+          "description": "When you attack enchanted opponent or a planeswalker they control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "enchantedPlayer"
+            },
+            "when": "attackDeclared"
+          }
+        },
+        {
+          "description": "When enchanted opponent attacks you or a planeswalker you control, sacrifice this Aura",
+          "effects": [
+            {
+              "op": "sacrifice",
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "enchantedPlayer",
+            "attacking": {
+              "planeswalkers": true,
+              "who": "you"
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-tergrid-god-of-fright-tergrid-s-lantern",
     "name": "Tergrid, God of Fright // Tergrid's Lantern",
     "handledLines": [
@@ -25646,8 +27348,62 @@
   {
     "oracleId": "oracle-territorial-aetherkite",
     "name": "Territorial Aetherkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, you get {E}{E} . Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, you get {E}{E}. Then you may pay one or more {E}. When you do, this creature deals that much damage to each other creature",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "min": 1,
+              "op": "mayPayEnergyThenReflexive",
+              "then": {
+                "description": "When you do, this creature deals that much damage to each other creature",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "energyPaid"
+                    },
+                    "op": "damageEach",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "other"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "kind": "spell",
+                "targets": []
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-terror-of-the-peaks",
@@ -25970,12 +27726,6 @@
     }
   },
   {
-    "oracleId": "oracle-thunderbreak-regent",
-    "name": "Thunderbreak Regent",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "oracle-thunderfoot-baloth",
     "name": "Thunderfoot Baloth",
     "handledLines": [
@@ -26055,8 +27805,70 @@
   {
     "oracleId": "oracle-thundermaw-hellkite",
     "name": "Thundermaw Hellkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "damageEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tibalt-s-trickery",
@@ -26234,8 +28046,30 @@
   {
     "oracleId": "oracle-tomb-blade",
     "name": "Tomb Blade",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature deals combat damage to a player, that player loses life equal to the number of creatures they control unless they sacrifice a creature of their choice",
+          "effects": [
+            {
+              "op": "tombBladeHit",
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tomb-fortress",
@@ -26297,8 +28131,46 @@
   {
     "oracleId": "oracle-tomik-wielder-of-law",
     "name": "Tomik, Wielder of Law",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life and you draw a card",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "op": "loseLifeTarget",
+              "target": "eventPlayer"
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "opponent",
+            "condition": {
+              "cmp": ">=",
+              "kind": "attackGroupAttackingYou",
+              "n": 2,
+              "planeswalkers": true
+            },
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "oracle-transcendent-envoy",
@@ -26537,8 +28409,65 @@
   {
     "oracleId": "oracle-tyrant-s-familiar",
     "name": "Tyrant's Familiar",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "layer": 7,
+            "power": 2,
+            "sublayer": "d",
+            "toughness": 2
+          }
+        },
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "controlsYourCommander"
+          },
+          "op": {
+            "addTrigger": {
+              "description": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls",
+              "effects": [
+                {
+                  "amount": {
+                    "kind": "const",
+                    "n": 7
+                  },
+                  "op": "dealDamage",
+                  "target": 0
+                }
+              ],
+              "kind": "triggered",
+              "targets": [
+                {
+                  "controller": "eventPlayer",
+                  "kind": "creature"
+                }
+              ],
+              "trigger": {
+                "defendingPlayerIsEventPlayer": true,
+                "subject": {
+                  "kind": "self"
+                },
+                "when": "attacks"
+              }
+            },
+            "layer": 6
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-ultimate-nullification",
@@ -26825,6 +28754,33 @@
               "kind": "self"
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-wall-of-tears",
+    "name": "Wall of Tears",
+    "handledLines": [
+      "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat",
+          "effects": [
+            {
+              "op": "returnBlockedCreatureAtEndOfCombat"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "blocks"
           }
         }
       ]
