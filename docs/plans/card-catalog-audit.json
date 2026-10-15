@@ -5565,7 +5565,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 25,
       "reviewedOracleIds": 32,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6508,6 +6508,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the fail-closed unsupportedCard that claimed the delayed damage is dealt by Arcbond): the executable override in coverage-pr06.ts registers a this-turn delayed trigger keyed to the chosen creature object, and each time it is dealt damage that creature, with last known information if it has left the battlefield, deals that much damage to each other creature and each player; damageEach and damageEachPlayer now resolve an explicit source that way, and the bespoke arcbond and arcbondDamage ops are deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
+      "name": "Thundermaw Hellkite",
+      "sourceFile": "packages/engine/src/cards/overrides/draconic-destruction.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the tap applies to all opposing fliers rather than the damaged set; a misreading, because Gatherer ruling 2017-11-17 says \"those creatures\" are the creatures with flying your opponents control, not the creatures dealt damage, so a flier whose damage is prevented is still tapped): the executable override in coverage-pr06.ts damages and taps the same opposing-fliers selector as the enter trigger resolves, with this creature as the damage source. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
     }
   ]
 }

@@ -10123,8 +10123,70 @@
   {
     "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
     "name": "Thundermaw Hellkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "damageEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e9bc324e-c200-45ef-8b9b-52a61d0f7374",
@@ -21767,8 +21829,70 @@
   {
     "oracleId": "oracle-thundermaw-hellkite",
     "name": "Thundermaw Hellkite",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "damageEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "keyword": "flying",
+                    "kind": "hasKeyword"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tibalt-s-trickery",

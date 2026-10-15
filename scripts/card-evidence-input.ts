@@ -2218,6 +2218,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Arcbond: the chosen creature reflects the damage it is dealt'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Thundermaw Hellkite: damage and tap the fliers your opponents control'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

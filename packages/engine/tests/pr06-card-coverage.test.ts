@@ -2485,6 +2485,160 @@ describe('Arcbond', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.13 Thundermaw Hellkite
+// ---------------------------------------------------------------------------------------------
+
+describe('Thundermaw Hellkite', () => {
+  const { card } = pinned('Thundermaw Hellkite');
+  const COST = [...red(2), ...generic(3)];
+  const flier = (name: string, extra = '') =>
+    oracle({
+      name,
+      typeLine: 'Creature — Bird',
+      power: '1',
+      toughness: '3',
+      oracleText: `Flying${extra}`,
+    });
+  const GROUNDED = oracle({
+    name: 'Lab Grounded',
+    typeLine: 'Creature — Ogre',
+    power: '1',
+    toughness: '3',
+  });
+
+  /** P1 controls an own flier and a grounded creature; P2 and P3 control fliers and a grounded one. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const mine = spawn(ctx, 'P1', flier('Lab Own Flier'));
+    const foeFlier = spawn(ctx, 'P2', flier('Lab Foe Flier'));
+    const farFlier = spawn(ctx, 'P3', flier('Lab Far Flier'));
+    const foeGround = spawn(ctx, 'P2', GROUNDED);
+    return { ctx, mine, foeFlier, farFlier, foeGround };
+  }
+
+  const hits = (ctx: GameContext) =>
+    damageEvents(ctx).filter((event) => String(event.payload['source']).includes('Thundermaw'));
+  const marked = (ctx: GameContext, perm: EnginePermanent) =>
+    onField(ctx, perm.cardId)?.damageMarked;
+  const tapped = (ctx: GameContext, perm: EnginePermanent) => onField(ctx, perm.cardId)?.tapped;
+
+  it('thundermaw-hellkite-pinned-oracle-supported — the override reads flying, haste and an enter trigger that damages and then taps the same opposing-fliers selector', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'haste']));
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({ when: 'enters', subject: { kind: 'self' } });
+    expect(trigger!.targets).toEqual([]);
+    const selector = {
+      kind: 'allOf',
+      of: [
+        { kind: 'type', value: 'Creature' },
+        { kind: 'controller', who: 'opponents' },
+        { kind: 'hasKeyword', keyword: 'flying' },
+      ],
+    };
+    expect(trigger!.effects).toEqual([
+      { op: 'damageEach', selector, amount: { kind: 'const', n: 1 } },
+      { op: 'tapEach', selector },
+    ]);
+  });
+
+  it('thundermaw-hellkite-damage-and-tap — each flier your opponents control takes 1 and is tapped; your own fliers and their non-fliers are untouched', () => {
+    const { ctx, mine, foeFlier, farFlier, foeGround } = board('thundermaw-basic');
+    enterFrom(ctx, 'P1', card);
+    settle(ctx);
+    for (const perm of [foeFlier, farFlier]) {
+      expect(marked(ctx, perm), perm.name).toBe(1);
+      expect(tapped(ctx, perm), perm.name).toBe(true);
+    }
+    for (const perm of [mine, foeGround]) {
+      expect(marked(ctx, perm), perm.name).toBe(0);
+      expect(tapped(ctx, perm), perm.name).toBe(false);
+    }
+    expect(hits(ctx)).toHaveLength(2);
+    expect(hits(ctx).every((event) => event.payload['amount'] === 1)).toBe(true);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('thundermaw-hellkite-source — Thundermaw is the damage source, so protection from red stops the damage but the flier is still tapped (Gatherer ruling 2017-11-17)', () => {
+    const { ctx, foeFlier } = board('thundermaw-protection');
+    const guard = spawn(ctx, 'P3', flier('Lab Red Guard', '\nProtection from red'));
+    enterFrom(ctx, 'P1', card);
+    settle(ctx);
+    expect(marked(ctx, guard)).toBe(0);
+    expect(tapped(ctx, guard)).toBe(true);
+    expect(marked(ctx, foeFlier)).toBe(1);
+    expect(tapped(ctx, foeFlier)).toBe(true);
+    expect(hits(ctx).map((event) => event.payload['targetCardId'])).not.toContain(guard.cardId);
+  });
+
+  it('thundermaw-hellkite-tap-not-damage-bound — a flier that dies to the damage or was already tapped causes no trouble, and an untapped survivor stays tapped', () => {
+    const { ctx, foeFlier } = board('thundermaw-dies');
+    const frail = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Lab Frail Flier',
+        typeLine: 'Creature — Bird',
+        power: '1',
+        toughness: '1',
+        oracleText: 'Flying',
+      }),
+    );
+    const sleepy = spawn(ctx, 'P3', flier('Lab Sleepy Flier'), { tapped: true });
+    enterFrom(ctx, 'P1', card);
+    settle(ctx);
+    expect(onField(ctx, frail.cardId)).toBeUndefined();
+    expect(tapped(ctx, sleepy)).toBe(true);
+    expect(marked(ctx, sleepy)).toBe(1);
+    expect(tapped(ctx, foeFlier)).toBe(true);
+  });
+
+  it('thundermaw-hellkite-set-at-resolution — the fliers are those your opponents control as the trigger resolves, including one that arrived in response and excluding one that left', () => {
+    const { ctx, foeFlier } = board('thundermaw-resolution');
+    enterFrom(ctx, 'P1', card);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const late = enterFrom(ctx, 'P2', flier('Lab Late Flier'));
+    pump(moveObject(ctx, onField(ctx, foeFlier.cardId)!, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    expect(marked(ctx, late)).toBe(1);
+    expect(tapped(ctx, late)).toBe(true);
+  });
+
+  it('thundermaw-hellkite-hellkite-gone — Thundermaw still deals the damage and taps when it left the battlefield before the trigger resolved', () => {
+    const { ctx, foeFlier } = board('thundermaw-lki');
+    const kite = enterFrom(ctx, 'P1', card);
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    pump(moveObject(ctx, onField(ctx, kite.cardId)!, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    expect(marked(ctx, foeFlier)).toBe(1);
+    expect(tapped(ctx, foeFlier)).toBe(true);
+    expect(hits(ctx)).toHaveLength(2);
+  });
+
+  it('thundermaw-hellkite-whole-game — casting it through the stack, the enter trigger resolves after its own priority round, and it can attack at once with haste', () => {
+    const { ctx, mine, foeFlier } = board('thundermaw-game');
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    const kite = ctx.state.battlefield.find((perm) => perm.name === 'Thundermaw Hellkite');
+    expect(kite).toBeDefined();
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    settle(ctx);
+    expect(marked(ctx, foeFlier)).toBe(1);
+    expect(tapped(ctx, foeFlier)).toBe(true);
+    expect(marked(ctx, mine)).toBe(0);
+    expect(hasKeyword(ctx, kite!, 'haste')).toBe(true);
+    expect(hasKeyword(ctx, kite!, 'flying')).toBe(true);
+    expect(ctx.state.stack).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2546,6 +2700,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Flameblast Dragon',
     sha256: '0e43fcdddaf97a13d2c8c714da6e70accf69f025681541279f217f29b9327663',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Thundermaw Hellkite',
+    sha256: '6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4',
+    clauseCount: 3,
     authored: true,
   },
   {

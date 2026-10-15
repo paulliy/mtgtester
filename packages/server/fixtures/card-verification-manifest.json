@@ -5651,15 +5651,41 @@
     "e958144e-01bc-46ff-8f56-ddf2eb098630": {
       "name": "Thundermaw Hellkite",
       "oracleSha256": "6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "thundermaw-hellkite-flying",
+          "oracleText": "Flying",
+          "implementation": ["keyword flying (interpreted)"],
+          "engineTestIds": ["thundermaw-hellkite-pinned-oracle-supported"],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
+        },
+        {
+          "id": "thundermaw-hellkite-haste",
+          "oracleText": "Haste",
+          "implementation": ["keyword haste (interpreted)"],
+          "engineTestIds": [
+            "thundermaw-hellkite-pinned-oracle-supported",
+            "thundermaw-hellkite-whole-game"
+          ],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
+        },
+        {
+          "id": "thundermaw-hellkite-enters-damage-tap",
           "oracleText": "When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures.",
           "implementation": [
-            "explicitly unsupported; tap applies to all opposing fliers not the damaged set"
+            "authored enter trigger: this creature deals 1 damage to each creature with flying your opponents control and taps the same set; \"those creatures\" is the creatures with flying your opponents control, not the creatures dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage is prevented is still tapped, and the set cannot change between the two instructions of one resolution; last known information if this creature has left the battlefield (CR 608.2h)"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "thundermaw-hellkite-pinned-oracle-supported",
+            "thundermaw-hellkite-damage-and-tap",
+            "thundermaw-hellkite-source",
+            "thundermaw-hellkite-tap-not-damage-bound",
+            "thundermaw-hellkite-set-at-resolution",
+            "thundermaw-hellkite-hellkite-gone",
+            "thundermaw-hellkite-whole-game"
+          ],
+          "viewerScenarioIds": ["thundermaw-hellkite-viewer-damage-and-tap-fliers"]
         }
       ],
       "gameplayAiScenarioIds": []

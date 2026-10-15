@@ -154,8 +154,6 @@ const REASONS: Record<string, string> = {
   'Dark Confidant':
     'Reveal-and-put-into-hand is implemented as a draw, including empty-library loss.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Thundermaw Hellkite':
-    'Tap applies to all opposing fliers, not only creatures dealt that damage.',
   'Champion of Lambholt':
     "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Reality Shift':
@@ -286,6 +284,7 @@ describe('Marchesa catalog audit containment', () => {
     'Flameblast Dragon',
     'Territorial Aetherkite',
     'Arcbond',
+    'Thundermaw Hellkite',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -129,6 +129,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Their Number Is Legion',
       'Thunderbreak Regent',
       'Thunderfoot Baloth',
+      'Thundermaw Hellkite',
       'Tomb Blade',
       'Tomb Fortress',
       'Toxic Deluge',

@@ -692,12 +692,7 @@ export function registerDRACONIC_DESTRUCTIONOverrides(): void {
 
   // Thunderbreak Regent: restored in coverage PR06 (no override remains).
 
-  // Catalog audit draconic-batch-4: tap is a second selector pass, not the damaged set.
-  unsupportedCard(
-    'e958144e-01bc-46ff-8f56-ddf2eb098630',
-    'Thundermaw Hellkite',
-    'Tap applies to all opposing fliers, not only creatures dealt that damage.',
-  );
+  // Thundermaw Hellkite: restored in coverage PR06 (see coverage-pr06.ts).
 
   // Tyrant's Familiar: Lieutenant (CR 903.7). While you control your own commander it gets +2/+2
   // and has an attack trigger; both exist only under that condition. The trigger's "defending

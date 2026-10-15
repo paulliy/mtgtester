@@ -8886,3 +8886,27 @@ test('Arcbond: the chosen creature reflects the damage it is dealt', async ({ pa
   }
   await expect(page.locator('.human-zone .life-badge')).toHaveText('38');
 });
+
+test('Thundermaw Hellkite: damage and tap the fliers your opponents control', async ({ page }) => {
+  await runScenario(page, 'Thundermaw Hellkite: damage and tap the fliers your opponents control');
+  const kite = handCard(page, 'Thundermaw Hellkite');
+  await expect(kite).toHaveClass(/actionable/, { timeout: 15_000 });
+  await kite.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Thundermaw Hellkite')).toContainText(/flying/i);
+  // Every opposing flier is tapped, protection from red included; the ground creature and your
+  // own flier are not.
+  await expect(permanent(page, 'Lab Sturdy Flier')).toHaveCount(2);
+  for (const flier of await permanent(page, 'Lab Sturdy Flier').all())
+    await expect(flier.locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Red Guard').locator('.tap-badge')).toHaveText('TAP');
+  await expect(permanent(page, 'Lab Ox').locator('.tap-badge')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird').locator('.tap-badge')).toHaveCount(0);
+  // The Red Guard's protection stopped the damage; the other fliers took 1 each.
+  await expect(
+    page.getByText(/Thundermaw Hellkite.* deals 1 to Lab Sturdy Flier/).first(),
+  ).toBeVisible();
+});

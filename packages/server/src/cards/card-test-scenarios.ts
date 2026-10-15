@@ -11728,6 +11728,62 @@ function arcbondScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+const LAB_STURDY_FLIER = card({
+  oracleId: 'lab-sturdy-flier',
+  name: 'Lab Sturdy Flier',
+  typeLine: 'Creature — Bird',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '3',
+  oracleText: 'Flying',
+});
+const LAB_RED_GUARD = card({
+  oracleId: 'lab-red-guard',
+  name: 'Lab Red Guard',
+  typeLine: 'Creature — Bird',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '3',
+  oracleText: 'Flying\nProtection from red',
+});
+
+function thundermawHellkiteScenario(gameId: GameId): CardTestScenario {
+  const kite = pinnedFrom(COVERAGE_PR06, 'Thundermaw Hellkite');
+  const mountains = Array.from({ length: 5 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: 'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+    title: 'Thundermaw Hellkite: damage and tap the fliers your opponents control',
+    instructions: [
+      'Thundermaw Hellkite is in your hand with five Mountains and your own Lab Bird (1/1 flier) on the battlefield. P2 controls Lab Sturdy Flier, Lab Red Guard (a flier with protection from red) and Lab Ox; P3 controls a Lab Sturdy Flier.',
+      'Cast Thundermaw Hellkite for {3}{R}{R} and let it resolve; its enter trigger resolves after you pass priority.',
+    ],
+    expectedOutcome:
+      'Both Lab Sturdy Fliers take 1 damage and are tapped. Lab Red Guard takes no damage (protection from red) but is still tapped. Lab Ox and your own Lab Bird are untouched and untapped.',
+    oracleSha256: kite.sha256,
+    clauseIds: [
+      'thundermaw-hellkite-flying',
+      'thundermaw-hellkite-haste',
+      'thundermaw-hellkite-enters-damage-tap',
+    ],
+    decks: {
+      P1: [kite.card, LAB_BIRD, ...mountains],
+      P2: [LAB_STURDY_FLIER, LAB_RED_GUARD, LAB_OX, FOREST],
+      P3: [LAB_STURDY_FLIER, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Thundermaw Hellkite'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Bird', ...mountains.map((mountain) => mountain.name)] },
+        { playerId: 'P2', cardNames: ['Lab Sturdy Flier', 'Lab Red Guard', 'Lab Ox'] },
+        { playerId: 'P3', cardNames: ['Lab Sturdy Flier'] },
+      ],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -11981,6 +12037,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'flameblast-dragon-viewer-target-then-pay-x',
   'territorial-aetherkite-viewer-pay-energy-damage',
   'arcbond-viewer-reflect-damage',
+  'thundermaw-hellkite-viewer-damage-and-tap-fliers',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12301,6 +12358,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'flameblast-dragon-viewer-target-then-pay-x': flameblastDragonScenario,
   'territorial-aetherkite-viewer-pay-energy-damage': territorialAetherkiteScenario,
   'arcbond-viewer-reflect-damage': arcbondScenario,
+  'thundermaw-hellkite-viewer-damage-and-tap-fliers': thundermawHellkiteScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

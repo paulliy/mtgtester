@@ -138,7 +138,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/draconic-destruction.ts",
-      "sha256": "96d877f65722388c4b9b9756b64b196d35e6ea6768676d54e55b0016b8ec034f",
+      "sha256": "9ea4e5bd74dc7f63e87f2bea708317627e5508a8c3a9e12ca00eedd7c07ff671",
       "description": "registerDRACONIC_DESTRUCTIONOverrides"
     },
     {

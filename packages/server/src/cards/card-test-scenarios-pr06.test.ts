@@ -581,3 +581,35 @@ describe('Arcbond Card Test Lab scenario', () => {
     replays('arcbond-viewer-reflect-damage', steps);
   });
 });
+
+describe('Thundermaw Hellkite Card Test Lab scenario', () => {
+  it('thundermaw-hellkite-viewer-damage-and-tap-fliers — the opposing fliers all take 1 and are tapped, the protected one takes none but is tapped, and the ground creature and your own flier are untouched', () => {
+    const steps: Step[] = [{ action: 'Cast Thundermaw Hellkite' }];
+    const { scenario, state, onBattlefield } = run(
+      'thundermaw-hellkite-viewer-damage-and-tap-fliers',
+      steps,
+    );
+    const sturdy = onBattlefield('Lab Sturdy Flier');
+    expect(sturdy).toHaveLength(2);
+    for (const perm of sturdy) {
+      expect(perm.damageMarked, perm.controllerId).toBe(1);
+      expect(perm.tapped, perm.controllerId).toBe(true);
+    }
+    const [guard] = onBattlefield('Lab Red Guard');
+    expect(guard?.damageMarked).toBe(0);
+    expect(guard?.tapped).toBe(true);
+    for (const name of ['Lab Ox', 'Lab Bird']) {
+      const [perm] = onBattlefield(name);
+      expect(perm?.damageMarked, name).toBe(0);
+      expect(perm?.tapped, name).toBe(false);
+    }
+    expect(onBattlefield('Thundermaw Hellkite')).toHaveLength(1);
+    const hits = state.eventLog.filter(
+      (event) => event.type === 'damage' && String(event.payload['source']).includes('Thundermaw'),
+    );
+    expect(hits).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('thundermaw-hellkite-viewer-damage-and-tap-fliers', steps);
+  });
+});

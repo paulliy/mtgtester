@@ -16,7 +16,7 @@ import {
   whenPermanent,
 } from '../templates';
 import { constant } from '../value';
-import { allOf, ofType, OTHER, YOURS } from '../selector';
+import { allOf, ofType, OPPONENTS, OTHER, withKeyword, YOURS } from '../selector';
 import { defineCard, extendCard, unsupportedCard } from './index';
 
 export function registerCoveragePr06Overrides(): void {
@@ -44,6 +44,32 @@ export function registerCoveragePr06Overrides(): void {
           ],
           description:
             'Whenever this creature attacks, you may pay {X}{R}. If you do, it deals X damage to any target',
+        }),
+      ],
+    },
+  );
+
+  // Thundermaw Hellkite: "those creatures" means the creatures with flying your opponents control,
+  // not the creatures that were dealt damage (Gatherer ruling 2017-11-17), so a flier whose damage
+  // is prevented, protection from red for one, is still tapped. Both instructions use that same
+  // set as the ability resolves; nothing can change flying or control between the two
+  // instructions of one resolution, so reading the selector twice is reading one set.
+  const opposingFliers = allOf(ofType('Creature'), OPPONENTS, withKeyword('flying'));
+  defineCard(
+    'e958144e-01bc-46ff-8f56-ddf2eb098630',
+    'Thundermaw Hellkite',
+    [
+      'When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [
+            { op: 'damageEach', selector: opposingFliers, amount: constant(1) },
+            { op: 'tapEach', selector: opposingFliers },
+          ],
+          description:
+            'When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures',
         }),
       ],
     },
