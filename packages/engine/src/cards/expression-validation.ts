@@ -406,7 +406,6 @@ const effectExpressions = {
   angelGrace: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},
-  combatCalligrapher: {},
   inkshield: {},
   gisela: {},
   humbleDefector: {},

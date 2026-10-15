@@ -2399,6 +2399,16 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Nils, Discipline Enforcer: a creature with counters must pay to attack you'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Combat Calligrapher: an Inkling cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

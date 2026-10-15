@@ -2264,13 +2264,37 @@
     "ee7ebbc1-2f9e-4867-a522-424869b6d772": {
       "name": "Combat Calligrapher",
       "oracleSha256": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "combat-calligrapher-inklings-cant-attack-you",
           "oracleText": "Inklings can't attack you or planeswalkers you control.",
-          "implementation": ["explicitly unsupported; cannot-attack-you omitted; trigger unscoped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static whose filter is the Inkling subtype: any Inkling, token or not and whoever controls it, is never offered you or a planeswalker you control as an attack target (CR 508.1c); other creatures, and Inklings attacking anyone else, are unaffected"
+          ],
+          "engineTestIds": [
+            "combat-calligrapher-pinned-oracle-supported",
+            "combat-calligrapher-inklings-cant-attack-you",
+            "combat-calligrapher-token-is-an-inkling"
+          ],
+          "viewerScenarioIds": ["combat-calligrapher-viewer-inkling-cant-attack-you"]
+        },
+        {
+          "id": "combat-calligrapher-attacker-creates-inkling",
+          "oracleText": "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
+          "implementation": [
+            "authored attackDeclared trigger, one for each opponent of yours attacked (an attack on a planeswalker, on you, or on a planeswalker of yours is not), whose createTokenAttacking effect makes the token for the attacking player (the event player, who may be you) tapped and attacking exactly that opponent; the token enters attacking without being declared, so no attack trigger sees it and its own restriction does not apply (CR 506.3, 508.4); nothing is made if that opponent has left the game, and two Calligraphers trigger separately"
+          ],
+          "engineTestIds": [
+            "combat-calligrapher-pinned-oracle-supported",
+            "combat-calligrapher-token",
+            "combat-calligrapher-you-attack",
+            "combat-calligrapher-not-you",
+            "combat-calligrapher-per-opponent",
+            "combat-calligrapher-two",
+            "combat-calligrapher-defender-gone"
+          ],
+          "viewerScenarioIds": ["combat-calligrapher-viewer-attacker-creates-inkling"]
         }
       ],
       "gameplayAiScenarioIds": []

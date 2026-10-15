@@ -12978,6 +12978,67 @@ function nilsScenario(gameId: GameId, kind: 'counters' | 'tax'): CardTestScenari
   });
 }
 
+const LAB_INKLING = card({
+  oracleId: 'lab-inkling',
+  name: 'Lab Inkling',
+  typeLine: 'Creature — Inkling',
+  manaCost: '{1}{W}',
+  cmc: 2,
+  colors: ['W'],
+  colorIdentity: ['W'],
+  power: '2',
+  toughness: '1',
+});
+
+function combatCalligrapherScenario(
+  gameId: GameId,
+  kind: 'restriction' | 'token',
+): CardTestScenario {
+  const calligrapher = pinnedFrom(COVERAGE_PR07, 'Combat Calligrapher');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `combat-calligrapher-viewer-${restriction ? 'inkling-cant-attack-you' : 'attacker-creates-inkling'}`,
+    title: restriction
+      ? 'Combat Calligrapher: an Inkling cannot attack you'
+      : 'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Combat Calligrapher is on your battlefield, and P2 controls Lab Inkling (2/1).',
+          'Pass priority and let P2’s attack play out: Lab Inkling cannot attack you, so it attacks P3. P3 is an opponent of yours, so Combat Calligrapher then makes P2 an Inkling token attacking P3.',
+        ]
+      : [
+          'Combat Calligrapher (3/3 flier) and Lab Ox (4/4) are on your battlefield.',
+          'Pass priority to the declare attackers step and attack P2 with Lab Ox, leaving Combat Calligrapher at home, and confirm.',
+        ],
+    expectedOutcome: restriction
+      ? 'Lab Inkling was not offered you as a defender, so you are still at 40 life. P2 attacked P3 and got a tapped 2/1 Inkling attacking P3: with Lab Inkling that is 4 damage, so P3 is at 36.'
+      : 'P2 is an opponent of yours, so you created a tapped 2/1 white and black flying Inkling attacking P2. Lab Ox dealt 4 and the Inkling 2: P2 is at 34.',
+    oracleSha256: calligrapher.sha256,
+    clauseIds: restriction
+      ? ['combat-calligrapher-inklings-cant-attack-you']
+      : ['combat-calligrapher-attacker-creates-inkling'],
+    decks: {
+      P1: [calligrapher.card, ...(restriction ? [] : [LAB_OX]), FOREST, FOREST],
+      P2: [...(restriction ? [LAB_INKLING] : []), FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: restriction ? ['Combat Calligrapher'] : ['Combat Calligrapher', 'Lab Ox'],
+        },
+        ...(restriction ? [{ playerId: 'P2' as const, cardNames: ['Lab Inkling'] }] : []),
+      ],
+      continueThroughCombat: true,
+    },
+    ...(restriction ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } } : {}),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13287,6 +13348,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'rite-of-the-raging-storm-viewer-upkeep-token',
   'nils-viewer-end-step-counters',
   'nils-viewer-counters-attack-tax',
+  'combat-calligrapher-viewer-inkling-cant-attack-you',
+  'combat-calligrapher-viewer-attacker-creates-inkling',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13770,6 +13833,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     riteOfTheRagingStormScenario(gameId, 'token'),
   'nils-viewer-end-step-counters': (gameId) => nilsScenario(gameId, 'counters'),
   'nils-viewer-counters-attack-tax': (gameId) => nilsScenario(gameId, 'tax'),
+  'combat-calligrapher-viewer-inkling-cant-attack-you': (gameId) =>
+    combatCalligrapherScenario(gameId, 'restriction'),
+  'combat-calligrapher-viewer-attacker-creates-inkling': (gameId) =>
+    combatCalligrapherScenario(gameId, 'token'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -3306,42 +3306,6 @@ export function* executeAbility(
         gainLife(ctx, controller, 2);
         break;
       }
-      case 'combatCalligrapher': {
-        const attackingPlayerId =
-          scope.eventPlayerId ??
-          (triggerObjectCardId === undefined
-            ? undefined
-            : findPermanent(ctx, triggerObjectCardId)?.controllerId);
-        const attacker =
-          triggerObjectCardId === undefined ? undefined : findPermanent(ctx, triggerObjectCardId);
-        if (
-          attackingPlayerId === undefined ||
-          attacker?.attacking === null ||
-          attacker?.attacking === undefined
-        )
-          break;
-        const token = createToken(
-          ctx,
-          {
-            name: 'Inkling',
-            typeLine: 'Creature — Inkling',
-            types: ['Creature'],
-            subtypes: ['Inkling'],
-            colors: ['W', 'B'],
-            power: 2,
-            toughness: 1,
-            keywords: ['flying'],
-          },
-          attackingPlayerId,
-        );
-        token.tapped = true;
-        token.attacking = attacker.attacking;
-        // It attacks what its attacker attacks, planeswalker included (CR 508.4a).
-        token.attackingPlaneswalker = attacker.attackingPlaneswalker;
-        token.attackedPlaneswalkerRemoved = attacker.attackedPlaneswalkerRemoved;
-        token.statuses.push('attacking');
-        break;
-      }
       case 'inkshield':
         ctx.state.combatDamagePrevention.players[controller.id] = true;
         if (ctx.state.combatDamagePrevention.tokenSpecs === undefined)
@@ -4885,20 +4849,38 @@ export function* executeAbility(
       case 'createTokenAttacking': {
         const count = amountOf(effect.count);
         if (count <= 0) break;
-        const defenders = (ctx.state.combat?.defendingPlayers ?? []).filter((id) => {
-          const player = ctx.state.players.find((candidate) => candidate.id === id);
-          return player !== undefined && !player.hasLost && id !== controller.id;
-        });
-        if (defenders.length === 0) break;
-        // "Tapped and attacking" names no player (CR 508.4): its controller chooses which defending
-        // player, or planeswalker one of them controls, it attacks.
-        const attackChoice = yield* chooseEnteringAttackTarget(
-          ctx,
-          controller,
-          source.name,
-          defenders,
-          true,
-        );
+        // The event player (the attacking player) creates them for "that attacking player".
+        const owner =
+          effect.player === 'eventPlayer'
+            ? scope.eventPlayerId === undefined
+              ? undefined
+              : playerById(ctx, scope.eventPlayerId)
+            : controller;
+        if (owner === undefined || owner.hasLost) break;
+        let attackChoice: { defenderId: PlayerId; planeswalkerId: ObjectId | null };
+        if (effect.defender === 'attackedPlayer') {
+          // "…that's attacking that opponent": the player the firing was about, not a planeswalker
+          // of theirs, and only while they are still in the game and not the token's controller.
+          const attacked = scope.attackedPlayerId;
+          const player = ctx.state.players.find((candidate) => candidate.id === attacked);
+          if (player === undefined || player.hasLost || player.id === owner.id) break;
+          attackChoice = { defenderId: player.id, planeswalkerId: null };
+        } else {
+          const defenders = (ctx.state.combat?.defendingPlayers ?? []).filter((id) => {
+            const player = ctx.state.players.find((candidate) => candidate.id === id);
+            return player !== undefined && !player.hasLost && id !== owner.id;
+          });
+          if (defenders.length === 0) break;
+          // "Tapped and attacking" names no player (CR 508.4): its controller chooses which
+          // defending player, or planeswalker one of them controls, it attacks.
+          attackChoice = yield* chooseEnteringAttackTarget(
+            ctx,
+            owner,
+            source.name,
+            defenders,
+            true,
+          );
+        }
         const spec = {
           ...effect.spec,
           ...(effect.powerOverride === undefined ? {} : { power: amountOf(effect.powerOverride) }),
@@ -4907,9 +4889,9 @@ export function* executeAbility(
             : { toughness: amountOf(effect.toughnessOverride) }),
         };
         const created: EnginePermanent[] = [];
-        const multiplier = tokenCreationMultiplierFor(ctx, controller.id);
+        const multiplier = tokenCreationMultiplierFor(ctx, owner.id);
         for (let i = 0; i < count * multiplier; i++) {
-          const token = createToken(ctx, spec, controller.id, false, false, false);
+          const token = createToken(ctx, spec, owner.id, false, false, false);
           token.tapped = true;
           token.attacking = attackChoice.defenderId;
           token.attackingPlaneswalker = attackChoice.planeswalkerId;
@@ -4927,7 +4909,7 @@ export function* executeAbility(
             'enters',
             created.map((permanent) => ({ permanent })),
           );
-          applyTokenCreationReplacements(ctx, spec, controller.id);
+          applyTokenCreationReplacements(ctx, spec, owner.id);
         }
         break;
       }

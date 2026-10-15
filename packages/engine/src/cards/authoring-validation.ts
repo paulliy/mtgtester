@@ -37,6 +37,8 @@ interface Scope {
   providedEventObject?: 'permanent' | 'card';
   eventPlayer?: boolean;
   providedEventPlayer?: boolean;
+  /** `attackDeclared` firing with one group, and one attacked player, for each defender. */
+  attackedPlayer?: boolean;
   movedToBattlefieldSlots?: ReadonlySet<number>;
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
@@ -469,7 +471,17 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         }
       }
     }
-    owningScope = { targets, eventPlayer, ...(eventObject === undefined ? {} : { eventObject }) };
+    const attackedPlayer =
+      record['kind'] === 'triggered' &&
+      (trigger as { when?: string; perDefender?: boolean } | undefined)?.when ===
+        'attackDeclared' &&
+      (trigger as { perDefender?: boolean }).perDefender === true;
+    owningScope = {
+      targets,
+      eventPlayer,
+      ...(attackedPlayer ? { attackedPlayer } : {}),
+      ...(eventObject === undefined ? {} : { eventObject }),
+    };
   }
   let checkedPermanentPossible = false;
   if (
@@ -763,6 +775,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       issues.push({
         path: `${path}.${key}`,
         message: 'event player reference has no owning event player scope',
+      });
+    if (entry === 'attackedPlayer' && owningScope?.attackedPlayer !== true)
+      issues.push({
+        path: `${path}.${key}`,
+        message: 'attacked player reference needs a per-defender attack declaration trigger',
       });
     if (['activatedAbilities', 'manaAbilities'].includes(key) && Array.isArray(entry)) {
       for (const [index, ability] of entry.entries()) {

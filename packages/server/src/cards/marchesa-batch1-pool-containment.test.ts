@@ -43,6 +43,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Canoptek Wraith',
       'Carrion Feeder',
       'Changing Loyalty',
+      'Combat Calligrapher',
       'Comeuppance',
       'Conclave Tribunal',
       "Conjurer's Closet",

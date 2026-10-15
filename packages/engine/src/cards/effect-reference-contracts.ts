@@ -156,7 +156,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   angelGrace: {},
   drawForEachOpponent: {},
   drawTargetAndController: { target: player },
-  combatCalligrapher: {},
   inkshield: {},
   gisela: {},
   humbleDefector: { target: player },

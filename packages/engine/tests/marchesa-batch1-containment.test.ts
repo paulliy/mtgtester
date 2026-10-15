@@ -77,8 +77,6 @@ const REASONS: Record<string, string> = {
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Combat Calligrapher':
-    'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
@@ -273,6 +271,7 @@ describe('Marchesa catalog audit containment', () => {
     'Firkraag, Cunning Instigator',
     'Eriette of the Charmed Apple',
     'Nils, Discipline Enforcer',
+    'Combat Calligrapher',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -92,10 +92,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying.',
   ]);
 
-  unimplemented('ee7ebbc1-2f9e-4867-a522-424869b6d772', 'Combat Calligrapher', [
-    "Inklings can't attack you or planeswalkers you control.",
-    "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
-  ]);
+  // Combat Calligrapher: restored in coverage PR07 (see coverage-pr07.ts).
 
   // Hateful Eidolon: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 

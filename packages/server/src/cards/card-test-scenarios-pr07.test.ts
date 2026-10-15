@@ -368,3 +368,47 @@ describe('Nils, Discipline Enforcer Card Test Lab scenarios', () => {
     replays('nils-viewer-counters-attack-tax', steps);
   });
 });
+
+describe('Combat Calligrapher Card Test Lab scenarios', () => {
+  it('combat-calligrapher-viewer-inkling-cant-attack-you — P2’s Lab Inkling is never offered you as a defender, and its attack on P3 makes P2 an Inkling token attacking P3', () => {
+    const steps: Step[] = [];
+    const offers: string[][] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'combat-calligrapher-viewer-inkling-cant-attack-you',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offers).toHaveLength(1);
+    expect(offers[0]).not.toContain('P1');
+    expect(offers[0]).toContain('P3');
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P3').life).toBe(36);
+    const [token] = onBattlefield('Inkling');
+    expect(token?.controllerId).toBe('P2');
+    expect(token?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('combat-calligrapher-viewer-inkling-cant-attack-you', steps);
+  });
+
+  it('combat-calligrapher-viewer-attacker-creates-inkling — your attack on P2 creates a tapped Inkling for you attacking P2', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['__no_attack__', 'P2'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'combat-calligrapher-viewer-attacker-creates-inkling',
+      steps,
+    );
+    const [token] = onBattlefield('Inkling');
+    expect(token?.controllerId).toBe('P1');
+    expect(token?.tapped).toBe(true);
+    expect(seat('P2').life).toBe(34);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('combat-calligrapher-viewer-attacker-creates-inkling', steps);
+  });
+});

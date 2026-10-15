@@ -702,6 +702,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+    "name": "Combat Calligrapher",
+    "package": "PR07.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Inklings-cannot-attack-you is omitted, and the token trigger is unscoped."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
     "name": "Comeuppance",
     "package": "PR06.04",

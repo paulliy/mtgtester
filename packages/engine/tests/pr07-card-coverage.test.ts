@@ -222,6 +222,7 @@ function fight(
   attacksFor: (combat: number) => Record<string, string>,
   answer?: Answer,
   onDeclare?: (combat: number) => void,
+  onBlockers?: (combat: number) => void,
 ) {
   let combats = 0;
   const run = pump(runCombatAndExtraCombats(ctx), (decision, count) => {
@@ -231,8 +232,10 @@ function fight(
       onDeclare?.(combat);
       return declareAttacks(decision, (subjectId) => attacks[subjectId] ?? null);
     }
-    if (decision.presentationBlockDeclaration !== undefined)
+    if (decision.presentationBlockDeclaration !== undefined) {
+      onBlockers?.(combats - 1);
       return declareBlocks(decision, () => null);
+    }
     const pass = decision.options.findIndex((option) => option.type === 'pass');
     if (pass >= 0) return { index: pass, targets: new Map() };
     return answer?.(decision, count) ?? { index: 0, targets: new Map() };
@@ -1284,6 +1287,224 @@ describe('Nils, Discipline Enforcer', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.05 Combat Calligrapher
+// ---------------------------------------------------------------------------------------------
+
+describe('Combat Calligrapher', () => {
+  const { card } = pinned('Combat Calligrapher');
+  const INKLING = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Inkling', power: '2', toughness: '1' });
+  /** Gains life whenever a creature you control attacks, to show the token was never declared. */
+  const WATCHER = oracle({
+    name: 'Lab Watcher',
+    typeLine: 'Creature — Wall',
+    power: '0',
+    toughness: '4',
+    oracleText: 'Whenever a creature you control attacks, you gain 1 life.',
+  });
+
+  /** P1 controls Combat Calligrapher; each opponent controls a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const calligrapher = spawn(ctx, 'P1', card);
+    const bears = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Bear')),
+    };
+    return { ctx, calligrapher, bears };
+  }
+
+  const inklings = (ctx: GameContext) =>
+    ctx.state.battlefield.filter((perm) => perm.name === 'Inkling' && perm.isToken);
+
+  it('combat-calligrapher-pinned-oracle-supported — the authored override carries the Inkling restriction and the per-opponent token trigger under both ids, and Flying still parses', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'attackRestriction',
+        filter: { kind: 'subtype', value: 'Inkling' },
+        includePlaneswalkers: true,
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({
+      when: 'attackDeclared',
+      attacker: 'any',
+      attacking: { who: 'opponent', planeswalkers: false },
+      perDefender: true,
+    });
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'createTokenAttacking',
+        player: 'eventPlayer',
+        defender: 'attackedPlayer',
+        count: { kind: 'const', n: 1 },
+        spec: {
+          name: 'Inkling',
+          colors: ['W', 'B'],
+          power: 2,
+          toughness: 1,
+          keywords: ['flying'],
+        },
+      },
+    ]);
+  });
+
+  it("combat-calligrapher-inklings-cant-attack-you — Inklings, token or not and whoever controls them, can't attack you or your planeswalkers; other creatures can", () => {
+    const { ctx } = board('calligrapher-restriction');
+    const walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const otherWalker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    const inkling = spawn(ctx, 'P2', INKLING('P2 Inkling'));
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Other Bear'));
+    const offered = attackOptionsFor(ctx, 'P2', inkling);
+    expect(offered.players.sort()).toEqual(['P3', 'P4']);
+    expect(offered.planeswalkers).toEqual([otherWalker.id]);
+    expect(offered.planeswalkers).not.toContain(walker.id);
+    expect(attackOptionsFor(ctx, 'P2', bear).players).toContain('P1');
+  });
+
+  it('combat-calligrapher-token-is-an-inkling — the Inkling token it makes is restricted like any other Inkling, and a later attack cannot send it at you', () => {
+    const { ctx, bears } = board('calligrapher-restriction-token');
+    turnOfPlayer(ctx, 'P2');
+    fight(ctx, () => ({ [bears.P2.id]: 'P3' }));
+    const [token] = inklings(ctx);
+    expect(token).toBeDefined();
+    token!.tapped = false;
+    token!.summoningSick = false;
+    expect(attackOptionsFor(ctx, 'P2', token!).players.sort()).toEqual(['P3', 'P4']);
+  });
+
+  it('combat-calligrapher-token — a player attacking one of your opponents creates a tapped 2/1 white and black flying Inkling, controlled by that attacking player, attacking that opponent', () => {
+    const { ctx, bears } = board('calligrapher-token');
+    spawn(ctx, 'P2', WATCHER);
+    turnOfPlayer(ctx, 'P2');
+    const seen: { controller: string; tapped: boolean; attacking: string | null }[] = [];
+    fight(
+      ctx,
+      () => ({ [bears.P2.id]: 'P3' }),
+      undefined,
+      undefined,
+      () =>
+        seen.push(
+          ...inklings(ctx).map((token) => ({
+            controller: token.controllerId,
+            tapped: token.tapped,
+            attacking: token.attacking,
+          })),
+        ),
+    );
+    // Controlled by the ATTACKING player (P2), not the Calligrapher's controller, tapped and
+    // attacking the opponent who was attacked.
+    expect(seen).toEqual([{ controller: 'P2', tapped: true, attacking: 'P3' }]);
+    const [token] = inklings(ctx);
+    const chars = computeCharacteristics(ctx, token!);
+    expect(chars.power).toBe(2);
+    expect(chars.toughness).toBe(1);
+    expect(chars.colors.sort()).toEqual(['B', 'W']);
+    expect(chars.keywords).toContain('flying');
+    // Both attackers connect: the Bear's 2 and the Inkling's 2.
+    expect(playerById(ctx, 'P3').life).toBe(36);
+    // The token was never declared as an attacker, so P2's Watcher saw only the Bear attack.
+    expect(playerById(ctx, 'P2').life).toBe(41);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('combat-calligrapher-you-attack — your own attack on an opponent makes the token for you', () => {
+    const { ctx } = board('calligrapher-own-attack');
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    fight(ctx, () => ({ [bear.id]: 'P2' }));
+    expect(inklings(ctx).map((token) => token.controllerId)).toEqual(['P1']);
+    expect(playerById(ctx, 'P2').life).toBe(36);
+  });
+
+  it('combat-calligrapher-not-you — an attack on you, on your planeswalker, or on an opponent’s planeswalker creates nothing', () => {
+    const { ctx, bears } = board('calligrapher-negatives');
+    const mine = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const theirs = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    const second = spawn(ctx, 'P2', GRIZZLY('P2 Second'));
+    // At you.
+    turnOfPlayer(ctx, 'P2');
+    fight(ctx, () => ({ [bears.P2.id]: 'P1' }));
+    expect(inklings(ctx)).toEqual([]);
+    // At your planeswalker and at an opponent's planeswalker.
+    bears.P2.tapped = false;
+    second.tapped = false;
+    fight(ctx, () => ({ [bears.P2.id]: mine.id, [second.id]: theirs.id }));
+    expect(inklings(ctx)).toEqual([]);
+  });
+
+  it('combat-calligrapher-per-opponent — one token for each opponent attacked, however many creatures attack that opponent', () => {
+    const { ctx, bears } = board('calligrapher-per-defender');
+    const extra = spawn(ctx, 'P2', GRIZZLY('P2 Extra'));
+    const third = spawn(ctx, 'P2', GRIZZLY('P2 Third'));
+    const seen: string[] = [];
+    turnOfPlayer(ctx, 'P2');
+    fight(
+      ctx,
+      () => ({ [bears.P2.id]: 'P3', [extra.id]: 'P3', [third.id]: 'P4' }),
+      undefined,
+      undefined,
+      // Each defending player declares blocks in turn; look once.
+      () => {
+        if (seen.length === 0)
+          seen.push(...inklings(ctx).map((token) => token.attacking ?? 'none'));
+      },
+    );
+    expect(seen.sort()).toEqual(['P3', 'P4']);
+  });
+
+  it('combat-calligrapher-two — each Calligrapher triggers separately', () => {
+    const { ctx, bears } = board('calligrapher-two');
+    spawn(ctx, 'P4', card);
+    const seen: string[] = [];
+    turnOfPlayer(ctx, 'P2');
+    // P3 is an opponent of both controllers (P1 and P4): one trigger each, so two tokens.
+    fight(
+      ctx,
+      () => ({ [bears.P2.id]: 'P3' }),
+      undefined,
+      undefined,
+      () => {
+        if (seen.length === 0)
+          seen.push(...inklings(ctx).map((token) => token.attacking ?? 'none'));
+      },
+    );
+    expect(seen).toEqual(['P3', 'P3']);
+  });
+
+  it('combat-calligrapher-defender-gone — the token is made for the attacked opponent only while they are in the game, and never attacking its own controller', () => {
+    const { ctx } = board('calligrapher-gone');
+    const [ability] = interpretCard(card).triggers;
+    const resolveFor = (eventPlayerId: string, attackedPlayerId: string) =>
+      pump(
+        executeAbility(
+          ctx,
+          { cardId: 'c', oracleId: card.oracleId, name: card.name, controllerId: 'P1' },
+          ability!,
+          [],
+          undefined,
+          { eventPlayerId, attackedPlayerId },
+        ),
+      );
+    // The attacked opponent has left the game: nothing is created.
+    playerById(ctx, 'P3').hasLost = true;
+    resolveFor('P2', 'P3');
+    expect(inklings(ctx)).toEqual([]);
+    // An attacked player who is the attacking player themselves cannot be attacked by their own token.
+    resolveFor('P2', 'P2');
+    expect(inklings(ctx)).toEqual([]);
+    // With the opponent in the game, it is made for the event player and attacks that opponent.
+    resolveFor('P2', 'P4');
+    expect(
+      inklings(ctx).map((token) => [token.controllerId, token.attacking, token.tapped]),
+    ).toEqual([['P2', 'P4', true]]);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -1338,6 +1559,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Nils, Discipline Enforcer',
     sha256: '4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Combat Calligrapher',
+    sha256: '14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25',
     clauseCount: 2,
     authored: true,
   },

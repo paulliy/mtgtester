@@ -16,7 +16,7 @@ import {
 import { allOfConditions } from '../condition';
 import type { TokenSpec } from '../ability';
 import { constant } from '../value';
-import { creatureToken } from '../tokens';
+import { creatureToken, INKLING_2_1_FLYING } from '../tokens';
 import { allOf, HAS_ANY_COUNTER, named, ofSubtype, ofType, SELF, YOURS } from '../selector';
 import { defineCard } from './index';
 
@@ -217,6 +217,52 @@ export function registerCoveragePr07Overrides(): void {
           description:
             'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls',
         }),
+      ],
+    },
+  );
+
+  // Combat Calligrapher: the static covers every Inkling, token or not, whoever controls it. The
+  // trigger is per attacked opponent of yours (an attack on a planeswalker is not an attack on that
+  // opponent): the ATTACKING player, who may be you, creates the token, tapped and attacking that
+  // opponent. It was put onto the battlefield attacking, never declared as an attacker, so no
+  // attack trigger sees it and the restriction above does not apply to it (CR 506.3, 508.4).
+  defineCard(
+    'ee7ebbc1-2f9e-4867-a522-424869b6d772',
+    'Combat Calligrapher',
+    [
+      "Inklings can't attack you or planeswalkers you control.",
+      "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'attackRestriction',
+          filter: ofSubtype('Inkling'),
+          includePlaneswalkers: true,
+        },
+      ],
+      triggers: [
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'any',
+            attacking: { who: 'opponent', planeswalkers: false },
+            perDefender: true,
+          },
+          {
+            effects: [
+              {
+                op: 'createTokenAttacking',
+                spec: INKLING_2_1_FLYING,
+                count: constant(1),
+                player: 'eventPlayer',
+                defender: 'attackedPlayer',
+              },
+            ],
+            description:
+              "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent",
+          },
+        ),
       ],
     },
   );

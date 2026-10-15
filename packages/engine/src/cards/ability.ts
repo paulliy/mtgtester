@@ -767,7 +767,6 @@ export type Effect =
   | { op: 'angelGrace' }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
-  | { op: 'combatCalligrapher' }
   | { op: 'inkshield' }
   | { op: 'gisela' }
   | { op: 'humbleDefector'; target: EffectRef }
@@ -1037,13 +1036,24 @@ export type Effect =
       /** "Create N tapped … tokens" — they enter tapped, not enter then tap. */
       tapped?: boolean;
     }
-  /** Create a batch of tokens tapped and attacking a defending player chosen on resolution. */
+  /**
+   * Create a batch of tokens tapped and attacking a defending player chosen on resolution. They
+   * were never declared as attackers (CR 506.3, 508.4): no attack trigger, no attack restriction
+   * or cost applies to them.
+   *
+   * `player: 'eventPlayer'` makes the event player (the attacking player) the tokens' controller
+   * instead of the ability's controller (Combat Calligrapher: "that attacking player creates …"),
+   * and `defender: 'attackedPlayer'` names the player they attack, the one an `attackDeclared`
+   * `perDefender` firing is about, instead of letting their controller choose.
+   */
   | {
       op: 'createTokenAttacking';
       spec: TokenSpec;
       count: Value;
       powerOverride?: number | Value;
       toughnessOverride?: number | Value;
+      player?: 'eventPlayer';
+      defender?: 'attackedPlayer';
     }
   /** Create one token already attached to an announced permanent target. */
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }

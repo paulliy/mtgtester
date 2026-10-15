@@ -534,6 +534,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'rite-of-the-raging-storm-viewer-upkeep-token',
       'nils-viewer-end-step-counters',
       'nils-viewer-counters-attack-tax',
+      'combat-calligrapher-viewer-inkling-cant-attack-you',
+      'combat-calligrapher-viewer-attacker-creates-inkling',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

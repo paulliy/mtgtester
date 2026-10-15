@@ -216,6 +216,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
+      "card": {
+        "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+        "scryfallId": "3c154814-72e4-4cca-a927-66c58602ae80",
+        "name": "Combat Calligrapher",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Bird Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird",
+          "Cleric"
+        ],
+        "oracleText": "Flying\nInklings can't attack you or planeswalkers you control.\nWhenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }
