@@ -128,7 +128,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Teyo, Geometric Tactician',
       'Wishclaw Talisman',
       'Brash Taunter',
-      'Breena, the Demagogue',
       'Scheming Symmetry',
       'Shadrix Silverquill',
     ]);

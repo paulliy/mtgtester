@@ -2274,6 +2274,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Firemane Commando: another player who attacked you draws nothing'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+    ],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

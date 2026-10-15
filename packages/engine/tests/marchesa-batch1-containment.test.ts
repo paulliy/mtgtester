@@ -97,8 +97,6 @@ const REASONS: Record<string, string> = {
   'Teyo, Geometric Tactician':
     'The −2 directional attack restriction is claimed without an implementation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
-  'Breena, the Demagogue':
-    'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
@@ -280,6 +278,7 @@ describe('Marchesa catalog audit containment', () => {
     'Michiko Konda, Truth Seeker',
     'Delirium',
     'Firemane Commando',
+    'Breena, the Demagogue',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

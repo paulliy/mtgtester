@@ -144,7 +144,6 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   humbleDefector: { target: player },
   shadrixModes: {},
   masterOfCeremonies: {},
-  breenaAttack: { target: permanent },
   drawTargetAndControllerN: { target: player },
   schemingSymmetry: {},
   kambal: {},

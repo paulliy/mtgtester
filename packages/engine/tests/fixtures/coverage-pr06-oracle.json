@@ -696,6 +696,46 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
+      "card": {
+        "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+        "scryfallId": "599f87c8-643e-4224-93a5-853c0bd4e497",
+        "name": "Breena, the Demagogue",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Bird Warlock",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird",
+          "Warlock"
+        ],
+        "oracleText": "Flying\nWhenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

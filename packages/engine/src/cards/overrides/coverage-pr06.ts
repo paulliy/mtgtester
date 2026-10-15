@@ -90,6 +90,41 @@ export function registerCoveragePr06Overrides(): void {
     },
   );
 
+  // Breena, the Demagogue: triggers once for each attacked opponent of yours, per declaration, for
+  // any player's attack, yours included: a player attacking two of your opponents triggers it twice,
+  // and an attack on an opponent's planeswalker is not an attack on that opponent. Intervening-if
+  // (CR 603.4): that opponent has more life than at least one other of your opponents, checked as
+  // the attack is declared and as the ability resolves. The attacking player, the event player,
+  // draws; you put the counters on a creature you control, chosen as it resolves, not targeted.
+  defineCard(
+    'd11e627b-8a48-411d-a261-2c9a02a758ba',
+    'Breena, the Demagogue',
+    [
+      'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.',
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'attackDeclared',
+            attacker: 'any',
+            attacking: { who: 'opponent', planeswalkers: false },
+            perDefender: true,
+          },
+          {
+            condition: { kind: 'attackedPlayerHasMoreLifeThanAnotherOpponent' },
+            effects: [
+              { op: 'draw', count: constant(1), player: 'eventPlayer' },
+              { op: 'putCountersOnCreatureOfChoice', counter: '+1/+1', count: 2 },
+            ],
+            description:
+              'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control',
+          },
+        ),
+      ],
+    },
+  );
+
   // Backlash: "untapped" holds when the target is chosen and again as the spell resolves (CR
   // 608.2b), so a creature tapped in response makes the only target illegal and the spell does
   // nothing. The creature itself deals the damage, equal to its power after being tapped, to the

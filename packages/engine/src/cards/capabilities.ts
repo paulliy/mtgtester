@@ -831,7 +831,6 @@ const families = {
       humbleDefector: true,
       shadrixModes: true,
       masterOfCeremonies: true,
-      breenaAttack: true,
       drawTargetAndControllerN: true,
       schemingSymmetry: true,
       kambal: true,

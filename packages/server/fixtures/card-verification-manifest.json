@@ -2758,13 +2758,24 @@
     "d11e627b-8a48-411d-a261-2c9a02a758ba": {
       "name": "Breena, the Demagogue",
       "oracleSha256": "1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "breena-attack-more-life",
           "oracleText": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
-          "implementation": ["explicitly unsupported; defender vs attacker life"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "an attackDeclared trigger for any player's attack, one firing per attacked opponent of yours (a planeswalker attack does not count), bound to the attacked player and the attacking player; the intervening-if that the attacked opponent has more life than another of your opponents is checked at the declaration and again on resolution; the attacking player, the event player, draws a card, and you choose a creature you control as it resolves (not targeted) and put two +1/+1 counters on it"
+          ],
+          "engineTestIds": [
+            "breena-pinned-oracle-supported",
+            "breena-more-life",
+            "breena-you-attack",
+            "breena-planeswalker",
+            "breena-per-opponent",
+            "breena-intervening-if",
+            "breena-no-creature"
+          ],
+          "viewerScenarioIds": ["breena-viewer-attack-more-life"]
         }
       ],
       "gameplayAiScenarioIds": []

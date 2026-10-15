@@ -4478,6 +4478,163 @@ describe('Firemane Commando', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR06.03 Breena, the Demagogue
+// ---------------------------------------------------------------------------------------------
+
+describe('Breena, the Demagogue', () => {
+  const { card } = pinned('Breena, the Demagogue');
+  const BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+
+  /** P1 controls Breena and an Ally; P2, P3 and P4 are at 30, 20 and `p4` life, with a Bear each. */
+  function board(seed: string, p4 = 20) {
+    const ctx = pod(seed);
+    const breena = spawn(ctx, 'P1', card);
+    const ally = spawn(ctx, 'P1', GRIZZLY('Lab Ally'));
+    const bears = Object.fromEntries(
+      (['P1', 'P2', 'P3', 'P4'] as const).map((id) => [
+        id,
+        spawn(ctx, id, GRIZZLY(`Lab ${id} Bear`)),
+      ]),
+    ) as Record<'P1' | 'P2' | 'P3' | 'P4', EnginePermanent>;
+    playerById(ctx, 'P2').life = 30;
+    playerById(ctx, 'P3').life = 20;
+    playerById(ctx, 'P4').life = p4;
+    return { ctx, breena, ally, bears };
+  }
+  /** Choose the Ally for the counters. */
+  const toAlly =
+    (ally: EnginePermanent): Answer =>
+    (decision) => ({
+      index: Math.max(
+        decision.options.findIndex((option) => option.description.includes(ally.name)),
+        0,
+      ),
+      targets: new Map(),
+    });
+  const counters = (perm: EnginePermanent) => perm.counters['+1/+1'] ?? 0;
+
+  it('breena-pinned-oracle-supported — the override reads one attack trigger per attacked opponent of yours, intervening-if on that opponent’s life, drawing for the attacking player and putting counters on a creature you choose', () => {
+    expectModeled(card);
+    expect(getOverride(card.oracleId)?.unsupportedReason).toBeUndefined();
+    expect(getOverride(fixtureOracleId(card.name))?.unsupportedReason).toBeUndefined();
+    const def = interpretCard(card);
+    expect(def.keywords).toContain('flying');
+    expect(def.triggers).toHaveLength(1);
+    const [trigger] = def.triggers;
+    expect(trigger!.trigger).toEqual({
+      when: 'attackDeclared',
+      attacker: 'any',
+      attacking: { who: 'opponent', planeswalkers: false },
+      perDefender: true,
+      condition: { kind: 'attackedPlayerHasMoreLifeThanAnotherOpponent' },
+    });
+    expect(trigger!.effects).toEqual([
+      { op: 'draw', count: { kind: 'const', n: 1 }, player: 'eventPlayer' },
+      { op: 'putCountersOnCreatureOfChoice', counter: '+1/+1', count: 2 },
+    ]);
+  });
+
+  it('breena-more-life — another player attacking the opponent with more life draws that player a card and puts two counters on your creature; attacking one with no more life does neither', () => {
+    const high = board('breena-high');
+    turnOfPlayer(high.ctx, 'P3');
+    declareAndFight(high.ctx, { [high.bears.P3.id]: 'P2' }, toAlly(high.ally));
+    expect(handSize(high.ctx, 'P3')).toBe(1);
+    expect(handSize(high.ctx, 'P1')).toBe(0);
+    expect(counters(high.ally)).toBe(2);
+    expect(counters(high.breena)).toBe(0);
+
+    // P3 (20) is tied with P4 (20): no more life than another of your opponents.
+    const low = board('breena-low');
+    turnOfPlayer(low.ctx, 'P2');
+    declareAndFight(low.ctx, { [low.bears.P2.id]: 'P3' }, toAlly(low.ally));
+    expect(handSize(low.ctx, 'P2')).toBe(0);
+    expect(counters(low.ally)).toBe(0);
+  });
+
+  it('breena-you-attack — you attack the opponent with more life: you draw as the attacking player', () => {
+    const { ctx, ally, bears } = board('breena-self');
+    declareAndFight(ctx, { [bears.P1.id]: 'P2' }, toAlly(ally));
+    expect(handSize(ctx, 'P1')).toBe(1);
+    expect(counters(ally)).toBe(2);
+  });
+
+  it('breena-planeswalker — attacking an opponent’s planeswalker is not attacking that opponent', () => {
+    const { ctx, ally, bears } = board('breena-walker');
+    const walker = spawn(ctx, 'P2', WALKER());
+    turnOfPlayer(ctx, 'P3');
+    declareAndFight(ctx, { [bears.P3.id]: walker.id }, toAlly(ally));
+    expect(handSize(ctx, 'P3')).toBe(0);
+    expect(counters(ally)).toBe(0);
+    expect(counterOf(walker)).toBe(3);
+  });
+
+  it('breena-per-opponent — one attack on two of your opponents triggers once for each that qualifies', () => {
+    const { ctx, ally, bears } = board('breena-two', 25);
+    const extra = spawn(ctx, 'P3', GRIZZLY('Lab P3 Second Bear'));
+    turnOfPlayer(ctx, 'P3');
+    declareAndFight(ctx, { [bears.P3.id]: 'P2', [extra.id]: 'P4' }, toAlly(ally));
+    // P2 (30) and P4 (25) both have more life than P3 (20): two triggers, two draws.
+    expect(handSize(ctx, 'P3')).toBe(2);
+    expect(counters(ally)).toBe(4);
+    expect(
+      ctx.state.eventLog.filter(
+        (e) => e.type === 'triggerOnStack' && e.payload['source'] === 'Breena, the Demagogue',
+      ),
+    ).toHaveLength(2);
+
+    // Two attackers on one opponent are one trigger.
+    const same = board('breena-same');
+    const second = spawn(same.ctx, 'P3', GRIZZLY('Lab P3 Second Bear'));
+    turnOfPlayer(same.ctx, 'P3');
+    declareAndFight(same.ctx, { [same.bears.P3.id]: 'P2', [second.id]: 'P2' }, toAlly(same.ally));
+    expect(handSize(same.ctx, 'P3')).toBe(1);
+  });
+
+  it('breena-intervening-if — checked again as the ability resolves: if that opponent no longer has more life, nothing happens', () => {
+    const { ctx, ally, bears } = board('breena-resolve');
+    playerById(ctx, 'P2').life = 22;
+    conjure(ctx, 'P1', BOLT, 'hand');
+    turnOfPlayer(ctx, 'P3');
+    let bolted = false;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (id === bears.P3.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const bolt = decision.options.findIndex(
+        (option) => decision.player === 'P1' && option.description.includes('Lab Bolt'),
+      );
+      if (bolt >= 0 && !bolted && ctx.state.stack.length > 0) {
+        bolted = true;
+        const slot = decision.options[bolt]!.targets![0]!;
+        return { index: bolt, targets: new Map([[slot.slot, 'P2']]) };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(bolted).toBe(true);
+    // 22 less the Bolt's 3, less the unblocked Bear's 2.
+    expect(playerById(ctx, 'P2').life).toBe(17);
+    expect(handSize(ctx, 'P3')).toBe(0);
+    expect(counters(ally)).toBe(0);
+  });
+
+  it('breena-no-creature — with no other creature of yours, Breena herself is the creature the counters go on', () => {
+    const { ctx, breena, ally, bears } = board('breena-none');
+    pump(moveObject(ctx, ally, { zone: 'graveyard' }));
+    turnOfPlayer(ctx, 'P3');
+    declareAndFight(ctx, { [bears.P3.id]: 'P2' });
+    expect(counters(breena)).toBe(2);
+    expect(handSize(ctx, 'P3')).toBe(1);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -4601,6 +4758,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Firemane Commando',
     sha256: '20c0287a3dd96d72f6a5f557813f972125a91a6506ed4b957cf022bf32a2437a',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Breena, the Demagogue',
+    sha256: '1a3ea33cc0a417228dcd76cf55f55186215b4f741905684aaeeae17e74d16996',
+    clauseCount: 1,
     authored: true,
   },
   {

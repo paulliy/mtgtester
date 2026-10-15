@@ -648,11 +648,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "dec747a6e6e744e079ed2285cfb1c4dd65b770bdd5c9cef47b26e8518307d680",
-      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "sha256": "bd02587928e75a26c676aff157613e37171e66b64834bdc737be233c318915d6",
       "description": "Crackling Doom"
     },
@@ -675,6 +670,11 @@
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "sha256": "4eefab1c6212e78ef1cb581c4e5c36b33ae8b2433d28eadbc3618e80edc8b469",
       "description": "Secret Rendezvous"
+    },
+    {
+      "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "sha256": "f54e359878b9da6cc261162a2522cc192a9b3023007d2694d32c076c5da03b5b",
+      "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
@@ -818,7 +818,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "28fba9e882bffa9696b235cb5b70e62b6fabc8f2487f621f1ecd18c41334130c",
+      "sha256": "592f680883deb66c46d3bcfb954cbacb1a5111f3e4d0431e5b78bcbd5c5d6606",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

@@ -254,9 +254,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
 
   // Angelic Destiny: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
-  unimplemented('d11e627b-8a48-411d-a261-2c9a02a758ba', 'Breena, the Demagogue', [
-    'Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.',
-  ]);
+  // Breena, the Demagogue: restored in coverage PR06 (see coverage-pr06.ts).
 
   unimplemented('eb735501-19e7-4910-aa6a-6667fff6f4e5', 'Study Hall', [
     "{1}, {T}: Add one mana of any color. When you spend this mana to cast your commander, scry X, where X is the number of times it's been cast from the command zone this game.",

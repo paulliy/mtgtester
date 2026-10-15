@@ -445,6 +445,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+    "name": "Breena, the Demagogue",
+    "package": "PR06.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "60fc89a1-cc6f-4a32-84c3-09abf7a4a1df",
     "name": "Brigid, Clachan's Heart // Brigid, Doun's Mind",
     "package": "W2",

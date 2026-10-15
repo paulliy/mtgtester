@@ -728,7 +728,6 @@ export type Effect =
   | { op: 'humbleDefector'; target: EffectRef }
   | { op: 'shadrixModes' }
   | { op: 'masterOfCeremonies' }
-  | { op: 'breenaAttack'; target: EffectRef }
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
   | { op: 'schemingSymmetry' }
   | { op: 'kambal' }

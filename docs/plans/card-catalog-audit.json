@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 32,
+      "uniqueOracleIds": 31,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5614,7 +5614,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 35,
+      "uniqueOracleIds": 34,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6571,6 +6571,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr06",
       "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the fail-closed unsupportedCard in silverquill-influence-remaining.ts by the executable override in coverage-pr06.ts); see the silverquill-influence-remaining.ts entry."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the fail-closed unsupportedCard that claimed the life comparison is defender versus attacker, and the shadowed unimplemented placeholder): the executable override in coverage-pr06.ts uses the attackDeclared event with per-defender grouping, so it triggers once for each opponent of yours attacked by at least one creature of any player's attack, yours included, and an attack on a planeswalker is not an attack on its controller. The intervening-if, checked at the declaration and as it resolves, is that the attacked opponent has more life than at least one other opponent of yours; the attacking player draws and you choose, as it resolves, a creature you control for the two +1/+1 counters. The bespoke breenaAttack op is deleted. Engine and Card Test Lab evidence in packages/engine/tests/pr06-card-coverage.test.ts and apps/web/e2e/card-test-lab.spec.ts."
+    },
+    {
+      "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
+      "name": "Breena, the Demagogue",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr06",
+      "note": "Registration deleted (the shadowed placeholder, replaced together with the other registration by the executable override in coverage-pr06.ts); see the queen-marchesa-queens-gambit-remaining.ts entry."
     }
   ]
 }

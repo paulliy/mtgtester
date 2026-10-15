@@ -9201,3 +9201,51 @@ test('Firemane Commando: another player who attacked you draws nothing', async (
     page.getByText(/Firemane Commando — Whenever another player attacks.* resolves/i).first(),
   ).toBeVisible();
 });
+
+test('Breena: attacking the opponent with the most life draws you a card and grows a creature', async ({
+  page,
+}) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+  );
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click();
+  const row = page.locator('.combat-assignment-row').filter({ hasText: 'Lab Ox' });
+  await row.getByRole('button', { name: 'P2' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // Breena's ability resolves: choose Lab Ox for the counters.
+  await expect(page.getByText(/choose a creature you control/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .locator('div')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .filter({ has: page.getByRole('button', { name: 'Choose' }) })
+    .last()
+    .getByRole('button', { name: 'Choose' })
+    .click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(permanent(page, 'Lab Ox')).toContainText('6/6');
+  expect(boards.at(-1)!.find((p) => p.name === 'Lab Ox')?.counters['+1/+1']).toBe(2);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+  for (const seat of ['P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('30');
+  }
+});

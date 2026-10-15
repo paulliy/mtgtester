@@ -175,12 +175,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
       ],
     },
   );
-  // Catalog audit queen-batch-4: life comparison is attacker vs defender.
-  unsupportedCard(
-    'd11e627b-8a48-411d-a261-2c9a02a758ba',
-    'Breena, the Demagogue',
-    'Defender-has-more-life-than-another-of-your-opponents is implemented as defender-has-more-life-than-the-attacker.',
-  );
+  // Breena, the Demagogue: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-2: Inklings-cannot-attack-you omitted; trigger unscoped.
   unsupportedCard(
     'ee7ebbc1-2f9e-4867-a522-424869b6d772',

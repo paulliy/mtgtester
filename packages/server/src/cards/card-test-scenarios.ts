@@ -12202,6 +12202,39 @@ function firemaneOtherAttackScenario(gameId: GameId, defender: PlayerId): CardTe
   });
 }
 
+function breenaScenario(gameId: GameId): CardTestScenario {
+  const breena = pinnedFrom(COVERAGE_PR06, 'Breena, the Demagogue');
+  return pr01Scenario(gameId, {
+    id: 'breena-viewer-attack-more-life',
+    title:
+      'Breena: attacking the opponent with the most life draws you a card and grows a creature',
+    instructions: [
+      'Breena, the Demagogue and Lab Ox (4/4) are on your battlefield. P2 is at 40 life, P3 at 30 and P4 at 30.',
+      'Pass priority until the declare attackers step, then attack P2 with Lab Ox and confirm. When Breena’s ability resolves, put the counters on Lab Ox. Nobody blocks.',
+    ],
+    expectedOutcome:
+      'You attacked P2, an opponent of yours with more life than another of your opponents, so Breena’s ability drew you a card (your library is one card smaller) and put two +1/+1 counters on Lab Ox, which dealt 6 combat damage: P2 is at 34 and P3 and P4 are at 30.',
+    oracleSha256: breena.sha256,
+    clauseIds: ['breena-attack-more-life'],
+    decks: {
+      P1: [breena.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Breena, the Demagogue', 'Lab Ox'] }],
+      lifeTotals: [
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 30 },
+        { playerId: 'P4', life: 30 },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12467,6 +12500,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'firemane-commando-viewer-own-attack',
   'firemane-commando-viewer-other-attack-elsewhere',
   'firemane-commando-viewer-other-attack-at-you',
+  'breena-viewer-attack-more-life',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12801,6 +12835,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     firemaneOtherAttackScenario(gameId, 'P3'),
   'firemane-commando-viewer-other-attack-at-you': (gameId) =>
     firemaneOtherAttackScenario(gameId, 'P1'),
+  'breena-viewer-attack-more-life': breenaScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

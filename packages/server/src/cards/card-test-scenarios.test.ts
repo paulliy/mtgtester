@@ -417,6 +417,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'firemane-commando-viewer-own-attack',
       'firemane-commando-viewer-other-attack-elsewhere',
       'firemane-commando-viewer-other-attack-at-you',
+      'breena-viewer-attack-more-life',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

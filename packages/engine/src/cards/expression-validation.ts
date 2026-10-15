@@ -378,7 +378,6 @@ const effectExpressions = {
   humbleDefector: {},
   shadrixModes: {},
   masterOfCeremonies: {},
-  breenaAttack: {},
   drawTargetAndControllerN: {},
   schemingSymmetry: {},
   kambal: {},

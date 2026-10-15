@@ -9200,8 +9200,45 @@
   {
     "oracleId": "d11e627b-8a48-411d-a261-2c9a02a758ba",
     "name": "Breena, the Demagogue",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            },
+            {
+              "count": 2,
+              "counter": "+1/+1",
+              "op": "putCountersOnCreatureOfChoice"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
+            "condition": {
+              "kind": "attackedPlayerHasMoreLifeThanAnotherOpponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
@@ -13280,8 +13317,45 @@
   {
     "oracleId": "oracle-breena-the-demagogue",
     "name": "Breena, the Demagogue",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw",
+              "player": "eventPlayer"
+            },
+            {
+              "count": 2,
+              "counter": "+1/+1",
+              "op": "putCountersOnCreatureOfChoice"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
+            "condition": {
+              "kind": "attackedPlayerHasMoreLifeThanAnotherOpponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-brokers-hideout",

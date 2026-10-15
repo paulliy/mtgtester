@@ -2755,16 +2755,6 @@ export function* executeAbility(
         yield* drawCards(ctx, target, amountOf(effect.count));
         break;
       }
-      case 'breenaAttack': {
-        const targetId = ref(effect.target);
-        const target = targetId === null ? undefined : findPermanent(ctx, targetId);
-        if (target === undefined) break;
-        const attacker =
-          scope.eventPlayerId === undefined ? controller : playerById(ctx, scope.eventPlayerId);
-        yield* drawCards(ctx, attacker, 1);
-        addCounters(ctx, source, target, '+1/+1', 2);
-        break;
-      }
       case 'schemingSymmetry': {
         for (const slot of [0, 1]) {
           const targetId = ref(slot);

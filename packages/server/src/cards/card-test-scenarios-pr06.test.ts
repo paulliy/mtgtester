@@ -860,3 +860,20 @@ describe('Firemane Commando Card Test Lab scenarios', () => {
     replays('firemane-commando-viewer-other-attack-at-you', steps);
   });
 });
+
+describe('Breena Card Test Lab scenario', () => {
+  it('breena-viewer-attack-more-life — attacking P2 with Lab Ox draws you a card and puts two counters on the creature you choose', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['__no_attack__', 'P2'] }];
+    const { scenario, state, seat, onBattlefield } = run('breena-viewer-attack-more-life', steps);
+    expect(seat('P1').hand).toHaveLength(1);
+    // The default choice is the first creature on offer; the viewer test picks Lab Ox itself.
+    const counters = [...onBattlefield('Breena, the Demagogue'), ...onBattlefield('Lab Ox')].reduce(
+      (total, perm) => total + (perm.counters['+1/+1'] ?? 0),
+      0,
+    );
+    expect(counters).toBe(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('breena-viewer-attack-more-life', steps);
+  });
+});
