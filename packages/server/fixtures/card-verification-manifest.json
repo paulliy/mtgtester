@@ -1716,13 +1716,34 @@
     "f43f5855-f297-4433-984b-18263b734cfc": {
       "name": "Eriette of the Charmed Apple",
       "oracleSha256": "427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "eriette-enchanted-cant-attack-you",
           "oracleText": "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
-          "implementation": ["explicitly unsupported; cannot-attack-you static omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static whose filter is enchanted-by-an-Aura-you-control: such a creature, whoever controls it or the Aura's other attachments, is never offered you or a planeswalker you control as an attack target (CR 508.1c), while a creature enchanted only by another player's Aura, or by a non-Aura enchantment, is unaffected; it follows the Aura as it attaches and leaves, and beats an attack requirement"
+          ],
+          "engineTestIds": [
+            "eriette-pinned-oracle-supported",
+            "eriette-cant-attack-you",
+            "eriette-restriction-follows-the-aura",
+            "eriette-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["eriette-viewer-enchanted-cant-attack-you"]
+        },
+        {
+          "id": "eriette-end-step-drain",
+          "oracleText": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+          "implementation": [
+            "authored end-step trigger on your end step only, whose X counts every Aura you control (on creatures, on players, on any permanent; not another player's Auras and not non-Aura enchantments) as it resolves; each opponent loses X life and you gain X life"
+          ],
+          "engineTestIds": [
+            "eriette-pinned-oracle-supported",
+            "eriette-drain",
+            "eriette-drain-your-turn-only"
+          ],
+          "viewerScenarioIds": ["eriette-viewer-end-step-drain"]
         }
       ],
       "gameplayAiScenarioIds": []

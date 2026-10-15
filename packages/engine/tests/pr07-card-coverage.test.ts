@@ -21,9 +21,11 @@ import { executeAbility } from '../src/effects/resolve';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runPrioritySequence } from '../src/turn/priority';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { runCombatAndExtraCombats } from '../src/turn/turn';
+import { beginEndStep, runCombatAndExtraCombats } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
 import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
 import { playerById } from '../src/state/objects';
@@ -250,6 +252,45 @@ const aimAt =
   };
 
 const handSize = (ctx: GameContext, playerId: string) => playerById(ctx, playerId).hand.length;
+
+/**
+ * Run the normal priority loop with every player passing: pending triggers go on the stack and
+ * resolve in order. Non-priority decisions go to `answer` (default: first option).
+ */
+function settle(ctx: GameContext, answer?: Answer) {
+  return pump(runPrioritySequence(ctx), (decision, count) => {
+    const pass = decision.options.findIndex((option) => option.type === 'pass');
+    if (pass >= 0) return { index: pass, targets: new Map() };
+    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+  });
+}
+
+/** It is `playerId`'s end step: its beginning-of-end-step triggers go on the stack and resolve. */
+function endStepOf(ctx: GameContext, playerId: string, answer?: Answer) {
+  turnOfPlayer(ctx, playerId);
+  ctx.state.phase = 'ending';
+  beginEndStep(ctx);
+  pump(priorityCheckpoint(ctx));
+  return settle(ctx, answer);
+}
+
+const AURA = (name: string) =>
+  oracle({ name, typeLine: 'Enchantment — Aura', manaCost: '{1}', power: null, toughness: null });
+/** An Aura that enchants a player (a Curse), so it can stay attached to one. */
+const CURSE = (name: string) =>
+  oracle({
+    name,
+    typeLine: 'Enchantment — Aura Curse',
+    manaCost: '{1}',
+    power: null,
+    toughness: null,
+    oracleText: 'Enchant player',
+  });
+
+/** Attach `aura` (a permanent) to a creature or player, as an Aura attached on an earlier turn. */
+function attach(aura: EnginePermanent, to: EnginePermanent | string): void {
+  aura.attachedTo = typeof to === 'string' ? to : to.id;
+}
 
 // ---------------------------------------------------------------------------------------------
 // PR07.04 Promise of Loyalty
@@ -764,6 +805,141 @@ describe('Firkraag, Cunning Instigator', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.06 Eriette of the Charmed Apple
+// ---------------------------------------------------------------------------------------------
+
+describe('Eriette of the Charmed Apple', () => {
+  const { card } = pinned('Eriette of the Charmed Apple');
+
+  /** P1 controls Eriette; each opponent controls a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const eriette = spawn(ctx, 'P1', card);
+    const bears = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Bear')),
+    };
+    return { ctx, eriette, bears };
+  }
+
+  it('eriette-pinned-oracle-supported — the authored override carries the attack restriction and the end-step drain under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'attackRestriction',
+        filter: { kind: 'enchantedByAuraYouControl' },
+        includePlaneswalkers: true,
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'endStep', player: 'you' });
+    const x = {
+      kind: 'countPermanents',
+      selector: {
+        kind: 'allOf',
+        of: [
+          { kind: 'subtype', value: 'Aura' },
+          { kind: 'controller', who: 'you' },
+        ],
+      },
+      scope: 'you',
+    };
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'eachOpponentLosesLife', amount: x },
+      { op: 'gainLife', amount: x },
+    ]);
+  });
+
+  it("eriette-cant-attack-you — a creature enchanted by an Aura you control can't attack you or your planeswalkers, whoever controls the creature or the Aura's host", () => {
+    const { ctx, bears } = board('eriette-restriction');
+    const walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const otherWalker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    // Your Aura on P2's Bear, P3's Aura on P3's Bear (not yours), and nothing on P4's Bear.
+    attach(spawn(ctx, 'P1', AURA('P1 Aura')), bears.P2);
+    attach(spawn(ctx, 'P3', AURA('P3 Aura')), bears.P3);
+    const enchanted = attackOptionsFor(ctx, 'P2', bears.P2);
+    expect(enchanted.players.sort()).toEqual(['P3', 'P4']);
+    expect(enchanted.planeswalkers).toEqual([otherWalker.id]);
+    expect(enchanted.planeswalkers).not.toContain(walker.id);
+    // An Aura another player controls does not restrict attacks on you; neither does having none.
+    expect(attackOptionsFor(ctx, 'P3', bears.P3).players.sort()).toEqual(['P1', 'P2', 'P4']);
+    expect(attackOptionsFor(ctx, 'P4', bears.P4).players.sort()).toEqual(['P1', 'P2', 'P3']);
+  });
+
+  it('eriette-restriction-follows-the-aura — it applies as the Aura attaches and ends when the Aura leaves, and an enchantment that is not an Aura does nothing', () => {
+    const { ctx, bears } = board('eriette-aura-leaves');
+    // The Aura starts on another creature (an unattached Aura would go to the graveyard) and an
+    // enchantment that is not an Aura stays on this one.
+    const aura = spawn(ctx, 'P1', AURA('P1 Aura'));
+    attach(aura, bears.P3);
+    const plain = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'P1 Enchantment', typeLine: 'Enchantment', manaCost: '{1}', power: null }),
+    );
+    attach(plain, bears.P2);
+    expect(attackOptionsFor(ctx, 'P2', bears.P2).players).toContain('P1');
+    // Moving the Aura onto this creature (CR 303.4) restricts it, and takes the restriction off the other.
+    attach(aura, bears.P2);
+    expect(attackOptionsFor(ctx, 'P2', bears.P2).players).not.toContain('P1');
+    expect(attackOptionsFor(ctx, 'P3', bears.P3).players).toContain('P1');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== aura.id);
+    expect(attackOptionsFor(ctx, 'P2', bears.P2).players).toContain('P1');
+  });
+
+  it('eriette-drain — at your end step each opponent loses X and you gain X, where X counts every Aura you control, attached to anything', () => {
+    const { ctx, bears } = board('eriette-drain');
+    // Four Auras you control: on an opponent's creature, on your own, on a player, and on one of
+    // your own creatures too. Auras and enchantments you do not control or that are not Auras do
+    // not count.
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    attach(spawn(ctx, 'P1', AURA('Aura A')), bears.P2);
+    attach(spawn(ctx, 'P1', AURA('Aura B')), mine);
+    attach(spawn(ctx, 'P1', CURSE('Aura C')), 'P3');
+    attach(spawn(ctx, 'P1', AURA('Aura D')), bears.P4);
+    attach(spawn(ctx, 'P2', AURA('Their Aura')), bears.P2);
+    spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'P1 Enchantment', typeLine: 'Enchantment', manaCost: '{1}', power: null }),
+    );
+    endStepOf(ctx, 'P1');
+    expect(playerById(ctx, 'P1').life).toBe(44);
+    for (const id of ['P2', 'P3', 'P4']) expect(playerById(ctx, id).life, id).toBe(36);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it("eriette-drain-your-turn-only — it does not trigger at an opponent's end step, and with no Auras it drains nothing", () => {
+    const { ctx, bears } = board('eriette-drain-negatives');
+    attach(spawn(ctx, 'P1', AURA('Aura A')), bears.P2);
+    endStepOf(ctx, 'P2');
+    expect(playerById(ctx, 'P1').life).toBe(40);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    const empty = board('eriette-no-auras');
+    endStepOf(empty.ctx, 'P1');
+    expect(playerById(empty.ctx, 'P1').life).toBe(40);
+    expect(playerById(empty.ctx, 'P2').life).toBe(40);
+  });
+
+  it('eriette-cast-and-attack — cast Eriette through the stack, and a creature already enchanted by your Aura then has no attack on you', () => {
+    const ctx = pod('eriette-cast');
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    attach(spawn(ctx, 'P1', AURA('P1 Aura')), bear);
+    expect(attackOptionsFor(ctx, 'P2', bear).players).toContain('P1');
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'precombatMain';
+    castFromHand(ctx, 'P1', card, [{ symbol: 'W' }, { symbol: 'B' }, ...generic(1)]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Eriette of the Charmed Apple')).toBe(
+      true,
+    );
+    expect(attackOptionsFor(ctx, 'P2', bear).players).not.toContain('P1');
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -800,6 +976,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Firkraag, Cunning Instigator',
     sha256: 'c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Eriette of the Charmed Apple',
+    sha256: '427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023',
     clauseCount: 2,
     authored: true,
   },

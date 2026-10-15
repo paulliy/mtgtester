@@ -528,6 +528,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'lightning-runner-viewer-pay-energy-extra-combat',
       'firkraag-viewer-dragon-attack-goads',
       'firkraag-viewer-goaded-damage-draws',
+      'eriette-viewer-enchanted-cant-attack-you',
+      'eriette-viewer-end-step-drain',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

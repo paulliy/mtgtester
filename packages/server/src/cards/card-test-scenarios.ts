@@ -12800,6 +12800,68 @@ function firkraagScenario(gameId: GameId, kind: 'goad' | 'damage'): CardTestScen
   });
 }
 
+function erietteScenario(gameId: GameId, kind: 'restriction' | 'drain'): CardTestScenario {
+  const eriette = pinnedFrom(COVERAGE_PR07, 'Eriette of the Charmed Apple');
+  const restriction = kind === 'restriction';
+  return pr01Scenario(gameId, {
+    id: `eriette-viewer-${restriction ? 'enchanted-cant-attack-you' : 'end-step-drain'}`,
+    title: restriction
+      ? 'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you'
+      : 'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+    instructions: restriction
+      ? [
+          'It is P2’s turn. Eriette of the Charmed Apple and a Lab Aegis (your Aura) are on your battlefield, and Lab Aegis enchants P2’s Lab Ox (6/6 with the Aura).',
+          'Pass priority and let P2’s attack play out: Lab Ox cannot attack you, so it attacks P3.',
+        ]
+      : [
+          'Eriette, Lab Aegis (enchanting P2’s Lab Ox) and Lab Mantle (enchanting your Lab Servo) are on your battlefield.',
+          'Pass priority until your end step and let Eriette’s trigger resolve.',
+        ],
+    expectedOutcome: restriction
+      ? 'P2 was not offered you as a defender for the enchanted Lab Ox, so you are still at 40 life; it dealt 6 to P3, who is at 34.'
+      : 'You control two Auras, so each opponent lost 2 life and you gained 2: you are at 42 and P2, P3 and P4 are at 38.',
+    oracleSha256: eriette.sha256,
+    clauseIds: restriction ? ['eriette-enchanted-cant-attack-you'] : ['eriette-end-step-drain'],
+    decks: {
+      P1: [
+        eriette.card,
+        LAB_AEGIS,
+        ...(restriction ? [] : [LAB_MANTLE, LAB_SERVO]),
+        FOREST,
+        FOREST,
+      ],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      ...(restriction ? { currentTurnPlayer: 'P2' as const } : {}),
+      hand: [],
+      battlefield: [
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+        ...(restriction ? [] : [{ playerId: 'P1' as const, cardNames: ['Lab Servo'] }]),
+        { playerId: 'P1', cardNames: ['Eriette of the Charmed Apple'] },
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Aegis'],
+          attachedToCard: { playerId: 'P2', cardName: 'Lab Ox' },
+        },
+        ...(restriction
+          ? []
+          : [
+              {
+                playerId: 'P1' as const,
+                cardNames: ['Lab Mantle'],
+                attachedToCard: { playerId: 'P1' as const, cardName: 'Lab Servo' },
+              },
+            ]),
+      ],
+      ...(restriction ? { continueThroughCombat: true } : { continueToEndStep: true }),
+    },
+    ...(restriction ? { decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') } } : {}),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13103,6 +13165,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'lightning-runner-viewer-pay-energy-extra-combat',
   'firkraag-viewer-dragon-attack-goads',
   'firkraag-viewer-goaded-damage-draws',
+  'eriette-viewer-enchanted-cant-attack-you',
+  'eriette-viewer-end-step-drain',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -13578,6 +13642,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'lightning-runner-viewer-pay-energy-extra-combat': lightningRunnerScenario,
   'firkraag-viewer-dragon-attack-goads': (gameId) => firkraagScenario(gameId, 'goad'),
   'firkraag-viewer-goaded-damage-draws': (gameId) => firkraagScenario(gameId, 'damage'),
+  'eriette-viewer-enchanted-cant-attack-you': (gameId) => erietteScenario(gameId, 'restriction'),
+  'eriette-viewer-end-step-drain': (gameId) => erietteScenario(gameId, 'drain'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

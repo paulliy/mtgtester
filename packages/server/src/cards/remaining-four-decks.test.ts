@@ -109,7 +109,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Armored Skyhunter',
       "Defacing Duskmage // Vandal's Edit",
       'Eiganjo Dynastorian // Replenish',
-      'Eriette of the Charmed Apple',
       'Herald of Amity',
       'Intermediate Chirography',
       'Keen Duelist',

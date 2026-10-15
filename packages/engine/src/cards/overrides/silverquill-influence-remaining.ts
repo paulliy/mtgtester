@@ -162,12 +162,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // (CR 308) and grants +10/+10, trample and annihilator 2 to the enchanted creature, the
   // annihilator as an attack trigger whose defending player sacrifices two permanents of their
   // choice.
-  // Catalog audit silverquill-remaining-batch-2: cannot-attack-you static omitted.
-  unsupportedCard(
-    'f43f5855-f297-4433-984b-18263b734cfc',
-    'Eriette of the Charmed Apple',
-    'Cannot-attack-you static is claimed without an implementation.',
-  );
+  // Eriette of the Charmed Apple: restored in coverage PR07 (see coverage-pr07.ts).
   // Fallen Ideal: restored in coverage PR05. Grants flying and the sacrifice ability to the
   // enchanted creature, which may sacrifice itself; returns this card to its owner's hand from the
   // graveyard.

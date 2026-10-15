@@ -4,7 +4,14 @@
  * audit inventory; the cards PR07 restores are gated by `tests/pr07-card-coverage.test.ts`.
  */
 
-import { onAttacks, targetSlots, triggered, whenAttacks, whenPermanent } from '../templates';
+import {
+  onAttacks,
+  onEndStep,
+  targetSlots,
+  triggered,
+  whenAttacks,
+  whenPermanent,
+} from '../templates';
 import { allOfConditions } from '../condition';
 import { constant } from '../value';
 import { allOf, ofSubtype, ofType, SELF, YOURS } from '../selector';
@@ -75,6 +82,42 @@ export function registerCoveragePr07Overrides(): void {
           ],
           description:
             'Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card',
+        }),
+      ],
+    },
+  );
+
+  // Eriette of the Charmed Apple: the restriction covers every creature enchanted by an Aura you
+  // control (that Aura may be any Aura, on any creature), whoever controls the creature. The
+  // drain counts ALL Auras you control, attached to anything or not, once as it resolves.
+  const aurasYouControl = {
+    kind: 'countPermanents',
+    selector: allOf(ofSubtype('Aura'), YOURS),
+    scope: 'you',
+  } as const;
+  defineCard(
+    'f43f5855-f297-4433-984b-18263b734cfc',
+    'Eriette of the Charmed Apple',
+    [
+      "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
+      'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.',
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'attackRestriction',
+          filter: { kind: 'enchantedByAuraYouControl' },
+          includePlaneswalkers: true,
+        },
+      ],
+      triggers: [
+        triggered(onEndStep('you'), {
+          effects: [
+            { op: 'eachOpponentLosesLife', amount: aurasYouControl },
+            { op: 'gainLife', amount: aurasYouControl },
+          ],
+          description:
+            'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control',
         }),
       ],
     },

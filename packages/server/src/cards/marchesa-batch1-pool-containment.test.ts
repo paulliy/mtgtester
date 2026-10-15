@@ -61,6 +61,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Eidolon of Countless Battles',
       'Eldrazi Conscription',
       'Endless Atlas',
+      'Eriette of the Charmed Apple',
       'Fabled Passage',
       'Fallen Ideal',
       'Firemane Commando',

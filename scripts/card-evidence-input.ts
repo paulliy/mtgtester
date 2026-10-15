@@ -2367,6 +2367,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

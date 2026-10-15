@@ -1131,6 +1131,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+    "name": "Eriette of the Charmed Apple",
+    "package": "PR07.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Cannot-attack-you static is claimed without an implementation."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
     "package": "W2",

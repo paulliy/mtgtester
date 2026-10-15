@@ -246,3 +246,38 @@ describe('Firkraag Card Test Lab scenarios', () => {
     replays('firkraag-viewer-goaded-damage-draws', steps);
   });
 });
+
+describe('Eriette of the Charmed Apple Card Test Lab scenarios', () => {
+  it("eriette-viewer-enchanted-cant-attack-you — P2's enchanted Lab Ox is never offered you as a defender and attacks P3", () => {
+    const steps: Step[] = [];
+    const offers: string[][] = [];
+    const { scenario, state, seat } = run(
+      'eriette-viewer-enchanted-cant-attack-you',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offers.length).toBeGreaterThan(0);
+    for (const options of offers) expect(options).not.toContain('P1');
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P3').life).toBe(34);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eriette-viewer-enchanted-cant-attack-you', steps);
+  });
+
+  it('eriette-viewer-end-step-drain — two Auras you control: each opponent loses 2 and you gain 2', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat } = run('eriette-viewer-end-step-drain', steps);
+    expect(seat('P1').life).toBe(42);
+    for (const id of ['P2', 'P3', 'P4']) expect(seat(id).life, id).toBe(38);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('eriette-viewer-end-step-drain', steps);
+  });
+});

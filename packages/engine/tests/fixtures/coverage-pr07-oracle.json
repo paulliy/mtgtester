@@ -111,6 +111,44 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023",
+      "card": {
+        "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+        "scryfallId": "baf256c5-1b4c-4fbe-94e4-1538d2577f8f",
+        "name": "Eriette of the Charmed Apple",
+        "manaCost": "{1}{W}{B}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Warlock",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warlock"
+        ],
+        "oracleText": "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.\nAt the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

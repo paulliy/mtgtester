@@ -5607,14 +5607,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
-      "uniqueOracleIds": 22,
+      "uniqueOracleIds": 21,
       "reviewedOracleIds": 45,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 31,
+      "uniqueOracleIds": 30,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6773,6 +6773,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/urdragon.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the fail-closed unsupportedCard that said the intervening-if checks Firkraag rather than the damaging creature, and the stale name-keyed interpreter branch that did not clear its own reasons): the authored override in coverage-pr07.ts triggers once for each opponent attacked by Dragons you control and goads a creature that opponent controls, and puts the intervening-if on the creature that dealt the damage (it had to attack this combat and the damaged player is one of your opponents), checked as it triggers and resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+      "name": "Eriette of the Charmed Apple",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registrations deleted (the fail-closed unsupportedCard that said the cannot-attack-you static was omitted, and the shadowed unimplemented placeholder): the authored override in coverage-pr07.ts uses the new attack-restriction rule static with an enchanted-by-an-Aura-you-control filter (no attack on you or your planeswalkers, CR 508.1c) and an end-step trigger that counts every Aura you control once as it resolves. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+      "name": "Eriette of the Charmed Apple",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed or fail-closed registration, replaced together with the other registration); see the silverquill-influence-remaining.ts entry."
     }
   ]
 }

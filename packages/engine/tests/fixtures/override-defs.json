@@ -13744,8 +13744,74 @@
   {
     "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
     "name": "Eriette of the Charmed Apple",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+      "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "enchantedByAuraYouControl"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control",
+          "effects": [
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
@@ -19186,8 +19252,74 @@
   {
     "oracleId": "oracle-eriette-of-the-charmed-apple",
     "name": "Eriette of the Charmed Apple",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+      "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "enchantedByAuraYouControl"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control",
+          "effects": [
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-etali-primal-conqueror-etali-primal-sickness",

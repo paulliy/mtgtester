@@ -9661,3 +9661,33 @@ test('Firkraag: a goaded creature that deals combat damage to an opponent grows 
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
   await expect(permanent(page, 'Firkraag, Cunning Instigator')).toContainText('4/4');
 });
+
+test('Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
+});
+
+test('Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+  for (const seat of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('38');
+  }
+});

@@ -144,10 +144,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }],
   });
 
-  unimplemented('f43f5855-f297-4433-984b-18263b734cfc', 'Eriette of the Charmed Apple', [
-    "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
-    'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.',
-  ]);
+  // Eriette of the Charmed Apple: restored in coverage PR07 (see coverage-pr07.ts).
 
   // Killian, Ink Duelist: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 

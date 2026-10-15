@@ -74,7 +74,6 @@ const REASONS: Record<string, string> = {
     'Prepare is implemented as a pump trigger when this creature attacks.',
   'Etali, Primal Conqueror // Etali, Primal Sickness':
     'Exile splices library cards without a zone-change, so leave-library events are skipped.',
-  'Eriette of the Charmed Apple': 'Cannot-attack-you static is claimed without an implementation.',
   'Herald of Amity':
     'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
   'Intermediate Chirography':
@@ -274,6 +273,7 @@ describe('Marchesa catalog audit containment', () => {
     'Promise of Loyalty',
     'Lightning Runner',
     'Firkraag, Cunning Instigator',
+    'Eriette of the Charmed Apple',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.
