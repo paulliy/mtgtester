@@ -30,7 +30,7 @@ import { assertManaRiders } from '../cards/mana-riders';
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
 import { abilityModeSelections } from '../actions/ability-modes';
-import type { ManaRider, WardCost } from '../cards/ability';
+import type { AttackRequirementSpec, ManaRider, WardCost } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -129,6 +129,8 @@ import {
   resolveDynamicUnits,
 } from '../state/queries';
 import type {
+  AttackRequirementEntry,
+  AttackRequirementRule,
   DamageKeyword,
   EngineCardObject,
   EngineObject,
@@ -5381,6 +5383,39 @@ export function* executeAbility(
             emit(ctx, 'goad', { target: perm.name, source: source.name });
           }
         }
+        break;
+      }
+      case 'addAttackRequirement': {
+        // The fixed set names its object now; a selector set is read live (CR 611.2c).
+        let affects: AttackRequirementEntry['affects'] | undefined;
+        if (effect.selector !== undefined)
+          affects = { kind: 'selector', selector: effect.selector };
+        else {
+          const targetId = effect.target === undefined ? null : ref(effect.target);
+          if (targetId !== null) affects = { kind: 'objects', objectIds: [targetId] };
+        }
+        if (affects === undefined) break;
+        const playerRef = (spec: AttackRequirementSpec): AttackRequirementRule | null => {
+          if (spec.kind === 'anyAttack') return { kind: 'anyAttack' };
+          const playerId =
+            spec.kind === 'notPlayer' ? controller.id : (ref('eventPlayer') as unknown as PlayerId);
+          return { kind: spec.kind, playerId };
+        };
+        const requirements = effect.requirements.flatMap((spec) => playerRef(spec) ?? []);
+        const expires = {
+          kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
+          playerId: controller.id,
+          setTurn: ctx.state.turnNumber,
+        } as const;
+        (ctx.state.attackRequirements ??= []).push({
+          id: `ar-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          affects,
+          requirements,
+          expires,
+        });
+        emit(ctx, 'attackRequirement', { source: source.name });
         break;
       }
       case 'forceAttack': {

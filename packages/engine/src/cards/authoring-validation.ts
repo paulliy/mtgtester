@@ -651,6 +651,31 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       path: `${path}.includePlaneswalkers`,
       message: 'planeswalker attack tax must be true when present',
     });
+  if (record['op'] === 'addAttackRequirement') {
+    if ((record['target'] === undefined) === (record['selector'] === undefined))
+      issues.push({
+        path,
+        message: 'an attack requirement names either a target or a selector for its creatures',
+      });
+    if (!['untilYourNextTurn', 'endOfYourNextTurn'].includes(String(record['duration'])))
+      issues.push({ path: `${path}.duration`, message: 'unsupported attack requirement duration' });
+    const requirements = record['requirements'];
+    const valid = (entry: unknown): boolean => {
+      const rule = entry as Record<string, unknown> | null;
+      return (
+        rule !== null &&
+        typeof rule === 'object' &&
+        (rule['kind'] === 'anyAttack' ||
+          (rule['kind'] === 'notPlayer' && rule['player'] === 'you') ||
+          (rule['kind'] === 'player' && rule['player'] === 'eventPlayer'))
+      );
+    };
+    if (!Array.isArray(requirements) || requirements.length === 0 || !requirements.every(valid))
+      issues.push({
+        path: `${path}.requirements`,
+        message: 'an attack requirement needs at least one supported requirement',
+      });
+  }
   if (record['kind'] === 'attackRestriction') {
     if (record['includePlaneswalkers'] !== true)
       issues.push({

@@ -64,7 +64,12 @@ import {
   triggersOf,
 } from '../state/queries';
 import type { RuleStaticEntry } from '../state/queries';
-import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
+import type {
+  AttackRequirementRule,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
 import { queueStepTriggers } from '../turn/turn';
 
@@ -89,14 +94,66 @@ function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId
   );
 }
 
-function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): boolean {
+/** Does attacking this target obey one attack requirement (CR 508.1d)? */
+type AttackRequirement = (target: AttackTarget) => boolean;
+
+/** "Attacks each combat if able": any attack at all, a planeswalker included. */
+const attacksAnything: AttackRequirement = () => true;
+/** "Attacks a player other than P if able": a player, never a planeswalker. */
+const attacksPlayerOtherThan =
+  (playerId: PlayerId): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && target.player.id !== playerId;
+/** "Attacks P if able": that player, never one of their planeswalkers. */
+const attacksPlayer =
+  (playerId: PlayerId): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && target.player.id === playerId;
+
+function requirementOf(rule: AttackRequirementRule): AttackRequirement {
+  switch (rule.kind) {
+    case 'anyAttack':
+      return attacksAnything;
+    case 'notPlayer':
+      return attacksPlayerOtherThan(rule.playerId);
+    case 'player':
+      return attacksPlayer(rule.playerId);
+  }
+}
+
+/**
+ * Every attack requirement on this creature: goads (each also an "attacks each combat"), the
+ * plain "attacks each combat if able" flags and statics, and the requirements stored by resolved
+ * spells and abilities whose affected set includes it (CR 611.2c). An effect whose controller has
+ * left the game no longer applies (CR 800.4a).
+ */
+function attackRequirementsFor(ctx: GameContext, creature: EnginePermanent): AttackRequirement[] {
   const chars = computeCharacteristics(ctx, creature);
-  return (
-    goaderIdsFor(ctx, creature).size > 0 ||
+  const goaders = goaderIdsFor(ctx, creature);
+  const requirements: AttackRequirement[] = [];
+  if (
+    goaders.size > 0 ||
     creature.mustAttackThisTurn === true ||
     chars.mustAttackEachCombat === true
-  );
+  )
+    requirements.push(attacksAnything);
+  for (const goaderId of goaders) requirements.push(attacksPlayerOtherThan(goaderId));
+  for (const entry of ctx.state.attackRequirements ?? []) {
+    if (playerById(ctx, entry.controllerId).hasLost) continue;
+    const affected =
+      entry.affects.kind === 'objects'
+        ? entry.affects.objectIds.includes(creature.id)
+        : matchesSelector(ctx, creature, entry.affects.selector, {
+            cardId: entry.sourceCardId ?? '',
+            controllerId: entry.controllerId,
+          });
+    if (affected) for (const rule of entry.requirements) requirements.push(requirementOf(rule));
+  }
+  return requirements;
 }
+
+const requirementsObeyed = (requirements: readonly AttackRequirement[], target: AttackTarget) =>
+  requirements.filter((requirement) => requirement(target)).length;
 
 /**
  * "Can't attack alone" / "can't block alone" (Toby's Beast token, CR 506.5): a creature with the
@@ -290,30 +347,22 @@ function attackRestrictionAllows(
 }
 
 /**
- * Goad (CR 508.1d, 701.15b): how many of the creature's goad requirements attacking this target
- * obeys. Attacking a PLAYER P obeys each goader's requirement except P's own; attacking any
- * planeswalker obeys none.
+ * Restrict `candidates` to targets obeying the maximum number of requirements achievable among
+ * the FREE targets (CR 508.1d: a cost never forces the player to obey an additional
+ * requirement, so cost-gated targets never raise the maximum). Attacking a PLAYER P obeys each
+ * goader's "other than" requirement except P's own; attacking a planeswalker obeys only the plain
+ * "attacks each combat" ones.
  */
-function goadRequirementsSatisfied(target: AttackTarget, goaders: ReadonlySet<PlayerId>): number {
-  if (target.planeswalker !== null) return 0;
-  return goaders.size - (goaders.has(target.player.id) ? 1 : 0);
-}
-
-/**
- * Restrict `candidates` to targets obeying the maximum number of goad requirements achievable
- * among the FREE targets (CR 508.1d: a cost never forces the player to obey an additional
- * requirement, so cost-gated targets never raise the maximum).
- */
-function applyGoadScope(
+function applyRequirementScope(
   ctx: GameContext,
   creature: EnginePermanent,
   candidates: AttackTarget[],
   free: readonly AttackTarget[],
 ): AttackTarget[] {
-  const goaderIds = goaderIdsFor(ctx, creature);
-  if (goaderIds.size === 0) return candidates;
-  const maximum = Math.max(0, ...free.map((t) => goadRequirementsSatisfied(t, goaderIds)));
-  return candidates.filter((t) => goadRequirementsSatisfied(t, goaderIds) >= maximum);
+  const requirements = attackRequirementsFor(ctx, creature);
+  if (requirements.length === 0) return candidates;
+  const maximum = Math.max(0, ...free.map((t) => requirementsObeyed(requirements, t)));
+  return candidates.filter((t) => requirementsObeyed(requirements, t) >= maximum);
 }
 
 function attackTargetsFor(
@@ -330,7 +379,7 @@ function attackTargetsFor(
   const free = allowed.filter(
     (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
-  return applyGoadScope(ctx, creature, payable, free);
+  return applyRequirementScope(ctx, creature, payable, free);
 }
 
 /**
@@ -354,7 +403,29 @@ function freeAttackTargetsFor(
       attackRestrictionAllows(ctx, creature, t) &&
       totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
-  return applyGoadScope(ctx, creature, free, free);
+  return applyRequirementScope(ctx, creature, free, free);
+}
+
+/**
+ * The free targets this creature must attack one of (CR 508.1d), or none when no requirement can
+ * be obeyed at all: attacking has to obey the maximum number of requirements it can, and a
+ * creature none of whose requirements any free attack would obey (it must attack a player it
+ * can't attack) is not required to attack.
+ */
+function requiredAttackTargets(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  opponents: readonly EnginePlayerState[],
+): AttackTarget[] {
+  const requirements = attackRequirementsFor(ctx, creature);
+  if (requirements.length === 0) return [];
+  const free = allAttackTargets(ctx, opponents).filter(
+    (t) =>
+      attackRestrictionAllows(ctx, creature, t) &&
+      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
+  );
+  const maximum = Math.max(0, ...free.map((t) => requirementsObeyed(requirements, t)));
+  return maximum === 0 ? [] : free.filter((t) => requirementsObeyed(requirements, t) >= maximum);
 }
 
 function* payAttackTax(
@@ -454,8 +525,7 @@ function mustAttackNow(
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
 ): boolean {
-  if (!hasAttackRequirement(ctx, creature)) return false;
-  if (freeAttackTargetsFor(ctx, creature, opponents).length === 0) return false;
+  if (requiredAttackTargets(ctx, creature, opponents).length === 0) return false;
   return (
     !cantActAlone(ctx, creature, 'cantAttackAlone') ||
     eligible.some(
@@ -731,7 +801,7 @@ function repairAttackDeclaration(
     const pick = candidates[0];
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
     const mustAttack = mustAttackNow(ctx, pick, eligible, opponents);
-    const free = mustAttack ? freeAttackTargetsFor(ctx, pick, opponents)[0] : undefined;
+    const free = mustAttack ? requiredAttackTargets(ctx, pick, opponents)[0] : undefined;
     repaired.set(
       pick.id,
       free === undefined

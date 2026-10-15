@@ -108,6 +108,11 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
     s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
+    // What they made with a spell or ability that was still lasting ends too (CR 800.4a).
+    if (s.attackRequirements !== undefined)
+      s.attackRequirements = s.attackRequirements.filter(
+        (entry) => entry.controllerId !== player.id,
+      );
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );

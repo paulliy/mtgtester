@@ -492,6 +492,14 @@ export interface TargetSpec {
   tapState?: 'untapped' | 'tapped';
 }
 
+/** One requirement an `addAttackRequirement` effect makes, with the players it names as references. */
+export type AttackRequirementSpec =
+  | { kind: 'anyAttack' }
+  /** "a player other than you" */
+  | { kind: 'notPlayer'; player: 'you' }
+  /** "that player" */
+  | { kind: 'player'; player: 'eventPlayer' };
+
 /**
  * What a "targeted" primitive acts on.
  *
@@ -1362,6 +1370,20 @@ export type Effect =
   | { op: 'grantHasteOnResolution'; target: EffectRef }
   | { op: 'overloadBounceAllNonlandOpponents' }
   | { op: 'goad'; target: EffectRef }
+  /**
+   * "Until your next turn, creatures your opponents control attack each combat if able and attack
+   * a player other than you if able" (Kardur), "target creature attacks that player each combat if
+   * able until the end of your next turn" (Silver Surfer). A rules modification, not a goad
+   * status (CR 611.2c): `target` names a fixed object; `selector` is read live relative to the
+   * ability's controller, so creatures that arrive later are covered too.
+   */
+  | {
+      op: 'addAttackRequirement';
+      target?: EffectRef;
+      selector?: Selector;
+      requirements: AttackRequirementSpec[];
+      duration: 'untilYourNextTurn' | 'endOfYourNextTurn';
+    }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }

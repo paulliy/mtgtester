@@ -84,6 +84,15 @@ function untapStep(ctx: GameContext): void {
     }
   }
 
+  // "Until your next turn" (Kardur) ends as that player's next turn begins.
+  if (ctx.state.attackRequirements !== undefined)
+    ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
+
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== ap.id) continue;
@@ -283,6 +292,14 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     }
     expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
+    // "Until the end of your next turn" (Silver Surfer) ends in that turn's cleanup step.
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) =>
+          entry.expires.kind !== 'endOfNextTurn' ||
+          entry.expires.playerId !== ap.id ||
+          entry.expires.setTurn >= ctx.state.turnNumber,
+      );
     ctx.state.damageShields = [];
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so

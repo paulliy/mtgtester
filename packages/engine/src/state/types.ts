@@ -35,7 +35,7 @@ import type {
   KeywordAbility,
 } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
-import type { SelectorCandidate } from '../cards/selector';
+import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -53,6 +53,42 @@ export interface GoadRequirement {
    * the game (CR 800.4a).
    */
   permanent?: true;
+}
+
+/**
+ * When an attack requirement made by a spell or ability ends. Both kinds count turns of one
+ * player from the turn the effect was made, so "your next turn" is the first of that player's
+ * turns after `setTurn`.
+ */
+export type EffectExpiry =
+  /** "Until your next turn": ends as that player's next turn begins (the untap step). */
+  | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
+  /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
+  | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number };
+
+/** What attacking must achieve to obey one attack requirement (CR 508.1d). */
+export type AttackRequirementRule =
+  /** "Attacks each combat if able": attacking anything, a planeswalker included. */
+  | { kind: 'anyAttack' }
+  /** "Attacks a player other than P if able" (the goad's second half): a player, not a planeswalker. */
+  | { kind: 'notPlayer'; playerId: PlayerId }
+  /** "Attacks P each combat if able": that player, not one of their planeswalkers. */
+  | { kind: 'player'; playerId: PlayerId };
+
+/**
+ * A requirement made by a resolving spell or ability that is not a goad or a status of one
+ * permanent (Kardur, Silver Surfer). It is a rules modification, not a change to characteristics
+ * (CR 611.2c): a fixed set of objects, or, when the text names no fixed set, a selector read live
+ * so creatures that come under the affected players' control later are covered too.
+ */
+export interface AttackRequirementEntry {
+  id: string;
+  /** "You": the player who made the effect, and the point of view the selector is read from. */
+  controllerId: PlayerId;
+  sourceCardId?: CardId;
+  affects: { kind: 'objects'; objectIds: ObjectId[] } | { kind: 'selector'; selector: Selector };
+  requirements: AttackRequirementRule[];
+  expires: EffectExpiry;
 }
 
 export interface EngineObject extends GameObject {
@@ -684,6 +720,8 @@ export interface EngineState extends GameState {
   extraTurns?: PlayerId[];
   phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;
+  /** Attack requirements made by resolved spells and abilities, until they expire (CR 508.1d). */
+  attackRequirements?: AttackRequirementEntry[];
   normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,

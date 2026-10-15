@@ -561,6 +561,7 @@ const effectExpressions = {
   grantHasteOnResolution: {},
   overloadBounceAllNonlandOpponents: {},
   goad: {},
+  addAttackRequirement: { selector: optional(selector) },
   forceAttack: {},
   forceAttackEach: { selector: selector },
   doublePower: { selector: selector },
