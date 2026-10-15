@@ -14,7 +14,10 @@ import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
+import type { CardDefinition } from '../src/cards/definition';
 import { interpretCard } from '../src/cards/interpret';
+import { ofType } from '../src/cards/selector';
+import { dealDamageToCreature, dealDamageToPlayer, permanentSource } from '../src/effects/resolve';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
@@ -40,6 +43,7 @@ import {
   oracle,
   plains,
   pump,
+  registerCustomDef,
   spawn,
 } from './fixtures';
 
@@ -2770,6 +2774,335 @@ describe('Backlash', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR06.24 Guard Gomazoa, and the damage modifier pipeline it introduces
+// ---------------------------------------------------------------------------------------------
+
+describe('Guard Gomazoa', () => {
+  const { card } = pinned('Guard Gomazoa');
+  const LAB_BOLT = oracle({
+    name: 'Lab Bolt',
+    typeLine: 'Instant',
+    manaCost: '{R}',
+    colors: ['R'],
+    oracleText: 'Lab Bolt deals 3 damage to any target.',
+  });
+  const OX = (name = 'Lab Ox', text = '') =>
+    oracle({ name, typeLine: 'Creature — Ox', power: '4', toughness: '4', oracleText: text });
+  const WALL = oracle({
+    name: 'Lab Wall',
+    typeLine: 'Creature — Wall',
+    power: '0',
+    toughness: '5',
+  });
+  const HUMILITY = oracle({
+    oracleId: 'lab-humility',
+    name: 'Lab Humility',
+    typeLine: 'Enchantment',
+    manaCost: '{2}{W}',
+    power: null,
+    toughness: null,
+  });
+  /** "Creatures lose all abilities" (Humility style), for the ability-loss check. */
+  const humilityDef = (): CardDefinition => ({
+    oracleId: 'lab-humility',
+    name: 'Lab Humility',
+    typeLine: 'Enchantment',
+    supertypes: [],
+    types: ['Enchantment'],
+    subtypes: [],
+    colors: [],
+    colorIdentity: [],
+    manaCost: null,
+    hasUnsupportedCost: false,
+    power: null,
+    toughness: null,
+    loyalty: null,
+    defense: null,
+    keywords: [],
+    manaAbilities: [],
+    activatedAbilities: [],
+    entersTapped: false,
+    spellAbility: null,
+    triggers: [],
+    staticEffects: [{ affects: ofType('Creature'), op: { layer: 6, loseAllAbilities: true } }],
+    ruleStatics: [],
+    modeled: true,
+    unmodeledReasons: [],
+  });
+  const gisela = oracle({
+    oracleId: '66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5',
+    name: 'Gisela, Blade of Goldnight',
+    typeLine: 'Legendary Creature — Angel',
+    supertypes: ['Legendary'],
+    manaCost: '{4}{R}{W}{W}',
+    colors: ['R', 'W'],
+    colorIdentity: ['R', 'W'],
+    power: '5',
+    toughness: '5',
+    oracleText:
+      'If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\n' +
+      'If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.',
+  });
+  const neriv = oracle({
+    name: 'Neriv, Heart of the Storm',
+    typeLine: 'Legendary Creature — Spirit Dragon',
+    supertypes: ['Legendary'],
+    manaCost: '{1}{R}{W}{B}',
+    colors: ['B', 'R', 'W'],
+    colorIdentity: ['B', 'R', 'W'],
+    power: '4',
+    toughness: '5',
+    oracleText:
+      'Flying\nIf a creature you control that entered this turn would deal damage, it deals ' +
+      'twice that much damage instead.',
+  });
+  const INKLING = {
+    name: 'Inkling',
+    typeLine: 'Creature — Inkling',
+    types: ['Creature' as const],
+    subtypes: ['Inkling'],
+    colors: ['W' as const, 'B' as const],
+    power: 2,
+    toughness: 1,
+    keywords: ['flying' as const],
+  };
+
+  const life = (ctx: GameContext, id: string) => playerById(ctx, id).life;
+  const preventedEvents = (ctx: GameContext) =>
+    ctx.state.eventLog.filter((event) => event.type === 'damagePrevented');
+
+  /** P1 attacks P2 with `attackers`; P2 blocks as `blocks` says (blocker id to attacker id). */
+  function combat(ctx: GameContext, attackers: string[], blocks: Record<string, string>) {
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) =>
+          attackers.includes(subjectId) ? 'P2' : null,
+        );
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+  }
+
+  /** P1 casts Lab Bolt at `targetId` and the stack settles; `answer` gets any other decision. */
+  function bolt(ctx: GameContext, targetId: string, answer?: Answer) {
+    const object = conjure(ctx, 'P1', LAB_BOLT, 'hand');
+    addMana(playerById(ctx, 'P1'), red(1));
+    const option = optionFor(ctx, 'P1', object.id);
+    expect(option, 'P1 casts Lab Bolt').toBeDefined();
+    takeAction(
+      ctx,
+      'P1',
+      option!.payload as PriorityActionPayload,
+      undefined,
+      new Map([[option!.targets![0]!.slot, targetId]]),
+    );
+    return settle(ctx, answer);
+  }
+
+  it('guard-gomazoa-pinned-oracle-supported — the interpreter alone reads defender, flying and the combat damage prevention static', () => {
+    expectNoRegistration(card);
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.keywords).toEqual(expect.arrayContaining(['defender', 'flying']));
+    expect(def.ruleStatics).toEqual([{ kind: 'preventCombatDamageToSelf' }]);
+    expect(def.triggers).toEqual([]);
+  });
+
+  it('guard-gomazoa-combat-prevented — it takes no combat damage when it blocks, in the first-strike step and again in the regular step, while a creature beside it takes damage', () => {
+    const ctx = pod('gomazoa-block');
+    const gomazoa = spawn(ctx, 'P2', card);
+    const wall = spawn(ctx, 'P2', WALL);
+    const ox = spawn(ctx, 'P1', OX());
+    const striker = spawn(ctx, 'P1', OX('Lab Double Striker', 'Double strike'));
+    combat(ctx, [ox.id, striker.id], { [gomazoa.id]: striker.id, [wall.id]: ox.id });
+    // Gomazoa blocked a 4/4 double striker (8 damage over two steps): none was marked, so it lives.
+    expect(onField(ctx, gomazoa.cardId)).toBeDefined();
+    expect(onField(ctx, gomazoa.cardId)!.damageMarked).toBe(0);
+    // The ordinary Wall beside it is not protected.
+    expect(onField(ctx, wall.cardId)!.damageMarked).toBe(4);
+    // The attacker it blocked still takes Gomazoa's own 1 damage.
+    expect(onField(ctx, striker.cardId)!.damageMarked).toBe(1);
+    const hits = preventedEvents(ctx).filter(
+      (event) => event.payload['target'] === 'Guard Gomazoa',
+    );
+    expect(hits.map((event) => event.payload['amount'])).toEqual([4, 4]);
+    expect(hits.every((event) => event.payload['reason'] === 'preventCombatDamageToSelf')).toBe(
+      true,
+    );
+    expect(life(ctx, 'P2')).toBe(40);
+  });
+
+  it('guard-gomazoa-combat-prevented — deathtouch combat damage to it is prevented as well, so it does not die', () => {
+    const ctx = pod('gomazoa-deathtouch');
+    const gomazoa = spawn(ctx, 'P2', card);
+    const ox = spawn(ctx, 'P1', OX('Lab Venomous Ox', 'Deathtouch'));
+    combat(ctx, [ox.id], { [gomazoa.id]: ox.id });
+    expect(onField(ctx, gomazoa.cardId)).toBeDefined();
+    expect(onField(ctx, gomazoa.cardId)!.damagedByDeathtouch).toBe(false);
+  });
+
+  it('guard-gomazoa-noncombat-damage — a spell that deals noncombat damage to it still does, through the stack, and 3 damage destroys it', () => {
+    const ctx = pod('gomazoa-bolt');
+    const gomazoa = spawn(ctx, 'P2', card);
+    bolt(ctx, gomazoa.id);
+    expect(onField(ctx, gomazoa.cardId)).toBeUndefined();
+    expect(playerById(ctx, 'P2').graveyard.some((c) => c.cardId === gomazoa.cardId)).toBe(true);
+    expect(preventedEvents(ctx)).toEqual([]);
+  });
+
+  it('guard-gomazoa-loses-abilities — the prevention is an ability of the creature, so it stops while the creature has lost all abilities', () => {
+    const lost = pod('gomazoa-humility');
+    registerCustomDef(lost, humilityDef());
+    spawn(lost, 'P2', HUMILITY);
+    const gomazoa = spawn(lost, 'P2', card);
+    const ox = spawn(lost, 'P1', OX());
+    combat(lost, [ox.id], { [gomazoa.id]: ox.id });
+    // Without its abilities the 3-toughness creature takes the 4 combat damage and dies.
+    expect(onField(lost, gomazoa.cardId)).toBeUndefined();
+    expect(preventedEvents(lost)).toEqual([]);
+
+    // Control: the same combat without the enchantment deals it no damage.
+    const kept = pod('gomazoa-humility-absent');
+    const fresh = spawn(kept, 'P2', card);
+    const attacker = spawn(kept, 'P1', OX());
+    combat(kept, [attacker.id], { [fresh.id]: attacker.id });
+    expect(onField(kept, fresh.cardId)!.damageMarked).toBe(0);
+  });
+
+  it('damage-modifiers-order-choice — two replacements that change the outcome ask the damaged player, and each order gives its own amount', () => {
+    const play = (pickText: RegExp) => {
+      const ctx = pod(`order-${pickText.source}`);
+      spawn(ctx, 'P1', gisela);
+      spawn(ctx, 'P2', gisela);
+      const asked: PendingDecision[] = [];
+      bolt(ctx, 'P2', (decision) => {
+        asked.push(decision);
+        return {
+          index: decision.options.findIndex((o) => pickText.test(o.description)),
+          targets: new Map(),
+        };
+      });
+      return { ctx, asked };
+    };
+    // P2 takes 3: halved first it is 1, then doubled to 2; doubled first it is 6, then halved to 3.
+    const halveFirst = play(/prevent half/);
+    expect(halveFirst.asked).toHaveLength(1);
+    expect(halveFirst.asked[0]!.player).toBe('P2');
+    expect(halveFirst.asked[0]!.decisionType).toBe('general');
+    expect(halveFirst.asked[0]!.prompt).toContain('3 damage from Lab Bolt to P2');
+    expect(halveFirst.asked[0]!.options).toHaveLength(2);
+    expect(life(halveFirst.ctx, 'P2')).toBe(38);
+    const doubleFirst = play(/double/);
+    expect(doubleFirst.asked).toHaveLength(1);
+    expect(life(doubleFirst.ctx, 'P2')).toBe(37);
+  });
+
+  it('damage-modifiers-order-choice — a choice that cannot change the outcome is not asked: even damage, two doublers, a doubler and a plain prevention, and two plain preventions', () => {
+    // 4 damage: halved then doubled is 4 and doubled then halved is 4, so there is nothing to choose.
+    const even = pod('order-even');
+    spawn(even, 'P1', gisela);
+    spawn(even, 'P2', gisela);
+    const evenHit = pump(
+      dealDamageToPlayer(
+        even,
+        permanentSource(spawn(even, 'P3', OX())),
+        playerById(even, 'P2'),
+        4,
+        {
+          combat: false,
+          sourceIsCommander: false,
+          sourceHasLifelink: false,
+        },
+      ),
+    );
+    expect(evenHit.decisions).toEqual([]);
+    expect(life(even, 'P2')).toBe(36);
+
+    // Neriv and Gisela both double, so the order never matters.
+    const doublers = pod('order-doublers');
+    spawn(doublers, 'P1', neriv);
+    spawn(doublers, 'P1', gisela);
+    const newcomer = spawn(doublers, 'P1', OX());
+    const doublerHit = pump(
+      dealDamageToPlayer(doublers, permanentSource(newcomer), playerById(doublers, 'P2'), 3, {
+        combat: false,
+        sourceIsCommander: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    expect(doublerHit.decisions).toEqual([]);
+    expect(life(doublers, 'P2')).toBe(28);
+
+    // A doubler and Gomazoa's plain prevention: the damage is prevented whichever applies first.
+    const mixed = pod('order-mixed');
+    spawn(mixed, 'P1', neriv);
+    const gomazoa = spawn(mixed, 'P2', card);
+    const mixedHit = pump(
+      dealDamageToCreature(mixed, permanentSource(spawn(mixed, 'P1', OX())), gomazoa, 3, {
+        combat: true,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    expect(mixedHit.decisions).toEqual([]);
+    expect(onField(mixed, gomazoa.cardId)!.damageMarked).toBe(0);
+
+    // Two plain prevent-alls, Gomazoa's static and a Fog-style shield: one applies, nothing is
+    // asked, and the other drops out because there is nothing left to prevent.
+    const plain = pod('order-plain');
+    const shielded = spawn(plain, 'P2', card);
+    plain.state.combatDamagePrevention.all = true;
+    const plainHit = pump(
+      dealDamageToCreature(plain, permanentSource(spawn(plain, 'P1', OX())), shielded, 3, {
+        combat: true,
+        sourceHasDeathtouch: false,
+        sourceHasLifelink: false,
+      }),
+    );
+    expect(plainHit.decisions).toEqual([]);
+    expect(preventedEvents(plain)).toHaveLength(1);
+    expect(onField(plain, shielded.cardId)!.damageMarked).toBe(0);
+  });
+
+  it('damage-modifiers-order-choice — a prevention with a follow-up counts as a different outcome: a token shield and a halving ask the player, and each order creates its own tokens', () => {
+    const play = (pickText: RegExp) => {
+      const ctx = pod(`order-tokens-${pickText.source}`);
+      spawn(ctx, 'P2', gisela);
+      ctx.state.combatDamagePrevention = {
+        all: false,
+        players: { P2: true },
+        tokenSpecs: { P2: INKLING },
+      };
+      const attacker = spawn(ctx, 'P1', OX('Lab Attacker'));
+      const { decisions } = pump(
+        dealDamageToPlayer(ctx, permanentSource(attacker), playerById(ctx, 'P2'), 3, {
+          combat: true,
+          sourceIsCommander: false,
+          sourceHasLifelink: false,
+        }),
+        (decision) => ({
+          index: decision.options.findIndex((o) => pickText.test(o.description)),
+          targets: new Map(),
+        }),
+      );
+      const tokens = ctx.state.battlefield.filter((p) => p.name === 'Inkling').length;
+      return { decisions, tokens, ctx };
+    };
+    // Shield first prevents all 3 and makes 3 tokens; halving first leaves 1, which the shield prevents.
+    const shieldFirst = play(/Prevent all combat damage/);
+    expect(shieldFirst.decisions).toHaveLength(1);
+    expect(shieldFirst.tokens).toBe(3);
+    expect(life(shieldFirst.ctx, 'P2')).toBe(40);
+    const halveFirst = play(/prevent half/);
+    expect(halveFirst.decisions).toHaveLength(1);
+    expect(halveFirst.tokens).toBe(1);
+    expect(life(halveFirst.ctx, 'P2')).toBe(40);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Restoration gate
 // ---------------------------------------------------------------------------------------------
 
@@ -2856,6 +3189,11 @@ const RESTORED: RestoredCard[] = [
     sha256: '3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893',
     clauseCount: 2,
     authored: true,
+  },
+  {
+    name: 'Guard Gomazoa',
+    sha256: 'c74c28c601c8f2f0527f10baab04b1fe96da7dd1ebac4bff48d4909fffb22eeb',
+    clauseCount: 2,
   },
 ];
 

@@ -2226,6 +2226,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     file: 'card-test-lab.spec.ts',
     titlePath: ['Backlash: tap an untapped creature and it hits its controller'],
   },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Guard Gomazoa: blocks Lab Ox and takes no combat damage'],
+  },
 ];
 for (const spec of VIEWER_CATALOG) {
   Object.freeze(spec.titlePath);

@@ -8936,3 +8936,33 @@ test('Backlash: tap an untapped creature and it hits its controller', async ({ p
   }
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+test('Guard Gomazoa: blocks Lab Ox and takes no combat damage', async ({ page }) => {
+  const boards: SpectatorPermanent[][] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot' || frame.type === 'stateSnapshot')
+        boards.push(frame.payload.state.battlefield);
+    }),
+  );
+  await runScenario(page, 'Guard Gomazoa: blocks Lab Ox and takes no combat damage');
+  await expect(permanent(page, 'Guard Gomazoa')).toContainText(/flying/i, { timeout: 15_000 });
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Guard Gomazoa')).toHaveCount(1);
+  await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
+  const final = boards.at(-1)!;
+  expect(final.find((p) => p.name === 'Guard Gomazoa')?.damageMarked).toBe(0);
+  expect(final.find((p) => p.name === 'Lab Ox')?.damageMarked).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});

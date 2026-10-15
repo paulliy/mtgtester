@@ -120,6 +120,11 @@ export type RuleStatic =
   | { kind: 'damageDoubledToOpponents'; sourceControllerOnly?: true }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
+  /**
+   * "Prevent all combat damage that would be dealt to this creature" (Guard Gomazoa) — a CR 615
+   * prevention effect of the permanent itself, so it stops with the permanent's abilities.
+   */
+  | { kind: 'preventCombatDamageToSelf' }
   /** "If an effect would create one or more tokens under your control, it creates twice that many instead." */
   | { kind: 'tokenCountMultiplier'; multiplier: number }
   /** A CR 616 replacement for counters placed on a matching permanent. */

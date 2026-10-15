@@ -111,6 +111,7 @@ const SOURCE_FILES = [
   'packages/engine/src/decisions.ts',
   'packages/engine/src/effects/choose.ts',
   'packages/engine/src/effects/continuous.ts',
+  'packages/engine/src/effects/damage-modifiers.ts',
   'packages/engine/src/effects/layer-cache.ts',
   'packages/engine/src/effects/values.ts',
   'packages/engine/src/engine.ts',

@@ -6890,6 +6890,9 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   ) {
     return [{ kind: 'damageDoubledToOpponents', sourceControllerOnly: true }];
   }
+  if (lower === 'prevent all combat damage that would be dealt to this creature') {
+    return [{ kind: 'preventCombatDamageToSelf' }];
+  }
   if (lower === 'affinity for artifacts') {
     return [
       {

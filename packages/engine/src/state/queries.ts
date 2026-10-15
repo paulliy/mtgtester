@@ -1381,34 +1381,6 @@ export function damageMultiplierFor(ctx: GameContext, sourceCardId: string): num
   return multiplier;
 }
 
-/** Apply every active target-aware damage replacement to one damage event. */
-export function damageAmountAfterReplacements(
-  ctx: GameContext,
-  sourceCardId: string,
-  targetControllerId: PlayerId,
-  amount: number,
-  sourceControllerId?: PlayerId,
-): number {
-  const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === sourceCardId);
-  for (const entry of gatherRuleStatics(ctx)) {
-    if (entry.static.kind === 'damageDoubled') {
-      if (sourcePerm === undefined) continue;
-      const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
-      if (matchesSelector(ctx, sourcePerm, entry.static.sourceFilter, from)) amount *= 2;
-    } else if (entry.static.kind === 'damageDoubledToOpponents') {
-      if (
-        targetControllerId !== entry.controllerId &&
-        (entry.static.sourceControllerOnly !== true ||
-          (sourceControllerId ?? sourcePerm?.controllerId) === entry.controllerId)
-      )
-        amount *= 2;
-    } else if (entry.static.kind === 'damageHalvedToYou') {
-      if (targetControllerId === entry.controllerId) amount = Math.floor(amount / 2);
-    }
-  }
-  return amount;
-}
-
 /** The multiplicative token replacement effects active for tokens created under `controllerId`. */
 export function tokenCreationMultiplierFor(ctx: GameContext, controllerId: PlayerId): number {
   return gatherRuleStatics(ctx).reduce((multiplier, entry) => {

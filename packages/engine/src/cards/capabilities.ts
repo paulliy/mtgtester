@@ -1228,6 +1228,7 @@ const families = {
       damageDoubled: true,
       damageDoubledToOpponents: true,
       damageHalvedToYou: true,
+      preventCombatDamageToSelf: true,
       tokenCountMultiplier: true,
       counterPlacementReplacement: true,
       attackTax: true,

@@ -11815,6 +11815,37 @@ function backlashScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function guardGomazoaScenario(gameId: GameId): CardTestScenario {
+  const gomazoa = pinnedFrom(COVERAGE_PR06, 'Guard Gomazoa');
+  return pr01Scenario(gameId, {
+    id: 'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+    title: 'Guard Gomazoa: blocks Lab Ox and takes no combat damage',
+    instructions: [
+      'You control Lab Ox (4/4). P2 controls Guard Gomazoa (1/3) and blocks with every creature it can.',
+      'Attack P2 with Lab Ox. Guard Gomazoa blocks it.',
+    ],
+    expectedOutcome:
+      'Lab Ox deals 4 combat damage to Guard Gomazoa, but all of it is prevented, so Guard Gomazoa has no damage and survives. Guard Gomazoa deals 1 damage to Lab Ox. P2 is still at 40.',
+    oracleSha256: gomazoa.sha256,
+    clauseIds: ['guard-gomazoa-keywords', 'guard-gomazoa-prevent-combat-damage'],
+    decks: {
+      P1: [LAB_OX, ...PR01_FILLER],
+      P2: [gomazoa.card, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox'] },
+        { playerId: 'P2', cardNames: ['Guard Gomazoa'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...TRANSFORMED_DFC_SCENARIO_IDS,
   ...SPECIALIZED_REFERENCE_SCENARIO_IDS,
@@ -12070,6 +12101,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'arcbond-viewer-reflect-damage',
   'thundermaw-hellkite-viewer-damage-and-tap-fliers',
   'backlash-viewer-tap-and-reflect',
+  'guard-gomazoa-viewer-blocks-and-takes-no-damage',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -12392,6 +12424,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'arcbond-viewer-reflect-damage': arcbondScenario,
   'thundermaw-hellkite-viewer-damage-and-tap-fliers': thundermawHellkiteScenario,
   'backlash-viewer-tap-and-reflect': backlashScenario,
+  'guard-gomazoa-viewer-blocks-and-takes-no-damage': guardGomazoaScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

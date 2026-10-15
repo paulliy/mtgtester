@@ -1642,15 +1642,19 @@
   {
     "oracleId": "7c565975-aebc-4599-ac32-5594c718e2cb",
     "name": "Guard Gomazoa",
-    "package": "W8",
-    "status": "pending",
+    "package": "PR06.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Prevent all combat damage that would be dealt to this creature.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr06-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr06-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr06.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated, unchanged"
   },
   {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",

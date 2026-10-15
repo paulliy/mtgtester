@@ -9850,6 +9850,36 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "7c565975-aebc-4599-ac32-5594c718e2cb": {
+      "name": "Guard Gomazoa",
+      "oracleSha256": "c74c28c601c8f2f0527f10baab04b1fe96da7dd1ebac4bff48d4909fffb22eeb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "guard-gomazoa-keywords",
+          "oracleText": "Defender, flying",
+          "implementation": ["keywords defender and flying (interpreted)"],
+          "engineTestIds": ["guard-gomazoa-pinned-oracle-supported"],
+          "viewerScenarioIds": ["guard-gomazoa-viewer-blocks-and-takes-no-damage"]
+        },
+        {
+          "id": "guard-gomazoa-prevent-combat-damage",
+          "oracleText": "Prevent all combat damage that would be dealt to this creature.",
+          "implementation": [
+            "interpreted preventCombatDamageToSelf rule static, collected by the damage modifier pipeline as a prevention of combat damage to that permanent only, whoever deals it, in every combat damage step; noncombat damage is not prevented and the static stops applying while the creature has lost all abilities (layer 6); when it applies together with another effect on the same damage and the order changes the outcome, the damaged permanent's controller chooses the order (CR 616.1), and when the order cannot matter nothing is asked"
+          ],
+          "engineTestIds": [
+            "guard-gomazoa-pinned-oracle-supported",
+            "guard-gomazoa-combat-prevented",
+            "guard-gomazoa-noncombat-damage",
+            "guard-gomazoa-loses-abilities",
+            "damage-modifiers-order-choice"
+          ],
+          "viewerScenarioIds": ["guard-gomazoa-viewer-blocks-and-takes-no-damage"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

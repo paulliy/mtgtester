@@ -634,3 +634,29 @@ describe('Backlash Card Test Lab scenario', () => {
     replays('backlash-viewer-tap-and-reflect', steps);
   });
 });
+
+describe('Guard Gomazoa Card Test Lab scenario', () => {
+  it('guard-gomazoa-viewer-blocks-and-takes-no-damage — Guard Gomazoa blocks Lab Ox, all 4 combat damage to it is prevented, and it survives with no damage while dealing 1 back', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'guard-gomazoa-viewer-blocks-and-takes-no-damage',
+      steps,
+    );
+    const [gomazoa] = onBattlefield('Guard Gomazoa');
+    expect(gomazoa?.damageMarked).toBe(0);
+    const [ox] = onBattlefield('Lab Ox');
+    expect(ox?.damageMarked).toBe(1);
+    expect(seat('P2').life).toBe(40);
+    const prevented = state.eventLog.filter((event) => event.type === 'damagePrevented');
+    expect(prevented).toHaveLength(1);
+    expect(prevented[0]?.payload).toMatchObject({
+      source: 'Lab Ox',
+      target: 'Guard Gomazoa',
+      amount: 4,
+      reason: 'preventCombatDamageToSelf',
+    });
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('guard-gomazoa-viewer-blocks-and-takes-no-damage', steps);
+  });
+});

@@ -61,6 +61,7 @@ import type { ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard, type ChooseCardSpec } from './choose';
+import { applyDamageModifiers } from './damage-modifiers';
 import {
   additionalTypedTriggerCopies,
   applyCopy,
@@ -91,7 +92,6 @@ import {
   counterAmountAfterReplacements,
   colorsOf,
   tokenCreationMultiplierFor,
-  damageAmountAfterReplacements,
   effectivePT,
   findPermanent,
   getDefByOracleId,
@@ -223,7 +223,6 @@ export interface EffectSource {
 }
 
 /** Deal non-combat or combat damage from `source` to a creature. */
-// eslint-disable-next-line require-yield -- a generator so a CR 616.1 replacement-order choice can interrupt it
 export function* dealDamageToCreature(
   ctx: GameContext,
   source: EffectSource,
@@ -245,37 +244,17 @@ export function* dealDamageToCreature(
   },
 ): GameGen<void> {
   if (amount <= 0) return;
-  if (opts.combat && ctx.state.combatDamagePrevention.all) {
-    emit(ctx, 'damagePrevented', {
-      source: source.name,
-      target: target.name,
-      amount,
-      reason: 'combatShield',
-    });
-    return;
-  }
-  // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm), applied to the amount
-  // BEFORE protection: the source deals more damage, independent of whether the target can
-  // prevent it.
-  amount = damageAmountAfterReplacements(
-    ctx,
-    source.cardId,
-    target.controllerId,
+  // Replacement and prevention effects (CR 616.1): the combat shield, protection (CR 702.16 — the
+  // D in DEBT, so no damage is marked and no lifelink is gained), Guard Gomazoa, and the damage
+  // doublers and halvers, ordered by the damaged permanent's controller when the order matters.
+  amount = (yield* applyDamageModifiers(ctx, {
+    source,
+    recipient: { kind: 'permanent', permanent: target },
     amount,
-    source.controllerId,
-  );
-  // Protection (CR 702.16), the D in DEBT: damage from a source of a protected-from color is
-  // prevented entirely, so no damage is marked and no lifelink is gained.
-  if (opts.sourceColors !== undefined && hasProtectionFrom(ctx, target, opts.sourceColors)) {
-    emit(ctx, 'damagePrevented', {
-      source: source.name,
-      target: target.name,
-      targetCardId: target.cardId,
-      amount,
-      reason: 'protection',
-    });
-    return;
-  }
+    combat: opts.combat,
+    ...(opts.sourceColors !== undefined ? { sourceColors: opts.sourceColors } : {}),
+  })).amount;
+  if (amount <= 0) return;
   // Excess damage this turn (Rith, Liberated Primeval) — the amount by which this single hit
   // exceeded what was needed to reduce the target to 0 toughness, accounting for damage already
   // marked. Tracked by the DAMAGED permanent's controller, regardless of who dealt it.
@@ -311,7 +290,6 @@ export function* dealDamageToCreature(
  * Deal damage from `source` to a player. Tracks commander combat damage (brief §5.7). Returns the
  * damage actually dealt — 0 when it was prevented — for "deals damage to a player" consequences.
  */
-// eslint-disable-next-line require-yield -- a generator so a CR 616.1 replacement-order choice can interrupt it
 export function* dealDamageToPlayer(
   ctx: GameContext,
   source: EffectSource,
@@ -325,31 +303,14 @@ export function* dealDamageToPlayer(
   },
 ): GameGen<number> {
   if (amount <= 0) return 0;
-  if (
-    opts.combat &&
-    (ctx.state.combatDamagePrevention.all ||
-      ctx.state.combatDamagePrevention.players[target.id] === true)
-  ) {
-    const tokenSpec = ctx.state.combatDamagePrevention.tokenSpecs?.[target.id];
-    if (tokenSpec !== undefined) {
-      for (let i = 0; i < amount; i++) createToken(ctx, tokenSpec, target.id);
-    }
-    emit(ctx, 'damagePrevented', {
-      source: source.name,
-      target: target.id,
-      amount,
-      reason: 'combatShield',
-    });
-    return 0;
-  }
-  // Damage-doubling replacement (CR 616 — Neriv, Heart of the Storm).
-  amount = damageAmountAfterReplacements(
-    ctx,
-    source.cardId,
-    target.id,
+  // Replacement and prevention effects (CR 616.1): the combat shield, the damage doublers and
+  // halvers, ordered by the damaged player when the order matters.
+  amount = (yield* applyDamageModifiers(ctx, {
+    source,
+    recipient: { kind: 'player', player: target },
     amount,
-    source.controllerId,
-  );
+    combat: opts.combat,
+  })).amount;
   if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
@@ -446,23 +407,14 @@ function* dealDamageToObject(
       : null;
   if (counterKind !== null) {
     if (amount <= 0) return;
-    amount = damageAmountAfterReplacements(
-      ctx,
-      source.cardId,
-      perm.controllerId,
+    amount = (yield* applyDamageModifiers(ctx, {
+      source,
+      recipient: { kind: 'permanent', permanent: perm },
       amount,
-      source.controllerId,
-    );
-    if (hasProtectionFrom(ctx, perm, sourceColors)) {
-      emit(ctx, 'damagePrevented', {
-        source: source.name,
-        target: perm.name,
-        targetCardId: perm.cardId,
-        amount,
-        reason: 'protection',
-      });
-      return;
-    }
+      combat: false,
+      sourceColors,
+    })).amount;
+    if (amount <= 0) return;
     const have = counterCount(perm.counters, counterKind);
     if (counterKind === 'loyalty' && amount > have)
       ctx.state.excessDamageControllerIds.push(perm.controllerId);
