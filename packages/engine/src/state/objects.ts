@@ -1823,6 +1823,8 @@ export interface TriggerEventSubject {
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
   counterKinds?: readonly string[];
+  /** `becomesTapped`: it was tapped to activate a mana ability. */
+  forMana?: true;
 }
 
 /** Discard is an action, including when a replacement changes the card's destination. */
@@ -2141,6 +2143,7 @@ export function queueTriggersForEvent(
           return false;
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
+        if ('forMana' in spec && spec.forMana === true && s.forMana !== true) return false;
         // "...attack an opponent" (Firkraag) is about attacking the player; a creature attacking
         // only a planeswalker of theirs isn't attacking that opponent.
         if (
@@ -2532,8 +2535,14 @@ export function queueTriggersForObject(
   ctx: GameContext,
   when: ObjectTriggerWhen,
   permanent: EnginePermanent,
+  /** `becomesTapped` for a mana ability: the player who activated it. */
+  tappedForMana?: PlayerId,
 ): void {
-  queueTriggersForEvent(ctx, when, [{ permanent }]);
+  queueTriggersForEvent(ctx, when, [
+    tappedForMana === undefined
+      ? { permanent }
+      : { permanent, forMana: true, playerId: tappedForMana },
+  ]);
 }
 
 /**

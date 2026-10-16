@@ -13706,6 +13706,67 @@ function sirensCallScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** An opponent's seat that casts the first spell it can, then proposes attacking with one creature only. */
+const castThenAttackWithOne: DecisionProvider = {
+  decide(request) {
+    const cast = request.legalActions.find((action) => action.type === 'castSpell');
+    if (cast !== undefined) return { requestId: request.requestId, actionId: cast.id };
+    const attack = request.legalActions.find((action) =>
+      action.description.startsWith('Declare attackers'),
+    );
+    if (attack !== undefined) {
+      return {
+        requestId: request.requestId,
+        actionId: attack.id,
+        targets: (attack.targets ?? []).map((slot, index) => ({
+          slot: slot.slot,
+          choice:
+            index === 0 && slot.options.includes('P1')
+              ? 'P1'
+              : slot.options.includes('__no_attack__')
+                ? '__no_attack__'
+                : (slot.options[0] as string),
+        })),
+      };
+    }
+    const pass = request.legalActions.find((action) => action.type === 'pass');
+    return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+  },
+};
+
+function warsTollScenario(gameId: GameId): CardTestScenario {
+  const toll = pinnedFrom(COVERAGE_PR07, "War's Toll");
+  return pr01Scenario(gameId, {
+    id: 'wars-toll-viewer-taps-lands-and-forces-attack',
+    title:
+      "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+    instructions: [
+      "War's Toll is on your battlefield. It is P2's turn: P2 has three Forests, Lab Ox, Lab Servo and Lab Green Bear in hand. It casts the Bear, then proposes attacking you with just one creature.",
+      'Keep passing priority and watch the log: the Forest P2 taps for the Bear triggers War’s Toll, and the attack with one creature is not allowed to stand alone.',
+    ],
+    expectedOutcome:
+      'P2 tapped one Forest for mana and War’s Toll tapped all three. P2’s attack with one creature (Lab Ox, at you) was rejected for leaving Lab Servo home, so the engine added it, aimed at P3: you took 4 and are at 36, and P3 took 1 and is at 39. The summoning-sick Lab Green Bear was not required to attack.',
+    oracleSha256: toll.sha256,
+    clauseIds: ['wars-toll-taps-lands', 'wars-toll-attack-with-all'],
+    decks: {
+      P1: [toll.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, LAB_GREEN_BEAR, FOREST, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P2', cardNames: ['Lab Green Bear'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ["War's Toll"] },
+        { playerId: 'P2', cardNames: ['Forest', 'Forest', 'Forest', 'Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: castThenAttackWithOne },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -14038,6 +14099,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'illusionists-gambit-viewer-remove-and-redirect',
   'moraug-viewer-landfall-extra-combat',
   'sirens-call-viewer-attack-or-die',
+  'wars-toll-viewer-taps-lands-and-forces-attack',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14547,6 +14609,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'illusionists-gambit-viewer-remove-and-redirect': gambitScenario,
   'moraug-viewer-landfall-extra-combat': moraugScenario,
   'sirens-call-viewer-attack-or-die': sirensCallScenario,
+  'wars-toll-viewer-taps-lands-and-forces-attack': warsTollScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

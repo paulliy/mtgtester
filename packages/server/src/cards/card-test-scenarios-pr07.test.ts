@@ -878,3 +878,22 @@ describe("Siren's Call Card Test Lab scenario", () => {
     replays('sirens-call-viewer-attack-or-die', steps);
   });
 });
+
+describe("War's Toll Card Test Lab scenario", () => {
+  it('wars-toll-viewer-taps-lands-and-forces-attack — the Forest P2 taps for mana taps all its lands, and its attack with one creature becomes an attack with both', () => {
+    const steps: Step[] = [];
+    const { scenario, state, seat } = run('wars-toll-viewer-taps-lands-and-forces-attack', steps);
+    const forests = state.battlefield.filter(
+      (perm) => perm.controllerId === 'P2' && perm.name === 'Forest',
+    );
+    expect(forests).toHaveLength(3);
+    expect(forests.every((perm) => perm.tapped)).toBe(true);
+    // Lab Ox hit you; the engine added Lab Servo, pointing it at the first free opponent, P3.
+    expect(seat('P1').life).toBe(36);
+    expect(seat('P3').life).toBe(39);
+    expect(state.eventLog.filter((event) => event.type === 'attack')).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('wars-toll-viewer-taps-lands-and-forces-attack', steps);
+  });
+});

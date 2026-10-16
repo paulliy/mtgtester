@@ -10289,3 +10289,17 @@ test("Siren's Call: the active player's creatures must attack, and the ones that
       .getByRole('img', { name: 'Lab Bird', exact: true }),
   ).toHaveCount(0);
 });
+
+test("War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('36');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('39');
+});

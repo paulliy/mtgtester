@@ -28,6 +28,7 @@ import {
   HAS_ANY_COUNTER,
   IS_TOKEN,
   named,
+  OPPONENTS,
   ofSubtype,
   ofType,
   SELF,
@@ -775,6 +776,41 @@ export function registerCoveragePr07Overrides(): void {
         description:
           "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
       }),
+    },
+  );
+
+  // War's Toll: the trigger is about a land tapped to activate a mana ability by an opponent (the
+  // event player is whoever tapped it); tapping lands by an effect does not count, so the trigger's
+  // own tapping cannot loop. The second line is a rule static read on each opponent's whole attack
+  // declaration, not a goad on creatures.
+  defineCard(
+    'ba4e4afb-24bb-47de-aba8-89d21b11d45c',
+    "War's Toll",
+    [
+      'Whenever an opponent taps a land for mana, tap all lands that player controls.',
+      'If a creature an opponent controls attacks, all creatures that opponent controls attack if able.',
+    ],
+    {
+      triggers: [
+        triggered(
+          {
+            when: 'becomesTapped',
+            subject: { kind: 'permanent', selector: allOf(ofType('Land'), OPPONENTS) },
+            forMana: true,
+          },
+          {
+            effects: [
+              {
+                op: 'tapEach',
+                selector: allOf(ofType('Land'), { kind: 'controller', who: 'eventPlayer' }),
+              },
+            ],
+            description:
+              'Whenever an opponent taps a land for mana, tap all lands that player controls',
+          },
+        ),
+      ],
+      ruleStatics: [{ kind: 'opponentsAttackWithAll' }],
     },
   );
 }

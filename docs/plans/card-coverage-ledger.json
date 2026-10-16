@@ -4362,16 +4362,20 @@
   {
     "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
     "name": "War's Toll",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever an opponent taps a land for mana, tap all lands that player controls.\"",
       "unrecognized rules text: \"If a creature an opponent controls attacks, all creatures that opponent controls attack if able.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",

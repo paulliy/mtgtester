@@ -465,7 +465,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       if (scope?.providedEventPlayer !== undefined) eventPlayer = scope.providedEventPlayer;
       else if (trigger !== undefined) {
         try {
-          eventPlayer = triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen);
+          eventPlayer =
+            triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen) ||
+            // "Taps a land for mana": the player who activated the mana ability.
+            (trigger.when === 'becomesTapped' &&
+              (trigger as { forMana?: unknown }).forMana === true);
         } catch {
           // validateTriggerHead reports unsupported event heads.
         }

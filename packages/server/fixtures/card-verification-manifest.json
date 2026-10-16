@@ -12662,6 +12662,45 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "ba4e4afb-24bb-47de-aba8-89d21b11d45c": {
+      "name": "War's Toll",
+      "oracleSha256": "715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "wars-toll-taps-lands",
+          "oracleText": "Whenever an opponent taps a land for mana, tap all lands that player controls.",
+          "implementation": [
+            "authored becomesTapped trigger with the new forMana flag (a land tapped to activate a mana ability, with the activating player as event player), over lands opponents control; it taps every land the event player controls through a tap effect, which is not tapping for mana and so cannot loop"
+          ],
+          "engineTestIds": [
+            "wars-toll-pinned-oracle-supported",
+            "wars-toll-taps-all-lands",
+            "wars-toll-not-yours",
+            "wars-toll-not-effects",
+            "wars-toll-whole-game"
+          ],
+          "viewerScenarioIds": ["wars-toll-viewer-taps-lands-and-forces-attack"]
+        },
+        {
+          "id": "wars-toll-attack-with-all",
+          "oracleText": "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+          "implementation": [
+            "opponentsAttackWithAll rule static read on the whole attack declaration of each opponent of the controller: with at least one attacker declared, every creature that can attack without paying a cost must be declared (violation attackWithAll, repaired by adding them), while declaring no attack at all stays legal (CR 508.1d)"
+          ],
+          "engineTestIds": [
+            "wars-toll-all-attack",
+            "wars-toll-attack-with-none",
+            "wars-toll-only-able-creatures",
+            "wars-toll-costs-excused",
+            "wars-toll-leaves",
+            "wars-toll-whole-game"
+          ],
+          "viewerScenarioIds": ["wars-toll-viewer-taps-lands-and-forces-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

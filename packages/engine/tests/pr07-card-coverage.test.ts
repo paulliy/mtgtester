@@ -1585,6 +1585,220 @@ describe("Siren's Call", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR07.24 War's Toll
+// ---------------------------------------------------------------------------------------------
+
+describe("War's Toll", () => {
+  const { card } = pinned("War's Toll");
+  const SPELL = oracle({
+    name: 'Lab Trinket Spell',
+    typeLine: 'Sorcery',
+    manaCost: '{1}{G}',
+    colors: ['G'],
+    oracleText: 'Draw a card.',
+  });
+
+  /** P1 controls War's Toll; P2 and P3 each have three Forests and two Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const toll = spawn(ctx, 'P1', card);
+    const lands: Record<string, EnginePermanent[]> = {};
+    const bears: Record<string, EnginePermanent[]> = {};
+    for (const id of ['P1', 'P2', 'P3']) {
+      lands[id] = [spawn(ctx, id, forest()), spawn(ctx, id, forest()), spawn(ctx, id, forest())];
+      bears[id] = [spawn(ctx, id, GRIZZLY(`${id} Bear`)), spawn(ctx, id, GRIZZLY(`${id} Cub`))];
+    }
+    return { ctx, toll, lands, bears };
+  }
+
+  /** `playerId` casts Lab Trinket Spell paying with lands (a mana ability each). */
+  function castSpellPaying(ctx: GameContext, playerId: string) {
+    turnOfPlayer(ctx, playerId);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const object = conjure(ctx, playerId, SPELL, 'hand');
+    const option = optionFor(ctx, playerId, object.id, /Lab Trinket Spell/);
+    expect(option, `${playerId} casts it`).toBeDefined();
+    takeAction(ctx, playerId, option!.payload as PriorityActionPayload);
+  }
+
+  const tappedCount = (perms: EnginePermanent[]) => perms.filter((perm) => perm.tapped).length;
+
+  it('wars-toll-pinned-oracle-supported — the authored override carries the for-mana trigger and the declaration rule static, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'becomesTapped', forMana: true });
+    expect(def.ruleStatics).toEqual([{ kind: 'opponentsAttackWithAll' }]);
+  });
+
+  it('wars-toll-taps-all-lands — an opponent tapping a land for mana has all lands they control tapped, and nobody else’s', () => {
+    const { ctx, lands } = board('toll-taps');
+    castSpellPaying(ctx, 'P2');
+    // Two lands paid for the spell; each tap triggered it (a trigger for each land tapped for mana).
+    expect(tappedCount(lands['P2']!)).toBe(2);
+    expect(ctx.state.pendingTriggers).toHaveLength(2);
+    settle(ctx);
+    expect(tappedCount(lands['P2']!)).toBe(3);
+    expect(tappedCount(lands['P3']!)).toBe(0);
+    expect(tappedCount(lands['P1']!)).toBe(0);
+    // Tapping them by the trigger is not tapping for mana: nothing is left to trigger.
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  it('wars-toll-not-yours — you tapping your own lands for mana does nothing', () => {
+    const { ctx, lands } = board('toll-own');
+    castSpellPaying(ctx, 'P1');
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    expect(tappedCount(lands['P1']!)).toBe(2);
+  });
+
+  it('wars-toll-not-effects — an opponent’s land tapped by an effect, or a creature tapped to attack, does not trigger it', () => {
+    const { ctx, lands, bears } = board('toll-effects');
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: 'oracle-src', name: 'Lab Source', controllerId: 'P1' },
+        spell({
+          effects: [
+            {
+              op: 'tapEach',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  { kind: 'type', value: 'Land' },
+                  { kind: 'controller', who: 'opponents' },
+                ],
+              },
+            },
+          ],
+        }),
+        [],
+      ),
+    );
+    expect(tappedCount(lands['P2']!)).toBe(3);
+    expect(ctx.state.pendingTriggers).toEqual([]);
+    // Attacking taps a creature: it is not a land tapped for mana either.
+    turnOfPlayer(ctx, 'P2');
+    fight(ctx, () => ({ [bears['P2']![0]!.id]: 'P1', [bears['P2']![1]!.id]: 'P1' }));
+    expect(ctx.state.pendingTriggers).toEqual([]);
+  });
+
+  /** P2's turn: it proposes `attacks`; returns what was rejected and who ended up attacking. */
+  function declare(
+    ctx: GameContext,
+    attacks: Record<string, string>,
+    creatures: EnginePermanent[],
+  ) {
+    turnOfPlayer(ctx, 'P2');
+    for (const creature of creatures) creature.tapped = false;
+    const result = declaredCombat(ctx, attacks);
+    return {
+      ...result,
+      attacking: creatures
+        .filter((creature) => creature.attackedThisTurn === true)
+        .map((c) => c.name),
+    };
+  }
+
+  it('wars-toll-all-attack — once one creature of an opponent attacks, every creature that can attack does, by repair if need be', () => {
+    const { ctx, bears } = board('toll-all');
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    const result = declare(ctx, { [bear.id]: 'P1' }, [bear, cub]);
+    expect(result.attackRejections).toContain('attackWithAll');
+    expect(result.attacking.sort()).toEqual(['P2 Bear', 'P2 Cub']);
+  });
+
+  it('wars-toll-attack-with-none — declaring no attack at all stays legal, and so does attacking with every creature', () => {
+    const { ctx, bears } = board('toll-none');
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    const none = declare(ctx, {}, [bear, cub]);
+    expect(none.attackRejections).toEqual([]);
+    expect(none.attacking).toEqual([]);
+    const { ctx: ctx2, bears: bears2 } = board('toll-every');
+    const [a, b] = bears2['P2']! as [EnginePermanent, EnginePermanent];
+    const every = declare(ctx2, { [a.id]: 'P1', [b.id]: 'P3' }, [a, b]);
+    expect(every.attackRejections).toEqual([]);
+    expect(every.attacking.sort()).toEqual(['P2 Bear', 'P2 Cub']);
+  });
+
+  it('wars-toll-only-able-creatures — a creature that cannot attack is not required to, and neither are your own creatures', () => {
+    const { ctx, bears } = board('toll-able');
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    // The Cub is summoning sick: only the Bear attacks, and that is a complete declaration.
+    cub.summoningSick = true;
+    turnOfPlayer(ctx, 'P2');
+    bear.tapped = false;
+    const result = declaredCombat(ctx, { [bear.id]: 'P1' });
+    expect(result.attackRejections).toEqual([]);
+    expect(bear.attackedThisTurn).toBe(true);
+    expect(cub.attackedThisTurn).not.toBe(true);
+    // You, the controller, may attack with one creature and keep the other home.
+    const mine = bears['P1']! as [EnginePermanent, EnginePermanent];
+    turnOfPlayer(ctx, 'P1');
+    mine[0].tapped = false;
+    mine[1].tapped = false;
+    const own = declaredCombat(ctx, { [mine[0].id]: 'P2' });
+    expect(own.attackRejections).toEqual([]);
+    expect(mine[1].attackedThisTurn).not.toBe(true);
+  });
+
+  it('wars-toll-costs-excused — a creature that could attack only by paying a cost is not required to, while one that can attack for free joins', () => {
+    const { ctx, bears } = board('toll-cost');
+    // Every possible defender has a Nils: a creature with counters pays {1} per counter to attack.
+    for (const id of ['P1', 'P3', 'P4']) spawn(ctx, id, pinned('Nils, Discipline Enforcer').card);
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    cub.counters['+1/+1'] = 1;
+    const result = declare(ctx, { [bear.id]: 'P1' }, [bear, cub]);
+    // The Cub could attack only by paying, so it is left home and the declaration stands.
+    expect(result.attackRejections).toEqual([]);
+    expect(result.attacking).toEqual(['P2 Bear']);
+    // Without the counter it is free to attack, so it must.
+    const { ctx: ctx2, bears: bears2 } = board('toll-cost-free');
+    for (const id of ['P1', 'P3', 'P4']) spawn(ctx2, id, pinned('Nils, Discipline Enforcer').card);
+    const [a, b] = bears2['P2']! as [EnginePermanent, EnginePermanent];
+    const free = declare(ctx2, { [a.id]: 'P1' }, [a, b]);
+    expect(free.attackRejections).toContain('attackWithAll');
+    expect(free.attacking.sort()).toEqual(['P2 Bear', 'P2 Cub']);
+  });
+
+  it('wars-toll-leaves — without War’s Toll an attack by one creature is again just that', () => {
+    const { ctx, toll, bears } = board('toll-gone');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== toll.id);
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    const result = declare(ctx, { [bear.id]: 'P1' }, [bear, cub]);
+    expect(result.attackRejections).toEqual([]);
+    expect(result.attacking).toEqual(['P2 Bear']);
+  });
+
+  it('wars-toll-whole-game — cast it, and on the opponent’s turn tapping a land for a spell taps the rest, and an attack by one is an attack by all', () => {
+    const ctx = pod('toll-chain');
+    const object = castFromHand(ctx, 'P1', card, [
+      { symbol: 'R' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+    ]);
+    resolveTop(ctx);
+    settle(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.cardId === object.cardId)).toBe(true);
+    const lands = [
+      spawn(ctx, 'P2', forest()),
+      spawn(ctx, 'P2', forest()),
+      spawn(ctx, 'P2', forest()),
+    ];
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const cub = spawn(ctx, 'P2', GRIZZLY('P2 Cub'));
+    castSpellPaying(ctx, 'P2');
+    settle(ctx);
+    expect(tappedCount(lands)).toBe(3);
+    const result = declare(ctx, { [bear.id]: 'P1' }, [bear, cub]);
+    expect(result.attackRejections).toContain('attackWithAll');
+    expect(result.attacking.sort()).toEqual(['P2 Bear', 'P2 Cub']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR07.07 Firkraag, Cunning Instigator
 // ---------------------------------------------------------------------------------------------
 
@@ -4600,6 +4814,12 @@ const RESTORED: RestoredCard[] = [
     name: "Siren's Call",
     sha256: '71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: "War's Toll",
+    sha256: '715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0',
+    clauseCount: 2,
     authored: true,
   },
 ];

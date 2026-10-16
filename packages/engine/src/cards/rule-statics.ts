@@ -180,6 +180,13 @@ export type RuleStatic =
    */
   | { kind: 'attackOnlyNearestOpponent' }
   /**
+   * "If a creature an opponent controls attacks, all creatures that opponent controls attack if
+   * able" (War's Toll): a requirement on the whole declaration of each opponent of the source's
+   * controller. Either nothing attacks or every creature that can attack without paying a cost
+   * does (CR 508.1d); declaring no attack at all stays legal.
+   */
+  | { kind: 'opponentsAttackWithAll' }
+  /**
    * "This creature can't attack alone" / "can't block alone" (Toby's Beast token). The creature
    * is this permanent itself. Attacking alone means being the only creature declared as an
    * attacker; blocking alone means being the only creature its controller declares as a blocker

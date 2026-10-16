@@ -1815,6 +1815,12 @@ export type TriggerHead =
       counter?: string;
       /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
       byYou?: true;
+      /**
+       * `becomesTapped` only: the permanent was tapped to activate a mana ability ("taps a land for
+       * mana", War's Toll), not by a tap effect or another cost. The player who tapped it is the
+       * event player.
+       */
+      forMana?: true;
       /** "This ability triggers only once each turn." */
       oncePerTurn?: true;
     }

@@ -6971,7 +6971,7 @@ export function* executeAbility(
         break;
       }
       case 'tapEach': {
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
+        for (const perm of affectedBy(ctx, source, effect.selector, extraScope?.eventPlayerId)) {
           if (perm.tapped) continue;
           perm.tapped = true;
           queueTriggersForObject(ctx, 'becomesTapped', perm);
@@ -8328,7 +8328,12 @@ export function* payAbilityCosts(
     switch (cost.kind) {
       case 'tap':
         perm.tapped = true;
-        queueTriggersForObject(ctx, 'becomesTapped', perm);
+        queueTriggersForObject(
+          ctx,
+          'becomesTapped',
+          perm,
+          tapEvent === 'tapForMana' ? player.id : undefined,
+        );
         emit(ctx, tapEvent, { name: perm.name, cardId: perm.cardId }, player.id);
         break;
       case 'tapOther': {

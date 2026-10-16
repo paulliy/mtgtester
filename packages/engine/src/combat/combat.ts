@@ -205,6 +205,19 @@ function cantActAlone(
   );
 }
 
+/**
+ * Does a rule static require this player, as an opponent of its controller, to attack with every
+ * creature that can attack for free once any creature attacks (War's Toll)?
+ */
+function attacksWithAll(ctx: GameContext, attackingPlayerId: PlayerId): boolean {
+  return gatherRuleStatics(ctx).some(
+    (entry) =>
+      entry.static.kind === 'opponentsAttackWithAll' &&
+      entry.controllerId !== attackingPlayerId &&
+      !playerById(ctx, entry.controllerId).hasLost,
+  );
+}
+
 /** How many creatures must block this attacker together if any do, beyond menace's two. */
 function minBlockersOf(ctx: GameContext, attacker: EnginePermanent): number {
   return gatherRuleStatics(ctx).reduce(
@@ -794,6 +807,21 @@ function validateAttackDeclaration(
         message: `${lone.name} can't attack alone`,
       },
     ];
+  // War's Toll: once any creature attacks, every creature that can attack for free must.
+  if (declared.length > 0 && attacksWithAll(ctx, attackingPlayerId)) {
+    const opponents = playersInApnapOrder(ctx).filter((p) => p.id !== attackingPlayerId);
+    const missing = eligible.filter(
+      (creature) =>
+        (assignment.get(creature.id) ?? null) === null &&
+        freeAttackTargetsFor(ctx, creature, opponents).length > 0,
+    );
+    if (missing.length > 0)
+      return missing.map((creature) => ({
+        subjectId: creature.id,
+        kind: 'attackWithAll' as const,
+        message: `${creature.name} must attack because another creature of yours attacks`,
+      }));
+  }
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
@@ -901,8 +929,14 @@ function repairAttackDeclaration(
       );
     const pick = candidates[0];
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
-    const mustAttack = mustAttackNow(ctx, pick, eligible, opponents);
-    const free = mustAttack ? requiredAttackTargets(ctx, pick, opponents)[0] : undefined;
+    // A creature that must join the attack goes at a target it can attack for free.
+    const joining = violations.some((v) => v.subjectId === pick.id && v.kind === 'attackWithAll');
+    const mustAttack = joining || mustAttackNow(ctx, pick, eligible, opponents);
+    const free = joining
+      ? freeAttackTargetsFor(ctx, pick, opponents)[0]
+      : mustAttack
+        ? requiredAttackTargets(ctx, pick, opponents)[0]
+        : undefined;
     repaired.set(
       pick.id,
       free === undefined

@@ -790,6 +790,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0",
+      "card": {
+        "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
+        "scryfallId": "3a08f7fe-8ca9-4604-85c8-9050298730ea",
+        "name": "War's Toll",
+        "manaCost": "{3}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an opponent taps a land for mana, tap all lands that player controls.\nIf a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -10744,6 +10744,66 @@
     }
   },
   {
+    "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
+    "name": "War's Toll",
+    "handledLines": [
+      "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+      "Whenever an opponent taps a land for mana, tap all lands that player controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "opponentsAttackWithAll"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever an opponent taps a land for mana, tap all lands that player controls",
+          "effects": [
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "eventPlayer"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "forMana": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "becomesTapped"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
     "handledLines": [
@@ -31285,6 +31345,66 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-war-s-toll",
+    "name": "War's Toll",
+    "handledLines": [
+      "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+      "Whenever an opponent taps a land for mana, tap all lands that player controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "opponentsAttackWithAll"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever an opponent taps a land for mana, tap all lands that player controls",
+          "effects": [
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "eventPlayer"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "forMana": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "becomesTapped"
+          }
         }
       ]
     }
