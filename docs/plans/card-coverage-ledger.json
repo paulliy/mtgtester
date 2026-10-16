@@ -3483,16 +3483,20 @@
   {
     "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
     "name": "Silver Surfer, Galactus's Herald",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.\"",
       "unrecognized rules text: \"Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",

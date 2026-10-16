@@ -545,6 +545,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'kardur-viewer-attacker-dies-drain',
       'galactus-viewer-attacks-most-life',
       'galactus-viewer-herald-lifts-requirement',
+      'silver-surfer-viewer-search-galactus',
+      'silver-surfer-viewer-attack-that-player',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

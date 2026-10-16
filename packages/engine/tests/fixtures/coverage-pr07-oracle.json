@@ -437,6 +437,40 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb",
+      "card": {
+        "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
+        "scryfallId": "b463462f-8044-4e57-b96e-408a9f4e0974",
+        "name": "Silver Surfer, Galactus's Herald",
+        "manaCost": "{5}",
+        "cmc": 5,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Creature — Alien Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Alien",
+          "Hero"
+        ],
+        "oracleText": "Flying\nWhen Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.\nWhenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.",
+        "power": "4",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

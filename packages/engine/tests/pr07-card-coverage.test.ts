@@ -28,6 +28,7 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { applyCopy, createToken, moveObject, tokenSpecCopying } from '../src/state/objects';
 import {
   beginEndStep,
+  cleanupStep,
   queueStepTriggers,
   runBeginningAndPrecombatMain,
   runCombatAndExtraCombats,
@@ -2489,6 +2490,179 @@ describe('Galactus, Devourer of Worlds', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.22 Silver Surfer, Galactus's Herald
+// ---------------------------------------------------------------------------------------------
+
+describe("Silver Surfer, Galactus's Herald", () => {
+  const { card } = pinned("Silver Surfer, Galactus's Herald");
+  const galactus = pinned('Galactus, Devourer of Worlds').card;
+  const COST = generic(5);
+
+  const libraryNames = (ctx: GameContext, playerId: string) =>
+    playerById(ctx, playerId).library.map((entry) => entry.name);
+
+  it('silver-surfer-pinned-oracle-supported — the authored override carries the optional search and the damage trigger under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.optional).toBe(true);
+    expect(def.triggers[0]!.effects).toMatchObject([
+      {
+        op: 'searchLibrary',
+        filter: { kind: 'name', value: 'Galactus, Devourer of Worlds' },
+        destinations: [{ zone: 'hand' }],
+        reveal: true,
+      },
+      { op: 'shuffle' },
+    ]);
+    expect(def.triggers[1]!.trigger).toMatchObject({ when: 'dealsCombatDamageToPlayer' });
+    expect(def.triggers[1]!.effects).toMatchObject([
+      {
+        op: 'addAttackRequirement',
+        requirements: [{ kind: 'player', player: 'eventPlayer' }],
+        duration: 'endOfYourNextTurn',
+      },
+    ]);
+  });
+
+  it('silver-surfer-search — you may search for a card named Galactus: it goes to your hand revealed, and the library is shuffled', () => {
+    const ctx = pod('surfer-search');
+    conjure(ctx, 'P1', galactus, 'library');
+    const decoy = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Galactus, Not Quite',
+        typeLine: 'Creature — God',
+        power: '1',
+        toughness: '1',
+      }),
+      'library',
+    );
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    const shuffles = () => ctx.state.eventLog.filter((event) => event.type === 'shuffle').length;
+    const before = shuffles();
+    settle(ctx, (decision) => {
+      const yes = decision.options.findIndex((option) =>
+        /yes|search|accept/i.test(option.description),
+      );
+      const galactusOption = decision.options.findIndex((option) =>
+        option.description.includes('Galactus, Devourer of Worlds'),
+      );
+      return { index: Math.max(galactusOption >= 0 ? galactusOption : yes, 0), targets: new Map() };
+    });
+    const hand = playerById(ctx, 'P1').hand.map((entry) => entry.name);
+    expect(hand).toContain('Galactus, Devourer of Worlds');
+    expect(hand).not.toContain('Galactus, Not Quite');
+    expect(libraryNames(ctx, 'P1')).toContain(decoy.name);
+    expect(libraryNames(ctx, 'P1')).not.toContain('Galactus, Devourer of Worlds');
+    expect(shuffles()).toBe(before + 1);
+  });
+
+  it('silver-surfer-search-fails — with no Galactus in the library, nothing is found and the library is still shuffled; declining the search shuffles nothing', () => {
+    const ctx = pod('surfer-no-galactus');
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    const shuffles = () => ctx.state.eventLog.filter((event) => event.type === 'shuffle').length;
+    const before = shuffles();
+    settle(ctx, (decision) => {
+      const yes = decision.options.findIndex(
+        (option) => !/decline|no\b|skip/i.test(option.description),
+      );
+      return { index: Math.max(yes, 0), targets: new Map() };
+    });
+    expect(playerById(ctx, 'P1').hand.map((entry) => entry.name)).not.toContain(
+      'Galactus, Devourer of Worlds',
+    );
+    expect(shuffles()).toBe(before + 1);
+    // Declined: no search, no shuffle.
+    const second = pod('surfer-decline');
+    conjure(second, 'P1', galactus, 'library');
+    castFromHand(second, 'P1', card, COST);
+    resolveTop(second);
+    const base = second.state.eventLog.filter((event) => event.type === 'shuffle').length;
+    settle(second, (decision) => ({
+      index: Math.max(
+        decision.options.findIndex((option) => option.type === 'declineTrigger'),
+        0,
+      ),
+      targets: new Map(),
+    }));
+    expect(playerById(second, 'P1').hand.map((entry) => entry.name)).not.toContain(
+      'Galactus, Devourer of Worlds',
+    );
+    expect(second.state.eventLog.filter((event) => event.type === 'shuffle').length).toBe(base);
+  });
+
+  /** P1's Surfer hits P2; the trigger targets `target`. */
+  function hit(ctx: GameContext, surfer: EnginePermanent, target: EnginePermanent) {
+    fight(ctx, () => ({ [surfer.id]: 'P2' }), aimAt(target.id));
+    expect(playerById(ctx, 'P2').life).toBe(36);
+  }
+
+  it('silver-surfer-attack-that-player — the target creature, whoever controls it, must attack the damaged player each combat until the end of your next turn', () => {
+    const ctx = pod('surfer-requirement');
+    const surfer = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P3', GRIZZLY('P3 Bear'));
+    const other = spawn(ctx, 'P3', GRIZZLY('P3 Other'));
+    const p2Walker = spawn(ctx, 'P2', WALKER('P2 Walker'));
+    hit(ctx, surfer, bear);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    const defenders: Record<string, string[]> = {};
+    const walkers: Record<string, string[]> = {};
+    // On P3's turn: it must attack P2, the player, and not P1, P4 or P2's planeswalker.
+    expect(mustAttackIn(ctx, 'P3', [bear, other], defenders, walkers)).toEqual({
+      [bear.id]: true,
+      [other.id]: false,
+    });
+    expect(defenders[bear.id]).toEqual(['P2']);
+    expect(walkers[bear.id]).not.toContain(p2Walker.id);
+    expect(walkers[bear.id]).toEqual([]);
+  });
+
+  it('silver-surfer-duration — it lasts through the other players’ turns and all of your next turn, and ends in that turn’s cleanup step', () => {
+    const ctx = pod('surfer-duration');
+    const surfer = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P3', GRIZZLY('P3 Bear'));
+    hit(ctx, surfer, bear);
+    // Cleanup of the turn it was made in does not end it.
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    for (const [index, id] of ['P2', 'P3', 'P4'].entries()) {
+      turnOfPlayer(ctx, id);
+      ctx.state.turnNumber += 1;
+      pump(runBeginningAndPrecombatMain(ctx));
+      expect(ctx.state.attackRequirements, `turn of ${id}`).toHaveLength(1);
+      expect(index).toBeLessThan(3);
+    }
+    // Your next turn: still on, through combat.
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackRequirements).toHaveLength(0);
+    expect(mustAttackIn(ctx, 'P3', [bear])).toEqual({ [bear.id]: false });
+  });
+
+  it('silver-surfer-own-creature-and-unable — it can target your own creature, and a creature that cannot attack that player is not required to attack at all', () => {
+    const ctx = pod('surfer-own');
+    const surfer = spawn(ctx, 'P1', card);
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    hit(ctx, surfer, mine);
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 4;
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [mine], defenders)).toEqual({ [mine.id]: true });
+    expect(defenders[mine.id]).toEqual(['P2']);
+    // P2 can no longer be attacked: nothing is required.
+    playerById(ctx, 'P2').hasLost = true;
+    expect(mustAttackIn(ctx, 'P1', [mine])).toEqual({ [mine.id]: false });
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2580,6 +2754,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Galactus, Devourer of Worlds',
     sha256: 'd71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: "Silver Surfer, Galactus's Herald",
+    sha256: '76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb',
+    clauseCount: 2,
     authored: true,
   },
 ];

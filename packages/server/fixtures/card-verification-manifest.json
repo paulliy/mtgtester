@@ -12371,6 +12371,41 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "be02005c-0e37-4dba-ac8e-3c69d06bbec2": {
+      "name": "Silver Surfer, Galactus's Herald",
+      "oracleSha256": "76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "silver-surfer-search-galactus",
+          "oracleText": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+          "implementation": [
+            "authored optional enters trigger: declining searches nothing and shuffles nothing; accepting searches your library for a card with the exact name Galactus, Devourer of Worlds (the new name selector on library cards), reveals it and puts it into your hand, and shuffles even when nothing is found (a similar name is not found)"
+          ],
+          "engineTestIds": [
+            "silver-surfer-pinned-oracle-supported",
+            "silver-surfer-search",
+            "silver-surfer-search-fails"
+          ],
+          "viewerScenarioIds": ["silver-surfer-viewer-search-galactus"]
+        },
+        {
+          "id": "silver-surfer-attack-that-player",
+          "oracleText": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.",
+          "implementation": [
+            "authored combat-damage trigger with any creature as target, whoever controls it: it stores an attack requirement (addAttackRequirement) for that object to attack the damaged player (a planeswalker of theirs never obeys it, and a creature that can't attack that player isn't required to attack at all) until the end of your next turn: it lasts through the other players' turns and all of your next turn and ends in that turn's cleanup step"
+          ],
+          "engineTestIds": [
+            "silver-surfer-pinned-oracle-supported",
+            "silver-surfer-attack-that-player",
+            "silver-surfer-duration",
+            "silver-surfer-own-creature-and-unable"
+          ],
+          "viewerScenarioIds": ["silver-surfer-viewer-attack-that-player"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

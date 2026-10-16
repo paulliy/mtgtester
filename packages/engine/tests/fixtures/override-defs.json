@@ -10860,6 +10860,77 @@
     }
   },
   {
+    "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
+    "name": "Silver Surfer, Galactus's Herald",
+    "handledLines": [
+      "When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+      "Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "name",
+                "value": "Galactus, Devourer of Worlds"
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able",
+          "effects": [
+            {
+              "duration": "endOfYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "player",
+                  "player": "eventPlayer"
+                }
+              ],
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "be2075af-1cd8-42fe-a29b-a0fd2b047a44",
     "name": "Lozhan, Dragons' Legacy",
     "handledLines": [
@@ -27419,6 +27490,77 @@
           "Swamp"
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-silver-surfer-galactus-s-herald",
+    "name": "Silver Surfer, Galactus's Herald",
+    "handledLines": [
+      "When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+      "Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "name",
+                "value": "Galactus, Devourer of Worlds"
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able",
+          "effects": [
+            {
+              "duration": "endOfYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "player",
+                  "player": "eventPlayer"
+                }
+              ],
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
     }
   },
   {

@@ -603,3 +603,46 @@ describe('Galactus, Devourer of Worlds Card Test Lab scenarios', () => {
     replays('galactus-viewer-herald-lifts-requirement', steps);
   });
 });
+
+describe('Silver Surfer, Galactus’s Herald Card Test Lab scenarios', () => {
+  it('silver-surfer-viewer-search-galactus — the enters trigger finds Galactus: it goes to your hand and the library is shuffled', () => {
+    const steps: Step[] = [
+      { action: "Cast Silver Surfer, Galactus's Herald" },
+      { action: 'Yes' },
+      { action: 'Put Galactus, Devourer of Worlds into your hand' },
+    ];
+    const { scenario, state } = run('silver-surfer-viewer-search-galactus', steps);
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    expect(p1.hand.map((entry) => entry.name)).toEqual(['Galactus, Devourer of Worlds']);
+    expect(p1.library.map((entry) => entry.name)).not.toContain('Galactus, Devourer of Worlds');
+    expect(state.eventLog.some((event) => event.type === 'shuffle')).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('silver-surfer-viewer-search-galactus', steps);
+  });
+
+  it('silver-surfer-viewer-attack-that-player — the targeted Lab Ox must attack P3 on P2’s turn and cannot attack you', () => {
+    const offers: string[][] = [];
+    const steps: Step[] = [
+      { action: 'Declare attackers', targets: ['P3'] },
+      { action: 'Targets for Silver Surfer', targets: ['Lab Ox'] },
+    ];
+    const { scenario, state, seat } = run(
+      'silver-surfer-viewer-attack-that-player',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offers.every((options) => !options.includes('P1'))).toBe(true);
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P3').life).toBe(32);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('silver-surfer-viewer-attack-that-player', steps);
+  });
+});

@@ -7,6 +7,7 @@
 import {
   grantsKeyword,
   onAttacks,
+  onCombatDamageToPlayer,
   onEndStep,
   onEtb,
   onUpkeep,
@@ -467,6 +468,53 @@ export function registerCoveragePr07Overrides(): void {
             1,
           ),
         },
+      ],
+    },
+  );
+
+  // Silver Surfer, Galactus's Herald: the search is "you may": declining searches nothing and
+  // shuffles nothing, while searching and finding no card still shuffles (the shuffle is part of
+  // the search). The found card is revealed. The damage trigger targets any creature; the
+  // requirement names that creature and THE DAMAGED PLAYER, and lasts until the end of your next
+  // turn (it ends in that turn's cleanup step). A planeswalker never obeys "attacks that player".
+  const surfer = targetSlots({ creature: { kind: 'creature' } });
+  defineCard(
+    'be02005c-0e37-4dba-ac8e-3c69d06bbec2',
+    "Silver Surfer, Galactus's Herald",
+    [
+      'When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.',
+      'Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          optional: true,
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: named('Galactus, Devourer of Worlds'),
+              destinations: [{ zone: 'hand' }],
+              allowFailToFind: true,
+              reveal: true,
+            },
+            { op: 'shuffle' },
+          ],
+          description:
+            'When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle',
+        }),
+        triggered(onCombatDamageToPlayer(), {
+          targets: surfer.targets,
+          effects: [
+            {
+              op: 'addAttackRequirement',
+              target: surfer.slot.creature,
+              requirements: [{ kind: 'player', player: 'eventPlayer' }],
+              duration: 'endOfYourNextTurn',
+            },
+          ],
+          description:
+            'Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able',
+        }),
       ],
     },
   );

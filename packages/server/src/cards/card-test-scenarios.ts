@@ -13317,6 +13317,67 @@ function galactusScenario(gameId: GameId, kind: 'hunger' | 'herald'): CardTestSc
   });
 }
 
+function silverSurferScenario(gameId: GameId, kind: 'search' | 'requirement'): CardTestScenario {
+  const surfer = pinnedFrom(COVERAGE_PR07, "Silver Surfer, Galactus's Herald");
+  const galactus = pinnedFrom(COVERAGE_PR07, 'Galactus, Devourer of Worlds');
+  const search = kind === 'search';
+  return pr01Scenario(gameId, {
+    id: search ? 'silver-surfer-viewer-search-galactus' : 'silver-surfer-viewer-attack-that-player',
+    title: search
+      ? 'Silver Surfer: search your library for Galactus when it enters'
+      : 'Silver Surfer: the target creature must attack the player it damaged',
+    instructions: search
+      ? [
+          'Silver Surfer is in your hand with five Forests on your battlefield, and Galactus, Devourer of Worlds is in your library. Cast Silver Surfer and let it resolve.',
+          'Accept its enters trigger and put Galactus into your hand: the card is revealed and your library is shuffled.',
+        ]
+      : [
+          'Silver Surfer is on your battlefield and P2 controls Lab Ox (4/4). Pass priority to the declare attackers step and attack P3 with Silver Surfer, then confirm.',
+          'Its combat damage trigger asks for a target creature: choose Lab Ox. On P2’s turn Lab Ox must attack P3, the player Silver Surfer damaged, and not you.',
+        ],
+    expectedOutcome: search
+      ? 'Galactus, Devourer of Worlds moved from your library to your hand (revealed) and the library was shuffled.'
+      : 'Silver Surfer hit P3 for 4. Lab Ox was required to attack P3 on P2’s turn and hit it for 4: P3 is at 32 and you are at 40.',
+    oracleSha256: surfer.sha256,
+    clauseIds: search ? ['silver-surfer-search-galactus'] : ['silver-surfer-attack-that-player'],
+    decks: {
+      P1: search
+        ? [surfer.card, FOREST, FOREST, FOREST, FOREST, FOREST, galactus.card, LAB_SERVO]
+        : [surfer.card, FOREST, FOREST],
+      P2: search ? PR01_FILLER : [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: search
+      ? {
+          hand: [{ playerId: 'P1', cardNames: ["Silver Surfer, Galactus's Herald"] }],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', 'Forest'] },
+          ],
+        }
+      : {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ["Silver Surfer, Galactus's Herald"] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        },
+    ...(search
+      ? {}
+      : {
+          decisionProviderOverrides: {
+            P2: attackPlayerWithEverything('P1'),
+            P3: neverBlocks(),
+            P4: neverBlocks(),
+          },
+        }),
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13637,6 +13698,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'kardur-viewer-attacker-dies-drain',
   'galactus-viewer-attacks-most-life',
   'galactus-viewer-herald-lifts-requirement',
+  'silver-surfer-viewer-search-galactus',
+  'silver-surfer-viewer-attack-that-player',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14133,6 +14196,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'kardur-viewer-attacker-dies-drain': (gameId) => kardurScenario(gameId, 'drain'),
   'galactus-viewer-attacks-most-life': (gameId) => galactusScenario(gameId, 'hunger'),
   'galactus-viewer-herald-lifts-requirement': (gameId) => galactusScenario(gameId, 'herald'),
+  'silver-surfer-viewer-search-galactus': (gameId) => silverSurferScenario(gameId, 'search'),
+  'silver-surfer-viewer-attack-that-player': (gameId) =>
+    silverSurferScenario(gameId, 'requirement'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

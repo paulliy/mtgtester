@@ -2453,6 +2453,14 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: search your library for Galactus when it enters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: the target creature must attack the player it damaged'],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

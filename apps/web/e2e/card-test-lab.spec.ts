@@ -9999,3 +9999,35 @@ test("Galactus, Devourer of Worlds: no requirement while you control Silver Surf
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('8');
 });
+
+test('Silver Surfer: search your library for Galactus when it enters', async ({ page }) => {
+  await runScenario(page, 'Silver Surfer: search your library for Galactus when it enters');
+  const surfer = handCard(page, "Silver Surfer, Galactus's Herald");
+  await expect(surfer).toHaveClass(/actionable/);
+  await surfer.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Yes' }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Put into your hand' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText('Galactus, Devourer of Worlds').first()).toBeVisible();
+});
+
+test('Silver Surfer: the target creature must attack the player it damaged', async ({ page }) => {
+  await runScenario(page, 'Silver Surfer: the target creature must attack the player it damaged');
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText("Silver Surfer, Galactus's Herald", { exact: true }) })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click({ timeout: 15_000 });
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('32');
+});
