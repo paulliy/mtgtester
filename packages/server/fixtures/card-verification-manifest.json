@@ -12342,6 +12342,35 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "4232995b-68c0-4514-8cde-bc62b9d1cbaa": {
+      "name": "Galactus, Devourer of Worlds",
+      "oracleSha256": "d71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "galactus-insatiable-hunger",
+          "oracleText": "Insatiable Hunger \u2014 Galactus attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, Galactus's Herald.",
+          "implementation": [
+            "authored attackRequirement rule static of Galactus itself (lost with its abilities): as attackers are declared, the opponents of its controller with the most life are read (any of them on a tie, players who left the game excluded) and attacking one of those players obeys the requirement; a planeswalker never does, and a restriction wins (CR 508.1c), so when Galactus cannot attack such a player nothing is required of it (CR 508.1d); the requirement does not apply while its controller controls a creature named Silver Surfer, Galactus's Herald (an opponent's, or one with a similar name, does not lift it); the exile trigger and the keywords are read by the interpreter"
+          ],
+          "engineTestIds": [
+            "galactus-pinned-oracle-supported",
+            "galactus-attacks-most-life",
+            "galactus-ties",
+            "galactus-life-now",
+            "galactus-unable",
+            "galactus-silver-surfer",
+            "galactus-control",
+            "galactus-whole-game"
+          ],
+          "viewerScenarioIds": [
+            "galactus-viewer-attacks-most-life",
+            "galactus-viewer-herald-lifts-requirement"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

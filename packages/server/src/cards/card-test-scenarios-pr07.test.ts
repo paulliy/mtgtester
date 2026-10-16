@@ -560,3 +560,46 @@ describe('Kardur, Doomscourge Card Test Lab scenarios', () => {
     replays('kardur-viewer-attacker-dies-drain', steps);
   });
 });
+
+describe('Galactus, Devourer of Worlds Card Test Lab scenarios', () => {
+  it('galactus-viewer-attacks-most-life — Galactus has exactly one legal declaration, so it attacks P3, the opponent with the most life, without being asked', () => {
+    const declarations: string[] = [];
+    const steps: Step[] = [];
+    const { scenario, state, seat } = run('galactus-viewer-attacks-most-life', steps, (request) => {
+      if (
+        request.decidingPlayer === 'P1' &&
+        request.legalActions.some((action) => action.description.startsWith('Declare attackers'))
+      )
+        declarations.push(request.prompt);
+    });
+    // A declaration with a single legal answer is made for you, as for any forced choice.
+    expect(declarations).toEqual([]);
+    expect(seat('P3').life).toBe(28);
+    expect(seat('P2').life).toBe(20);
+    expect(seat('P4').life).toBe(30);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('galactus-viewer-attacks-most-life', steps);
+  });
+
+  it('galactus-viewer-herald-lifts-requirement — with Silver Surfer, Galactus’s Herald, Galactus may attack P2', () => {
+    const offers: string[][] = [];
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2', '__no_attack__'] }];
+    const { scenario, state, seat } = run(
+      'galactus-viewer-herald-lifts-requirement',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P1' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offers[0]).toEqual(expect.arrayContaining(['P2', 'P3', 'P4', '__no_attack__']));
+    expect(seat('P2').life).toBe(8);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('galactus-viewer-herald-lifts-requirement', steps);
+  });
+});

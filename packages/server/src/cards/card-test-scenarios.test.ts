@@ -543,6 +543,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'life-of-the-party-viewer-goaded-copies',
       'kardur-viewer-must-attack-not-you',
       'kardur-viewer-attacker-dies-drain',
+      'galactus-viewer-attacks-most-life',
+      'galactus-viewer-herald-lifts-requirement',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

@@ -12,6 +12,7 @@
 
 import type { Color } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
+import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
 
@@ -179,6 +180,14 @@ export type RuleStatic =
    */
   | { kind: 'cantAttackAlone' }
   | { kind: 'cantBlockAlone' }
+  /**
+   * "~ attacks an opponent with the most life among your opponents each combat if able, unless
+   * <condition>" (Galactus): a requirement of THIS creature, lost with its abilities. Attacking a
+   * player with the most life among its controller's opponents (any of them, on a tie) obeys it;
+   * a planeswalker never does. It is read as attackers are declared and does not apply while
+   * `unless` holds.
+   */
+  | { kind: 'attackRequirement'; target: 'opponentWithMostLife'; unless?: Condition }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

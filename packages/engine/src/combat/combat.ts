@@ -58,12 +58,14 @@ import {
   isAttackingPlayer,
   isCreaturePermanent,
   playersInApnapOrder,
+  opponentsOf,
   allowanceFor,
   gatherRuleStatics,
   manaSourcesFor,
   triggersOf,
 } from '../state/queries';
 import type { RuleStaticEntry } from '../state/queries';
+import { evaluateCondition } from '../cards/condition';
 import type {
   AttackRequirementRule,
   EnginePermanent,
@@ -110,6 +112,12 @@ const attacksPlayer =
   (target) =>
     target.planeswalker === null && target.player.id === playerId;
 
+/** "Attacks one of these players if able": a player, never a planeswalker. */
+const attacksOneOf =
+  (playerIds: readonly PlayerId[]): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && playerIds.includes(target.player.id);
+
 function requirementOf(rule: AttackRequirementRule): AttackRequirement {
   switch (rule.kind) {
     case 'anyAttack':
@@ -148,6 +156,19 @@ function attackRequirementsFor(ctx: GameContext, creature: EnginePermanent): Att
             controllerId: entry.controllerId,
           });
     if (affected) for (const rule of entry.requirements) requirements.push(requirementOf(rule));
+  }
+  // "Attacks an opponent with the most life among your opponents each combat if able" (Galactus).
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'attackRequirement' || entry.sourceCardId !== creature.cardId)
+      continue;
+    const source = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (entry.static.unless !== undefined && evaluateCondition(ctx, entry.static.unless, source))
+      continue;
+    const opponents = opponentsOf(ctx, entry.controllerId);
+    const most = Math.max(...opponents.map((opponent) => opponent.life));
+    requirements.push(
+      attacksOneOf(opponents.filter((opponent) => opponent.life === most).map((p) => p.id)),
+    );
   }
   return requirements;
 }

@@ -2443,6 +2443,16 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Galactus, Devourer of Worlds: it must attack the opponent with the most life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

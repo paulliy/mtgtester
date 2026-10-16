@@ -2336,6 +2336,159 @@ describe('Kardur, Doomscourge', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.13 Galactus, Devourer of Worlds
+// ---------------------------------------------------------------------------------------------
+
+describe('Galactus, Devourer of Worlds', () => {
+  const { card } = pinned('Galactus, Devourer of Worlds');
+  const HERALD = oracle({
+    name: "Silver Surfer, Galactus's Herald",
+    typeLine: 'Creature — Alien Hero',
+    manaCost: '{5}',
+    power: '4',
+    toughness: '5',
+    oracleText: 'Flying',
+  });
+  const LOOKALIKE = oracle({
+    name: 'Silver Surfer, Not The Herald',
+    typeLine: 'Creature — Alien Hero',
+    manaCost: '{5}',
+    power: '4',
+    toughness: '5',
+  });
+
+  /** P1 controls Galactus; the opponents' life totals are 20, 40 and 30. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const galactus = spawn(ctx, 'P1', card);
+    playerById(ctx, 'P2').life = 20;
+    playerById(ctx, 'P3').life = 40;
+    playerById(ctx, 'P4').life = 30;
+    return { ctx, galactus };
+  }
+
+  it('galactus-pinned-oracle-supported — the authored override carries the Insatiable Hunger requirement under both ids, and the exile trigger still parses', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'attackRequirement',
+        target: 'opponentWithMostLife',
+        unless: {
+          kind: 'countPermanents',
+          selector: {
+            kind: 'allOf',
+            of: [
+              { kind: 'type', value: 'Creature' },
+              { kind: 'name', value: "Silver Surfer, Galactus's Herald" },
+            ],
+          },
+          scope: 'you',
+          cmp: '>=',
+          n: 1,
+        },
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters' });
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'trample', 'indestructible']));
+  });
+
+  it('galactus-attacks-most-life — it must attack the opponent with the most life, and nobody else, nor a planeswalker', () => {
+    const { ctx, galactus } = board('galactus-most-life');
+    const walker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    const defenders: Record<string, string[]> = {};
+    const walkers: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [galactus], defenders, walkers)).toEqual({
+      [galactus.id]: true,
+    });
+    // P3 has the most life (40): only P3 itself obeys it, not P2, P4, or P3's planeswalker.
+    expect(defenders[galactus.id]).toEqual(['P3']);
+    expect(walkers[galactus.id]).toEqual([]);
+    expect(walkers[galactus.id]).not.toContain(walker.id);
+  });
+
+  it('galactus-ties — with the most life tied, attacking any tied opponent obeys it', () => {
+    const { ctx, galactus } = board('galactus-tie');
+    playerById(ctx, 'P4').life = 40;
+    const defenders: Record<string, string[]> = {};
+    mustAttackIn(ctx, 'P1', [galactus], defenders);
+    expect(defenders[galactus.id]!.sort()).toEqual(['P3', 'P4']);
+  });
+
+  it('galactus-life-now — the opponent with the most life is read as attackers are declared, and your own life does not count', () => {
+    const { ctx, galactus } = board('galactus-now');
+    playerById(ctx, 'P1').life = 100;
+    const defenders: Record<string, string[]> = {};
+    mustAttackIn(ctx, 'P1', [galactus], defenders);
+    expect(defenders[galactus.id]).toEqual(['P3']);
+    playerById(ctx, 'P3').life = 10;
+    mustAttackIn(ctx, 'P1', [galactus], defenders);
+    expect(defenders[galactus.id]).toEqual(['P4']);
+    // An opponent who has left the game is not among your opponents.
+    playerById(ctx, 'P4').hasLost = true;
+    mustAttackIn(ctx, 'P1', [galactus], defenders);
+    expect(defenders[galactus.id]).toEqual(['P2']);
+  });
+
+  it('galactus-unable — when it cannot attack that opponent, nothing is required of it', () => {
+    const { ctx, galactus } = board('galactus-unable');
+    galactus.cantAttackPlayerWhileCounter = [{ playerId: 'P3', counter: 'vow' }];
+    galactus.counters['vow'] = 1;
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [galactus], defenders)).toEqual({ [galactus.id]: false });
+    expect(defenders[galactus.id]!.sort()).toEqual(['P2', 'P4']);
+  });
+
+  it('galactus-silver-surfer — it has no requirement while you control a creature named Silver Surfer, Galactus’s Herald, and only then', () => {
+    const { ctx, galactus } = board('galactus-surfer');
+    expect(mustAttackIn(ctx, 'P1', [galactus])).toEqual({ [galactus.id]: true });
+    // A creature with a similar name is not enough.
+    spawn(ctx, 'P1', LOOKALIKE);
+    expect(mustAttackIn(ctx, 'P1', [galactus])).toEqual({ [galactus.id]: true });
+    // An opponent's Herald is not "a creature you control".
+    const theirs = spawn(ctx, 'P2', HERALD);
+    expect(mustAttackIn(ctx, 'P1', [galactus])).toEqual({ [galactus.id]: true });
+    // Yours: no requirement; it may attack anyone, or no one.
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== theirs.id);
+    const herald = spawn(ctx, 'P1', HERALD);
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [galactus], defenders)).toEqual({ [galactus.id]: false });
+    expect(defenders[galactus.id]!.sort()).toEqual(['P2', 'P3', 'P4']);
+    // The Herald leaves and the requirement is back.
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== herald.id);
+    expect(mustAttackIn(ctx, 'P1', [galactus])).toEqual({ [galactus.id]: true });
+  });
+
+  it('galactus-control — whoever controls it reads "your opponents" from their own seat', () => {
+    const { ctx, galactus } = board('galactus-control');
+    galactus.controllerId = 'P2';
+    const defenders: Record<string, string[]> = {};
+    // P2's opponents are P1 (40), P3 (40) and P4 (30): P1 and P3 are tied for the most life.
+    mustAttackIn(ctx, 'P2', [galactus], defenders);
+    expect(defenders[galactus.id]!.sort()).toEqual(['P1', 'P3']);
+  });
+
+  it('galactus-whole-game — cast it for ten, its enters trigger exiles a permanent, and when it attacks it must go for the opponent with the most life', () => {
+    const ctx = pod('galactus-chain');
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    playerById(ctx, 'P4').life = 35;
+    const object = castFromHand(ctx, 'P1', card, generic(10));
+    resolveTop(ctx);
+    settle(ctx, aimAt(bear.id));
+    expect(ctx.state.battlefield.some((perm) => perm.id === bear.id)).toBe(false);
+    expect(ctx.state.exile.some((entry) => entry.name === 'P2 Bear')).toBe(true);
+    const galactus = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    galactus.summoningSick = false;
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [galactus], defenders)).toEqual({ [galactus.id]: true });
+    // P2 and P3 are at 40: they are tied for the most.
+    expect(defenders[galactus.id]!.sort()).toEqual(['P2', 'P3']);
+    expect(playerById(ctx, 'P1').life).toBe(40);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2421,6 +2574,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Kardur, Doomscourge',
     sha256: '72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Galactus, Devourer of Worlds',
+    sha256: 'd71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42',
+    clauseCount: 1,
     authored: true,
   },
 ];

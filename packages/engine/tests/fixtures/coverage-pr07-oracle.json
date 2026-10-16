@@ -400,6 +400,43 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "d71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42",
+      "card": {
+        "oracleId": "4232995b-68c0-4514-8cde-bc62b9d1cbaa",
+        "scryfallId": "3a9df9dd-a480-406c-ba28-94895fbfb574",
+        "name": "Galactus, Devourer of Worlds",
+        "manaCost": "{10}",
+        "cmc": 10,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Creature — Elder Alien",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elder",
+          "Alien"
+        ],
+        "oracleText": "Flying, trample, indestructible\nWhen Galactus enters, exile target permanent.\nInsatiable Hunger — Galactus attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, Galactus's Herald.",
+        "power": "12",
+        "toughness": "12",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Indestructible",
+          "Insatiable Hunger",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

@@ -442,4 +442,32 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Galactus, Devourer of Worlds: Insatiable Hunger is a requirement of Galactus itself (it is
+  // lost with its abilities), not a goad: it attacks an opponent with the most life among its
+  // controller's opponents, any of them on a tie, read as attackers are declared. Only a player
+  // obeys it, never a planeswalker, and when it can't attack such a player nothing is required.
+  // It does not apply while you control a creature named Silver Surfer, Galactus's Herald. Flying,
+  // trample, indestructible and the exile trigger are read by the interpreter.
+  defineCard(
+    '4232995b-68c0-4514-8cde-bc62b9d1cbaa',
+    'Galactus, Devourer of Worlds',
+    [
+      "Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald.",
+    ],
+    {
+      ruleStatics: [
+        {
+          kind: 'attackRequirement',
+          target: 'opponentWithMostLife',
+          unless: countPermanents(
+            allOf(ofType('Creature'), named("Silver Surfer, Galactus's Herald")),
+            'you',
+            '>=',
+            1,
+          ),
+        },
+      ],
+    },
+  );
 }

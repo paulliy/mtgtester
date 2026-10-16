@@ -13259,6 +13259,64 @@ function kardurScenario(gameId: GameId, kind: 'requirement' | 'drain'): CardTest
   });
 }
 
+const LAB_HERALD = card({
+  oracleId: 'lab-silver-surfer-herald',
+  name: "Silver Surfer, Galactus's Herald",
+  typeLine: 'Creature — Alien Hero',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function galactusScenario(gameId: GameId, kind: 'hunger' | 'herald'): CardTestScenario {
+  const galactus = pinnedFrom(COVERAGE_PR07, 'Galactus, Devourer of Worlds');
+  const hunger = kind === 'hunger';
+  return pr01Scenario(gameId, {
+    id: hunger ? 'galactus-viewer-attacks-most-life' : 'galactus-viewer-herald-lifts-requirement',
+    title: hunger
+      ? 'Galactus, Devourer of Worlds: it must attack the opponent with the most life'
+      : "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+    instructions: hunger
+      ? [
+          'Galactus is on your battlefield. P2 is at 20 life, P3 at 40 and P4 at 30.',
+          'Pass priority to the declare attackers step. Galactus must attack an opponent with the most life: P3 is its only choice, and it cannot stay home.',
+        ]
+      : [
+          'Galactus and a creature named Silver Surfer, Galactus’s Herald are on your battlefield. P2 is at 20 life, P3 at 40 and P4 at 30.',
+          'Pass priority to the declare attackers step. While you control the Herald, Galactus has no requirement: attack P2 with it and confirm.',
+        ],
+    expectedOutcome: hunger
+      ? 'Galactus attacked P3, the opponent with the most life, for 12: P3 is at 28.'
+      : 'Galactus was free to attack P2, who is not the opponent with the most life: P2 is at 8.',
+    oracleSha256: galactus.sha256,
+    clauseIds: ['galactus-insatiable-hunger'],
+    decks: {
+      P1: hunger ? [galactus.card, FOREST, FOREST] : [galactus.card, LAB_HERALD, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      lifeTotals: [
+        { playerId: 'P2', life: 20 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 30 },
+      ],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: hunger
+            ? ['Galactus, Devourer of Worlds']
+            : ['Galactus, Devourer of Worlds', "Silver Surfer, Galactus's Herald"],
+        },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13577,6 +13635,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'life-of-the-party-viewer-goaded-copies',
   'kardur-viewer-must-attack-not-you',
   'kardur-viewer-attacker-dies-drain',
+  'galactus-viewer-attacks-most-life',
+  'galactus-viewer-herald-lifts-requirement',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14071,6 +14131,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'life-of-the-party-viewer-goaded-copies': (gameId) => lifeOfThePartyScenario(gameId, 'copies'),
   'kardur-viewer-must-attack-not-you': (gameId) => kardurScenario(gameId, 'requirement'),
   'kardur-viewer-attacker-dies-drain': (gameId) => kardurScenario(gameId, 'drain'),
+  'galactus-viewer-attacks-most-life': (gameId) => galactusScenario(gameId, 'hunger'),
+  'galactus-viewer-herald-lifts-requirement': (gameId) => galactusScenario(gameId, 'herald'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

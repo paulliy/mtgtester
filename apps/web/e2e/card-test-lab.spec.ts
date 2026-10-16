@@ -9960,3 +9960,42 @@ test('Kardur, Doomscourge: whenever an attacking creature dies, each opponent lo
       page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
     ).toHaveText('39');
 });
+
+test('Galactus, Devourer of Worlds: it must attack the opponent with the most life', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Galactus, Devourer of Worlds: it must attack the opponent with the most life',
+  );
+  // Its only legal declaration is made for you: it attacks P3 and nobody else.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('28');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('20');
+});
+
+test("Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Galactus, Devourer of Worlds', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('8');
+});

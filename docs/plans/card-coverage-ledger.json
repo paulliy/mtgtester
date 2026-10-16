@@ -1542,15 +1542,19 @@
   {
     "oracleId": "4232995b-68c0-4514-8cde-bc62b9d1cbaa",
     "name": "Galactus, Devourer of Worlds",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.13",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",

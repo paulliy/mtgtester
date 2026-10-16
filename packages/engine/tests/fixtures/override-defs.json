@@ -3682,6 +3682,40 @@
     }
   },
   {
+    "oracleId": "4232995b-68c0-4514-8cde-bc62b9d1cbaa",
+    "name": "Galactus, Devourer of Worlds",
+    "handledLines": [
+      "Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "attackRequirement",
+          "target": "opponentWithMostLife",
+          "unless": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "name",
+                  "value": "Silver Surfer, Galactus's Herald"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
     "name": "Flare of Denial",
     "handledLines": [],
@@ -20852,6 +20886,40 @@
               "kind": "self"
             },
             "when": "becomesBlocked"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-galactus-devourer-of-worlds",
+    "name": "Galactus, Devourer of Worlds",
+    "handledLines": [
+      "Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "attackRequirement",
+          "target": "opponentWithMostLife",
+          "unless": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "name",
+                  "value": "Silver Surfer, Galactus's Herald"
+                }
+              ]
+            }
           }
         }
       ]
