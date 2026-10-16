@@ -13378,6 +13378,49 @@ function silverSurferScenario(gameId: GameId, kind: 'search' | 'requirement'): C
   });
 }
 
+function tauntScenario(gameId: GameId): CardTestScenario {
+  const taunt = pinnedFrom(COVERAGE_PR07, 'Taunt from the Rampart');
+  return pr01Scenario(gameId, {
+    id: 'taunt-viewer-goad-and-cant-block',
+    title:
+      "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+    instructions: [
+      'Taunt from the Rampart is in your hand with a Mountain, a Plains and three Forests on your battlefield, along with Lab Bird (1/1 flier). P2 controls Lab Ox (4/4).',
+      'Cast Taunt and let it resolve: Lab Ox is goaded and can’t block until your next turn. Then attack P2 with Lab Bird and confirm: Lab Ox is not offered as a blocker.',
+      'On P2’s turn Lab Ox must attack, and it can’t attack you: it attacks P3.',
+    ],
+    expectedOutcome:
+      'Lab Bird was unblocked: P2 is at 39. On P2’s turn the goaded Lab Ox attacked P3 for 4 (P3 is at 36) and you are at 40.',
+    oracleSha256: taunt.sha256,
+    clauseIds: ['taunt-goad-and-cant-block'],
+    decks: {
+      P1: [taunt.card, LAB_BIRD, MOUNTAIN, PLAINS, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Taunt from the Rampart'] }],
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: ['Lab Bird', 'Mountain', 'Plains', 'Forest', 'Forest', 'Forest'],
+        },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+      continueThroughNextTurn: true,
+    },
+    decisionProviderOverrides: {
+      P2: attackPlayerWithEverything('P1'),
+      P3: neverBlocks(),
+      P4: neverBlocks(),
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13700,6 +13743,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'galactus-viewer-herald-lifts-requirement',
   'silver-surfer-viewer-search-galactus',
   'silver-surfer-viewer-attack-that-player',
+  'taunt-viewer-goad-and-cant-block',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14199,6 +14243,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'silver-surfer-viewer-search-galactus': (gameId) => silverSurferScenario(gameId, 'search'),
   'silver-surfer-viewer-attack-that-player': (gameId) =>
     silverSurferScenario(gameId, 'requirement'),
+  'taunt-viewer-goad-and-cant-block': tauntScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

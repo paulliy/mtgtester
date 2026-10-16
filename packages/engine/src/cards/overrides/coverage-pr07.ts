@@ -6,6 +6,7 @@
 
 import {
   grantsKeyword,
+  spell,
   onAttacks,
   onCombatDamageToPlayer,
   onEndStep,
@@ -516,6 +517,29 @@ export function registerCoveragePr07Overrides(): void {
             'Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able',
         }),
       ],
+    },
+  );
+
+  // Taunt from the Rampart: "those creatures" are the ones goaded, a set fixed as this resolves
+  // (CR 611.2c), so creatures an opponent gets later are neither goaded nor kept from blocking, and
+  // a creature that changes hands stays in it. The goad and the can't-block both end as your next
+  // turn begins.
+  const opponentCreatures = allOf(ofType('Creature'), { kind: 'controller', who: 'opponents' });
+  defineCard(
+    '9138a768-d01d-4603-9bae-d3bff6cd2f61',
+    'Taunt from the Rampart',
+    [
+      "Goad all creatures your opponents control. Until your next turn, those creatures can't block.",
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          { op: 'goadEachOpponent' },
+          { op: 'cantBlockEach', selector: opponentCreatures, duration: 'untilYourNextTurn' },
+        ],
+        description:
+          "Goad all creatures your opponents control. Until your next turn, those creatures can't block",
+      }),
     },
   );
 }

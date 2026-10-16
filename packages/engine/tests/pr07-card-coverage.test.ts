@@ -2663,6 +2663,116 @@ describe("Silver Surfer, Galactus's Herald", () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.15 Taunt from the Rampart
+// ---------------------------------------------------------------------------------------------
+
+describe('Taunt from the Rampart', () => {
+  const { card } = pinned('Taunt from the Rampart');
+  const COST = [{ symbol: 'R' as const }, { symbol: 'W' as const }, ...generic(3)];
+  const goaders = (perm: EnginePermanent) => (perm.goadedBy ?? []).map((entry) => entry.goaderId);
+
+  /** P1 casts Taunt; P2 and P3 each control a Bear, P1 a Raider. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const bears = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Bear')),
+    };
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Wall'));
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    settle(ctx);
+    return { ctx, bears, mine, raider };
+  }
+
+  it('taunt-pinned-oracle-supported — the authored override goads and then keeps the same creatures from blocking, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.spellAbility?.effects).toMatchObject([
+      { op: 'goadEachOpponent' },
+      { op: 'cantBlockEach', duration: 'untilYourNextTurn' },
+    ]);
+  });
+
+  it('taunt-goads-all — every creature your opponents control is goaded by you, and yours are not', () => {
+    const { ctx, bears, mine } = board('taunt-goad');
+    for (const bear of Object.values(bears)) expect(goaders(bear)).toEqual(['P1']);
+    expect(goaders(mine)).toEqual([]);
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P2', [bears.P2], defenders)).toEqual({ [bears.P2.id]: true });
+    expect(defenders[bears.P2.id]).not.toContain('P1');
+  });
+
+  it("taunt-cant-block — those creatures can't block until your next turn, and your own creatures can", () => {
+    const { ctx, bears, mine, raider } = board('taunt-block');
+    // P2's goaded Bear is the only creature P2 has and it can't block your Raider.
+    const unblocked = declaredCombat(ctx, { [raider.id]: 'P2' }, { [bears.P2.id]: raider.id });
+    expect(unblocked.asked.blockers).toBe(0);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    // Your own creatures are not restricted: P2 attacking you can be blocked by your Wall.
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    bears.P2.tapped = false;
+    const blocked = declaredCombat(ctx, { [bears.P2.id]: 'P1' }, { [mine.id]: bears.P2.id });
+    expect(blocked.asked.blockers).toBe(1);
+  });
+
+  it('taunt-fixed-set — a creature an opponent gets afterwards is neither goaded nor kept from blocking, and one that changes hands stays affected', () => {
+    const { ctx, bears, raider } = board('taunt-fixed');
+    const later = spawn(ctx, 'P2', GRIZZLY('P2 Latecomer'));
+    expect(goaders(later)).toEqual([]);
+    const blocked = declaredCombat(ctx, { [raider.id]: 'P2' }, { [later.id]: raider.id });
+    expect(blocked.asked.blockers).toBe(1);
+    // P3's Bear passes to P2: it still can't block, and is still goaded.
+    bears.P3.controllerId = 'P2';
+    raider.tapped = false;
+    const stolen = declaredCombat(ctx, { [raider.id]: 'P2' }, { [bears.P3.id]: raider.id });
+    expect(stolen.blockRejections).toEqual([]);
+    expect(goaders(bears.P3)).toEqual(['P1']);
+    expect(bears.P3.blocking).toBeNull();
+  });
+
+  it('taunt-until-your-next-turn — it lasts through every other turn and ends, goad and all, as your next turn begins', () => {
+    const { ctx, bears } = board('taunt-duration');
+    for (const [index, id] of ['P2', 'P3', 'P4'].entries()) {
+      turnOfPlayer(ctx, id);
+      ctx.state.turnNumber += 1;
+      pump(runBeginningAndPrecombatMain(ctx));
+      expect(ctx.state.blockRestrictions, `turn of ${id}`).toHaveLength(1);
+      expect(goaders(bears.P2), `turn of ${id}`).toEqual(['P1']);
+      expect(index).toBeLessThan(3);
+    }
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(ctx.state.blockRestrictions).toHaveLength(0);
+    expect(goaders(bears.P2)).toEqual([]);
+    // They can block again.
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Late Raider'));
+    const blocked = declaredCombat(ctx, { [raider.id]: 'P2' }, { [bears.P2.id]: raider.id });
+    expect(blocked.asked.blockers).toBe(1);
+  });
+
+  it('taunt-whole-game — cast through the stack: opponents’ goaded creatures attack someone else on their turns and cannot block yours', () => {
+    const { ctx, bears, raider } = board('taunt-chain');
+    expect(ctx.state.stack).toEqual([]);
+    // P3's turn: its Bear must attack, and not P1.
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P3', [bears.P3], defenders)).toEqual({ [bears.P3.id]: true });
+    expect(defenders[bears.P3.id]!.sort()).toEqual(['P2', 'P4']);
+    // Back on your turn (before it begins anew) none of them may block your Raider.
+    turnOfPlayer(ctx, 'P1');
+    bears.P4.tapped = false;
+    const before = playerById(ctx, 'P4').life;
+    const run = declaredCombat(ctx, { [raider.id]: 'P4' }, { [bears.P4.id]: raider.id });
+    expect(run.asked.blockers).toBe(0);
+    expect(playerById(ctx, 'P4').life).toBe(before - 2);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2760,6 +2870,12 @@ const RESTORED: RestoredCard[] = [
     name: "Silver Surfer, Galactus's Herald",
     sha256: '76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Taunt from the Rampart',
+    sha256: '977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73',
+    clauseCount: 1,
     authored: true,
   },
 ];

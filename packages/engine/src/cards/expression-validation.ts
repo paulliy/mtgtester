@@ -562,6 +562,7 @@ const effectExpressions = {
   overloadBounceAllNonlandOpponents: {},
   goad: {},
   addAttackRequirement: { selector: optional(selector) },
+  cantBlockEach: { selector: selector },
   forceAttack: {},
   forceAttackEach: { selector: selector },
   doublePower: { selector: selector },

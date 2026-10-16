@@ -3656,15 +3656,19 @@
   {
     "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
     "name": "Taunt from the Rampart",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.15",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Goad all creatures your opponents control. Until your next turn, those creatures can't block.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",

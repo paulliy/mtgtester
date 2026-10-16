@@ -5418,6 +5418,23 @@ export function* executeAbility(
         emit(ctx, 'attackRequirement', { source: source.name });
         break;
       }
+      case 'cantBlockEach': {
+        const objectIds = selectPermanents(ctx, effect.selector, {
+          cardId: source.cardId,
+          controllerId: controller.id,
+        }).map((perm) => perm.id);
+        (ctx.state.blockRestrictions ??= []).push({
+          id: `br-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          objectIds,
+          expires: {
+            kind: 'untilNextTurn',
+            playerId: controller.id,
+            setTurn: ctx.state.turnNumber,
+          },
+        });
+        break;
+      }
       case 'forceAttack': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);

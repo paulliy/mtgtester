@@ -646,3 +646,31 @@ describe('Silver Surfer, Galactus’s Herald Card Test Lab scenarios', () => {
     replays('silver-surfer-viewer-attack-that-player', steps);
   });
 });
+
+describe('Taunt from the Rampart Card Test Lab scenario', () => {
+  it('taunt-viewer-goad-and-cant-block — Lab Ox is not offered as a blocker, and on its own turn it must attack P3 and not you', () => {
+    const offers: string[][] = [];
+    let blockDecisions = 0;
+    const steps: Step[] = [
+      { action: 'Cast Taunt from the Rampart' },
+      { action: 'Declare attackers', targets: ['P2'] },
+    ];
+    const { scenario, state, seat } = run('taunt-viewer-goad-and-cant-block', steps, (request) => {
+      const declare = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (request.decidingPlayer === 'P2' && declare !== undefined)
+        for (const slot of declare.targets ?? []) offers.push(slot.options);
+      if (request.legalActions.some((action) => action.description.startsWith('Declare blockers')))
+        blockDecisions++;
+    });
+    expect(blockDecisions).toBe(0);
+    expect(offers.every((options) => !options.includes('P1'))).toBe(true);
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P3').life).toBe(36);
+    expect(seat('P1').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('taunt-viewer-goad-and-cant-block', steps);
+  });
+});

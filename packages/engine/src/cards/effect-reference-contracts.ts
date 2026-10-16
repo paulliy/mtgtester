@@ -302,6 +302,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   overloadBounceAllNonlandOpponents: {},
   goad: { target: permanent },
   addAttackRequirement: { target: optionalRef(permanent) },
+  cantBlockEach: {},
   forceAttack: { target: permanent },
   forceAttackEach: {},
   doublePower: {},

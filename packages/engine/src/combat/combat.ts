@@ -466,6 +466,14 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   if (blocker.tapped || blocker.cantBlock === true || attacker.cantBeBlocked === true) return false;
   if (computeCharacteristics(ctx, attacker).cantBeBlocked) return false;
   if (ctx.state.creaturesCantBeBlockedThisTurn) return false;
+  // "Those creatures can't block" until a player's next turn (Taunt from the Rampart).
+  if (
+    (ctx.state.blockRestrictions ?? []).some(
+      (entry) =>
+        entry.objectIds.includes(blocker.id) && !playerById(ctx, entry.controllerId).hasLost,
+    )
+  )
+    return false;
   for (const champion of ctx.state.battlefield) {
     if (champion.controllerId === attacker.controllerId) {
       const def = ctx.defs.get(champion.oracleId);

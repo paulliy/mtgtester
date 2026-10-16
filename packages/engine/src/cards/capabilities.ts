@@ -1024,6 +1024,7 @@ const families = {
       overloadBounceAllNonlandOpponents: true,
       goad: true,
       addAttackRequirement: true,
+      cantBlockEach: true,
       forceAttack: true,
       forceAttackEach: true,
       doublePower: true,

@@ -7918,6 +7918,42 @@
     }
   },
   {
+    "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
+    "name": "Taunt from the Rampart",
+    "handledLines": [
+      "Goad all creatures your opponents control. Until your next turn, those creatures can't block."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Goad all creatures your opponents control. Until your next turn, those creatures can't block",
+        "effects": [
+          {
+            "op": "goadEachOpponent"
+          },
+          {
+            "duration": "untilYourNextTurn",
+            "op": "cantBlockEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
     "name": "Bottomless Pit",
     "handledLines": [
@@ -28532,6 +28568,42 @@
     "name": "Szarekh, the Silent King",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-taunt-from-the-rampart",
+    "name": "Taunt from the Rampart",
+    "handledLines": [
+      "Goad all creatures your opponents control. Until your next turn, those creatures can't block."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Goad all creatures your opponents control. Until your next turn, those creatures can't block",
+        "effects": [
+          {
+            "op": "goadEachOpponent"
+          },
+          {
+            "duration": "untilYourNextTurn",
+            "op": "cantBlockEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-tender-wildguide",

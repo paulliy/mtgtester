@@ -12406,6 +12406,30 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "9138a768-d01d-4603-9bae-d3bff6cd2f61": {
+      "name": "Taunt from the Rampart",
+      "oracleSha256": "977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "taunt-goad-and-cant-block",
+          "oracleText": "Goad all creatures your opponents control. Until your next turn, those creatures can't block.",
+          "implementation": [
+            "authored sorcery: goadEachOpponent goads every creature your opponents control as it resolves, and the new cantBlockEach effect records the same set (the creatures matching your opponents' creatures as it resolves, fixed, CR 611.2c) in the block-restriction store so they can't be declared as blockers; both end as your next turn begins; a creature an opponent gets afterwards is neither goaded nor restricted, one that changes hands stays affected, and your own creatures are unaffected"
+          ],
+          "engineTestIds": [
+            "taunt-pinned-oracle-supported",
+            "taunt-goads-all",
+            "taunt-cant-block",
+            "taunt-fixed-set",
+            "taunt-until-your-next-turn",
+            "taunt-whole-game"
+          ],
+          "viewerScenarioIds": ["taunt-viewer-goad-and-cant-block"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

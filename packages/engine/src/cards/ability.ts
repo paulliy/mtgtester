@@ -1384,6 +1384,11 @@ export type Effect =
       requirements: AttackRequirementSpec[];
       duration: 'untilYourNextTurn' | 'endOfYourNextTurn';
     }
+  /**
+   * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures
+   * matching `selector` as this resolves, a fixed set (CR 611.2c).
+   */
+  | { op: 'cantBlockEach'; selector: Selector; duration: 'untilYourNextTurn' }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }

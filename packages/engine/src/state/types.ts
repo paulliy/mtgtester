@@ -91,6 +91,18 @@ export interface AttackRequirementEntry {
   expires: EffectExpiry;
 }
 
+/**
+ * "Until your next turn, those creatures can't block" (Taunt from the Rampart): a fixed set of
+ * objects named when the effect resolved (CR 611.2c) that can't be declared as blockers until the
+ * effect ends.
+ */
+export interface BlockRestrictionEntry {
+  id: string;
+  controllerId: PlayerId;
+  objectIds: ObjectId[];
+  expires: EffectExpiry;
+}
+
 export interface EngineObject extends GameObject {
   cardId: CardId;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
@@ -722,6 +734,8 @@ export interface EngineState extends GameState {
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;
   /** Attack requirements made by resolved spells and abilities, until they expire (CR 508.1d). */
   attackRequirements?: AttackRequirementEntry[];
+  /** Creatures that can't block because of a resolved spell or ability, until it expires. */
+  blockRestrictions?: BlockRestrictionEntry[];
   normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,

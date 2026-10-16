@@ -2461,6 +2461,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Silver Surfer: the target creature must attack the player it damaged'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

@@ -10031,3 +10031,34 @@ test('Silver Surfer: the target creature must attack the player it damaged', asy
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('32');
 });
+
+test("Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+  );
+  const taunt = handCard(page, 'Taunt from the Rampart');
+  await expect(taunt).toHaveClass(/actionable/);
+  await taunt.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Bird', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});

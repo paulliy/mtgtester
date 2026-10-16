@@ -471,6 +471,41 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73",
+      "card": {
+        "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
+        "scryfallId": "ad79ee29-dd86-484f-bd70-8ecd9d90ef75",
+        "name": "Taunt from the Rampart",
+        "manaCost": "{3}{R}{W}",
+        "cmc": 5,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Goad all creatures your opponents control. Until your next turn, those creatures can't block. (Until your next turn, those creatures attack each combat if able and attack a player other than you if able.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }
