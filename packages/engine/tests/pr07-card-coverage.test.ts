@@ -3916,6 +3916,39 @@ describe('Toby, Beastie Befriender', () => {
     expect(bear.tapped).toBe(true);
   });
 
+  it('toby-attack-alone-taxed-partner — a partner that can attack only by paying a tax does not make the goaded Beast required', () => {
+    const ctx = pod('toby-taxed-partner');
+    const beast = beastFor(ctx, 'P1');
+    const toby = ctx.state.battlefield.find((perm) => perm.name === card.name)!;
+    toby.tapped = true;
+    beast.goadedBy = [{ goaderId: 'P2', appliedTurn: ctx.state.turnNumber }];
+    const PRISON = oracle({
+      name: 'Lab Prison',
+      typeLine: 'Enchantment',
+      oracleText:
+        "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      power: null,
+      toughness: null,
+    });
+    spawn(ctx, 'P2', PRISON);
+    spawn(ctx, 'P4', PRISON);
+    // P1 can afford the tax, which CR 508.1d never requires it to pay.
+    for (let n = 0; n < 4; n++) spawn(ctx, 'P1', forest());
+    // The Bear can't attack P3, the one untaxed opponent, so it attacks only by paying a tax.
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    bear.cantAttackPlayerWhileCounter = [{ playerId: 'P3', counter: 'vow' }];
+    bear.counters['vow'] = 1;
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [beast, bear], defenders)).toEqual({
+      [beast.id]: false,
+      [bear.id]: false,
+    });
+    expect(defenders[bear.id]!.sort()).toEqual(['P2', 'P4']);
+    // With the vow gone the Bear can attack P3 for free, and the Beast is required again.
+    delete bear.counters['vow'];
+    expect(mustAttackIn(ctx, 'P1', [beast, bear])[beast.id]).toBe(true);
+  });
+
   it('toby-cant-block-alone — the Beast alone cannot block, and with another of its controller’s blockers it can; another player’s blocker does not count', () => {
     const ctx = pod('toby-block-alone');
     const beast = beastFor(ctx, 'P2');

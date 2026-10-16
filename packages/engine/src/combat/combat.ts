@@ -636,7 +636,8 @@ function commitAttacker(
 /**
  * Must this creature be declared as an attacker (CR 508.1d)? It has a requirement it can obey for
  * free. A creature that can't attack alone obeys it only together with another creature that can
- * be declared, so with no such partner it is not required to attack (CR 506.5, 508.1c).
+ * be declared for free, so with no such partner it is not required to attack: nobody has to pay an
+ * attack cost to obey a requirement (CR 506.5, 508.1c, 508.1d).
  */
 function mustAttackNow(
   ctx: GameContext,
@@ -648,7 +649,7 @@ function mustAttackNow(
   return (
     !cantActAlone(ctx, creature, 'cantAttackAlone') ||
     eligible.some(
-      (other) => other.id !== creature.id && attackTargetsFor(ctx, other, opponents).length > 0,
+      (other) => other.id !== creature.id && freeAttackTargetsFor(ctx, other, opponents).length > 0,
     )
   );
 }
