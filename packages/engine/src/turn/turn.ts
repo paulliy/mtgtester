@@ -40,14 +40,20 @@ function setStep(ctx: GameContext, step: Step): void {
 /** Untap step (CR 502): turn-based actions only; NO priority (brief §5.3). */
 /**
  * End what a departed player made to last until their next turn: it lasts until that turn would
- * have begun, which is now, as the turn of `activeId`, seated before them, ends (CR 800.4m).
+ * have begun (CR 800.4m). That is as this turn ends when no extra turn comes next and the normal
+ * rotation resumes after the player seated before them; an extra turn defers it.
  */
-function expireDepartedPlayerEffects(ctx: GameContext, activeId: PlayerId): void {
+function expireDepartedPlayerEffects(ctx: GameContext): void {
+  const s = ctx.state;
+  const extraTurnNext = (s.extraTurns ?? []).some((id) =>
+    s.players.some((player) => player.id === id && !player.hasLost),
+  );
+  if (extraTurnNext) return;
+  const resumeAfter = s.normalTurnResumeAfter ?? s.currentTurnPlayer;
   const endsNow = (departed: { afterTurnOf: PlayerId; fromTurn: number }): boolean =>
-    departed.afterTurnOf === activeId && departed.fromTurn <= ctx.state.turnNumber;
+    departed.afterTurnOf === resumeAfter && departed.fromTurn <= s.turnNumber;
   const ends = (expires: EffectExpiry): boolean =>
     expires.kind === 'departedNextTurn' && endsNow(expires);
-  const s = ctx.state;
   if (s.attackRequirements !== undefined)
     s.attackRequirements = s.attackRequirements.filter((entry) => !ends(entry.expires));
   if (s.attackDirections !== undefined)
@@ -336,9 +342,8 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     }
     expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
-    // A departed player's "until your next turn" ends as that turn would have begun, when the
-    // turn of the player seated before them ends (CR 800.4m).
-    expireDepartedPlayerEffects(ctx, ap.id);
+    // A departed player's "until your next turn" ends as that turn would have begun (CR 800.4m).
+    expireDepartedPlayerEffects(ctx);
     // "Until the end of your next turn" (Silver Surfer) ends in that turn's cleanup step.
     if (ctx.state.attackRequirements !== undefined)
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(

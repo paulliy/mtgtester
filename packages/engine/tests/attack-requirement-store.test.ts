@@ -314,6 +314,45 @@ describe('attack requirements made by resolving spells and abilities', () => {
     expect(offerFor(ctx, 'P2', bearP2).mustAttack).toBe(false);
   });
 
+  it("an extra turn defers when a departed player's next turn would have begun (CR 800.4m)", () => {
+    const ctx = setup('arq-controller-gone-extra-turns');
+    const bearP2 = spawn(ctx, 'P2', grizzly('P2 Bear'));
+    resolveRequirement(
+      ctx,
+      {
+        op: 'addAttackRequirement',
+        target: 0,
+        requirements: [{ kind: 'anyAttack' }],
+        duration: 'endOfYourNextTurn',
+      },
+      [bearP2.id],
+    );
+    playerById(ctx, 'P1').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    const endTurn = (turn: number, seat: 'P2' | 'P3' | 'P4', resumeAfter?: 'P3' | 'P4'): void => {
+      ctx.state.turnNumber = turn;
+      ctx.state.currentTurnPlayer = seat;
+      if (resumeAfter === undefined) delete ctx.state.normalTurnResumeAfter;
+      else ctx.state.normalTurnResumeAfter = resumeAfter;
+      pump(cleanupStep(ctx));
+    };
+    // P3 grants P4 an extra turn: P4's extra turn 7 is not the turn before P1's ...
+    ctx.state.extraTurns = ['P4'];
+    endTurn(6, 'P3');
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    ctx.state.extraTurns = [];
+    endTurn(7, 'P4', 'P3');
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    // ... nor is P4's normal turn 8 when P4 takes another extra turn right after it ...
+    ctx.state.extraTurns = ['P4'];
+    endTurn(8, 'P4');
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    // ... P1's turn would have begun after that extra turn 9.
+    ctx.state.extraTurns = [];
+    endTurn(9, 'P4', 'P4');
+    expect(ctx.state.attackRequirements).toEqual([]);
+  });
+
   it('is added to goad: both apply and the maximum counts every requirement', () => {
     const ctx = setup('arq-goad');
     const bearP2 = spawn(ctx, 'P2', grizzly('P2 Bear'));
