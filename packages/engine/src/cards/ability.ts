@@ -1379,6 +1379,13 @@ export type Effect =
   | { op: 'overloadBounceAllNonlandOpponents' }
   | { op: 'goad'; target: EffectRef }
   /**
+   * "You choose which creatures attack this turn. You choose which creatures block this turn and
+   * how those creatures block" (Master Warcraft): until the end of the turn the effect's
+   * controller chooses the set of attackers and every defending player's blocks, though the
+   * attacking player still chooses what each attacker attacks and pays its costs.
+   */
+  | { op: 'chooseAttackersAndBlockers' }
+  /**
    * "Until your next turn, creatures your opponents control attack each combat if able and attack
    * a player other than you if able" (Kardur), "target creature attacks that player each combat if
    * able until the end of your next turn" (Silver Surfer). A rules modification, not a goad

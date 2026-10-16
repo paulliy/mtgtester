@@ -11,6 +11,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
@@ -50,6 +51,7 @@ import {
   declareBlocks,
   forest,
   island,
+  mountain,
   gameConfig,
   oracle,
   pump,
@@ -2256,6 +2258,467 @@ describe('Fight or Flight', () => {
     const run = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2 }, 2);
     expect(run.attacked).toEqual(['P2 Bear B']);
     expect(playerById(ctx, 'P1').life).toBe(38);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// PR07.25 Master Warcraft
+// ---------------------------------------------------------------------------------------------
+
+describe('Master Warcraft', () => {
+  const { card } = pinned('Master Warcraft');
+  const mana = [{ symbol: 'R' as const }, { symbol: 'W' as const }, ...generic(2)];
+
+  /** P1's turn: Bears A and B (and a Cub in the second test); P2 and P3 each have two blockers. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const a = spawn(ctx, 'P1', GRIZZLY('P1 Bear A'));
+    const b = spawn(ctx, 'P1', GRIZZLY('P1 Bear B'));
+    const p2 = [spawn(ctx, 'P2', GRIZZLY('P2 Wall A')), spawn(ctx, 'P2', GRIZZLY('P2 Wall B'))];
+    const p3 = [spawn(ctx, 'P3', GRIZZLY('P3 Wall A')), spawn(ctx, 'P3', GRIZZLY('P3 Wall B'))];
+    return { ctx, a, b, p2, p3 };
+  }
+
+  /** `caster` casts Master Warcraft through legality, payment and the stack, then it resolves. */
+  function cast(ctx: GameContext, caster = 'P2') {
+    castFromHand(ctx, caster, card, mana);
+    resolveTop(ctx);
+  }
+
+  interface Asked {
+    kind: 'set' | 'assign' | 'block';
+    player: string;
+    names: string[];
+    /** Per subject: the option ids its slot offered. */
+    options: string[][];
+    blockingPlayer?: string;
+    chosenBy?: string;
+    attackingPlayer?: string;
+    prompt: string;
+  }
+  interface Plan {
+    /** The creatures (by name) each round's chosen set contains. */
+    sets?: string[][];
+    /** What each chosen creature attacks, by name: a player id, or null to decline its cost. */
+    attacks?: Record<string, string | null>;
+    /** Blocker name to the attacker name it blocks. */
+    blocks?: Record<string, string>;
+  }
+
+  /** Run the active player's combat phases with this plan, recording every declaration asked. */
+  function combat(ctx: GameContext, plan: Plan = {}, turnPlayer = 'P1') {
+    const asked: Asked[] = [];
+    let setRound = 0;
+    const nameOf = (id: string) => ctx.state.battlefield.find((perm) => perm.id === id)?.name ?? id;
+    turnOfPlayer(ctx, turnPlayer);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      const optionsOf = (slot: number) =>
+        decision.options[0]?.targets?.find((entry) => entry.slot === slot)?.options ?? [];
+      const attack = decision.presentationAttackDeclaration;
+      if (attack !== undefined) {
+        const kind = attack.mode === 'chooseAttackers' ? 'set' : 'assign';
+        asked.push({
+          kind,
+          player: decision.player,
+          names: attack.subjects.map((subject) => subject.name),
+          options: attack.subjects.map((_, slot) => optionsOf(slot)),
+          ...(attack.attackingPlayer !== undefined
+            ? { attackingPlayer: attack.attackingPlayer }
+            : {}),
+          ...(attack.chosenBy !== undefined ? { chosenBy: attack.chosenBy } : {}),
+          prompt: decision.prompt,
+        });
+        const targets = new Map<number, string>();
+        if (kind === 'set') {
+          const set = plan.sets?.[setRound++] ?? [];
+          attack.subjects.forEach((subject, slot) => {
+            const options = optionsOf(slot);
+            targets.set(
+              slot,
+              set.includes(subject.name) || !options.includes(NO_ATTACK_TARGET)
+                ? ATTACKS_TARGET
+                : NO_ATTACK_TARGET,
+            );
+          });
+        } else {
+          attack.subjects.forEach((subject, slot) => {
+            const options = optionsOf(slot);
+            const wanted = plan.attacks?.[subject.name];
+            if (wanted === null && options.includes(NO_ATTACK_TARGET))
+              targets.set(slot, NO_ATTACK_TARGET);
+            else
+              targets.set(
+                slot,
+                wanted !== undefined && wanted !== null && options.includes(wanted)
+                  ? wanted
+                  : (options.find((option) => option !== NO_ATTACK_TARGET) ?? NO_ATTACK_TARGET),
+              );
+          });
+        }
+        return { index: 0, targets };
+      }
+      const block = decision.presentationBlockDeclaration;
+      if (block !== undefined) {
+        asked.push({
+          kind: 'block',
+          player: decision.player,
+          names: block.subjects.map((subject) => subject.name),
+          options: block.subjects.map((_, slot) => optionsOf(slot)),
+          ...(block.blockingPlayer !== undefined ? { blockingPlayer: block.blockingPlayer } : {}),
+          prompt: decision.prompt,
+        });
+        const targets = new Map<number, string>();
+        block.subjects.forEach((subject, slot) => {
+          const wanted = plan.blocks?.[subject.name];
+          const attackerId = block.subjects[slot]!.attackers.find(
+            (candidate) => candidate.name === wanted,
+          )?.attackerId;
+          targets.set(slot, attackerId ?? NO_BLOCK_TARGET);
+        });
+        return { index: 0, targets };
+      }
+      if (decision.combatDamageSplit !== undefined) {
+        asked.push({
+          kind: 'block',
+          player: decision.player,
+          names: ['damage'],
+          options: [],
+          prompt: decision.prompt,
+        });
+        return { index: 0, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return { asked, nameOf };
+  }
+
+  /** Who attacked whom, by creature name, from the log (attacking status clears with combat). */
+  const attacksOf = (ctx: GameContext): Record<string, string> =>
+    Object.fromEntries(
+      ctx.state.eventLog
+        .filter((event) => event.type === 'attack')
+        .map((event) => [String(event.payload['attacker']), String(event.payload['defender'])]),
+    );
+  /** Which creature blocked which, by name, from the log. */
+  const blocksOf = (ctx: GameContext): [string, string][] =>
+    ctx.state.eventLog
+      .filter((event) => event.type === 'block')
+      .map((event) => [String(event.payload['blocker']), String(event.payload['attacker'])]);
+
+  const sets = (run: { asked: Asked[] }) => run.asked.filter((entry) => entry.kind === 'set');
+  const assigns = (run: { asked: Asked[] }) => run.asked.filter((entry) => entry.kind === 'assign');
+  const blocks = (run: { asked: Asked[] }) =>
+    run.asked.filter((entry) => entry.kind === 'block' && entry.names[0] !== 'damage');
+
+  it('master-warcraft-pinned-oracle-supported — the authored override carries the cast restriction and the one effect, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.castRestriction).toEqual({ kind: 'beforeAttackersDeclared' });
+    expect(def.spellAbility?.effects).toEqual([{ op: 'chooseAttackersAndBlockers' }]);
+  });
+
+  it('master-warcraft-cast-timing — castable from the start of the turn until attackers are declared, on any player’s turn, and not afterwards', () => {
+    const { ctx } = board('mw-timing');
+    const object = conjure(ctx, 'P2', card, 'hand');
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P2', mountain());
+    const canCast = () => optionFor(ctx, 'P2', object.id, /Master Warcraft/) !== undefined;
+    turnOfPlayer(ctx, 'P1');
+    expect(canCast()).toBe(true);
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    expect(canCast()).toBe(true);
+    ctx.state.declareAttackersReachedThisTurn = true;
+    ctx.state.step = 'declareAttackers';
+    expect(canCast()).toBe(false);
+    ctx.state.step = 'declareBlockers';
+    expect(canCast()).toBe(false);
+    // Nothing limits it to an opponent's turn.
+    delete ctx.state.declareAttackersReachedThisTurn;
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    turnOfPlayer(ctx, 'P2');
+    expect(canCast()).toBe(true);
+  });
+
+  it('master-warcraft-chooses-attackers — the caster chooses which of the active player’s creatures attack, and only those do', () => {
+    const { ctx, a, b } = board('mw-set');
+    cast(ctx);
+    expect(ctx.state.combatChoices).toHaveLength(1);
+    const run = combat(ctx, { sets: [['P1 Bear B']] });
+    const [choice] = sets(run);
+    expect(sets(run)).toHaveLength(1);
+    // The caster, not the active player, is asked, about the active player's creatures.
+    expect(choice).toMatchObject({ player: 'P2', attackingPlayer: 'P1' });
+    expect(choice!.names).toEqual(['P1 Bear A', 'P1 Bear B']);
+    // Each slot is "attacks" or "stays home": no defender is chosen at this point.
+    expect(choice!.options).toEqual([
+      [ATTACKS_TARGET, NO_ATTACK_TARGET],
+      [ATTACKS_TARGET, NO_ATTACK_TARGET],
+    ]);
+    expect(a.attacking).toBeNull();
+    expect(a.tapped).toBe(false);
+    expect(b.tapped).toBe(true);
+    // Choosing nobody leaves the active player's creatures at home.
+    const none = board('mw-set-none');
+    cast(none.ctx);
+    const quiet = combat(none.ctx, { sets: [[]] });
+    expect(assigns(quiet)).toEqual([]);
+    expect(none.a.tapped).toBe(false);
+    expect(none.b.tapped).toBe(false);
+  });
+
+  it('master-warcraft-active-player-assigns — the active player chooses what each chosen creature attacks, from only the chosen creatures, and may not stay home', () => {
+    const { ctx } = board('mw-assign');
+    cast(ctx);
+    const run = combat(ctx, {
+      sets: [['P1 Bear A', 'P1 Bear B']],
+      attacks: { 'P1 Bear A': 'P3', 'P1 Bear B': 'P4' },
+    });
+    const [assign] = assigns(run);
+    expect(assigns(run)).toHaveLength(1);
+    expect(assign).toMatchObject({ player: 'P1', chosenBy: 'P2' });
+    expect(assign!.names).toEqual(['P1 Bear A', 'P1 Bear B']);
+    // Every creature has a free way to attack, so staying home is not among the options.
+    for (const options of assign!.options) expect(options).not.toContain(NO_ATTACK_TARGET);
+    expect(attacksOf(ctx)).toEqual({ 'P1 Bear A': 'P3', 'P1 Bear B': 'P4' });
+    // With only Bear B chosen the active player is asked only about Bear B.
+    const narrow = board('mw-assign-narrow');
+    cast(narrow.ctx);
+    const only = combat(narrow.ctx, { sets: [['P1 Bear B']], attacks: { 'P1 Bear B': 'P2' } });
+    expect(assigns(only)[0]!.names).toEqual(['P1 Bear B']);
+    expect(attacksOf(narrow.ctx)).toEqual({ 'P1 Bear B': 'P2' });
+  });
+
+  it('master-warcraft-requirements — a creature that must attack is in the set and the choices still obey restrictions', () => {
+    const { ctx, a, b } = board('mw-requirements');
+    // Bear A must attack this turn (a requirement), and Bear B can't attack P2 (a restriction).
+    (ctx.state.attackRequirements ??= []).push(
+      {
+        id: 'ar-test-a',
+        controllerId: 'P3',
+        affects: { kind: 'objects', objectIds: [a.id] },
+        requirements: [{ kind: 'anyAttack' }],
+        expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+      },
+      {
+        id: 'ar-test-b',
+        controllerId: 'P2',
+        affects: { kind: 'objects', objectIds: [b.id] },
+        requirements: [],
+        restrictions: [{ kind: 'cantAttackPlayer', playerId: 'P2' }],
+        expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+      },
+    );
+    cast(ctx);
+    const run = combat(ctx, { sets: [['P1 Bear B']], attacks: { 'P1 Bear B': 'P2' } });
+    const [choice] = sets(run);
+    // Bear A must attack, so "stays home" is not offered for it; Bear B may be left out.
+    expect(choice!.options[0]).toEqual([ATTACKS_TARGET]);
+    expect(choice!.options[1]).toEqual([ATTACKS_TARGET, NO_ATTACK_TARGET]);
+    expect(attacksOf(ctx)['P1 Bear A']).toBeDefined();
+    // Bear B was offered every defender but P2, so its attack on P2 was not one of the options.
+    const bearB = assigns(run)[0]!.names.indexOf('P1 Bear B');
+    expect(assigns(run)[0]!.options[bearB]).not.toContain('P2');
+    expect(attacksOf(ctx)['P1 Bear B']).not.toBe('P2');
+  });
+
+  it('master-warcraft-joint-rules — the chosen set must obey rules about the whole attack, which the engine enforces', () => {
+    const { ctx } = board('mw-joint');
+    // War's Toll: once any creature of an opponent attacks, every one that can attack for free must.
+    spawn(ctx, 'P3', pinned("War's Toll").card);
+    cast(ctx);
+    const rejections: string[] = [];
+    const run = (() => {
+      const asked: string[] = [];
+      turnOfPlayer(ctx, 'P1');
+      pump(runCombatAndExtraCombats(ctx), (decision) => {
+        const attack = decision.presentationAttackDeclaration;
+        if (attack !== undefined) {
+          for (const violation of attack.rejection?.violations ?? [])
+            rejections.push(violation.kind);
+          asked.push(attack.mode ?? 'normal');
+          const targets = new Map<number, string>();
+          attack.subjects.forEach((subject, slot) => {
+            const options =
+              decision.options[0]?.targets?.find((t) => t.slot === slot)?.options ?? [];
+            if (attack.mode === 'chooseAttackers') {
+              // Only Bear A, both times it is asked: the rule asks for Bear B too.
+              targets.set(slot, subject.name === 'P1 Bear A' ? ATTACKS_TARGET : NO_ATTACK_TARGET);
+            } else
+              targets.set(slot, options.find((o) => o !== NO_ATTACK_TARGET) ?? NO_ATTACK_TARGET);
+          });
+          return { index: 0, targets };
+        }
+        if (decision.presentationBlockDeclaration !== undefined)
+          return declareBlocks(decision, () => null);
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        return { index: Math.max(pass, 0), targets: new Map() };
+      });
+      return asked;
+    })();
+    // The set was proposed twice with the rejection attached, then repaired to include Bear B.
+    expect(rejections).toContain('attackWithAll');
+    expect(run.filter((mode) => mode === 'chooseAttackers')).toHaveLength(2);
+    expect(Object.keys(attacksOf(ctx)).sort()).toEqual(['P1 Bear A', 'P1 Bear B']);
+  });
+
+  it('master-warcraft-costs — an attack the active player declines to pay for is dropped, and the caster chooses again among the rest', () => {
+    const { ctx, a } = board('mw-costs');
+    // Every opponent controls Nils, so Bear A, with a counter, can attack only by paying {1}.
+    for (const id of ['P2', 'P3', 'P4']) spawn(ctx, id, pinned('Nils, Discipline Enforcer').card);
+    a.counters = { '+1/+1': 1 };
+    const land = spawn(ctx, 'P1', forest());
+    cast(ctx);
+    const run = combat(ctx, {
+      sets: [
+        ['P1 Bear A', 'P1 Bear B'],
+        ['P1 Bear A', 'P1 Bear B'],
+      ],
+      attacks: { 'P1 Bear A': null },
+    });
+    // Asked twice: the second time Bear A is no longer a creature that can be chosen.
+    expect(sets(run).map((entry) => entry.names)).toEqual([
+      ['P1 Bear A', 'P1 Bear B'],
+      ['P1 Bear B'],
+    ]);
+    // Only Bear A may decline: Bear B has a free way to attack.
+    expect(assigns(run)[0]!.options[0]).toContain(NO_ATTACK_TARGET);
+    expect(assigns(run)[0]!.options[1]).not.toContain(NO_ATTACK_TARGET);
+    expect(attacksOf(ctx)).toEqual({ 'P1 Bear B': expect.any(String) });
+    expect(a.tapped).toBe(false);
+    expect(land.tapped).toBe(false);
+  });
+
+  it('master-warcraft-costs-paid — if the active player pays, the creature attacks and pays once', () => {
+    const { ctx, a } = board('mw-costs-paid');
+    for (const id of ['P2', 'P3', 'P4']) spawn(ctx, id, pinned('Nils, Discipline Enforcer').card);
+    a.counters = { '+1/+1': 1 };
+    const land = spawn(ctx, 'P1', forest());
+    cast(ctx);
+    const run = combat(ctx, { sets: [['P1 Bear A']], attacks: { 'P1 Bear A': 'P3' } });
+    expect(sets(run)).toHaveLength(1);
+    expect(attacksOf(ctx)).toEqual({ 'P1 Bear A': 'P3' });
+    expect(land.tapped).toBe(true);
+  });
+
+  it('master-warcraft-chooses-blocks — the caster chooses every defending player’s blocks, one declaration per defending player, and the defenders are not asked', () => {
+    const { ctx } = board('mw-blocks');
+    cast(ctx, 'P4');
+    const run = combat(ctx, {
+      sets: [['P1 Bear A', 'P1 Bear B']],
+      attacks: { 'P1 Bear A': 'P2', 'P1 Bear B': 'P3' },
+      blocks: { 'P2 Wall A': 'P1 Bear A', 'P2 Wall B': 'P1 Bear A', 'P3 Wall A': 'P1 Bear B' },
+    });
+    const declared = blocks(run);
+    // The caster, P4, is asked once for each defending player, and neither defender is asked.
+    expect(declared.map((entry) => [entry.player, entry.blockingPlayer])).toEqual([
+      ['P4', 'P2'],
+      ['P4', 'P3'],
+    ]);
+    expect(declared[0]!.names).toEqual(['P2 Wall A', 'P2 Wall B']);
+    expect(declared[1]!.names).toEqual(['P3 Wall A', 'P3 Wall B']);
+    expect(run.asked.some((entry) => entry.player === 'P2' || entry.player === 'P3')).toBe(false);
+    expect(blocksOf(ctx)).toEqual([
+      ['P2 Wall A', 'P1 Bear A'],
+      ['P2 Wall B', 'P1 Bear A'],
+      ['P3 Wall A', 'P1 Bear B'],
+    ]);
+    // The damage division among Bear A's two blockers is still its controller's.
+    const split = run.asked.find((entry) => entry.names[0] === 'damage');
+    expect(split?.player).toBe('P1');
+  });
+
+  it('master-warcraft-caster-defends — a caster who is also a defending player chooses their own blocks and everyone else’s', () => {
+    const { ctx } = board('mw-self');
+    cast(ctx, 'P2');
+    const run = combat(ctx, {
+      sets: [['P1 Bear A']],
+      attacks: { 'P1 Bear A': 'P2' },
+      blocks: { 'P2 Wall A': 'P1 Bear A' },
+    });
+    expect(blocks(run)).toHaveLength(1);
+    expect(blocks(run)[0]).toMatchObject({ player: 'P2' });
+    // Their own creatures: no "chosen for" note is needed.
+    expect(blocks(run)[0]!.blockingPlayer).toBeUndefined();
+    expect(blocksOf(ctx)).toEqual([['P2 Wall A', 'P1 Bear A']]);
+  });
+
+  it('master-warcraft-caster-attacks — a caster who is the active player declares their own attackers as usual and still chooses every block', () => {
+    const { ctx } = board('mw-own-turn');
+    cast(ctx, 'P1');
+    const run = combat(ctx, {
+      attacks: { 'P1 Bear A': 'P2', 'P1 Bear B': null },
+      blocks: { 'P2 Wall A': 'P1 Bear A' },
+    });
+    // One ordinary declaration, by the active player: no two-step choice.
+    expect(sets(run)).toEqual([]);
+    expect(assigns(run)).toHaveLength(1);
+    expect(assigns(run)[0]).toMatchObject({ player: 'P1' });
+    expect(assigns(run)[0]!.chosenBy).toBeUndefined();
+    expect(attacksOf(ctx)).toEqual({ 'P1 Bear A': 'P2' });
+    // The caster (P1) makes P2's block.
+    expect(blocks(run)[0]).toMatchObject({ player: 'P1', blockingPlayer: 'P2' });
+    expect(blocksOf(ctx)).toEqual([['P2 Wall A', 'P1 Bear A']]);
+  });
+
+  it('master-warcraft-whole-turn — it also covers an additional combat phase in the same turn, and ends in the cleanup step', () => {
+    const { ctx } = board('mw-extra');
+    cast(ctx);
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: 'oracle-src', name: 'Lab Source', controllerId: 'P1' },
+        spell({ effects: [{ op: 'extraCombatPhase' }] }),
+        [],
+      ),
+    );
+    const run = combat(ctx, { sets: [['P1 Bear A'], ['P1 Bear A']] });
+    // The regular combat and the additional one each have the caster choose.
+    expect(sets(run)).toHaveLength(2);
+    expect(sets(run).every((entry) => entry.player === 'P2')).toBe(true);
+    pump(cleanupStep(ctx));
+    expect(ctx.state.combatChoices).toBeUndefined();
+    // The next turn: the active player chooses for themselves again.
+    ctx.state.turnNumber += 1;
+    for (const perm of ctx.state.battlefield) perm.tapped = false;
+    const next = combat(ctx, { attacks: { 'P1 Bear A': 'P2' } });
+    expect(sets(next)).toEqual([]);
+    expect(assigns(next)[0]).toMatchObject({ player: 'P1' });
+  });
+
+  it('master-warcraft-newest-wins — with two of them in a turn the one that resolved last decides, and one whose caster left the game stops applying', () => {
+    const { ctx } = board('mw-two');
+    cast(ctx, 'P2');
+    cast(ctx, 'P3');
+    expect(ctx.state.combatChoices).toHaveLength(2);
+    const run = combat(ctx, { sets: [[]] });
+    expect(sets(run)[0]!.player).toBe('P3');
+    // The caster leaving the game ends what they made (CR 800.4a): back to the first one.
+    const left = board('mw-left');
+    cast(left.ctx, 'P2');
+    playerById(left.ctx, 'P2').hasLost = true;
+    const normal = combat(left.ctx, { attacks: { 'P1 Bear A': 'P3' } });
+    expect(sets(normal)).toEqual([]);
+    expect(assigns(normal)[0]).toMatchObject({ player: 'P1' });
+  });
+
+  it('master-warcraft-whole-game — cast before attackers, the caster picks the attacker and the blocks, the active player picks the target, and damage is dealt', () => {
+    const { ctx, p3 } = board('mw-chain');
+    cast(ctx, 'P2');
+    const run = combat(ctx, {
+      sets: [['P1 Bear B']],
+      attacks: { 'P1 Bear B': 'P3' },
+      blocks: { 'P3 Wall A': 'P1 Bear B' },
+    });
+    expect(sets(run)[0]).toMatchObject({ player: 'P2' });
+    expect(assigns(run)[0]).toMatchObject({ player: 'P1' });
+    expect(blocks(run).map((entry) => entry.blockingPlayer)).toEqual(['P3']);
+    // Bear B (2/2) was blocked by P3's 2/2: both die, and nothing reaches P3.
+    expect(playerById(ctx, 'P3').life).toBe(40);
+    expect(ctx.state.battlefield.some((perm) => perm.id === p3[0]!.id)).toBe(false);
   });
 });
 
@@ -5293,6 +5756,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Fight or Flight',
     sha256: '87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Master Warcraft',
+    sha256: 'bc2e3cc5eaa6fe0dc6973c574f93a6693183f420215430d9f5a63b29ac59776a',
+    clauseCount: 3,
     authored: true,
   },
 ];

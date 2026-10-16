@@ -970,3 +970,71 @@ describe('Fight or Flight Card Test Lab scenarios', () => {
     replays('fight-or-flight-viewer-choose', steps);
   });
 });
+
+describe('Master Warcraft Card Test Lab scenarios', () => {
+  it('master-warcraft-viewer-choose-attackers-and-blocks — you choose that only Lab Servo attacks and that P3’s Lab Ox blocks it', () => {
+    const steps: Step[] = [
+      { action: 'Cast Master Warcraft' },
+      { action: 'Choose attackers', targets: ['__no_attack__', '__attacks__'] },
+      { action: 'Declare blockers', targets: ['Lab Servo'] },
+    ];
+    const { scenario, state, seat, onBattlefield, requests } = run(
+      'master-warcraft-viewer-choose-attackers-and-blocks',
+      steps,
+    );
+    const chooseAttackers = requests.find(({ request }) =>
+      request.legalActions.some((action) => action.description.startsWith('Choose attackers')),
+    )!;
+    expect(chooseAttackers.seat).toBe('P1');
+    expect(chooseAttackers.request.presentation?.attackDeclaration).toMatchObject({
+      mode: 'chooseAttackers',
+      attackingPlayer: 'P2',
+    });
+    // P2 itself is then asked what the chosen creature attacks.
+    const assign = requests.find(
+      ({ request }) => request.presentation?.attackDeclaration?.mode === 'assignChosen',
+    )!;
+    expect(assign.seat).toBe('P2');
+    expect(assign.request.presentation?.attackDeclaration?.subjects.map((s) => s.name)).toEqual([
+      'Lab Servo',
+    ]);
+    // P3 is never asked to block: you choose, once, for P3's creatures.
+    const blocking = requests.filter(({ request }) => request.decisionType === 'declareBlockers');
+    expect(blocking.map(({ seat: who }) => who)).toEqual(['P1']);
+    expect(blocking[0]!.request.presentation?.blockDeclaration?.blockingPlayer).toBe('P3');
+    expect(seat('P3').life).toBe(40);
+    expect(onBattlefield('Lab Servo')).toHaveLength(0);
+    expect(onBattlefield('Lab Ox')).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('master-warcraft-viewer-choose-attackers-and-blocks', steps);
+  });
+
+  it('master-warcraft-viewer-assign-chosen-attackers — P2 chooses that only Lab Servo attacks and you choose to send it at P3', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P3'] }];
+    const { scenario, state, seat, onBattlefield, requests } = run(
+      'master-warcraft-viewer-assign-chosen-attackers',
+      steps,
+    );
+    const chooser = requests.find(
+      ({ request }) => request.presentation?.attackDeclaration?.mode === 'chooseAttackers',
+    )!;
+    expect(chooser.seat).toBe('P2');
+    const assign = requests.find(
+      ({ request }) => request.presentation?.attackDeclaration?.mode === 'assignChosen',
+    )!;
+    expect(assign.seat).toBe('P1');
+    // Only the chosen creature is offered, and it may not stay home.
+    expect(assign.request.presentation?.attackDeclaration?.subjects.map((s) => s.name)).toEqual([
+      'Lab Servo',
+    ]);
+    expect(assign.request.legalActions[0]!.targets![0]!.options).not.toContain('__no_attack__');
+    expect(seat('P3').life).toBe(39);
+    expect(onBattlefield('Lab Ox').some((perm) => perm.controllerId === 'P1' && !perm.tapped)).toBe(
+      true,
+    );
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('master-warcraft-viewer-assign-chosen-attackers', steps);
+  });
+});

@@ -25,7 +25,7 @@ import type {
   ObjectId,
   PlayerId,
 } from '@mtg/shared';
-import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
+import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { DecisionOutcome, EngineActionOption, GameGen } from '../decisions';
 import {
   combatDamageTraits,
@@ -70,6 +70,7 @@ import { evaluateCondition } from '../cards/condition';
 import type {
   AttackRequirementEntry,
   AttackRequirementRule,
+  CombatChoiceEntry,
   EnginePermanent,
   EnginePlayerState,
   GameContext,
@@ -805,6 +806,8 @@ function validateAttackDeclaration(
   attackingPlayerId: PlayerId,
   eligible: readonly EnginePermanent[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  /** False while only WHICH creatures attack is known (Master Warcraft): no defender, so no cost yet. */
+  costs = true,
 ): CombatViolation[] {
   // CR 506.5: a creature that can't attack alone is declared only with another attacker.
   const declared = eligible.filter((creature) => (assignment.get(creature.id) ?? null) !== null);
@@ -832,6 +835,7 @@ function validateAttackDeclaration(
         message: `${creature.name} must attack because another creature of yours attacks`,
       }));
   }
+  if (!costs) return [];
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
@@ -902,9 +906,10 @@ function repairAttackDeclaration(
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  costs = true,
 ): Map<ObjectId, AttackChoice | null> {
   const repaired = new Map(assignment);
-  let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+  let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
   let guard = eligible.length + 1;
   while (violations.length > 0 && guard-- > 0) {
     // A creature that can't attack alone, declared alone (CR 506.5): when it has a requirement
@@ -928,7 +933,7 @@ function repairAttackDeclaration(
           planeswalkerId: target.planeswalker?.id ?? null,
         });
       else repaired.set(lone.id, null);
-      violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+      violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
       continue;
     }
     const violatedIds = new Set(violations.map((v) => v.subjectId));
@@ -953,9 +958,186 @@ function repairAttackDeclaration(
         ? null
         : { defenderId: free.player.id, planeswalkerId: free.planeswalker?.id ?? null },
     );
-    violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+    violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
   }
   return repaired;
+}
+
+/**
+ * Whoever chooses this turn's attackers and every player's blocks (Master Warcraft), or null. A
+ * newer effect overrides an older one; one whose controller has left the game no longer applies
+ * (CR 800.4a).
+ */
+function combatChooserId(ctx: GameContext): PlayerId | null {
+  const entries = ctx.state.combatChoices ?? [];
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i] as CombatChoiceEntry;
+    if (entry.turn === ctx.state.turnNumber && !playerById(ctx, entry.casterId).hasLost)
+      return entry.casterId;
+  }
+  return null;
+}
+
+/** The set-only counterpart of `buildAttackOption`: each slot is "attacks" or "stays home". */
+function buildAttackSetOption(subjects: readonly AttackDeclarationSubject[]): EngineActionOption {
+  const base = buildAttackOption(subjects);
+  return {
+    ...base,
+    description: `Choose attackers (${subjects.length} eligible creature${subjects.length === 1 ? '' : 's'})`,
+    data: { ...base.data, chooseAttackers: true },
+    targets: subjects.map((s, i) => ({
+      slot: i,
+      options: [ATTACKS_TARGET, ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
+    })),
+  };
+}
+
+/**
+ * "You choose which creatures attack this turn" (Master Warcraft), first half: the chooser picks
+ * the set from the creatures that can attack, held to the same requirements and joint rules as
+ * any declaration (CR 508.1c-d, 506.5) but with no defender yet, so no cost is checked here. Asked
+ * and repaired like `declareAttackers`.
+ */
+function* chooseAttackerSet(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  pool: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<EnginePermanent[]> {
+  const MAX_PROPOSALS = 2;
+  // Which creatures are in the set is all that matters; the defender is a placeholder.
+  const stand = { defenderId: opponents[0]?.id ?? ap.id, planeswalkerId: null };
+  const asAssignment = (set: ReadonlySet<ObjectId>) =>
+    new Map<ObjectId, AttackChoice | null>(pool.map((c) => [c.id, set.has(c.id) ? stand : null]));
+  let rejection: CombatRejection | undefined;
+  let set = new Set<ObjectId>();
+  for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
+    const subjects = buildAttackSubjects(ctx, pool, opponents);
+    const outcome = yield {
+      decisionType: 'declareAttackers',
+      player: chooserId,
+      prompt:
+        attempt === 1
+          ? `Choose which of ${ap.id}'s creatures attack: ${pool.length} eligible creature${pool.length === 1 ? '' : 's'}`
+          : `Choose which of ${ap.id}'s creatures attack — fix the flagged problem(s) and resubmit`,
+      options: [buildAttackSetOption(subjects)],
+      presentationAttackDeclaration: {
+        subjects,
+        mode: 'chooseAttackers',
+        attackingPlayer: ap.id,
+        ...(rejection !== undefined ? { rejection } : {}),
+      },
+    };
+    set = new Set(
+      pool.filter((_, i) => outcome.targets.get(i) === ATTACKS_TARGET).map((c) => c.id),
+    );
+    for (const subject of subjects) {
+      if (subject.mustAttack && !set.has(subject.subjectId)) {
+        throw new Error(
+          `engine bug: ${subject.subjectId} must attack but was left out of the chosen set`,
+        );
+      }
+    }
+    const violations = validateAttackDeclaration(ctx, ap.id, pool, asAssignment(set), false);
+    if (violations.length === 0) return pool.filter((c) => set.has(c.id));
+    rejection = { violations };
+  }
+  const repaired = repairAttackDeclaration(ctx, ap.id, pool, opponents, asAssignment(set), false);
+  emit(
+    ctx,
+    'attackDeclarationRepaired',
+    { violations: rejection?.violations.length ?? 0 },
+    chooserId,
+  );
+  return pool.filter((c) => repaired.get(c.id) !== null && repaired.get(c.id) !== undefined);
+}
+
+/**
+ * Second half: the attacking player chooses what each chosen creature attacks and pays for it
+ * (CR 508.1b, 508.1g). A creature with a way to attack that costs nothing must attack one; one
+ * that could attack only by paying may be declined (CR 508.1d), and is then left out of the
+ * assignment for the chooser to choose again. Asked and repaired like `declareAttackers`.
+ */
+function* assignChosenAttackers(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  members: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<Map<ObjectId, AttackChoice | null>> {
+  const MAX_PROPOSALS = 2;
+  let rejection: CombatRejection | undefined;
+  let assignment: Map<ObjectId, AttackChoice | null> = new Map();
+  for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
+    const subjects = buildAttackSubjects(ctx, members, opponents).map((subject) => ({
+      ...subject,
+      mustAttack:
+        freeAttackTargetsFor(
+          ctx,
+          members.find((c) => c.id === subject.subjectId) as EnginePermanent,
+          opponents,
+        ).length > 0,
+    }));
+    const outcome = yield {
+      decisionType: 'declareAttackers',
+      player: ap.id,
+      prompt:
+        attempt === 1
+          ? `Choose what each of the ${members.length} creature${members.length === 1 ? '' : 's'} ${chooserId} chose attacks`
+          : 'Choose what each chosen creature attacks — fix the flagged problem(s) and resubmit',
+      options: [buildAttackOption(subjects)],
+      presentationAttackDeclaration: {
+        subjects,
+        mode: 'assignChosen',
+        attackingPlayer: ap.id,
+        chosenBy: chooserId,
+        ...(rejection !== undefined ? { rejection } : {}),
+      },
+    };
+    assignment = readAttackAssignment(ctx, outcome, members);
+    for (const subject of subjects) {
+      if (subject.mustAttack && assignment.get(subject.subjectId) === null) {
+        throw new Error(`engine bug: ${subject.subjectId} must attack but was left undeclared`);
+      }
+    }
+    const violations = validateAttackDeclaration(ctx, ap.id, members, assignment);
+    if (violations.length === 0) return assignment;
+    rejection = { violations };
+  }
+  const repaired = repairAttackDeclaration(ctx, ap.id, members, opponents, assignment);
+  emit(ctx, 'attackDeclarationRepaired', { violations: rejection?.violations.length ?? 0 }, ap.id);
+  return repaired;
+}
+
+/**
+ * Declare attackers when someone else chooses which creatures attack (Master Warcraft): the
+ * chooser picks the set, the attacking player picks what each attacks, and a creature whose cost
+ * they decline can't attack, so the chooser chooses again among the rest (CR 508.1g-h).
+ */
+function* declareChosenAttackers(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  eligible: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<void> {
+  const declined = new Set<ObjectId>();
+  for (let round = 0; round <= eligible.length; round++) {
+    const pool = eligible.filter(
+      (c) => !declined.has(c.id) && attackTargetsFor(ctx, c, opponents).length > 0,
+    );
+    if (pool.length === 0) return;
+    const members = yield* chooseAttackerSet(ctx, ap, opponents, pool, chooserId);
+    if (members.length === 0) return;
+    const assignment = yield* assignChosenAttackers(ctx, ap, opponents, members, chooserId);
+    const dropped = members.filter((c) => (assignment.get(c.id) ?? null) === null);
+    if (dropped.length === 0) {
+      yield* applyAttackDeclaration(ctx, ap, members, opponents, assignment);
+      return;
+    }
+    for (const creature of dropped) declined.add(creature.id);
+  }
 }
 
 /**
@@ -982,7 +1164,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // creature was eligible to be in it.
   const eligible = creaturesOf(ctx, ap.id).filter((c) => canAttack(ctx, c));
 
-  if (eligible.length > 0) {
+  const chooserId = combatChooserId(ctx);
+  if (chooserId !== null && chooserId !== ap.id)
+    yield* declareChosenAttackers(ctx, ap, opponents, eligible, chooserId);
+  else if (eligible.length > 0) {
     const MAX_PROPOSALS = 2;
     let rejection: CombatRejection | undefined;
     let lastAssignment: Map<ObjectId, AttackChoice | null> = new Map();
@@ -1121,7 +1306,11 @@ function buildBlockSubjects(
 /** The single `EngineActionOption` a batched block declaration is proposed against — the
  * blocker-side mirror of `buildAttackOption`: one target slot per subject, that creature's legal
  * attackers plus `NO_BLOCK_TARGET`, omitted when `mustBlock`. */
-function buildBlockOption(subjects: readonly BlockDeclarationSubject[]): EngineActionOption {
+function buildBlockOption(
+  subjects: readonly BlockDeclarationSubject[],
+  /** Set when someone else chooses this defending player's blocks (Master Warcraft). */
+  blockingPlayer?: PlayerId,
+): EngineActionOption {
   return {
     type: 'blockDeclaration',
     description: `Declare blockers (${subjects.length} eligible creature${subjects.length === 1 ? '' : 's'})`,
@@ -1132,6 +1321,7 @@ function buildBlockOption(subjects: readonly BlockDeclarationSubject[]): EngineA
         toughness: s.toughness,
         mustBlock: s.mustBlock,
       })),
+      ...(blockingPlayer !== undefined ? { blockingPlayer } : {}),
     },
     targets: subjects.map((s, i) => ({
       slot: i,
@@ -1320,18 +1510,22 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
     let lastAssignment: Map<ObjectId, ObjectId | null> = new Map();
     let applied = false;
 
+    // Master Warcraft: someone else chooses this defending player's blocks.
+    const chooserId = combatChooserId(ctx);
+    const chosenFor = chooserId !== null && chooserId !== defenderId;
     for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
       const subjects = buildBlockSubjects(ctx, candidates);
       const outcome = yield {
         decisionType: 'declareBlockers',
-        player: defenderId,
+        player: chosenFor ? chooserId : defenderId,
         prompt:
           attempt === 1
-            ? `Declare blockers: ${candidates.length} eligible creature${candidates.length === 1 ? '' : 's'}`
+            ? `Declare blockers${chosenFor ? ` for ${defenderId}` : ''}: ${candidates.length} eligible creature${candidates.length === 1 ? '' : 's'}`
             : 'Declare blockers — fix the flagged problem(s) and resubmit',
-        options: [buildBlockOption(subjects)],
+        options: [buildBlockOption(subjects, chosenFor ? defenderId : undefined)],
         presentationBlockDeclaration: {
           subjects,
+          ...(chosenFor ? { blockingPlayer: defenderId } : {}),
           ...(rejection !== undefined ? { rejection } : {}),
         },
       };

@@ -117,6 +117,8 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       s.attackDirections = s.attackDirections.filter((entry) => entry.controllerId !== player.id);
     if (s.blockRestrictions !== undefined)
       s.blockRestrictions = s.blockRestrictions.filter((entry) => entry.controllerId !== player.id);
+    if (s.combatChoices !== undefined)
+      s.combatChoices = s.combatChoices.filter((entry) => entry.casterId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );

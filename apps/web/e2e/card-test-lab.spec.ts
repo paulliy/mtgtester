@@ -10383,3 +10383,69 @@ test('Fight or Flight: P2 separates your creatures and only the pile you choose 
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('39');
 });
+
+test('Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+  );
+  const warcraft = page.locator('.hand-card.actionable', { hasText: 'Master Warcraft' });
+  await passUntil(page, warcraft);
+  await warcraft.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // You are asked which of P2's creatures attack: only that, no defender yet.
+  const choose = page.getByRole('button', { name: /Choose attackers/ });
+  await passUntil(page, choose);
+  await choose.click({ timeout: 15_000 });
+  await expect(page.getByText('Choose which of P2’s creatures attack')).toBeVisible();
+  const row = (name: string) =>
+    page.locator('.combat-assignment-row').filter({ has: page.getByText(name, { exact: true }) });
+  await expect(row('Lab Ox').getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row('Lab Servo').getByRole('button', { name: 'Attacks' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // P2 chooses what Lab Servo attacks (P3); then you choose P3's blocks.
+  const blockers = page.getByRole('button', { name: /Declare blockers/ });
+  await passUntil(page, blockers);
+  await blockers.click({ timeout: 15_000 });
+  await expect(page.getByText('Declare blockers for P3', { exact: true })).toBeVisible();
+  await row('Lab Ox').getByRole('button', { name: 'Lab Servo' }).click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P3"] .life-badge')).toHaveText('40');
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Servo', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
+});
+
+test('Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await expect(page.getByText('Choose what each creature P2 chose attacks')).toBeVisible();
+  // Only the creature P2 chose is offered, and it has no "stay home" choice.
+  const rows = page.locator('.combat-assignment-row');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Lab Servo');
+  await expect(rows.first().getByRole('button', { name: 'Stay home' })).toHaveCount(0);
+  await expect(rows.first().getByRole('button', { name: 'Decline to pay' })).toHaveCount(0);
+  await rows.first().getByRole('button', { name: 'P3' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P3"] .life-badge')).toHaveText('39');
+});

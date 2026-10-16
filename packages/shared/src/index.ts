@@ -20,7 +20,7 @@ export {
   isClientToServerMessage,
   isPlayerSeatId,
 } from './protocol';
-export { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
+export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
 export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
 
 // --- Strict inbound JSON (duplicate-key rejection ahead of the native parse) ---

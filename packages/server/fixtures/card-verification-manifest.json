@@ -12770,6 +12770,66 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "f9bca7af-29b6-46ba-b847-56715d09d1da": {
+      "name": "Master Warcraft",
+      "oracleSha256": "bc2e3cc5eaa6fe0dc6973c574f93a6693183f420215430d9f5a63b29ac59776a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "master-warcraft-cast-timing",
+          "oracleText": "Cast this spell only before attackers are declared.",
+          "implementation": [
+            "authored castRestriction beforeAttackersDeclared (the turn has not reached the declare attackers step of its first combat), enforced when offering and when casting; nothing limits it to an opponent's turn"
+          ],
+          "engineTestIds": [
+            "master-warcraft-pinned-oracle-supported",
+            "master-warcraft-cast-timing"
+          ],
+          "viewerScenarioIds": [
+            "master-warcraft-viewer-choose-attackers-and-blocks",
+            "master-warcraft-viewer-assign-chosen-attackers"
+          ]
+        },
+        {
+          "id": "master-warcraft-attackers",
+          "oracleText": "You choose which creatures attack this turn.",
+          "implementation": [
+            "chooseAttackersAndBlockers records the caster for the turn (the newest one wins, ended in cleanup or when the caster leaves the game); each declaration of attackers by another player becomes two decisions: the caster chooses the set from the creatures that can attack (requirements and the joint rules of CR 506.5 and 508.1d bind it, a creature with no legal attack is not offered), then the attacking player chooses what each chosen creature attacks and pays its costs, and may decline only a creature that has no attack that costs nothing, which leaves it out so the caster chooses again; the active player declares as usual when they are the caster"
+          ],
+          "engineTestIds": [
+            "master-warcraft-chooses-attackers",
+            "master-warcraft-active-player-assigns",
+            "master-warcraft-requirements",
+            "master-warcraft-joint-rules",
+            "master-warcraft-costs",
+            "master-warcraft-costs-paid",
+            "master-warcraft-caster-attacks",
+            "master-warcraft-whole-turn",
+            "master-warcraft-newest-wins",
+            "master-warcraft-whole-game"
+          ],
+          "viewerScenarioIds": [
+            "master-warcraft-viewer-choose-attackers-and-blocks",
+            "master-warcraft-viewer-assign-chosen-attackers"
+          ]
+        },
+        {
+          "id": "master-warcraft-blockers",
+          "oracleText": "You choose which creatures block this turn and how those creatures block.",
+          "implementation": [
+            "each defending player's block declaration is asked of the caster instead (one decision per defending player, validated and repaired as usual, with the player whose creatures they are named in the presentation); damage assignment stays with the attacking player"
+          ],
+          "engineTestIds": [
+            "master-warcraft-chooses-blocks",
+            "master-warcraft-caster-defends",
+            "master-warcraft-caster-attacks",
+            "master-warcraft-whole-game"
+          ],
+          "viewerScenarioIds": ["master-warcraft-viewer-choose-attackers-and-blocks"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

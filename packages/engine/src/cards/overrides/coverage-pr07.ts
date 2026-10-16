@@ -871,4 +871,26 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Master Warcraft: castable only before attackers are declared. Until the end of the turn its
+  // controller chooses which creatures attack (the attacking player still chooses what each
+  // attacks and pays its costs) and every defending player's blocks. Both lines are about the
+  // whole turn, additional combats included; the choices obey the usual requirements and limits.
+  defineCard(
+    'f9bca7af-29b6-46ba-b847-56715d09d1da',
+    'Master Warcraft',
+    [
+      'Cast this spell only before attackers are declared.',
+      'You choose which creatures attack this turn.',
+      'You choose which creatures block this turn and how those creatures block.',
+    ],
+    {
+      castRestriction: { kind: 'beforeAttackersDeclared' },
+      spellAbility: spell({
+        effects: [{ op: 'chooseAttackersAndBlockers' }],
+        description:
+          'You choose which creatures attack this turn. You choose which creatures block this turn and how those creatures block',
+      }),
+    },
+  );
 }

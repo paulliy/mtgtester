@@ -53,6 +53,12 @@ const BLOCK_PRIMER = `This is one batched block declaration. Fill every blocker 
 
 const COMBAT_DAMAGE_PRIMER = `Return combatDamageSplit counts summing exactly to the stated amount. With trample, damage may reach the defending player or planeswalker only after every blocker has at least lethal damage assigned.`;
 
+/** Master Warcraft: choosing which of ANOTHER player's creatures attack. */
+const CHOOSE_ATTACKERS_PRIMER = `Choosing another player's attackers: this "attackDeclaration" only decides WHICH of the named player's creatures attack, and that player then chooses what each one attacks. For each slot, "choice" is the literal string "__attacks__" or "__no_attack__" ("__no_attack__" is only offered for creatures not forced to attack). Fill in EVERY slot.`;
+
+/** Master Warcraft: choosing the blocks of ANOTHER player's creatures. */
+const CHOOSE_FOREIGN_BLOCKS_PRIMER = `Choosing another player's blocks: the blockers in this "blockDeclaration" belong to the player named in the prompt, not to you, but you decide whether and how each one blocks. Fill in EVERY slot.`;
+
 const MANA_SPLIT_PRIMER = `Return manaSplit counts summing exactly to the stated amount and use only offered mana categories.`;
 
 const ORDER_OR_VALUE_PRIMER = `Return every supplemental field required by this request (modes, xValue, order, or selected cards) using only offered values and the requested cardinality.`;
@@ -68,6 +74,10 @@ export function tacticianPrimerFor(request: DecisionRequest): string {
   }
   if (request.decisionType === 'declareAttackers') fragments.push(ATTACK_PRIMER);
   if (request.decisionType === 'declareBlockers') fragments.push(BLOCK_PRIMER);
+  if (request.legalActions.some((action) => action.data?.['chooseAttackers'] === true))
+    fragments.push(CHOOSE_ATTACKERS_PRIMER);
+  if (request.legalActions.some((action) => typeof action.data?.['blockingPlayer'] === 'string'))
+    fragments.push(CHOOSE_FOREIGN_BLOCKS_PRIMER);
   if (request.combatDamageSplit !== undefined || request.decisionType === 'assignCombatDamage') {
     fragments.push(COMBAT_DAMAGE_PRIMER);
   }

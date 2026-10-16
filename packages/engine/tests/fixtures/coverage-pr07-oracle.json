@@ -890,6 +890,39 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "bc2e3cc5eaa6fe0dc6973c574f93a6693183f420215430d9f5a63b29ac59776a",
+      "card": {
+        "oracleId": "f9bca7af-29b6-46ba-b847-56715d09d1da",
+        "scryfallId": "a95749cf-dd12-4bca-a74d-01301b9b76df",
+        "name": "Master Warcraft",
+        "manaCost": "{2}{R/W}{R/W}",
+        "cmc": 4,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Cast this spell only before attackers are declared.\nYou choose which creatures attack this turn.\nYou choose which creatures block this turn and how those creatures block.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

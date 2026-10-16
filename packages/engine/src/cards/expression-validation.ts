@@ -583,6 +583,7 @@ const effectExpressions = {
   grantHasteOnResolution: {},
   overloadBounceAllNonlandOpponents: {},
   goad: {},
+  chooseAttackersAndBlockers: {},
   addAttackRequirement: { selector: optional(selector) },
   cantBlockEach: { selector: selector },
   limitAttacksToNearestOpponent: {},

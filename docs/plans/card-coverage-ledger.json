@@ -2503,17 +2503,22 @@
   {
     "oracleId": "f9bca7af-29b6-46ba-b847-56715d09d1da",
     "name": "Master Warcraft",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.25",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only before attackers are declared.\"",
       "unrecognized rules text: \"You choose which creatures attack this turn.\"",
       "unrecognized rules text: \"You choose which creatures block this turn and how those creatures block.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts",
+      "packages/server/src/ai/master-warcraft-bot.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",

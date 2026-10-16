@@ -5514,6 +5514,16 @@ export function* executeAbility(
         emit(ctx, 'attackRequirement', { source: source.name });
         break;
       }
+      case 'chooseAttackersAndBlockers': {
+        (ctx.state.combatChoices ??= []).push({
+          id: `cc-${ctx.state.nextObjectNum++}`,
+          casterId: controller.id,
+          sourceCardId: source.cardId,
+          turn: ctx.state.turnNumber,
+        });
+        emit(ctx, 'combatChoice', { source: source.name }, controller.id);
+        break;
+      }
       case 'cantBlockEach': {
         const objectIds = selectPermanents(ctx, effect.selector, {
           cardId: source.cardId,

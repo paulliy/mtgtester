@@ -1036,6 +1036,7 @@ const families = {
       grantHasteOnResolution: true,
       overloadBounceAllNonlandOpponents: true,
       goad: true,
+      chooseAttackersAndBlockers: true,
       addAttackRequirement: true,
       cantBlockEach: true,
       limitAttacksToNearestOpponent: true,

@@ -302,6 +302,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   grantHasteOnResolution: { target: returnedPermanent },
   overloadBounceAllNonlandOpponents: {},
   goad: { target: permanent },
+  chooseAttackersAndBlockers: {},
   addAttackRequirement: { target: optionalRef(permanent) },
   cantBlockEach: {},
   limitAttacksToNearestOpponent: {},

@@ -13900,6 +13900,135 @@ function fightOrFlightChooseScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** An opponent's seat that sends everything it is offered at `defender` and blocks nothing it need not. */
+const attackOnlyAndNeverBlock = (defender: PlayerId): DecisionProvider => {
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const block = request.legalActions.find((action) =>
+        action.description.startsWith('Declare blockers'),
+      );
+      if (block !== undefined)
+        return {
+          requestId: request.requestId,
+          actionId: block.id,
+          targets: (block.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes('__no_block__')
+              ? '__no_block__'
+              : (slot.options[0] as string),
+          })),
+        };
+      return attack.decide(request);
+    },
+  };
+};
+
+function masterWarcraftChooseScenario(gameId: GameId): CardTestScenario {
+  const warcraft = pinnedFrom(COVERAGE_PR07, 'Master Warcraft');
+  return pr01Scenario(gameId, {
+    id: 'master-warcraft-viewer-choose-attackers-and-blocks',
+    title:
+      'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+    instructions: [
+      'It is P2’s turn, before combat. Master Warcraft is in your hand with four lands on your battlefield. P2 controls Lab Ox and Lab Servo; P3 controls Lab Ox.',
+      'Cast Master Warcraft before attackers are declared and pass priority to the declare attackers step.',
+      'Choose only Lab Servo to attack. P2 then chooses what it attacks (P3). Then block it with P3’s Lab Ox.',
+    ],
+    expectedOutcome:
+      'P2’s Lab Ox stayed home. Lab Servo, the creature you chose, attacked P3 and was blocked by P3’s Lab Ox, which you chose: it died and P3 stayed at 40 life.',
+    oracleSha256: warcraft.sha256,
+    clauseIds: [
+      'master-warcraft-cast-timing',
+      'master-warcraft-attackers',
+      'master-warcraft-blockers',
+    ],
+    decks: {
+      P1: [warcraft.card, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: [LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ['Master Warcraft'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mountain', 'Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P3', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackOnlyAndNeverBlock('P3') },
+  });
+}
+
+/** The seat that casts Master Warcraft when it can, then chooses Lab Servo alone to attack. */
+const warcraftCasterChoosingServo: DecisionProvider = {
+  decide(request) {
+    const cast = request.legalActions.find(
+      (action) => action.type === 'castSpell' && action.description.includes('Master Warcraft'),
+    );
+    if (cast !== undefined) return { requestId: request.requestId, actionId: cast.id };
+    const choose = request.legalActions.find(
+      (action) => action.type === 'attackDeclaration' && action.data?.['chooseAttackers'] === true,
+    );
+    if (choose !== undefined) {
+      const subjects = request.presentation?.attackDeclaration?.subjects ?? [];
+      return {
+        requestId: request.requestId,
+        actionId: choose.id,
+        targets: (choose.targets ?? []).map((slot) => ({
+          slot: slot.slot,
+          choice:
+            subjects[slot.slot]?.name === 'Lab Servo' || !slot.options.includes('__no_attack__')
+              ? '__attacks__'
+              : '__no_attack__',
+        })),
+      };
+    }
+    return attackOnlyAndNeverBlock('P1').decide(request);
+  },
+};
+
+function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
+  const warcraft = pinnedFrom(COVERAGE_PR07, 'Master Warcraft');
+  return pr01Scenario(gameId, {
+    id: 'master-warcraft-viewer-assign-chosen-attackers',
+    title:
+      'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+    instructions: [
+      'It is your turn. You control Lab Ox and Lab Servo; P2 holds Master Warcraft and has four lands.',
+      'Pass priority: P2 casts Master Warcraft before attackers are declared. Pass priority again to let it resolve and move to combat.',
+      'P2 chooses that only Lab Servo attacks. You then choose what it attacks: send it at P3.',
+    ],
+    expectedOutcome:
+      'Only Lab Servo attacked (P2 chose it), at the player you picked: P3 took 1 and is at 39. Lab Ox stayed home.',
+    oracleSha256: warcraft.sha256,
+    clauseIds: [
+      'master-warcraft-cast-timing',
+      'master-warcraft-attackers',
+      'master-warcraft-blockers',
+    ],
+    decks: {
+      P1: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: [warcraft.card, MOUNTAIN, MOUNTAIN, FOREST, FOREST],
+      P3: [LAB_OX, FOREST, FOREST],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P2', cardNames: ['Master Warcraft'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Mountain', 'Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P3', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: warcraftCasterChoosingServo },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -14236,6 +14365,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'willie-lumpkin-viewer-draw-then-cant-attack',
   'fight-or-flight-viewer-separate',
   'fight-or-flight-viewer-choose',
+  'master-warcraft-viewer-choose-attackers-and-blocks',
+  'master-warcraft-viewer-assign-chosen-attackers',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14749,6 +14880,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'willie-lumpkin-viewer-draw-then-cant-attack': willieScenario,
   'fight-or-flight-viewer-separate': fightOrFlightSeparateScenario,
   'fight-or-flight-viewer-choose': fightOrFlightChooseScenario,
+  'master-warcraft-viewer-choose-attackers-and-blocks': masterWarcraftChooseScenario,
+  'master-warcraft-viewer-assign-chosen-attackers': masterWarcraftAssignScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

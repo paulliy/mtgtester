@@ -128,6 +128,18 @@ export interface BlockRestrictionEntry {
 }
 
 /**
+ * "You choose which creatures attack this turn" and "which creatures block this turn and how"
+ * (Master Warcraft): until the end of the turn `casterId` makes the attack and block declarations
+ * that the attacking and the defending players would. A newer one overrides an older one.
+ */
+export interface CombatChoiceEntry {
+  id: string;
+  casterId: PlayerId;
+  sourceCardId: CardId;
+  turn: number;
+}
+
+/**
  * "Until your next turn, each player may attack only the nearest opponent in the last chosen
  * direction and planeswalkers controlled by that opponent" (Teyo, Geometric Tactician). A newer
  * effect from the same card replaces the older one, so only the last choice is ever in force.
@@ -795,6 +807,8 @@ export interface EngineState extends GameState {
   attackRequirements?: AttackRequirementEntry[];
   /** Creatures that can't block because of a resolved spell or ability, until it expires. */
   blockRestrictions?: BlockRestrictionEntry[];
+  /** Whoever chooses this turn's attackers and blockers in place of the usual players (Master Warcraft). */
+  combatChoices?: CombatChoiceEntry[];
   /** Seat-direction limits on whom players may attack, until they expire (Teyo). */
   attackDirections?: AttackDirectionEntry[];
   normalTurnResumeAfter?: PlayerId;

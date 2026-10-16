@@ -561,6 +561,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'willie-lumpkin-viewer-draw-then-cant-attack',
       'fight-or-flight-viewer-separate',
       'fight-or-flight-viewer-choose',
+      'master-warcraft-viewer-choose-attackers-and-blocks',
+      'master-warcraft-viewer-assign-chosen-attackers',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

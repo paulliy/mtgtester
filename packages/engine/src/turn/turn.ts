@@ -319,6 +319,8 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
           entry.expires.setTurn >= ctx.state.turnNumber,
       );
     ctx.state.damageShields = [];
+    // "This turn": whoever chose the attackers and blockers stops choosing.
+    delete ctx.state.combatChoices;
     // A phase that was to come after one that is over (made in the end step) never happens.
     ctx.state.extraCombats = [];
     if (ctx.state.attackRequirements !== undefined)

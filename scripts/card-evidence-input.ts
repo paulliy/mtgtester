@@ -2539,6 +2539,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },
