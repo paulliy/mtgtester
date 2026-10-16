@@ -1737,6 +1737,7 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   setStep(ctx, 'declareAttackers');
+  ctx.state.declareAttackersReachedThisTurn = true;
   yield* declareAttackers(ctx);
   const anyAttackers = attackers(ctx).length > 0;
   yield* runPrioritySequence(ctx);

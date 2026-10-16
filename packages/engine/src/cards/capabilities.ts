@@ -627,6 +627,7 @@ const shapes = {
     planeswalkers: leaf,
     left: { node: 'Value' },
     right: { node: 'Value' },
+    step: leaf,
   } satisfies Fields<Objects<Condition>>,
   RuleStatic: {
     scope: leaf,
@@ -1298,6 +1299,8 @@ const families = {
       controlsACommander: true,
       opponentIsMonarch: true,
       notYourTurn: true,
+      duringStep: true,
+      beforeAttackersDeclared: true,
       yourTurn: true,
       attackingPlayerHasMoreLife: true,
       attackingPlayerHasMoreLifeThanYou: true,

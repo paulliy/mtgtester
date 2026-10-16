@@ -408,6 +408,7 @@ export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   queueStepTriggers(ctx, 'untapStep');
   untapStep(ctx);
 
+  delete ctx.state.declareAttackersReachedThisTurn;
   if (ctx.state.createdTokenThisTurn) {
     for (const player of ctx.state.players) ctx.state.createdTokenThisTurn[player.id] = false;
   }

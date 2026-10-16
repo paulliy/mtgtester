@@ -19,6 +19,8 @@ import { interpretCard } from '../src/cards/interpret';
 import { spell } from '../src/cards/templates';
 import { executeAbility } from '../src/effects/resolve';
 import { fixtureOracleId, getOverride } from '../src/cards/overrides';
+import { allOfConditions, type Condition } from '../src/cards/condition';
+import type { Phase, Step } from '@mtg/shared';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { priorityCheckpoint } from '../src/sba/sba';
@@ -50,6 +52,7 @@ import {
   gameConfig,
   oracle,
   pump,
+  registerCustomDef,
   spawn,
 } from './fixtures';
 
@@ -856,6 +859,115 @@ describe('Additional combat phases', () => {
       }
     }
     expect(seenAtDeclare).toEqual([false, true]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Cast timing conditions: "only during <step>" and "only before attackers are declared"
+// ---------------------------------------------------------------------------------------------
+
+describe('Cast timing restrictions', () => {
+  const TRICK = oracle({
+    name: 'Lab Trick',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'Draw a card.',
+  });
+
+  /** P2 holds a Lab Trick whose restriction is `restriction`. */
+  function withTrick(seed: string, restriction: Condition) {
+    const ctx = pod(seed);
+    const def = { ...interpretCard(TRICK), castRestriction: restriction };
+    registerCustomDef(ctx, def);
+    const object = conjure(ctx, 'P2', TRICK, 'hand');
+    const canCast = () => optionFor(ctx, 'P2', object.id, /Lab Trick/) !== undefined;
+    return { ctx, object, canCast };
+  }
+
+  const at = (ctx: GameContext, player: string, phase: Phase, step: Step | null) => {
+    turnOfPlayer(ctx, player);
+    ctx.state.phase = phase;
+    ctx.state.step = step;
+  };
+
+  it('cast-during-step — "only during the declare blockers step on an opponent’s turn" allows exactly that step on a turn that is not yours', () => {
+    const { ctx, canCast } = withTrick(
+      'cast-step',
+      allOfConditions({ kind: 'duringStep', step: 'declareBlockers' }, { kind: 'notYourTurn' }),
+    );
+    at(ctx, 'P1', 'combat', 'declareBlockers');
+    expect(canCast()).toBe(true);
+    for (const step of ['beginCombat', 'declareAttackers', 'combatDamage', 'endCombat'] as const) {
+      at(ctx, 'P1', 'combat', step);
+      expect(canCast(), step).toBe(false);
+    }
+    at(ctx, 'P1', 'precombatMain', null);
+    expect(canCast()).toBe(false);
+    // The same step on your own turn is not an opponent's turn.
+    at(ctx, 'P2', 'combat', 'declareBlockers');
+    expect(canCast()).toBe(false);
+  });
+
+  it('cast-before-attackers — allowed from the start of the turn until the declare attackers step of its first combat, then not again that turn', () => {
+    const { ctx, canCast } = withTrick(
+      'cast-before',
+      allOfConditions({ kind: 'beforeAttackersDeclared' }, { kind: 'notYourTurn' }),
+    );
+    at(ctx, 'P1', 'beginning', 'upkeep');
+    expect(canCast()).toBe(true);
+    at(ctx, 'P1', 'precombatMain', null);
+    expect(canCast()).toBe(true);
+    at(ctx, 'P1', 'combat', 'beginCombat');
+    expect(canCast()).toBe(true);
+    // Mine to cast on its own turn? No: it is an opponent's-turn restriction as well.
+    at(ctx, 'P2', 'precombatMain', null);
+    expect(canCast()).toBe(false);
+    // Running the combat reaches the declare attackers step, even with nobody attacking.
+    at(ctx, 'P1', 'precombatMain', null);
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(ctx.state.declareAttackersReachedThisTurn).toBe(true);
+    at(ctx, 'P1', 'postcombatMain', null);
+    expect(canCast()).toBe(false);
+    at(ctx, 'P1', 'combat', 'beginCombat');
+    expect(canCast()).toBe(false);
+  });
+
+  it('cast-before-attackers-extra-combat — an additional combat before the first declaration does not end the window, and the next turn starts it again', () => {
+    const { ctx, canCast } = withTrick('cast-before-extra', { kind: 'beforeAttackersDeclared' });
+    at(ctx, 'P1', 'precombatMain', null);
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: 'oracle-src', name: 'Lab Source', controllerId: 'P1' },
+        spell({ effects: [{ op: 'extraCombatPhase' }] }),
+        [],
+      ),
+    );
+    // The additional combat comes first and is the turn's first combat phase: still before.
+    at(ctx, 'P1', 'combat', 'beginCombat');
+    expect(canCast()).toBe(true);
+    ctx.state.declareAttackersReachedThisTurn = true;
+    expect(canCast()).toBe(false);
+    turnOfPlayer(ctx, 'P3');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(canCast()).toBe(true);
+  });
+
+  it('cast-restriction-enforced-on-cast — a cast that was offered but is attempted after the window closed is refused', () => {
+    const { ctx, object } = withTrick('cast-refused', { kind: 'beforeAttackersDeclared' });
+    at(ctx, 'P1', 'precombatMain', null);
+    const option = optionFor(ctx, 'P2', object.id, /Lab Trick/)!;
+    expect(option).toBeDefined();
+    ctx.state.declareAttackersReachedThisTurn = true;
+    expect(() => takeAction(ctx, 'P2', option.payload as PriorityActionPayload)).toThrow(
+      /casting restriction is not met/,
+    );
   });
 });
 

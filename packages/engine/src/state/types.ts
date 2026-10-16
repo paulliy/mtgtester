@@ -799,6 +799,8 @@ export interface EngineState extends GameState {
    * earlier. Emptied at the end of the turn.
    */
   extraCombats: ExtraCombat[];
+  /** Has this turn reached the declare attackers step of a combat phase yet? Reset each turn. */
+  declareAttackersReachedThisTurn?: boolean;
   /** The combat phase being run: `regular`, or the id of the `ExtraCombat` it is. */
   currentCombatId?: string;
   /** The player who is currently the monarch, or null before the mechanic appears. */
