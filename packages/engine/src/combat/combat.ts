@@ -1440,11 +1440,57 @@ function applyBlockDeclaration(
 }
 
 /**
+ * A group too small for menace or "can't be blocked except by N or more creatures" that holds a
+ * creature required to block grows to the minimum with its controller's idle creatures able to
+ * block that attacker, rather than standing the required creature down (CR 509.1c). Assigns
+ * nothing unless the whole gap can be filled, and fills each attacker at most once so the repair
+ * still terminates; returns whether it assigned.
+ */
+function fillRequiredBlockGroup(
+  ctx: GameContext,
+  candidates: readonly BlockCandidate[],
+  repaired: Map<ObjectId, ObjectId | null>,
+  violations: readonly CombatViolation[],
+  filled: Set<ObjectId>,
+): boolean {
+  const shortIds = new Set(
+    violations
+      .filter((v) => v.kind === 'menace' || v.kind === 'minBlockers')
+      .map((v) => v.subjectId),
+  );
+  for (const { blocker } of candidates) {
+    if (!shortIds.has(blocker.id) || blocker.mustBlockThisTurn !== true) continue;
+    const attackerId = repaired.get(blocker.id);
+    if (attackerId == null || filled.has(attackerId)) continue;
+    const attacker = findPermanent(ctx, attackerId);
+    if (attacker === undefined) continue;
+    const needed = Math.max(
+      hasKeyword(ctx, attacker, 'menace') ? 2 : 0,
+      minBlockersOf(ctx, attacker),
+    );
+    const current = candidates.filter((c) => repaired.get(c.blocker.id) === attackerId).length;
+    const idle = candidates.filter(
+      (c) =>
+        (repaired.get(c.blocker.id) ?? null) === null &&
+        c.blockable.some((a) => a.id === attackerId),
+    );
+    if (current + idle.length < needed) continue;
+    for (const partner of idle.slice(0, needed - current))
+      repaired.set(partner.blocker.id, attackerId);
+    filled.add(attackerId);
+    return true;
+  }
+  return false;
+}
+
+/**
  * Engine-owned repair (ADR 0023 item 17, blocker-side) — the `repairAttackDeclaration` pattern
  * applied to menace: repeatedly pick the lowest-power violating blocker (ties broken by id) and
  * fix just it. If it's `mustBlock`, first try redirecting it to a different legal attacker that
  * isn't itself under-blocked (never manufacturing a second menace violation); otherwise, or if no
- * such attacker exists, stand it down. Bounded by the candidate count so it always terminates.
+ * such attacker exists, stand it down. A too-small group holding a `mustBlock` creature is first
+ * grown to its minimum when enough idle creatures can join it. Bounded by the candidate count so
+ * it always terminates.
  */
 function repairBlockDeclaration(
   ctx: GameContext,
@@ -1453,8 +1499,14 @@ function repairBlockDeclaration(
 ): Map<ObjectId, ObjectId | null> {
   const repaired = new Map(assignment);
   let violations = validateBlockDeclaration(ctx, candidates, repaired);
-  let guard = candidates.length + 1;
+  // Each candidate is stood down or redirected at most once, and each attacker filled at most once.
+  let guard = 2 * candidates.length + 1;
+  const filled = new Set<ObjectId>();
   while (violations.length > 0 && guard-- > 0) {
+    if (fillRequiredBlockGroup(ctx, candidates, repaired, violations, filled)) {
+      violations = validateBlockDeclaration(ctx, candidates, repaired);
+      continue;
+    }
     const violatedIds = new Set(violations.map((v) => v.subjectId));
     const pick = candidates
       .filter((c) => violatedIds.has(c.blocker.id))

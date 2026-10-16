@@ -4910,6 +4910,20 @@ describe('Hexmark Destroyer', () => {
     }
   });
 
+  it('hexmark-required-blocker-repair — a Bear that must block keeps its block when the repair can grow the group to six', () => {
+    const { ctx, hexmark, bears } = board('hexmark-must-block');
+    bears[0]!.mustBlockThisTurn = true;
+    const run = declaredCombat(ctx, { [hexmark.id]: 'P2' }, blocking(bears, 2, hexmark));
+    expect(new Set(run.blockRejections)).toEqual(new Set(['minBlockers']));
+    // The repair adds four idle Bears beside the two instead of standing the required Bear down.
+    const blocked = ctx.state.eventLog
+      .filter((event) => event.type === 'block')
+      .map((event) => event.payload.blocker);
+    expect(blocked).toHaveLength(6);
+    expect(blocked).toContain('P2 Bear 1');
+    expect(playerById(ctx, 'P2').life).toBe(40);
+  });
+
   it('hexmark-others-unaffected — another attacker can be blocked by one creature, and the rule is not menace', () => {
     const { ctx, hexmark, bears } = board('hexmark-other');
     const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
