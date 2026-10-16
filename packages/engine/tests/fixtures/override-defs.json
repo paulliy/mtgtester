@@ -1753,8 +1753,48 @@
   {
     "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
     "name": "Triarch Stalker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures attacking the last chosen player have menace.",
+      "Targeting Relay — At the beginning of combat on your turn, choose an opponent."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "attackingChosenPlayer"
+              }
+            ]
+          },
+          "op": {
+            "addKeyword": "menace",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, choose an opponent",
+          "effects": [
+            {
+              "op": "chooseOpponentForSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "1b3e841e-0f8f-467d-9983-f9b8d081a67f",
@@ -30155,8 +30195,48 @@
   {
     "oracleId": "oracle-triarch-stalker",
     "name": "Triarch Stalker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures attacking the last chosen player have menace.",
+      "Targeting Relay — At the beginning of combat on your turn, choose an opponent."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "attackingChosenPlayer"
+              }
+            ]
+          },
+          "op": {
+            "addKeyword": "menace",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, choose an opponent",
+          "effects": [
+            {
+              "op": "chooseOpponentForSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tribute-mage",

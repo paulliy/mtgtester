@@ -5453,6 +5453,33 @@ export function* executeAbility(
         });
         break;
       }
+      case 'chooseOpponentForSource': {
+        const opponents = opponentsOf(ctx, controller.id);
+        if (opponents.length === 0) break;
+        let chosen = opponents[0] as (typeof opponents)[number];
+        if (opponents.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: choose an opponent`,
+            // No `payload`: a player is not an on-screen source the web UI can focus, so the
+            // choice is read back by index and shown as one "Choose" button per player.
+            options: opponents.map((opponent) =>
+              playerOption(opponent.id, opponent.id, {
+                type: 'choosePlayer',
+                description: opponent.id,
+                verb: 'Choose',
+              }),
+            ),
+          };
+          chosen = opponents[outcome.index] ?? chosen;
+        }
+        // Only the permanent itself remembers it: a Stalker that has left has nothing to store on.
+        const holder = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+        if (holder !== undefined) holder.chosenOption = chosen.id;
+        emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id });
+        break;
+      }
       case 'forceAttack': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);

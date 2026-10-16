@@ -376,10 +376,5 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   );
   // Triarch Praetorian: restored in coverage PR03. The interpreter reads "enters from a
   // graveyard" as an origin-zone enters trigger, so no override remains.
-  // Catalog audit necron-remaining-batch-3: chosen-opponent attackers is all in combat.
-  unsupportedCard(
-    '1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3',
-    'Triarch Stalker',
-    'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
-  );
+  // Triarch Stalker: restored in coverage PR07 (see coverage-pr07.ts).
 }

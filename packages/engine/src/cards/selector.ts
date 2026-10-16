@@ -232,6 +232,12 @@ export type Selector =
    */
   | { kind: 'attackingOpponent' }
   | { kind: 'attackingYouOrYourPlaneswalker' }
+  /**
+   * "Attacking the last chosen player" (Triarch Stalker): attacking the player stored in the
+   * source's `chosenOption`, not one of that player's planeswalkers. Combat assignment is game
+   * state, so a static may read it like `combatRole`.
+   */
+  | { kind: 'attackingChosenPlayer' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -305,6 +311,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
       return selectorIsEventOnly(selector.of);
     case 'combatRole':
     case 'attackingOpponent':
+    case 'attackingChosenPlayer':
       // Attack/block assignment is game state, not output from a continuous-effect layer.
       // Static effects such as attacking-creature anthems may therefore use this selector.
       return false;
@@ -429,6 +436,10 @@ export function selectMatches(
       return (
         candidate.attackingDefenderId != null &&
         candidate.attackingDefenderId !== source.controllerId
+      );
+    case 'attackingChosenPlayer':
+      return (
+        source.chosenOption !== undefined && candidate.attackingDefenderId === source.chosenOption
       );
     case 'attackingYouOrYourPlaneswalker':
       // The defending player when the attack is on that player, or on a planeswalker still in combat.

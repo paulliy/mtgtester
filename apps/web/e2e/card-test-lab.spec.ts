@@ -10193,3 +10193,26 @@ test('Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a ta
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(1);
 });
+
+test('Triarch Stalker: creatures attacking the chosen player have menace', async ({ page }) => {
+  await runScenario(page, 'Triarch Stalker: creatures attacking the chosen player have menace');
+  await expect(page.getByText(/choose an opponent/).first()).toBeVisible({ timeout: 15_000 });
+  await page
+    .locator('.panel-group')
+    .filter({ has: page.getByText('P2', { exact: true }) })
+    .getByRole('button', { name: 'Choose' })
+    .click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+});

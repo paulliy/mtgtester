@@ -155,6 +155,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Tomik, Wielder of Law',
       'Toxic Deluge',
       'Triarch Praetorian',
+      'Triarch Stalker',
       "Tyrant's Familiar",
       'Vastwood Surge',
       'Vigean Graftmage',

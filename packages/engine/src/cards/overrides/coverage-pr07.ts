@@ -9,6 +9,7 @@ import {
   grantsKeyword,
   spell,
   onAttacks,
+  onBeginCombat,
   onCombatDamageToPlayer,
   onEndStep,
   onEtb,
@@ -629,6 +630,29 @@ export function registerCoveragePr07Overrides(): void {
           description:
             '−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent',
         }),
+      ],
+    },
+  );
+
+  // Triarch Stalker: the choice is made as the trigger resolves and stored on the Stalker itself,
+  // so each new choice replaces the last ("the last chosen player") and a copy starts with none.
+  // Menace goes to creatures of any controller attacking that player (not their planeswalkers).
+  defineCard(
+    '1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3',
+    'Triarch Stalker',
+    [
+      'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',
+      'Creatures attacking the last chosen player have menace.',
+    ],
+    {
+      triggers: [
+        triggered(onBeginCombat('you'), {
+          effects: [{ op: 'chooseOpponentForSource' }],
+          description: 'At the beginning of combat on your turn, choose an opponent',
+        }),
+      ],
+      staticEffects: [
+        grantsKeyword(allOf(ofType('Creature'), { kind: 'attackingChosenPlayer' }), 'menace'),
       ],
     },
   );

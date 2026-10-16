@@ -654,6 +654,42 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
+      "card": {
+        "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+        "scryfallId": "fbe75aae-727b-4cb0-967c-477d5a08b8f7",
+        "name": "Triarch Stalker",
+        "manaCost": "{3}{B}{B}",
+        "cmc": 5,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Necron",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Targeting Relay — At the beginning of combat on your turn, choose an opponent.\nCreatures attacking the last chosen player have menace.",
+        "power": "4",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Targeting Relay"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

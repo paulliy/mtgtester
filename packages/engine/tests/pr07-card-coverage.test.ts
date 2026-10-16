@@ -3384,6 +3384,151 @@ describe('Teyo, Geometric Tactician', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.11 Triarch Stalker
+// ---------------------------------------------------------------------------------------------
+
+describe('Triarch Stalker', () => {
+  const { card } = pinned('Triarch Stalker');
+
+  /** P1 controls the Stalker; every player has a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const stalker = spawn(ctx, 'P1', card);
+    const bears: Record<string, EnginePermanent> = {};
+    for (const id of ['P1', 'P2', 'P3', 'P4']) bears[id] = spawn(ctx, id, GRIZZLY(`${id} Bear`));
+    return { ctx, stalker, bears };
+  }
+
+  const hasMenace = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).keywords.includes('menace');
+
+  /** Attack as `perm`'s controller does: the player, or one of their planeswalkers. */
+  function attacking(perm: EnginePermanent, player: string, walker?: EnginePermanent) {
+    perm.attacking = player;
+    perm.attackingPlaneswalker = walker?.id ?? null;
+  }
+
+  /** `playerId`'s beginning of combat, choosing `pick` when asked to choose an opponent. */
+  function beginCombatOf(ctx: GameContext, playerId: string, pick?: string, asked: string[] = []) {
+    turnOfPlayer(ctx, playerId);
+    ctx.state.turnNumber += 1;
+    return fight(
+      ctx,
+      () => ({}),
+      (decision) => {
+        asked.push(decision.prompt);
+        const index = decision.options.findIndex((option) => option.description === pick);
+        return { index: Math.max(index, 0), targets: new Map() };
+      },
+    );
+  }
+
+  it('triarch-stalker-pinned-oracle-supported — the authored override carries the begin-combat choice and the menace static under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'beginningOfCombat', player: 'you' });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'chooseOpponentForSource' }]);
+    expect(def.staticEffects).toHaveLength(1);
+    expect(def.staticEffects[0]!.op).toEqual({ layer: 6, addKeyword: 'menace' });
+  });
+
+  it('triarch-stalker-choose-opponent — at the beginning of combat on your turn you choose an opponent, stored on the Stalker', () => {
+    const { ctx, stalker } = board('stalker-choose');
+    const asked: string[] = [];
+    expect(stalker.chosenOption).toBeUndefined();
+    beginCombatOf(ctx, 'P1', 'P3', asked);
+    expect(asked.filter((prompt) => /choose an opponent/.test(prompt))).toHaveLength(1);
+    expect(stalker.chosenOption).toBe('P3');
+  });
+
+  it('triarch-stalker-only-your-turn — it does not trigger at the beginning of combat on another player’s turn', () => {
+    const { ctx, stalker } = board('stalker-their-turn');
+    beginCombatOf(ctx, 'P1', 'P3');
+    const asked: string[] = [];
+    beginCombatOf(ctx, 'P2', 'P4', asked);
+    expect(asked.filter((prompt) => /choose an opponent/.test(prompt))).toEqual([]);
+    expect(stalker.chosenOption).toBe('P3');
+  });
+
+  it('triarch-stalker-last-chosen — each new choice replaces the last, and only an opponent can be chosen', () => {
+    const { ctx, stalker } = board('stalker-last');
+    let offered: string[] = [];
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    fight(
+      ctx,
+      () => ({}),
+      (decision) => {
+        offered = decision.options.map((option) => option.description);
+        return { index: 0, targets: new Map() };
+      },
+    );
+    expect(offered).toEqual(['P2', 'P3', 'P4']);
+    expect(stalker.chosenOption).toBe('P2');
+    beginCombatOf(ctx, 'P1', 'P4');
+    expect(stalker.chosenOption).toBe('P4');
+  });
+
+  it('triarch-stalker-menace — creatures of any controller attacking the chosen player have menace, and others do not', () => {
+    const { ctx, stalker, bears } = board('stalker-menace');
+    stalker.chosenOption = 'P3';
+    attacking(bears['P1']!, 'P3');
+    attacking(bears['P2']!, 'P3');
+    attacking(bears['P4']!, 'P1');
+    expect(hasMenace(ctx, bears['P1']!)).toBe(true);
+    // Another player's creature too, and the Stalker's own controller is not special.
+    expect(hasMenace(ctx, bears['P2']!)).toBe(true);
+    expect(hasMenace(ctx, bears['P4']!)).toBe(false);
+    // Not attacking at all.
+    expect(hasMenace(ctx, bears['P3']!)).toBe(false);
+  });
+
+  it('triarch-stalker-not-planeswalkers — attacking a planeswalker of the chosen player is not attacking that player', () => {
+    const { ctx, stalker, bears } = board('stalker-walker');
+    stalker.chosenOption = 'P3';
+    const walker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    attacking(bears['P1']!, 'P3', walker);
+    expect(hasMenace(ctx, bears['P1']!)).toBe(false);
+  });
+
+  it('triarch-stalker-no-choice-yet — until a player has been chosen nothing has menace', () => {
+    const { ctx, bears } = board('stalker-unchosen');
+    attacking(bears['P1']!, 'P2');
+    expect(hasMenace(ctx, bears['P1']!)).toBe(false);
+  });
+
+  it('triarch-stalker-leaves — without the Stalker nothing has menace', () => {
+    const { ctx, stalker, bears } = board('stalker-gone');
+    stalker.chosenOption = 'P2';
+    attacking(bears['P1']!, 'P2');
+    expect(hasMenace(ctx, bears['P1']!)).toBe(true);
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== stalker.id);
+    expect(hasMenace(ctx, bears['P1']!)).toBe(false);
+  });
+
+  it('triarch-stalker-whole-game — at the beginning of combat P2 is chosen, and its lone Bear then cannot block your attacker alone but two can', () => {
+    const { ctx, bears } = board('stalker-chain');
+    const second = spawn(ctx, 'P2', GRIZZLY('P2 Second Bear'));
+    turnOfPlayer(ctx, 'P1');
+    const alone = declaredCombat(
+      ctx,
+      { [bears['P1']!.id]: 'P2' },
+      { [bears['P2']!.id]: bears['P1']!.id },
+    );
+    expect(alone.blockRejections).toContain('menace');
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    bears['P1']!.tapped = false;
+    const together = declaredCombat(
+      ctx,
+      { [bears['P1']!.id]: 'P2' },
+      { [bears['P2']!.id]: bears['P1']!.id, [second.id]: bears['P1']!.id },
+    );
+    expect(together.blockRejections).toEqual([]);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -3511,6 +3656,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Teyo, Geometric Tactician',
     sha256: 'c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: 'Triarch Stalker',
+    sha256: '7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338',
+    clauseCount: 2,
     authored: true,
   },
 ];

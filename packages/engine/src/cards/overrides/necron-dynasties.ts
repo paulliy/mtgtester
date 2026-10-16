@@ -380,8 +380,5 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Triarch Praetorian: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3', 'Triarch Stalker', [
-    'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',
-    'Creatures attacking the last chosen player have menace.',
-  ]);
+  // Triarch Stalker: restored in coverage PR07 (see coverage-pr07.ts).
 }

@@ -80,7 +80,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Mob Rule',
       'Caged Sun',
       'Mystic Forge',
-      'Triarch Stalker',
       'Biotransference',
       'The War in Heaven',
       'Out of the Tombs',

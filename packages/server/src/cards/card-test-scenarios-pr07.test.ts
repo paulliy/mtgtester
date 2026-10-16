@@ -798,3 +798,27 @@ describe('Teyo, Geometric Tactician draw Card Test Lab scenario', () => {
     replays('teyo-viewer-wall-and-plus-one', steps);
   });
 });
+
+describe('Triarch Stalker Card Test Lab scenario', () => {
+  it('triarch-stalker-viewer-menace — after choosing P2, a lone Lab Servo cannot block the menace attacker, so P2 takes 1', () => {
+    const steps: Step[] = [
+      { action: 'P2' },
+      { action: 'Declare attackers', targets: ['__no_attack__', 'P2'] },
+    ];
+    const rejections: string[] = [];
+    const { scenario, state, seat, offered, onBattlefield } = run(
+      'triarch-stalker-viewer-menace',
+      steps,
+      (request) => {
+        if (/fix the flagged problem/.test(request.prompt ?? '')) rejections.push(request.prompt);
+      },
+    );
+    expect(offered).toContainEqual(['P2', 'P3', 'P4']);
+    expect(rejections.length).toBeGreaterThan(0);
+    expect(seat('P2').life).toBe(39);
+    expect(onBattlefield('Lab Servo')).toHaveLength(2);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('triarch-stalker-viewer-menace', steps);
+  });
+});

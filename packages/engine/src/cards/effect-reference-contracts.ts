@@ -304,6 +304,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   addAttackRequirement: { target: optionalRef(permanent) },
   cantBlockEach: {},
   limitAttacksToNearestOpponent: {},
+  chooseOpponentForSource: {},
   forceAttack: { target: permanent },
   forceAttackEach: {},
   doublePower: {},

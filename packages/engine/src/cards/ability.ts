@@ -1399,6 +1399,12 @@ export type Effect =
       direction: 'left' | 'right';
       duration: 'untilYourNextTurn';
     }
+  /**
+   * "Choose an opponent" as this resolves (Triarch Stalker's Targeting Relay): the controller
+   * picks one, stored on the source permanent as its chosen option so a later choice replaces it
+   * ("the last chosen player") and its statics can read it back.
+   */
+  | { op: 'chooseOpponentForSource' }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }

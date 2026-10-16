@@ -95,8 +95,6 @@ const REASONS: Record<string, string> = {
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
-  'Triarch Stalker':
-    'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Out of the Tombs':
@@ -269,6 +267,7 @@ describe('Marchesa catalog audit containment', () => {
     'Hexmark Destroyer',
     'Champion of Lambholt',
     'Teyo, Geometric Tactician',
+    'Triarch Stalker',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

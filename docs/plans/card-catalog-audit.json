@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 22,
+      "uniqueOracleIds": 21,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 33,
+      "uniqueOracleIds": 32,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6857,6 +6857,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (an orphan typo'd Oracle id that no card has); see the entry for the real id."
+    },
+    {
+      "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+      "name": "Triarch Stalker",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said menace for attackers of the chosen opponent was implemented as all creatures in combat): the authored override in coverage-pr07.ts chooses an opponent at the beginning of combat on its controller's turn, stores it on the Stalker, and grants menace through a layer 6 static to creatures attacking that player (the new attackingChosenPlayer selector). Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+      "name": "Triarch Stalker",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
     }
   ]
 }

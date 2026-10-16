@@ -13567,6 +13567,37 @@ function teyoDrawScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function stalkerScenario(gameId: GameId): CardTestScenario {
+  const stalker = pinnedFrom(COVERAGE_PR07, 'Triarch Stalker');
+  return pr01Scenario(gameId, {
+    id: 'triarch-stalker-viewer-menace',
+    title: 'Triarch Stalker: creatures attacking the chosen player have menace',
+    instructions: [
+      'Triarch Stalker and Lab Servo (1/1) are on your battlefield. P2 controls one Lab Servo and blocks with everything it can.',
+      'Pass priority to the beginning of combat and choose P2 for Targeting Relay. Then attack P2 with your Lab Servo, leaving the Stalker home, and confirm.',
+    ],
+    expectedOutcome:
+      'Your attacking Lab Servo had menace, so P2’s lone Lab Servo could not block it alone: the block was rejected and dropped, your Servo was unblocked and P2 took 1 and is at 39, with its Servo alive.',
+    oracleSha256: stalker.sha256,
+    clauseIds: ['triarch-stalker-choose-opponent', 'triarch-stalker-menace'],
+    decks: {
+      P1: [stalker.card, LAB_SERVO, SWAMP, SWAMP],
+      P2: [LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Triarch Stalker', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13895,6 +13926,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'pramikon-viewer-nearest-opponent',
   'teyo-viewer-minus-two-direction',
   'teyo-viewer-wall-and-plus-one',
+  'triarch-stalker-viewer-menace',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14400,6 +14432,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'pramikon-viewer-nearest-opponent': pramikonScenario,
   'teyo-viewer-minus-two-direction': teyoScenario,
   'teyo-viewer-wall-and-plus-one': teyoDrawScenario,
+  'triarch-stalker-viewer-menace': stalkerScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

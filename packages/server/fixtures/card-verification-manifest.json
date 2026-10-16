@@ -3695,22 +3695,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3": {
-      "name": "Triarch Stalker",
-      "oracleSha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Creatures attacking the last chosen player have menace.",
-          "implementation": [
-            "explicitly unsupported; chosen-opponent attackers implemented as all in combat"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "5443557e-440f-4fdd-a29b-7740d7cec085": {
       "name": "Biotransference",
       "oracleSha256": "d693464368e3d8093da14fd32051868cfd0cf034ecd0340c38d9623cff10ef3c",
@@ -12515,6 +12499,43 @@
             "teyo-whole-game"
           ],
           "viewerScenarioIds": ["teyo-viewer-minus-two-direction"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3": {
+      "name": "Triarch Stalker",
+      "oracleSha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "triarch-stalker-choose-opponent",
+          "oracleText": "Targeting Relay — At the beginning of combat on your turn, choose an opponent.",
+          "implementation": [
+            "authored beginning-of-combat trigger (your turn only) with chooseOpponentForSource: its controller chooses an opponent as the trigger resolves, stored on the Stalker as its chosen option so each new choice replaces the last"
+          ],
+          "engineTestIds": [
+            "triarch-stalker-pinned-oracle-supported",
+            "triarch-stalker-choose-opponent",
+            "triarch-stalker-only-your-turn",
+            "triarch-stalker-last-chosen"
+          ],
+          "viewerScenarioIds": ["triarch-stalker-viewer-menace"]
+        },
+        {
+          "id": "triarch-stalker-menace",
+          "oracleText": "Creatures attacking the last chosen player have menace.",
+          "implementation": [
+            "authored layer 6 static of the Stalker granting menace to creatures of any controller that are attacking the player stored in its chosen option (the player, not their planeswalkers, via the attackingChosenPlayer selector); nothing has menace before a choice or once the Stalker has left"
+          ],
+          "engineTestIds": [
+            "triarch-stalker-menace",
+            "triarch-stalker-not-planeswalkers",
+            "triarch-stalker-no-choice-yet",
+            "triarch-stalker-leaves",
+            "triarch-stalker-whole-game"
+          ],
+          "viewerScenarioIds": ["triarch-stalker-viewer-menace"]
         }
       ],
       "gameplayAiScenarioIds": []
