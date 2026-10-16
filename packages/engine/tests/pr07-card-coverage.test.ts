@@ -28,7 +28,10 @@ import { computeCharacteristics } from '../src/effects/continuous';
 import { applyCopy, createToken, moveObject, tokenSpecCopying } from '../src/state/objects';
 import {
   beginEndStep,
+  beginPostcombatMain,
   cleanupStep,
+  runEndingPhase,
+  runInsertedPhases,
   queueStepTriggers,
   runBeginningAndPrecombatMain,
   runCombatAndExtraCombats,
@@ -620,7 +623,7 @@ describe('Lightning Runner', () => {
     expect(seen[1]).toEqual({ bear: false, bystander: true, land: true, trinket: true });
     // The untapped Runner attacked again: 4 double-strike damage in each combat.
     expect(playerById(ctx, 'P2').life).toBe(40 - 8);
-    expect(ctx.state.extraCombatPhases).toBe(0);
+    expect(ctx.state.extraCombats).toEqual([]);
   });
 
   it('lightning-runner-decline — declining the payment keeps the energy and adds no combat phase', () => {
@@ -651,7 +654,7 @@ describe('Lightning Runner', () => {
     // 14 + 2 = 16, pay 8; in the second combat 8 + 2 = 10, pay 8; in the third 2 + 2 = 4, no payment.
     expect(run.combats).toBe(3);
     expect(playerById(ctx, 'P1').energy).toBe(4);
-    expect(ctx.state.extraCombatPhases).toBe(0);
+    expect(ctx.state.extraCombats).toEqual([]);
   });
 
   it("lightning-runner-opponent-attack — an opponent's creature attacking does not trigger it, and the Runner not attacking gains nothing", () => {
@@ -661,6 +664,198 @@ describe('Lightning Runner', () => {
     const run = fight(ctx, () => ({ [bystander.id]: 'P1' }));
     expect(run.combats).toBe(1);
     expect(playerById(ctx, 'P1').energy).toBe(6);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Typed extra combat phases (CR 500.8): inserted directly after the phase they were made in
+// ---------------------------------------------------------------------------------------------
+
+describe('Additional combat phases', () => {
+  const SOURCE = { cardId: 'src', oracleId: 'oracle-src', name: 'Lab Source', controllerId: 'P1' };
+  const makeExtra = (
+    ctx: GameContext,
+    effect: { additionalMain?: true; untapYourCreatures?: true } = {},
+  ) =>
+    pump(
+      executeAbility(ctx, SOURCE, spell({ effects: [{ op: 'extraCombatPhase', ...effect }] }), []),
+    );
+
+  /** The phases the turn goes through after `from`, as the phase events say, with nobody attacking. */
+  function playOut(
+    ctx: GameContext,
+    from: 'precombatMain' | 'combat' | 'postcombatMain' | 'ending',
+    during?: (phase: string, count: number) => void,
+  ): string[] {
+    const start = ctx.state.eventLog.length;
+    const answer = (decision: PendingDecision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, () => null);
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    };
+    const rest = function* () {
+      if (from === 'precombatMain') {
+        yield* runCombatAndExtraCombats(ctx);
+        from = 'postcombatMain';
+        beginPostcombatMain(ctx);
+        yield* runPrioritySequence(ctx);
+        yield* runInsertedPhases(ctx, 'postcombatMain');
+      } else if (from === 'postcombatMain') {
+        yield* runInsertedPhases(ctx, 'postcombatMain');
+      }
+      yield* runEndingPhase(ctx);
+    };
+    pump(rest(), answer);
+    void during;
+    return ctx.state.eventLog
+      .slice(start)
+      .filter((event) => event.type === 'phaseBegin')
+      .map((event) => String(event.payload['phase']));
+  }
+
+  it('extra-combat-after-precombat-main — made in the first main phase it runs right after it, before the regular combat', () => {
+    const ctx = pod('extra-main-one');
+    makeExtra(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    expect(ctx.state.extraCombats[0]).toMatchObject({ after: 'precombatMain', controllerId: 'P1' });
+    expect(playOut(ctx, 'precombatMain')).toEqual(['combat', 'combat', 'postcombatMain', 'ending']);
+    expect(ctx.state.extraCombats).toEqual([]);
+  });
+
+  it('extra-combat-after-combat — made during combat it runs once, right after that combat, and no main phase comes with it', () => {
+    const ctx = pod('extra-combat');
+    ctx.state.phase = 'combat';
+    makeExtra(ctx);
+    expect(ctx.state.extraCombats[0]).toMatchObject({ after: 'combat' });
+    // Combat is already underway: the regular combat has "just ended" and the extra one follows.
+    const phases = pump(runInsertedPhases(ctx, 'combat'));
+    expect(phases.value).toBeUndefined();
+    expect(ctx.state.extraCombats).toEqual([]);
+    const begun = ctx.state.eventLog.filter((event) => event.type === 'phaseBegin');
+    expect(begun.map((event) => event.payload['phase'])).toEqual(['combat']);
+  });
+
+  it('extra-combat-after-postcombat-main — made in the second main phase it runs after it and before the end step, and never leaks into the next turn', () => {
+    const ctx = pod('extra-main-two');
+    ctx.state.phase = 'postcombatMain';
+    makeExtra(ctx);
+    expect(playOut(ctx, 'postcombatMain')).toEqual(['combat', 'ending']);
+    expect(ctx.state.extraCombats).toEqual([]);
+  });
+
+  it('extra-combat-too-late — made in the end step there is no later phase to run it, so it is dropped at cleanup instead of leaking', () => {
+    const ctx = pod('extra-end');
+    ctx.state.phase = 'ending';
+    makeExtra(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    expect(playOut(ctx, 'ending')).toEqual(['ending']);
+    expect(ctx.state.extraCombats).toEqual([]);
+  });
+
+  it('extra-combat-newest-first — two made in one phase both run, the later one first; one made during an extra combat runs right after it', () => {
+    const ctx = pod('extra-order');
+    makeExtra(ctx);
+    makeExtra(ctx, { untapYourCreatures: true });
+    expect(ctx.state.extraCombats.map((extra) => extra.untapAllAtBeginning === true)).toEqual([
+      true,
+      false,
+    ]);
+    const ids = ctx.state.extraCombats.map((extra) => extra.id);
+    const order: string[] = [];
+    const generator = runInsertedPhases(ctx, 'precombatMain');
+    let outcome: DecisionOutcome | undefined;
+    for (let guard = 0; guard < 400; guard++) {
+      const step = outcome === undefined ? generator.next() : generator.next(outcome);
+      if (step.done === true) break;
+      if (ctx.state.currentCombatId !== undefined && order.at(-1) !== ctx.state.currentCombatId)
+        order.push(ctx.state.currentCombatId);
+      const decision = step.value;
+      if (decision.presentationAttackDeclaration !== undefined)
+        outcome = declareAttacks(decision, () => null);
+      else if (decision.presentationBlockDeclaration !== undefined)
+        outcome = declareBlocks(decision, () => null);
+      else {
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        outcome = { index: Math.max(pass, 0), targets: new Map() };
+      }
+    }
+    expect(order).toEqual([ids[0], ids[1]]);
+    // One made while an extra combat is current is inserted directly after that one.
+    const ctx2 = pod('extra-nested');
+    makeExtra(ctx2);
+    makeExtra(ctx2);
+    const [first, second] = ctx2.state.extraCombats.map((extra) => extra.id) as [string, string];
+    const seen: string[] = [];
+    let made = false;
+    const gen2 = runInsertedPhases(ctx2, 'precombatMain');
+    let out2: DecisionOutcome | undefined;
+    for (let guard = 0; guard < 400; guard++) {
+      const step = out2 === undefined ? gen2.next() : gen2.next(out2);
+      if (step.done === true) break;
+      const current = ctx2.state.currentCombatId;
+      if (current !== undefined && seen.at(-1) !== current) seen.push(current);
+      if (current === first && !made) {
+        made = true;
+        ctx2.state.phase = 'combat';
+        makeExtra(ctx2);
+        seen.push(`made:${ctx2.state.extraCombats[0]!.id}`);
+      }
+      const decision = step.value;
+      if (decision.presentationAttackDeclaration !== undefined)
+        out2 = declareAttacks(decision, () => null);
+      else if (decision.presentationBlockDeclaration !== undefined)
+        out2 = declareBlocks(decision, () => null);
+      else {
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        out2 = { index: Math.max(pass, 0), targets: new Map() };
+      }
+    }
+    const nested = seen.find((entry) => entry.startsWith('made:'))!.slice('made:'.length);
+    const ran = seen
+      .filter((entry) => !entry.startsWith('made:'))
+      .filter((entry, index, all) => entry !== all[index - 1]);
+    expect(ran).toEqual([first, nested, second]);
+  });
+
+  it('extra-combat-additional-main — "followed by an additional main phase" adds a main phase after that combat, and only then', () => {
+    const ctx = pod('extra-with-main');
+    ctx.state.phase = 'postcombatMain';
+    makeExtra(ctx, { additionalMain: true });
+    expect(playOut(ctx, 'postcombatMain')).toEqual(['combat', 'postcombatMain', 'ending']);
+    const plain = pod('extra-without-main');
+    plain.state.phase = 'postcombatMain';
+    makeExtra(plain);
+    expect(playOut(plain, 'postcombatMain')).toEqual(['combat', 'ending']);
+  });
+
+  it('extra-combat-untap-trigger — "at the beginning of that combat, untap all creatures you control" is a trigger that resolves in that combat only', () => {
+    const ctx = pod('extra-untap');
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Bear'), { tapped: true });
+    const theirs = spawn(ctx, 'P2', GRIZZLY('P2 Bear'), { tapped: true });
+    makeExtra(ctx, { untapYourCreatures: true });
+    // The regular combat has not begun: nothing untaps yet.
+    expect(mine.tapped).toBe(true);
+    let seenAtDeclare: boolean[] = [];
+    const generator = runInsertedPhases(ctx, 'precombatMain');
+    let outcome: DecisionOutcome | undefined;
+    for (let guard = 0; guard < 200; guard++) {
+      const step = outcome === undefined ? generator.next() : generator.next(outcome);
+      if (step.done === true) break;
+      const decision = step.value;
+      if (decision.presentationAttackDeclaration !== undefined) {
+        seenAtDeclare = [mine.tapped, theirs.tapped];
+        outcome = declareAttacks(decision, () => null);
+      } else if (decision.presentationBlockDeclaration !== undefined)
+        outcome = declareBlocks(decision, () => null);
+      else {
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        outcome = { index: Math.max(pass, 0), targets: new Map() };
+      }
+    }
+    expect(seenAtDeclare).toEqual([false, true]);
   });
 });
 

@@ -20,7 +20,8 @@ import {
   playerById,
 } from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
-import type { EngineCardObject, GameContext } from '../state/types';
+import type { EngineCardObject, ExtraCombat, GameContext } from '../state/types';
+import { allOf, ofType, YOURS } from '../cards/selector';
 import { emptyManaPools, runPrioritySequence } from './priority';
 
 function setPhase(ctx: GameContext, phase: Phase, step: Step | null): void {
@@ -317,6 +318,8 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
           entry.expires.setTurn >= ctx.state.turnNumber,
       );
     ctx.state.damageShields = [];
+    // A phase that was to come after one that is over (made in the end step) never happens.
+    ctx.state.extraCombats = [];
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").
@@ -339,13 +342,58 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
  * Card Test Lab's prepared-scenario continuation so both use one combat sequence.
  */
 export function* runCombatAndExtraCombats(ctx: GameContext): GameGen<void> {
+  // Combat phases made in the precombat main phase come right after it, before the regular one.
+  yield* runInsertedPhases(ctx, 'precombatMain');
+  yield* runOneCombat(ctx, 'regular');
+}
+
+/**
+ * One combat phase and whatever was inserted after it (CR 500.8). `id` names the phase for
+ * effects that last "that combat".
+ */
+function* runOneCombat(ctx: GameContext, id: string, extra?: ExtraCombat): GameGen<void> {
   setPhase(ctx, 'combat', null);
+  ctx.state.currentCombatId = id;
   queueStepTriggers(ctx, 'beginningOfCombat');
+  if (extra?.untapAllAtBeginning === true) {
+    // "At the beginning of that combat, untap all creatures you control" is a triggered ability.
+    ctx.state.pendingTriggers.push({
+      controllerId: extra.controllerId,
+      sourceCardId: extra.sourceCardId,
+      sourceOracleId: extra.sourceOracleId,
+      sourceName: extra.sourceName,
+      ability: {
+        kind: 'triggered',
+        trigger: { when: 'beginningOfCombat', player: 'you' },
+        targets: [],
+        effects: [{ op: 'untapEach', selector: allOf(ofType('Creature'), YOURS) }],
+        description: 'At the beginning of that combat, untap all creatures you control',
+      },
+      scope: { eventPlayerId: extra.controllerId },
+    });
+  }
   yield* runCombatPhase(ctx);
-  while (ctx.state.extraCombatPhases > 0) {
-    ctx.state.extraCombatPhases -= 1;
-    queueStepTriggers(ctx, 'beginningOfCombat');
-    yield* runCombatPhase(ctx);
+  delete ctx.state.currentCombatId;
+  yield* runInsertedPhases(ctx, 'combat');
+}
+
+/**
+ * Run the additional phases created in `phase`, most recent first (CR 500.8). A combat phase made
+ * during one of them is inserted right after it, so it runs before the additional main phase that
+ * may follow and before what was scheduled earlier.
+ */
+export function* runInsertedPhases(ctx: GameContext, phase: Phase): GameGen<void> {
+  for (;;) {
+    const index = ctx.state.extraCombats.findIndex((extra) => extra.after === phase);
+    if (index < 0) return;
+    const [extra] = ctx.state.extraCombats.splice(index, 1) as [ExtraCombat];
+    yield* runOneCombat(ctx, extra.id, extra);
+    if (extra.additionalMain === true) {
+      beginPostcombatMain(ctx);
+      yield* runPrioritySequence(ctx);
+      emptyManaPools(ctx);
+      yield* runInsertedPhases(ctx, 'postcombatMain');
+    }
   }
 }
 
@@ -377,6 +425,8 @@ export function* runBeginningAndPrecombatMain(ctx: GameContext): GameGen<void> {
   yield* drawCards(ctx, ap, 1); // multiplayer: first-turn draw included (brief §5.3)
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
+  // A combat phase made in the beginning phase comes right after it, before the first main phase.
+  yield* runInsertedPhases(ctx, 'beginning');
 
   // Precombat main.
   ctx.state.mainPhasesStartedThisTurn = 1;
@@ -398,6 +448,7 @@ export function* runTurn(ctx: GameContext): GameGen<void> {
   beginPostcombatMain(ctx);
   yield* runPrioritySequence(ctx);
   emptyManaPools(ctx);
+  yield* runInsertedPhases(ctx, 'postcombatMain');
 
   yield* runEndingPhase(ctx);
 }

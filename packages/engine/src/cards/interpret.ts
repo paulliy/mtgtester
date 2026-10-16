@@ -939,7 +939,7 @@ function parseEffectSentence(
     s ===
     'after this main phase, there is an additional combat phase followed by an additional main phase'
   ) {
-    return [{ op: 'extraCombatPhase' }];
+    return [{ op: 'extraCombatPhase', additionalMain: true }];
   }
   {
     const copy = s.match(

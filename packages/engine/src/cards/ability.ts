@@ -1448,7 +1448,13 @@ export type Effect =
   | { op: 'castForLifeFromZones'; selector: Selector; zones: ('hand' | 'graveyard')[] }
   | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
   | { op: 'setMustBlockThisTurn'; target: EffectRef }
-  | { op: 'extraCombatPhase' }
+  /**
+   * "After this phase, there is an additional combat phase": inserted directly after the phase
+   * that is current as this resolves (CR 500.8). `additionalMain` adds the main phase some cards
+   * put after it; `untapYourCreatures` untaps all creatures the controller controls as that combat
+   * begins, as a triggered ability.
+   */
+  | { op: 'extraCombatPhase'; additionalMain?: true; untapYourCreatures?: true }
   /** Make the ability's controller the monarch (CR  monarch). */
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }

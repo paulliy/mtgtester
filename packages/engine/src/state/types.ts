@@ -21,6 +21,7 @@ import type {
   ObjectId,
   OracleCard,
   OracleId,
+  Phase,
   PermanentState,
   PlayerId,
   PlayerState,
@@ -115,6 +116,25 @@ export interface AttackDirectionEntry {
   sourceOracleId: string;
   direction: 'left' | 'right';
   expires: EffectExpiry;
+}
+
+/**
+ * "After this phase, there is an additional combat phase" (Lightning Runner, Moraug, Illusionist's
+ * Gambit): a combat phase inserted directly after the phase that was current when it was created.
+ * No main phase comes with it unless the text says so (`additionalMain`).
+ */
+export interface ExtraCombat {
+  id: string;
+  /** The phase it was created in; it runs as that phase ends. */
+  after: Phase;
+  controllerId: PlayerId;
+  sourceCardId: CardId;
+  sourceOracleId: OracleId;
+  sourceName: string;
+  /** "At the beginning of that combat, untap all creatures you control" (Moraug). */
+  untapAllAtBeginning?: true;
+  /** "…followed by an additional main phase" (Seize the Day). */
+  additionalMain?: true;
 }
 
 export interface EngineObject extends GameObject {
@@ -773,8 +793,14 @@ export interface EngineState extends GameState {
   combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
-  /** Number of additional combat phases to run after the current combat. */
-  extraCombatPhases: number;
+  /**
+   * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
+   * directly after the phase it was created in, ahead of anything scheduled after that phase
+   * earlier. Emptied at the end of the turn.
+   */
+  extraCombats: ExtraCombat[];
+  /** The combat phase being run: `regular`, or the id of the `ExtraCombat` it is. */
+  currentCombatId?: string;
   /** The player who is currently the monarch, or null before the mechanic appears. */
   monarchPlayerId: PlayerId | null;
   /** Until-end-of-turn activated abilities temporarily granted to cards in graveyards. */

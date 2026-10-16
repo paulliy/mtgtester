@@ -5826,7 +5826,17 @@ export function* executeAbility(
         break;
       }
       case 'extraCombatPhase':
-        ctx.state.extraCombatPhases += 1;
+        // Directly after the current phase, ahead of anything scheduled after it earlier.
+        ctx.state.extraCombats.unshift({
+          id: `ec-${ctx.state.nextObjectNum++}`,
+          after: ctx.state.phase,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ...(effect.untapYourCreatures === true ? { untapAllAtBeginning: true as const } : {}),
+          ...(effect.additionalMain === true ? { additionalMain: true as const } : {}),
+        });
         break;
       case 'becomeMonarch':
         ctx.state.monarchPlayerId = controller.id;

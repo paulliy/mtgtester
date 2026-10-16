@@ -186,6 +186,8 @@ const shapes = {
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     level: leaf,
+    additionalMain: leaf,
+    untapYourCreatures: leaf,
     direction: leaf,
     maximum: leaf,
     nonlandMaySatisfyCount: leaf,
