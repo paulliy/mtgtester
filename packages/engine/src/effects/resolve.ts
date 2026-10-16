@@ -11,7 +11,7 @@ import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellTargetOccurrences } from '../stack/target-occurrences';
-import { spellDefinitionOf } from '../state/queries';
+import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import {
   permanentManaValue,
@@ -5094,6 +5094,8 @@ export function* executeAbility(
         // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
         // which for a copy is the copied definition.
         const lastKnownSourceDef = ctx.defs.get(source.oracleId);
+        // The card itself, wherever it went, still shows the rules text and cost the copy shows.
+        const sourceCard = live === undefined ? findObjectByCardId(ctx, source.cardId) : undefined;
         const original =
           live ??
           (effect.ref === 'source' && lastKnownSourceDef !== undefined
@@ -5103,8 +5105,8 @@ export function* executeAbility(
                 oracleId: source.oracleId,
                 name: source.name,
                 typeLine: lastKnownSourceDef.typeLine,
-                oracleText: '',
-                manaCost: null,
+                oracleText: sourceCard?.oracleText ?? '',
+                manaCost: sourceCard?.manaCost ?? null,
                 transformed: false,
               } as unknown as EnginePermanent)
             : undefined);

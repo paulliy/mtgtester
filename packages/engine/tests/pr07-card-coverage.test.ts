@@ -4163,6 +4163,9 @@ describe('Life of the Party', () => {
     expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P2', 'P3', 'P4']);
     for (const token of tokens) expect(goaders(token)).toEqual(['P1']);
     expect(computeCharacteristics(ctx, tokens[0]!).keywords).toContain('haste');
+    // The copies show the card's own rules text and mana cost, not blanks.
+    expect(tokens[0]!.oracleText).toBe(card.oracleText);
+    expect(tokens[0]!.manaCost).toBe(card.manaCost);
   });
 
   it('life-of-the-party-whole-game — cast it, the opponents get goaded copies, and on a copy’s controller’s turn it attacks someone else', () => {
