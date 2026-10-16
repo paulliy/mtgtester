@@ -12732,6 +12732,44 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "2fc42640-983a-49ca-9020-7756135077b4": {
+      "name": "Fight or Flight",
+      "oracleSha256": "87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "fight-or-flight-separate-and-choose",
+          "oracleText": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles.",
+          "implementation": [
+            "authored beginningOfCombat trigger for each opponent's turn running separateIntoPilesLimitAttackers: the enchantment's controller puts each of the active player's creatures in pile 1 or 2 one decision at a time, then the active player chooses a pile (either pile may be empty); with no creatures there is nothing to choose between"
+          ],
+          "engineTestIds": [
+            "fight-or-flight-pinned-oracle-supported",
+            "fight-or-flight-controller-separates",
+            "fight-or-flight-active-player-chooses",
+            "fight-or-flight-extra-combat"
+          ],
+          "viewerScenarioIds": ["fight-or-flight-viewer-separate", "fight-or-flight-viewer-choose"]
+        },
+        {
+          "id": "fight-or-flight-pile-attacks",
+          "oracleText": "Only creatures in the pile of their choice can attack this turn.",
+          "implementation": [
+            "a this-turn entry in the attack requirement store whose live selector covers every creature the active player controls (CR 611.2c, so later arrivals are in no pile) and whose cantAttackExcept restriction names the chosen pile; restrictions beat requirements, and two of them bind together"
+          ],
+          "engineTestIds": [
+            "fight-or-flight-only-chosen-pile-attacks",
+            "fight-or-flight-later-arrivals",
+            "fight-or-flight-this-turn-only",
+            "fight-or-flight-beats-must-attack",
+            "fight-or-flight-two-copies",
+            "fight-or-flight-whole-game"
+          ],
+          "viewerScenarioIds": ["fight-or-flight-viewer-separate", "fight-or-flight-viewer-choose"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

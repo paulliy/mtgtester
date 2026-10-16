@@ -16,6 +16,8 @@ interface Choice {
 /** One scripted step: take the first legal action whose description contains `action`. */
 interface Step {
   action: string;
+  /** Only take this step in a decision whose prompt contains this text. */
+  prompt?: string;
   /** Fill target slots, in order, with the objects or players of these names. */
   targets?: string[];
   /** Only take this step while the game is in this phase (an action offered earlier is skipped). */
@@ -49,6 +51,7 @@ function scripted(steps: Step[]) {
     for (const [index, step] of remaining.slice(0, 1).entries()) {
       if (step.phase !== undefined && scenario.engine.getState().phase !== step.phase) continue;
       if (step.ready !== undefined && !step.ready(scenario)) continue;
+      if (step.prompt !== undefined && !(request.prompt ?? '').includes(step.prompt)) continue;
       const action = request.legalActions.find((candidate) =>
         candidate.description.includes(step.action),
       );
@@ -910,5 +913,60 @@ describe('Willie Lumpkin, Postman Card Test Lab scenario', () => {
     expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
     expect(state.stack).toEqual([]);
     replays('willie-lumpkin-viewer-draw-then-cant-attack', steps);
+  });
+});
+
+describe('Fight or Flight Card Test Lab scenarios', () => {
+  it('fight-or-flight-viewer-separate — you separate P2’s creatures, P2 chooses pile 1, and only Lab Servo attacks', () => {
+    const steps: Step[] = [
+      { prompt: 'Put Lab Ox in a pile', action: 'Put it in pile 2' },
+      { prompt: 'Put Lab Servo in a pile', action: 'Put it in pile 1' },
+    ];
+    const { scenario, state, seat, onBattlefield, requests } = run(
+      'fight-or-flight-viewer-separate',
+      steps,
+    );
+    const separating = requests.filter(({ request }) =>
+      /^Put .* in a pile\.$/.test(request.prompt),
+    );
+    expect(separating.map(({ seat: who }) => who)).toEqual(['P1', 'P1']);
+    expect(seat('P1').life).toBe(39);
+    expect(onBattlefield('Lab Ox')[0]!.tapped).toBe(false);
+    expect(onBattlefield('Lab Servo')[0]!.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('fight-or-flight-viewer-separate', steps);
+  });
+
+  it('fight-or-flight-viewer-choose — P2 separates your creatures, you choose pile 2, and only Lab Servo is offered as an attacker', () => {
+    const steps: Step[] = [
+      { prompt: 'choose a pile', action: 'Attack with pile 2' },
+      { action: 'Declare attackers', targets: ['__no_attack__', 'P2'] },
+    ];
+    const attackOffers: string[][] = [];
+    const { scenario, state, seat, requests } = run(
+      'fight-or-flight-viewer-choose',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (declare !== undefined)
+          for (const slot of declare.targets ?? []) attackOffers.push(slot.options);
+      },
+    );
+    const choosing = requests.find(({ request }) => request.prompt.includes('choose a pile'))!;
+    expect(choosing.seat).toBe('P1');
+    expect(choosing.request.legalActions.map((action) => action.description)).toEqual([
+      'Attack with pile 1: Lab Ox',
+      'Attack with pile 2: Lab Servo',
+    ]);
+    // Lab Ox's slot offers no defender at all; Lab Servo's offers every opponent.
+    expect(attackOffers).toHaveLength(2);
+    expect(attackOffers.filter((options) => options.includes('P2'))).toHaveLength(1);
+    expect(seat('P2').life).toBe(39);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('fight-or-flight-viewer-choose', steps);
   });
 });

@@ -13810,6 +13810,96 @@ function willieScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/**
+ * The seat that owns Fight or Flight or has the creatures in the Fight or Flight scenarios: it
+ * puts the named creatures in pile 1 (all others in pile 2), takes pile 1 when it chooses, and
+ * otherwise attacks `defender` with everything it is offered.
+ */
+function pileScript(pileOne: string[], defender: PlayerId): DecisionProvider {
+  const attack = attackPlayerWithEverything(defender);
+  return {
+    decide(request) {
+      const separating = request.prompt.match(/^Put (.*) in a pile\.$/);
+      if (separating !== null) {
+        const wanted = pileOne.includes(separating[1]!) ? 'Put it in pile 1' : 'Put it in pile 2';
+        const action = request.legalActions.find((candidate) => candidate.description === wanted);
+        if (action !== undefined) return { requestId: request.requestId, actionId: action.id };
+      }
+      const choosing = request.legalActions.find((candidate) =>
+        candidate.description.startsWith('Attack with pile 1'),
+      );
+      if (choosing !== undefined) return { requestId: request.requestId, actionId: choosing.id };
+      return attack.decide(request);
+    },
+  };
+}
+
+function fightOrFlightSeparateScenario(gameId: GameId): CardTestScenario {
+  const fight = pinnedFrom(COVERAGE_PR07, 'Fight or Flight');
+  return pr01Scenario(gameId, {
+    id: 'fight-or-flight-viewer-separate',
+    title:
+      'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+    instructions: [
+      'It is P2’s turn. You control Fight or Flight; P2 controls Lab Ox and Lab Servo.',
+      'Pass priority to the beginning of combat. Put Lab Ox in pile 2 and Lab Servo in pile 1 when asked.',
+      'P2 chooses pile 1 and attacks you with what it can.',
+    ],
+    expectedOutcome:
+      'Only Lab Servo, in the chosen pile, attacked: you took 1 and are at 39. Lab Ox, in the other pile, could not attack and stayed untapped.',
+    oracleSha256: fight.sha256,
+    clauseIds: ['fight-or-flight-separate-and-choose', 'fight-or-flight-pile-attacks'],
+    decks: {
+      P1: [fight.card, FOREST, FOREST],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      currentTurnPlayer: 'P2',
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Fight or Flight'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: pileScript(['Lab Servo'], 'P1') },
+  });
+}
+
+function fightOrFlightChooseScenario(gameId: GameId): CardTestScenario {
+  const fight = pinnedFrom(COVERAGE_PR07, 'Fight or Flight');
+  return pr01Scenario(gameId, {
+    id: 'fight-or-flight-viewer-choose',
+    title: 'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+    instructions: [
+      'It is your turn. You control Lab Ox and Lab Servo; P2 controls Fight or Flight.',
+      'Pass priority to the beginning of combat. P2 puts Lab Ox in pile 1 and Lab Servo in pile 2, and you choose a pile.',
+      'Choose pile 2, then declare attackers: only Lab Servo can attack.',
+    ],
+    expectedOutcome:
+      'Lab Ox, in the pile you did not choose, was not offered as an attacker; Lab Servo attacked P2, which is at 39.',
+    oracleSha256: fight.sha256,
+    clauseIds: ['fight-or-flight-separate-and-choose', 'fight-or-flight-pile-attacks'],
+    decks: {
+      P1: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P2: [fight.card, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Fight or Flight'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: pileScript(['Lab Ox'], 'P1') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -14144,6 +14234,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'sirens-call-viewer-attack-or-die',
   'wars-toll-viewer-taps-lands-and-forces-attack',
   'willie-lumpkin-viewer-draw-then-cant-attack',
+  'fight-or-flight-viewer-separate',
+  'fight-or-flight-viewer-choose',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14655,6 +14747,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'sirens-call-viewer-attack-or-die': sirensCallScenario,
   'wars-toll-viewer-taps-lands-and-forces-attack': warsTollScenario,
   'willie-lumpkin-viewer-draw-then-cant-attack': willieScenario,
+  'fight-or-flight-viewer-separate': fightOrFlightSeparateScenario,
+  'fight-or-flight-viewer-choose': fightOrFlightChooseScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

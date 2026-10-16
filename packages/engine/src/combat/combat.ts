@@ -407,10 +407,13 @@ function attackRestrictionAllows(
   )
     return false;
   // "Can't attack you or planeswalkers you control" from a resolved spell (Illusionist's Gambit).
+  // "Only creatures in the chosen pile can attack" (Fight or Flight) bars everything outside it.
   if (
     activeRequirementEntries(ctx, creature).some((entry) =>
-      (entry.restrictions ?? []).some(
-        (rule) => rule.kind === 'cantAttackPlayer' && rule.playerId === target.player.id,
+      (entry.restrictions ?? []).some((rule) =>
+        rule.kind === 'cantAttackExcept'
+          ? !rule.objectIds.includes(creature.id)
+          : rule.playerId === target.player.id,
       ),
     )
   )

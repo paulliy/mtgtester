@@ -1939,6 +1939,327 @@ describe('Willie Lumpkin, Postman', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR07.12 Fight or Flight
+// ---------------------------------------------------------------------------------------------
+
+describe('Fight or Flight', () => {
+  const { card } = pinned('Fight or Flight');
+  const HASTY = oracle({
+    name: 'P2 Hasty Latecomer',
+    typeLine: 'Creature — Goblin',
+    power: '2',
+    toughness: '1',
+    oracleText: 'Haste',
+  });
+
+  /** P1 controls Fight or Flight; P2 has three Bears; P3 has one. */
+  function board(seed: string, copiesOfFight = 1) {
+    const ctx = pod(seed);
+    const fights = Array.from({ length: copiesOfFight }, () => spawn(ctx, 'P1', card));
+    const bears = ['A', 'B', 'C'].map((letter) => spawn(ctx, 'P2', GRIZZLY(`P2 Bear ${letter}`)));
+    const other = spawn(ctx, 'P3', GRIZZLY('P3 Bear'));
+    return { ctx, fights, bears, other };
+  }
+
+  interface Run {
+    /** Who was asked what, in order. */
+    asked: { player: string; prompt: string; options: string[] }[];
+    /** The players each of P2's creatures was offered as defenders in each declaration. */
+    offered: Record<string, string[]>[];
+    attacked: string[];
+  }
+
+  /**
+   * P2's turn from the beginning of combat: P1 separates (`split` names each creature's pile, the
+   * rest go to pile 1), P2 takes pile `pick`, then P2 attacks P1 with everything it is offered.
+   */
+  function combatOf(
+    ctx: GameContext,
+    split: Record<string, 1 | 2>,
+    pick: 1 | 2,
+    options: { turn?: boolean; between?: () => void } = {},
+  ): Run {
+    const run: Run = { asked: [], offered: [], attacked: [] };
+    if (options.turn !== false) {
+      turnOfPlayer(ctx, 'P2');
+      ctx.state.turnNumber += 1;
+    }
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        const subjects = decision.presentationAttackDeclaration.subjects;
+        run.offered.push(
+          Object.fromEntries(
+            subjects.map((subject) => [
+              subject.name,
+              subject.defenders.map((defender) => defender.playerId),
+            ]),
+          ),
+        );
+        return declareAttacks(decision, (_subjectId, subject) => {
+          const defender = subject.defenders.find((candidate) => candidate.playerId === 'P1');
+          if (defender !== undefined) run.attacked.push(subject.name);
+          return defender?.playerId ?? null;
+        });
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      run.asked.push({
+        player: decision.player,
+        prompt: decision.prompt,
+        options: decision.options.map((option) => option.description),
+      });
+      if (decision.prompt.startsWith('Put ')) {
+        const pile = Object.entries(split).find(([name]) => decision.prompt.includes(`${name} `));
+        return { index: (pile?.[1] ?? 1) - 1, targets: new Map() };
+      }
+      return { index: pick - 1, targets: new Map() };
+    });
+    return run;
+  }
+
+  const attackers = (run: Run, declaration = 0) =>
+    Object.entries(run.offered[declaration] ?? {})
+      .filter(([, defenders]) => defenders.length > 0)
+      .map(([name]) => name)
+      .sort();
+
+  it('fight-or-flight-pinned-oracle-supported — the authored override carries the opponents’ begin-combat trigger under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toEqual({ when: 'beginningOfCombat', player: 'opponent' });
+    expect(def.triggers[0]!.effects).toEqual([{ op: 'separateIntoPilesLimitAttackers' }]);
+  });
+
+  it('fight-or-flight-controller-separates — its controller puts each of the active player’s creatures in a pile, one at a time, and only on an opponent’s turn', () => {
+    const { ctx } = board('fof-separates');
+    const run = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2, 'P2 Bear C': 2 }, 1);
+    const separation = run.asked.filter((entry) => entry.prompt.startsWith('Put '));
+    expect(separation.map((entry) => entry.player)).toEqual(['P1', 'P1', 'P1']);
+    expect(
+      separation.map((entry) => entry.prompt.replace(/^Put (.*) in a pile\.$/, '$1')).sort(),
+    ).toEqual(['P2 Bear A', 'P2 Bear B', 'P2 Bear C']);
+    // P3's creature is not separated: only the player whose turn it is.
+    expect(separation.some((entry) => entry.prompt.includes('P3 Bear'))).toBe(false);
+    // On its controller's own turn it does nothing.
+    const mine = board('fof-own-turn');
+    spawn(mine.ctx, 'P1', GRIZZLY('P1 Bear'));
+    turnOfPlayer(mine.ctx, 'P1');
+    mine.ctx.state.turnNumber += 1;
+    const own = fight(mine.ctx, () => ({}));
+    expect(own.decisions.filter((decision) => decision.prompt.startsWith('Put '))).toEqual([]);
+    expect(mine.ctx.state.attackRequirements ?? []).toEqual([]);
+  });
+
+  it('fight-or-flight-active-player-chooses — the active player chooses between the two piles, either of which may be empty', () => {
+    const { ctx } = board('fof-chooses');
+    const run = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 1, 'P2 Bear C': 1 }, 1);
+    const choice = run.asked.find((entry) => !entry.prompt.startsWith('Put '))!;
+    expect(choice.player).toBe('P2');
+    expect(choice.options).toEqual([
+      'Attack with pile 1: P2 Bear A, P2 Bear B, P2 Bear C',
+      'Attack with pile 2: empty',
+    ]);
+    // The empty pile is a legal choice and leaves nothing able to attack.
+    const empty = board('fof-empty-pile');
+    const none = combatOf(empty.ctx, { 'P2 Bear A': 1, 'P2 Bear B': 1, 'P2 Bear C': 1 }, 2);
+    expect(attackers(none)).toEqual([]);
+    expect(none.attacked).toEqual([]);
+  });
+
+  it('fight-or-flight-only-chosen-pile-attacks — only the creatures in the chosen pile can attack, the other pile’s cannot', () => {
+    const { ctx, bears } = board('fof-pile');
+    const run = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2, 'P2 Bear C': 2 }, 2);
+    expect(attackers(run)).toEqual(['P2 Bear B', 'P2 Bear C']);
+    expect(run.attacked.sort()).toEqual(['P2 Bear B', 'P2 Bear C']);
+    expect(run.offered[0]!['P2 Bear A']).toEqual([]);
+    expect(bears[0]!.tapped).toBe(false);
+    expect(playerById(ctx, 'P1').life).toBe(36);
+    // Choosing the other pile flips it.
+    const other = board('fof-pile-other');
+    const flipped = combatOf(other.ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2, 'P2 Bear C': 2 }, 1);
+    expect(flipped.attacked).toEqual(['P2 Bear A']);
+  });
+
+  it('fight-or-flight-later-arrivals — a creature that arrives after the piles were made is in neither pile and can’t attack', () => {
+    // The effect is resolved by hand (no Fight or Flight on the battlefield to trigger again).
+    const ctx = pod('fof-later');
+    for (const letter of ['A', 'B', 'C']) spawn(ctx, 'P2', GRIZZLY(`P2 Bear ${letter}`));
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'fof', oracleId: 'oracle-fof', name: 'Fight or Flight', controllerId: 'P1' },
+        spell({ effects: [{ op: 'separateIntoPilesLimitAttackers' }] }),
+        [],
+        undefined,
+        { eventPlayerId: 'P2' },
+      ),
+    );
+    spawn(ctx, 'P2', HASTY, { summoningSick: false });
+    const run = combatOf(ctx, {}, 1, { turn: false });
+    expect(Object.keys(run.offered[0]!).sort()).toEqual([
+      'P2 Bear A',
+      'P2 Bear B',
+      'P2 Bear C',
+      'P2 Hasty Latecomer',
+    ]);
+    expect(attackers(run)).toEqual(['P2 Bear A', 'P2 Bear B', 'P2 Bear C']);
+    expect(run.offered[0]!['P2 Hasty Latecomer']).toEqual([]);
+    expect(run.attacked).not.toContain('P2 Hasty Latecomer');
+  });
+
+  it('fight-or-flight-this-turn-only — the limit ends in the cleanup step and the next turn’s piles are made afresh', () => {
+    const { ctx, bears } = board('fof-cleanup');
+    combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2, 'P2 Bear C': 2 }, 2);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+    for (const bear of bears) bear.tapped = false;
+    const next = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 1, 'P2 Bear C': 2 }, 1);
+    expect(next.attacked.sort()).toEqual(['P2 Bear A', 'P2 Bear B']);
+  });
+
+  it('fight-or-flight-beats-must-attack — a creature outside the pile is not made to attack, one inside still is', () => {
+    const { ctx, bears } = board('fof-goad');
+    // Siren's-Call-style requirement on all of P2's creatures this turn.
+    (ctx.state.attackRequirements ??= []).push({
+      id: 'ar-test',
+      controllerId: 'P3',
+      affects: { kind: 'objects', objectIds: bears.map((bear) => bear.id) },
+      requirements: [{ kind: 'anyAttack' }],
+      expires: { kind: 'thisTurn', turn: ctx.state.turnNumber + 1 },
+    });
+    const required: Record<string, boolean> = {};
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          required[subject.name] = subject.mustAttack;
+        return declareAttacks(decision, (_id, subject) =>
+          subject.mustAttack ? (subject.defenders[0]?.playerId ?? null) : null,
+        );
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      if (decision.prompt.startsWith('Put '))
+        return { index: decision.prompt.includes('Bear A') ? 0 : 1, targets: new Map() };
+      return { index: 0, targets: new Map() };
+    });
+    expect(required['P2 Bear A']).toBe(true);
+    expect(required['P2 Bear B']).toBe(false);
+    expect(required['P2 Bear C']).toBe(false);
+  });
+
+  it('fight-or-flight-two-copies — with two of them a creature must be in the pile chosen for each', () => {
+    const { ctx } = board('fof-two', 2);
+    // Both separations put Bear A with Bear B in pile 1 and Bear C alone in pile 2, and both
+    // choices take pile 1, except that the second copy is made to split A from B instead.
+    let separations = 0;
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    const run: Run = { asked: [], offered: [], attacked: [] };
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        run.offered.push(
+          Object.fromEntries(
+            decision.presentationAttackDeclaration.subjects.map((subject) => [
+              subject.name,
+              subject.defenders.map((defender) => defender.playerId),
+            ]),
+          ),
+        );
+        return declareAttacks(decision, () => null);
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      if (decision.prompt.startsWith('Put ')) {
+        separations++;
+        // First copy (three prompts): A and B in pile 1. Second copy: A in pile 1, B and C in pile 2.
+        const second = separations > 3;
+        const inOne = second
+          ? decision.prompt.includes('Bear A')
+          : !decision.prompt.includes('Bear C');
+        return { index: inOne ? 0 : 1, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(separations).toBe(6);
+    // Pile 1 each time: {A, B} then {A}: only A is in both.
+    expect(attackers(run)).toEqual(['P2 Bear A']);
+  });
+
+  it('fight-or-flight-extra-combat — it triggers again at the beginning of an additional combat, and the creature must be in every pile chosen that turn', () => {
+    const { ctx } = board('fof-extra');
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: 'oracle-src', name: 'Lab Source', controllerId: 'P2' },
+        spell({ effects: [{ op: 'extraCombatPhase' }] }),
+        [],
+      ),
+    );
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    let combats = 0;
+    let separations = 0;
+    const run: Run = { asked: [], offered: [], attacked: [] };
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        combats++;
+        run.offered.push(
+          Object.fromEntries(
+            decision.presentationAttackDeclaration.subjects.map((subject) => [
+              subject.name,
+              subject.defenders.map((defender) => defender.playerId),
+            ]),
+          ),
+        );
+        return declareAttacks(decision, () => null);
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      if (decision.prompt.startsWith('Put ')) {
+        separations++;
+        // Combat 1: everything in pile 1. Combat 2: only Bear A in pile 1.
+        const inOne = separations <= 3 || decision.prompt.includes('Bear A');
+        return { index: inOne ? 0 : 1, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    expect(combats).toBe(2);
+    expect(ctx.state.attackRequirements).toHaveLength(2);
+    expect(separations).toBe(6);
+    // In the second combat only Bear A is in the pile chosen for both separations.
+    expect(attackers(run, 1)).toEqual(['P2 Bear A']);
+    expect(attackers(run, 0)).toEqual(['P2 Bear A', 'P2 Bear B', 'P2 Bear C']);
+  });
+
+  it('fight-or-flight-whole-game — P1 casts it, and on P2’s turn the piles are made and chosen and only the chosen pile attacks through damage', () => {
+    const ctx = pod('fof-chain');
+    spawn(ctx, 'P2', GRIZZLY('P2 Bear A'));
+    spawn(ctx, 'P2', GRIZZLY('P2 Bear B'));
+    castFromHand(ctx, 'P1', card, [{ symbol: 'W' }, ...generic(3)]);
+    resolveTop(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Fight or Flight')).toBe(true);
+    const run = combatOf(ctx, { 'P2 Bear A': 1, 'P2 Bear B': 2 }, 2);
+    expect(run.attacked).toEqual(['P2 Bear B']);
+    expect(playerById(ctx, 'P1').life).toBe(38);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR07.07 Firkraag, Cunning Instigator
 // ---------------------------------------------------------------------------------------------
 
@@ -4965,6 +5286,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Willie Lumpkin, Postman',
     sha256: '33c6149e7443a3b97484dc3ce01515a81e91e83af46a878ca95da0c306685429',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Fight or Flight',
+    sha256: '87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7',
     clauseCount: 2,
     authored: true,
   },

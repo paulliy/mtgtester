@@ -559,6 +559,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'sirens-call-viewer-attack-or-die',
       'wars-toll-viewer-taps-lands-and-forces-attack',
       'willie-lumpkin-viewer-draw-then-cant-attack',
+      'fight-or-flight-viewer-separate',
+      'fight-or-flight-viewer-choose',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

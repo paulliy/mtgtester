@@ -2795,6 +2795,31 @@
     }
   },
   {
+    "oracleId": "2fc42640-983a-49ca-9020-7756135077b4",
+    "name": "Fight or Flight",
+    "handledLines": [
+      "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn",
+          "effects": [
+            {
+              "op": "separateIntoPilesLimitAttackers"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
     "name": "Ultimate Nullification",
     "handledLines": [
@@ -20772,6 +20797,31 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-fight-or-flight",
+    "name": "Fight or Flight",
+    "handledLines": [
+      "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn",
+          "effects": [
+            {
+              "op": "separateIntoPilesLimitAttackers"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
     }
   },
   {

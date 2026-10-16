@@ -838,6 +838,7 @@ const families = {
       sacrificeTargetPlayerCreature: true,
       eachPlayerKeepsCreatureWithVow: true,
       separatePermanentsIntoPilesThenSacrifice: true,
+      separateIntoPilesLimitAttackers: true,
       dealDamage: true,
       dealDamageUnlessSacrifice: true,
       destroy: true,

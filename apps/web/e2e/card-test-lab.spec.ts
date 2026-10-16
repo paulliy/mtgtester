@@ -10329,3 +10329,57 @@ test('Willie Lumpkin: both players draw, then the one who drew cannot attack you
   ).toHaveText('36');
   await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('40');
 });
+
+test('Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+  );
+  for (const [name, pile] of [
+    ['Lab Ox', 2],
+    ['Lab Servo', 1],
+  ] as const) {
+    await passUntil(page, page.getByText(`Put ${name} in a pile.`, { exact: true }));
+    await page.getByRole('button', { name: `Put it in pile ${pile}`, exact: true }).click();
+  }
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Only Lab Servo, in the pile P2 chose, attacked: one damage to you.
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('39');
+});
+
+test('Fight or Flight: P2 separates your creatures and only the pile you choose can attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+  );
+  await passUntil(
+    page,
+    page.getByText(/choose a pile of creatures; only those can attack this turn/),
+  );
+  await expect(page.getByRole('button', { name: 'Attack with pile 1: Lab Ox' })).toBeVisible();
+  await page.getByRole('button', { name: 'Attack with pile 2: Lab Servo' }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  // Lab Ox is in the pile you did not choose: it is not offered any defender.
+  await expect(
+    page
+      .locator('.combat-assignment-row')
+      .filter({ has: page.getByText('Lab Ox', { exact: true }) })
+      .getByRole('button', { name: 'P2' }),
+  ).toHaveCount(0);
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+});

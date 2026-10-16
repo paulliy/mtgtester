@@ -597,6 +597,14 @@ export type Effect =
   | { op: 'sacrificeTargetPlayerCreature'; target: EffectRef }
   | { op: 'eachPlayerKeepsCreatureWithVow' }
   | { op: 'separatePermanentsIntoPilesThenSacrifice'; target: EffectRef }
+  /**
+   * "Separate all creatures that player controls into two piles. Only creatures in the pile of
+   * their choice can attack this turn" (Fight or Flight): the effect's controller separates the
+   * event player's creatures, that player chooses a pile, and a restriction until the end of the
+   * turn lets only the creatures in it attack. It is a rules modification (CR 611.2c), so a
+   * creature that arrives later is in neither pile and can't attack.
+   */
+  | { op: 'separateIntoPilesLimitAttackers' }
   | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: EffectRef } // to the slot's creature or player
   /**
    * "deals N damage to target opponent unless that player sacrifices a creature of their

@@ -102,6 +102,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   sacrificeTargetPlayerCreature: { target: player },
   eachPlayerKeepsCreatureWithVow: {},
   separatePermanentsIntoPilesThenSacrifice: { target: player },
+  separateIntoPilesLimitAttackers: {},
   dealDamage: { target: damage, source: optionalRef(permanent) },
   dealDamageUnlessSacrifice: { target: player },
   destroy: { target: permanent },

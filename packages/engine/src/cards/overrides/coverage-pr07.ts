@@ -850,4 +850,25 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Fight or Flight: the enchantment's controller separates the creatures that player controls (CR
+  // 700.3), the player whose turn it is chooses a pile, and only creatures in it can attack this
+  // turn. Creatures that arrive afterwards are in neither pile, and the trigger fires again at the
+  // beginning of an extra combat, so a creature must then be in every pile chosen this turn.
+  defineCard(
+    '2fc42640-983a-49ca-9020-7756135077b4',
+    'Fight or Flight',
+    [
+      "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn.",
+    ],
+    {
+      triggers: [
+        triggered(onBeginCombat('opponent'), {
+          effects: [{ op: 'separateIntoPilesLimitAttackers' }],
+          description:
+            "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn",
+        }),
+      ],
+    },
+  );
 }

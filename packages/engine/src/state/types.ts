@@ -77,7 +77,10 @@ export type EffectExpiry =
   | { kind: 'combat'; combatId: string };
 
 /** What an attack requirement entry forbids: attacking a player or the planeswalkers they control. */
-export type AttackRestrictionRule = { kind: 'cantAttackPlayer'; playerId: PlayerId };
+export type AttackRestrictionRule =
+  | { kind: 'cantAttackPlayer'; playerId: PlayerId }
+  /** "Only creatures in the chosen pile can attack": nothing outside these objects may attack at all. */
+  | { kind: 'cantAttackExcept'; objectIds: ObjectId[] };
 
 /** What attacking must achieve to obey one attack requirement (CR 508.1d). */
 export type AttackRequirementRule =

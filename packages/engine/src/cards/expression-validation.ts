@@ -362,6 +362,7 @@ const effectExpressions = {
   sacrificeTargetPlayerCreature: {},
   eachPlayerKeepsCreatureWithVow: {},
   separatePermanentsIntoPilesThenSacrifice: {},
+  separateIntoPilesLimitAttackers: {},
   dealDamage: { amount: numberValue },
   dealDamageUnlessSacrifice: { amount: numberValue },
   destroy: {},

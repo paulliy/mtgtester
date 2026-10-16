@@ -43,7 +43,7 @@ import type {
 } from '../cards/definition';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
-import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
+import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
 import {
@@ -2619,6 +2619,78 @@ export function* executeAbility(
         const pile = piles[choice.index];
         if (pile === undefined) throw new Error('engine bug: invalid sacrifice pile');
         yield* movePermanentsToGraveyard(ctx, pile, 'sacrifice');
+        break;
+      }
+      case 'separateIntoPilesLimitAttackers': {
+        const eventPlayerId = ref('eventPlayer') as unknown as PlayerId | null;
+        const attacker = ctx.state.players.find((player) => player.id === eventPlayerId);
+        if (attacker === undefined || attacker.hasLost) break;
+        const creatures = ctx.state.battlefield.filter(
+          (permanent) =>
+            permanent.controllerId === attacker.id && isCreaturePermanent(ctx, permanent),
+        );
+        const piles: [EnginePermanent[], EnginePermanent[]] = [[], []];
+        const describePile = (pile: readonly EnginePermanent[]) =>
+          pile.length === 0 ? 'empty' : pile.map((permanent) => permanent.name).join(', ');
+        // The controller separates (CR 700.3); the pile choice is the affected player's, and with
+        // no creature to separate there is nothing to choose between.
+        for (const creature of creatures) {
+          const choice = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `Put ${creature.name} in a pile.`,
+            options: [
+              {
+                type: 'pile1',
+                description: 'Put it in pile 1',
+                data: { pile: describePile(piles[0]) },
+              },
+              {
+                type: 'pile2',
+                description: 'Put it in pile 2',
+                data: { pile: describePile(piles[1]) },
+              },
+            ],
+          };
+          const pile = piles[choice.index];
+          if (pile === undefined) throw new Error('engine bug: invalid pile assignment');
+          pile.push(creature);
+        }
+        let allowed: EnginePermanent[] = [];
+        if (creatures.length > 0) {
+          const choice = yield {
+            decisionType: 'general',
+            player: attacker.id,
+            prompt: `${source.name}: choose a pile of creatures; only those can attack this turn.`,
+            options: piles.map((pile, index) => ({
+              type: 'attackPile',
+              description: `Attack with pile ${index + 1}: ${describePile(pile)}`,
+            })),
+          };
+          allowed = piles[choice.index] ?? [];
+        }
+        // Read live from the affected player's point of view (CR 611.2c): a creature that arrives
+        // later is in neither pile, so it can't attack. Two of these in one turn both bind.
+        (ctx.state.attackRequirements ??= []).push({
+          id: `ar-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          affects: {
+            kind: 'selector',
+            selector: allOf(ofType('Creature'), YOURS),
+            viewpointId: attacker.id,
+          },
+          requirements: [],
+          restrictions: [
+            { kind: 'cantAttackExcept', objectIds: allowed.map((permanent) => permanent.id) },
+          ],
+          expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+        });
+        emit(ctx, 'attackRestriction', {
+          source: source.name,
+          player: attacker.id,
+          allowed: allowed.map((permanent) => permanent.name),
+        });
         break;
       }
       case 'sacrifice': {
