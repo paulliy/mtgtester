@@ -5616,7 +5616,11 @@ export function* executeAbility(
           ],
         };
         if (outcome.index !== 0) break;
+        // "If they do" means a card was actually drawn: an attempt on an empty library, or a draw
+        // replaced by something else, is not drawing one (CR 121.3, 614.6).
+        const drawnBefore = drawer.cardsDrawnThisTurn;
         yield* drawCards(ctx, drawer, 1);
+        if (drawer.cardsDrawnThisTurn === drawnBefore) break;
         yield* executeAbility(
           ctx,
           source,

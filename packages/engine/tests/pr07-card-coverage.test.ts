@@ -1879,6 +1879,13 @@ describe('Willie Lumpkin, Postman', () => {
     expect(offeredFor(ctx, bears['P2']!).players).toEqual(['P1', 'P3', 'P4']);
   });
 
+  it('willie-empty-library — saying yes with an empty library is not drawing, so no restriction follows', () => {
+    const { ctx, willie } = board('willie-empty');
+    ctx.state.players.find((player) => player.id === 'P2')!.library = [];
+    hit(ctx, willie, true);
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+  });
+
   it('willie-cant-attack-you — if they drew, they cannot attack you or your planeswalkers during their next turn, but can attack others', () => {
     const { ctx, willie, walker, bears } = board('willie-restrict');
     hit(ctx, willie, true);
