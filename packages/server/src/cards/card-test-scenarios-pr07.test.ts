@@ -897,3 +897,18 @@ describe("War's Toll Card Test Lab scenario", () => {
     replays('wars-toll-viewer-taps-lands-and-forces-attack', steps);
   });
 });
+
+describe('Willie Lumpkin, Postman Card Test Lab scenario', () => {
+  it('willie-lumpkin-viewer-draw-then-cant-attack — both draw, and on its next turn the one who drew attacks P3 instead of you', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const { scenario, state, seat } = run('willie-lumpkin-viewer-draw-then-cant-attack', steps);
+    expect(seat('P2').life).toBe(39);
+    expect(seat('P3').life).toBe(36);
+    expect(seat('P1').life).toBe(40);
+    // You drew from Willie (a card in hand), and the engine halted nothing.
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('willie-lumpkin-viewer-draw-then-cant-attack', steps);
+  });
+});

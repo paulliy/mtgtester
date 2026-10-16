@@ -306,6 +306,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   limitAttacksToNearestOpponent: {},
   chooseOpponentForSource: {},
   removeAttackersFromCombat: {},
+  eventPlayerMayDraw: {},
   forceAttack: { target: permanent },
   forceAttackEach: {},
   doublePower: {},

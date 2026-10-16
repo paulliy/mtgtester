@@ -5395,7 +5395,9 @@ export function* executeAbility(
             selector: effect.selector,
             ...(effect.relativeTo === 'activePlayer'
               ? { viewpointId: ctx.state.currentTurnPlayer }
-              : {}),
+              : effect.relativeTo === 'eventPlayer'
+                ? { viewpointId: ref('eventPlayer') as unknown as PlayerId }
+                : {}),
           };
         else {
           const targetId = effect.target === undefined ? null : ref(effect.target);
@@ -5412,17 +5414,29 @@ export function* executeAbility(
         const expires: AttackRequirementEntry['expires'] =
           effect.duration === 'thisTurn'
             ? { kind: 'thisTurn', turn: ctx.state.turnNumber }
-            : {
-                kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
-                playerId: controller.id,
-                setTurn: ctx.state.turnNumber,
-              };
+            : effect.duration === 'duringTheirNextTurn'
+              ? {
+                  kind: 'theirNextTurn',
+                  playerId:
+                    affects.kind === 'selector' && affects.viewpointId !== undefined
+                      ? affects.viewpointId
+                      : controller.id,
+                  setTurn: ctx.state.turnNumber,
+                }
+              : {
+                  kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
+                  playerId: controller.id,
+                  setTurn: ctx.state.turnNumber,
+                };
         (ctx.state.attackRequirements ??= []).push({
           id: `ar-${ctx.state.nextObjectNum++}`,
           controllerId: controller.id,
           sourceCardId: source.cardId,
           affects,
           requirements,
+          ...(effect.cantAttack === 'you'
+            ? { restrictions: [{ kind: 'cantAttackPlayer' as const, playerId: controller.id }] }
+            : {}),
           expires,
         });
         emit(ctx, 'attackRequirement', { source: source.name });
@@ -5581,6 +5595,38 @@ export function* executeAbility(
         if (diff > 0) {
           yield* drawCards(ctx, controller, diff);
         }
+        break;
+      }
+      case 'eventPlayerMayDraw': {
+        const eventPlayerId = ref('eventPlayer') as unknown as PlayerId | null;
+        const drawer = ctx.state.players.find((player) => player.id === eventPlayerId);
+        if (drawer === undefined || drawer.hasLost) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: drawer.id,
+          prompt: `${source.name}: draw a card?`,
+          options: [
+            plainOption({ type: 'draw', description: 'Draw a card', verb: 'Draw', role: 'affirm' }),
+            plainOption({
+              type: 'decline',
+              description: 'Do not draw',
+              verb: 'Decline',
+              role: 'decline',
+            }),
+          ],
+        };
+        if (outcome.index !== 0) break;
+        yield* drawCards(ctx, drawer, 1);
+        yield* executeAbility(
+          ctx,
+          source,
+          { ...ability, effects: effect.then },
+          targets,
+          triggerObjectCardId,
+          extraScope,
+          countTargets,
+          divisionAmounts,
+        );
         break;
       }
       case 'drawUpToN': {

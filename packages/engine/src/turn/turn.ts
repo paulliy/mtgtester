@@ -325,6 +325,14 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
         (entry) => entry.expires.kind !== 'combat' && entry.expires.kind !== 'thisTurn',
       );
+    // "During their next turn" (Willie Lumpkin) ends in the cleanup step of that turn.
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) =>
+          entry.expires.kind !== 'theirNextTurn' ||
+          entry.expires.playerId !== ap.id ||
+          entry.expires.setTurn >= ctx.state.turnNumber,
+      );
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").

@@ -12701,6 +12701,37 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "b08633e9-7b8f-4f69-a3b7-8d982b17574c": {
+      "name": "Willie Lumpkin, Postman",
+      "oracleSha256": "33c6149e7443a3b97484dc3ce01515a81e91e83af46a878ca95da0c306685429",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "willie-lumpkin-unblockable",
+          "oracleText": "Willie Lumpkin can't be blocked.",
+          "implementation": ["interpreter-read layer 6 setCantBeBlocked static of Willie itself"],
+          "engineTestIds": ["willie-pinned-oracle-supported", "willie-unblockable"],
+          "viewerScenarioIds": ["willie-lumpkin-viewer-draw-then-cant-attack"]
+        },
+        {
+          "id": "willie-lumpkin-draws-and-restricts",
+          "oracleText": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn.",
+          "implementation": [
+            "authored dealsCombatDamageToPlayer trigger: its controller draws, then the damaged player is asked whether to draw (eventPlayerMayDraw) and only if they do, an attack requirement store entry (a live selector read from that player's point of view, so later creatures are covered) forbids them to attack the controller or their planeswalkers (battles are not modeled) during their next turn: it applies only while they are the active player in their first turn after, and ends in that turn's cleanup step"
+          ],
+          "engineTestIds": [
+            "willie-both-draw",
+            "willie-decline",
+            "willie-cant-attack-you",
+            "willie-their-next-turn-only",
+            "willie-later-creatures",
+            "willie-whole-game"
+          ],
+          "viewerScenarioIds": ["willie-lumpkin-viewer-draw-then-cant-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

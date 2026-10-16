@@ -1799,6 +1799,139 @@ describe("War's Toll", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR07.16 Willie Lumpkin, Postman
+// ---------------------------------------------------------------------------------------------
+
+describe('Willie Lumpkin, Postman', () => {
+  const { card } = pinned('Willie Lumpkin, Postman');
+
+  /** P1 controls Willie and a planeswalker; every opponent controls a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const willie = spawn(ctx, 'P1', card);
+    const walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const bears: Record<string, EnginePermanent> = {};
+    for (const id of ['P2', 'P3', 'P4']) bears[id] = spawn(ctx, id, GRIZZLY(`${id} Bear`));
+    return { ctx, willie, walker, bears };
+  }
+
+  /** Willie hits P2; P2 answers the optional draw with `draw`. Returns what P2 was asked. */
+  function hit(ctx: GameContext, willie: EnginePermanent, draw: boolean) {
+    turnOfPlayer(ctx, 'P1');
+    const asked: string[] = [];
+    fight(
+      ctx,
+      () => ({ [willie.id]: 'P2' }),
+      (decision) => {
+        asked.push(`${decision.player}: ${decision.prompt}`);
+        const index = decision.options.findIndex((option) =>
+          draw ? option.type === 'draw' : option.type === 'decline',
+        );
+        return { index: Math.max(index, 0), targets: new Map() };
+      },
+    );
+    return asked;
+  }
+
+  const offeredFor = (ctx: GameContext, creature: EnginePermanent) => {
+    const offered = attackOptionsFor(ctx, creature.controllerId, creature);
+    return { players: offered.players.sort(), planeswalkers: offered.planeswalkers };
+  };
+
+  it('willie-pinned-oracle-supported — the unblockable static still parses and the trigger is authored, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.staticEffects.map((entry) => entry.op)).toEqual([
+      { layer: 6, setCantBeBlocked: true },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'dealsCombatDamageToPlayer' });
+    expect(def.triggers[0]!.effects.map((effect) => effect.op)).toEqual([
+      'draw',
+      'eventPlayerMayDraw',
+    ]);
+  });
+
+  it('willie-unblockable — it cannot be blocked', () => {
+    const { ctx, willie } = board('willie-unblockable');
+    const result = declaredCombat(ctx, { [willie.id]: 'P2' }, {});
+    expect(result.blockRejections).toEqual([]);
+    expect(computeCharacteristics(ctx, willie).cantBeBlocked).toBe(true);
+  });
+
+  it('willie-both-draw — its controller draws, the damaged player is asked and draws if they say yes, and nobody else draws', () => {
+    const { ctx, willie } = board('willie-draw');
+    const before = ['P1', 'P2', 'P3', 'P4'].map((id) => handSize(ctx, id));
+    const asked = hit(ctx, willie, true);
+    const after = ['P1', 'P2', 'P3', 'P4'].map((id) => handSize(ctx, id));
+    expect(after.map((n, i) => n - before[i]!)).toEqual([1, 1, 0, 0]);
+    // Only P2, the damaged player, is asked.
+    expect(asked.filter((line) => /draw a card\?/.test(line))).toHaveLength(1);
+    expect(asked.filter((line) => /draw a card\?/.test(line))[0]).toMatch(/^P2: Willie Lumpkin/);
+  });
+
+  it('willie-decline — if they decline, only you draw and nothing restricts them', () => {
+    const { ctx, willie, bears } = board('willie-decline');
+    const before = ['P1', 'P2'].map((id) => handSize(ctx, id));
+    hit(ctx, willie, false);
+    expect([handSize(ctx, 'P1') - before[0]!, handSize(ctx, 'P2') - before[1]!]).toEqual([1, 0]);
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+    expect(offeredFor(ctx, bears['P2']!).players).toEqual(['P1', 'P3', 'P4']);
+  });
+
+  it('willie-cant-attack-you — if they drew, they cannot attack you or your planeswalkers during their next turn, but can attack others', () => {
+    const { ctx, willie, walker, bears } = board('willie-restrict');
+    hit(ctx, willie, true);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    // Willie's turn is not P2's next turn: P2's creatures are unrestricted until it is.
+    expect(offeredFor(ctx, bears['P2']!).players).toEqual(['P1', 'P3', 'P4']);
+    ctx.state.turnNumber += 1;
+    const next = offeredFor(ctx, bears['P2']!);
+    expect(next.players).toEqual(['P3', 'P4']);
+    expect(next.planeswalkers).not.toContain(walker.id);
+  });
+
+  it('willie-their-next-turn-only — it does nothing on anyone else’s turn, lasts through that one turn, and is gone afterwards', () => {
+    const { ctx, willie, bears } = board('willie-window');
+    hit(ctx, willie, true);
+    // The turns of P3 and P4 are not P2's next turn: their creatures may attack you.
+    ctx.state.turnNumber += 1;
+    expect(offeredFor(ctx, bears['P3']!).players).toEqual(['P1', 'P2', 'P4']);
+    ctx.state.turnNumber += 1;
+    expect(offeredFor(ctx, bears['P4']!).players).toEqual(['P1', 'P2', 'P3']);
+    // P2's next turn: restricted, all the way through to its cleanup step.
+    ctx.state.turnNumber += 1;
+    expect(offeredFor(ctx, bears['P2']!).players).toEqual(['P3', 'P4']);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+    // Its turn after that is free.
+    ctx.state.turnNumber += 4;
+    expect(offeredFor(ctx, bears['P2']!).players).toEqual(['P1', 'P3', 'P4']);
+  });
+
+  it('willie-later-creatures — a creature they get after the draw is restricted too', () => {
+    const { ctx, willie } = board('willie-later');
+    hit(ctx, willie, true);
+    ctx.state.turnNumber += 3;
+    const later = spawn(ctx, 'P2', GRIZZLY('P2 Latecomer'));
+    expect(offeredFor(ctx, later).players).toEqual(['P3', 'P4']);
+  });
+
+  it('willie-whole-game — it hits, you and they draw, and on their next turn their attack cannot be aimed at you', () => {
+    const { ctx, willie, bears } = board('willie-chain');
+    const asked = hit(ctx, willie, true);
+    expect(asked).toHaveLength(1);
+    ctx.state.turnNumber += 1;
+    turnOfPlayer(ctx, 'P2');
+    bears['P2']!.tapped = false;
+    const defenders: Record<string, string[]> = {};
+    mustAttackIn(ctx, 'P2', [bears['P2']!], defenders);
+    expect(defenders[bears['P2']!.id]).toEqual(['P3', 'P4']);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR07.07 Firkraag, Cunning Instigator
 // ---------------------------------------------------------------------------------------------
 
@@ -4819,6 +4952,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: "War's Toll",
     sha256: '715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Willie Lumpkin, Postman',
+    sha256: '33c6149e7443a3b97484dc3ce01515a81e91e83af46a878ca95da0c306685429',
     clauseCount: 2,
     authored: true,
   },

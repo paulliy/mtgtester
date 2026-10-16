@@ -813,4 +813,41 @@ export function registerCoveragePr07Overrides(): void {
       ruleStatics: [{ kind: 'opponentsAttackWithAll' }],
     },
   );
+
+  // Willie Lumpkin: its controller draws, then the damaged player chooses whether to draw; only if
+  // they do, they can't attack its controller or their planeswalkers during THEIR next turn (not
+  // "until your next turn": it lasts only while they are the active player in that turn). It is a
+  // rules modification on the player (CR 611.2c), so creatures they get later are covered too.
+  // Battles are not modeled, so "permanents you control" covers the player and planeswalkers.
+  defineCard(
+    'b08633e9-7b8f-4f69-a3b7-8d982b17574c',
+    'Willie Lumpkin, Postman',
+    [
+      "Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn.",
+    ],
+    {
+      triggers: [
+        triggered(whenPermanent('dealsCombatDamageToPlayer', SELF), {
+          effects: [
+            { op: 'draw', count: constant(1) },
+            {
+              op: 'eventPlayerMayDraw',
+              then: [
+                {
+                  op: 'addAttackRequirement',
+                  selector: allOf(ofType('Creature'), YOURS),
+                  relativeTo: 'eventPlayer',
+                  requirements: [],
+                  cantAttack: 'you',
+                  duration: 'duringTheirNextTurn',
+                },
+              ],
+            },
+          ],
+          description:
+            "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn",
+        }),
+      ],
+    },
+  );
 }

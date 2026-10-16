@@ -13767,6 +13767,49 @@ function warsTollScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+/** An opponent's seat that draws when offered the optional draw, otherwise attacks P1 with everything. */
+const drawThenAttackP1: DecisionProvider = {
+  decide(request) {
+    const draw = request.legalActions.find((action) => action.description === 'Draw a card');
+    if (draw !== undefined) return { requestId: request.requestId, actionId: draw.id };
+    return attackP1WithEverything.decide(request);
+  },
+};
+
+function willieScenario(gameId: GameId): CardTestScenario {
+  const willie = pinnedFrom(COVERAGE_PR07, 'Willie Lumpkin, Postman');
+  return pr01Scenario(gameId, {
+    id: 'willie-lumpkin-viewer-draw-then-cant-attack',
+    title:
+      'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+    instructions: [
+      'Willie Lumpkin (1/3, can’t be blocked) is on your battlefield; P2 controls Lab Ox (4/4).',
+      'Pass priority to the declare attackers step and attack P2 with Willie, then confirm. You draw a card and P2 accepts its optional draw.',
+      'Keep passing priority through P2’s next turn: Lab Ox may not attack you, so it attacks P3 instead.',
+    ],
+    expectedOutcome:
+      'Willie dealt 1 to P2 (P2 is at 39), you and P2 each drew a card, and on P2’s next turn Lab Ox was not offered you as a defender: it hit P3 for 4 (P3 is at 36) and you are still at 40.',
+    oracleSha256: willie.sha256,
+    clauseIds: ['willie-lumpkin-draws-and-restricts'],
+    decks: {
+      P1: [willie.card, FOREST, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Willie Lumpkin, Postman'] },
+        { playerId: 'P2', cardNames: ['Lab Ox'] },
+      ],
+      continueThroughCombat: true,
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: { P2: drawThenAttackP1 },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -14100,6 +14143,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'moraug-viewer-landfall-extra-combat',
   'sirens-call-viewer-attack-or-die',
   'wars-toll-viewer-taps-lands-and-forces-attack',
+  'willie-lumpkin-viewer-draw-then-cant-attack',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14610,6 +14654,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'moraug-viewer-landfall-extra-combat': moraugScenario,
   'sirens-call-viewer-attack-or-die': sirensCallScenario,
   'wars-toll-viewer-taps-lands-and-forces-attack': warsTollScenario,
+  'willie-lumpkin-viewer-draw-then-cant-attack': willieScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

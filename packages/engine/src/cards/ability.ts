@@ -1382,10 +1382,21 @@ export type Effect =
       target?: EffectRef;
       selector?: Selector;
       requirements: AttackRequirementSpec[];
-      duration: 'untilYourNextTurn' | 'endOfYourNextTurn' | 'thisTurn';
-      /** "you" in the selector is the player whose turn it is as this resolves, not the controller. */
-      relativeTo?: 'activePlayer';
+      duration: 'untilYourNextTurn' | 'endOfYourNextTurn' | 'thisTurn' | 'duringTheirNextTurn';
+      /**
+       * "you" in the selector is the player whose turn it is as this resolves (`activePlayer`), or
+       * the player involved in the firing event (`eventPlayer`), not the controller. For
+       * `duringTheirNextTurn` it is also the player whose next turn it lasts through.
+       */
+      relativeTo?: 'activePlayer' | 'eventPlayer';
+      /** "can't attack you or planeswalkers you control": the controller and what they control. */
+      cantAttack?: 'you';
     }
+  /**
+   * "That player may draw a card. If they do, …" (Willie Lumpkin): the event player chooses, and
+   * `then` resolves only if they chose to draw.
+   */
+  | { op: 'eventPlayerMayDraw'; then: Effect[] }
   /**
    * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures
    * matching `selector` as this resolves, a fixed set (CR 611.2c).

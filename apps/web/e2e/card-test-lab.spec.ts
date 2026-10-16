@@ -10303,3 +10303,29 @@ test("War's Toll: an opponent's mana taps all their lands, and an attack by one 
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('39');
 });
+
+test('Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Willie Lumpkin, Postman', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('40');
+});

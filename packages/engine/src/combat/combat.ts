@@ -144,6 +144,13 @@ function activeRequirementEntries(
     if (playerById(ctx, entry.controllerId).hasLost) return false;
     if (entry.expires.kind === 'combat' && ctx.state.currentCombatId !== entry.expires.combatId)
       return false;
+    // "During their next turn": only while that player is the active player in that turn.
+    if (
+      entry.expires.kind === 'theirNextTurn' &&
+      (ctx.state.currentTurnPlayer !== entry.expires.playerId ||
+        ctx.state.turnNumber <= entry.expires.setTurn)
+    )
+      return false;
     return entry.affects.kind === 'objects'
       ? entry.affects.objectIds.includes(creature.id)
       : matchesSelector(ctx, creature, entry.affects.selector, {

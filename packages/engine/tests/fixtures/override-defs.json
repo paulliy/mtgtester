@@ -10078,6 +10078,65 @@
     }
   },
   {
+    "oracleId": "b08633e9-7b8f-4f69-a3b7-8d982b17574c",
+    "name": "Willie Lumpkin, Postman",
+    "handledLines": [
+      "Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "op": "eventPlayerMayDraw",
+              "then": [
+                {
+                  "cantAttack": "you",
+                  "duration": "duringTheirNextTurn",
+                  "op": "addAttackRequirement",
+                  "relativeTo": "eventPlayer",
+                  "requirements": [],
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
     "name": "Swords to Plowshares",
     "handledLines": [
@@ -31758,6 +31817,65 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-willie-lumpkin-postman",
+    "name": "Willie Lumpkin, Postman",
+    "handledLines": [
+      "Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "op": "eventPlayerMayDraw",
+              "then": [
+                {
+                  "cantAttack": "you",
+                  "duration": "duringTheirNextTurn",
+                  "op": "addAttackRequirement",
+                  "relativeTo": "eventPlayer",
+                  "requirements": [],
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
     }
   },
   {

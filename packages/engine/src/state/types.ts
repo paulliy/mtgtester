@@ -66,6 +66,11 @@ export type EffectExpiry =
   | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
   /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
   | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "During their next turn": applies only while `playerId` is the active player in their first
+   * turn after `setTurn`, and ends in that turn's cleanup step (Willie Lumpkin).
+   */
+  | { kind: 'theirNextTurn'; playerId: PlayerId; setTurn: number }
   /** "This turn": ends in the cleanup step of the turn it was made (Siren's Call). */
   | { kind: 'thisTurn'; turn: number }
   /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */

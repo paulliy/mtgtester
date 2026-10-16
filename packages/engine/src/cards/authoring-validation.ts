@@ -662,7 +662,9 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         message: 'an attack requirement names either a target or a selector for its creatures',
       });
     if (
-      !['untilYourNextTurn', 'endOfYourNextTurn', 'thisTurn'].includes(String(record['duration']))
+      !['untilYourNextTurn', 'endOfYourNextTurn', 'thisTurn', 'duringTheirNextTurn'].includes(
+        String(record['duration']),
+      )
     )
       issues.push({ path: `${path}.duration`, message: 'unsupported attack requirement duration' });
     const requirements = record['requirements'];
@@ -676,7 +678,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
           (rule['kind'] === 'player' && rule['player'] === 'eventPlayer'))
       );
     };
-    if (!Array.isArray(requirements) || requirements.length === 0 || !requirements.every(valid))
+    if (
+      !Array.isArray(requirements) ||
+      (requirements.length === 0 && record['cantAttack'] !== 'you') ||
+      !requirements.every(valid)
+    )
       issues.push({
         path: `${path}.requirements`,
         message: 'an attack requirement needs at least one supported requirement',
