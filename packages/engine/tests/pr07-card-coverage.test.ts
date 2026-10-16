@@ -2862,6 +2862,149 @@ describe('Hexmark Destroyer', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.01 Champion of Lambholt
+// ---------------------------------------------------------------------------------------------
+
+describe('Champion of Lambholt', () => {
+  const { card } = pinned('Champion of Lambholt');
+  const POWER = (name: string, power: number) =>
+    oracle({
+      name,
+      typeLine: 'Creature — Lab',
+      manaCost: '{0}',
+      power: String(power),
+      toughness: '5',
+    });
+
+  /** P1's Champion (1/1) with a Raider; P2 has blockers of power 0, 1, 2 and 3. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const champion = spawn(ctx, 'P1', card);
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    const blockers = [0, 1, 2, 3].map((power) =>
+      spawn(ctx, 'P2', POWER(`P2 Power ${power}`, power)),
+    );
+    return { ctx, champion, raider, blockers };
+  }
+
+  /** Which of `blockers` could be declared as a blocker of the Raider's attack on P2. */
+  function whoCanBlock(
+    ctx: GameContext,
+    raider: EnginePermanent,
+    blockers: EnginePermanent[],
+  ): string[] {
+    const offered: string[] = [];
+    raider.tapped = false;
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (id === raider.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined) {
+        for (const subject of decision.presentationBlockDeclaration.subjects)
+          if (subject.attackers.some((entry) => entry.attackerId === raider.id))
+            offered.push(subject.name);
+        return declareBlocks(decision, () => null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return blockers.filter((blocker) => offered.includes(blocker.name)).map((b) => b.name);
+  }
+
+  it('champion-pinned-oracle-supported — the authored override carries the can’t-block rule static and the interpreter reads the counter trigger, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([
+      {
+        kind: 'cantBlockCreatures',
+        attackerFilter: { kind: 'controller', who: 'you' },
+        blockerPowerLessThanSource: true,
+      },
+    ]);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters' });
+  });
+
+  it('champion-power-less — creatures with power less than the Champion’s power can’t block your creatures, and the comparison is to its CURRENT power', () => {
+    const { ctx, champion, raider, blockers } = board('champion-power');
+    // Power 1: only the power-0 creature is shut out.
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual(['P2 Power 1', 'P2 Power 2', 'P2 Power 3']);
+    // Two +1/+1 counters make it a 3/3: only power 3 or more may block.
+    champion.counters['+1/+1'] = 2;
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual(['P2 Power 3']);
+    // Equal power is fine, and the restriction follows its power back down.
+    delete champion.counters['+1/+1'];
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual(['P2 Power 1', 'P2 Power 2', 'P2 Power 3']);
+  });
+
+  it('champion-only-yours — it restricts blocks of creatures YOU control, not other players’ attackers or your own blockers', () => {
+    const { ctx, champion, blockers } = board('champion-yours');
+    champion.counters['+1/+1'] = 5;
+    // P2's attacker is blocked by P3's weak creature, and your own weak creature can block it.
+    const attacker = spawn(ctx, 'P2', GRIZZLY('P2 Attacker'));
+    const weakP3 = spawn(ctx, 'P3', POWER('P3 Weak', 0));
+    const weakMine = spawn(ctx, 'P1', POWER('P1 Weak', 0));
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    const blocked = declaredCombat(ctx, { [attacker.id]: 'P3' }, { [weakP3.id]: attacker.id });
+    expect(blocked.asked.blockers).toBe(1);
+    attacker.tapped = false;
+    const mine = declaredCombat(ctx, { [attacker.id]: 'P1' }, { [weakMine.id]: attacker.id });
+    expect(mine.asked.blockers).toBe(1);
+    expect(blockers.length).toBe(4);
+  });
+
+  it('champion-copies-and-lost-abilities — a copy has the static, and it is gone when the Champion leaves or becomes something else', () => {
+    const { ctx, champion, raider, blockers } = board('champion-copy');
+    const clay = spawn(ctx, 'P3', GRIZZLY('P3 Clay'));
+    applyCopy(ctx, clay, champion);
+    const attackerP3 = clay;
+    attackerP3.counters['+1/+1'] = 1;
+    // P3's copy restricts blocks of P3's creatures (it is "this creature" for its own controller).
+    const victim = spawn(ctx, 'P3', GRIZZLY('P3 Attacker'));
+    const weak = spawn(ctx, 'P4', POWER('P4 Weak', 0));
+    turnOfPlayer(ctx, 'P3');
+    ctx.state.turnNumber += 1;
+    victim.tapped = false;
+    const run = declaredCombat(ctx, { [victim.id]: 'P4' }, { [weak.id]: victim.id });
+    expect(run.asked.blockers).toBe(0);
+    // The Champion becomes a Bear (copy of one): the static is gone.
+    applyCopy(ctx, champion, spawn(ctx, 'P3', GRIZZLY('P3 Template')));
+    turnOfPlayer(ctx, 'P1');
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual([
+      'P2 Power 0',
+      'P2 Power 1',
+      'P2 Power 2',
+      'P2 Power 3',
+    ]);
+  });
+
+  it('champion-leaves — with the Champion gone nothing is restricted', () => {
+    const { ctx, champion, raider, blockers } = board('champion-gone');
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== champion.id);
+    expect(whoCanBlock(ctx, raider, blockers)).toHaveLength(4);
+  });
+
+  it('champion-whole-game — cast it, another creature of yours entering puts a counter on it, and weaker creatures then can’t block', () => {
+    const ctx = pod('champion-chain');
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    const blockers = [1, 2].map((power) => spawn(ctx, 'P2', POWER(`P2 Power ${power}`, power)));
+    const object = castFromHand(ctx, 'P1', card, [{ symbol: 'G' }, { symbol: 'G' }, ...generic(1)]);
+    resolveTop(ctx);
+    settle(ctx);
+    const champion = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual(['P2 Power 1', 'P2 Power 2']);
+    // Another creature enters under your control: a counter, so it is a 2/2 and power 1 is shut out.
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    castFromHand(ctx, 'P1', GRIZZLY('P1 Bear'), generic(1));
+    resolveTop(ctx);
+    settle(ctx);
+    expect(champion.counters['+1/+1']).toBe(1);
+    expect(whoCanBlock(ctx, raider, blockers)).toEqual(['P2 Power 2']);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2970,6 +3113,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Hexmark Destroyer',
     sha256: 'f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470',
+    clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Champion of Lambholt',
+    sha256: '7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63',
     clauseCount: 1,
     authored: true,
   },

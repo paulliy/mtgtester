@@ -120,8 +120,6 @@ const REASONS: Record<string, string> = {
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Champion of Lambholt':
-    "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
@@ -271,6 +269,7 @@ describe('Marchesa catalog audit containment', () => {
     'Combat Calligrapher',
     'Kardur, Doomscourge',
     'Hexmark Destroyer',
+    'Champion of Lambholt',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

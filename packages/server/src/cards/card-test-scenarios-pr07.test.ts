@@ -694,3 +694,29 @@ describe('Hexmark Destroyer Card Test Lab scenario', () => {
     replays('hexmark-viewer-needs-six-blockers', steps);
   });
 });
+
+describe('Champion of Lambholt Card Test Lab scenario', () => {
+  it('champion-of-lambholt-viewer-weaker-cant-block — only Lab Ox is offered as a blocker of Lab Servo; Lab Bird, with less power than the Champion, is not', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['__no_attack__', 'P2'] }];
+    const blockSlots: number[] = [];
+    const { scenario, state, onBattlefield } = run(
+      'champion-of-lambholt-viewer-weaker-cant-block',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare blockers'),
+        );
+        if (request.decidingPlayer === 'P2' && declare !== undefined)
+          blockSlots.push(declare.targets?.length ?? 0);
+      },
+    );
+    // One eligible blocker (Lab Ox) out of two creatures.
+    expect(blockSlots).toEqual([1]);
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(onBattlefield('Lab Bird')).toHaveLength(1);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('champion-of-lambholt-viewer-weaker-cant-block', steps);
+  });
+});

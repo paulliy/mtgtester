@@ -194,6 +194,13 @@ export type RuleStatic =
    * as menace is the case of two.
    */
   | { kind: 'minBlockers'; minimum: number }
+  /**
+   * "Creatures with power less than this creature's power can't block creatures you control"
+   * (Champion of Lambholt): attackers matching `attackerFilter`, read from this permanent's
+   * controller's point of view, can't be blocked by a creature whose power is less than this
+   * permanent's CURRENT power. Lost with its abilities; copies have it.
+   */
+  | { kind: 'cantBlockCreatures'; attackerFilter: Selector; blockerPowerLessThanSource: true }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

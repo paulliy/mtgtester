@@ -628,6 +628,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
+    "name": "Champion of Lambholt",
+    "package": "PR07.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
     "name": "Changing Loyalty",
     "package": "PR02.25",

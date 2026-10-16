@@ -42,6 +42,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Canoptek Tomb Sentinel',
       'Canoptek Wraith',
       'Carrion Feeder',
+      'Champion of Lambholt',
       'Changing Loyalty',
       'Combat Calligrapher',
       'Comeuppance',

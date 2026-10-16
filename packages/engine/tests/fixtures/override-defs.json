@@ -11300,8 +11300,21 @@
   {
     "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures with power less than this creature's power can't block creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "attackerFilter": {
+            "kind": "controller",
+            "who": "you"
+          },
+          "blockerPowerLessThanSource": true,
+          "kind": "cantBlockCreatures"
+        }
+      ]
+    }
   },
   {
     "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
@@ -17997,8 +18010,21 @@
   {
     "oracleId": "oracle-champion-of-lambholt",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures with power less than this creature's power can't block creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "attackerFilter": {
+            "kind": "controller",
+            "who": "you"
+          },
+          "blockerPowerLessThanSource": true,
+          "kind": "cantBlockCreatures"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-chaos-warp",

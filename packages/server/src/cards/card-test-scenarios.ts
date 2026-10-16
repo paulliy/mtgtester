@@ -13452,6 +13452,38 @@ function hexmarkScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function championScenario(gameId: GameId): CardTestScenario {
+  const champion = pinnedFrom(COVERAGE_PR07, 'Champion of Lambholt');
+  return pr01Scenario(gameId, {
+    id: 'champion-of-lambholt-viewer-weaker-cant-block',
+    title: "Champion of Lambholt: weaker creatures can't block your creatures",
+    instructions: [
+      'Champion of Lambholt (a 3/3 with two +1/+1 counters) and Lab Servo (1/1) are on your battlefield. P2 controls Lab Ox (4/4) and Lab Bird (1/1) and blocks with everything it is offered.',
+      'Pass priority to the declare attackers step and attack P2 with Lab Servo, leaving the Champion at home, and confirm. Lab Bird has less power than the Champion, so it can’t block.',
+    ],
+    expectedOutcome:
+      'Only Lab Ox could block Lab Servo, and it killed it. Lab Bird, with power less than the Champion’s 3, was never offered the block and is untouched.',
+    oracleSha256: champion.sha256,
+    clauseIds: ['champion-of-lambholt-weaker-cant-block'],
+    decks: {
+      P1: [champion.card, LAB_SERVO, FOREST, FOREST],
+      P2: [LAB_OX, LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Champion of Lambholt'], counters: { '+1/+1': 2 } },
+        { playerId: 'P1', cardNames: ['Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Bird'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13776,6 +13808,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'silver-surfer-viewer-attack-that-player',
   'taunt-viewer-goad-and-cant-block',
   'hexmark-viewer-needs-six-blockers',
+  'champion-of-lambholt-viewer-weaker-cant-block',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14277,6 +14310,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     silverSurferScenario(gameId, 'requirement'),
   'taunt-viewer-goad-and-cant-block': tauntScenario,
   'hexmark-viewer-needs-six-blockers': hexmarkScenario,
+  'champion-of-lambholt-viewer-weaker-cant-block': championScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

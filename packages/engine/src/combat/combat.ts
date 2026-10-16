@@ -485,18 +485,20 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
     )
   )
     return false;
-  for (const champion of ctx.state.battlefield) {
-    if (champion.controllerId === attacker.controllerId) {
-      const def = ctx.defs.get(champion.oracleId);
-      if (
-        def?.name === 'Champion of Lambholt' ||
-        def?.oracleId === 'c549b0fd-1e08-4873-952e-a14dc45a0fd2'
-      ) {
-        const champPower = effectivePT(ctx, champion).power;
-        const blockerPower = effectivePT(ctx, blocker).power;
-        if (blockerPower < champPower) return false;
-      }
-    }
+  // "Creatures with power less than this creature's power can't block creatures you control"
+  // (Champion of Lambholt): a rule static of the source, read against its CURRENT power.
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'cantBlockCreatures') continue;
+    const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+    if (source === undefined) continue;
+    if (
+      matchesSelector(ctx, attacker, entry.static.attackerFilter, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+      }) &&
+      effectivePT(ctx, blocker).power < effectivePT(ctx, source).power
+    )
+      return false;
   }
   if (
     ctx.state.effects.some(

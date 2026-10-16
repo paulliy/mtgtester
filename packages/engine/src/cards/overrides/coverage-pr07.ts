@@ -553,4 +553,19 @@ export function registerCoveragePr07Overrides(): void {
     ["Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."],
     { ruleStatics: [{ kind: 'minBlockers', minimum: 6 }] },
   );
+
+  // Champion of Lambholt: a rule static of the Champion itself, so it is lost with its abilities
+  // and a copy has it, and it compares against the Champion's CURRENT power (counters, anthems).
+  // It restricts blocks of creatures its controller controls, whoever the blockers are. The
+  // counter trigger is read by the interpreter.
+  defineCard(
+    'c549b0fd-1e08-4873-952e-a14dc45a0fd2',
+    'Champion of Lambholt',
+    ["Creatures with power less than this creature's power can't block creatures you control."],
+    {
+      ruleStatics: [
+        { kind: 'cantBlockCreatures', attackerFilter: YOURS, blockerPowerLessThanSource: true },
+      ],
+    },
+  );
 }

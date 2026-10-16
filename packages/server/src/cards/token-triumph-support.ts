@@ -28,6 +28,7 @@ export const VERIFIED_TOKEN_TRIUMPH_CARDS = [
   'Path to Exile',
   'Rootborn Defenses',
   'Scavenging Ooze',
+  'Champion of Lambholt',
 ] as const;
 
-export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS = ['Champion of Lambholt'] as const;
+export const EXPECTED_UNSUPPORTED_TOKEN_TRIUMPH_CARDS: readonly string[] = [];

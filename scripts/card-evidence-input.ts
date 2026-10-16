@@ -2471,6 +2471,10 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Hexmark Destroyer: three blockers are not enough'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Champion of Lambholt: weaker creatures can't block your creatures"],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

@@ -6269,20 +6269,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "c549b0fd-1e08-4873-952e-a14dc45a0fd2": {
-      "name": "Champion of Lambholt",
-      "oracleSha256": "7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Creatures with power less than this creature's power can't block creatures you control.\nWhenever another creature you control enters, put a +1/+1 counter on this creature.",
-          "implementation": ["explicitly unsupported; can't-block is hardcoded by card name"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "e938ee4c-d5df-4d93-bd61-9e518fb1dc30": {
       "name": "Conclave Tribunal",
       "oracleSha256": "bead25eae71e919428001104ee03ad6fe6261144a909897511225298eb235fb9",
@@ -12435,6 +12421,30 @@
             "hexmark-whole-game"
           ],
           "viewerScenarioIds": ["hexmark-viewer-needs-six-blockers"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c549b0fd-1e08-4873-952e-a14dc45a0fd2": {
+      "name": "Champion of Lambholt",
+      "oracleSha256": "7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "champion-of-lambholt-weaker-cant-block",
+          "oracleText": "Creatures with power less than this creature's power can't block creatures you control.",
+          "implementation": [
+            "authored cantBlockCreatures rule static of the Champion itself, replacing the hardcoded name check in combat.ts: a creature whose power is less than the Champion's CURRENT power (counters, anthems) can't be declared as a blocker of a creature its controller controls, whoever the blockers' controller is; it is lost with the Champion's abilities, present on copies, and gone when the Champion leaves; it does not restrict blocks of other players' attackers; the counter trigger is read by the interpreter"
+          ],
+          "engineTestIds": [
+            "champion-pinned-oracle-supported",
+            "champion-power-less",
+            "champion-only-yours",
+            "champion-copies-and-lost-abilities",
+            "champion-leaves",
+            "champion-whole-game"
+          ],
+          "viewerScenarioIds": ["champion-of-lambholt-viewer-weaker-cant-block"]
         }
       ],
       "gameplayAiScenarioIds": []
