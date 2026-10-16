@@ -7,7 +7,11 @@ import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { priorityCheckpoint } from '../src/sba/sba';
-import { cleanupStep, runBeginningAndPrecombatMain } from '../src/turn/turn';
+import {
+  cleanupStep,
+  expireDepartedPlayerEffects,
+  runBeginningAndPrecombatMain,
+} from '../src/turn/turn';
 import {
   copies,
   declareAttacks,
@@ -350,6 +354,66 @@ describe('attack requirements made by resolving spells and abilities', () => {
     // ... P1's turn would have begun after that extra turn 9.
     ctx.state.extraTurns = [];
     endTurn(9, 'P4', 'P4');
+    expect(ctx.state.attackRequirements).toEqual([]);
+  });
+
+  it('when the seat before a departed player leaves in its own turn, their effects end with that turn (CR 800.4m)', () => {
+    const ctx = setup('arq-controller-gone-chain');
+    const bearP2 = spawn(ctx, 'P2', grizzly('P2 Bear'));
+    const bearP3 = spawn(ctx, 'P3', grizzly('P3 Bear'));
+    bearP3.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber }];
+    resolveRequirement(
+      ctx,
+      {
+        op: 'addAttackRequirement',
+        target: 0,
+        requirements: [{ kind: 'anyAttack' }],
+        duration: 'endOfYourNextTurn',
+      },
+      [bearP2.id],
+    );
+    playerById(ctx, 'P1').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    // P4 leaves in its own normal turn 7, the turn P1's would have followed: the turn is cut
+    // short with no cleanup step, and both effects end with it rather than lasting until P3's.
+    ctx.state.turnNumber = 7;
+    ctx.state.currentTurnPlayer = 'P4';
+    playerById(ctx, 'P4').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    expect(bearP3.goadedBy).toHaveLength(1);
+    expireDepartedPlayerEffects(ctx);
+    expect(ctx.state.attackRequirements).toEqual([]);
+    expect(bearP3.goadedBy).toBeUndefined();
+  });
+
+  it('when the seat before a departed player leaves in an extra turn, their effects wait for the seat before it (CR 800.4m)', () => {
+    const ctx = setup('arq-controller-gone-chain-extra');
+    const bearP2 = spawn(ctx, 'P2', grizzly('P2 Bear'));
+    resolveRequirement(
+      ctx,
+      {
+        op: 'addAttackRequirement',
+        target: 0,
+        requirements: [{ kind: 'anyAttack' }],
+        duration: 'endOfYourNextTurn',
+      },
+      [bearP2.id],
+    );
+    playerById(ctx, 'P1').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    // P4 leaves in an extra turn granted after P2's turn: P1's turn would now follow P3's.
+    ctx.state.turnNumber = 6;
+    ctx.state.currentTurnPlayer = 'P4';
+    ctx.state.normalTurnResumeAfter = 'P2';
+    playerById(ctx, 'P4').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    expireDepartedPlayerEffects(ctx);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    ctx.state.turnNumber = 7;
+    ctx.state.currentTurnPlayer = 'P3';
+    delete ctx.state.normalTurnResumeAfter;
+    pump(cleanupStep(ctx));
     expect(ctx.state.attackRequirements).toEqual([]);
   });
 

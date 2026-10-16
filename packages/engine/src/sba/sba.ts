@@ -63,7 +63,9 @@ function markLoss(ctx: GameContext, player: EnginePlayerState, reason: LossReaso
  * a point in it, lasts until that turn would have begun: neither ending now nor lasting forever.
  * Their turn would begin as the turn of the player seated before them ends, so each such expiry
  * (goad included, CR 701.15a) moves to the end of that player's next turn. An expiry already
- * waiting on the departed player's own seat moves to the seat before theirs.
+ * waiting on the departed player's own seat moves to the seat before theirs, unless this is that
+ * seat's normal turn: then the earlier player's turn would begin as this turn ends, and the
+ * expiry stays on it for the aborted turn's end (`expireDepartedPlayerEffects`).
  */
 function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): void {
   const seat = s.turnOrder.indexOf(departedId);
@@ -78,6 +80,7 @@ function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): v
   }
   if (afterTurnOf === undefined) return;
   const departed = { afterTurnOf, fromTurn: s.turnNumber };
+  const keepsBoundary = departedId === s.currentTurnPlayer && s.normalTurnResumeAfter === undefined;
   const remap = <T extends { expires: EffectExpiry }>(entries: T[] | undefined): void => {
     for (const entry of entries ?? []) {
       const expires = entry.expires;
@@ -86,7 +89,11 @@ function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): v
         expires.playerId === departedId
       )
         entry.expires = { kind: 'departedNextTurn', ...departed };
-      else if (expires.kind === 'departedNextTurn' && expires.afterTurnOf === departedId)
+      else if (
+        expires.kind === 'departedNextTurn' &&
+        expires.afterTurnOf === departedId &&
+        !keepsBoundary
+      )
         entry.expires = { ...expires, afterTurnOf };
     }
   };
@@ -97,7 +104,7 @@ function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): v
     for (const goad of perm.goadedBy ?? []) {
       if (goad.permanent === true) continue;
       if (goad.departed === undefined && goad.goaderId === departedId) goad.departed = departed;
-      else if (goad.departed?.afterTurnOf === departedId)
+      else if (goad.departed?.afterTurnOf === departedId && !keepsBoundary)
         goad.departed = { ...goad.departed, afterTurnOf };
     }
   }

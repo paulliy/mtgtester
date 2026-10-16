@@ -43,7 +43,7 @@ function setStep(ctx: GameContext, step: Step): void {
  * have begun (CR 800.4m). That is as this turn ends when no extra turn comes next and the normal
  * rotation resumes after the player seated before them; an extra turn defers it.
  */
-function expireDepartedPlayerEffects(ctx: GameContext): void {
+export function expireDepartedPlayerEffects(ctx: GameContext): void {
   const s = ctx.state;
   const extraTurnNext = (s.extraTurns ?? []).some((id) =>
     s.players.some((player) => player.id === id && !player.hasLost),

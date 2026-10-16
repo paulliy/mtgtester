@@ -18,6 +18,7 @@ import {
   beginEndStep,
   beginPostcombatMain,
   cleanupStep,
+  expireDepartedPlayerEffects,
   queueStepTriggers,
   runCombatAndExtraCombats,
   runBeginningAndPrecombatMain,
@@ -98,6 +99,8 @@ export function* playGame(ctx: GameContext): GameGen<GameResult> {
         yield* runTurn(ctx);
       } catch (err) {
         if (err instanceof TurnAbortedSignal) {
+          // The turn ends without a cleanup step; a departed player's turn may begin after it.
+          expireDepartedPlayerEffects(ctx);
           debug(
             ctx,
             'turn',
