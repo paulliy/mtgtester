@@ -9966,8 +9966,17 @@
   {
     "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
     "name": "Hexmark Destroyer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "minBlockers",
+          "minimum": 6
+        }
+      ]
+    }
   },
   {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
@@ -21691,8 +21700,17 @@
   {
     "oracleId": "oracle-hexmark-destroyer",
     "name": "Hexmark Destroyer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "minBlockers",
+          "minimum": 6
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-hoard-smelter-dragon",

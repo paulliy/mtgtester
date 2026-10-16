@@ -5579,14 +5579,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
-      "uniqueOracleIds": 23,
+      "uniqueOracleIds": 22,
       "reviewedOracleIds": 42,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
-      "uniqueOracleIds": 34,
+      "uniqueOracleIds": 33,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 1,
       "status": "reviewed"
@@ -6822,6 +6822,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the fail-closed unsupportedCard that said goad snapshots current creatures and the death trigger fires for blockers as well as attackers): the authored override in coverage-pr07.ts uses the new attack-requirement store (every creature your opponents control, live, attacks each combat if able and attacks a player other than you if able, until your next turn) and a death trigger whose subject must have been attacking as it died. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+      "name": "Hexmark Destroyer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said except-six-or-more was implemented as cantBeBlocked): the authored override in coverage-pr07.ts uses the new minBlockers rule static, so it is blocked by none or by six or more creatures, a violation otherwise rejected and repaired by dropping all its blockers. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+      "name": "Hexmark Destroyer",
+      "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
     }
   ]
 }

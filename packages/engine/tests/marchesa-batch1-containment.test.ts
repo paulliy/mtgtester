@@ -95,7 +95,6 @@ const REASONS: Record<string, string> = {
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
-  'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
   'Triarch Stalker':
@@ -271,6 +270,7 @@ describe('Marchesa catalog audit containment', () => {
     'Nils, Discipline Enforcer',
     'Combat Calligrapher',
     'Kardur, Doomscourge',
+    'Hexmark Destroyer',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

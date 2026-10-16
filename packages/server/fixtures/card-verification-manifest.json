@@ -3569,22 +3569,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "b3329240-c812-45ea-a7f8-4d79cd4ed515": {
-      "name": "Hexmark Destroyer",
-      "oracleSha256": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "This creature can't be blocked except by six or more creatures.",
-          "implementation": [
-            "explicitly unsupported; except-six-or-more implemented as cantBeBlocked"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "425fea06-76ec-4cd9-bd3b-750504fd7fd2": {
       "name": "Imotekh the Stormlord",
       "oracleSha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
@@ -12427,6 +12411,30 @@
             "taunt-whole-game"
           ],
           "viewerScenarioIds": ["taunt-viewer-goad-and-cant-block"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b3329240-c812-45ea-a7f8-4d79cd4ed515": {
+      "name": "Hexmark Destroyer",
+      "oracleSha256": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "hexmark-destroyer-six-blockers",
+          "oracleText": "This creature can't be blocked except by six or more creatures.",
+          "implementation": [
+            "authored minBlockers rule static of Hexmark Destroyer itself (lost with its abilities, present on copies): once its defending player's block declaration is known, it is either unblocked or blocked by at least six creatures (CR 509.1b); a declaration with one to five blockers is rejected with the new minBlockers violation and, if still wrong, repaired by dropping all of its blockers; other attackers, and menace, are unaffected; unearth is read by the interpreter"
+          ],
+          "engineTestIds": [
+            "hexmark-pinned-oracle-supported",
+            "hexmark-unblocked-or-six",
+            "hexmark-too-few",
+            "hexmark-others-unaffected",
+            "hexmark-copy-and-lost-abilities",
+            "hexmark-whole-game"
+          ],
+          "viewerScenarioIds": ["hexmark-viewer-needs-six-blockers"]
         }
       ],
       "gameplayAiScenarioIds": []

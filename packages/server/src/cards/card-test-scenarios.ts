@@ -13421,6 +13421,37 @@ function tauntScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function hexmarkScenario(gameId: GameId): CardTestScenario {
+  const hexmark = pinnedFrom(COVERAGE_PR07, 'Hexmark Destroyer');
+  return pr01Scenario(gameId, {
+    id: 'hexmark-viewer-needs-six-blockers',
+    title: 'Hexmark Destroyer: three blockers are not enough',
+    instructions: [
+      'Hexmark Destroyer is on your battlefield. P2 controls three Lab Servos and blocks with everything it can.',
+      'Pass priority to the declare attackers step and attack P2 with Hexmark Destroyer, then confirm.',
+    ],
+    expectedOutcome:
+      'Three blockers are fewer than the six it needs, so P2’s block was rejected and the engine dropped it: Hexmark Destroyer was unblocked and P2 took 6 and is at 34, with all three Servos alive.',
+    oracleSha256: hexmark.sha256,
+    clauseIds: ['hexmark-destroyer-six-blockers'],
+    decks: {
+      P1: [hexmark.card, FOREST, FOREST],
+      P2: [LAB_SERVO, LAB_SERVO, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Hexmark Destroyer'] },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Lab Servo', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: blockWithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13744,6 +13775,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'silver-surfer-viewer-search-galactus',
   'silver-surfer-viewer-attack-that-player',
   'taunt-viewer-goad-and-cant-block',
+  'hexmark-viewer-needs-six-blockers',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14244,6 +14276,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'silver-surfer-viewer-attack-that-player': (gameId) =>
     silverSurferScenario(gameId, 'requirement'),
   'taunt-viewer-goad-and-cant-block': tauntScenario,
+  'hexmark-viewer-needs-six-blockers': hexmarkScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

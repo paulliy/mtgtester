@@ -135,12 +135,7 @@ export function registerNECRON_DYNASTIES_REMAININGOverrides(): void {
   // creatures" as a graveyard alternative cast, so no override remains.
   // Endless Atlas: restored in coverage PR02. The interpreter reads "Activate only if you control
   // three or more lands with the same name" as an activation condition, so no override remains.
-  // Catalog audit necron-remaining-batch-3: except-six-or-more is unconditional unblockable.
-  unsupportedCard(
-    'b3329240-c812-45ea-a7f8-4d79cd4ed515',
-    'Hexmark Destroyer',
-    'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
-  );
+  // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
   // Coverage PR02: a mana ability whose {T} and sacrifice are both costs (CR 605.1a), making {B}
   // equal to the sacrificed creature's mana value. The payment solver sees one source per
   // candidate creature (amountFromSacrificedManaValue), each pinned to that sacrifice.

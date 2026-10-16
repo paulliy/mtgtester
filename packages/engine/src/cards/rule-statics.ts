@@ -188,6 +188,12 @@ export type RuleStatic =
    * `unless` holds.
    */
   | { kind: 'attackRequirement'; target: 'opponentWithMostLife'; unless?: Condition }
+  /**
+   * "This creature can't be blocked except by N or more creatures" (Hexmark Destroyer). The
+   * attacker is this permanent itself. Either none block it or at least `minimum` do (CR 509.1b),
+   * as menace is the case of two.
+   */
+  | { kind: 'minBlockers'; minimum: number }
   /** Opposing spells that target this permanent cost life during announcement. */
   | { kind: 'targetLifeTax'; amount: number }
   | { kind: 'convoke' }

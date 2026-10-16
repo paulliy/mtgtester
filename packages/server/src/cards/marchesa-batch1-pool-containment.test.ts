@@ -83,6 +83,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Grim Haruspex',
       'Harvest Season',
       'Hateful Eidolon',
+      'Hexmark Destroyer',
       'Hour of Reckoning',
       'Hunting Wilds',
       'Idol of Oblivion',

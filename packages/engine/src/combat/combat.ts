@@ -190,6 +190,17 @@ function cantActAlone(
   );
 }
 
+/** How many creatures must block this attacker together if any do, beyond menace's two. */
+function minBlockersOf(ctx: GameContext, attacker: EnginePermanent): number {
+  return gatherRuleStatics(ctx).reduce(
+    (most, entry) =>
+      entry.static.kind === 'minBlockers' && entry.sourceCardId === attacker.cardId
+        ? Math.max(most, entry.static.minimum)
+        : most,
+    0,
+  );
+}
+
 function canAttack(ctx: GameContext, perm: EnginePermanent): boolean {
   if (perm.tapped) return false;
   if (hasKeyword(ctx, perm, 'defender')) return false;
@@ -1067,16 +1078,25 @@ function validateBlockDeclaration(
   const violations: CombatViolation[] = [];
   for (const [attackerId, blockers] of byAttacker) {
     const attacker = findPermanent(ctx, attackerId);
-    if (attacker === undefined || !hasKeyword(ctx, attacker, 'menace') || blockers.length >= 2) {
-      continue;
-    }
-    for (const blocker of blockers) {
-      violations.push({
-        subjectId: blocker.id,
-        kind: 'menace',
-        message: `${attacker.name} has menace and can't be blocked by only one creature`,
-      });
-    }
+    if (attacker === undefined) continue;
+    if (hasKeyword(ctx, attacker, 'menace') && blockers.length < 2)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'menace',
+          message: `${attacker.name} has menace and can't be blocked by only one creature`,
+        });
+      }
+    // "Can't be blocked except by N or more creatures": none, or at least N.
+    const needed = minBlockersOf(ctx, attacker);
+    if (needed > 2 && blockers.length < needed)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'minBlockers',
+          message: `${attacker.name} can't be blocked except by ${needed} or more creatures`,
+        });
+      }
   }
   // CR 506.5: a creature that can't block alone blocks only if another creature of the same
   // defending player is declared as a blocker too (this is that player's whole declaration).
@@ -1155,7 +1175,12 @@ function repairBlockDeclaration(
     );
     const alternative =
       pick.blocker.mustBlockThisTurn === true && !alone
-        ? pick.blockable.find((a) => a.id !== currentAttackerId && !hasKeyword(ctx, a, 'menace'))
+        ? pick.blockable.find(
+            (a) =>
+              a.id !== currentAttackerId &&
+              !hasKeyword(ctx, a, 'menace') &&
+              minBlockersOf(ctx, a) === 0,
+          )
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);
     violations = validateBlockDeclaration(ctx, candidates, repaired);

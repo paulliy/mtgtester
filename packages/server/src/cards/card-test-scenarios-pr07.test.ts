@@ -674,3 +674,23 @@ describe('Taunt from the Rampart Card Test Lab scenario', () => {
     replays('taunt-viewer-goad-and-cant-block', steps);
   });
 });
+
+describe('Hexmark Destroyer Card Test Lab scenario', () => {
+  it('hexmark-viewer-needs-six-blockers — three blockers are rejected and dropped, so Hexmark Destroyer deals 6 to P2', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['P2'] }];
+    const rejections: string[] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'hexmark-viewer-needs-six-blockers',
+      steps,
+      (request) => {
+        if (/fix the flagged problem/.test(request.prompt ?? '')) rejections.push(request.prompt);
+      },
+    );
+    expect(rejections.length).toBeGreaterThan(0);
+    expect(seat('P2').life).toBe(34);
+    expect(onBattlefield('Lab Servo')).toHaveLength(3);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('hexmark-viewer-needs-six-blockers', steps);
+  });
+});

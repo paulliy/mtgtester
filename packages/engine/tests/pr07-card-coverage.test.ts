@@ -2773,6 +2773,95 @@ describe('Taunt from the Rampart', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.02 Hexmark Destroyer
+// ---------------------------------------------------------------------------------------------
+
+describe('Hexmark Destroyer', () => {
+  const { card } = pinned('Hexmark Destroyer');
+  const COST = [{ symbol: 'B' as const }, { symbol: 'B' as const }, ...generic(4)];
+
+  /** P1 attacks with Hexmark; P2 controls seven Bears. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const hexmark = spawn(ctx, 'P1', card);
+    const bears = Array.from({ length: 7 }, (_, n) =>
+      spawn(ctx, 'P2', GRIZZLY(`P2 Bear ${n + 1}`)),
+    );
+    return { ctx, hexmark, bears };
+  }
+  const blocking = (bears: EnginePermanent[], count: number, hexmark: EnginePermanent) =>
+    Object.fromEntries(bears.slice(0, count).map((bear) => [bear.id, hexmark.id]));
+
+  it('hexmark-pinned-oracle-supported — the authored override carries the six-blockers rule and unearth still parses, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.ruleStatics).toEqual([{ kind: 'minBlockers', minimum: 6 }]);
+    expect(def.cantBeBlocked).not.toBe(true);
+    expect(def.activatedAbilities.length).toBeGreaterThan(0);
+  });
+
+  it('hexmark-unblocked-or-six — with no blockers it is unblocked, and six or more creatures may block it', () => {
+    const { ctx, hexmark, bears } = board('hexmark-six');
+    const none = declaredCombat(ctx, { [hexmark.id]: 'P2' });
+    expect(none.blockRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(34);
+    for (const count of [6, 7]) {
+      hexmark.tapped = false;
+      const run = declaredCombat(ctx, { [hexmark.id]: 'P2' }, blocking(bears, count, hexmark));
+      expect(run.blockRejections, `${count} blockers`).toEqual([]);
+    }
+  });
+
+  it('hexmark-too-few — one to five blockers are rejected, and the repair drops all of them so it is unblocked', () => {
+    for (const count of [1, 2, 5]) {
+      const { ctx, hexmark, bears } = board(`hexmark-few-${count}`);
+      const run = declaredCombat(ctx, { [hexmark.id]: 'P2' }, blocking(bears, count, hexmark));
+      expect(run.blockRejections.length, `${count} blockers`).toBeGreaterThan(0);
+      expect(new Set(run.blockRejections)).toEqual(new Set(['minBlockers']));
+      expect(playerById(ctx, 'P2').life, `${count} blockers`).toBe(34);
+      expect(bears.every((bear) => bear.blocking === null)).toBe(true);
+    }
+  });
+
+  it('hexmark-others-unaffected — another attacker can be blocked by one creature, and the rule is not menace', () => {
+    const { ctx, hexmark, bears } = board('hexmark-other');
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    const run = declaredCombat(
+      ctx,
+      { [raider.id]: 'P2', [hexmark.id]: 'P2' },
+      { [bears[0]!.id]: raider.id },
+    );
+    expect(run.blockRejections).toEqual([]);
+    expect(playerById(ctx, 'P2').life).toBe(34);
+  });
+
+  it('hexmark-copy-and-lost-abilities — a copy of it has the rule, and it loses the rule when it becomes a copy of something else', () => {
+    const { ctx, hexmark, bears } = board('hexmark-copy');
+    const clay = spawn(ctx, 'P1', GRIZZLY('P1 Clay'));
+    applyCopy(ctx, clay, hexmark);
+    const copied = declaredCombat(ctx, { [clay.id]: 'P2' }, blocking(bears, 2, clay));
+    expect(copied.blockRejections.length).toBeGreaterThan(0);
+    applyCopy(ctx, hexmark, bears[6]!);
+    hexmark.tapped = false;
+    const plain = declaredCombat(ctx, { [hexmark.id]: 'P2' }, blocking(bears, 1, hexmark));
+    expect(plain.blockRejections).toEqual([]);
+  });
+
+  it('hexmark-whole-game — cast it, attack with it next turn, and two blockers are not enough', () => {
+    const ctx = pod('hexmark-chain');
+    const bears = [1, 2].map((n) => spawn(ctx, 'P3', GRIZZLY(`P3 Bear ${n}`)));
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    settle(ctx);
+    const hexmark = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    hexmark.summoningSick = false;
+    const run = declaredCombat(ctx, { [hexmark.id]: 'P3' }, blocking(bears, 2, hexmark));
+    expect(run.blockRejections.length).toBeGreaterThan(0);
+    expect(playerById(ctx, 'P3').life).toBe(34);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2875,6 +2964,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Taunt from the Rampart',
     sha256: '977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73',
+    clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Hexmark Destroyer',
+    sha256: 'f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470',
     clauseCount: 1,
     authored: true,
   },

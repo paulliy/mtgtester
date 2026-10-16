@@ -179,7 +179,7 @@ export interface BlockDeclarationSubject {
  * claims to enumerate it, only to say what was wrong with what was tried. */
 export interface CombatViolation {
   subjectId: ObjectId;
-  kind: 'attackTax' | 'menace' | 'attackAlone' | 'blockAlone';
+  kind: 'attackTax' | 'menace' | 'attackAlone' | 'blockAlone' | 'minBlockers';
   message: string;
 }
 export interface CombatRejection {

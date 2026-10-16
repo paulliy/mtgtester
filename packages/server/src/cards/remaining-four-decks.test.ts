@@ -79,7 +79,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       "Songbirds' Blessing",
       'Mob Rule',
       'Caged Sun',
-      'Hexmark Destroyer',
       'Mystic Forge',
       'Triarch Stalker',
       'Biotransference',

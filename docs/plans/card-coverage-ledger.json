@@ -1857,6 +1857,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+    "name": "Hexmark Destroyer",
+    "package": "PR07.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
     "name": "Hour of Reckoning",
     "package": "PR02.14",

@@ -10062,3 +10062,21 @@ test("Taunt from the Rampart: opponents' creatures are goaded and can't block un
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('36');
 });
+
+test('Hexmark Destroyer: three blockers are not enough', async ({ page }) => {
+  await runScenario(page, 'Hexmark Destroyer: three blockers are not enough');
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Hexmark Destroyer', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+  await expect(permanent(page, 'Lab Servo')).toContainText('×3');
+});

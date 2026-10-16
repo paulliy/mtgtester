@@ -542,4 +542,15 @@ export function registerCoveragePr07Overrides(): void {
       }),
     },
   );
+
+  // Hexmark Destroyer: not "can't be blocked" and not menace: either nobody blocks it or six or
+  // more creatures do (CR 509.1b), counted across the whole declaration of its defending player.
+  // The rule is its own, so it is lost with its abilities, and a copy has it. Unearth is read by
+  // the interpreter.
+  defineCard(
+    'b3329240-c812-45ea-a7f8-4d79cd4ed515',
+    'Hexmark Destroyer',
+    ["Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."],
+    { ruleStatics: [{ kind: 'minBlockers', minimum: 6 }] },
+  );
 }

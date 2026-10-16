@@ -204,9 +204,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('b3329240-c812-45ea-a7f8-4d79cd4ed515', 'Hexmark Destroyer', [
-    "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures.",
-  ]);
+  // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
 
   unimplemented('10f274f9-9044-447b-81c9-d4906ad9e6be', 'Illuminor Szeras', [
     "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
