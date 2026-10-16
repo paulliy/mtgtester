@@ -974,16 +974,82 @@
     }
   },
   {
-    "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",
-    "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
     "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: You and target opponent each draw a card.",
+      "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "+1: You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent",
+            "effects": [
+              {
+                "op": "chooseOne",
+                "options": [
+                  {
+                    "description": "Left",
+                    "effects": [
+                      {
+                        "direction": "left",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  },
+                  {
+                    "description": "Right",
+                    "effects": [
+                      {
+                        "direction": "right",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
@@ -29180,8 +29246,80 @@
   {
     "oracleId": "oracle-teyo-geometric-tactician",
     "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: You and target opponent each draw a card.",
+      "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "+1: You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent",
+            "effects": [
+              {
+                "op": "chooseOne",
+                "options": [
+                  {
+                    "description": "Left",
+                    "effects": [
+                      {
+                        "direction": "left",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  },
+                  {
+                    "description": "Right",
+                    "effects": [
+                      {
+                        "direction": "right",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-the-haunt-of-hightower",

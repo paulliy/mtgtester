@@ -93,6 +93,14 @@ function untapStep(ctx: GameContext): void {
         entry.expires.setTurn >= ctx.state.turnNumber,
     );
 
+  if (ctx.state.attackDirections !== undefined)
+    ctx.state.attackDirections = ctx.state.attackDirections.filter(
+      (entry) =>
+        entry.expires.kind !== 'untilNextTurn' ||
+        entry.expires.playerId !== ap.id ||
+        entry.expires.setTurn >= ctx.state.turnNumber,
+    );
+
   if (ctx.state.blockRestrictions !== undefined)
     ctx.state.blockRestrictions = ctx.state.blockRestrictions.filter(
       (entry) =>

@@ -115,7 +115,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Cut a Deal',
       'Chaos Warp',
       'Humble Defector',
-      'Teyo, Geometric Tactician',
       'Wishclaw Talisman',
       'Brash Taunter',
       'Scheming Symmetry',

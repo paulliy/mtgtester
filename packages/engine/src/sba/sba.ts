@@ -113,6 +113,8 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
       s.attackRequirements = s.attackRequirements.filter(
         (entry) => entry.controllerId !== player.id,
       );
+    if (s.attackDirections !== undefined)
+      s.attackDirections = s.attackDirections.filter((entry) => entry.controllerId !== player.id);
     if (s.blockRestrictions !== undefined)
       s.blockRestrictions = s.blockRestrictions.filter((entry) => entry.controllerId !== player.id);
     s.stack = s.stack.filter(

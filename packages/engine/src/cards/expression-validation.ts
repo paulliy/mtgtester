@@ -563,6 +563,7 @@ const effectExpressions = {
   goad: {},
   addAttackRequirement: { selector: optional(selector) },
   cantBlockEach: { selector: selector },
+  limitAttacksToNearestOpponent: {},
   forceAttack: {},
   forceAttackEach: { selector: selector },
   doublePower: { selector: selector },

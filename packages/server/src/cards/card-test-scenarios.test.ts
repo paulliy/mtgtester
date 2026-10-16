@@ -551,6 +551,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'hexmark-viewer-needs-six-blockers',
       'champion-of-lambholt-viewer-weaker-cant-block',
       'pramikon-viewer-nearest-opponent',
+      'teyo-viewer-minus-two-direction',
+      'teyo-viewer-wall-and-plus-one',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

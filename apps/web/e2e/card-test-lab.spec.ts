@@ -10132,3 +10132,64 @@ test('Pramikon, Sky Rampart: each player may attack only the nearest opponent in
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('40');
 });
+
+test('Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+  );
+  const teyo = permanent(page, 'Teyo, Geometric Tactician');
+  await expect(teyo).toHaveClass(/actionable/);
+  await teyo.click();
+  await page.getByRole('button', { name: /−2: Choose left or right/ }).click();
+  await expect(page.getByText('Activate Teyo, Geometric Tactician')).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/choose one/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Right/ }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  const row = page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) });
+  // Only P4, the nearest opponent to the right, is a legal defender.
+  await expect(row.getByRole('button', { name: 'P2' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row.getByRole('button', { name: 'P4' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});
+
+test('Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+  );
+  const teyo = handCard(page, 'Teyo, Geometric Tactician');
+  await expect(teyo).toHaveClass(/actionable/);
+  await teyo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Wall'));
+  await expect(permanent(page, 'Wall')).toContainText('0/4');
+  const walker = permanent(page, 'Teyo, Geometric Tactician');
+  await expect(walker).toHaveClass(/actionable/);
+  await walker.click();
+  await page.getByRole('button', { name: /\+1: You and target opponent each draw a card/ }).click();
+  await expect(page.getByText('Activate Teyo, Geometric Tactician')).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(1);
+});

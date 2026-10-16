@@ -81,8 +81,6 @@ const REASONS: Record<string, string> = {
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
-  'Teyo, Geometric Tactician':
-    'The −2 directional attack restriction is claimed without an implementation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
@@ -270,6 +268,7 @@ describe('Marchesa catalog audit containment', () => {
     'Kardur, Doomscourge',
     'Hexmark Destroyer',
     'Champion of Lambholt',
+    'Teyo, Geometric Tactician',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

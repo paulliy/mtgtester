@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 26,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6843,6 +6843,20 @@
       "sourceFile": "packages/engine/src/cards/overrides/token-triumph.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the fail-closed unsupportedCard that said the can't-block static was hardcoded by card name, so copies lacked it and lost abilities still applied it): the authored override in coverage-pr07.ts uses the new cantBlockCreatures rule static, a static of the Champion itself read against its current power, and the name check in combat.ts is removed. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
+      "name": "Teyo, Geometric Tactician",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the −2 directional attack restriction was claimed without an implementation): the authored override in coverage-pr07.ts reads the Wall line through the interpreter and authors the +1 and a −2 that asks left or right and records an attack-direction limit in game state until the controller's next turn, replaced by a newer −2 and read at the attack restriction choke point beside Pramikon's static. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+    },
+    {
+      "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",
+      "name": "Teyo, Geometric Tactician",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr07",
+      "note": "Registration deleted (an orphan typo'd Oracle id that no card has); see the entry for the real id."
     }
   ]
 }

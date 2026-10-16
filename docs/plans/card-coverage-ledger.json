@@ -3801,6 +3801,21 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
+    "name": "Teyo, Geometric Tactician",
+    "package": "PR07.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
     "name": "The Fantasticar",
     "package": "PR04.22",

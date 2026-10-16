@@ -3174,6 +3174,216 @@ describe('Pramikon, Sky Rampart', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.10 Teyo, Geometric Tactician
+// ---------------------------------------------------------------------------------------------
+
+describe('Teyo, Geometric Tactician', () => {
+  const { card } = pinned('Teyo, Geometric Tactician');
+
+  /** Teyo under `controller`'s control; every player has an attacker. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const teyo = spawn(ctx, 'P1', card);
+    const attackers: Record<string, EnginePermanent> = {};
+    for (const id of ['P1', 'P2', 'P3', 'P4']) {
+      attackers[id] = spawn(ctx, id, GRIZZLY(`${id} Attacker`));
+    }
+    return { ctx, teyo, attackers };
+  }
+
+  const offeredFor = (ctx: GameContext, creature: EnginePermanent) => {
+    const offered = attackOptionsFor(ctx, creature.controllerId, creature);
+    return { players: offered.players.sort(), planeswalkers: offered.planeswalkers.sort() };
+  };
+
+  /** Activate the loyalty ability whose description starts with `sign` through legality and the stack. */
+  function activate(
+    ctx: GameContext,
+    teyo: EnginePermanent,
+    sign: '+1' | '−2',
+    answer?: Answer,
+    targets?: ReadonlyMap<number, string>,
+  ) {
+    turnOfPlayer(ctx, teyo.controllerId);
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const option = optionFor(
+      ctx,
+      teyo.controllerId,
+      teyo.id,
+      new RegExp(sign === '+1' ? '\\+1' : sign),
+    );
+    expect(option, `${sign} is offered`).toBeDefined();
+    takeAction(ctx, teyo.controllerId, option!.payload as PriorityActionPayload, answer, targets);
+    resolveTop(ctx, answer);
+    settle(ctx);
+  }
+
+  const choose =
+    (label: 'Left' | 'Right'): Answer =>
+    (decision) => ({
+      index: Math.max(
+        decision.options.findIndex((option) => option.description === label),
+        0,
+      ),
+      targets: new Map(),
+    });
+
+  it('teyo-pinned-oracle-supported — the Wall line is read and the two loyalty abilities are authored, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters' });
+    expect(def.activatedAbilities.map((ability) => ability.costs)).toEqual([
+      [{ kind: 'loyalty', delta: 1 }],
+      [{ kind: 'loyalty', delta: -2 }],
+    ]);
+    expect(def.activatedAbilities[0]!.ability.effects).toEqual([
+      { op: 'drawTargetAndController', target: 0 },
+    ]);
+  });
+
+  it('teyo-enters-wall — when Teyo enters it creates a 0/4 white Wall with defender and flying', () => {
+    const ctx = pod('teyo-wall');
+    const object = castFromHand(ctx, 'P1', card, [
+      { symbol: 'W' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+    ]);
+    resolveTop(ctx);
+    settle(ctx);
+    const teyo = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    expect(teyo.counters['loyalty']).toBe(3);
+    const wall = ctx.state.battlefield.find((perm) => perm.name === 'Wall')!;
+    expect(wall.isToken).toBe(true);
+    expect(computeCharacteristics(ctx, wall)).toMatchObject({ power: 0, toughness: 4 });
+    expect(wall.controllerId).toBe('P1');
+  });
+
+  it('teyo-plus-one-draw — you and the target opponent each draw a card, nobody else does, and it adds loyalty', () => {
+    const { ctx, teyo } = board('teyo-plus');
+    const before = ['P1', 'P2', 'P3', 'P4'].map((id) => handSize(ctx, id));
+    activate(ctx, teyo, '+1', undefined, new Map([[0, 'P3']]));
+    const after = ['P1', 'P2', 'P3', 'P4'].map((id) => handSize(ctx, id));
+    expect(after.map((n, i) => n - before[i]!)).toEqual([1, 0, 1, 0]);
+    expect(teyo.counters['loyalty']).toBe(4);
+  });
+
+  it('teyo-plus-one-opponent-only — you are not a legal target of the +1', () => {
+    const { ctx, teyo } = board('teyo-plus-targets');
+    turnOfPlayer(ctx, 'P1');
+    const option = optionFor(ctx, 'P1', teyo.id, /\+1/);
+    expect(option).toBeDefined();
+    const slots = (option!.targets ?? []).flatMap((slot) => [...slot.options]);
+    expect(slots.sort()).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('teyo-minus-two-direction — choosing left or right limits every player to the nearest opponent that way', () => {
+    const { ctx, teyo, attackers } = board('teyo-minus');
+    activate(ctx, teyo, '−2', choose('Right'));
+    expect(teyo.counters['loyalty']).toBe(1);
+    expect(ctx.state.attackDirections).toHaveLength(1);
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
+    expect(offeredFor(ctx, attackers['P2']!).players).toEqual(['P1']);
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2']);
+    expect(offeredFor(ctx, attackers['P4']!).players).toEqual(['P3']);
+  });
+
+  it('teyo-left — left is the next player in turn order', () => {
+    const { ctx, teyo, attackers } = board('teyo-left');
+    activate(ctx, teyo, '−2', choose('Left'));
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+    expect(offeredFor(ctx, attackers['P4']!).players).toEqual(['P1']);
+  });
+
+  it('teyo-planeswalkers — only the planeswalkers of that nearest opponent can be attacked too', () => {
+    const { ctx, teyo, attackers } = board('teyo-walkers');
+    const nearest = spawn(ctx, 'P2', WALKER('P2 Walker'));
+    spawn(ctx, 'P3', WALKER('P3 Walker'));
+    spawn(ctx, 'P1', WALKER('P1 Walker'));
+    activate(ctx, teyo, '−2', choose('Left'));
+    expect(offeredFor(ctx, attackers['P1']!)).toEqual({
+      players: ['P2'],
+      planeswalkers: [nearest.id],
+    });
+  });
+
+  it('teyo-until-your-next-turn — it lasts through every other player’s turn and ends as your next turn begins', () => {
+    const { ctx, teyo, attackers } = board('teyo-duration');
+    activate(ctx, teyo, '−2', choose('Left'));
+    for (const id of ['P2', 'P3', 'P4']) {
+      turnOfPlayer(ctx, id);
+      ctx.state.turnNumber += 1;
+      pump(runBeginningAndPrecombatMain(ctx));
+      expect(ctx.state.attackDirections, `at the start of ${id}'s turn`).toHaveLength(1);
+    }
+    expect(offeredFor(ctx, attackers['P4']!).players).toEqual(['P1']);
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(ctx.state.attackDirections).toHaveLength(0);
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('teyo-outlasts-teyo — the limit stays when Teyo leaves the battlefield', () => {
+    const { ctx, teyo, attackers } = board('teyo-leaves');
+    activate(ctx, teyo, '−2', choose('Left'));
+    pump(moveObject(ctx, teyo, { zone: 'graveyard' }));
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+  });
+
+  it('teyo-last-choice-wins — a newer −2 from another Teyo replaces the older one instead of adding to it', () => {
+    const { ctx, teyo, attackers } = board('teyo-replace');
+    const other = spawn(ctx, 'P3', card);
+    activate(ctx, teyo, '−2', choose('Left'));
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+    ctx.state.turnNumber += 1;
+    activate(ctx, other, '−2', choose('Right'));
+    expect(ctx.state.attackDirections).toHaveLength(1);
+    // Right, not left and right together (which would leave no legal attack).
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2']);
+  });
+
+  it('teyo-with-pramikon — Pramikon and Teyo both apply, and disagreeing directions leave no legal attack', () => {
+    const { ctx, teyo, attackers } = board('teyo-pramikon');
+    const pramikon = spawn(ctx, 'P4', pinned('Pramikon, Sky Rampart').card);
+    pramikon.chosenOption = 'left';
+    activate(ctx, teyo, '−2', choose('Left'));
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+    pramikon.chosenOption = 'right';
+    expect(offeredFor(ctx, attackers['P1']!)).toEqual({ players: [], planeswalkers: [] });
+  });
+
+  it('teyo-controller-left — once its controller has left the game the limit no longer applies', () => {
+    const { ctx, teyo, attackers } = board('teyo-eliminated');
+    activate(ctx, teyo, '−2', choose('Left'));
+    playerById(ctx, 'P1').hasLost = true;
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2', 'P4']);
+  });
+
+  it('teyo-whole-game — cast it, use the −2 to choose right, and an attack through combat may go only to the nearest opponent on that side', () => {
+    const ctx = pod('teyo-chain');
+    const attacker = spawn(ctx, 'P1', GRIZZLY('P1 Attacker'));
+    const object = castFromHand(ctx, 'P1', card, [
+      { symbol: 'W' },
+      { symbol: 'C' },
+      { symbol: 'C' },
+    ]);
+    resolveTop(ctx);
+    settle(ctx);
+    const teyo = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    activate(ctx, teyo, '−2', choose('Right'));
+    // The attack declaration offers only P4, and a hit on P4 lands.
+    attacker.tapped = false;
+    const { combats } = fight(ctx, () => ({ [attacker.id]: 'P4' }));
+    expect(combats).toBe(1);
+    expect(playerById(ctx, 'P4').life).toBe(38);
+    expect(playerById(ctx, 'P2').life).toBe(40);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -3295,6 +3505,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Pramikon, Sky Rampart',
     sha256: 'd702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Teyo, Geometric Tactician',
+    sha256: 'c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade',
+    clauseCount: 3,
     authored: true,
   },
 ];

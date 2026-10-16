@@ -2652,20 +2652,6 @@
       ],
       "gameplayAiScenarioIds": ["smothering-tithe-ai-payment-quality"]
     },
-    "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
-      "name": "Teyo, Geometric Tactician",
-      "oracleSha256": "c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
-          "implementation": ["explicitly unsupported; −2 directional restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f": {
       "name": "Weathered Wayfarer",
       "oracleSha256": "42ef11f806b155602ccdd9ce54d2cd2e123a4df1d42d90c83dcedad110cfaafd",
@@ -12484,6 +12470,51 @@
             "pramikon-whole-game"
           ],
           "viewerScenarioIds": ["pramikon-viewer-nearest-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
+      "name": "Teyo, Geometric Tactician",
+      "oracleSha256": "c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "teyo-etb-wall",
+          "oracleText": "When Teyo enters, create a 0/4 white Wall creature token with defender and flying.",
+          "implementation": [
+            "interpreter-read enters trigger creating a 0/4 white Wall token with defender and flying"
+          ],
+          "engineTestIds": ["teyo-pinned-oracle-supported", "teyo-enters-wall"],
+          "viewerScenarioIds": ["teyo-viewer-wall-and-plus-one"]
+        },
+        {
+          "id": "teyo-plus-one-draw",
+          "oracleText": "+1: You and target opponent each draw a card.",
+          "implementation": [
+            "authored +1 loyalty ability targeting an opponent, drawTargetAndController: you and that opponent each draw one card"
+          ],
+          "engineTestIds": ["teyo-plus-one-draw", "teyo-plus-one-opponent-only"],
+          "viewerScenarioIds": ["teyo-viewer-wall-and-plus-one"]
+        },
+        {
+          "id": "teyo-minus-two-direction",
+          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": [
+            "authored −2 loyalty ability: a resolution-time left or right choice that records an attack-direction limit in game state until its controller's next turn begins; a newer −2 from the same card replaces the older entry so only the last choice applies; the combat restriction choke point allows only the nearest opponent in that direction (skipping players who left) and that opponent's planeswalkers, and it composes with Pramikon's static, possibly leaving no legal attack; the limit ends if its controller leaves the game"
+          ],
+          "engineTestIds": [
+            "teyo-minus-two-direction",
+            "teyo-left",
+            "teyo-planeswalkers",
+            "teyo-until-your-next-turn",
+            "teyo-outlasts-teyo",
+            "teyo-last-choice-wins",
+            "teyo-with-pramikon",
+            "teyo-controller-left",
+            "teyo-whole-game"
+          ],
+          "viewerScenarioIds": ["teyo-viewer-minus-two-direction"]
         }
       ],
       "gameplayAiScenarioIds": []

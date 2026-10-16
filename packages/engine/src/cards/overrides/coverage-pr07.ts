@@ -5,6 +5,7 @@
  */
 
 import {
+  activated,
   grantsKeyword,
   spell,
   onAttacks,
@@ -588,6 +589,47 @@ export function registerCoveragePr07Overrides(): void {
         ],
       },
       ruleStatics: [{ kind: 'attackOnlyNearestOpponent' }],
+    },
+  );
+
+  const teyo = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
+  // Teyo, Geometric Tactician: the Wall token line is read by the interpreter. The −2 asks
+  // left or right as it resolves and the limit is game state until the controller's next turn,
+  // so a newer −2 replaces the older one and Pramikon's static still applies beside it.
+  defineCard(
+    '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',
+    'Teyo, Geometric Tactician',
+    [
+      '+1: You and target opponent each draw a card.',
+      '−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [{ kind: 'loyalty', delta: 1 }],
+          timing: 'sorcery',
+          targets: teyo.targets,
+          effects: [{ op: 'drawTargetAndController', target: teyo.slot.opponent }],
+          description: '+1: You and target opponent each draw a card',
+        }),
+        activated({
+          costs: [{ kind: 'loyalty', delta: -2 }],
+          timing: 'sorcery',
+          effects: [
+            {
+              op: 'chooseOne',
+              options: (['left', 'right'] as const).map((direction) => ({
+                description: direction === 'left' ? 'Left' : 'Right',
+                effects: [
+                  { op: 'limitAttacksToNearestOpponent', direction, duration: 'untilYourNextTurn' },
+                ],
+              })),
+            },
+          ],
+          description:
+            '−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent',
+        }),
+      ],
     },
   );
 }

@@ -750,3 +750,51 @@ describe('Pramikon, Sky Rampart Card Test Lab scenario', () => {
     replays('pramikon-viewer-nearest-opponent', steps);
   });
 });
+
+describe('Teyo, Geometric Tactician Card Test Lab scenario', () => {
+  it('teyo-viewer-minus-two-direction — after the −2 chooses right, Lab Servo is offered only P4 as a defender and hits it', () => {
+    const steps: Step[] = [
+      { action: '−2: Choose left or right' },
+      { action: 'Right' },
+      { action: 'Declare attackers', targets: ['P4'] },
+    ];
+    const offers: string[][] = [];
+    const { scenario, state, seat, offered } = run(
+      'teyo-viewer-minus-two-direction',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P1' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offered).toContainEqual(['Left', 'Right']);
+    expect(offers).toEqual([['P4', '__no_attack__']]);
+    expect(seat('P4').life).toBe(39);
+    expect(seat('P2').life).toBe(40);
+    expect(seat('P3').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('teyo-viewer-minus-two-direction', steps);
+  });
+});
+
+describe('Teyo, Geometric Tactician draw Card Test Lab scenario', () => {
+  it('teyo-viewer-wall-and-plus-one — casting Teyo makes a Wall, and the +1 draws a card for you and P2 only', () => {
+    const steps: Step[] = [
+      { action: 'Cast Teyo, Geometric Tactician' },
+      { action: '+1: You and target opponent each draw a card', targets: ['P2'] },
+    ];
+    const { scenario, state, seat, onBattlefield } = run('teyo-viewer-wall-and-plus-one', steps);
+    expect(onBattlefield('Wall')).toHaveLength(1);
+    expect(seat('P1').hand).toHaveLength(1);
+    expect(seat('P2').hand).toHaveLength(1);
+    expect(seat('P3').hand).toHaveLength(0);
+    expect(seat('P4').hand).toHaveLength(0);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('teyo-viewer-wall-and-plus-one', steps);
+  });
+});

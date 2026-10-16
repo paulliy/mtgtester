@@ -339,12 +339,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Sunforger: restored in coverage PR05. The interpreter reads Equip {3} and the unattach
   // activation that casts a found instant for free, so no override remains.
-  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
-  unsupportedCard(
-    '0dfdf1a1-3a9a-490f-bd9d-dcba088c6785',
-    'Teyo, Geometric Tactician',
-    'The −2 directional attack restriction is claimed without an implementation.',
-  );
   // Catalog audit queen-batch-1: mill/exile/cast cascade is claimed as counter only.
   unsupportedCard(
     '6623cb85-fb1e-4561-8b21-0977c25096c2',
@@ -370,10 +364,5 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Kambal, Consul of Allocation: restored in coverage PR03. The interpreter reads the
   // opponent-cast trigger and "that player loses 2 life and you gain 2 life", so no override remains.
-  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
-  unsupportedCard(
-    '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',
-    'Teyo, Geometric Tactician',
-    'The −2 directional attack restriction is claimed without an implementation.',
-  );
+  // Teyo, Geometric Tactician: restored in coverage PR07 (see coverage-pr07.ts).
 }

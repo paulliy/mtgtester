@@ -1389,6 +1389,16 @@ export type Effect =
    * matching `selector` as this resolves, a fixed set (CR 611.2c).
    */
   | { op: 'cantBlockEach'; selector: Selector; duration: 'untilYourNextTurn' }
+  /**
+   * "Until your next turn, each player may attack only the nearest opponent in the last chosen
+   * direction and planeswalkers controlled by that opponent" (Teyo's −2, after its left/right
+   * choice). It replaces any earlier effect of the same card.
+   */
+  | {
+      op: 'limitAttacksToNearestOpponent';
+      direction: 'left' | 'right';
+      duration: 'untilYourNextTurn';
+    }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }

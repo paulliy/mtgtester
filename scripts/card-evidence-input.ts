@@ -2481,6 +2481,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

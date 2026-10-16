@@ -372,9 +372,26 @@ function attackRestrictionAllows(
     )
   )
     return false;
+  // Teyo's −2: every player's attacks are limited to the nearest opponent in a direction.
+  if (
+    (ctx.state.attackDirections ?? []).some(
+      (entry) =>
+        !playerById(ctx, entry.controllerId).hasLost &&
+        !isNearestOpponent(ctx, creature, target, entry.direction),
+    )
+  )
+    return false;
   return !gatherRuleStatics(ctx).some((entry) => {
-    if (entry.static.kind === 'attackOnlyNearestOpponent')
-      return !onlyNearestAllows(ctx, entry, creature, target);
+    if (entry.static.kind === 'attackOnlyNearestOpponent') {
+      const direction = ctx.state.battlefield.find(
+        (perm) => perm.cardId === entry.sourceCardId,
+      )?.chosenOption;
+      // A source with no direction chosen restricts nothing.
+      return (
+        (direction === 'left' || direction === 'right') &&
+        !isNearestOpponent(ctx, creature, target, direction)
+      );
+    }
     return (
       entry.static.kind === 'attackRestriction' &&
       entry.static.cost === undefined &&
@@ -385,19 +402,15 @@ function attackRestrictionAllows(
 
 /**
  * "Each player may attack only the nearest opponent in the chosen direction and planeswalkers
- * controlled by that opponent" (Pramikon): may `creature`'s controller attack this target? A
- * source with no direction chosen restricts nothing.
+ * controlled by that opponent" (Pramikon, Teyo): is this target that opponent or one of their
+ * planeswalkers, for `creature`'s controller?
  */
-function onlyNearestAllows(
+function isNearestOpponent(
   ctx: GameContext,
-  entry: RuleStaticEntry,
   creature: EnginePermanent,
   target: AttackTarget,
+  direction: 'left' | 'right',
 ): boolean {
-  const direction = ctx.state.battlefield.find(
-    (perm) => perm.cardId === entry.sourceCardId,
-  )?.chosenOption;
-  if (direction !== 'left' && direction !== 'right') return true;
   return nearestOpponentInDirection(ctx, creature.controllerId, direction)?.id === target.player.id;
 }
 

@@ -303,6 +303,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   goad: { target: permanent },
   addAttackRequirement: { target: optionalRef(permanent) },
   cantBlockEach: {},
+  limitAttacksToNearestOpponent: {},
   forceAttack: { target: permanent },
   forceAttackEach: {},
   doublePower: {},

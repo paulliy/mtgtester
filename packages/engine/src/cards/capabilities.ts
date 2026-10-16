@@ -186,6 +186,7 @@ const shapes = {
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     level: leaf,
+    direction: leaf,
     maximum: leaf,
     nonlandMaySatisfyCount: leaf,
     opponentsUnableLoseLife: { node: 'Value' },
@@ -1028,6 +1029,7 @@ const families = {
       goad: true,
       addAttackRequirement: true,
       cantBlockEach: true,
+      limitAttacksToNearestOpponent: true,
       forceAttack: true,
       forceAttackEach: true,
       doublePower: true,

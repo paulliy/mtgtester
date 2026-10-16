@@ -103,6 +103,20 @@ export interface BlockRestrictionEntry {
   expires: EffectExpiry;
 }
 
+/**
+ * "Until your next turn, each player may attack only the nearest opponent in the last chosen
+ * direction and planeswalkers controlled by that opponent" (Teyo, Geometric Tactician). A newer
+ * effect from the same card replaces the older one, so only the last choice is ever in force.
+ */
+export interface AttackDirectionEntry {
+  id: string;
+  controllerId: PlayerId;
+  /** The card that made it; a newer entry from the same oracle card replaces older ones. */
+  sourceOracleId: string;
+  direction: 'left' | 'right';
+  expires: EffectExpiry;
+}
+
 export interface EngineObject extends GameObject {
   cardId: CardId;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
@@ -736,6 +750,8 @@ export interface EngineState extends GameState {
   attackRequirements?: AttackRequirementEntry[];
   /** Creatures that can't block because of a resolved spell or ability, until it expires. */
   blockRestrictions?: BlockRestrictionEntry[];
+  /** Seat-direction limits on whom players may attack, until they expire (Teyo). */
+  attackDirections?: AttackDirectionEntry[];
   normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,

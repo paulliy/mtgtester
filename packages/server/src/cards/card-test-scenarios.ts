@@ -13512,6 +13512,61 @@ function pramikonScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function teyoScenario(gameId: GameId): CardTestScenario {
+  const teyo = pinnedFrom(COVERAGE_PR07, 'Teyo, Geometric Tactician');
+  return pr01Scenario(gameId, {
+    id: 'teyo-viewer-minus-two-direction',
+    title:
+      'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+    instructions: [
+      'Teyo, Geometric Tactician and Lab Servo (1/1) are on your battlefield. The seats are P1 (you), P2, P3 and P4.',
+      'Activate Teyo’s −2 and choose Right. Pass priority to the declare attackers step: Lab Servo may attack only P4, the nearest opponent to your right. Attack P4 with it and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Servo was offered only P4 (not P2 or P3) and hit it for 1: P4 is at 39 and P2 and P3 are untouched at 40.',
+    oracleSha256: teyo.sha256,
+    clauseIds: ['teyo-minus-two-direction'],
+    decks: {
+      P1: [teyo.card, LAB_SERVO, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [],
+      battlefield: [{ playerId: 'P1', cardNames: ['Teyo, Geometric Tactician', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
+function teyoDrawScenario(gameId: GameId): CardTestScenario {
+  const teyo = pinnedFrom(COVERAGE_PR07, 'Teyo, Geometric Tactician');
+  return pr01Scenario(gameId, {
+    id: 'teyo-viewer-wall-and-plus-one',
+    title:
+      'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+    instructions: [
+      'Teyo is in your hand with a Plains and two Forests on your battlefield. Your hand and P2’s hand are otherwise empty, and your library holds only Lab Servos so the drawn card is not a land.',
+      'Cast Teyo: a 0/4 Wall token with defender and flying arrives. Then activate Teyo’s +1 targeting P2.',
+    ],
+    expectedOutcome:
+      'The Wall token is on your battlefield, and you and P2 each drew one card (one card in each hand) while P3 and P4 drew none.',
+    oracleSha256: teyo.sha256,
+    clauseIds: ['teyo-etb-wall', 'teyo-plus-one-draw'],
+    decks: {
+      P1: [teyo.card, PLAINS, FOREST, FOREST, LAB_SERVO, LAB_SERVO],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Teyo, Geometric Tactician'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Plains', 'Forest', 'Forest'] }],
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13838,6 +13893,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'hexmark-viewer-needs-six-blockers',
   'champion-of-lambholt-viewer-weaker-cant-block',
   'pramikon-viewer-nearest-opponent',
+  'teyo-viewer-minus-two-direction',
+  'teyo-viewer-wall-and-plus-one',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14341,6 +14398,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'hexmark-viewer-needs-six-blockers': hexmarkScenario,
   'champion-of-lambholt-viewer-weaker-cant-block': championScenario,
   'pramikon-viewer-nearest-opponent': pramikonScenario,
+  'teyo-viewer-minus-two-direction': teyoScenario,
+  'teyo-viewer-wall-and-plus-one': teyoDrawScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

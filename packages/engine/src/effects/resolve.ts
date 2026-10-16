@@ -5435,6 +5435,24 @@ export function* executeAbility(
         });
         break;
       }
+      case 'limitAttacksToNearestOpponent': {
+        // The last choice is the only one in force: drop what this card made before.
+        ctx.state.attackDirections = (ctx.state.attackDirections ?? []).filter(
+          (entry) => entry.sourceOracleId !== source.oracleId,
+        );
+        ctx.state.attackDirections.push({
+          id: `ad-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceOracleId: source.oracleId,
+          direction: effect.direction,
+          expires: {
+            kind: 'untilNextTurn',
+            playerId: controller.id,
+            setTurn: ctx.state.turnNumber,
+          },
+        });
+        break;
+      }
       case 'forceAttack': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);
