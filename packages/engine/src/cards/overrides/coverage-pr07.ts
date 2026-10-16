@@ -568,4 +568,26 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Pramikon, Sky Rampart: the direction is chosen as it enters (a replacement, so it exists
+  // before anything can attack) and the restriction is a rule static of Pramikon itself, so it is
+  // lost with its abilities and gone when it leaves. Flying and defender are read by the interpreter.
+  defineCard(
+    '377d0fa7-1b3d-4b97-b066-dceeff3734d0',
+    'Pramikon, Sky Rampart',
+    [
+      'As ~ enters, choose left or right.',
+      'Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.',
+    ],
+    {
+      entersChoosingOption: {
+        prompt: 'choose left or right',
+        options: [
+          { key: 'left', label: 'Left' },
+          { key: 'right', label: 'Right' },
+        ],
+      },
+      ruleStatics: [{ kind: 'attackOnlyNearestOpponent' }],
+    },
+  );
 }

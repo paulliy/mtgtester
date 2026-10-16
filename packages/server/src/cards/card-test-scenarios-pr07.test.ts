@@ -720,3 +720,33 @@ describe('Champion of Lambholt Card Test Lab scenario', () => {
     replays('champion-of-lambholt-viewer-weaker-cant-block', steps);
   });
 });
+
+describe('Pramikon, Sky Rampart Card Test Lab scenario', () => {
+  it('pramikon-viewer-nearest-opponent — after choosing right, Lab Servo is offered only P4 as a defender and hits it', () => {
+    const steps: Step[] = [
+      { action: 'Cast Pramikon, Sky Rampart' },
+      { action: 'Right' },
+      { action: 'Declare attackers', targets: ['P4'] },
+    ];
+    const offers: string[][] = [];
+    const { scenario, state, seat, offered } = run(
+      'pramikon-viewer-nearest-opponent',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (request.decidingPlayer === 'P1' && declare !== undefined)
+          for (const slot of declare.targets ?? []) offers.push(slot.options);
+      },
+    );
+    expect(offered).toContainEqual(['Left', 'Right']);
+    expect(offers).toEqual([['P4', '__no_attack__']]);
+    expect(seat('P4').life).toBe(39);
+    expect(seat('P2').life).toBe(40);
+    expect(seat('P3').life).toBe(40);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('pramikon-viewer-nearest-opponent', steps);
+  });
+});

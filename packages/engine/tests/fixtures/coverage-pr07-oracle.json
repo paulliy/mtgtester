@@ -577,6 +577,48 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "d702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a",
+      "card": {
+        "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
+        "scryfallId": "8569ad47-a243-402d-899f-4e6b17ea4e1e",
+        "name": "Pramikon, Sky Rampart",
+        "manaCost": "{U}{R}{W}",
+        "cmc": 3,
+        "colors": [
+          "R",
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Wall",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Wall"
+        ],
+        "oracleText": "Flying, defender\nAs Pramikon enters, choose left or right.\nEach player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.",
+        "power": "1",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Defender"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

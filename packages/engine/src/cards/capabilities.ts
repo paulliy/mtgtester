@@ -1342,6 +1342,7 @@ const families = {
       attackTax: true,
       attackRestriction: true,
       attackRequirement: true,
+      attackOnlyNearestOpponent: true,
       cantBlockCreatures: true,
       minBlockers: true,
       cantAttackAlone: true,

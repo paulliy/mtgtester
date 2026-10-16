@@ -12448,6 +12448,45 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "377d0fa7-1b3d-4b97-b066-dceeff3734d0": {
+      "name": "Pramikon, Sky Rampart",
+      "oracleSha256": "d702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "pramikon-choose-direction",
+          "oracleText": "As Pramikon enters, choose left or right.",
+          "implementation": [
+            "authored entersChoosingOption of left or right: the direction is chosen as a replacement as it enters, so it exists before anything can attack, and is stored as the permanent's chosen option"
+          ],
+          "engineTestIds": [
+            "pramikon-pinned-oracle-supported",
+            "pramikon-whole-game",
+            "pramikon-no-choice-no-restriction"
+          ],
+          "viewerScenarioIds": ["pramikon-viewer-nearest-opponent"]
+        },
+        {
+          "id": "pramikon-attack-only-nearest",
+          "oracleText": "Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": [
+            "authored attackOnlyNearestOpponent rule static of Pramikon itself, read at the attack restriction choke point: every player, its controller included, may attack only the nearest opponent in the chosen direction (left is the next player in turn order, right the previous one, skipping players who have left the game) and that opponent's planeswalkers; several such statics intersect and can leave no legal attack, in which case a requirement such as goad no longer applies; creatures put onto the battlefield attacking are not limited; it ends when Pramikon leaves"
+          ],
+          "engineTestIds": [
+            "pramikon-left-right",
+            "pramikon-planeswalkers",
+            "pramikon-skips-eliminated",
+            "pramikon-intersect",
+            "pramikon-requirements",
+            "pramikon-leaves",
+            "pramikon-not-attacking-tokens",
+            "pramikon-whole-game"
+          ],
+          "viewerScenarioIds": ["pramikon-viewer-nearest-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

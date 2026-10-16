@@ -62,6 +62,7 @@ import {
   allowanceFor,
   gatherRuleStatics,
   manaSourcesFor,
+  nearestOpponentInDirection,
   triggersOf,
 } from '../state/queries';
 import type { RuleStaticEntry } from '../state/queries';
@@ -355,7 +356,8 @@ function allAttackTargets(
  * counter on them." And the statics that say the same of whatever matches a filter (Combat
  * Calligrapher's Inklings, creatures enchanted by an Aura Eriette's controller controls, creatures
  * named Lightning Rager): each covers the player and every planeswalker that player controls.
- * Only the unconditional ones forbid; one with a cost is a tax (`attackTax`), never a ban.
+ * Only the unconditional ones forbid; one with a cost is a tax (`attackTax`), never a ban. Pramikon's
+ * seat rule also forbids, for every target but the nearest opponent in its direction.
  */
 function attackRestrictionAllows(
   ctx: GameContext,
@@ -370,12 +372,33 @@ function attackRestrictionAllows(
     )
   )
     return false;
-  return !gatherRuleStatics(ctx).some(
-    (entry) =>
+  return !gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind === 'attackOnlyNearestOpponent')
+      return !onlyNearestAllows(ctx, entry, creature, target);
+    return (
       entry.static.kind === 'attackRestriction' &&
       entry.static.cost === undefined &&
-      attackRestrictionApplies(ctx, entry, creature, target.player.id),
-  );
+      attackRestrictionApplies(ctx, entry, creature, target.player.id)
+    );
+  });
+}
+
+/**
+ * "Each player may attack only the nearest opponent in the chosen direction and planeswalkers
+ * controlled by that opponent" (Pramikon): may `creature`'s controller attack this target? A
+ * source with no direction chosen restricts nothing.
+ */
+function onlyNearestAllows(
+  ctx: GameContext,
+  entry: RuleStaticEntry,
+  creature: EnginePermanent,
+  target: AttackTarget,
+): boolean {
+  const direction = ctx.state.battlefield.find(
+    (perm) => perm.cardId === entry.sourceCardId,
+  )?.chosenOption;
+  if (direction !== 'left' && direction !== 'right') return true;
+  return nearestOpponentInDirection(ctx, creature.controllerId, direction)?.id === target.player.id;
 }
 
 /**

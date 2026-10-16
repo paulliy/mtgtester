@@ -2475,6 +2475,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ["Champion of Lambholt: weaker creatures can't block your creatures"],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

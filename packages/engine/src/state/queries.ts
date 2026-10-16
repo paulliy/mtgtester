@@ -214,6 +214,33 @@ export function playersInApnapOrder(ctx: GameContext): EnginePlayerState[] {
   return order;
 }
 
+/** A direction around the table (CR 101.4: turn order passes to the left). */
+export type SeatDirection = 'left' | 'right';
+
+/**
+ * The nearest opponent of `playerId` in `direction`, skipping players who have left the game:
+ * the next player in turn order to the left, the previous one to the right. With two players it
+ * is the other one either way. Undefined when `playerId` has no opponent left.
+ */
+export function nearestOpponentInDirection(
+  ctx: GameContext,
+  playerId: PlayerId,
+  direction: SeatDirection,
+): EnginePlayerState | undefined {
+  const order = ctx.state.turnOrder;
+  const start = order.indexOf(playerId);
+  if (start < 0) return undefined;
+  const step = direction === 'left' ? 1 : -1;
+  for (let i = 1; i < order.length; i++) {
+    const id = order[
+      (((start + step * i) % order.length) + order.length) % order.length
+    ] as PlayerId;
+    const candidate = ctx.state.players.find((p) => p.id === id);
+    if (candidate !== undefined && !candidate.hasLost) return candidate;
+  }
+  return undefined;
+}
+
 export function activePlayer(ctx: GameContext): EnginePlayerState {
   const id = ctx.state.turnOrder[ctx.state.activePlayerIndex] as PlayerId;
   const p = ctx.state.players.find((pl) => pl.id === id);

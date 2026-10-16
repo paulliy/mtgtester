@@ -2973,16 +2973,20 @@
   {
     "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
     "name": "Pramikon, Sky Rampart",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.20",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"As ~ enters, choose left or right.\"",
       "unrecognized rules text: \"Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",

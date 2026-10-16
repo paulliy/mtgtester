@@ -13484,6 +13484,34 @@ function championScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function pramikonScenario(gameId: GameId): CardTestScenario {
+  const pramikon = pinnedFrom(COVERAGE_PR07, 'Pramikon, Sky Rampart');
+  return pr01Scenario(gameId, {
+    id: 'pramikon-viewer-nearest-opponent',
+    title:
+      'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+    instructions: [
+      'Pramikon is in your hand with an Island, a Mountain and a Plains on your battlefield, next to Lab Servo (1/1). The seats are P1 (you), P2, P3 and P4.',
+      'Cast Pramikon and choose Right as it enters. Pass priority to the declare attackers step: Lab Servo may attack only P4, the nearest opponent to your right. Attack P4 with it and confirm.',
+    ],
+    expectedOutcome:
+      'Lab Servo was offered only P4 (not P2 or P3) and hit it for 1: P4 is at 39 and P2 and P3 are untouched at 40.',
+    oracleSha256: pramikon.sha256,
+    clauseIds: ['pramikon-choose-direction', 'pramikon-attack-only-nearest'],
+    decks: {
+      P1: [pramikon.card, LAB_SERVO, ISLAND, MOUNTAIN, PLAINS],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Pramikon, Sky Rampart'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Island', 'Mountain', 'Plains', 'Lab Servo'] }],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13809,6 +13837,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'taunt-viewer-goad-and-cant-block',
   'hexmark-viewer-needs-six-blockers',
   'champion-of-lambholt-viewer-weaker-cant-block',
+  'pramikon-viewer-nearest-opponent',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14311,6 +14340,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'taunt-viewer-goad-and-cant-block': tauntScenario,
   'hexmark-viewer-needs-six-blockers': hexmarkScenario,
   'champion-of-lambholt-viewer-weaker-cant-block': championScenario,
+  'pramikon-viewer-nearest-opponent': pramikonScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

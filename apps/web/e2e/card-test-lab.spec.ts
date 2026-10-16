@@ -10098,3 +10098,37 @@ test("Champion of Lambholt: weaker creatures can't block your creatures", async 
   await expect(permanent(page, 'Lab Bird')).toBeVisible();
   await expect(permanent(page, 'Champion of Lambholt')).toContainText('3/3');
 });
+
+test('Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+  );
+  const pramikon = handCard(page, 'Pramikon, Sky Rampart');
+  await expect(pramikon).toHaveClass(/actionable/);
+  await pramikon.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/choose left or right/).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Right/ }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  const row = page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) });
+  // Only P4, the nearest opponent to the right, is a legal defender.
+  await expect(row.getByRole('button', { name: 'P2' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row.getByRole('button', { name: 'P4' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});

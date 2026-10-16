@@ -173,6 +173,13 @@ export type RuleStatic =
       cost?: { perCounterOnCreature: true };
     }
   /**
+   * "Each player may attack only the nearest opponent in the chosen direction and planeswalkers
+   * controlled by that opponent" (Pramikon, Sky Rampart): the direction is the source's chosen
+   * option, `left` or `right`, made as it entered. It applies to every player, the source's
+   * controller included, and several such statics intersect.
+   */
+  | { kind: 'attackOnlyNearestOpponent' }
+  /**
    * "This creature can't attack alone" / "can't block alone" (Toby's Beast token). The creature
    * is this permanent itself. Attacking alone means being the only creature declared as an
    * attacker; blocking alone means being the only creature its controller declares as a blocker

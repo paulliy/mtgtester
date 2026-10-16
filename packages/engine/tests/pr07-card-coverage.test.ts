@@ -34,6 +34,7 @@ import {
   runCombatAndExtraCombats,
 } from '../src/turn/turn';
 import { createGame } from '../src/state/game';
+import { INKLING_2_1_FLYING } from '../src/cards/tokens';
 import { phaseInAtUntap, phaseOutControlledPermanents } from '../src/state/phasing';
 import { playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
@@ -3005,6 +3006,174 @@ describe('Champion of Lambholt', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.20 Pramikon, Sky Rampart
+// ---------------------------------------------------------------------------------------------
+
+describe('Pramikon, Sky Rampart', () => {
+  const { card } = pinned('Pramikon, Sky Rampart');
+  const COST = [{ symbol: 'U' as const }, { symbol: 'R' as const }, { symbol: 'W' as const }];
+
+  /** Pramikon under P1's control with the direction chosen; every player has an attacker. */
+  function board(seed: string, direction: 'left' | 'right' | undefined = 'left') {
+    const ctx = pod(seed);
+    const pramikon = spawn(ctx, 'P1', card);
+    if (direction !== undefined) pramikon.chosenOption = direction;
+    const attackers: Record<string, EnginePermanent> = {};
+    for (const id of ['P1', 'P2', 'P3', 'P4']) {
+      attackers[id] = spawn(ctx, id, GRIZZLY(`${id} Attacker`));
+    }
+    return { ctx, pramikon, attackers };
+  }
+
+  /** The players and planeswalkers `creature`'s controller may attack, sorted. */
+  const offeredFor = (ctx: GameContext, creature: EnginePermanent) => {
+    const offered = attackOptionsFor(ctx, creature.controllerId, creature);
+    return { players: offered.players.sort(), planeswalkers: offered.planeswalkers.sort() };
+  };
+
+  it('pramikon-pinned-oracle-supported — the authored override carries the as-enters choice and the seat restriction under both ids, and flying and defender still parse', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.entersChoosingOption?.options?.map((option) => option.key)).toEqual([
+      'left',
+      'right',
+    ]);
+    expect(def.ruleStatics).toEqual([{ kind: 'attackOnlyNearestOpponent' }]);
+    expect(def.keywords).toEqual(expect.arrayContaining(['flying', 'defender']));
+  });
+
+  it('pramikon-left-right — each player may attack only the nearest opponent in the chosen direction, and the direction decides who that is', () => {
+    const { ctx, pramikon, attackers } = board('pramikon-seats', 'left');
+    // Seating is P1, P2, P3, P4 and turn order passes to the left: P1's left is P2.
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+    expect(offeredFor(ctx, attackers['P2']!).players).toEqual(['P3']);
+    expect(offeredFor(ctx, attackers['P4']!).players).toEqual(['P1']);
+    pramikon.chosenOption = 'right';
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
+    expect(offeredFor(ctx, attackers['P2']!).players).toEqual(['P1']);
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2']);
+  });
+
+  it('pramikon-planeswalkers — only the planeswalkers that nearest opponent controls can be attacked too', () => {
+    const { ctx, attackers } = board('pramikon-walkers', 'left');
+    const mine = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const nearest = spawn(ctx, 'P2', WALKER('P2 Walker'));
+    spawn(ctx, 'P3', WALKER('P3 Walker'));
+    expect(mine.id).not.toBe(nearest.id);
+    expect(offeredFor(ctx, attackers['P1']!)).toEqual({
+      players: ['P2'],
+      planeswalkers: [nearest.id],
+    });
+  });
+
+  it('pramikon-skips-eliminated — a player who has left the game is not the nearest opponent', () => {
+    const { ctx, pramikon, attackers } = board('pramikon-eliminated', 'left');
+    playerById(ctx, 'P2').hasLost = true;
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P3']);
+    playerById(ctx, 'P3').hasLost = true;
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
+    // Two players left: the other one, whichever way it points.
+    pramikon.chosenOption = 'right';
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
+  });
+
+  it('pramikon-intersect — two Pramikons pointing opposite ways can leave no legal attack, and a creature then is not required to attack', () => {
+    const { ctx, attackers } = board('pramikon-two', 'left');
+    const second = spawn(ctx, 'P3', card);
+    second.chosenOption = 'right';
+    expect(offeredFor(ctx, attackers['P1']!)).toEqual({ players: [], planeswalkers: [] });
+    // Goaded by P3 and unable to attack anyone: nothing is required of it.
+    attackers['P1']!.goadedBy = [{ goaderId: 'P3', appliedTurn: ctx.state.turnNumber }];
+    expect(mustAttackIn(ctx, 'P1', [attackers['P1']!])).toEqual({
+      [attackers['P1']!.id]: false,
+    });
+    // Two pointing the same way is the same restriction as one.
+    second.chosenOption = 'left';
+    expect(offeredFor(ctx, attackers['P2']!).players).toEqual(['P3']);
+  });
+
+  it('pramikon-requirements — a goaded creature must still attack its nearest opponent even when that is the goader', () => {
+    const { ctx, attackers } = board('pramikon-goad', 'left');
+    attackers['P1']!.goadedBy = [{ goaderId: 'P2', appliedTurn: ctx.state.turnNumber }];
+    const defenders: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [attackers['P1']!], defenders)).toEqual({
+      [attackers['P1']!.id]: true,
+    });
+    expect(defenders[attackers['P1']!.id]).toEqual(['P2']);
+  });
+
+  it('pramikon-no-choice-no-restriction — a Pramikon that never chose a direction restricts nothing', () => {
+    const { ctx, pramikon, attackers } = board('pramikon-unchosen', undefined);
+    delete pramikon.chosenOption;
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('pramikon-leaves — the restriction is gone when Pramikon leaves the battlefield', () => {
+    const { ctx, pramikon, attackers } = board('pramikon-gone', 'left');
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
+    ctx.state.battlefield = ctx.state.battlefield.filter((perm) => perm.id !== pramikon.id);
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2', 'P3', 'P4']);
+  });
+
+  it('pramikon-not-attacking-tokens — creatures put onto the battlefield attacking are not limited', () => {
+    const { ctx } = board('pramikon-token', 'left');
+    const offered: string[] = [];
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'declareAttackers';
+    // Someone else's creature already attacks P2 and P3 (it was declared before Pramikon arrived).
+    ctx.state.combat = { defendingPlayers: ['P2', 'P3'] };
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: card.oracleId, name: card.name, controllerId: 'P1' },
+        spell({
+          effects: [
+            {
+              op: 'createTokenAttacking',
+              spec: INKLING_2_1_FLYING,
+              count: { kind: 'const', n: 1 },
+            },
+          ],
+        }),
+        [],
+      ),
+      (decision) => {
+        offered.push(...decision.options.map((option) => option.description));
+        return {
+          index: Math.max(
+            decision.options.findIndex((option) => option.description === 'Attack P3'),
+            0,
+          ),
+          targets: new Map(),
+        };
+      },
+    );
+    expect(offered).toEqual(['Attack P2', 'Attack P3']);
+    const token = ctx.state.battlefield.find((perm) => perm.isToken && perm.name === 'Inkling')!;
+    expect(token.attacking).toBe('P3');
+  });
+
+  it('pramikon-whole-game — cast it, choose right as it enters, and every attacker is then limited to its right-hand opponent', () => {
+    const ctx = pod('pramikon-chain');
+    const attacker = spawn(ctx, 'P1', GRIZZLY('P1 Attacker'));
+    const walker = spawn(ctx, 'P4', WALKER('P4 Walker'));
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx, (decision) => ({
+      index: Math.max(
+        decision.options.findIndex((option) => option.description === 'Right'),
+        0,
+      ),
+      targets: new Map(),
+    }));
+    settle(ctx);
+    const pramikon = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    expect(pramikon.chosenOption).toBe('right');
+    expect(offeredFor(ctx, attacker)).toEqual({ players: ['P4'], planeswalkers: [walker.id] });
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -3120,6 +3289,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Champion of Lambholt',
     sha256: '7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63',
     clauseCount: 1,
+    authored: true,
+  },
+  {
+    name: 'Pramikon, Sky Rampart',
+    sha256: 'd702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a',
+    clauseCount: 2,
     authored: true,
   },
 ];

@@ -550,6 +550,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'taunt-viewer-goad-and-cant-block',
       'hexmark-viewer-needs-six-blockers',
       'champion-of-lambholt-viewer-weaker-cant-block',
+      'pramikon-viewer-nearest-opponent',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',
