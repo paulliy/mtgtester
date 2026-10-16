@@ -4222,6 +4222,41 @@ describe('Life of the Party', () => {
     expect(tokens[0]!.manaCost).toBe(card.manaCost);
   });
 
+  it("life-of-the-party-copy-left-before-resolving — a creature that entered as a copy of it and left with the trigger on the stack gives copies with its text, not the copying card's", () => {
+    const ctx = pod('lotp-clone-gone');
+    spawn(ctx, 'P1', card);
+    // Dack's Duplicate: "You may have this creature enter as a copy of any creature on the
+    // battlefield, except it has haste and dethrone."
+    const CLONE = (
+      JSON.parse(
+        readFileSync(
+          join(import.meta.dirname, 'fixtures/marchesa-engine-batch3-oracle.json'),
+          'utf8',
+        ),
+      ) as { cards: { card: OracleCard }[] }
+    ).cards.find((entry) => entry.card.name === "Dack's Duplicate")!.card;
+    const clone = conjure(ctx, 'P1', CLONE, 'hand');
+    pump(moveObject(ctx, clone, { zone: 'battlefield', controllerId: 'P1' }), () => ({
+      index: 0,
+      targets: new Map(),
+    }));
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.stack).toHaveLength(1);
+    const copy = ctx.state.battlefield.find((perm) => perm.cardId === clone.cardId)!;
+    expect(copy.name).toBe(card.name);
+    const shown = { oracleText: copy.oracleText, manaCost: copy.manaCost };
+    expect(shown.oracleText).not.toBe(CLONE.oracleText);
+    pump(moveObject(ctx, copy, { zone: 'graveyard' }));
+    resolveTop(ctx);
+    const tokens = copies(ctx);
+    expect(tokens.map((token) => token.controllerId).sort()).toEqual(['P2', 'P3', 'P4']);
+    // The copies show what the copy showed as it left, not Dack's Duplicate's own text and cost.
+    for (const token of tokens) {
+      expect(token.oracleText).toBe(shown.oracleText);
+      expect(token.manaCost).toBe(shown.manaCost);
+    }
+  });
+
   it('life-of-the-party-whole-game — cast it, the opponents get goaded copies, and on a copy’s controller’s turn it attacks someone else', () => {
     const { ctx } = cast('lotp-chain');
     const p4Token = copies(ctx).find((token) => token.controllerId === 'P4')!;

@@ -5094,8 +5094,13 @@ export function* executeAbility(
         // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
         // which for a copy is the copied definition.
         const lastKnownSourceDef = ctx.defs.get(source.oracleId);
-        // The card itself, wherever it went, still shows the rules text and cost the copy shows.
-        const sourceCard = live === undefined ? findObjectByCardId(ctx, source.cardId) : undefined;
+        // The copies show the rules text and cost it showed as it left (a copy's, for a copy of
+        // something); without those facts, the card itself, wherever it went.
+        const facts = source.lastKnownFacts;
+        const sourceCard =
+          live === undefined && facts?.oracleText === undefined
+            ? findObjectByCardId(ctx, source.cardId)
+            : undefined;
         const original =
           live ??
           (effect.ref === 'source' && lastKnownSourceDef !== undefined
@@ -5105,8 +5110,11 @@ export function* executeAbility(
                 oracleId: source.oracleId,
                 name: source.name,
                 typeLine: lastKnownSourceDef.typeLine,
-                oracleText: sourceCard?.oracleText ?? '',
-                manaCost: sourceCard?.manaCost ?? null,
+                oracleText: facts?.oracleText ?? sourceCard?.oracleText ?? '',
+                manaCost:
+                  facts?.oracleText !== undefined
+                    ? (facts.manaCost ?? null)
+                    : (sourceCard?.manaCost ?? null),
                 transformed: false,
               } as unknown as EnginePermanent)
             : undefined);
