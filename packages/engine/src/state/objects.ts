@@ -445,6 +445,23 @@ export function makePermanent(
 }
 
 /**
+ * Remove a permanent from combat (CR 506.4): it stops being an attacking, blocking, blocked or
+ * unblocked creature. An attacker it was blocking REMAINS blocked (CR 509.1h), so its id stays in
+ * that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
+ */
+export function removeFromCombat(ctx: GameContext, perm: EnginePermanent): void {
+  perm.attacking = null;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
+  perm.blocking = null;
+  perm.blockedByOrdered = [];
+  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+  for (const other of ctx.state.battlefield) {
+    if (other.blocking === perm.id) other.blocking = null;
+  }
+}
+
+/**
  * Apply a one-shot regeneration replacement (CR 701.19a). Returns true when destruction was
  * replaced. A "can't be regenerated" destruction bypasses the shield without consuming it.
  */
@@ -458,17 +475,8 @@ export function consumeRegenerationShield(
   perm.damageMarked = 0;
   perm.damagedByDeathtouch = false;
   perm.tapped = true;
-  perm.attacking = null;
-  perm.attackingPlaneswalker = null;
-  perm.attackedPlaneswalkerRemoved = false;
-  perm.blocking = null;
-  perm.blockedByOrdered = [];
-  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
-  // Removed from combat (CR 701.19c). An attacker it was blocking REMAINS blocked (CR 509.1h), so
-  // its id stays in that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
-  for (const other of ctx.state.battlefield) {
-    if (other.blocking === perm.id) other.blocking = null;
-  }
+  // Removed from combat (CR 701.19c).
+  removeFromCombat(ctx, perm);
   emit(
     ctx,
     'regenerated',

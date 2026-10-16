@@ -10216,3 +10216,22 @@ test('Triarch Stalker: creatures attacking the chosen player have menace', async
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('39');
 });
+
+test("Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+  );
+  const gambit = page.locator('.hand-card.actionable', { hasText: "Illusionist's Gambit" });
+  await passUntil(page, gambit);
+  await gambit.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+});

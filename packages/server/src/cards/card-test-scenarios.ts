@@ -13598,6 +13598,43 @@ function stalkerScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function gambitScenario(gameId: GameId): CardTestScenario {
+  const gambit = pinnedFrom(COVERAGE_PR07, "Illusionist's Gambit");
+  return pr01Scenario(gameId, {
+    id: 'illusionists-gambit-viewer-remove-and-redirect',
+    title:
+      "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+    instructions: [
+      "It is P2's turn. Illusionist's Gambit is in your hand with four Islands on your battlefield. P2 controls Lab Ox and Lab Servo and attacks you with both.",
+      'Pass priority until the declare blockers step, when you may cast Illusionist’s Gambit, and cast it. Then keep passing priority through the additional combat.',
+    ],
+    expectedOutcome:
+      'The attackers were removed from combat and untapped before any damage, so you are still at 40. In the additional combat Lab Ox and Lab Servo had to attack but could not attack you, so they hit P3: P3 is at 35.',
+    oracleSha256: gambit.sha256,
+    clauseIds: [
+      'illusionists-gambit-cast-timing',
+      'illusionists-gambit-remove-untap',
+      'illusionists-gambit-extra-combat-requirement',
+    ],
+    decks: {
+      P1: [gambit.card, ISLAND, ISLAND, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_SERVO, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ["Illusionist's Gambit"] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island', 'Island', 'Island', 'Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+      ],
+      continueThroughCombat: true,
+    },
+    decisionProviderOverrides: { P2: attackP1WithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13927,6 +13964,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'teyo-viewer-minus-two-direction',
   'teyo-viewer-wall-and-plus-one',
   'triarch-stalker-viewer-menace',
+  'illusionists-gambit-viewer-remove-and-redirect',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14433,6 +14471,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'teyo-viewer-minus-two-direction': teyoScenario,
   'teyo-viewer-wall-and-plus-one': teyoDrawScenario,
   'triarch-stalker-viewer-menace': stalkerScenario,
+  'illusionists-gambit-viewer-remove-and-redirect': gambitScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

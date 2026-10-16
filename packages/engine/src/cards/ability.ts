@@ -1405,6 +1405,18 @@ export type Effect =
    * ("the last chosen player") and its statics can read it back.
    */
   | { op: 'chooseOpponentForSource' }
+  /**
+   * "Remove all attacking creatures from combat and untap them" (Illusionist's Gambit), and, with
+   * `thenCombat` (those creatures must attack if able and can't attack the controller or their
+   * planeswalkers), "after this phase, there is an additional combat phase. Each of those creatures
+   * attacks that combat if able. They can't attack you or planeswalkers you control that combat":
+   * the removed creatures are a fixed set (CR 611.2c) bound to that one combat.
+   */
+  | {
+      op: 'removeAttackersFromCombat';
+      untap?: true;
+      thenCombat?: true;
+    }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }

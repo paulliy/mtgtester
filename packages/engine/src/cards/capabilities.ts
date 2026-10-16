@@ -187,6 +187,8 @@ const shapes = {
   Effect: {
     level: leaf,
     additionalMain: leaf,
+    thenCombat: leaf,
+    untap: leaf,
     untapYourCreatures: leaf,
     direction: leaf,
     maximum: leaf,
@@ -1034,6 +1036,7 @@ const families = {
       cantBlockEach: true,
       limitAttacksToNearestOpponent: true,
       chooseOpponentForSource: true,
+      removeAttackersFromCombat: true,
       forceAttack: true,
       forceAttackEach: true,
       doublePower: true,

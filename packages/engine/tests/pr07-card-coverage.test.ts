@@ -49,6 +49,7 @@ import {
   declareAttacks,
   declareBlocks,
   forest,
+  island,
   gameConfig,
   oracle,
   pump,
@@ -968,6 +969,246 @@ describe('Cast timing restrictions', () => {
     expect(() => takeAction(ctx, 'P2', option.payload as PriorityActionPayload)).toThrow(
       /casting restriction is not met/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// PR07.17 Illusionist's Gambit
+// ---------------------------------------------------------------------------------------------
+
+describe("Illusionist's Gambit", () => {
+  const { card } = pinned("Illusionist's Gambit");
+  /** P1 attacks with two Bears; P2 holds the Gambit and has a Wall; P3 and P4 are bystanders. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const bearA = spawn(ctx, 'P1', GRIZZLY('P1 Bear A'));
+    const bearB = spawn(ctx, 'P1', GRIZZLY('P1 Bear B'));
+    const bystander = spawn(ctx, 'P1', GRIZZLY('P1 Bystander'));
+    const wall = spawn(ctx, 'P2', GRIZZLY('P2 Wall'));
+    const walker = spawn(ctx, 'P2', WALKER('P2 Walker'));
+    const gambit = conjure(ctx, 'P2', card, 'hand');
+    // Four Islands pay for it in the declare blockers step (mana empties between steps).
+    for (let i = 0; i < 4; i++) spawn(ctx, 'P2', island());
+    return { ctx, bearA, bearB, bystander, wall, walker, gambit };
+  }
+
+  interface Declaration {
+    mustAttack: boolean;
+    defenders: string[];
+    walkers: string[];
+  }
+
+  /**
+   * P1's turn: Bears A and B attack P2 (A is blocked by the Wall) and, in the declare blockers
+   * step, P2 casts the Gambit if `cast`. `second` chooses what attacks in the additional combat
+   * (object id to a player or planeswalker id) and sees what each creature was offered.
+   */
+  function play(
+    ctx: GameContext,
+    gambit: { id: string },
+    first: Record<string, string>,
+    blocks: Record<string, string>,
+    second: (offered: Record<string, Declaration>) => Record<string, string>,
+    cast = true,
+  ) {
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    const offered: Record<string, Declaration>[] = [];
+    let casted = false;
+    const run = pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined) {
+        const index = offered.length;
+        const seen: Record<string, Declaration> = {};
+        for (const subject of decision.presentationAttackDeclaration.subjects)
+          seen[subject.subjectId] = {
+            mustAttack: subject.mustAttack,
+            defenders: subject.defenders.map((defender) => defender.playerId),
+            walkers: subject.planeswalkers.map((walker) => walker.objectId),
+          };
+        offered.push(seen);
+        const attacks = index === 0 ? first : second(seen);
+        return declareAttacks(decision, (subjectId, subject) => {
+          if (attacks[subjectId] !== undefined) return attacks[subjectId];
+          // A creature that must attack and was given no target goes at the first one it may.
+          if (index === 0 || !subject.mustAttack) return null;
+          return subject.defenders[0]?.playerId ?? subject.planeswalkers[0]?.objectId ?? null;
+        });
+      }
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) => blocks[subjectId] ?? null);
+      if (
+        cast &&
+        !casted &&
+        ctx.state.step === 'declareBlockers' &&
+        decision.options.some((option) => /Cast Illusionist/.test(option.description))
+      ) {
+        casted = true;
+        const index = decision.options.findIndex((option) =>
+          /Cast Illusionist/.test(option.description),
+        );
+        return { index, targets: new Map() };
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    return { offered, decisions: run.decisions, casted };
+  }
+
+  it('illusionists-gambit-pinned-oracle-supported — the authored override carries the cast restriction and the one removing effect, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.castRestriction).toEqual({
+      kind: 'allOf',
+      of: [{ kind: 'duringStep', step: 'declareBlockers' }, { kind: 'notYourTurn' }],
+    });
+    expect(def.spellAbility?.effects).toEqual([
+      {
+        op: 'removeAttackersFromCombat',
+        untap: true,
+        thenCombat: true,
+      },
+    ]);
+  });
+
+  it('illusionists-gambit-cast-timing — castable only in the declare blockers step on an opponent’s turn', () => {
+    const { ctx, gambit } = board('gambit-timing');
+    const canCast = () => optionFor(ctx, 'P2', gambit.id, /Illusionist/) !== undefined;
+    const at = (player: string, phase: Phase, step: Step | null) => {
+      turnOfPlayer(ctx, player);
+      ctx.state.phase = phase;
+      ctx.state.step = step;
+    };
+    at('P1', 'combat', 'declareBlockers');
+    expect(canCast()).toBe(true);
+    at('P1', 'combat', 'declareAttackers');
+    expect(canCast()).toBe(false);
+    at('P1', 'precombatMain', null);
+    expect(canCast()).toBe(false);
+    at('P2', 'combat', 'declareBlockers');
+    expect(canCast()).toBe(false);
+  });
+
+  it('illusionists-gambit-removes-and-untaps — every attacking creature leaves combat and untaps, blocked or not, and nothing deals combat damage', () => {
+    const { ctx, bearA, bearB, bystander, wall, gambit } = board('gambit-remove');
+    const atSecond: Record<string, unknown> = {};
+    const { casted } = play(
+      ctx,
+      gambit,
+      { [bearA.id]: 'P2', [bearB.id]: 'P2' },
+      { [wall.id]: bearA.id },
+      () => {
+        // As the additional combat's declaration starts, the first one is over.
+        Object.assign(atSecond, {
+          life: playerById(ctx, 'P2').life,
+          wallDamage: wall.damageMarked,
+          bearDamage: bearA.damageMarked,
+          blocking: wall.blocking,
+          tapped: [bearA.tapped, bearB.tapped, bystander.tapped],
+        });
+        return {};
+      },
+    );
+    expect(casted).toBe(true);
+    // The first combat dealt nothing: both Bears were removed before damage.
+    expect(atSecond).toEqual({
+      life: 40,
+      wallDamage: 0,
+      bearDamage: 0,
+      // The Wall was blocking a creature that was removed: it no longer blocks.
+      blocking: null,
+      // Both attackers were untapped by the Gambit; the idle Bear never was tapped.
+      tapped: [false, false, false],
+    });
+    expect(ctx.state.stack).toEqual([]);
+    expect(ctx.state.extraCombats).toEqual([]);
+  });
+
+  it('illusionists-gambit-additional-combat — an additional combat follows, in which those creatures must attack if able and cannot attack you or your planeswalkers', () => {
+    const { ctx, bearA, bearB, bystander, wall, walker, gambit } = board('gambit-combat');
+    const { offered } = play(
+      ctx,
+      gambit,
+      { [bearA.id]: 'P2', [bearB.id]: 'P2' },
+      { [wall.id]: bearA.id },
+      () => ({}),
+    );
+    // Two combat phases: the regular one and the additional one, with a declaration in each.
+    expect(offered).toHaveLength(2);
+    const second = offered[1]!;
+    for (const bear of [bearA, bearB]) {
+      expect(second[bear.id]!.mustAttack, bear.name).toBe(true);
+      // Not P2 (the Gambit's controller), and not P2's planeswalker either.
+      expect(second[bear.id]!.defenders.sort(), bear.name).toEqual(['P3', 'P4']);
+      expect(second[bear.id]!.walkers, bear.name).not.toContain(walker.id);
+    }
+    // A creature that was not attacking when it resolved is in neither set: free to attack P2.
+    expect(second[bystander.id]!.mustAttack).toBe(false);
+    expect(second[bystander.id]!.defenders.sort()).toEqual(['P2', 'P3', 'P4']);
+    expect(second[bystander.id]!.walkers).toContain(walker.id);
+  });
+
+  it('illusionists-gambit-attacks-others — in that combat the Bears do attack the others, and it is the Gambit’s controller who is spared', () => {
+    const { ctx, bearA, bearB, wall, gambit } = board('gambit-others');
+    play(ctx, gambit, { [bearA.id]: 'P2', [bearB.id]: 'P2' }, { [wall.id]: bearA.id }, () => ({
+      [bearA.id]: 'P3',
+      [bearB.id]: 'P4',
+    }));
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(playerById(ctx, 'P3').life).toBe(38);
+    expect(playerById(ctx, 'P4').life).toBe(38);
+  });
+
+  it('illusionists-gambit-restriction-beats-requirement — with nobody else to attack the creatures are not required to attack at all', () => {
+    const { ctx, bearA, bearB, wall, gambit } = board('gambit-nobody');
+    const { offered } = play(
+      ctx,
+      gambit,
+      { [bearA.id]: 'P2', [bearB.id]: 'P2' },
+      { [wall.id]: bearA.id },
+      () => ({}),
+    );
+    expect(offered).toHaveLength(2);
+    // Now with the other opponents gone.
+    const again = board('gambit-nobody-two');
+    playerById(again.ctx, 'P3').hasLost = true;
+    playerById(again.ctx, 'P4').hasLost = true;
+    const second = play(
+      again.ctx,
+      again.gambit,
+      { [again.bearA.id]: 'P2', [again.bearB.id]: 'P2' },
+      {},
+      () => ({}),
+    );
+    const later = second.offered[1];
+    expect(later).toBeDefined();
+    expect(later![again.bearA.id]!.mustAttack).toBe(false);
+    expect(later![again.bearA.id]!.defenders).toEqual([]);
+  });
+
+  it('illusionists-gambit-that-combat-only — the requirement and restriction are gone after that combat', () => {
+    const { ctx, bearA, bearB, wall, gambit } = board('gambit-expiry');
+    play(ctx, gambit, { [bearA.id]: 'P2', [bearB.id]: 'P2' }, { [wall.id]: bearA.id }, () => ({}));
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+    // A later combat of P1 (next turn) is unconstrained.
+    ctx.state.turnNumber += 1;
+    expect(mustAttackIn(ctx, 'P1', [bearA])).toEqual({ [bearA.id]: false });
+    expect(attackOptionsFor(ctx, 'P1', bearA).players.sort()).toEqual(['P2', 'P3', 'P4']);
+    // An entry for some other combat does nothing in this one; one for this combat applies.
+    const entry = (combatId: string) => ({
+      id: `ar-test-${combatId}`,
+      controllerId: 'P2',
+      affects: { kind: 'objects' as const, objectIds: [bearA.id] },
+      requirements: [{ kind: 'anyAttack' as const }],
+      restrictions: [{ kind: 'cantAttackPlayer' as const, playerId: 'P2' }],
+      expires: { kind: 'combat' as const, combatId },
+    });
+    ctx.state.attackRequirements = [entry('ec-elsewhere')];
+    expect(attackOptionsFor(ctx, 'P1', bearA).players.sort()).toEqual(['P2', 'P3', 'P4']);
+    ctx.state.attackRequirements = [entry('regular')];
+    const offeredNow: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P1', [bearA], offeredNow)).toEqual({ [bearA.id]: true });
+    expect(offeredNow[bearA.id]!.sort()).toEqual(['P3', 'P4']);
   });
 });
 
@@ -3969,6 +4210,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Triarch Stalker',
     sha256: '7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: "Illusionist's Gambit",
+    sha256: '11fe7642c0a68a5c2ad0e32127d111997ddff524b1bf634e725c78264698d4b6',
+    clauseCount: 3,
     authored: true,
   },
 ];

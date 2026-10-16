@@ -12539,6 +12539,52 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "333745d9-e930-439b-94d6-3aeea2877f69": {
+      "name": "Illusionist's Gambit",
+      "oracleSha256": "11fe7642c0a68a5c2ad0e32127d111997ddff524b1bf634e725c78264698d4b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "illusionists-gambit-cast-timing",
+          "oracleText": "Cast this spell only during the declare blockers step on an opponent's turn.",
+          "implementation": [
+            "authored castRestriction allOf duringStep declareBlockers and notYourTurn, enforced when offering and when casting"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-pinned-oracle-supported",
+            "illusionists-gambit-cast-timing"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        },
+        {
+          "id": "illusionists-gambit-remove-untap",
+          "oracleText": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase.",
+          "implementation": [
+            "removeAttackersFromCombat: every attacking creature is removed from combat (blockers of it stop blocking) and untapped before any damage, and an additional combat phase is inserted directly after the current combat"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-removes-and-untaps",
+            "illusionists-gambit-additional-combat"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        },
+        {
+          "id": "illusionists-gambit-extra-combat-requirement",
+          "oracleText": "Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.",
+          "implementation": [
+            "the removed creatures are a fixed set bound to that one combat in the attack requirement store: they attack that combat if able and cannot attack the Gambit's controller or their planeswalkers (restrictions beat requirements, so with nobody else to attack they are not required to); creatures not attacking when it resolved are in neither set; the entry ends with that combat"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-additional-combat",
+            "illusionists-gambit-attacks-others",
+            "illusionists-gambit-restriction-beats-requirement",
+            "illusionists-gambit-that-combat-only"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -822,3 +822,17 @@ describe('Triarch Stalker Card Test Lab scenario', () => {
     replays('triarch-stalker-viewer-menace', steps);
   });
 });
+
+describe("Illusionist's Gambit Card Test Lab scenario", () => {
+  it('illusionists-gambit-viewer-remove-and-redirect — the attackers are removed before damage, and in the additional combat they must attack someone other than you', () => {
+    const steps: Step[] = [{ action: "Cast Illusionist's Gambit" }];
+    const { scenario, state, seat } = run('illusionists-gambit-viewer-remove-and-redirect', steps);
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P2').life).toBe(40);
+    // Lab Ox (4) and Lab Servo (1) both hit the first player they were offered besides you.
+    expect(seat('P3').life + seat('P4').life).toBe(75);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('illusionists-gambit-viewer-remove-and-redirect', steps);
+  });
+});

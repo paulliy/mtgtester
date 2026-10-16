@@ -656,4 +656,34 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Illusionist's Gambit: castable only in the declare blockers step of an opponent's turn. It
+  // removes every creature attacking when it resolves (a fixed set, CR 611.2c) and untaps them;
+  // the additional combat comes right after this phase, and for that combat only those creatures
+  // must attack if able and can't attack you or planeswalkers you control (restrictions win).
+  defineCard(
+    '333745d9-e930-439b-94d6-3aeea2877f69',
+    "Illusionist's Gambit",
+    [
+      "Cast this spell only during the declare blockers step on an opponent's turn.",
+      "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.",
+    ],
+    {
+      castRestriction: allOfConditions(
+        { kind: 'duringStep', step: 'declareBlockers' },
+        { kind: 'notYourTurn' },
+      ),
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'removeAttackersFromCombat',
+            untap: true,
+            thenCombat: true,
+          },
+        ],
+        description:
+          "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat",
+      }),
+    },
+  );
 }

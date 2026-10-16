@@ -2945,6 +2945,40 @@
     }
   },
   {
+    "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
+    "name": "Illusionist's Gambit",
+    "handledLines": [
+      "Cast this spell only during the declare blockers step on an opponent's turn.",
+      "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "duringStep",
+            "step": "declareBlockers"
+          },
+          {
+            "kind": "notYourTurn"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat",
+        "effects": [
+          {
+            "op": "removeAttackersFromCombat",
+            "thenCombat": true,
+            "untap": true
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "33d405ea-7a9a-4970-b70f-9c05d90dd6f0",
     "name": "Duress",
     "handledLines": [
@@ -22290,6 +22324,40 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-illusionist-s-gambit",
+    "name": "Illusionist's Gambit",
+    "handledLines": [
+      "Cast this spell only during the declare blockers step on an opponent's turn.",
+      "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "duringStep",
+            "step": "declareBlockers"
+          },
+          {
+            "kind": "notYourTurn"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat",
+        "effects": [
+          {
+            "op": "removeAttackersFromCombat",
+            "thenCombat": true,
+            "untap": true
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {

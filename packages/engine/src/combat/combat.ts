@@ -68,6 +68,7 @@ import {
 import type { RuleStaticEntry } from '../state/queries';
 import { evaluateCondition } from '../cards/condition';
 import type {
+  AttackRequirementEntry,
   AttackRequirementRule,
   EnginePermanent,
   EnginePlayerState,
@@ -131,6 +132,28 @@ function requirementOf(rule: AttackRequirementRule): AttackRequirement {
 }
 
 /**
+ * The stored requirement entries that apply to `creature` right now: made by a player still in the
+ * game (CR 800.4a), naming it (or matching their live selector, CR 611.2c), and, for one that lasts
+ * "that combat", only while that combat is the one being run.
+ */
+function activeRequirementEntries(
+  ctx: GameContext,
+  creature: EnginePermanent,
+): AttackRequirementEntry[] {
+  return (ctx.state.attackRequirements ?? []).filter((entry) => {
+    if (playerById(ctx, entry.controllerId).hasLost) return false;
+    if (entry.expires.kind === 'combat' && ctx.state.currentCombatId !== entry.expires.combatId)
+      return false;
+    return entry.affects.kind === 'objects'
+      ? entry.affects.objectIds.includes(creature.id)
+      : matchesSelector(ctx, creature, entry.affects.selector, {
+          cardId: entry.sourceCardId ?? '',
+          controllerId: entry.controllerId,
+        });
+  });
+}
+
+/**
  * Every attack requirement on this creature: goads (each also an "attacks each combat"), the
  * plain "attacks each combat if able" flags and statics, and the requirements stored by resolved
  * spells and abilities whose affected set includes it (CR 611.2c). An effect whose controller has
@@ -147,17 +170,8 @@ function attackRequirementsFor(ctx: GameContext, creature: EnginePermanent): Att
   )
     requirements.push(attacksAnything);
   for (const goaderId of goaders) requirements.push(attacksPlayerOtherThan(goaderId));
-  for (const entry of ctx.state.attackRequirements ?? []) {
-    if (playerById(ctx, entry.controllerId).hasLost) continue;
-    const affected =
-      entry.affects.kind === 'objects'
-        ? entry.affects.objectIds.includes(creature.id)
-        : matchesSelector(ctx, creature, entry.affects.selector, {
-            cardId: entry.sourceCardId ?? '',
-            controllerId: entry.controllerId,
-          });
-    if (affected) for (const rule of entry.requirements) requirements.push(requirementOf(rule));
-  }
+  for (const entry of activeRequirementEntries(ctx, creature))
+    for (const rule of entry.requirements) requirements.push(requirementOf(rule));
   // "Attacks an opponent with the most life among your opponents each combat if able" (Galactus).
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'attackRequirement' || entry.sourceCardId !== creature.cardId)
@@ -369,6 +383,15 @@ function attackRestrictionAllows(
       (restriction) =>
         restriction.playerId === target.player.id &&
         counterCount(creature.counters, restriction.counter) > 0,
+    )
+  )
+    return false;
+  // "Can't attack you or planeswalkers you control" from a resolved spell (Illusionist's Gambit).
+  if (
+    activeRequirementEntries(ctx, creature).some((entry) =>
+      (entry.restrictions ?? []).some(
+        (rule) => rule.kind === 'cantAttackPlayer' && rule.playerId === target.player.id,
+      ),
     )
   )
     return false;

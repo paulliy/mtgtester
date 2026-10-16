@@ -582,6 +582,7 @@ const effectExpressions = {
   cantBlockEach: { selector: selector },
   limitAttacksToNearestOpponent: {},
   chooseOpponentForSource: {},
+  removeAttackersFromCombat: {},
   forceAttack: {},
   forceAttackEach: { selector: selector },
   doublePower: { selector: selector },

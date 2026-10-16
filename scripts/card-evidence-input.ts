@@ -2497,6 +2497,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Triarch Stalker: creatures attacking the chosen player have menace'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

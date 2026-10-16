@@ -320,6 +320,10 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     ctx.state.damageShields = [];
     // A phase that was to come after one that is over (made in the end step) never happens.
     ctx.state.extraCombats = [];
+    if (ctx.state.attackRequirements !== undefined)
+      ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+        (entry) => entry.expires.kind !== 'combat',
+      );
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so
     // cleanup drains persistent mana as well (Klauth's is explicitly "until end of turn").
@@ -374,6 +378,11 @@ function* runOneCombat(ctx: GameContext, id: string, extra?: ExtraCombat): GameG
   }
   yield* runCombatPhase(ctx);
   delete ctx.state.currentCombatId;
+  // What lasted "that combat" ends with it.
+  if (ctx.state.attackRequirements !== undefined)
+    ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
+      (entry) => entry.expires.kind !== 'combat' || entry.expires.combatId !== id,
+    );
   yield* runInsertedPhases(ctx, 'combat');
 }
 

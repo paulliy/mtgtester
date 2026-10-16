@@ -690,6 +690,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "11fe7642c0a68a5c2ad0e32127d111997ddff524b1bf634e725c78264698d4b6",
+      "card": {
+        "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
+        "scryfallId": "a00cc6ab-e97c-4eba-bc7e-49d77690433b",
+        "name": "Illusionist's Gambit",
+        "manaCost": "{2}{U}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Cast this spell only during the declare blockers step on an opponent's turn.\nRemove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

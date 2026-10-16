@@ -65,7 +65,12 @@ export type EffectExpiry =
   /** "Until your next turn": ends as that player's next turn begins (the untap step). */
   | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
   /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
-  | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number };
+  | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number }
+  /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */
+  | { kind: 'combat'; combatId: string };
+
+/** What an attack requirement entry forbids: attacking a player or the planeswalkers they control. */
+export type AttackRestrictionRule = { kind: 'cantAttackPlayer'; playerId: PlayerId };
 
 /** What attacking must achieve to obey one attack requirement (CR 508.1d). */
 export type AttackRequirementRule =
@@ -89,6 +94,8 @@ export interface AttackRequirementEntry {
   sourceCardId?: CardId;
   affects: { kind: 'objects'; objectIds: ObjectId[] } | { kind: 'selector'; selector: Selector };
   requirements: AttackRequirementRule[];
+  /** What the affected creatures can't attack while it lasts; it beats the requirements (CR 508.1c). */
+  restrictions?: AttackRestrictionRule[];
   expires: EffectExpiry;
 }
 

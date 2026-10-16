@@ -554,6 +554,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'teyo-viewer-minus-two-direction',
       'teyo-viewer-wall-and-plus-one',
       'triarch-stalker-viewer-menace',
+      'illusionists-gambit-viewer-remove-and-redirect',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

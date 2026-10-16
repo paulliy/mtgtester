@@ -1979,16 +1979,20 @@
   {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.17",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only during the declare blockers step on an opponent's turn.\"",
       "unrecognized rules text: \"Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",

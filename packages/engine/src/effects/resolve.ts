@@ -81,6 +81,7 @@ import {
   applyTokenCreationReplacements,
   attachPermanent,
   consumeRegenerationShield,
+  removeFromCombat,
   createToken,
   changeController,
   createTokens,
@@ -5478,6 +5479,35 @@ export function* executeAbility(
         const holder = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
         if (holder !== undefined) holder.chosenOption = chosen.id;
         emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id });
+        break;
+      }
+      case 'removeAttackersFromCombat': {
+        const removed = ctx.state.battlefield.filter((perm) => perm.attacking !== null);
+        for (const perm of removed) {
+          removeFromCombat(ctx, perm);
+          if (effect.untap === true) perm.tapped = false;
+        }
+        emit(ctx, 'removedFromCombat', { source: source.name, count: removed.length });
+        if (effect.thenCombat === undefined) break;
+        const combatId = `ec-${ctx.state.nextObjectNum++}`;
+        ctx.state.extraCombats.unshift({
+          id: combatId,
+          after: ctx.state.phase,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+        });
+        if (removed.length > 0)
+          (ctx.state.attackRequirements ??= []).push({
+            id: `ar-${ctx.state.nextObjectNum++}`,
+            controllerId: controller.id,
+            sourceCardId: source.cardId,
+            affects: { kind: 'objects', objectIds: removed.map((perm) => perm.id) },
+            requirements: [{ kind: 'anyAttack' }],
+            restrictions: [{ kind: 'cantAttackPlayer', playerId: controller.id }],
+            expires: { kind: 'combat', combatId },
+          });
         break;
       }
       case 'forceAttack': {
