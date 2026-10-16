@@ -556,8 +556,23 @@ function applyOpTo(
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
   if (!effectExists(ctx, work, effect)) return;
   const scope = scopeOf(ctx, work, effect);
+  // "For each time it has attacked this turn" reads the affected object, not the source.
+  const op = effect.op;
+  const perObject =
+    scope !== undefined &&
+    op.layer === 7 &&
+    ((typeof op.power !== 'number' && op.power.kind === 'timesAttackedThisTurn') ||
+      (typeof op.toughness !== 'number' && op.toughness.kind === 'timesAttackedThisTurn'));
   for (const entry of work.values()) {
-    if (affects(ctx, effect, entry)) applyOpTo(ctx, entry.chars, effect.op, scope);
+    if (!affects(ctx, effect, entry)) continue;
+    applyOpTo(
+      ctx,
+      entry.chars,
+      effect.op,
+      perObject
+        ? { ...scope, affectedTimesAttacked: entry.perm.timesAttackedThisTurn ?? 0 }
+        : scope,
+    );
   }
 }
 

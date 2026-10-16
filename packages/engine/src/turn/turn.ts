@@ -70,6 +70,7 @@ function untapStep(ctx: GameContext): void {
     perm.activationsThisTurn = [];
     if (perm.triggeredOnceThisTurn !== undefined) delete perm.triggeredOnceThisTurn;
     if (perm.attackedThisTurn === true) perm.attackedThisTurn = false;
+    if (perm.timesAttackedThisTurn !== undefined) delete perm.timesAttackedThisTurn;
     perm.mustBlockThisTurn = false;
     // CR 701.15a: a goad requirement lasts until the next turn of the player who caused it.
     // Requirements created during that player's current turn remain active until that turn ends.

@@ -237,6 +237,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   cantBeBlocked?: boolean;
   /** Boast (CR 702.146): "activate only if this creature attacked this turn". */
   attackedThisTurn?: boolean;
+  /** How many times it was declared as an attacker this turn; tokens put onto the battlefield attacking never count. */
+  timesAttackedThisTurn?: number;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).

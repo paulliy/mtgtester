@@ -998,7 +998,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // Boast (CR 702.146a): "activate only if this creature attacked this turn" — tracked
   // separately from `attacking` (which clears at end of combat) so the check still holds
   // in a later main phase.
-  for (const perm of declared) perm.attackedThisTurn = true;
+  for (const perm of declared) {
+    perm.attackedThisTurn = true;
+    perm.timesAttackedThisTurn = (perm.timesAttackedThisTurn ?? 0) + 1;
+  }
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     // The defending player is woken for an attack on their planeswalker too (CR 509.1).

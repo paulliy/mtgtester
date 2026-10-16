@@ -270,6 +270,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       }
       return count;
     }
+    case 'timesAttackedThisTurn':
+      throw new Error('engine bug: "timesAttackedThisTurn" is read per affected object in a layer');
     case 'creaturesDiedThisTurn':
       return ctx.state.creaturesDiedThisTurn;
     case 'powerOfSource':

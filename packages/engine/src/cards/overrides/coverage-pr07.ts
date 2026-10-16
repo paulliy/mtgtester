@@ -686,4 +686,39 @@ export function registerCoveragePr07Overrides(): void {
       }),
     },
   );
+
+  // Moraug, Fury of Akoum: the pump reads how many times EACH creature has attacked, so it is a
+  // per-object value in the layer, counting declared attacks only (a token put onto the
+  // battlefield attacking never attacked). The landfall trigger is an intervening-if about the
+  // phase (your main phase, checked as it triggers and as it resolves); the additional combat goes
+  // right after that main phase and untaps your creatures at its beginning, as a trigger.
+  defineCard(
+    '6288c0cb-cf32-4ae9-abf0-104ec71654fa',
+    'Moraug, Fury of Akoum',
+    [
+      'Each creature you control gets +1/+0 for each time it has attacked this turn.',
+      "Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+    ],
+    {
+      staticEffects: [
+        {
+          affects: allOf(ofType('Creature'), YOURS),
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: { kind: 'timesAttackedThisTurn' },
+            toughness: 0,
+          },
+        },
+      ],
+      triggers: [
+        triggered(whenPermanent('enters', allOf(ofType('Land'), YOURS)), {
+          condition: { kind: 'duringYourMainPhase' },
+          effects: [{ op: 'extraCombatPhase', untapYourCreatures: true }],
+          description:
+            "Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control",
+        }),
+      ],
+    },
+  );
 }

@@ -2503,6 +2503,12 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

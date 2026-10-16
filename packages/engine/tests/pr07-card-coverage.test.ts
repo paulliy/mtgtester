@@ -1213,6 +1213,222 @@ describe("Illusionist's Gambit", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR07.19 Moraug, Fury of Akoum
+// ---------------------------------------------------------------------------------------------
+
+describe('Moraug, Fury of Akoum', () => {
+  const { card } = pinned('Moraug, Fury of Akoum');
+
+  /** P1 controls Moraug and a Bear; P2 a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const moraug = spawn(ctx, 'P1', card);
+    const bear = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    const theirs = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    return { ctx, moraug, bear, theirs };
+  }
+  const power = (ctx: GameContext, perm: EnginePermanent) =>
+    computeCharacteristics(ctx, perm).power;
+
+  /** P1 plays a Forest from hand during `phase` through legality and the stack. */
+  function playLandIn(ctx: GameContext, phase: Phase, player = 'P1') {
+    turnOfPlayer(ctx, player);
+    ctx.state.phase = phase;
+    ctx.state.step = null;
+    const land = conjure(ctx, player, forest(), 'hand');
+    const option = optionFor(ctx, player, land.id, /Play/);
+    expect(option, `${player} can play a land in ${phase}`).toBeDefined();
+    takeAction(ctx, player, option!.payload as PriorityActionPayload);
+    return land;
+  }
+
+  it('moraug-pinned-oracle-supported — the authored override carries the per-object pump and the landfall trigger, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.staticEffects).toHaveLength(1);
+    expect(def.staticEffects[0]!.op).toEqual({
+      layer: 7,
+      sublayer: 'd',
+      power: { kind: 'timesAttackedThisTurn' },
+      toughness: 0,
+    });
+    expect(def.triggers).toHaveLength(1);
+    expect(def.triggers[0]!.trigger).toMatchObject({
+      when: 'enters',
+      condition: { kind: 'duringYourMainPhase' },
+    });
+    expect(def.triggers[0]!.effects).toEqual([
+      { op: 'extraCombatPhase', untapYourCreatures: true },
+    ]);
+  });
+
+  it('moraug-pump-per-attack — each creature you control gets +1/+0 for each time IT has attacked this turn, counted per creature', () => {
+    const { ctx, moraug, bear, theirs } = board('moraug-pump');
+    const idle = spawn(ctx, 'P1', GRIZZLY('P1 Idle'));
+    expect([power(ctx, bear), power(ctx, idle), power(ctx, moraug)]).toEqual([2, 2, 6]);
+    const seen: number[] = [];
+    turnOfPlayer(ctx, 'P1');
+    fight(
+      ctx,
+      () => ({ [bear.id]: 'P2' }),
+      undefined,
+      undefined,
+      () => seen.push(power(ctx, bear)),
+    );
+    // Declared once: 2 + 1 as blockers are declared; the idle creature and Moraug did not attack.
+    expect(seen).toEqual([3]);
+    expect(power(ctx, bear)).toBe(3);
+    expect(power(ctx, idle)).toBe(2);
+    expect(power(ctx, moraug)).toBe(6);
+    // Only creatures you control.
+    expect(power(ctx, theirs)).toBe(2);
+    expect(playerById(ctx, 'P2').life).toBe(37);
+  });
+
+  it('moraug-resets-each-turn — the count starts over when the next turn begins', () => {
+    const { ctx, bear } = board('moraug-reset');
+    turnOfPlayer(ctx, 'P1');
+    fight(ctx, () => ({ [bear.id]: 'P2' }));
+    expect(power(ctx, bear)).toBe(3);
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(power(ctx, bear)).toBe(2);
+  });
+
+  it('moraug-declared-attacks-only — a token put onto the battlefield attacking never attacked, so it gets nothing', () => {
+    const { ctx } = board('moraug-token');
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'declareAttackers';
+    ctx.state.combat = { defendingPlayers: ['P2'] };
+    pump(
+      executeAbility(
+        ctx,
+        { cardId: 'src', oracleId: card.oracleId, name: card.name, controllerId: 'P1' },
+        spell({
+          effects: [
+            {
+              op: 'createTokenAttacking',
+              spec: INKLING_2_1_FLYING,
+              count: { kind: 'const', n: 1 },
+            },
+          ],
+        }),
+        [],
+      ),
+      (decision) => ({
+        index: Math.max(
+          decision.options.findIndex((option) => option.description === 'Attack P2'),
+          0,
+        ),
+        targets: new Map(),
+      }),
+    );
+    const token = ctx.state.battlefield.find((perm) => perm.isToken && perm.name === 'Inkling')!;
+    expect(token.attacking).toBe('P2');
+    expect(power(ctx, token)).toBe(2);
+  });
+
+  it('moraug-landfall-first-main — a land in your first main phase adds a combat phase right after it, before the regular one, and untaps your creatures at its beginning', () => {
+    const { ctx, bear, theirs } = board('moraug-first-main');
+    bear.tapped = true;
+    theirs.tapped = true;
+    playLandIn(ctx, 'precombatMain');
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    expect(ctx.state.extraCombats[0]).toMatchObject({
+      after: 'precombatMain',
+      untapAllAtBeginning: true,
+    });
+    const tappedAtDeclare: boolean[][] = [];
+    const run = fight(
+      ctx,
+      () => ({}),
+      undefined,
+      () => tappedAtDeclare.push([bear.tapped, theirs.tapped]),
+    );
+    expect(run.combats).toBe(2);
+    // The extra combat's trigger untapped your Bear before it was declared; theirs stays tapped.
+    expect(tappedAtDeclare[0]).toEqual([false, true]);
+  });
+
+  it('moraug-landfall-second-main — a land in your second main phase adds a combat after it, and no extra main phase', () => {
+    const { ctx } = board('moraug-second-main');
+    playLandIn(ctx, 'postcombatMain');
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    expect(ctx.state.extraCombats[0]).toMatchObject({ after: 'postcombatMain' });
+    expect(ctx.state.extraCombats[0]!.additionalMain).toBeUndefined();
+  });
+
+  it('moraug-landfall-conditions — not in combat, not on another player’s turn, and not for an opponent’s land', () => {
+    const { ctx } = board('moraug-conditions');
+    // A land you control entering during combat (it is not a main phase).
+    const land = conjure(ctx, 'P1', forest(), 'hand');
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    pump(moveObject(ctx, land, { zone: 'battlefield' }));
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(0);
+    // Your land during an opponent's main phase: not your main phase.
+    const second = conjure(ctx, 'P1', forest(), 'hand');
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.phase = 'precombatMain';
+    ctx.state.step = null;
+    pump(moveObject(ctx, second, { zone: 'battlefield' }));
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(0);
+    // An opponent's land in their own main phase.
+    playLandIn(ctx, 'precombatMain', 'P2');
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(0);
+  });
+
+  it('moraug-landfall-rechecked — if it is no longer your main phase as the trigger resolves, there is no additional combat phase', () => {
+    const { ctx } = board('moraug-recheck');
+    playLandIn(ctx, 'precombatMain');
+    expect(ctx.state.pendingTriggers).toHaveLength(1);
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(0);
+  });
+
+  it('moraug-whole-game — attack, play a land after combat: the extra combat untaps the Bear and it attacks again, growing each time', () => {
+    const { ctx, bear } = board('moraug-chain');
+    turnOfPlayer(ctx, 'P1');
+    const powers: number[] = [];
+    fight(
+      ctx,
+      () => ({ [bear.id]: 'P2' }),
+      undefined,
+      undefined,
+      () => powers.push(power(ctx, bear)),
+    );
+    expect(bear.tapped).toBe(true);
+    playLandIn(ctx, 'postcombatMain');
+    settle(ctx);
+    expect(ctx.state.extraCombats).toHaveLength(1);
+    pump(runInsertedPhases(ctx, 'postcombatMain'), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId) => (subjectId === bear.id ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined) {
+        powers.push(power(ctx, bear));
+        return declareBlocks(decision, () => null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    // 2 +1 for the first attack, then untapped and attacking again: 2 +2.
+    expect(powers).toEqual([3, 4]);
+    expect(playerById(ctx, 'P2').life).toBe(40 - 3 - 4);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR07.07 Firkraag, Cunning Instigator
 // ---------------------------------------------------------------------------------------------
 
@@ -4216,6 +4432,12 @@ const RESTORED: RestoredCard[] = [
     name: "Illusionist's Gambit",
     sha256: '11fe7642c0a68a5c2ad0e32127d111997ddff524b1bf634e725c78264698d4b6',
     clauseCount: 3,
+    authored: true,
+  },
+  {
+    name: 'Moraug, Fury of Akoum',
+    sha256: '2f43c33f9dfea9bcffe2778bf5f70f7255d4d813328c45a02e41698d8e995694',
+    clauseCount: 2,
     authored: true,
   },
 ];

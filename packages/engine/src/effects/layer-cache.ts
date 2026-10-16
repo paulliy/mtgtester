@@ -144,6 +144,8 @@ export function digestOf(
           ? 8
           : 0,
     );
+    // `timesAttackedThisTurn` feeds a layer-7 value (Moraug).
+    h = mix(h, perm.timesAttackedThisTurn ?? 0);
     // The `hadToAttackThisCombat` condition reads this per-combat flag.
     h = mix(h, perm.hadToAttackThisCombat === true ? 1 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming

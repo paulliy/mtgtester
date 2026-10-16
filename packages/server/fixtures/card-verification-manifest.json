@@ -12585,6 +12585,43 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "6288c0cb-cf32-4ae9-abf0-104ec71654fa": {
+      "name": "Moraug, Fury of Akoum",
+      "oracleSha256": "2f43c33f9dfea9bcffe2778bf5f70f7255d4d813328c45a02e41698d8e995694",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "moraug-pump-per-attack",
+          "oracleText": "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+          "implementation": [
+            "authored layer 7d static over creatures you control whose power is the new timesAttackedThisTurn value, read once per affected creature: its own count of times declared as an attacker this turn (never for tokens put onto the battlefield attacking), reset at the start of each turn and folded into the layer cache fingerprint"
+          ],
+          "engineTestIds": [
+            "moraug-pinned-oracle-supported",
+            "moraug-pump-per-attack",
+            "moraug-resets-each-turn",
+            "moraug-declared-attacks-only"
+          ],
+          "viewerScenarioIds": ["moraug-viewer-landfall-extra-combat"]
+        },
+        {
+          "id": "moraug-landfall-extra-combat",
+          "oracleText": "Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+          "implementation": [
+            "authored landfall trigger with a duringYourMainPhase intervening-if (checked as it triggers and as it resolves) creating an additional combat phase inserted directly after the current main phase, with a beginning-of-that-combat trigger that untaps all creatures its controller controls"
+          ],
+          "engineTestIds": [
+            "moraug-landfall-first-main",
+            "moraug-landfall-second-main",
+            "moraug-landfall-conditions",
+            "moraug-landfall-rechecked",
+            "moraug-whole-game"
+          ],
+          "viewerScenarioIds": ["moraug-viewer-landfall-extra-combat"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -13635,6 +13635,38 @@ function gambitScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function moraugScenario(gameId: GameId): CardTestScenario {
+  const moraug = pinnedFrom(COVERAGE_PR07, 'Moraug, Fury of Akoum');
+  return pr01Scenario(gameId, {
+    id: 'moraug-viewer-landfall-extra-combat',
+    title:
+      'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+    instructions: [
+      'Moraug (6/6) and a tapped Lab Ox (4/4) are on your battlefield and a Forest is in your hand.',
+      'Play the Forest in your first main phase: landfall adds an additional combat phase right after it, and at its beginning your creatures untap.',
+      'Pass priority to the declare attackers step and attack P2 with Moraug and Lab Ox, then confirm.',
+    ],
+    expectedOutcome:
+      'The additional combat came before the regular one and untapped Lab Ox. Each has attacked once this turn, so Moraug hit for 7 and Lab Ox for 5: P2 is at 28. Both are tapped for the regular combat, so no second declaration was offered.',
+    oracleSha256: moraug.sha256,
+    clauseIds: ['moraug-pump-per-attack', 'moraug-landfall-extra-combat'],
+    decks: {
+      P1: [moraug.card, LAB_OX, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Forest'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Moraug, Fury of Akoum'] },
+        { playerId: 'P1', cardNames: ['Lab Ox'], tapped: true },
+      ],
+      continueThroughCombat: true,
+    },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13965,6 +13997,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'teyo-viewer-wall-and-plus-one',
   'triarch-stalker-viewer-menace',
   'illusionists-gambit-viewer-remove-and-redirect',
+  'moraug-viewer-landfall-extra-combat',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14472,6 +14505,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'teyo-viewer-wall-and-plus-one': teyoDrawScenario,
   'triarch-stalker-viewer-menace': stalkerScenario,
   'illusionists-gambit-viewer-remove-and-redirect': gambitScenario,
+  'moraug-viewer-landfall-extra-combat': moraugScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

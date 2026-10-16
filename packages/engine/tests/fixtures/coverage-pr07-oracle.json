@@ -721,6 +721,44 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "2f43c33f9dfea9bcffe2778bf5f70f7255d4d813328c45a02e41698d8e995694",
+      "card": {
+        "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
+        "scryfallId": "4481eab8-9e7d-4db8-b1f2-fdf5ee1919a2",
+        "name": "Moraug, Fury of Akoum",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Minotaur Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Minotaur",
+          "Warrior"
+        ],
+        "oracleText": "Each creature you control gets +1/+0 for each time it has attacked this turn.\nLandfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Landfall"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

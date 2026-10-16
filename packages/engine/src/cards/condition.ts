@@ -175,6 +175,8 @@ export type Condition =
    * declare attackers step of its first combat phase (Siren's Call, Master Warcraft).
    */
   | { kind: 'beforeAttackersDeclared' }
+  /** "If it's your main phase" (Moraug): your turn, during either main phase. */
+  | { kind: 'duringYourMainPhase' }
   /** Dethrone: the defending player has the most life, or is tied for the most life. */
   | { kind: 'attackingPlayerHasMoreLife' }
   /** The defending player has more life than the ability's controller. */
@@ -277,6 +279,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'yourTurn':
     case 'duringStep':
     case 'beforeAttackersDeclared':
+    case 'duringYourMainPhase':
     case 'attackingPlayerHasMoreLife':
     case 'attackingPlayerHasMoreLifeThanYou':
     case 'defendingOpponentHasMoreLifeThanAnother':
@@ -414,6 +417,11 @@ export function evaluateCondition(
       return ctx.state.step === condition.step;
     case 'beforeAttackersDeclared':
       return ctx.state.declareAttackersReachedThisTurn !== true;
+    case 'duringYourMainPhase':
+      return (
+        ctx.state.currentTurnPlayer === source.controllerId &&
+        (ctx.state.phase === 'precombatMain' || ctx.state.phase === 'postcombatMain')
+      );
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
       const defenderId = defenderIdOf(eventObjectState(ctx, scope));

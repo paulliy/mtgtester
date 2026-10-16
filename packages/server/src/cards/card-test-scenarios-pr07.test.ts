@@ -836,3 +836,31 @@ describe("Illusionist's Gambit Card Test Lab scenario", () => {
     replays('illusionists-gambit-viewer-remove-and-redirect', steps);
   });
 });
+
+describe('Moraug, Fury of Akoum Card Test Lab scenario', () => {
+  it('moraug-viewer-landfall-extra-combat — landfall adds a combat that untaps Lab Ox, and each attacker is pumped once for its one attack', () => {
+    const steps: Step[] = [
+      { action: 'Play Forest' },
+      { action: 'Declare attackers', targets: ['P2', 'P2'] },
+    ];
+    const declarations: number[] = [];
+    const { scenario, state, seat, onBattlefield } = run(
+      'moraug-viewer-landfall-extra-combat',
+      steps,
+      (request) => {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (declare !== undefined) declarations.push(declare.targets?.length ?? 0);
+      },
+    );
+    // Two attackers offered once: Lab Ox was untapped by the additional combat, and after it both
+    // stay tapped for the regular combat.
+    expect(declarations).toEqual([2]);
+    expect(seat('P2').life).toBe(28);
+    expect(onBattlefield('Lab Ox')[0]?.tapped).toBe(true);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('moraug-viewer-landfall-extra-combat', steps);
+  });
+});

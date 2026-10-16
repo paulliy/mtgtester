@@ -10235,3 +10235,29 @@ test("Illusionist's Gambit: remove the attackers, then an additional combat they
     page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
   ).toHaveText('35');
 });
+
+test('Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+  );
+  const forest = handCard(page, 'Forest');
+  await expect(forest).toHaveClass(/actionable/);
+  await forest.click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  for (const name of ['Moraug, Fury of Akoum', 'Lab Ox'])
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('28');
+});

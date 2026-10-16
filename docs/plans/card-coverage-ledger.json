@@ -2658,16 +2658,20 @@
   {
     "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
     "name": "Moraug, Fury of Akoum",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.19",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Each creature you control gets +1/+0 for each time it has attacked this turn.\"",
       "unrecognized rules text: \"Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
