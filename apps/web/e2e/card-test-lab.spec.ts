@@ -10022,12 +10022,14 @@ test('Silver Surfer: the target creature must attack the player it damaged', asy
     .getByRole('button', { name: 'P3' })
     .click();
   await page.getByRole('button', { name: 'Confirm attacks' }).click();
-  await page.getByRole('button', { name: 'Target Lab Ox' }).click({ timeout: 15_000 });
+  // The combat damage trigger's one required target is chosen on the board, then confirmed.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
-  await expect(
-    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
-  ).toHaveText('32');
+  await expect(page.locator('.opponent[data-seat="P3"]').locator('.life-badge')).toHaveText('32');
 });
 
 test("Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn", async ({
