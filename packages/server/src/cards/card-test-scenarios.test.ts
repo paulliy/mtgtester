@@ -541,6 +541,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'toby-viewer-flying-with-four-tokens',
       'life-of-the-party-viewer-attack-pump',
       'life-of-the-party-viewer-goaded-copies',
+      'kardur-viewer-must-attack-not-you',
+      'kardur-viewer-attacker-dies-drain',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

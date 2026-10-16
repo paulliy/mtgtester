@@ -217,7 +217,9 @@ function attackOptionsFor(
 
 /**
  * Whether `playerId` is required to attack with each of `creatures` in the next declaration, by
- * object id. Everything else, including the creatures with no requirement, stays home.
+ * object id. Everything else, including the creatures with no requirement, stays home. The
+ * declaration is driven by hand because `pump` answers a declaration with one legal choice on its
+ * own, which is exactly the case (a creature required to attack one player) this must see.
  */
 function mustAttackIn(
   ctx: GameContext,
@@ -225,13 +227,20 @@ function mustAttackIn(
   creatures: readonly EnginePermanent[],
   /** Receives the players each creature may be declared against. */
   defendersSeen: Record<string, string[]> = {},
+  /** Receives the planeswalkers (object ids) each creature may be declared against. */
+  walkersSeen: Record<string, string[]> = {},
 ): Record<string, boolean | undefined> {
   turnOfPlayer(ctx, playerId);
   ctx.state.phase = 'precombatMain';
   ctx.state.step = null;
   const seen: Record<string, boolean | undefined> = {};
   for (const creature of creatures) creature.tapped = false;
-  pump(runCombatAndExtraCombats(ctx), (decision) => {
+  const generator = runCombatAndExtraCombats(ctx);
+  let outcome: DecisionOutcome | undefined;
+  for (;;) {
+    const step = outcome === undefined ? generator.next() : generator.next(outcome);
+    if (step.done === true) break;
+    const decision = step.value;
     if (decision.presentationAttackDeclaration !== undefined) {
       for (const creature of creatures) {
         const subject = decision.presentationAttackDeclaration.subjects.find(
@@ -239,17 +248,19 @@ function mustAttackIn(
         );
         seen[creature.id] = subject?.mustAttack;
         defendersSeen[creature.id] = subject?.defenders.map((defender) => defender.playerId) ?? [];
+        walkersSeen[creature.id] = subject?.planeswalkers.map((walker) => walker.objectId) ?? [];
       }
-      return declareAttacks(decision, (subjectId, subject) => {
+      outcome = declareAttacks(decision, (_subjectId, subject) => {
         if (!subject.mustAttack) return null;
         return subject.defenders[0]?.playerId ?? subject.planeswalkers[0]?.objectId ?? null;
       });
+    } else if (decision.presentationBlockDeclaration !== undefined)
+      outcome = declareBlocks(decision, () => null);
+    else {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      outcome = { index: Math.max(pass, 0), targets: new Map() };
     }
-    if (decision.presentationBlockDeclaration !== undefined)
-      return declareBlocks(decision, () => null);
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    return { index: Math.max(pass, 0), targets: new Map() };
-  });
+  }
   return seen;
 }
 
@@ -2107,6 +2118,224 @@ describe('Life of the Party', () => {
   });
 });
 
+// ---------------------------------------------------------------------------------------------
+// PR07.08 Kardur, Doomscourge
+// ---------------------------------------------------------------------------------------------
+
+describe('Kardur, Doomscourge', () => {
+  const { card } = pinned('Kardur, Doomscourge');
+  const COST = [{ symbol: 'B' as const }, { symbol: 'R' as const }, ...generic(2)];
+  const BRUTE_N = (n: number) =>
+    oracle({
+      name: `Lab Brute ${n}`,
+      typeLine: 'Creature — Brute',
+      manaCost: '{0}',
+      power: '3',
+      toughness: '3',
+    });
+  const BRUTE = BRUTE_N(0);
+
+  /** P1 casts Kardur; each opponent controls a Bear. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const bears = {
+      P2: spawn(ctx, 'P2', GRIZZLY('P2 Bear')),
+      P3: spawn(ctx, 'P3', GRIZZLY('P3 Bear')),
+      P4: spawn(ctx, 'P4', GRIZZLY('P4 Bear')),
+    };
+    const mine = spawn(ctx, 'P1', GRIZZLY('P1 Bear'));
+    const object = castFromHand(ctx, 'P1', card, COST);
+    resolveTop(ctx);
+    settle(ctx);
+    const kardur = ctx.state.battlefield.find((perm) => perm.cardId === object.cardId)!;
+    return { ctx, kardur, bears, mine };
+  }
+
+  it('kardur-pinned-oracle-supported — the authored override carries the enters requirement and the attacking-creature death trigger under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.triggers).toHaveLength(2);
+    expect(def.triggers[0]!.trigger).toMatchObject({ when: 'enters' });
+    expect(def.triggers[0]!.effects).toEqual([
+      {
+        op: 'addAttackRequirement',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'opponents' },
+          ],
+        },
+        requirements: [{ kind: 'anyAttack' }, { kind: 'notPlayer', player: 'you' }],
+        duration: 'untilYourNextTurn',
+      },
+    ]);
+    expect(def.triggers[1]!.trigger).toMatchObject({
+      when: 'dies',
+      subject: {
+        kind: 'permanent',
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'combatRole', role: 'attacking' },
+          ],
+        },
+      },
+    });
+  });
+
+  it('kardur-enters-requirement — Kardur entering makes the requirement for you, until your next turn, with the two requirements', () => {
+    const { ctx } = board('kardur-enters');
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    expect(ctx.state.attackRequirements![0]).toMatchObject({
+      controllerId: 'P1',
+      requirements: [{ kind: 'anyAttack' }, { kind: 'notPlayer', playerId: 'P1' }],
+      expires: { kind: 'untilNextTurn', playerId: 'P1' },
+    });
+  });
+
+  it('kardur-opponents-must-attack-not-you — creatures your opponents control attack each combat if able and a player other than you, and your creatures do neither', () => {
+    const { ctx, bears, mine } = board('kardur-must-attack');
+    const offered: Record<string, string[]> = {};
+    expect(mustAttackIn(ctx, 'P2', [bears.P2], offered)).toEqual({ [bears.P2.id]: true });
+    // Not you ("a player other than you"): P3 and P4 only.
+    expect(offered[bears.P2.id]!.sort()).toEqual(['P3', 'P4']);
+    expect(mustAttackIn(ctx, 'P1', [mine])).toEqual({ [mine.id]: false });
+  });
+
+  it('kardur-later-arrivals — creatures an opponent gets after it resolved are covered, and so is one they gain control of', () => {
+    const { ctx, bears } = board('kardur-later');
+    const later = spawn(ctx, 'P3', GRIZZLY('P3 Latecomer'));
+    expect(mustAttackIn(ctx, 'P3', [later])).toEqual({ [later.id]: true });
+    bears.P2.controllerId = 'P4';
+    expect(mustAttackIn(ctx, 'P4', [bears.P2])).toEqual({ [bears.P2.id]: true });
+  });
+
+  it('kardur-planeswalker-ruling — a planeswalker attack obeys only "attacks each combat", so with another player available it is not enough, and with none it must still attack you or a planeswalker', () => {
+    const { ctx, bears } = board('kardur-walker');
+    const p3Walker = spawn(ctx, 'P3', WALKER('P3 Walker'));
+    const p1Walker = spawn(ctx, 'P1', WALKER('P1 Walker'));
+    const defenders: Record<string, string[]> = {};
+    const walkers: Record<string, string[]> = {};
+    // With P3 and P4 available, only they obey both: no planeswalker, and not P1 or its walker.
+    mustAttackIn(ctx, 'P2', [bears.P2], defenders, walkers);
+    expect(defenders[bears.P2.id]!.sort()).toEqual(['P3', 'P4']);
+    expect(walkers[bears.P2.id]).toEqual([]);
+    expect(walkers[bears.P2.id]).not.toContain(p3Walker.id);
+    // Only you and your planeswalker left to attack: it must still attack one of them.
+    playerById(ctx, 'P3').hasLost = true;
+    playerById(ctx, 'P4').hasLost = true;
+    expect(mustAttackIn(ctx, 'P2', [bears.P2], defenders, walkers)).toEqual({
+      [bears.P2.id]: true,
+    });
+    expect(defenders[bears.P2.id]).toEqual(['P1']);
+    expect(walkers[bears.P2.id]).toEqual([p1Walker.id]);
+  });
+
+  it('kardur-until-your-next-turn — the requirement outlasts Kardur leaving, lasts through every other player’s turn, and ends as your next turn begins', () => {
+    const { ctx, kardur, bears } = board('kardur-duration');
+    // Kardur leaves the battlefield: the effect is not tied to it.
+    pump(moveObject(ctx, kardur, { zone: 'graveyard' }));
+    expect(mustAttackIn(ctx, 'P2', [bears.P2])).toEqual({ [bears.P2.id]: true });
+    for (const [index, id] of ['P2', 'P3', 'P4'].entries()) {
+      turnOfPlayer(ctx, id);
+      ctx.state.turnNumber += 1;
+      pump(runBeginningAndPrecombatMain(ctx));
+      expect(ctx.state.attackRequirements, `before P1's turn, at ${id}`).toHaveLength(1);
+      expect(index).toBeLessThan(3);
+    }
+    turnOfPlayer(ctx, 'P1');
+    ctx.state.turnNumber += 1;
+    pump(runBeginningAndPrecombatMain(ctx));
+    expect(ctx.state.attackRequirements).toHaveLength(0);
+    expect(mustAttackIn(ctx, 'P2', [bears.P2])).toEqual({ [bears.P2.id]: false });
+  });
+
+  it('kardur-attacker-dies-drain — whenever an attacking creature dies, each opponent loses 1 and you gain 1, whoever controls it', () => {
+    const { ctx, mine } = board('kardur-drain');
+    const brute = spawn(ctx, 'P2', BRUTE);
+    const life = () => ['P1', 'P2', 'P3', 'P4'].map((id) => playerById(ctx, id).life);
+    // Your Bear attacks P2 and P2's Brute blocks and kills it: the attacker died.
+    declaredCombat(ctx, { [mine.id]: 'P2' }, { [brute.id]: mine.id });
+    expect(ctx.state.battlefield.some((perm) => perm.id === mine.id)).toBe(false);
+    expect(life()).toEqual([41, 39, 39, 39]);
+    expect(ctx.state.stack).toEqual([]);
+  });
+
+  it('kardur-blockers-dont-count — a blocking creature dying does not trigger it, and a creature that dies while not attacking does not either', () => {
+    const { ctx } = board('kardur-blocker');
+    const brute = spawn(ctx, 'P1', BRUTE);
+    const blocker = spawn(ctx, 'P2', GRIZZLY('P2 Wall'));
+    const life = () => ['P1', 'P2', 'P3', 'P4'].map((id) => playerById(ctx, id).life);
+    // Your Brute (3/3) is blocked by a 2/2 that dies: only the blocker died.
+    declaredCombat(ctx, { [brute.id]: 'P2' }, { [blocker.id]: brute.id });
+    expect(ctx.state.battlefield.some((perm) => perm.id === blocker.id)).toBe(false);
+    expect(life()).toEqual([40, 40, 40, 40]);
+    // A creature that dies outside combat is not an attacking creature.
+    const idle = spawn(ctx, 'P3', GRIZZLY('P3 Idle'));
+    pump(moveObject(ctx, idle, { zone: 'graveyard' }));
+    pump(priorityCheckpoint(ctx));
+    expect(life()).toEqual([40, 40, 40, 40]);
+  });
+
+  it('kardur-trade-and-multiple — an attacker trading with a blocker counts once, and two attackers dying count twice; Kardur sees itself die attacking', () => {
+    const { ctx, mine, kardur } = board('kardur-multiple');
+    const life = () => ['P1', 'P2', 'P3', 'P4'].map((id) => playerById(ctx, id).life);
+    // The trade: an attacking 2/2 and a blocking 2/2 both die; only the attacker triggers.
+    const wall = spawn(ctx, 'P2', GRIZZLY('P2 Wall'));
+    declaredCombat(ctx, { [mine.id]: 'P2' }, { [wall.id]: mine.id });
+    expect(life()).toEqual([41, 39, 39, 39]);
+    // Two attackers die at once: two triggers.
+    const [a, b] = [1, 2].map((n) => spawn(ctx, 'P1', GRIZZLY(`P1 Raider ${n}`)));
+    const big = [1, 2].map((n) => spawn(ctx, 'P2', BRUTE_N(n)));
+    declaredCombat(
+      ctx,
+      { [a!.id]: 'P2', [b!.id]: 'P2' },
+      { [big[0]!.id]: a!.id, [big[1]!.id]: b!.id },
+    );
+    expect(life()).toEqual([43, 37, 37, 37]);
+    // Kardur itself attacks and dies: it sees its own death.
+    kardur.summoningSick = false;
+    const brutes = [3, 4].map((n) => spawn(ctx, 'P3', BRUTE_N(n)));
+    declaredCombat(
+      ctx,
+      { [kardur.id]: 'P3' },
+      { [brutes[0]!.id]: kardur.id, [brutes[1]!.id]: kardur.id },
+    );
+    expect(ctx.state.battlefield.some((perm) => perm.id === kardur.id)).toBe(false);
+    expect(life()).toEqual([44, 36, 36, 36]);
+  });
+
+  it('kardur-whole-game — cast it, an opponent’s required attack runs into a blocker and dies, and the drain resolves through the stack', () => {
+    const { ctx, bears } = board('kardur-chain');
+    const brute = spawn(ctx, 'P3', BRUTE);
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.turnNumber += 1;
+    const seen: Record<string, boolean | undefined> = {};
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId, subject) => {
+          seen[subjectId] = subject.mustAttack;
+          expect(subject.defenders.map((defender) => defender.playerId)).not.toContain('P1');
+          return subject.mustAttack ? 'P3' : null;
+        });
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, (subjectId) =>
+          subjectId === brute.id ? bears.P2.id : null,
+        );
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(seen[bears.P2.id]).toBe(true);
+    expect(ctx.state.battlefield.some((perm) => perm.id === bears.P2.id)).toBe(false);
+    expect(['P1', 'P2', 'P3', 'P4'].map((id) => playerById(ctx, id).life)).toEqual([
+      41, 39, 39, 39,
+    ]);
+    expect(ctx.state.stack).toEqual([]);
+  });
+});
+
 // @@CARDS@@
 // ---------------------------------------------------------------------------------------------
 // Restoration gate
@@ -2185,6 +2414,12 @@ const RESTORED: RestoredCard[] = [
   {
     name: 'Life of the Party',
     sha256: '6244452d742f3bd5bb3fe11e45312ee784ee2f7b695ea8b0dff970658c43243c',
+    clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: 'Kardur, Doomscourge',
+    sha256: '72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7',
     clauseCount: 2,
     authored: true,
   },

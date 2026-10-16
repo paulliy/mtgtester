@@ -2431,6 +2431,18 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     titlePath: ['Life of the Party: each opponent creates a goaded copy of it'],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

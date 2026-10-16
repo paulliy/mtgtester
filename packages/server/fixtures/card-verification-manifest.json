@@ -1052,26 +1052,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "bc14356c-3a1a-47af-9a6e-2b449de0331f": {
-      "name": "Kardur, Doomscourge",
-      "oracleSha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
-          "implementation": ["explicitly unsupported; goad snapshots current creatures"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
-        },
-        {
-          "oracleText": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
-          "implementation": ["explicitly unsupported; inCombat includes blockers"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "35e2f82e-7ca3-4a92-9134-b7999eef5337": {
       "name": "Mana Sculpt",
       "oracleSha256": "0b2d95dd1b6129ea13122d2493cb1b94b5f20d66a2848532a52aa2f805a15e4e",
@@ -12319,6 +12299,46 @@
             "life-of-the-party-whole-game"
           ],
           "viewerScenarioIds": ["life-of-the-party-viewer-goaded-copies"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bc14356c-3a1a-47af-9a6e-2b449de0331f": {
+      "name": "Kardur, Doomscourge",
+      "oracleSha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kardur-opponents-attack-not-you",
+          "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+          "implementation": [
+            "authored enters trigger that stores an attack requirement (the new addAttackRequirement effect) for every creature your opponents control, read live so creatures they get later are covered (CR 611.2c), with two requirements counted separately: attack each combat, and attack a player other than you; a declaration obeys the maximum possible (CR 508.1d): a planeswalker attack obeys only the first, so a creature that can attack another player must, and one that can't must still attack you or a planeswalker; it lasts until your next turn begins, whether or not Kardur is still on the battlefield, and ends early if you leave the game"
+          ],
+          "engineTestIds": [
+            "kardur-pinned-oracle-supported",
+            "kardur-enters-requirement",
+            "kardur-opponents-must-attack-not-you",
+            "kardur-later-arrivals",
+            "kardur-planeswalker-ruling",
+            "kardur-until-your-next-turn",
+            "kardur-whole-game"
+          ],
+          "viewerScenarioIds": ["kardur-viewer-must-attack-not-you"]
+        },
+        {
+          "id": "kardur-attacking-creature-dies-drain",
+          "oracleText": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
+          "implementation": [
+            "authored dies trigger whose subject is a creature that was attacking as it died (combat role read from last known information), controlled by anyone: each opponent loses 1 life and you gain 1; a blocking creature, or a creature that dies outside combat, does not trigger it; each attacker that dies triggers it once, Kardur's own death included"
+          ],
+          "engineTestIds": [
+            "kardur-pinned-oracle-supported",
+            "kardur-attacker-dies-drain",
+            "kardur-blockers-dont-count",
+            "kardur-trade-and-multiple",
+            "kardur-whole-game"
+          ],
+          "viewerScenarioIds": ["kardur-viewer-attacker-dies-drain"]
         }
       ],
       "gameplayAiScenarioIds": []

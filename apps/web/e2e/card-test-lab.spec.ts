@@ -9916,3 +9916,47 @@ test('Life of the Party: each opponent creates a goaded copy of it', async ({ pa
   // P2's goaded copy had to attack, and not you.
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
 });
+
+test("Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn",
+  );
+  const kardur = handCard(page, 'Kardur, Doomscourge');
+  await expect(kardur).toHaveClass(/actionable/);
+  await kardur.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Lab Ox had to attack and could not attack you: it hit P3.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});
+
+test('Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('39');
+});

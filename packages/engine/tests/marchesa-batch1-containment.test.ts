@@ -42,8 +42,6 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Kardur, Doomscourge':
-    'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
   'Siren Stormtamer':
@@ -272,6 +270,7 @@ describe('Marchesa catalog audit containment', () => {
     'Eriette of the Charmed Apple',
     'Nils, Discipline Enforcer',
     'Combat Calligrapher',
+    'Kardur, Doomscourge',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

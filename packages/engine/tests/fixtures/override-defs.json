@@ -10328,8 +10328,93 @@
   {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+      "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able",
+          "effects": [
+            {
+              "duration": "untilYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "anyAttack"
+                },
+                {
+                  "kind": "notPlayer",
+                  "player": "you"
+                }
+              ],
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "bc328acc-8521-4581-88c3-99a7cb2c1cdb",
@@ -22234,8 +22319,93 @@
   {
     "oracleId": "oracle-kardur-doomscourge",
     "name": "Kardur, Doomscourge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+      "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able",
+          "effects": [
+            {
+              "duration": "untilYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "anyAttack"
+                },
+                {
+                  "kind": "notPlayer",
+                  "player": "you"
+                }
+              ],
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-karn-argent-defender",

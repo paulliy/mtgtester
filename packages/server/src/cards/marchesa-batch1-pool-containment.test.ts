@@ -92,6 +92,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Kairi, the Swirling Sky',
       'Kambal, Consul of Allocation',
       "Karametra's Favor",
+      'Kardur, Doomscourge',
       'Killian, Decisive Mentor',
       'Killian, Ink Duelist',
       'Kor Spiritdancer',

@@ -95,7 +95,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Twilight Diviner',
       'Siren Stormtamer',
       'Smokestack',
-      'Kardur, Doomscourge',
       'Mana Sculpt',
       'Vindictive Lich',
       "Angel's Grace",

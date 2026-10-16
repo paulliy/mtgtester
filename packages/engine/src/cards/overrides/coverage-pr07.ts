@@ -396,4 +396,50 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Kardur, Doomscourge: the enters ability is an attack REQUIREMENT with a duration, not a goad:
+  // it covers every creature your opponents control, now and later (CR 611.2c), until your next
+  // turn begins, and has two parts that are counted separately (CR 508.1d): attack each combat,
+  // and attack a player other than you. A planeswalker attack obeys only the first, so a creature
+  // that can attack another player must, and one that can't must still attack you or a
+  // planeswalker. The death trigger needs the creature to have been ATTACKING as it died, read
+  // from last known information, so a blocker never counts.
+  defineCard(
+    'bc14356c-3a1a-47af-9a6e-2b449de0331f',
+    'Kardur, Doomscourge',
+    [
+      'When ~ enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.',
+      'Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [
+            {
+              op: 'addAttackRequirement',
+              selector: allOf(ofType('Creature'), { kind: 'controller', who: 'opponents' }),
+              requirements: [{ kind: 'anyAttack' }, { kind: 'notPlayer', player: 'you' }],
+              duration: 'untilYourNextTurn',
+            },
+          ],
+          description:
+            'When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able',
+        }),
+        triggered(
+          whenPermanent(
+            'dies',
+            allOf(ofType('Creature'), { kind: 'combatRole', role: 'attacking' }),
+          ),
+          {
+            effects: [
+              { op: 'eachOpponentLosesLife', amount: constant(1) },
+              { op: 'gainLife', amount: constant(1) },
+            ],
+            description:
+              'Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life',
+          },
+        ),
+      ],
+    },
+  );
 }

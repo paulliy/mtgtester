@@ -362,6 +362,44 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
+      "card": {
+        "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
+        "scryfallId": "7c0f7712-7bbf-471b-8107-3a49cf922ad9",
+        "name": "Kardur, Doomscourge",
+        "manaCost": "{2}{B}{R}",
+        "cmc": 4,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Demon Berserker",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Demon",
+          "Berserker"
+        ],
+        "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.\nWhenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

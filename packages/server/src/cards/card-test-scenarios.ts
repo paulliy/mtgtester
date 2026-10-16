@@ -13201,6 +13201,64 @@ function lifeOfThePartyScenario(gameId: GameId, kind: 'pump' | 'copies'): CardTe
   });
 }
 
+function kardurScenario(gameId: GameId, kind: 'requirement' | 'drain'): CardTestScenario {
+  const kardur = pinnedFrom(COVERAGE_PR07, 'Kardur, Doomscourge');
+  const requirement = kind === 'requirement';
+  return pr01Scenario(gameId, {
+    id: requirement ? 'kardur-viewer-must-attack-not-you' : 'kardur-viewer-attacker-dies-drain',
+    title: requirement
+      ? "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn"
+      : 'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+    instructions: requirement
+      ? [
+          'Kardur is in your hand with a Swamp, a Mountain and two Forests on your battlefield; P2 controls Lab Ox (4/4). Cast Kardur and let it and its enters trigger resolve.',
+          'Pass priority to P2’s turn. Until your next turn Lab Ox attacks each combat if able and attacks a player other than you if able: it is not offered you as a defender and must attack P3 or P4.',
+        ]
+      : [
+          'Kardur and Lab Servo (1/1) are on your battlefield; P2 controls Lab Ox (4/4), which blocks whatever you attack with.',
+          'Pass priority to the declare attackers step and attack P2 with Lab Servo, leaving Kardur at home, and confirm. Lab Ox blocks and kills it: an attacking creature died.',
+        ],
+    expectedOutcome: requirement
+      ? 'Lab Ox was not offered you and had to attack: it hit P3 for 4 (P3 is at 36) and you are still at 40.'
+      : 'Lab Servo died while attacking: each opponent lost 1 life (P2, P3 and P4 are at 39) and you gained 1 (41). Lab Ox, a blocker, would not have triggered it.',
+    oracleSha256: kardur.sha256,
+    clauseIds: requirement
+      ? ['kardur-opponents-attack-not-you']
+      : ['kardur-attacking-creature-dies-drain'],
+    decks: {
+      P1: requirement
+        ? [kardur.card, SWAMP, MOUNTAIN, FOREST, FOREST]
+        : [kardur.card, LAB_SERVO, FOREST, FOREST],
+      P2: [LAB_OX, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: requirement
+      ? {
+          hand: [{ playerId: 'P1', cardNames: ['Kardur, Doomscourge'] }],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Swamp', 'Mountain', 'Forest', 'Forest'] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+          continueToPostcombatMain: true,
+          continueToEndStep: true,
+          continueThroughNextTurn: true,
+        }
+      : {
+          hand: [],
+          battlefield: [
+            { playerId: 'P1', cardNames: ['Kardur, Doomscourge', 'Lab Servo'] },
+            { playerId: 'P2', cardNames: ['Lab Ox'] },
+          ],
+          continueThroughCombat: true,
+        },
+    decisionProviderOverrides: requirement
+      ? { P2: attackPlayerWithEverything('P1'), P3: neverBlocks(), P4: neverBlocks() }
+      : { P2: blockWithEverything },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13517,6 +13575,8 @@ export const CARD_TEST_SCENARIO_IDS = [
   'toby-viewer-flying-with-four-tokens',
   'life-of-the-party-viewer-attack-pump',
   'life-of-the-party-viewer-goaded-copies',
+  'kardur-viewer-must-attack-not-you',
+  'kardur-viewer-attacker-dies-drain',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14009,6 +14069,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'toby-viewer-flying-with-four-tokens': (gameId) => tobyScenario(gameId, 'flying'),
   'life-of-the-party-viewer-attack-pump': (gameId) => lifeOfThePartyScenario(gameId, 'pump'),
   'life-of-the-party-viewer-goaded-copies': (gameId) => lifeOfThePartyScenario(gameId, 'copies'),
+  'kardur-viewer-must-attack-not-you': (gameId) => kardurScenario(gameId, 'requirement'),
+  'kardur-viewer-attacker-dies-drain': (gameId) => kardurScenario(gameId, 'drain'),
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

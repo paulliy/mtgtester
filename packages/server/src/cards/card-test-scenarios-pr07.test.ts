@@ -523,3 +523,40 @@ describe('Life of the Party Card Test Lab scenarios', () => {
     replays('life-of-the-party-viewer-goaded-copies', steps);
   });
 });
+
+describe('Kardur, Doomscourge Card Test Lab scenarios', () => {
+  it('kardur-viewer-must-attack-not-you — until your next turn P2’s Lab Ox is not offered you and must attack, so it hits P3', () => {
+    const offers: string[][] = [];
+    const steps: Step[] = [{ action: 'Cast Kardur, Doomscourge' }];
+    const { scenario, state, seat } = run('kardur-viewer-must-attack-not-you', steps, (request) => {
+      const declare = request.legalActions.find((action) =>
+        action.description.startsWith('Declare attackers'),
+      );
+      if (request.decidingPlayer === 'P2' && declare !== undefined)
+        for (const slot of declare.targets ?? []) offers.push(slot.options);
+    });
+    expect(offers).toHaveLength(1);
+    expect(offers[0]).not.toContain('P1');
+    expect(offers[0]).not.toContain('__no_attack__');
+    expect(seat('P1').life).toBe(40);
+    expect(seat('P3').life).toBe(36);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('kardur-viewer-must-attack-not-you', steps);
+  });
+
+  it('kardur-viewer-attacker-dies-drain — Lab Servo dies attacking into the blocking Lab Ox: each opponent loses 1 and you gain 1', () => {
+    const steps: Step[] = [{ action: 'Declare attackers', targets: ['__no_attack__', 'P2'] }];
+    const { scenario, state, seat, onBattlefield } = run(
+      'kardur-viewer-attacker-dies-drain',
+      steps,
+    );
+    expect(onBattlefield('Lab Servo')).toEqual([]);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(seat('P1').life).toBe(41);
+    for (const id of ['P2', 'P3', 'P4']) expect(seat(id).life).toBe(39);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('kardur-viewer-attacker-dies-drain', steps);
+  });
+});
