@@ -2364,7 +2364,7 @@ export function* executeAbility(
       case 'destroyEach': {
         // CR 701.7: evaluate indestructibility before any static-granting permanent leaves.
         // Replacements and all death watchers likewise see one simultaneous departure event.
-        const affected = affectedBy(ctx, source, effect.selector);
+        const affected = affectedBy(ctx, source, effect.selector, extraScope?.eventPlayerId);
         const protectedIds = new Set(
           affected.filter((perm) => hasKeyword(ctx, perm, 'indestructible')).map((perm) => perm.id),
         );
@@ -5390,7 +5390,13 @@ export function* executeAbility(
         // The fixed set names its object now; a selector set is read live (CR 611.2c).
         let affects: AttackRequirementEntry['affects'] | undefined;
         if (effect.selector !== undefined)
-          affects = { kind: 'selector', selector: effect.selector };
+          affects = {
+            kind: 'selector',
+            selector: effect.selector,
+            ...(effect.relativeTo === 'activePlayer'
+              ? { viewpointId: ctx.state.currentTurnPlayer }
+              : {}),
+          };
         else {
           const targetId = effect.target === undefined ? null : ref(effect.target);
           if (targetId !== null) affects = { kind: 'objects', objectIds: [targetId] };
@@ -5403,11 +5409,14 @@ export function* executeAbility(
           return { kind: spec.kind, playerId };
         };
         const requirements = effect.requirements.flatMap((spec) => playerRef(spec) ?? []);
-        const expires = {
-          kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
-          playerId: controller.id,
-          setTurn: ctx.state.turnNumber,
-        } as const;
+        const expires: AttackRequirementEntry['expires'] =
+          effect.duration === 'thisTurn'
+            ? { kind: 'thisTurn', turn: ctx.state.turnNumber }
+            : {
+                kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
+                playerId: controller.id,
+                setTurn: ctx.state.turnNumber,
+              };
         (ctx.state.attackRequirements ??= []).push({
           id: `ar-${ctx.state.nextObjectNum++}`,
           controllerId: controller.id,
@@ -6800,9 +6809,11 @@ export function* executeAbility(
         const affectedPlayerId =
           effect.affectedPlayer === 'sourceController'
             ? source.controllerId
-            : effect.affectedPlayer === 'targetController'
-              ? capturedTargetController
-              : undefined;
+            : effect.affectedPlayer === 'activePlayer'
+              ? ctx.state.currentTurnPlayer
+              : effect.affectedPlayer === 'targetController'
+                ? capturedTargetController
+                : undefined;
         if (effect.affectedPlayer === 'targetController' && affectedPlayerId === undefined) {
           throw new Error(
             `engine bug: ${source.name} affected target controller could not be captured`,

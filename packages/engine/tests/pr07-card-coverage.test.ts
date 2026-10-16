@@ -1429,6 +1429,162 @@ describe('Moraug, Fury of Akoum', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// PR07.26 Siren's Call
+// ---------------------------------------------------------------------------------------------
+
+describe("Siren's Call", () => {
+  const { card } = pinned("Siren's Call");
+  const WALL = (name: string) =>
+    oracle({
+      name,
+      typeLine: 'Creature — Wall',
+      power: '0',
+      toughness: '4',
+      oracleText: 'Defender',
+    });
+
+  /** P1's turn: Bears A and B, a tapped Bear C and a Wall; P2 holds Siren's Call. */
+  function board(seed: string) {
+    const ctx = pod(seed);
+    const bearA = spawn(ctx, 'P1', GRIZZLY('P1 Bear A'));
+    const bearB = spawn(ctx, 'P1', GRIZZLY('P1 Bear B'));
+    const bearC = spawn(ctx, 'P1', GRIZZLY('P1 Bear C'), { tapped: true });
+    const wall = spawn(ctx, 'P1', WALL('P1 Wall'));
+    const theirs = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    return { ctx, bearA, bearB, bearC, wall, theirs };
+  }
+
+  /** P2 casts Siren's Call through legality, payment and the stack, then it resolves. */
+  function cast(ctx: GameContext) {
+    const object = castFromHand(ctx, 'P2', card, [{ symbol: 'U' }]);
+    resolveTop(ctx);
+    return object;
+  }
+
+  const alive = (ctx: GameContext, ...perms: EnginePermanent[]) =>
+    perms.filter((perm) => ctx.state.battlefield.some((other) => other.id === perm.id));
+
+  it('sirens-call-pinned-oracle-supported — the authored override carries the cast restriction, the live attack requirement and the end-step destruction, under both ids', () => {
+    expectModeled(card);
+    const def = interpretCard(card);
+    expect(def.castRestriction).toEqual({
+      kind: 'allOf',
+      of: [{ kind: 'notYourTurn' }, { kind: 'beforeAttackersDeclared' }],
+    });
+    expect(def.spellAbility?.effects.map((effect) => effect.op)).toEqual([
+      'addAttackRequirement',
+      'registerDelayedTrigger',
+    ]);
+    expect(def.spellAbility?.effects[0]).toMatchObject({
+      relativeTo: 'activePlayer',
+      requirements: [{ kind: 'anyAttack' }],
+      duration: 'thisTurn',
+    });
+  });
+
+  it('sirens-call-cast-timing — only on an opponent’s turn and only before attackers are declared', () => {
+    const { ctx } = board('siren-timing');
+    const object = conjure(ctx, 'P2', card, 'hand');
+    spawn(ctx, 'P2', island());
+    const canCast = () => optionFor(ctx, 'P2', object.id, /Siren/) !== undefined;
+    turnOfPlayer(ctx, 'P1');
+    expect(canCast()).toBe(true);
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'beginCombat';
+    expect(canCast()).toBe(true);
+    ctx.state.declareAttackersReachedThisTurn = true;
+    ctx.state.step = 'declareAttackers';
+    expect(canCast()).toBe(false);
+    ctx.state.step = 'declareBlockers';
+    expect(canCast()).toBe(false);
+    // On your own turn it is never castable.
+    delete ctx.state.declareAttackersReachedThisTurn;
+    turnOfPlayer(ctx, 'P2');
+    expect(canCast()).toBe(false);
+  });
+
+  it('sirens-call-must-attack — the active player’s creatures attack this turn if able, and nobody else’s do', () => {
+    const { ctx, bearA, bearB, wall } = board('siren-attack');
+    cast(ctx);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    const required = mustAttackIn(ctx, 'P1', [bearA, bearB, wall]);
+    expect(required[bearA.id]).toBe(true);
+    expect(required[bearB.id]).toBe(true);
+    // Not able: the Wall (defender) is not required to do the impossible.
+    expect(required[wall.id]).not.toBe(true);
+    // P2's own creature is not covered even if it were P2's turn: the set is P1's creatures.
+    const theirs = ctx.state.battlefield.find((perm) => perm.name === 'P2 Bear')!;
+    expect(mustAttackIn(ctx, 'P2', [theirs])).toEqual({ [theirs.id]: false });
+  });
+
+  it('sirens-call-later-arrivals — a creature the active player gets after it resolved must attack too, and one that changes hands leaves the set', () => {
+    const { ctx, bearA } = board('siren-later');
+    cast(ctx);
+    const later = spawn(ctx, 'P1', GRIZZLY('P1 Latecomer'), { summoningSick: false });
+    expect(mustAttackIn(ctx, 'P1', [later])).toEqual({ [later.id]: true });
+    // A creature of P1's that P3 steals is no longer P1's creature: P3 is not the active player.
+    bearA.controllerId = 'P3';
+    expect(mustAttackIn(ctx, 'P3', [bearA])).toEqual({ [bearA.id]: false });
+  });
+
+  it('sirens-call-this-turn-only — the requirement ends in the cleanup step', () => {
+    const { ctx, bearA } = board('siren-cleanup');
+    cast(ctx);
+    expect(ctx.state.attackRequirements).toHaveLength(1);
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackRequirements ?? []).toEqual([]);
+    ctx.state.turnNumber += 1;
+    expect(mustAttackIn(ctx, 'P1', [bearA])).toEqual({ [bearA.id]: false });
+  });
+
+  it('sirens-call-end-step-destruction — at the end step the non-Walls that did not attack are destroyed, those that attacked, Walls and newcomers are not', () => {
+    const { ctx, bearA, bearB, bearC, wall } = board('siren-destroy');
+    cast(ctx);
+    // Bear A and Bear B must attack; Bear B is left home by being unable (tapped just now).
+    bearB.tapped = true;
+    // A creature that came under P1's control this turn is ignored, and so is a token that arrived.
+    const newcomer = spawn(ctx, 'P1', GRIZZLY('P1 Newcomer'), { summoningSick: true });
+    fight(ctx, () => ({ [bearA.id]: 'P2' }));
+    expect(bearA.attackedThisTurn).toBe(true);
+    endStepOf(ctx, 'P1');
+    expect(alive(ctx, bearA, bearB, bearC, wall, newcomer).map((perm) => perm.name)).toEqual([
+      'P1 Bear A',
+      'P1 Wall',
+      'P1 Newcomer',
+    ]);
+    // It is the active player's creatures only: P2's Bear is untouched.
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'P2 Bear')).toBe(true);
+  });
+
+  it('sirens-call-whole-game — cast before attackers, the Bears are made to attack, and the one that could not is destroyed with the rest at the end step', () => {
+    const { ctx, bearA, bearB, bearC, wall } = board('siren-chain');
+    cast(ctx);
+    turnOfPlayer(ctx, 'P1');
+    const attacked: string[] = [];
+    pump(runCombatAndExtraCombats(ctx), (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (subjectId, subject) => {
+          if (!subject.mustAttack) return null;
+          attacked.push(subjectId);
+          return subject.defenders[0]?.playerId ?? null;
+        });
+      if (decision.presentationBlockDeclaration !== undefined)
+        return declareBlocks(decision, () => null);
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    });
+    expect(attacked.sort()).toEqual([bearA.id, bearB.id].sort());
+    endStepOf(ctx, 'P1');
+    expect(alive(ctx, bearA, bearB, bearC, wall).map((perm) => perm.name)).toEqual([
+      'P1 Bear A',
+      'P1 Bear B',
+      'P1 Wall',
+    ]);
+    expect(ctx.state.delayedTriggers).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // PR07.07 Firkraag, Cunning Instigator
 // ---------------------------------------------------------------------------------------------
 
@@ -4438,6 +4594,12 @@ const RESTORED: RestoredCard[] = [
     name: 'Moraug, Fury of Akoum',
     sha256: '2f43c33f9dfea9bcffe2778bf5f70f7255d4d813328c45a02e41698d8e995694',
     clauseCount: 2,
+    authored: true,
+  },
+  {
+    name: "Siren's Call",
+    sha256: '71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f',
+    clauseCount: 3,
     authored: true,
   },
 ];

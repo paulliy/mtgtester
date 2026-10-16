@@ -85,6 +85,10 @@ export interface SelectorCandidate {
   /** The player this permanent is attacking, when it attacks a player (not a planeswalker). */
   attackingDefenderId?: string | null;
   attackingDefendingPlayerId?: string;
+  /** Declared as an attacker this turn. */
+  attackedThisTurn?: boolean;
+  /** Not summoning sick: controlled continuously since its controller's turn began (CR 302.6). */
+  controlledSinceTurnStart?: boolean;
   /**
    * Its current name (CR 201.2): the name a copy effect gave it, and none at all for a face-down
    * permanent (CR 708.2). Absent when a builder does not know it, which never matches `name`.
@@ -164,7 +168,7 @@ export type Selector =
    */
   | { kind: 'chosenSubtype' }
   /** Controlled by the source's controller, or by any of their opponents. */
-  | { kind: 'controller'; who: 'you' | 'opponents' }
+  | { kind: 'controller'; who: 'you' | 'opponents' | 'eventPlayer' }
   /** EVENT-ONLY (see the module comment): "with power 4 or greater". */
   | { kind: 'powerAtLeast'; n: number }
   /** EVENT-ONLY (see the module comment): "with power 2 or less". */
@@ -238,6 +242,17 @@ export type Selector =
    * state, so a static may read it like `combatRole`.
    */
   | { kind: 'attackingChosenPlayer' }
+  /**
+   * EVENT-ONLY: it was declared as an attacker this turn (never true of a token put onto the
+   * battlefield attacking) — "creatures that didn't attack this turn" (Siren's Call).
+   */
+  | { kind: 'attackedThisTurn' }
+  /**
+   * EVENT-ONLY: its controller has controlled it continuously since their turn began (CR 302.6),
+   * read during that controller's own turn — "each creature they didn't control continuously
+   * since the beginning of the turn" (Siren's Call).
+   */
+  | { kind: 'controlledSinceTurnStart' }
   | { kind: 'allOf'; of: Selector[] }
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
@@ -303,6 +318,8 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'inCombat':
     case 'attackingEventPlayer':
     case 'attackingYouOrYourPlaneswalker':
+    case 'attackedThisTurn':
+    case 'controlledSinceTurnStart':
       return true;
     case 'allOf':
     case 'anyOf':
@@ -379,9 +396,17 @@ export function selectMatches(
     case 'chosenSubtype':
       return source.chosenOption !== undefined && candidate.subtypes.includes(source.chosenOption);
     case 'controller':
+      if (selector.who === 'eventPlayer')
+        return (
+          source.eventPlayerId !== undefined && candidate.controllerId === source.eventPlayerId
+        );
       return selector.who === 'you'
         ? candidate.controllerId === source.controllerId
         : candidate.controllerId !== source.controllerId;
+    case 'attackedThisTurn':
+      return candidate.attackedThisTurn === true;
+    case 'controlledSinceTurnStart':
+      return candidate.controlledSinceTurnStart === true;
     case 'powerAtLeast':
       return candidate.power >= selector.n;
     case 'powerAtMost':

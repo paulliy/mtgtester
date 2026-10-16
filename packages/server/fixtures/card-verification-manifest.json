@@ -12622,6 +12622,46 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "269fc857-a052-4f0a-9759-467ccf42bebb": {
+      "name": "Siren's Call",
+      "oracleSha256": "71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "sirens-call-cast-timing",
+          "oracleText": "Cast this spell only during an opponent's turn, before attackers are declared.",
+          "implementation": [
+            "authored castRestriction allOf notYourTurn and beforeAttackersDeclared (the turn has not reached the declare attackers step of its first combat), enforced when offering and when casting"
+          ],
+          "engineTestIds": ["sirens-call-pinned-oracle-supported", "sirens-call-cast-timing"],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        },
+        {
+          "id": "sirens-call-must-attack",
+          "oracleText": "Creatures the active player controls attack this turn if able.",
+          "implementation": [
+            "addAttackRequirement with a live selector read from the active player's point of view (a rules modification, CR 611.2c, so creatures arriving later are covered) and a this-turn expiry that ends in the cleanup step"
+          ],
+          "engineTestIds": [
+            "sirens-call-must-attack",
+            "sirens-call-later-arrivals",
+            "sirens-call-this-turn-only",
+            "sirens-call-whole-game"
+          ],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        },
+        {
+          "id": "sirens-call-end-step-destruction",
+          "oracleText": "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+          "implementation": [
+            "registerDelayedTrigger at the next end step remembering the active player, destroying creatures that player controls that are not Walls, did not attack (declared attackers only, via the attackedThisTurn selector fact) and have been controlled continuously since their controller's turn began"
+          ],
+          "engineTestIds": ["sirens-call-end-step-destruction", "sirens-call-whole-game"],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

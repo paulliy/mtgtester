@@ -556,6 +556,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'triarch-stalker-viewer-menace',
       'illusionists-gambit-viewer-remove-and-redirect',
       'moraug-viewer-landfall-extra-combat',
+      'sirens-call-viewer-attack-or-die',
       'bess-soul-nourisher-viewer-counter-and-pump',
       'mikey-and-leo-viewer-counter-draw',
       'satoru-viewer-free-cast-draws',

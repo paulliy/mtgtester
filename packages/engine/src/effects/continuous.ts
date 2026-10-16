@@ -387,6 +387,8 @@ export function candidateOf(
     combatRole: perm.attacking !== null ? 'attacking' : perm.blocking !== null ? 'blocking' : null,
     // The player attacked itself: null when it attacks a planeswalker, so "attacking you / an
     // opponent / that player" selectors don't match an attack on their planeswalker.
+    attackedThisTurn: perm.attackedThisTurn === true,
+    controlledSinceTurnStart: !perm.summoningSick,
     attackingDefenderId: perm.attackingPlaneswalker === null ? perm.attacking : null,
     ...(defendingPlayer === undefined ? {} : { attackingDefendingPlayerId: defendingPlayer }),
     hasAnyCounter: Object.values(perm.counters).some((c) => c > 0),

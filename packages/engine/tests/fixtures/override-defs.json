@@ -2282,6 +2282,107 @@
     }
   },
   {
+    "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",
+    "name": "Siren's Call",
+    "handledLines": [
+      "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+      "Cast this spell only during an opponent's turn, before attackers are declared.",
+      "Creatures the active player controls attack this turn if able."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "notYourTurn"
+          },
+          {
+            "kind": "beforeAttackersDeclared"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+        "effects": [
+          {
+            "duration": "thisTurn",
+            "op": "addAttackRequirement",
+            "relativeTo": "activePlayer",
+            "requirements": [
+              {
+                "kind": "anyAttack"
+              }
+            ],
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          {
+            "ability": {
+              "description": "Destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+              "effects": [
+                {
+                  "op": "destroyEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Wall"
+                        }
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "eventPlayer"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "attackedThisTurn"
+                        }
+                      },
+                      {
+                        "kind": "controlledSinceTurnStart"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "each",
+                "when": "endStep"
+              }
+            },
+            "affectedPlayer": "activePlayer",
+            "expiry": "endStep",
+            "op": "registerDelayedTrigger",
+            "when": "endStep"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
@@ -28011,6 +28112,107 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-siren-s-call",
+    "name": "Siren's Call",
+    "handledLines": [
+      "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+      "Cast this spell only during an opponent's turn, before attackers are declared.",
+      "Creatures the active player controls attack this turn if able."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "notYourTurn"
+          },
+          {
+            "kind": "beforeAttackersDeclared"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+        "effects": [
+          {
+            "duration": "thisTurn",
+            "op": "addAttackRequirement",
+            "relativeTo": "activePlayer",
+            "requirements": [
+              {
+                "kind": "anyAttack"
+              }
+            ],
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          {
+            "ability": {
+              "description": "Destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+              "effects": [
+                {
+                  "op": "destroyEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Wall"
+                        }
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "eventPlayer"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "attackedThisTurn"
+                        }
+                      },
+                      {
+                        "kind": "controlledSinceTurnStart"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "each",
+                "when": "endStep"
+              }
+            },
+            "affectedPlayer": "activePlayer",
+            "expiry": "endStep",
+            "op": "registerDelayedTrigger",
+            "when": "endStep"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {

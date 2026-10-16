@@ -657,7 +657,9 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         path,
         message: 'an attack requirement names either a target or a selector for its creatures',
       });
-    if (!['untilYourNextTurn', 'endOfYourNextTurn'].includes(String(record['duration'])))
+    if (
+      !['untilYourNextTurn', 'endOfYourNextTurn', 'thisTurn'].includes(String(record['duration']))
+    )
       issues.push({ path: `${path}.duration`, message: 'unsupported attack requirement duration' });
     const requirements = record['requirements'];
     const valid = (entry: unknown): boolean => {

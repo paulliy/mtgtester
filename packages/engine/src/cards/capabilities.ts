@@ -187,6 +187,7 @@ const shapes = {
   Effect: {
     level: leaf,
     additionalMain: leaf,
+    relativeTo: leaf,
     thenCombat: leaf,
     untap: leaf,
     untapYourCreatures: leaf,
@@ -1201,6 +1202,8 @@ const families = {
       combatRole: true,
       attackingEventPlayer: true,
       attackingChosenPlayer: true,
+      attackedThisTurn: true,
+      controlledSinceTurnStart: true,
       attackingOpponent: true,
       attackingYouOrYourPlaneswalker: true,
       enchantedByAuraYouControl: true,

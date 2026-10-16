@@ -66,6 +66,8 @@ export type EffectExpiry =
   | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
   /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
   | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number }
+  /** "This turn": ends in the cleanup step of the turn it was made (Siren's Call). */
+  | { kind: 'thisTurn'; turn: number }
   /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */
   | { kind: 'combat'; combatId: string };
 
@@ -92,7 +94,13 @@ export interface AttackRequirementEntry {
   /** "You": the player who made the effect, and the point of view the selector is read from. */
   controllerId: PlayerId;
   sourceCardId?: CardId;
-  affects: { kind: 'objects'; objectIds: ObjectId[] } | { kind: 'selector'; selector: Selector };
+  affects:
+    | { kind: 'objects'; objectIds: ObjectId[] }
+    /**
+     * Read live (CR 611.2c) from `viewpointId`'s point of view when it names a player other than
+     * the effect's controller: "creatures the active player controls" (Siren's Call).
+     */
+    | { kind: 'selector'; selector: Selector; viewpointId?: PlayerId };
   requirements: AttackRequirementRule[];
   /** What the affected creatures can't attack while it lasts; it beats the requirements (CR 508.1c). */
   restrictions?: AttackRestrictionRule[];

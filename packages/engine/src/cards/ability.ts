@@ -1350,7 +1350,7 @@ export type Effect =
       target?: EffectRef;
       controller?: 'source' | 'targetController';
       /** Player referenced as `eventPlayer` when the delayed ability resolves. */
-      affectedPlayer?: 'sourceController' | 'targetController';
+      affectedPlayer?: 'sourceController' | 'targetController' | 'activePlayer';
       /**
        * Remember the permanent itself rather than its card: if it leaves the battlefield before
        * the delayed ability resolves, it is a new object and the effect does nothing (CR 400.7).
@@ -1382,7 +1382,9 @@ export type Effect =
       target?: EffectRef;
       selector?: Selector;
       requirements: AttackRequirementSpec[];
-      duration: 'untilYourNextTurn' | 'endOfYourNextTurn';
+      duration: 'untilYourNextTurn' | 'endOfYourNextTurn' | 'thisTurn';
+      /** "you" in the selector is the player whose turn it is as this resolves, not the controller. */
+      relativeTo?: 'activePlayer';
     }
   /**
    * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures

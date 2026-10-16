@@ -721,4 +721,60 @@ export function registerCoveragePr07Overrides(): void {
       ],
     },
   );
+
+  // Siren's Call: castable on an opponent's turn before attackers are declared. "Attack this turn
+  // if able" is a rules modification from a resolving spell, read live for the active player's
+  // creatures so ones that arrive later are covered too (CR 611.2c). The delayed trigger destroys
+  // the non-Walls that player controls at the next end step that neither attacked (declared
+  // attackers only) nor were put under their control after their turn began.
+  defineCard(
+    '269fc857-a052-4f0a-9759-467ccf42bebb',
+    "Siren's Call",
+    [
+      "Cast this spell only during an opponent's turn, before attackers are declared.",
+      'Creatures the active player controls attack this turn if able.',
+      "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+    ],
+    {
+      castRestriction: allOfConditions(
+        { kind: 'notYourTurn' },
+        { kind: 'beforeAttackersDeclared' },
+      ),
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'addAttackRequirement',
+            selector: allOf(ofType('Creature'), YOURS),
+            relativeTo: 'activePlayer',
+            requirements: [{ kind: 'anyAttack' }],
+            duration: 'thisTurn',
+          },
+          {
+            op: 'registerDelayedTrigger',
+            when: 'endStep',
+            expiry: 'endStep',
+            affectedPlayer: 'activePlayer',
+            ability: triggered(onEndStep('each'), {
+              effects: [
+                {
+                  op: 'destroyEach',
+                  selector: allOf(
+                    ofType('Creature'),
+                    { kind: 'not', of: ofSubtype('Wall') },
+                    { kind: 'controller', who: 'eventPlayer' },
+                    { kind: 'not', of: { kind: 'attackedThisTurn' } },
+                    { kind: 'controlledSinceTurnStart' },
+                  ),
+                },
+              ],
+              description:
+                "Destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+            }),
+          },
+        ],
+        description:
+          "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+      }),
+    },
+  );
 }

@@ -323,7 +323,7 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     ctx.state.extraCombats = [];
     if (ctx.state.attackRequirements !== undefined)
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(
-        (entry) => entry.expires.kind !== 'combat',
+        (entry) => entry.expires.kind !== 'combat' && entry.expires.kind !== 'thisTurn',
       );
     ctx.state.delayedTriggers = ctx.state.delayedTriggers.filter((dt) => dt.expiry !== 'cleanup');
     // End of TURN: "you don't lose this mana as steps and phases end" runs out here too, so

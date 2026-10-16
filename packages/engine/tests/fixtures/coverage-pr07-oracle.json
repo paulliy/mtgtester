@@ -759,6 +759,37 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f",
+      "card": {
+        "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",
+        "scryfallId": "51832cfb-0a2e-4674-bb36-38027a71ac6d",
+        "name": "Siren's Call",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Cast this spell only during an opponent's turn, before attackers are declared.\nCreatures the active player controls attack this turn if able.\nAt the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

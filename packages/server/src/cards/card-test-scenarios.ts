@@ -13667,6 +13667,45 @@ function moraugScenario(gameId: GameId): CardTestScenario {
   });
 }
 
+function sirensCallScenario(gameId: GameId): CardTestScenario {
+  const siren = pinnedFrom(COVERAGE_PR07, "Siren's Call");
+  return pr01Scenario(gameId, {
+    id: 'sirens-call-viewer-attack-or-die',
+    title:
+      "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+    instructions: [
+      "It is P2's turn, before combat. Siren's Call is in your hand with an Island on your battlefield. P2 controls Lab Ox, Lab Servo and a tapped Lab Bird, and attacks P3 with everything it can.",
+      "Cast Siren's Call now, before attackers are declared, and pass priority through the turn to P2's end step.",
+    ],
+    expectedOutcome:
+      'Lab Ox and Lab Servo had to attack and did (P3 took 5 and is at 35). At the end step Lab Bird, which was tapped and did not attack, was destroyed; Lab Ox and Lab Servo, which attacked, were not.',
+    oracleSha256: siren.sha256,
+    clauseIds: [
+      'sirens-call-cast-timing',
+      'sirens-call-must-attack',
+      'sirens-call-end-step-destruction',
+    ],
+    decks: {
+      P1: [siren.card, ISLAND, ISLAND],
+      P2: [LAB_OX, LAB_SERVO, LAB_BIRD, FOREST, FOREST],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: 'P2',
+      hand: [{ playerId: 'P1', cardNames: ["Siren's Call"] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Island'] },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+        { playerId: 'P2', cardNames: ['Lab Bird'], tapped: true },
+      ],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+    decisionProviderOverrides: { P2: attackPlayerWithEverything('P3') },
+  });
+}
+
 export const CARD_TEST_SCENARIO_IDS = [
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -13998,6 +14037,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'triarch-stalker-viewer-menace',
   'illusionists-gambit-viewer-remove-and-redirect',
   'moraug-viewer-landfall-extra-combat',
+  'sirens-call-viewer-attack-or-die',
   'bess-soul-nourisher-viewer-counter-and-pump',
   'mikey-and-leo-viewer-counter-draw',
   'satoru-viewer-free-cast-draws',
@@ -14506,6 +14546,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'triarch-stalker-viewer-menace': stalkerScenario,
   'illusionists-gambit-viewer-remove-and-redirect': gambitScenario,
   'moraug-viewer-landfall-extra-combat': moraugScenario,
+  'sirens-call-viewer-attack-or-die': sirensCallScenario,
   'bess-soul-nourisher-viewer-counter-and-pump': bessScenario,
   'mikey-and-leo-viewer-counter-draw': mikeyAndLeoScenario,
   'satoru-viewer-free-cast-draws': satoruScenario,

@@ -148,7 +148,7 @@ function activeRequirementEntries(
       ? entry.affects.objectIds.includes(creature.id)
       : matchesSelector(ctx, creature, entry.affects.selector, {
           cardId: entry.sourceCardId ?? '',
-          controllerId: entry.controllerId,
+          controllerId: entry.affects.viewpointId ?? entry.controllerId,
         });
   });
 }

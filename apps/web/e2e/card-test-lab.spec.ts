@@ -10261,3 +10261,31 @@ test('Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatu
     page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
   ).toHaveText('28');
 });
+
+test("Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+  );
+  const siren = page.locator('.hand-card.actionable', { hasText: "Siren's Call" });
+  await passUntil(page, siren);
+  await siren.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Bird', exact: true }),
+  ).toHaveCount(0);
+});

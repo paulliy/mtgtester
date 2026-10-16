@@ -864,3 +864,17 @@ describe('Moraug, Fury of Akoum Card Test Lab scenario', () => {
     replays('moraug-viewer-landfall-extra-combat', steps);
   });
 });
+
+describe("Siren's Call Card Test Lab scenario", () => {
+  it('sirens-call-viewer-attack-or-die — the attackers attack P3 and the tapped Lab Bird that did not is destroyed at the end step', () => {
+    const steps: Step[] = [{ action: "Cast Siren's Call" }];
+    const { scenario, state, seat, onBattlefield } = run('sirens-call-viewer-attack-or-die', steps);
+    expect(seat('P3').life).toBe(35);
+    expect(onBattlefield('Lab Ox')).toHaveLength(1);
+    expect(onBattlefield('Lab Servo')).toHaveLength(1);
+    expect(onBattlefield('Lab Bird')).toHaveLength(0);
+    expect(scenario.engine.getResult()?.haltReason ?? null).toBeNull();
+    expect(state.stack).toEqual([]);
+    replays('sirens-call-viewer-attack-or-die', steps);
+  });
+});

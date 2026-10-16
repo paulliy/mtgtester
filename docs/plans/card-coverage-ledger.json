@@ -3547,17 +3547,21 @@
   {
     "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",
     "name": "Siren's Call",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only during an opponent's turn, before attackers are declared.\"",
       "unrecognized rules text: \"Creatures the active player controls attack this turn if able.\"",
       "unrecognized rules text: \"At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
