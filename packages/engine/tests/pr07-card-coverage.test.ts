@@ -4951,7 +4951,7 @@ describe('Hexmark Destroyer', () => {
     // The repair adds four idle Bears beside the two instead of standing the required Bear down.
     const blocked = ctx.state.eventLog
       .filter((event) => event.type === 'block')
-      .map((event) => event.payload.blocker);
+      .map((event) => event.payload['blocker']);
     expect(blocked).toHaveLength(6);
     expect(blocked).toContain('P2 Bear 1');
     expect(playerById(ctx, 'P2').life).toBe(40);
