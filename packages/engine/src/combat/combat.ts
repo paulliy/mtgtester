@@ -873,8 +873,12 @@ function* applyAttackDeclaration(
 ): GameGen<void> {
   for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
     yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
+    // War's Toll: every attacker that could attack for free was required to (Firkraag reads it).
+    const allMustAttack = attacksWithAll(ctx, ap.id);
     for (const creature of creatures) {
-      const hadToAttack = mustAttackNow(ctx, creature, eligible, opponents);
+      const hadToAttack =
+        mustAttackNow(ctx, creature, eligible, opponents) ||
+        (allMustAttack && freeAttackTargetsFor(ctx, creature, opponents).length > 0);
       commitAttacker(
         ctx,
         creature,
@@ -1465,6 +1469,21 @@ function repairBlockDeclaration(
     const alone = violations.some(
       (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
     );
+    // A required blocker that can't block alone keeps its block when another of its controller's
+    // idle creatures can join it on the same attacker.
+    if (alone && pick.blocker.mustBlockThisTurn === true && currentAttackerId != null) {
+      const partner = candidates.find(
+        (c) =>
+          c.blocker.id !== pick.blocker.id &&
+          (repaired.get(c.blocker.id) ?? null) === null &&
+          c.blockable.some((a) => a.id === currentAttackerId),
+      );
+      if (partner !== undefined) {
+        repaired.set(partner.blocker.id, currentAttackerId);
+        violations = validateBlockDeclaration(ctx, candidates, repaired);
+        continue;
+      }
+    }
     const alternative =
       pick.blocker.mustBlockThisTurn === true && !alone
         ? pick.blockable.find(

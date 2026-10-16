@@ -535,7 +535,7 @@ describe('Promise of Loyalty', () => {
     expect(attackOptionsFor(ctx, 'P2', vowed).players).toContain('P1');
   });
 
-  it("promise-of-loyalty-phasing — a creature that phases out and back in keeps its vow counter and still can't attack the caster (CR 702.26)", () => {
+  it('promise-of-loyalty-phasing — a creature that phases out keeps its vow counter, but the restriction tracking it ends and does not return (CR 702.26f)', () => {
     const { ctx, creatures } = board('promise-phasing');
     castFromHand(ctx, 'P1', card, COST);
     resolveTop(ctx, keepKeepers([]));
@@ -546,7 +546,7 @@ describe('Promise of Loyalty', () => {
     expect(stillThere(ctx, vowed)).toBe(true);
     expect(vowed.counters['vow']).toBe(1);
     const offered = attackOptionsFor(ctx, 'P2', vowed);
-    expect(offered.players.sort()).toEqual(['P3', 'P4']);
+    expect(offered.players.sort()).toEqual(['P1', 'P3', 'P4']);
   });
 });
 
@@ -1709,6 +1709,13 @@ describe("War's Toll", () => {
     const result = declare(ctx, { [bear.id]: 'P1' }, [bear, cub]);
     expect(result.attackRejections).toContain('attackWithAll');
     expect(result.attacking.sort()).toEqual(['P2 Bear', 'P2 Cub']);
+  });
+
+  it('wars-toll-had-to-attack — the creatures it makes attack count as having had to attack this combat (Firkraag)', () => {
+    const { ctx, bears } = board('toll-had-to');
+    const [bear, cub] = bears['P2']! as [EnginePermanent, EnginePermanent];
+    declare(ctx, { [bear.id]: 'P1', [cub.id]: 'P3' }, [bear, cub]);
+    expect([bear.hadToAttackThisCombat, cub.hadToAttackThisCombat]).toEqual([true, true]);
   });
 
   it('wars-toll-attack-with-none — declaring no attack at all stays legal, and so does attacking with every creature', () => {
@@ -3940,6 +3947,20 @@ describe('Toby, Beastie Befriender', () => {
     );
     expect(apart.blockRejections).toEqual(['blockAlone']);
     expect(playerById(ctx, 'P2').life).toBe(36);
+  });
+
+  it('toby-required-block-repair — a Beast that must block keeps its block when the repair can add a partner', () => {
+    const ctx = pod('toby-must-block');
+    const beast = beastFor(ctx, 'P2');
+    spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    beast.mustBlockThisTurn = true;
+    const result = declaredCombat(ctx, { [raider.id]: 'P2' }, { [beast.id]: raider.id });
+    expect(result.blockRejections).toEqual(['blockAlone']);
+    // The repair adds the Bear beside the Beast instead of standing the required Beast down: the
+    // Raider is blocked, deals no damage to P2, and dies to the two blockers.
+    expect(playerById(ctx, 'P2').life).toBe(40);
+    expect(ctx.state.battlefield.some((perm) => perm.id === raider.id)).toBe(false);
   });
 
   it('toby-restriction-scope — only the Beast token has the restriction: Toby and a second creature of yours attack and block alone freely', () => {

@@ -6751,7 +6751,7 @@
       "name": "Promise of Loyalty",
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence-remaining.ts",
       "restoredIn": "coverage-pr07",
-      "note": "Registrations deleted (the fail-closed unsupportedCard that claimed the keep-one sacrifice, vow counters and attack restriction were unimplemented, and the shadowed unimplemented placeholder): the authored override in white-black-control-promise.ts already carried the behavior (APNAP keep-one choice, vow counters, a counter-bound attack restriction against the caster and their planeswalkers), and the dead registrations are gone. The restriction is no longer deleted when the creature phases out, because a phased-out permanent keeps its counters and stays the same object (CR 702.26). Engine evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+      "note": "Registrations deleted (the fail-closed unsupportedCard that claimed the keep-one sacrifice, vow counters and attack restriction were unimplemented, and the shadowed unimplemented placeholder): the authored override in white-black-control-promise.ts already carried the behavior (APNAP keep-one choice, vow counters, a counter-bound attack restriction against the caster and their planeswalkers), and the dead registrations are gone. The restriction still ends when the creature phases out: the vow counter stays, but a \"for as long as\" duration tracking the permanent ends at phasing out (CR 702.26f). Engine evidence in packages/engine/tests/pr07-card-coverage.test.ts."
     },
     {
       "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",

@@ -265,7 +265,7 @@ describe('white-black control review regressions', () => {
     expect(player(perchGame, 'P2').graveyard.some((card) => card.cardId === auraCardId)).toBe(true);
   });
 
-  it('Promise of Loyalty restriction ends permanently at zero vow counters but survives phasing', () => {
+  it('Promise of Loyalty restriction ends permanently at zero vow counters and at phasing', () => {
     const game = ctx('promise-vow-counter-phase');
     const p1Keeper = spawn(game, 'P1', witness('P1 Keeper', 'Creature — Bear'));
     const p2Vowed = spawn(game, 'P2', witness('P2 Vowed', 'Creature — Bear'));
@@ -310,9 +310,9 @@ describe('white-black control review regressions', () => {
     const repeatedPromise = cast(game, 'P1', 'Promise of Loyalty');
     resolve(game, repeatedPromise);
     expect(attackDefenders(game, 'P2', p2Vowed)).not.toContain('P1');
-    // CR 702.26: a permanent that phases out and in is the same object and keeps its vow counter.
+    // CR 702.26f: the "for as long as" duration ends at phasing out, though the counter stays.
     phaseOutControlledPermanents(game, 'P2');
     phaseInAtUntap(game, 'P2');
-    expect(attackDefenders(game, 'P2', p2Vowed)).not.toContain('P1');
+    expect(attackDefenders(game, 'P2', p2Vowed)).toContain('P1');
   });
 });

@@ -35,8 +35,10 @@ export function phaseOutControlledPermanents(ctx: GameContext, playerId: PlayerI
       attacker.attackedPlaneswalkerRemoved = true;
   }
   for (const permanent of leaving) {
-    // CR 702.26: the permanent stays the same object and keeps its counters, so an effect that lasts
-    // "for as long as it has a vow counter on it" (Promise of Loyalty) is still tracking it.
+    // CR 702.26f: an effect with a "for as long as" duration tracking this permanent (Promise of
+    // Loyalty's "for as long as it has a vow counter on it") ends when it phases out, because it
+    // can no longer see the permanent. The vow counter stays (CR 702.26d); the effect does not.
+    delete permanent.cantAttackPlayerWhileCounter;
     permanent.attacking = null;
     permanent.attackingPlaneswalker = null;
     permanent.attackedPlaneswalkerRemoved = false;
