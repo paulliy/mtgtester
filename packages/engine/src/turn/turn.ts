@@ -6,7 +6,7 @@ import { assertTriggerEventFamily } from '../cards/trigger-contracts';
  * draw on their first turn (brief §5.3 — no two-player skip rule).
  */
 
-import type { Phase, Step } from '@mtg/shared';
+import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
@@ -20,7 +20,7 @@ import {
   playerById,
 } from '../state/objects';
 import { hasNoMaximumHandSize, triggersOf } from '../state/queries';
-import type { EngineCardObject, ExtraCombat, GameContext } from '../state/types';
+import type { EffectExpiry, EngineCardObject, ExtraCombat, GameContext } from '../state/types';
 import { allOf, ofType, YOURS } from '../cards/selector';
 import { emptyManaPools, runPrioritySequence } from './priority';
 
@@ -38,6 +38,32 @@ function setStep(ctx: GameContext, step: Step): void {
 }
 
 /** Untap step (CR 502): turn-based actions only; NO priority (brief §5.3). */
+/**
+ * End what a departed player made to last until their next turn: it lasts until that turn would
+ * have begun, which is now, as the turn of `activeId`, seated before them, ends (CR 800.4m).
+ */
+function expireDepartedPlayerEffects(ctx: GameContext, activeId: PlayerId): void {
+  const endsNow = (departed: { afterTurnOf: PlayerId; fromTurn: number }): boolean =>
+    departed.afterTurnOf === activeId && departed.fromTurn <= ctx.state.turnNumber;
+  const ends = (expires: EffectExpiry): boolean =>
+    expires.kind === 'departedNextTurn' && endsNow(expires);
+  const s = ctx.state;
+  if (s.attackRequirements !== undefined)
+    s.attackRequirements = s.attackRequirements.filter((entry) => !ends(entry.expires));
+  if (s.attackDirections !== undefined)
+    s.attackDirections = s.attackDirections.filter((entry) => !ends(entry.expires));
+  if (s.blockRestrictions !== undefined)
+    s.blockRestrictions = s.blockRestrictions.filter((entry) => !ends(entry.expires));
+  for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
+    if (perm.goadedBy === undefined) continue;
+    const remaining = perm.goadedBy.filter(
+      (goad) => goad.departed === undefined || !endsNow(goad.departed),
+    );
+    if (remaining.length > 0) perm.goadedBy = remaining;
+    else delete perm.goadedBy;
+  }
+}
+
 function untapStep(ctx: GameContext): void {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   setPhase(ctx, 'beginning', 'untap');
@@ -310,6 +336,9 @@ export function* cleanupStep(ctx: GameContext): GameGen<void> {
     }
     expireRegenerationShields(ctx);
     endUntilEotEffects(ctx);
+    // A departed player's "until your next turn" ends as that turn would have begun, when the
+    // turn of the player seated before them ends (CR 800.4m).
+    expireDepartedPlayerEffects(ctx, ap.id);
     // "Until the end of your next turn" (Silver Surfer) ends in that turn's cleanup step.
     if (ctx.state.attackRequirements !== undefined)
       ctx.state.attackRequirements = ctx.state.attackRequirements.filter(

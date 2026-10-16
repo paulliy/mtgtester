@@ -44,6 +44,7 @@ import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EffectExpiry,
   EngineStackObject,
   GameContext,
   PendingTrigger,
@@ -55,6 +56,51 @@ function markLoss(ctx: GameContext, player: EnginePlayerState, reason: LossReaso
   player.hasLost = true;
   player.lossReason = reason;
   debug(ctx, 'sba', `${player.id} loses: ${reason}`);
+}
+
+/**
+ * CR 800.4m: when `departedId` leaves, a continuous effect lasting until their next turn, or until
+ * a point in it, lasts until that turn would have begun: neither ending now nor lasting forever.
+ * Their turn would begin as the turn of the player seated before them ends, so each such expiry
+ * (goad included, CR 701.15a) moves to the end of that player's next turn. An expiry already
+ * waiting on the departed player's own seat moves to the seat before theirs.
+ */
+function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): void {
+  const seat = s.turnOrder.indexOf(departedId);
+  if (seat < 0) return;
+  let afterTurnOf: PlayerId | undefined;
+  for (let step = 1; step < s.turnOrder.length; step++) {
+    const id = s.turnOrder[(seat - step + s.turnOrder.length) % s.turnOrder.length] as PlayerId;
+    if (!s.players.find((p) => p.id === id)?.hasLost) {
+      afterTurnOf = id;
+      break;
+    }
+  }
+  if (afterTurnOf === undefined) return;
+  const departed = { afterTurnOf, fromTurn: s.turnNumber };
+  const remap = <T extends { expires: EffectExpiry }>(entries: T[] | undefined): void => {
+    for (const entry of entries ?? []) {
+      const expires = entry.expires;
+      if (
+        (expires.kind === 'untilNextTurn' || expires.kind === 'endOfNextTurn') &&
+        expires.playerId === departedId
+      )
+        entry.expires = { kind: 'departedNextTurn', ...departed };
+      else if (expires.kind === 'departedNextTurn' && expires.afterTurnOf === departedId)
+        entry.expires = { ...expires, afterTurnOf };
+    }
+  };
+  remap(s.attackRequirements);
+  remap(s.attackDirections);
+  remap(s.blockRestrictions);
+  for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
+    for (const goad of perm.goadedBy ?? []) {
+      if (goad.permanent === true) continue;
+      if (goad.departed === undefined && goad.goaderId === departedId) goad.departed = departed;
+      else if (goad.departed?.afterTurnOf === departedId)
+        goad.departed = { ...goad.departed, afterTurnOf };
+    }
+  }
 }
 
 /**
@@ -108,15 +154,9 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
     s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
-    // What they made with a spell or ability that was still lasting ends too (CR 800.4a).
-    if (s.attackRequirements !== undefined)
-      s.attackRequirements = s.attackRequirements.filter(
-        (entry) => entry.controllerId !== player.id,
-      );
-    if (s.attackDirections !== undefined)
-      s.attackDirections = s.attackDirections.filter((entry) => entry.controllerId !== player.id);
-    if (s.blockRestrictions !== undefined)
-      s.blockRestrictions = s.blockRestrictions.filter((entry) => entry.controllerId !== player.id);
+    // Effects they made that last until their next turn, or a point in it, last until that turn
+    // would have begun (CR 800.4m); every other duration runs as written.
+    outlastDepartedPlayer(s, player.id);
     if (s.combatChoices !== undefined)
       s.combatChoices = s.combatChoices.filter((entry) => entry.casterId !== player.id);
     s.stack = s.stack.filter(

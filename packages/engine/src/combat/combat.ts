@@ -88,15 +88,16 @@ function creaturesOf(ctx: GameContext, playerId: PlayerId): EnginePermanent[] {
   return controlledPermanents(ctx, playerId).filter((p) => isCreaturePermanent(ctx, p));
 }
 
-/** The players whose goad applies to this creature: one who has left the game goads nothing (CR 800.4a). */
+/**
+ * The players whose goad applies to this creature. A goad outlasts a goader who left the game
+ * until their next turn would have begun (CR 800.4m); the stored entry carries that expiry.
+ */
 function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId> {
   const chars = computeCharacteristics(ctx, creature);
-  return new Set(
-    [
-      ...(creature.goadedBy ?? []).map((requirement) => requirement.goaderId),
-      ...(chars.staticGoadedBy ?? []),
-    ].filter((goaderId) => !playerById(ctx, goaderId).hasLost),
-  );
+  return new Set([
+    ...(creature.goadedBy ?? []).map((requirement) => requirement.goaderId),
+    ...(chars.staticGoadedBy ?? []),
+  ]);
 }
 
 /** Does attacking this target obey one attack requirement (CR 508.1d)? */
@@ -133,16 +134,16 @@ function requirementOf(rule: AttackRequirementRule): AttackRequirement {
 }
 
 /**
- * The stored requirement entries that apply to `creature` right now: made by a player still in the
- * game (CR 800.4a), naming it (or matching their live selector, CR 611.2c), and, for one that lasts
- * "that combat", only while that combat is the one being run.
+ * The stored requirement entries that apply to `creature` right now: naming it (or matching their
+ * live selector, CR 611.2c), and, for one that lasts "that combat", only while that combat is the
+ * one being run. An entry outlasts a controller who left the game for as long as its expiry says
+ * (CR 800.4m).
  */
 function activeRequirementEntries(
   ctx: GameContext,
   creature: EnginePermanent,
 ): AttackRequirementEntry[] {
   return (ctx.state.attackRequirements ?? []).filter((entry) => {
-    if (playerById(ctx, entry.controllerId).hasLost) return false;
     if (entry.expires.kind === 'combat' && ctx.state.currentCombatId !== entry.expires.combatId)
       return false;
     // "During their next turn": only while that player is the active player in that turn.
@@ -422,9 +423,7 @@ function attackRestrictionAllows(
   // Teyo's −2: every player's attacks are limited to the nearest opponent in a direction.
   if (
     (ctx.state.attackDirections ?? []).some(
-      (entry) =>
-        !playerById(ctx, entry.controllerId).hasLost &&
-        !isNearestOpponent(ctx, creature, target, entry.direction),
+      (entry) => !isNearestOpponent(ctx, creature, target, entry.direction),
     )
   )
     return false;
@@ -561,12 +560,7 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   if (computeCharacteristics(ctx, attacker).cantBeBlocked) return false;
   if (ctx.state.creaturesCantBeBlockedThisTurn) return false;
   // "Those creatures can't block" until a player's next turn (Taunt from the Rampart).
-  if (
-    (ctx.state.blockRestrictions ?? []).some(
-      (entry) =>
-        entry.objectIds.includes(blocker.id) && !playerById(ctx, entry.controllerId).hasLost,
-    )
-  )
+  if ((ctx.state.blockRestrictions ?? []).some((entry) => entry.objectIds.includes(blocker.id)))
     return false;
   // "Creatures with power less than this creature's power can't block creatures you control"
   // (Champion of Lambholt): a rule static of the source, read against its CURRENT power.

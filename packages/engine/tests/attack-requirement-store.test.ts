@@ -6,6 +6,7 @@ import type { DecisionOutcome } from '../src/decisions';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import type { EnginePermanent, GameContext } from '../src/state/types';
+import { priorityCheckpoint } from '../src/sba/sba';
 import { cleanupStep, runBeginningAndPrecombatMain } from '../src/turn/turn';
 import {
   copies,
@@ -270,9 +271,11 @@ describe('attack requirements made by resolving spells and abilities', () => {
     expect(ctx.state.attackRequirements).toHaveLength(0);
   });
 
-  it('what a player who has left the game made no longer applies', () => {
+  it('what a player who left the game made lasts until their next turn would have begun (CR 800.4m)', () => {
     const ctx = setup('arq-controller-gone');
     const bearP2 = spawn(ctx, 'P2', grizzly('P2 Bear'));
+    const bearP3 = spawn(ctx, 'P3', grizzly('P3 Bear'));
+    bearP3.goadedBy = [{ goaderId: 'P1', appliedTurn: ctx.state.turnNumber }];
     resolveRequirement(
       ctx,
       {
@@ -283,11 +286,32 @@ describe('attack requirements made by resolving spells and abilities', () => {
       },
       [bearP2.id],
     );
-    expect(offerFor(ctx, 'P2', bearP2).mustAttack).toBe(true);
+    // P1 leaves the game in its own turn 4: neither the requirement nor the goad ends now.
     playerById(ctx, 'P1').hasLost = true;
-    expect(offerFor(ctx, 'P2', bearP2).mustAttack).toBe(false);
-    // The state-based action that removes them from the game also drops what they made.
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.turnOrder).toEqual(['P2', 'P3', 'P4']);
+    expect(offerFor(ctx, 'P2', bearP2).mustAttack).toBe(true);
+    expect(offerFor(ctx, 'P3', bearP3).mustAttack).toBe(true);
+    // P1's next turn would have begun after P4's turn 7: both last through turns 5 to 7 ...
+    for (const [turn, seat] of [
+      [4, 'P1'],
+      [5, 'P2'],
+      [6, 'P3'],
+    ] as const) {
+      ctx.state.turnNumber = turn;
+      ctx.state.currentTurnPlayer = seat;
+      pump(cleanupStep(ctx));
+      expect(ctx.state.attackRequirements).toHaveLength(1);
+      expect(bearP3.goadedBy).toHaveLength(1);
+    }
+    // ... and end as P4's turn ends, without lasting indefinitely.
+    ctx.state.turnNumber = 7;
+    ctx.state.currentTurnPlayer = 'P4';
+    ctx.state.activePlayerIndex = 2;
+    pump(cleanupStep(ctx));
     expect(ctx.state.attackRequirements).toEqual([]);
+    expect(bearP3.goadedBy).toBeUndefined();
+    expect(offerFor(ctx, 'P2', bearP2).mustAttack).toBe(false);
   });
 
   it('is added to goad: both apply and the maximum counts every requirement', () => {

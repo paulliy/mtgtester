@@ -4136,13 +4136,16 @@ describe('Life of the Party', () => {
     expect(mustAttackIn(ctx, 'P2', [p2Token])).toEqual({ [p2Token.id]: true });
   });
 
-  it('life-of-the-party-goader-leaves — when you leave the game the goad ends, and the copies are no longer required to attack', () => {
+  it('life-of-the-party-goader-leaves — the goad is for the rest of the game, so it outlasts you leaving it', () => {
     const { ctx } = cast('lotp-goader-gone');
     const p3Token = copies(ctx).find((token) => token.controllerId === 'P3')!;
     p3Token.summoningSick = false;
     expect(mustAttackIn(ctx, 'P3', [p3Token])).toEqual({ [p3Token.id]: true });
     playerById(ctx, 'P1').hasLost = true;
-    expect(mustAttackIn(ctx, 'P3', [p3Token])).toEqual({ [p3Token.id]: false });
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.turnOrder).not.toContain('P1');
+    expect(goaders(p3Token)).toEqual(['P1']);
+    expect(mustAttackIn(ctx, 'P3', [p3Token])).toEqual({ [p3Token.id]: true });
   });
 
   it('life-of-the-party-left-before-resolving — if it leaves the battlefield with the trigger on the stack, the opponents still create copies of it', () => {
@@ -5414,10 +5417,19 @@ describe('Teyo, Geometric Tactician', () => {
     expect(offeredFor(ctx, attackers['P1']!)).toEqual({ players: [], planeswalkers: [] });
   });
 
-  it('teyo-controller-left — once its controller has left the game the limit no longer applies', () => {
+  it('teyo-controller-left — if its controller leaves the game, the limit lasts until their next turn would have begun (CR 800.4m)', () => {
     const { ctx, teyo, attackers } = board('teyo-eliminated');
     activate(ctx, teyo, '−2', choose('Left'));
     playerById(ctx, 'P1').hasLost = true;
+    pump(priorityCheckpoint(ctx));
+    expect(ctx.state.turnOrder).toEqual(['P2', 'P3', 'P4']);
+    // Still limited, now among the players left: P3's nearest opponent to the left is P4.
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P4']);
+    // P1's turn would have begun as P4's next turn ends.
+    turnOfPlayer(ctx, 'P4');
+    ctx.state.turnNumber += 3;
+    pump(cleanupStep(ctx));
+    expect(ctx.state.attackDirections).toEqual([]);
     expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2', 'P4']);
   });
 

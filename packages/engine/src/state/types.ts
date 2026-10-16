@@ -50,10 +50,16 @@ export interface GoadRequirement {
   appliedTurn: number;
   /**
    * "Goaded for the rest of the game" (Life of the Party's tokens): never expires at the goader's
-   * next turn. It still ends when the creature leaves the battlefield, and when the goader leaves
-   * the game (CR 800.4a).
+   * next turn. It still ends when the creature leaves the battlefield; it outlasts a goader who
+   * leaves the game.
    */
   permanent?: true;
+  /**
+   * Set when the goader leaves the game: the goad lasts until their next turn would have begun
+   * (CR 800.4m), which is when the turn of `afterTurnOf`, seated before them, taken on or after
+   * turn `fromTurn` ends.
+   */
+  departed?: { afterTurnOf: PlayerId; fromTurn: number };
 }
 
 /**
@@ -71,6 +77,12 @@ export type EffectExpiry =
    * turn after `setTurn`, and ends in that turn's cleanup step (Willie Lumpkin).
    */
   | { kind: 'theirNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "Until [a departed player's] next turn" or a point in it: when that player leaves the game, the
+   * effect lasts until that turn would have begun (CR 800.4m), which is when the turn of
+   * `afterTurnOf`, the player seated before them, taken on or after turn `fromTurn` ends.
+   */
+  | { kind: 'departedNextTurn'; afterTurnOf: PlayerId; fromTurn: number }
   /** "This turn": ends in the cleanup step of the turn it was made (Siren's Call). */
   | { kind: 'thisTurn'; turn: number }
   /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */
