@@ -9116,13 +9116,11 @@ test('Michiko Konda: each opposing source that damages you makes its controller 
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.human-zone .life-badge')).toHaveText('34');
   await expect(page.getByText(/Michiko Konda.* sacrifice/i).first()).toBeVisible();
-  await expect(
-    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
-  ).toHaveText('40');
+  await expect(page.locator('.opponent[data-seat="P2"]').locator('.life-badge')).toHaveText('40');
   for (const seat of ['P3', 'P4']) {
-    await expect(
-      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
-    ).toHaveText('40');
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`).locator('.life-badge')).toHaveText(
+      '40',
+    );
   }
   await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
   await expect(permanent(page, 'Forest')).toHaveCount(0);
