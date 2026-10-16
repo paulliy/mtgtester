@@ -1523,16 +1523,28 @@ function repairBlockDeclaration(
       (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
     );
     // A required blocker that can't block alone keeps its block when another of its controller's
-    // idle creatures can join it on the same attacker.
+    // idle creatures can block too (CR 506.5 counts every blocker that player declares): beside
+    // it on the same attacker, or else on any attacker that one creature may block by itself.
     if (alone && pick.blocker.mustBlockThisTurn === true && currentAttackerId != null) {
-      const partner = candidates.find(
-        (c) =>
-          c.blocker.id !== pick.blocker.id &&
-          (repaired.get(c.blocker.id) ?? null) === null &&
-          c.blockable.some((a) => a.id === currentAttackerId),
+      const idle = candidates.filter(
+        (c) => c.blocker.id !== pick.blocker.id && (repaired.get(c.blocker.id) ?? null) === null,
       );
-      if (partner !== undefined) {
-        repaired.set(partner.blocker.id, currentAttackerId);
+      const beside = idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId));
+      const elsewhere =
+        beside === undefined
+          ? idle
+              .map((c) => ({
+                c,
+                attacker: c.blockable.find(
+                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0,
+                ),
+              }))
+              .find((entry) => entry.attacker !== undefined)
+          : undefined;
+      const partner = beside ?? elsewhere?.c;
+      const partnerAttackerId = beside !== undefined ? currentAttackerId : elsewhere?.attacker?.id;
+      if (partner !== undefined && partnerAttackerId !== undefined) {
+        repaired.set(partner.blocker.id, partnerAttackerId);
         violations = validateBlockDeclaration(ctx, candidates, repaired);
         continue;
       }

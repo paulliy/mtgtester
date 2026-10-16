@@ -3996,6 +3996,46 @@ describe('Toby, Beastie Befriender', () => {
     expect(ctx.state.battlefield.some((perm) => perm.id === raider.id)).toBe(false);
   });
 
+  it('toby-required-block-repair-elsewhere — when no idle creature can join the required Beast, one blocking another attacker keeps it from blocking alone', () => {
+    const ctx = pod('toby-must-block-elsewhere');
+    const beast = beastFor(ctx, 'P2');
+    const toby = ctx.state.battlefield.find((perm) => perm.name === card.name)!;
+    toby.tapped = true;
+    // With four creature tokens Toby gives the Beast flying; the other tokens are tapped.
+    for (const n of [1, 2, 3]) plainToken(ctx, 'P2', `Token ${n}`).tapped = true;
+    const bear = spawn(ctx, 'P2', GRIZZLY('P2 Bear'));
+    const skulker = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Skulker',
+        typeLine: 'Creature — Lab',
+        oracleText: 'Flying',
+        power: '2',
+        toughness: '2',
+      }),
+    );
+    const raider = spawn(ctx, 'P1', GRIZZLY('P1 Raider'));
+    beast.mustBlockThisTurn = true;
+    const result = declaredCombat(
+      ctx,
+      { [skulker.id]: 'P2', [raider.id]: 'P2' },
+      { [beast.id]: skulker.id },
+    );
+    expect(result.blockRejections).toEqual(['blockAlone']);
+    // The Bear can't block the flying Skulker, but it can block the Raider: the Beast keeps its block.
+    const blocks = ctx.state.eventLog
+      .filter((event) => event.type === 'block')
+      .map((event) => [event.payload['blocker'], event.payload['attacker']]);
+    expect(blocks).toEqual(
+      expect.arrayContaining([
+        [beast.name, 'Lab Skulker'],
+        [bear.name, 'P1 Raider'],
+      ]),
+    );
+    expect(playerById(ctx, 'P2').life).toBe(40);
+  });
+
   it('toby-restriction-scope — only the Beast token has the restriction: Toby and a second creature of yours attack and block alone freely', () => {
     const ctx = pod('toby-scope');
     const toby = spawn(ctx, 'P1', card);
