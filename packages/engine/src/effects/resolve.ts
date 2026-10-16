@@ -5544,14 +5544,17 @@ export function* executeAbility(
         break;
       }
       case 'limitAttacksToNearestOpponent': {
-        // The last choice is the only one in force: drop what this card made before.
+        // "The last chosen direction" is this Teyo's own latest choice: it replaces what this
+        // object made before, while another Teyo (or this card back as a new object) makes an
+        // effect of its own, and disagreeing effects can leave no legal attack.
+        const sourceObjectId = source.id ?? source.cardId;
         ctx.state.attackDirections = (ctx.state.attackDirections ?? []).filter(
-          (entry) => entry.sourceOracleId !== source.oracleId,
+          (entry) => entry.sourceObjectId !== sourceObjectId,
         );
         ctx.state.attackDirections.push({
           id: `ad-${ctx.state.nextObjectNum++}`,
           controllerId: controller.id,
-          sourceOracleId: source.oracleId,
+          sourceObjectId,
           direction: effect.direction,
           expires: {
             kind: 'untilNextTurn',
@@ -5582,8 +5585,11 @@ export function* executeAbility(
           };
           chosen = opponents[outcome.index] ?? chosen;
         }
-        // Only the permanent itself remembers it: a Stalker that has left has nothing to store on.
-        const holder = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
+        // Only the permanent itself remembers it: a Stalker that has left has nothing to store on,
+        // and the same card back as a new object is not the one whose trigger this is (CR 400.7).
+        const holder = ctx.state.battlefield.find((perm) =>
+          source.id !== undefined ? perm.id === source.id : perm.cardId === source.cardId,
+        );
         if (holder !== undefined) holder.chosenOption = chosen.id;
         emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id });
         break;

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "caseId": "public-recursion-001",
-  "contentHash": "c565d90f8b0062e0bac3ba14dab642a1af850c940d9f7dc1d2ef2b879521a9b6",
+  "contentHash": "35ad560f50858d62224a664ac3c541cbf5960281b0c023b0ba7f3601351d1d7f",
   "role": "strategist",
   "categories": ["threat-assessment", "graveyard", "resource-reservation"],
   "sourceGroup": "starter-synthetic-002",
@@ -10,8 +10,8 @@
   "phase": "precombatMain",
   "step": null,
   "eventSequence": 77,
-  "supportedEngineVersion": "8ebcf16716e0593fa7d7d89f87ccedb5c2bfd7d69387a279b78094fb775bdc87",
-  "supportedCardDefinitionHash": "8aa85b43a7fca2e375c7a48217f48344fcb4874e7046602631a158d1096742f4",
+  "supportedEngineVersion": "5dd46351ce7dbc2a5843c3e96a51d1b86c54d91546a406d12aede73fa2a019b5",
+  "supportedCardDefinitionHash": "67166c2cb46b66974e18533e49a2cecf83968caf5d65f21c9d4c19fb2e5bd267",
   "input": {
     "request": {
       "requestId": "starter-strategy-001",

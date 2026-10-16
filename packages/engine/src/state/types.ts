@@ -159,8 +159,8 @@ export interface CombatChoiceEntry {
 export interface AttackDirectionEntry {
   id: string;
   controllerId: PlayerId;
-  /** The card that made it; a newer entry from the same oracle card replaces older ones. */
-  sourceOracleId: string;
+  /** The Teyo object that made it; a newer choice by the same object replaces its older one. */
+  sourceObjectId: string;
   direction: 'left' | 'right';
   expires: EffectExpiry;
 }

@@ -6849,7 +6849,7 @@
       "name": "Teyo, Geometric Tactician",
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr07",
-      "note": "Registration deleted (the fail-closed unsupportedCard that said the −2 directional attack restriction was claimed without an implementation): the authored override in coverage-pr07.ts reads the Wall line through the interpreter and authors the +1 and a −2 that asks left or right and records an attack-direction limit in game state until the controller's next turn, replaced by a newer −2 and read at the attack restriction choke point beside Pramikon's static. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
+      "note": "Registration deleted (the fail-closed unsupportedCard that said the −2 directional attack restriction was claimed without an implementation): the authored override in coverage-pr07.ts reads the Wall line through the interpreter and authors the +1 and a −2 that asks left or right and records an attack-direction limit in game state until the controller's next turn, replaced by a newer −2 of the same Teyo (another Teyo's limit applies beside it) and read at the attack restriction choke point beside Pramikon's static. Engine and Card Test Lab evidence in packages/engine/tests/pr07-card-coverage.test.ts."
     },
     {
       "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",

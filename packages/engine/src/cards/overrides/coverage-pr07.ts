@@ -597,7 +597,8 @@ export function registerCoveragePr07Overrides(): void {
   const teyo = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
   // Teyo, Geometric Tactician: the Wall token line is read by the interpreter. The −2 asks
   // left or right as it resolves and the limit is game state until the controller's next turn,
-  // so a newer −2 replaces the older one and Pramikon's static still applies beside it.
+  // so this Teyo's newer −2 replaces its older one, while another Teyo's and Pramikon's limits
+  // still apply beside it.
   defineCard(
     '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',
     'Teyo, Geometric Tactician',

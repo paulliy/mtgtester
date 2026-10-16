@@ -5418,17 +5418,29 @@ describe('Teyo, Geometric Tactician', () => {
     expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
   });
 
-  it('teyo-last-choice-wins — a newer −2 from another Teyo replaces the older one instead of adding to it', () => {
+  it('teyo-last-choice-wins — the same Teyo choosing again replaces its earlier direction instead of adding to it', () => {
     const { ctx, teyo, attackers } = board('teyo-replace');
-    const other = spawn(ctx, 'P3', card);
     activate(ctx, teyo, '−2', choose('Left'));
     expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P2']);
-    ctx.state.turnNumber += 1;
-    activate(ctx, other, '−2', choose('Right'));
+    // A second activation while the first effect lasts (as with Oath of Teferi).
+    teyo.activationsThisTurn = [];
+    teyo.counters['loyalty'] = 2;
+    activate(ctx, teyo, '−2', choose('Right'));
     expect(ctx.state.attackDirections).toHaveLength(1);
     // Right, not left and right together (which would leave no legal attack).
     expect(offeredFor(ctx, attackers['P1']!).players).toEqual(['P4']);
     expect(offeredFor(ctx, attackers['P3']!).players).toEqual(['P2']);
+  });
+
+  it('teyo-each-teyo-its-own — another Teyo’s −2 is its own effect: both apply, and disagreeing directions leave no legal attack', () => {
+    const { ctx, teyo, attackers } = board('teyo-two');
+    const other = spawn(ctx, 'P3', card);
+    activate(ctx, teyo, '−2', choose('Left'));
+    ctx.state.turnNumber += 1;
+    activate(ctx, other, '−2', choose('Right'));
+    expect(ctx.state.attackDirections).toHaveLength(2);
+    expect(offeredFor(ctx, attackers['P1']!).players).toEqual([]);
+    expect(offeredFor(ctx, attackers['P3']!).players).toEqual([]);
   });
 
   it('teyo-with-pramikon — Pramikon and Teyo both apply, and disagreeing directions leave no legal attack', () => {
@@ -5535,6 +5547,33 @@ describe('Triarch Stalker', () => {
     beginCombatOf(ctx, 'P1', 'P3', asked);
     expect(asked.filter((prompt) => /choose an opponent/.test(prompt))).toHaveLength(1);
     expect(stalker.chosenOption).toBe('P3');
+  });
+
+  it('triarch-stalker-blinked — a choice made by the trigger of a Stalker that left is not stored on it when it returns as a new object', () => {
+    const { ctx, stalker } = board('stalker-blink');
+    const { id: oldId, cardId, name, oracleId } = stalker;
+    pump(moveObject(ctx, stalker, { zone: 'exile' }));
+    const exiled = ctx.state.exile.find((object) => object.cardId === cardId)!;
+    pump(moveObject(ctx, exiled, { zone: 'battlefield' }));
+    const back = ctx.state.battlefield.find((perm) => perm.cardId === cardId)!;
+    expect(back.id).not.toBe(oldId);
+    // The old Stalker's trigger resolves now, choosing P3.
+    pump(
+      executeAbility(
+        ctx,
+        { id: oldId, cardId, name, oracleId, controllerId: 'P1' },
+        spell({ effects: [{ op: 'chooseOpponentForSource' }] }),
+        [],
+      ),
+      (decision) => ({
+        index: Math.max(
+          decision.options.findIndex((option) => option.description === 'P3'),
+          0,
+        ),
+        targets: new Map(),
+      }),
+    );
+    expect(back.chosenOption).toBeUndefined();
   });
 
   it('triarch-stalker-only-your-turn — it does not trigger at the beginning of combat on another player’s turn', () => {
