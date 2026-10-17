@@ -9,10 +9,12 @@ plan still apply. This document only orders the work and groups it into PRs.
 
 The population is the frozen 906 unique Oracle IDs: the 12 committed coverage decks plus the
 200 EDH staples. The plan was prepared from the working tree at `406b61c` (604/906). The current
-numbers below were measured after PR07 by interpreting every card in the committed
-`packages/server/fixtures/coverage-oracle.json`, which holds exactly those 906 cards.
-`bun run coverage --json` and `bun run staples --json` with the local bulk file should give the
-same numbers.
+numbers below were measured after PR07 for those original twelve decks and the staples. The
+committed `packages/server/fixtures/coverage-oracle.json` now holds 958 cards because it also
+includes the later white-black-control fixture. Default coverage includes that thirteenth deck.
+For this plan's frozen 906-card population, exclude cards found only in white-black-control from
+the fixture report, then union the remaining Oracle IDs with the 200 staples. PR08 keeps that
+population fixed; the expanded default report is a separate inventory.
 
 | Population            | Before PR01     | After PR01      | After PR02      | Main before PR03 | After PR03      | After PR04      | After PR05      | After PR06      | After PR07      | Remaining |
 | --------------------- | --------------- | --------------- | --------------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------: |

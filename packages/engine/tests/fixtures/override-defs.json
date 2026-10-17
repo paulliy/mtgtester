@@ -9983,8 +9983,73 @@
   {
     "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
     "name": "Mob Rule",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+      "• Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose one — gain control of creatures in the chosen power range until end of turn, untap them, and they gain haste",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Gain control of creatures with power 4 or greater until end of turn; untap them and give them haste",
+              "effects": [
+                {
+                  "duration": "untilEndOfTurn",
+                  "grantHaste": true,
+                  "op": "gainControl",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "powerAtLeast",
+                        "n": 4
+                      }
+                    ]
+                  },
+                  "untap": true
+                }
+              ]
+            },
+            {
+              "description": "Gain control of creatures with power 3 or less until end of turn; untap them and give them haste",
+              "effects": [
+                {
+                  "duration": "untilEndOfTurn",
+                  "grantHaste": true,
+                  "op": "gainControl",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "powerAtMost",
+                        "n": 3
+                      }
+                    ]
+                  },
+                  "untap": true
+                }
+              ]
+            }
+          ]
+        },
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
@@ -24725,8 +24790,73 @@
   {
     "oracleId": "oracle-mob-rule",
     "name": "Mob Rule",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Choose one —",
+      "• Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+      "• Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose one — gain control of creatures in the chosen power range until end of turn, untap them, and they gain haste",
+        "effects": [],
+        "kind": "spell",
+        "modes": {
+          "maxChoices": 1,
+          "minChoices": 1,
+          "options": [
+            {
+              "description": "Gain control of creatures with power 4 or greater until end of turn; untap them and give them haste",
+              "effects": [
+                {
+                  "duration": "untilEndOfTurn",
+                  "grantHaste": true,
+                  "op": "gainControl",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "powerAtLeast",
+                        "n": 4
+                      }
+                    ]
+                  },
+                  "untap": true
+                }
+              ]
+            },
+            {
+              "description": "Gain control of creatures with power 3 or less until end of turn; untap them and give them haste",
+              "effects": [
+                {
+                  "duration": "untilEndOfTurn",
+                  "grantHaste": true,
+                  "op": "gainControl",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "powerAtMost",
+                        "n": 3
+                      }
+                    ]
+                  },
+                  "untap": true
+                }
+              ]
+            }
+          ]
+        },
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-mondrak-glory-dominus",

@@ -4497,5 +4497,20 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+    "name": "Mob Rule",
+    "package": "PR08.08",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr08.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed; interpretation snapshot unchanged"
   }
 ]

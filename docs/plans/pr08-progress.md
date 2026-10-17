@@ -6,8 +6,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 ## Scope and status
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
-Expected combined inventory after implementation is 809/906 from 786/906. No PR08 card is
-implemented or verified by this preparation. The seven reopened quality-audit cards now belong
+Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule is the first
+implementation increment; the other 22 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -28,9 +28,8 @@ a reported limitation. No CI job, required check, or repository protection was w
 - The full baseline suite exposed the existing async-provider test's 15-second timeout
   under concurrent load. The run was stopped after the billing blocker was confirmed;
   it is not a passing full-suite result. No test was changed or disabled.
-- GLM 5.3 Flash was invoked through the OpenCode provider for bounded scaffolding,
-  control-lifetime, and isolated Cut a Deal tasks. All tasks were stopped at the blocker.
-  No child implementation was accepted or committed.
+- GLM 5.3 Flash/OpenCode tasks resumed after the user authorized local validation. The main
+  thread reviewed and corrected the control-lifetime draft; isolated card tasks continue.
 - Local scratch artifacts are retained under `.tmp/pr08/`: logs, the exact CI annotation,
   23 Oracle pins generated from the committed coverage bank, and the unfinished scaffolding
   patch. These artifacts are preparation, not completion evidence.
@@ -55,3 +54,20 @@ each shared primitive accompanying its first card. Follow the sole
 [card-completion standard](../guides/card-modeling-and-testing.md), including current engine
 and real-viewer evidence. Keep the PR draft until all 23 cards, local gates, and review
 findings are complete.
+
+## Mob Rule increment (PR08.08)
+
+The first implementation adds timestamped control durations and a fixed affected set for the
+untap and haste clauses. Main-thread review corrected expiry transitions, absent-source
+durations, and source/target phasing together. The exact-source runtime path never substitutes
+a later incarnation through a physical card ID.
+
+Local focused evidence: 35 engine/lab tests, 17 control-lifetime contracts, and three real-browser
+scenarios passed. Both typechecks, lint, formatting, snapshots, and the web build passed. The
+broader card gate's inventory expectations were updated after their failures; the clean-tree
+primitive-evidence check and full suite run after the implementation commit.
+
+The frozen original population measures 787/906 (692/802 deck cards, 189/200 staples). The
+expanded default report includes white-black-control and is not the 906-card plan denominator.
+Gameplay-AI quality has not been evaluated with a live provider; the lab uses scripted legal
+choices. Those observations do not substitute for engine or viewer correctness.

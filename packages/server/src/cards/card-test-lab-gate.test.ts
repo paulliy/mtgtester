@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { GameId } from '@mtg/shared';
 import { PR02_FOLLOW_UP_SCENARIO_IDS } from './pr02-follow-up-scenarios';
+import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
 import {
   CARD_TEST_SCENARIO_IDS,
   createCardTestScenario,
@@ -24,6 +25,19 @@ const workflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 const gameServer = readFileSync(resolve('packages/server/src/ws/server.ts'), 'utf8');
 
 describe('Card Test Lab viewer-evidence gate', () => {
+  it('requires exhaustive independent real-viewer coverage for PR08', () => {
+    const pr08Spec = readFileSync(resolve('apps/web/e2e/pr08-card-test-lab.spec.ts'), 'utf8');
+    for (const id of PR08_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
+    expect(labSpec).toContain('!PR08_SCENARIO_IDS.includes(scenarioId)');
+    expect(labSpec).toContain('!PR08_SCENARIO_IDS.includes(id)');
+    expect(pr08Spec).toContain('exercised.add(id)');
+    expect(pr08Spec).toContain(
+      'expect([...exercised].sort()).toEqual([...PR08_SCENARIO_IDS].sort())',
+    );
+    expect(pr08Spec).toContain("trace: 'on'");
+    expect(pr08Spec).not.toContain('routeWebSocket');
+    expect(pr08Spec).not.toContain('page.route(');
+  });
   it('requires independent real viewer coverage for the PR02 supplemental catalog', () => {
     for (const id of PR02_FOLLOW_UP_SCENARIO_IDS) expect(CARD_TEST_SCENARIO_IDS).toContain(id);
     expect(labSpec).toContain('PR02_FOLLOW_UP_SCENARIO_IDS.includes');

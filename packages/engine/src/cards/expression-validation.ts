@@ -97,6 +97,11 @@ const numberValue: Check = (value, path, issues) =>
   validateExpression('value', value, path, issues);
 const condition: Check = (value, path, issues) =>
   validateExpression('condition', value, path, issues);
+/** Gain-control duration union — 'permanent' | 'untilEndOfTurn' | 'whileSourceOnBattlefield'. */
+const controlDuration: Check = (value, path, issues) => {
+  if (!['permanent', 'untilEndOfTurn', 'whileSourceOnBattlefield'].includes(value as string))
+    issue(path, issues, 'expected permanent | untilEndOfTurn | whileSourceOnBattlefield');
+};
 
 const selectorShapes = {
   self: {},
@@ -652,13 +657,28 @@ const effectExpressions = {
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };
 
+/**
+ * Ops with optional NON-expression fields (durations, rider flags) — the expression registry
+ * above can only carry Selector/Value/Condition operands, so anything else is checked here.
+ * Malformed payloads surface as authoring issues, never silently pass.
+ */
+const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
+  gainControlTarget: { duration: optional(controlDuration) },
+  gainControl: {
+    duration: optional(controlDuration),
+    untap: optional(flag),
+    grantHaste: optional(flag),
+  },
+};
+
 export function validateEffectExpressions(
   effect: Effect,
   path: string,
   issues: AuthoringIssue[],
 ): void {
   const fields: Record<string, Check> | undefined = effectExpressions[effect.op];
-  if (fields === undefined) return; // Unknown operations are rejected by the effect-reference registry.
-  for (const [field, check] of Object.entries(fields))
+  const extra: Record<string, Check> | undefined = effectExtraFields[effect.op];
+  if (fields === undefined && extra === undefined) return; // Unknown operations are rejected by the effect-reference registry.
+  for (const [field, check] of [...Object.entries(fields ?? {}), ...Object.entries(extra ?? {})])
     check((effect as unknown as Record<string, unknown>)[field], path + '.' + field, issues);
 }

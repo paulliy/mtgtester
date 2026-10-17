@@ -3124,15 +3124,48 @@
     "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce": {
       "name": "Mob Rule",
       "oracleSha256": "f34b00942fd781e1187f12ee0f9754a3d1ea743e739fa323a27558ad9e647828",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "mob-rule-mode-announcement",
+          "oracleText": "Choose one —",
+          "implementation": ["announcement-time modal selection"],
+          "engineTestIds": ["mob-rule-normal-cast-modes", "mob-rule-cost-and-timing"],
+          "viewerScenarioIds": ["mob-rule-viewer-large", "mob-rule-viewer-small"]
+        },
+        {
+          "id": "mob-rule-large-mode",
           "oracleText": "Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn.",
           "implementation": [
-            "explicitly unsupported; until-end-of-turn steal is permanent gainControl"
+            "announcement-time modal selection",
+            "resolution-time power selector captured before control changes",
+            "timestamped until-end-of-turn control effects",
+            "untap and temporary haste on the captured object set",
+            "shared cleanup expiry"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "mob-rule-normal-cast-modes",
+            "mob-rule-cost-and-timing",
+            "mob-rule-frozen-set"
+          ],
+          "viewerScenarioIds": ["mob-rule-viewer-large", "mob-rule-viewer-cleanup"]
+        },
+        {
+          "id": "mob-rule-small-mode",
+          "oracleText": "Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+          "implementation": [
+            "announcement-time modal selection",
+            "resolution-time power selector captured before control changes",
+            "timestamped until-end-of-turn control effects",
+            "untap and temporary haste on the captured object set",
+            "shared cleanup expiry"
+          ],
+          "engineTestIds": [
+            "mob-rule-normal-cast-modes",
+            "mob-rule-cost-and-timing",
+            "mob-rule-frozen-set"
+          ],
+          "viewerScenarioIds": ["mob-rule-viewer-small"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -12290,7 +12323,7 @@
       "clauses": [
         {
           "id": "galactus-insatiable-hunger",
-          "oracleText": "Insatiable Hunger \u2014 Galactus attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, Galactus's Herald.",
+          "oracleText": "Insatiable Hunger — Galactus attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, Galactus's Herald.",
           "implementation": [
             "authored attackRequirement rule static of Galactus itself (lost with its abilities): as attackers are declared, the opponents of its controller with the most life are read (any of them on a tie, players who left the game excluded) and attacking one of those players obeys the requirement; a planeswalker never does, and a restriction wins (CR 508.1c), so when Galactus cannot attack such a player nothing is required of it (CR 508.1d); the requirement does not apply while its controller controls a creature named Silver Surfer, Galactus's Herald (an opponent's, or one with a similar name, does not lift it); the exile trigger and the keywords are read by the interpreter"
           ],

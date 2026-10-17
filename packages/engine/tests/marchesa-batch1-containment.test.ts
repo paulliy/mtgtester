@@ -91,7 +91,6 @@ const REASONS: Record<string, string> = {
   "Songbirds' Blessing":
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
-  'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
@@ -122,6 +121,8 @@ const REASONS: Record<string, string> = {
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    // PR08 normal-cast, cleanup and frozen-set tests replace the containment requirement.
+    'Mob Rule',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',

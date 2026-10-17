@@ -107,6 +107,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Mask of Memory',
       'Michiko Konda, Truth Seeker',
       'Mistveil Plains',
+      'Mob Rule',
       'Mordant Dragon',
       'Myriad Landscape',
       'Necron Deathmark',

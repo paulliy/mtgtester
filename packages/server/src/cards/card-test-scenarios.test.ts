@@ -46,6 +46,9 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'mob-rule-viewer-large',
+      'mob-rule-viewer-small',
+      'mob-rule-viewer-cleanup',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

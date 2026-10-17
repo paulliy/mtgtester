@@ -58,6 +58,8 @@ import {
 } from './queries';
 import type {
   CardId,
+  ControlChange,
+  ControlChangeDuration,
   EngineCardObject,
   EngineObject,
   EnginePermanent,
@@ -260,15 +262,43 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
       : {}),
   };
 }
-/** Apply a control-changing effect without replacing the permanent's initial controller. */
+/**
+ * Apply a control-changing effect without replacing the permanent's initial controller
+ * (`defaultControllerId`). EVERY effect is recorded — including one naming the controller the
+ * permanent already answers to — so an effect expiring later can still fall back to the
+ * record underneath it (`refreshControlEffects`). Each record carries a fresh *effect*
+ * timestamp; the permanent's own layer timestamp is left untouched (CR 613.7).
+ *
+ * Only an ACTUAL controller transition is an event: it sets summoning sickness (CR 302.6) and
+ * removes the permanent from combat (CR 506.4).
+ */
 export function changeController(
   ctx: GameContext,
   perm: EnginePermanent,
   controllerId: PlayerId,
+  duration: ControlChangeDuration = { kind: 'permanent' },
 ): void {
-  (perm.controlChanges ??= []).push(controllerId);
+  if (duration.kind === 'whileSourceOnBattlefield') {
+    const { sourceObjectId } = duration;
+    if (!ctx.state.battlefield.some((source) => source.id === sourceObjectId)) return;
+  }
+  (perm.controlChanges ??= []).push({
+    controllerId,
+    timestamp: ctx.state.nextTimestamp++,
+    duration,
+  });
+  applyControllerTransition(ctx, perm, controllerId);
+}
+
+/** Both a new effect and an expired effect can cause a controller transition (CR 302.6, 506.4). */
+function applyControllerTransition(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  controllerId: PlayerId,
+): void {
+  const transition = perm.controllerId !== controllerId;
   perm.controllerId = controllerId;
-  perm.timestamp = ctx.state.nextTimestamp++;
+  if (!transition) return;
   perm.summoningSick = true;
   perm.attacking = null;
   perm.attackingPlaneswalker = null;
@@ -281,6 +311,77 @@ export function changeController(
     if (attacker.attackingPlaneswalker === perm.id && attacker.attacking !== controllerId) {
       attacker.attackedPlaneswalkerRemoved = true;
     }
+  }
+}
+
+/** The controller the permanent's surviving control-change records (or entry facts) give. */
+export function controlledBy(perm: {
+  controlChanges?: ControlChange[];
+  defaultControllerId?: PlayerId;
+  ownerId: PlayerId;
+}): PlayerId {
+  return perm.controlChanges?.at(-1)?.controllerId ?? perm.defaultControllerId ?? perm.ownerId;
+}
+
+/**
+ * Expire control-change records whose duration has ended and recompute the controller: the
+ * latest surviving record, else the controller it entered under, else its owner (CR 613.7
+ * ordering — records are resolution-ordered, the newest one wins while it survives).
+ *
+ * Losing three kinds of duration run through here:
+ *   - recipient departed the game (CR 800.4e), even buried underneath newer records;
+ *   - a `whileSourceOnBattlefield` record whose source no longer has that exact object id on
+ *     the battlefield: the source left, or phased out (CR 702.26f), or blinked into a NEW
+ *     incarnation that no record tracks (CR 400.7);
+ *   - an `untilEndOfTurn` record, at the cleanup step (CR 514.2) — phased-out permanents
+ *     included, they still expire on schedule.
+ *
+ * Reversion records no new effect or timestamp. An actual controller transition still updates
+ * summoning sickness and combat, exactly as when a new effect changes the controller.
+ */
+export function refreshControlEffects(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  opts?: { expireEndOfTurn?: boolean },
+): void {
+  if (perm.controlChanges === undefined) return;
+  const surviving = perm.controlChanges.filter((entry) => {
+    if (ctx.state.players.some((p) => p.id === entry.controllerId && p.hasLost)) return false;
+    switch (entry.duration.kind) {
+      case 'permanent':
+        return true;
+      case 'whileSourceOnBattlefield': {
+        const { sourceObjectId } = entry.duration;
+        return ctx.state.battlefield.some((p) => p.id === sourceObjectId);
+      }
+      case 'untilEndOfTurn':
+        return !(opts?.expireEndOfTurn ?? false);
+    }
+  });
+  if (surviving.length === 0) delete perm.controlChanges;
+  else perm.controlChanges = surviving;
+  applyControllerTransition(ctx, perm, controlledBy(perm));
+}
+
+/**
+ * Expire (via `refreshControlEffects`) every control-change record that tracks `sourceObjectId`
+ * — the source just left the battlefield, so "for as long as …" ends for every other permanent
+ * it held (CR 611.2b). The source's own copies die with it when it reincarnates.
+ */
+export function expireSourceControlEffects(ctx: GameContext, sourceObjectId: ObjectId): void {
+  for (const perm of [
+    ...ctx.state.battlefield,
+    ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+  ]) {
+    if (
+      !perm.controlChanges?.some(
+        (entry) =>
+          entry.duration.kind === 'whileSourceOnBattlefield' &&
+          entry.duration.sourceObjectId === sourceObjectId,
+      )
+    )
+      continue;
+    refreshControlEffects(ctx, perm);
   }
 }
 
@@ -791,6 +892,11 @@ export function* moveObject(
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
   removeFromCurrentZone(ctx, obj, keepForLeaveProcessing);
+  // A control-change effect tracking this permanent by its exact object id ends when it leaves
+  // the battlefield; a later blink incarnation is a NEW id and restores none of them (CR 400.7,
+  // 611.2b). The departing object's own copies die with it; these end everyone else's.
+  if (from === 'battlefield' && target.zone !== 'battlefield')
+    expireSourceControlEffects(ctx, obj.id);
   // An ability granted to a card in a graveyard ("gains unearth {3} until end of turn") does not
   // follow it to a new zone: it is a new object there (CR 400.7).
   if (from === 'graveyard') delete ctx.state.temporaryGraveyardAbilities[obj.cardId];

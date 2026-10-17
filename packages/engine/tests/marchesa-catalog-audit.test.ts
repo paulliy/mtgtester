@@ -142,6 +142,7 @@ describe('Marchesa override catalog audit inventory', () => {
       'coverage-pr03.ts',
       'coverage-pr06.ts',
       'coverage-pr07.ts',
+      'coverage-pr08.ts',
     ]);
     const remaining = readdirSync(OVERRIDES_DIR)
       .filter((file) => file.endsWith('.ts') && !skip.has(file))

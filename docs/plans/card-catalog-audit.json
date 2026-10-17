@@ -5600,7 +5600,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
-      "uniqueOracleIds": 12,
+      "uniqueOracleIds": 11,
       "reviewedOracleIds": 12,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6871,6 +6871,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
+    },
+    {
+      "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+      "name": "Mob Rule",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Mob Rule uses timestamped temporary control with a frozen affected set for its untap and haste riders. Required normal-cast and real-viewer scenarios are declared in the verification manifest; historical audit rows remain as history."
     }
   ]
 }

@@ -501,6 +501,13 @@ export type AttackRequirementSpec =
   | { kind: 'player'; player: 'eventPlayer' };
 
 /**
+ * The declarative duration on `gainControl`/`gainControlTarget` IR. `'whileSourceOnBattlefield'`
+ * stays a bare enum here (IR carries no object ids); the runtime resolves it to the source's
+ * exact ObjectId when the effect resolves (CR 611.2b).
+ */
+export type GainControlIRDuration = 'permanent' | 'untilEndOfTurn' | 'whileSourceOnBattlefield';
+
+/**
  * What a "targeted" primitive acts on.
  *
  * A number is the index into the owning `Ability.targets` whose chosen object is used — a real
@@ -826,7 +833,13 @@ export type Effect =
    * counters were actually put on the source — not if it left the battlefield first.
    */
   | { op: 'putCountersOnSourceThenReflexive'; counter: string; count: number; then: Ability }
-  | { op: 'gainControlTarget'; target: EffectRef }
+  /**
+   * "Gain control of target creature" — optionally until end of turn or for as long as a
+   * source-bound grant lasts (`duration: 'whileSourceOnBattlefield'`, resolved to the exact
+   * source ObjectId at runtime; a source off the battlefield at that moment gives no effect,
+   * CR 611.2b). Omitted, the steal is permanent.
+   */
+  | { op: 'gainControlTarget'; target: EffectRef; duration?: GainControlIRDuration }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
   | {
@@ -1142,12 +1155,23 @@ export type Effect =
   /** Untap the exact permanents stored by an earlier bound effect if the condition is true. */
   | { op: 'untapBoundIf'; binding: string; condition: Condition }
   /**
-   * "Gain control of all Dragons" (Karrthus, Tyrant of Jund) — CR 613.7's control-change
-   * timestamp is a real rules event, so the affected permanents' `timestamp` is bumped too, the
-   * same as a copy effect would. A permanent already under the caster's control is left alone
-   * (no timestamp churn for something that didn't actually change hands).
+   * "Gain control of all Dragons" (Karrthus, Tyrant of Jund). Every touched permanent records a
+   * control-change entry, even one already answering to the same controller: an effect expiring
+   * later falls back to the surviving record underneath it (`refreshControlEffects`). Each
+   * entry takes a fresh effect timestamp; the permanent's own layer timestamp is untouched.
+   *
+   * `duration` follows `gainControlTarget` (omitted = permanent). `untap`/`grantHaste` are the
+   * generic “gain control, untap them, give them haste until end of turn” riders (Mob Rule,
+   * Reins of Power style): the FROZEN CR 611.2c set is captured before any control changes and
+   * all three clauses apply to that same set.
    */
-  | { op: 'gainControl'; selector: Selector }
+  | {
+      op: 'gainControl';
+      selector: Selector;
+      duration?: GainControlIRDuration;
+      untap?: true;
+      grantHaste?: true;
+    }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
   | {
       op: 'graveyardToBattlefield';

@@ -69,7 +69,7 @@ import { withoutReserved } from '../mana/activation';
 import type { ParsedManaCost, PaymentPlan } from '../mana/cost';
 import type { SpellPaymentChoice } from '../mana/spell-payment';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
-import type { ManaEntry, PaymentPurpose } from '../cards/ability';
+import type { GainControlIRDuration, ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard, type ChooseCardSpec } from './choose';
@@ -84,6 +84,7 @@ import {
   removeFromCombat,
   createToken,
   changeController,
+  refreshControlEffects,
   createTokens,
   makePermanent,
   canAttach,
@@ -130,6 +131,7 @@ import {
   resolveDynamicUnits,
 } from '../state/queries';
 import type {
+  ControlChangeDuration,
   AttackRequirementEntry,
   AttackRequirementRule,
   DamageKeyword,
@@ -1108,6 +1110,32 @@ function affectedBy(
 /** "Grizzly Bears, Llanowar Elves get +3/+3 until end of turn" — the locked-in set, by name. */
 function describeMassEffect(affected: EnginePermanent[], clause: string): string {
   return `${affected.map((p) => p.name).join(', ')} ${clause} until end of turn`;
+}
+
+/**
+ * Resolve a control-change duration at runtime. The source-bound IR value stays declarative
+ * ('whileSourceOnBattlefield') and becomes the source's exact ObjectId here: an effect whose
+ * source is not ON the battlefield when its duration starts gives no effect at all (CR 611.2b),
+ * and a later blink incarnation carries a new id that no recorded effect ever tracks (CR 400.7).
+ */
+function resolveControlChangeDuration(
+  ctx: GameContext,
+  source: EffectSource,
+  ir: GainControlIRDuration | undefined,
+): ControlChangeDuration | null {
+  switch (ir) {
+    case 'untilEndOfTurn':
+      return { kind: 'untilEndOfTurn' };
+    case 'whileSourceOnBattlefield': {
+      const id = source.id ?? source.lastKnownFacts?.objectId;
+      return id !== undefined && ctx.state.battlefield.some((p) => p.id === id)
+        ? { kind: 'whileSourceOnBattlefield', sourceObjectId: id }
+        : null;
+    }
+    default:
+      // Omitted means permanent.
+      return { kind: 'permanent' };
+  }
 }
 
 /**
@@ -2703,15 +2731,16 @@ export function* executeAbility(
       case 'gainControlTarget': {
         const t = ref(effect.target);
         const perm = t === null ? undefined : findPermanent(ctx, t);
-        if (perm !== undefined && perm.controllerId !== source.controllerId) {
-          changeController(ctx, perm, source.controllerId);
-          perm.summoningSick = true;
+        const duration = resolveControlChangeDuration(ctx, source, effect.duration);
+        if (perm === undefined || duration === null) break;
+        const change = perm.controllerId !== source.controllerId;
+        changeController(ctx, perm, source.controllerId, duration);
+        if (change)
           emit(ctx, 'gainControl', {
             source: source.name,
             target: perm.name,
             newController: source.controllerId,
           });
-        }
         break;
       }
       case 'putCounters': {
@@ -5304,20 +5333,55 @@ export function* executeAbility(
         }
         break;
       }
-      case 'gainControl':
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          if (perm.controllerId === source.controllerId) continue;
-          changeController(ctx, perm, source.controllerId);
-          // CR 302.6: not continuously controlled by the new controller since their turn began.
-          // Left true under haste, exactly like a freshly cast creature.
-          perm.summoningSick = true;
-          emit(ctx, 'gainControl', {
+      case 'gainControl': {
+        const duration = resolveControlChangeDuration(ctx, source, effect.duration);
+        if (duration === null) break;
+        // CR 611.2c: the affected set is frozen BEFORE anything changes hands — taking a
+        // creature can change what the selector would match next (controller-dependent power,
+        // "creatures you control" scoping), and the untap/haste riders apply to that same
+        // frozen set, not to whatever matches afterwards.
+        const affected = affectedBy(ctx, source, effect.selector);
+        for (const perm of affected) {
+          const change = perm.controllerId !== source.controllerId;
+          changeController(ctx, perm, source.controllerId, duration);
+          if (change)
+            emit(ctx, 'gainControl', {
+              source: source.name,
+              target: perm.name,
+              newController: source.controllerId,
+            });
+        }
+        if (effect.untap === true) {
+          for (const perm of affected) perm.tapped = false;
+          emit(ctx, 'untap', {
             source: source.name,
-            target: perm.name,
-            newController: source.controllerId,
+            objects: affected.map((perm) => ({
+              id: perm.id,
+              name: perm.faceDown ? 'Face-down permanent' : perm.name,
+            })),
           });
         }
+        if (effect.grantHaste === true) {
+          for (const perm of affected) {
+            ctx.state.effects.push({
+              id: `eff-${ctx.state.nextObjectNum++}`,
+              sourceId: source.cardId,
+              description: `${perm.name} gains haste until end of turn`,
+              targetCardIds: [perm.cardId],
+              targetObjectIds: [perm.id],
+              kind: 'grantKeyword',
+              keyword: 'haste',
+              timestamp: ctx.state.nextTimestamp++,
+            });
+            emit(ctx, 'grantKeyword', {
+              source: source.name,
+              target: perm.name,
+              keyword: 'haste',
+            });
+          }
+        }
         break;
+      }
       case 'graveyardToBattlefield': {
         // CR 400.7e / 603.6c: a death trigger can find its first public destination,
         // including an opponent-owned card. Leaving that incarnation ends the exception.
@@ -8149,6 +8213,14 @@ export function endUntilEotEffects(ctx: GameContext): void {
   if (expiring.length > 0) {
     debug(ctx, 'effect', `ending ${expiring.length} until-end-of-turn effect(s)`);
     ctx.state.effects = ctx.state.effects.filter((effect) => effect.duration === 'permanent');
+  }
+  // Until-end-of-turn control changes end here too — for every permanent, phased-out ones
+  // included: they still expire on schedule (CR 514.2).
+  for (const perm of [
+    ...ctx.state.battlefield,
+    ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+  ]) {
+    refreshControlEffects(ctx, perm, { expireEndOfTurn: true });
   }
   for (const perm of [
     ...ctx.state.battlefield,

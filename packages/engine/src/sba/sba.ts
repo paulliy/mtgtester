@@ -28,9 +28,11 @@ import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
+  controlledBy,
   enchantAllows,
   moveObject,
   movePermanentsToGraveyard,
+  refreshControlEffects,
   returnExiledUntilLeaves,
 } from '../state/objects';
 import {
@@ -132,31 +134,22 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
-    // End effects giving a departed player control. A permanent put onto the
-    // battlefield under that player's control has no such effect to end (CR 800.4a).
+    // Control-change effects end here too, with the shared refresh: entries naming a departed
+    // player expire (even underneath newer records), and source-bound entries expire because the
+    // sources the departing player owned just left the battlefield (all CR 800.4a durations).
     for (const perm of [
       ...s.battlefield,
       ...(s.phasedOut ?? []).map((record) => record.permanent),
     ]) {
-      if (perm.controllerId !== player.id) continue;
-      perm.controlChanges = (perm.controlChanges ?? []).filter(
-        (id) => !s.players.find((p) => p.id === id)?.hasLost,
-      );
-      const controller = perm.controlChanges.at(-1) ?? perm.defaultControllerId ?? perm.ownerId;
+      refreshControlEffects(ctx, perm);
+      const controller = controlledBy(perm);
       if (s.players.find((p) => p.id === controller)?.hasLost) {
+        // Its initial controller is gone as well: it leaves the game (CR 800.4a) — no die
+        // triggers, no reversion to a player no longer playing.
         leaving.push(perm);
         s.phasedOut = (s.phasedOut ?? []).filter((record) => record.permanent !== perm);
         yield* moveObject(ctx, perm, { zone: 'exile' });
-        continue;
       }
-      perm.controllerId = controller;
-      perm.timestamp = s.nextTimestamp++;
-      perm.summoningSick = true;
-      perm.attacking = null;
-      perm.attackingPlaneswalker = null;
-      perm.attackedPlaneswalkerRemoved = false;
-      perm.blocking = null;
-      perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
     }
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);

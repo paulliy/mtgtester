@@ -191,6 +191,7 @@ const shapes = {
     cantAttack: leaf,
     thenCombat: leaf,
     untap: leaf,
+    grantHaste: leaf,
     untapYourCreatures: leaf,
     direction: leaf,
     maximum: leaf,

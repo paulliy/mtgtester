@@ -98,6 +98,7 @@ import {
   whiteBlackControlKeywordScenario,
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
 import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
 export interface CardTestScenario {
@@ -324,6 +325,10 @@ const COVERAGE_PR06: PinnedOracleFile = JSON.parse(
 /** Coverage PR07 cards (combat requirements, restrictions and extra combats). */
 const COVERAGE_PR07: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr07-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+const COVERAGE_PR08: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr08-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
@@ -12683,6 +12688,54 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function mobRuleScenario(gameId: GameId, mode: 'large' | 'small' | 'cleanup'): CardTestScenario {
+  const mob = pinnedFrom(COVERAGE_PR08, 'Mob Rule');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: `mob-rule-viewer-${mode}`,
+    title: `Mob Rule: ${mode === 'cleanup' ? 'temporary control ends at cleanup' : mode === 'large' ? 'steal power 4 or greater' : 'steal power 3 or less'}`,
+    instructions: [
+      'Cast Mob Rule using your six Mountains and choose the indicated power range.',
+      'Your own and opposing Lab Ox (4/4) and Lab Servo (1/1) are tapped before the spell.',
+      mode === 'cleanup'
+        ? 'Choose power 4 or greater and pass through cleanup to see control return.'
+        : 'Resolve the spell and verify only the chosen range untaps, gains haste, and is controlled by you.',
+    ],
+    expectedOutcome:
+      mode === 'cleanup'
+        ? 'P2 controls its Lab Ox again after cleanup; the temporary haste is gone.'
+        : `You control and untap both ${mode === 'large' ? 'Lab Oxen' : 'Lab Servos'}, and they have haste. The other creatures remain tapped under their original controllers.`,
+    oracleSha256: mob.sha256,
+    clauseIds: [
+      'mob-rule-mode-announcement',
+      mode === 'small' ? 'mob-rule-small-mode' : 'mob-rule-large-mode',
+    ],
+    decks: {
+      P1: [mob.card, witness, ...mountains, LAB_OX, LAB_SERVO, FOREST],
+      P2: [LAB_OX, LAB_SERVO, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mob Rule', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+      ],
+      ...(mode === 'cleanup' ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
   const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
@@ -14030,6 +14083,7 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...PR08_SCENARIO_IDS,
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
   ...WHITE_BLACK_ENTRY_SCENARIO_IDS,
@@ -14397,6 +14451,9 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
+  'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
+  'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,
