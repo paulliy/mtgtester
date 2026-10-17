@@ -1,7 +1,7 @@
 # Card coverage chunks: 302 cards to 906/906
 
 Prepared 2026-10-06. Status: active; PR01 to PR07 are complete and PR08 is in progress. This plan divides the remaining work under
-[complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
+[complete card coverage](complete-card-coverage.md) into eleven original pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
 
@@ -28,7 +28,7 @@ the PR02 measurement and closed seven cards that had counted as modeled: Black B
 (FF4) and Dingus Staff (PRA) now fail IR validation (an event-player reference with no event
 scope); Sivitri, Dragon Master and Zurgo and Ojutai reject an executable `noOp`; and Bloomvine
 Regent, Marang River Regent and Monster Manual are contained explicitly. No PR in this plan owns
-them yet, so they stay in the remaining counts: the measured PR02 and PR03 columns below show them
+them in the original eleven chunks; PR12 below now owns them. They stay in the remaining counts: the measured PR02 and PR03 columns below show them
 as one extra card for PRA and FF4 and five for URD. The later columns are still the planned counts
 without them.
 
@@ -774,3 +774,24 @@ worth splitting further.
 - After each PR, rerun the measurement and replace the baseline and progression tables. If a fix
   shows that a card previously counted as modeled was wrong, report the regression rather than
   hiding it.
+
+### PR12: Reopened quality-audit cards
+
+Assigned during PR08 preparation on 2026-10-17. PR08 keeps its original 23-card scope and targets
+809/906 from the measured 786/906 baseline. These seven cards are additional to the original
+PR01–PR11 assignments; the existing later columns are historical planned counts, not new measurements.
+
+Depends on PR09–PR11 where their shared primitives apply. Each card still requires the full
+[card modeling and testing standard](../guides/card-modeling-and-testing.md), one card per green
+commit, and explicit containment until every clause is faithfully implemented. Completing PR12
+is necessary for the frozen population to reach 906/906.
+
+|     # | Card                     | Population | Reopened blocker                                                   |
+| ----: | ------------------------ | ---------- | ------------------------------------------------------------------ |
+| 12.01 | Black Bolt, Inhuman King | FF4        | Event-player reference without an event scope fails IR validation. |
+| 12.02 | Dingus Staff             | PRA        | Event-player reference without an event scope fails IR validation. |
+| 12.03 | Sivitri, Dragon Master   | URD        | Executable `noOp` is rejected.                                     |
+| 12.04 | Zurgo and Ojutai         | URD        | Executable `noOp` is rejected.                                     |
+| 12.05 | Bloomvine Regent         | URD        | Explicitly contained; implement and verify all relevant faces.     |
+| 12.06 | Marang River Regent      | URD        | Explicitly contained; implement and verify all relevant faces.     |
+| 12.07 | Monster Manual           | URD        | Explicitly contained; implement and verify all relevant faces.     |
