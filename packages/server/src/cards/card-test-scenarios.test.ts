@@ -49,6 +49,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'mob-rule-viewer-large',
       'mob-rule-viewer-small',
       'mob-rule-viewer-cleanup',
+      'cut-a-deal-viewer-full-draw',
+      'cut-a-deal-viewer-empty-library',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

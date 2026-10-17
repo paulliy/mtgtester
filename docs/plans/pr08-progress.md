@@ -1,4 +1,4 @@
-# PR08 preparation checkpoint
+# PR08 implementation progress
 
 Prepared 2026-10-17. Draft PR: <https://github.com/paulliy/mtgtester/pull/26>.
 Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
@@ -6,8 +6,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 ## Scope and status
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
-Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule is the first
-implementation increment; the other 22 cards remain unsupported. The seven reopened quality-audit cards now belong
+Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule and Cut a Deal
+are the first two implementation increments; the other 21 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -82,3 +82,22 @@ The frozen original population measures 787/906 (692/802 deck cards, 189/200 sta
 expanded default report includes white-black-control and is not the 906-card plan denominator.
 Gameplay-AI quality has not been evaluated with a live provider; the lab uses scripted legal
 choices. Those observations do not substitute for engine or viewer correctness.
+
+## Cut a Deal increment (PR08.01)
+
+`drawCards` returns the number of actual draw events. Cut a Deal counts an opponent only when
+that opponent actually drew a card, preserving APNAP order and deferring state-based actions
+until resolution finishes. Empty libraries, draw replacements, eliminated opponents, a
+nonactive caster, payable costs, and sorcery timing have explicit regressions. The actual-draw
+regression failed against the previous executor and passed after the fix.
+
+Local integrated checks passed 141 card/lab/inventory tests, 105 related contracts, reviewed
+override snapshots, and five real-browser PR08 scenarios (the three Mob Rule scenarios plus
+Cut a Deal's full-library and empty-library cases). The OpenCode draft also passed the entire
+452-scenario legacy lab spec in its isolated checkout. The main checkout's final full suite and
+all-scenario viewer run remain required before marking the PR ready.
+
+The frozen population now measures 788/906 (693/802 deck cards, 189/200 staples); the expanded
+default deck report measures 746/855. Both reports use the committed Oracle fixture because the
+optional bulk Scryfall download is absent from this worktree. Gameplay-AI quality remains
+unevaluated with a live provider; the lab uses scripted legal choices.

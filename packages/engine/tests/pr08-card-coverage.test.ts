@@ -1,6 +1,6 @@
 /** PR08's pin and containment gate; behavior tests accompany each restored card below. */
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
@@ -27,7 +27,7 @@ const pins = (
   ) as { cards: Pin[] }
 ).cards;
 // Move a card into this set only with its complete behavioral tests and lab requirements.
-const IMPLEMENTED = new Set<string>(['Mob Rule']);
+const IMPLEMENTED = new Set<string>(['Mob Rule', 'Cut a Deal']);
 function canonical(input: unknown): unknown {
   if (Array.isArray(input)) return input.map(canonical);
   if (input !== null && typeof input === 'object')
@@ -58,7 +58,10 @@ describe('PR08 Oracle pins and containment', () => {
         }
       >;
     };
-    const source = readFileSync(import.meta.filename, 'utf8');
+    const source = readdirSync(import.meta.dirname)
+      .filter((name) => /^pr08.*\.test\.ts$/.test(name))
+      .map((name) => readFileSync(join(import.meta.dirname, name), 'utf8'))
+      .join('\n');
     const viewerSource = readFileSync(
       resolve('packages/server/src/cards/card-test-scenarios.ts'),
       'utf8',
@@ -73,7 +76,12 @@ describe('PR08 Oracle pins and containment', () => {
         expect(clause.engineTestIds.length, clause.id).toBeGreaterThan(0);
         expect(clause.viewerScenarioIds.length, clause.id).toBeGreaterThan(0);
         for (const id of clause.engineTestIds) expect(source, id).toContain(`${id} —`);
-        for (const id of clause.viewerScenarioIds) expect(viewerSource, id).toContain(id);
+        for (const id of clause.viewerScenarioIds)
+          expect(
+            viewerSource +
+              readFileSync(resolve('packages/server/src/cards/pr08-scenario-catalog.ts'), 'utf8'),
+            id,
+          ).toContain(id);
       }
     }
   });

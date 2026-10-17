@@ -607,12 +607,19 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
  * Draw cards. Drawing from an empty library sets the loss flag checked at the next SBA
  * check, not an immediate loss (brief §5.6). A generator: a drawn commander (one shuffled
  * into the library) triggers the CR 903.9b hand-replacement choice inside `moveObject`.
+ *
+ * Returns the number of cards ACTUALLY drawn: one per card whose move to hand led to the
+ * `draw` event. A draw instruction that did not move a card to hand — the empty-library
+ * flag, or the empty-library replacement putting a graveyard creature back — is not a
+ * draw, so callers such as "draw for each opponent who drew a card this way" must not
+ * count it (CR 608.2h reads what actually happened).
  */
 export function* drawCards(
   ctx: GameContext,
   player: EnginePlayerState,
   count: number,
-): GameGen<void> {
+): GameGen<number> {
+  let drawnCount = 0;
   for (let i = 0; i < count; i++) {
     const top = player.library[0];
     if (top === undefined) {
@@ -635,6 +642,7 @@ export function* drawCards(
         });
         if (chosen === null) player.hasLost = true;
         else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: player.id });
+        // The reanimation AS A DRAW REPLACEMENT is not a draw: no card reached the hand.
         continue;
       }
       player.attemptedDrawFromEmptyLibrary = true;
@@ -644,6 +652,9 @@ export function* drawCards(
     }
     const drawn = yield* moveObject(ctx, top, { zone: 'hand' });
     if (drawn?.zone !== 'hand') continue;
+    // The count is banked exactly when this successful emitted draw exists: the card moved
+    // to hand and the `draw` event below is about to record it.
+    drawnCount += 1;
     emit(
       ctx,
       'draw',
@@ -659,6 +670,7 @@ export function* drawCards(
     player.cardsDrawnThisDrawStep += 1;
     queuePlayerTriggersForEvent(ctx, 'drawsCard', player.id);
   }
+  return drawnCount;
 }
 
 /** Discard N cards, one controller choice at a time (CR 701.8a). */
@@ -3363,10 +3375,22 @@ export function* executeAbility(
         ctx.state.lifeFloorPlayers[controller.id] = true;
         emit(ctx, 'lifeFloor', { player: controller.id, minimum: 1 });
         break;
-      case 'drawForEachOpponent':
-        for (const opponent of opponentsOf(ctx, controller.id)) yield* drawCards(ctx, opponent, 1);
-        yield* drawCards(ctx, controller, opponentsOf(ctx, controller.id).length);
+      case 'drawForEachOpponent': {
+        // Cut a Deal (CR 608.2g/h: the instructions resolve one after the other). Each
+        // opponent still in the game (a lost player is out and draws nothing) draws one
+        // card, in APNAP order (CR 101.4). Then the SECOND instruction's count reads what
+        // actually happened: only an opponent whose draw succeeded — a card reached their
+        // hand and the `draw` event fired — is "each opponent who drew a card this way".
+        // An empty-library draw whose replacement reanimated a creature is not a draw, and
+        // neither is the empty-library flag itself. No state-based action runs between the
+        // draws: the empty-library flag waits for the next SBA check, and the caster's own
+        // draws resolve with the count fixed before they begin.
+        let opponentsWhoDrew = 0;
+        for (const opponent of opponentsOf(ctx, controller.id))
+          if ((yield* drawCards(ctx, opponent, 1)) >= 1) opponentsWhoDrew += 1;
+        yield* drawCards(ctx, controller, opponentsWhoDrew);
         break;
+      }
       case 'drawTargetAndController': {
         const targetId = ref(effect.target);
         const target =

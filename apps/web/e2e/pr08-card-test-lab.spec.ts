@@ -108,3 +108,42 @@ for (const mode of ['large', 'small', 'cleanup'] as const) {
     }
   });
 }
+
+// --- Coverage PR08.01: Cut a Deal (drawForEachOpponent) ---
+
+async function castCutADeal(page: Page): Promise<void> {
+  const deal = handCard(page, 'Cut a Deal');
+  await expect(deal).toHaveClass(/actionable/);
+  await deal.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+}
+
+async function resolveCutADeal(page: Page): Promise<void> {
+  await castCutADeal(page);
+  // After the spell resolves you hold priority again with an unused land drop, so the pass
+  // raises the land-drop confirmation; the pattern from the Endless Atlas run confirms it.
+  await passUntil(page, page.getByRole('button', { name: 'Pass anyway' }));
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Cast Cut a Deal/i).first()).toBeVisible();
+}
+
+test('Cut a Deal: each opponent draws, then you draw three', async ({ page }) => {
+  await runScenario(page, 'Cut a Deal: each opponent draws, then you draw three');
+  await resolveCutADeal(page);
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(3);
+  for (const seat of ['P2', 'P3', 'P4'] as const)
+    await expect(page.locator('.opponent').filter({ hasText: seat })).toContainText('1 in hand');
+});
+
+test('Cut a Deal: an empty library draws nothing and you draw two', async ({ page }) => {
+  await runScenario(page, 'Cut a Deal: an empty library draws nothing and you draw two');
+  await resolveCutADeal(page);
+  // P3 has no library when the spell resolves: P3 draws nothing (and loses at the next
+  // state-based action), so the caster draws one per opponent who ACTUALLY drew — two.
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(2);
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P4' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('0 in hand');
+});

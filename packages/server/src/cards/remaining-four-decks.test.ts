@@ -111,7 +111,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Malakir Rebirth // Malakir Mire',
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
-      'Cut a Deal',
       'Chaos Warp',
       'Humble Defector',
       'Wishclaw Talisman',

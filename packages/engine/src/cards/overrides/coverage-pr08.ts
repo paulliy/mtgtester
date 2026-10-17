@@ -56,5 +56,19 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  defineCard(
+    '8b5cffd5-5db3-4151-9275-d91387554412',
+    'Cut a Deal',
+    [
+      'unrecognized rules text: "Each opponent draws a card, then you draw a card for each opponent who drew a card this way."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [{ op: 'drawForEachOpponent' }],
+        description:
+          'Each opponent draws a card, then you draw a card for each opponent who drew a card this way',
+      }),
+    },
+  );
   defineCard('acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce', 'Mob Rule', MOB_RULE_HANDLED_LINES, MOB_RULE);
 }

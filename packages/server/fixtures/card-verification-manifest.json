@@ -5942,15 +5942,28 @@
     "8b5cffd5-5db3-4151-9275-d91387554412": {
       "name": "Cut a Deal",
       "oracleSha256": "ebb114b6bfc41cef8114727a540ffd8b6f277c16b451d9652f5e2e1025a29b2d",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
           "oracleText": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way.",
           "implementation": [
-            "explicitly unsupported; you draw for each opponent not those who drew"
+            "drawForEachOpponent: every opponent still in the game draws one in APNAP order (CR 101.4), then the caster draws one for each opponent whose draw actually succeeded (empty library draws zero, eliminated players are skipped); no state-based action runs during resolution",
+            "packages/engine/src/cards/overrides/coverage-pr08.ts"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "cut-a-deal-pinned-oracle-supported",
+            "cut-a-deal-all-draw",
+            "cut-a-deal-empty-library",
+            "cut-a-deal-eliminated-opponent",
+            "cut-a-deal-empty-library-replacement",
+            "cut-a-deal-all-opponents-gone",
+            "cut-a-deal-normal-cast",
+            "cut-a-deal-cast-legality",
+            "cut-a-deal-nonactive-caster",
+            "cut-a-deal-sorcery-timing"
+          ],
+          "viewerScenarioIds": ["cut-a-deal-viewer-full-draw", "cut-a-deal-viewer-empty-library"],
+          "id": "cut-a-deal-each-opponent-draws-then-you-draw-for-each-who-drew"
         }
       ],
       "gameplayAiScenarioIds": []

@@ -3,4 +3,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'mob-rule-viewer-large',
   'mob-rule-viewer-small',
   'mob-rule-viewer-cleanup',
+  'cut-a-deal-viewer-full-draw',
+  'cut-a-deal-viewer-empty-library',
 ];

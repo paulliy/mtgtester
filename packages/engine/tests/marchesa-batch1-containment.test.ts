@@ -114,7 +114,6 @@ const REASONS: Record<string, string> = {
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
@@ -269,6 +268,8 @@ describe('Marchesa catalog audit containment', () => {
     'Champion of Lambholt',
     'Teyo, Geometric Tactician',
     'Triarch Stalker',
+    // Coverage PR08.01 (docs/plans/card-coverage-chunks.md).
+    'Cut a Deal',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

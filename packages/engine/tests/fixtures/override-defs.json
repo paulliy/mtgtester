@@ -7909,8 +7909,21 @@
   {
     "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
     "name": "Cut a Deal",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each opponent draws a card, then you draw a card for each opponent who drew a card this way.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way",
+        "effects": [
+          {
+            "op": "drawForEachOpponent"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
@@ -19449,8 +19462,21 @@
   {
     "oracleId": "oracle-cut-a-deal",
     "name": "Cut a Deal",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each opponent draws a card, then you draw a card for each opponent who drew a card this way.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way",
+        "effects": [
+          {
+            "op": "drawForEachOpponent"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-cytoplast-manipulator",

@@ -18,6 +18,7 @@ const ORACLE_SHA256 = 'fd064f3f1c8289f7cd3a05433a31b03a8676ba4ce9035cd6706bd3708
 const SCENARIO_ID = 'fabled-passage-viewer-search-entry-untap';
 
 const SOURCE_FILES = [
+  'packages/server/src/cards/pr08-cut-a-deal-scenarios.ts',
   'packages/server/src/cards/pr08-scenario-catalog.ts',
   'packages/engine/tests/fixtures/coverage-pr08-oracle.json',
   'packages/engine/src/cards/overrides/coverage-pr08.ts',

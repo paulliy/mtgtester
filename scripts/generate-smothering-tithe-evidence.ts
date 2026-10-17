@@ -17,6 +17,7 @@ const ORACLE_ID = '153376c9-dffd-458c-8ce3-a4c8269bc4e9';
 const ORACLE_SHA256 = '38346bcc71227873ac4c358bd89d277f9d1f94a65e7778392c5e0aefeb7ab2c4';
 
 const SOURCE_FILES = [
+  'packages/server/src/cards/pr08-cut-a-deal-scenarios.ts',
   'packages/server/src/cards/pr08-scenario-catalog.ts',
   'packages/engine/tests/fixtures/coverage-pr08-oracle.json',
   'packages/engine/src/cards/overrides/coverage-pr08.ts',

@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 25,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6878,6 +6878,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
       "restoredIn": "coverage-pr08",
       "note": "The fail-closed registration is replaced by coverage-pr08.ts. Mob Rule uses timestamped temporary control with a frozen affected set for its untap and haste riders. Required normal-cast and real-viewer scenarios are declared in the verification manifest; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
+      "name": "Cut a Deal",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The resolving spell counts actual successful draws, including empty-library and replacement cases; historical audit rows remain as history."
     }
   ]
 }

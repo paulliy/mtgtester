@@ -99,6 +99,7 @@ import {
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
 import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
+import { PR08_CUT_A_DEAL_SCENARIO_IDS, pr08CutADealScenario } from './pr08-cut-a-deal-scenarios';
 import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
 export interface CardTestScenario {
@@ -14451,6 +14452,12 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08CutADealScenario(id, gameId),
+    ]),
+  ),
   'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
   'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
   'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),

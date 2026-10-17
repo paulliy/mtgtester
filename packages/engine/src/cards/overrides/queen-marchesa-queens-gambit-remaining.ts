@@ -186,12 +186,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     CRACKLING_DOOM,
   );
-  // Catalog audit queen-batch-5: you draw for every opponent, not those who drew.
-  unsupportedCard(
-    '8b5cffd5-5db3-4151-9275-d91387554412',
-    'Cut a Deal',
-    'You draw for each opponent, not for each opponent who drew a card.',
-  );
+  // Cut a Deal: restored in coverage PR08.01 (see coverage-pr08.ts).
   // Deflecting Palm: restored in coverage PR06 (see coverage-pr06.ts).
   // Delirium: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-1: copies keep original targets; can't-be-copied is omitted.
