@@ -1,6 +1,6 @@
 # Card coverage chunks: 302 cards to 906/906
 
-Prepared 2026-10-06. Status: active; PR01 to PR05 are complete, PR06 is in review and PR07 is next. This plan divides the remaining work under
+Prepared 2026-10-06. Status: active; PR01 to PR07 are complete and PR08 is in progress. This plan divides the remaining work under
 [complete card coverage](complete-card-coverage.md) into eleven pull requests (PRs) of about 30
 cards each. Each commit models one card. The scope, definition of done and completion gate in that
 plan still apply. This document only orders the work and groups it into PRs.
