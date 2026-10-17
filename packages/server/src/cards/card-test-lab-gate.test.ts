@@ -70,9 +70,10 @@ describe('Card Test Lab viewer-evidence gate', () => {
     expect(playwrightConfig).toContain('--card-test-lab');
   });
 
-  it('runs the viewer evidence job in CI and uploads traces', () => {
+  it('runs the viewer evidence job in CI and uploads the traces of a failing run', () => {
     expect(workflow).toContain('name: Viewer / Card Test Lab evidence');
     expect(workflow).toContain('bun run test:e2e');
+    expect(workflow).toContain('name: Require viewer traces');
     expect(workflow).toContain('card-test-lab-traces');
     expect(workflow).toContain('if-no-files-found: error');
   });
