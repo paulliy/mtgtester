@@ -10,7 +10,7 @@ Expected combined inventory after implementation is 809/906 from 786/906. No PR0
 implemented or verified by this preparation. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
-## External blocker
+## GitHub Actions limitation
 
 [The initial CI run](https://github.com/paulliy/mtgtester/actions/runs/39058473513) did not start
 its classification or format jobs. GitHub's check annotation states:
@@ -18,8 +18,9 @@ its classification or format jobs. GitHub's check annotation states:
 > The job was not started because recent account payments have failed or your spending limit
 > needs to be increased. Please check the 'Billing & plans' section in your settings
 
-Required checks cannot become green until the account owner resolves this billing/spending
-restriction. No CI job, required check, or repository protection was weakened to bypass it.
+The user subsequently instructed this session to ignore the Actions outage and continue using
+tests on this device. Local validation is now the work gate; the unavailable GitHub checks remain
+a reported limitation. No CI job, required check, or repository protection was weakened.
 
 ## Local preparation
 
@@ -49,8 +50,8 @@ control also makes you the defending player. See the
 [official Commander Masters release notes](https://media.wizards.com/2023/downloads/CMM_Release_Notes/EN_MTGCMM_ReleaseNotes_20230616.pdf).
 Include that positive case and an attack on another player's planeswalker as a negative case.
 
-After billing is resolved, finish scaffolding and implement one card per green commit, with
+Continue scaffolding and implement one card per green commit, with
 each shared primitive accompanying its first card. Follow the sole
 [card-completion standard](../guides/card-modeling-and-testing.md), including current engine
-and real-viewer evidence. Keep the PR draft until all 23 cards, local gates, CI, and review
+and real-viewer evidence. Keep the PR draft until all 23 cards, local gates, and review
 findings are complete.
