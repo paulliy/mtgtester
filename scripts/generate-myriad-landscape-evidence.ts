@@ -17,6 +17,9 @@ const ORACLE_ID = '2549bc57-9ffb-4053-9f10-f2a5f792b845';
 const ORACLE_SHA256 = '696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b';
 
 const SOURCE_FILES = [
+  'packages/server/src/cards/pr08-scenario-catalog.ts',
+  'packages/engine/tests/fixtures/coverage-pr08-oracle.json',
+  'packages/engine/src/cards/overrides/coverage-pr08.ts',
   'packages/server/src/cards/white-black-control-keyword-scenarios.ts',
   'apps/web/e2e/white-black-control-keywords.spec.ts',
   'packages/server/src/cards/white-black-control-keyword-scenarios.test.ts',

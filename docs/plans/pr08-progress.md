@@ -67,6 +67,17 @@ scenarios passed. Both typechecks, lint, formatting, snapshots, and the web buil
 broader card gate's inventory expectations were updated after their failures; the clean-tree
 primitive-evidence check and full suite run after the implementation commit.
 
+The clean-tree card gate passed all 129 suites and 4,165 tests at `ebccb1cd`. The full local
+suite then reported 419 passing suites and five failing suites: four evidence-input suites
+require the new PR08 source/data bindings in the five existing generators, and the rules-sweep
+fixture must create its stolen permanent through `changeController` rather than directly
+assigning `controllerId`. The focused rerun follows those integration fixes; this is not yet a
+passing full-suite result. Existing bulk-data skips were unchanged.
+
+The review rerun passed all five suites and 184 tests. The test typecheck and affected-file
+format check passed. A fresh real-browser run passed all three Mob Rule scenarios against the
+current engine; JSON output and traces are retained under `.tmp/pr08/mob-rule-viewer-current*`.
+
 The frozen original population measures 787/906 (692/802 deck cards, 189/200 staples). The
 expanded default report includes white-black-control and is not the 906-card plan denominator.
 Gameplay-AI quality has not been evaluated with a live provider; the lab uses scripted legal
