@@ -4527,5 +4527,20 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-cut-a-deal.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
+    "name": "Cytoplast Manipulator",
+    "package": "PR08.06",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-cytoplast-manipulator.test.ts",
+      "packages/server/src/cards/pr08-cytoplast-manipulator-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-cytoplast-manipulator.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

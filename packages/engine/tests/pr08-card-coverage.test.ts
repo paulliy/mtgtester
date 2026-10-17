@@ -27,7 +27,7 @@ const pins = (
   ) as { cards: Pin[] }
 ).cards;
 // Move a card into this set only with its complete behavioral tests and lab requirements.
-const IMPLEMENTED = new Set<string>(['Mob Rule', 'Cut a Deal']);
+const IMPLEMENTED = new Set<string>(['Mob Rule', 'Cut a Deal', 'Cytoplast Manipulator']);
 function canonical(input: unknown): unknown {
   if (Array.isArray(input)) return input.map(canonical);
   if (input !== null && typeof input === 'object')

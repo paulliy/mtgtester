@@ -348,13 +348,46 @@
     "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37": {
       "name": "Cytoplast Manipulator",
       "oracleSha256": "faac653c0a227cf33a3c44758770b9fed072d8d1fab969d7def6eb9d8c19f642",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "cytoplast-graft",
+          "oracleText": "Graft 2",
+          "implementation": [
+            "entersWithCounters +1/+1:2 replacement",
+            "optional another-creature-enter trigger, sourceHasCounters intervening-if, moveCounters source to exact triggerObject"
+          ],
+          "engineTestIds": [
+            "cytoplast-pinned-oracle-supported",
+            "cytoplast-normal-cast-graft",
+            "cytoplast-cast-cost-and-timing",
+            "cytoplast-graft-transfer",
+            "cytoplast-graft-decline",
+            "cytoplast-last-graft-dies"
+          ],
+          "viewerScenarioIds": [
+            "cytoplast-manipulator-viewer-graft-yes",
+            "cytoplast-manipulator-viewer-graft-no"
+          ]
+        },
+        {
+          "id": "cytoplast-control-duration",
           "oracleText": "{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield.",
-          "implementation": ["explicitly unsupported; gainControlTarget is a permanent steal"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "activated mana U plus tap with creature hasCounter +1/+1 targeting",
+            "gainControlTarget duration whileSourceOnBattlefield bound to exact source object; counter is a target requirement, not a duration condition"
+          ],
+          "engineTestIds": [
+            "cytoplast-normal-activation",
+            "cytoplast-target-legality",
+            "cytoplast-activation-costs",
+            "cytoplast-counter-removed-before-resolution",
+            "cytoplast-source-control-changes-pending",
+            "cytoplast-source-gone-at-resolution",
+            "cytoplast-target-blink",
+            "cytoplast-source-phases"
+          ],
+          "viewerScenarioIds": ["cytoplast-manipulator-viewer-control-duration"]
         }
       ],
       "gameplayAiScenarioIds": []

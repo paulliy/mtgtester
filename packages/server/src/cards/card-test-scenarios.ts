@@ -12689,6 +12689,86 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function cytoplastScenario(
+  gameId: GameId,
+  mode: 'graft-yes' | 'graft-no' | 'control-duration',
+): CardTestScenario {
+  const manipulator = pinnedFrom(COVERAGE_PR08, 'Cytoplast Manipulator');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const recall = card({
+    oracleId: 'lab-pr08-source-recall',
+    name: 'Lab Source Recall',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: "Return target creature you control to its owner's hand.",
+  });
+  const control = mode === 'control-duration';
+  const islands = Array.from({ length: control ? 1 : 5 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `cytoplast-manipulator-viewer-${mode}`,
+    title: `Cytoplast Manipulator: ${control ? 'steal a countered creature until the source leaves' : mode === 'graft-yes' ? 'cast with two counters and graft one' : 'decline graft and keep two counters'}`,
+    instructions: control
+      ? [
+          'Activate Cytoplast Manipulator, paying blue and tapping it. Target the tapped Lab Ox with a +1/+1 counter; the uncountered Lab Servo is not legal.',
+          'The Ox changes control without untapping or gaining haste. Cast Lab Source Recall on Cytoplast Manipulator; the Ox returns to P2 when the source leaves.',
+        ]
+      : [
+          'Cast Cytoplast Manipulator using four Islands. It enters with two +1/+1 counters.',
+          `Cast Lab Servo with the remaining Island, then ${mode === 'graft-yes' ? 'accept' : 'decline'} the optional Graft trigger.`,
+        ],
+    expectedOutcome: control
+      ? 'The tapped Lab Ox is controlled by you until Cytoplast Manipulator leaves, then returns to P2 still tapped.'
+      : mode === 'graft-yes'
+        ? 'Cytoplast Manipulator has one counter and Lab Servo has one.'
+        : 'Cytoplast Manipulator keeps two counters and Lab Servo has none.',
+    oracleSha256: manipulator.sha256,
+    clauseIds: control ? ['cytoplast-control-duration'] : ['cytoplast-graft'],
+    decks: {
+      P1: [manipulator.card, witness, ...(control ? [recall] : [LAB_SERVO]), ...islands],
+      P2: control ? [LAB_OX, LAB_SERVO, ...PR01_FILLER] : PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: control
+            ? ['Lab Source Recall', 'Lab Priority Witness']
+            : ['Cytoplast Manipulator', 'Lab Servo', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(control
+          ? [
+              {
+                playerId: 'P1' as const,
+                cardNames: ['Cytoplast Manipulator'],
+                counters: { '+1/+1': 2 },
+              },
+              {
+                playerId: 'P2' as const,
+                cardNames: ['Lab Ox'],
+                tapped: true,
+                counters: { '+1/+1': 1 },
+              },
+              { playerId: 'P2' as const, cardNames: ['Lab Servo'] },
+            ]
+          : []),
+      ],
+    },
+  });
+}
+
 function mobRuleScenario(gameId: GameId, mode: 'large' | 'small' | 'cleanup'): CardTestScenario {
   const mob = pinnedFrom(COVERAGE_PR08, 'Mob Rule');
   const witness = card({
@@ -14458,6 +14538,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
       (gameId: GameId) => pr08CutADealScenario(id, gameId),
     ]),
   ),
+  'cytoplast-manipulator-viewer-graft-yes': (gameId) => cytoplastScenario(gameId, 'graft-yes'),
+  'cytoplast-manipulator-viewer-graft-no': (gameId) => cytoplastScenario(gameId, 'graft-no'),
+  'cytoplast-manipulator-viewer-control-duration': (gameId) =>
+    cytoplastScenario(gameId, 'control-duration'),
   'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
   'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
   'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),

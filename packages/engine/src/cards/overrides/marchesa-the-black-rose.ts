@@ -150,12 +150,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Carrion Feeder: restored in coverage PR02. The interpreter reads "can't block" and the
   // sacrifice-a-creature cost, which may sacrifice Carrion Feeder itself (allowSelf).
-  // Catalog audit batch 3: control change is permanent, not "for as long as this remains".
-  unsupportedCard(
-    '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',
-    'Cytoplast Manipulator',
-    'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
-  );
+  // Cytoplast Manipulator: restored in coverage PR08.06. The interpreter retains Graft 2;
+  // coverage-pr08.ts binds the activated control duration to this exact battlefield object.
   defineCard(
     '724767ca-bd84-4137-9133-4ad2e96b8428',
     "Dack's Duplicate",

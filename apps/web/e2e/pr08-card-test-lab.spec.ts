@@ -147,3 +147,76 @@ test('Cut a Deal: an empty library draws nothing and you draw two', async ({ pag
   await expect(page.locator('.opponent').filter({ hasText: 'P4' })).toContainText('1 in hand');
   await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('0 in hand');
 });
+
+function humanPermanent(page: Page, name: string) {
+  return page
+    .locator('.human-zone .object:not(.board-card-leave-active)')
+    .filter({ has: page.getByRole('img', { name, exact: true }) });
+}
+function opponentPermanent(page: Page, name: string) {
+  return page
+    .locator('.opponent[data-seat="P2"] .object:not(.board-card-leave-active)')
+    .filter({ has: page.getByRole('img', { name, exact: true }) });
+}
+async function castPr08Card(page: Page, name: string) {
+  const card = handCard(page, name);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+}
+
+for (const accept of [true, false]) {
+  test(`Cytoplast Manipulator: ${accept ? 'cast with two counters and graft one' : 'decline graft and keep two counters'}`, async ({
+    page,
+  }) => {
+    await runScenario(
+      page,
+      `Cytoplast Manipulator: ${accept ? 'cast with two counters and graft one' : 'decline graft and keep two counters'}`,
+    );
+    await castPr08Card(page, 'Cytoplast Manipulator');
+    const source = humanPermanent(page, 'Cytoplast Manipulator');
+    await passStackUntil(page, source);
+    await expect(source.getByText('+1/+1×2')).toBeVisible();
+    await expect(source.getByText('2/2', { exact: true })).toBeVisible();
+    await castPr08Card(page, 'Lab Servo');
+    await passUntil(page, page.getByText(/use this ability/i).first());
+    await page.getByRole('button', { name: accept ? 'Yes' : 'No', exact: true }).click();
+    const servo = humanPermanent(page, 'Lab Servo');
+    await expect(source.getByText(`+1/+1×${accept ? 1 : 2}`)).toBeVisible();
+    if (accept) await expect(servo.getByText('+1/+1×1')).toBeVisible();
+    else await expect(servo.getByText(/\+1\/\+1/)).toHaveCount(0);
+    await expect(servo.getByText(accept ? '2/2' : '1/1', { exact: true })).toBeVisible();
+  });
+}
+
+test('Cytoplast Manipulator: steal a countered creature until the source leaves', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Cytoplast Manipulator: steal a countered creature until the source leaves',
+  );
+  const source = humanPermanent(page, 'Cytoplast Manipulator');
+  await expect(source).toHaveClass(/actionable/);
+  await source.click();
+  const ability = page.getByRole('button', { name: /Gain control of target creature/ });
+  if (await ability.isVisible()) await ability.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(opponentPermanent(page, 'Lab Servo')).not.toHaveClass(/targetable/);
+  await opponentPermanent(page, 'Lab Ox').click();
+  await confirm(page);
+  const stolen = humanPermanent(page, 'Lab Ox');
+  await passStackUntil(page, stolen);
+  await expect(stolen.locator('.tile')).toHaveClass(/tapped/);
+  await expect(stolen.locator('.keywords[title*="haste"]')).toHaveCount(0);
+  await expect(source.locator('.tile')).toHaveClass(/tapped/);
+  await handCard(page, 'Lab Source Recall').click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await source.click();
+  await confirm(page);
+  await passStackUntil(page, handCard(page, 'Cytoplast Manipulator'));
+  await expect(opponentPermanent(page, 'Lab Ox').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(source).toHaveCount(0);
+});

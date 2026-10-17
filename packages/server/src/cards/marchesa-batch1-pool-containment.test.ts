@@ -53,6 +53,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Cryptek',
       'Curse of Bounty',
       'Cut a Deal',
+      'Cytoplast Manipulator',
       'Dark Confidant',
       'Deflecting Palm',
       'Delirium',

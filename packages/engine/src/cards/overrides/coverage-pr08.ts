@@ -5,8 +5,8 @@
  * Unfinished cards remain explicitly unsupported in their original deck registrations.
  */
 import type { CardDefinition } from '../definition';
-import { allOf, ofType } from '../selector';
-import { spell } from '../templates';
+import { allOf, hasCounter, ofType } from '../selector';
+import { activated, mana, spell, targetSlots, TAP } from '../templates';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -56,6 +56,33 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  const cytoplastTargets = targetSlots({
+    counteredCreature: { kind: 'creature', filter: hasCounter('+1/+1') },
+  });
+  defineCard(
+    '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',
+    'Cytoplast Manipulator',
+    [
+      'unrecognized rules text: "{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield."',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{U}'), TAP],
+          targets: cytoplastTargets.targets,
+          effects: [
+            {
+              op: 'gainControlTarget',
+              target: cytoplastTargets.slot.counteredCreature,
+              duration: 'whileSourceOnBattlefield',
+            },
+          ],
+          description:
+            'Gain control of target creature with a +1/+1 counter on it for as long as Cytoplast Manipulator remains on the battlefield',
+        }),
+      ],
+    },
+  );
   defineCard(
     '8b5cffd5-5db3-4151-9275-d91387554412',
     'Cut a Deal',

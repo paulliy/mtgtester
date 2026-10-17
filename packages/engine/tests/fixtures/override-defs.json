@@ -410,8 +410,55 @@
   {
     "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
     "name": "Cytoplast Manipulator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Gain control of target creature with a +1/+1 counter on it for as long as Cytoplast Manipulator remains on the battlefield",
+            "effects": [
+              {
+                "duration": "whileSourceOnBattlefield",
+                "op": "gainControlTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "04046ae4-5c51-434b-930c-f3b1d348bf4b",
@@ -19481,8 +19528,55 @@
   {
     "oracleId": "oracle-cytoplast-manipulator",
     "name": "Cytoplast Manipulator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Gain control of target creature with a +1/+1 counter on it for as long as Cytoplast Manipulator remains on the battlefield",
+            "effects": [
+              {
+                "duration": "whileSourceOnBattlefield",
+                "op": "gainControlTarget",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "counter": "+1/+1",
+                  "kind": "hasCounter"
+                },
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 1,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 0
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-dack-s-duplicate",

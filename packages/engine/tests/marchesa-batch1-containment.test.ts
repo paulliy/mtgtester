@@ -36,8 +36,6 @@ const REASONS: Record<string, string> = {
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
-  'Cytoplast Manipulator':
-    'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
   'Deflecting Swat':
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
@@ -122,6 +120,7 @@ describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
     // PR08 normal-cast, cleanup and frozen-set tests replace the containment requirement.
     'Mob Rule',
+    'Cytoplast Manipulator',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',

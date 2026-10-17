@@ -6,8 +6,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 ## Scope and status
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
-Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule and Cut a Deal
-are the first two implementation increments; the other 21 cards remain unsupported. The seven reopened quality-audit cards now belong
+Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
+and Cytoplast Manipulator are the first three implementation increments; the other 20 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -101,3 +101,38 @@ The frozen population now measures 788/906 (693/802 deck cards, 189/200 staples)
 default deck report measures 746/855. Both reports use the committed Oracle fixture because the
 optional bulk Scryfall download is absent from this worktree. Gameplay-AI quality remains
 unevaluated with a live provider; the lab uses scripted legal choices.
+
+## Local checkpoint at `b698932c`
+
+The full suite completed with 424 passing suites, two timeout failures in ESLint-based tests,
+and five existing skipped suites: 6,885 passed, two failed, and 36 existing skipped tests.
+The two failing suites passed all 62 tests on a serial rerun without changing assertions or
+timeouts. This is a full run plus a successful focused retry, not an entirely green full
+invocation. The subsequent clean-tree card gate passed all 131 suites and 4,178 tests.
+An entirely green full run remains required before the PR is ready.
+
+Delegation is capped at two active subagents on different free OpenCode models. Beam and
+Nemotron Lightning have produced isolated drafts after GLM, DeepSeek, MiMo, and Nemotron
+Ultra encountered provider errors. Main-thread review rejects unfinished tests and artifacts;
+their completion messages do not constitute card evidence.
+
+## Cytoplast Manipulator increment (PR08.06)
+
+The interpreter retains Graft 2, including its enters-with replacement and optional transfer.
+The authored activation pays blue and taps, targets a creature with a +1/+1 counter, and binds
+control to the exact source object remaining on the battlefield. Losing the target's counter
+after resolution does not end control; source departure or phasing does. Source blink never
+substitutes a new incarnation. Pending abilities retain their original controller.
+
+All 16 card engine tests and three production-lab outcome tests passed. The normal casting
+regression failed explicitly unsupported against the previous implementation, then passed
+with the override restored. The integrated run passed 176 tests across 12 suites. All eight
+PR08 real-browser scenarios passed, including accepting and declining Graft and stealing a
+countered creature before returning the source to hand. Both typechecks, lint, formatting,
+reviewed snapshots, benchmark pin validation, and the web build passed. Generated receipts
+are refreshed against committed revisions after the implementation commit.
+
+The frozen population now measures 789/906 (694/802 deck cards, 189/200 staples); the expanded
+default deck report measures 747/855. Gameplay-AI quality remains unevaluated with a live
+provider. Implementation review labels and primitive eligibility are separate final completion
+requirements; current declarations remain `implemented-unreviewed` until that review is complete.

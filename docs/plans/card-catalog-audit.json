@@ -6885,6 +6885,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr08",
       "note": "The fail-closed registration is replaced by coverage-pr08.ts. The resolving spell counts actual successful draws, including empty-library and replacement cases; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
+      "name": "Cytoplast Manipulator",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Existing Graft replacement and optional transfer are retained. Control lasts while the exact source object remains on the battlefield, including source departure and phasing; losing the target counter after resolution does not end it. Historical audit rows remain as history."
     }
   ]
 }

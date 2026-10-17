@@ -5,4 +5,7 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'mob-rule-viewer-cleanup',
   'cut-a-deal-viewer-full-draw',
   'cut-a-deal-viewer-empty-library',
+  'cytoplast-manipulator-viewer-graft-yes',
+  'cytoplast-manipulator-viewer-graft-no',
+  'cytoplast-manipulator-viewer-control-duration',
 ];
