@@ -5,7 +5,7 @@ import {
   SAPROLING_1_1_GREEN,
   SOLDIER_1_1_LIFELINK,
 } from '../tokens';
-import { defineCard, unsupportedCard } from './index';
+import { defineCard } from './index';
 import { TAP, mana, manaCost, spell } from '../templates';
 import { constant } from '../value';
 import {
@@ -571,12 +571,7 @@ export function registerTOKEN_TRIUMPHOverrides(): void {
   );
   // Conclave Tribunal: restored in coverage PR02. Convoke is a real payment now (creatures
   // tapped while casting it), so no override remains.
-  // Catalog audit token-triumph-batch-7: can't-block is a name check, not a static.
-  unsupportedCard(
-    'c549b0fd-1e08-4873-952e-a14dc45a0fd2',
-    'Champion of Lambholt',
-    "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
-  );
+  // Champion of Lambholt: restored in coverage PR07 (see coverage-pr07.ts).
   // Rootborn Defenses
   defineCard(
     '04046ae4-5c51-434b-930c-f3b1d348bf4b',

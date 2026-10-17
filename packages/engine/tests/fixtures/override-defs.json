@@ -974,16 +974,82 @@
     }
   },
   {
-    "oracleId": "0dfdf1a1-3a9a-490f-bd9d-dcba088c6785",
-    "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
-  },
-  {
     "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
     "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: You and target opponent each draw a card.",
+      "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "+1: You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent",
+            "effects": [
+              {
+                "op": "chooseOne",
+                "options": [
+                  {
+                    "description": "Left",
+                    "effects": [
+                      {
+                        "direction": "left",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  },
+                  {
+                    "description": "Right",
+                    "effects": [
+                      {
+                        "direction": "right",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
@@ -1687,8 +1753,48 @@
   {
     "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
     "name": "Triarch Stalker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures attacking the last chosen player have menace.",
+      "Targeting Relay — At the beginning of combat on your turn, choose an opponent."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "attackingChosenPlayer"
+              }
+            ]
+          },
+          "op": {
+            "addKeyword": "menace",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, choose an opponent",
+          "effects": [
+            {
+              "op": "chooseOpponentForSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "1b3e841e-0f8f-467d-9983-f9b8d081a67f",
@@ -2176,6 +2282,107 @@
     }
   },
   {
+    "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",
+    "name": "Siren's Call",
+    "handledLines": [
+      "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+      "Cast this spell only during an opponent's turn, before attackers are declared.",
+      "Creatures the active player controls attack this turn if able."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "notYourTurn"
+          },
+          {
+            "kind": "beforeAttackersDeclared"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+        "effects": [
+          {
+            "duration": "thisTurn",
+            "op": "addAttackRequirement",
+            "relativeTo": "activePlayer",
+            "requirements": [
+              {
+                "kind": "anyAttack"
+              }
+            ],
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          {
+            "ability": {
+              "description": "Destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+              "effects": [
+                {
+                  "op": "destroyEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Wall"
+                        }
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "eventPlayer"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "attackedThisTurn"
+                        }
+                      },
+                      {
+                        "kind": "controlledSinceTurnStart"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "each",
+                "when": "endStep"
+              }
+            },
+            "affectedPlayer": "activePlayer",
+            "expiry": "endStep",
+            "op": "registerDelayedTrigger",
+            "when": "endStep"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "27c366cf-00d7-47d4-9577-736bfc4a3b81",
     "name": "Defacing Duskmage // Vandal's Edit",
     "handledLines": [],
@@ -2531,8 +2738,86 @@
   {
     "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
     "name": "Lightning Runner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you get {E}{E}, then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 8
+              },
+              "op": "mayPayEnergy",
+              "then": [
+                {
+                  "op": "untapEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "extraCombatPhase"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "2fc42640-983a-49ca-9020-7756135077b4",
+    "name": "Fight or Flight",
+    "handledLines": [
+      "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn",
+          "effects": [
+            {
+              "op": "separateIntoPilesLimitAttackers"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "2fe0ebf5-52ed-4e92-9b93-81e9ae564439",
@@ -2783,6 +3068,40 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
+    "name": "Illusionist's Gambit",
+    "handledLines": [
+      "Cast this spell only during the declare blockers step on an opponent's turn.",
+      "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "duringStep",
+            "step": "declareBlockers"
+          },
+          {
+            "kind": "notYourTurn"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat",
+        "effects": [
+          {
+            "op": "removeAttackersFromCombat",
+            "thenCombat": true,
+            "untap": true
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -3044,6 +3363,34 @@
             "layer": 6,
             "setCantBeBlocked": true
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
+    "name": "Pramikon, Sky Rampart",
+    "handledLines": [
+      "As ~ enters, choose left or right.",
+      "Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "left",
+            "label": "Left"
+          },
+          {
+            "key": "right",
+            "label": "Right"
+          }
+        ],
+        "prompt": "choose left or right"
+      },
+      "ruleStatics": [
+        {
+          "kind": "attackOnlyNearestOpponent"
         }
       ]
     }
@@ -3623,6 +3970,40 @@
               "kind": "self"
             },
             "when": "dealtDamage"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "4232995b-68c0-4514-8cde-bc62b9d1cbaa",
+    "name": "Galactus, Devourer of Worlds",
+    "handledLines": [
+      "Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "attackRequirement",
+          "target": "opponentWithMostLife",
+          "unless": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "name",
+                  "value": "Silver Surfer, Galactus's Herald"
+                }
+              ]
+            }
           }
         }
       ]
@@ -5088,6 +5469,76 @@
           "category": "noncreature",
           "kind": "spellCastLimit",
           "limit": 1
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
+    "name": "Moraug, Fury of Akoum",
+    "handledLines": [
+      "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+      "Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "timesAttackedThisTurn"
+            },
+            "sublayer": "d",
+            "toughness": 0
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control",
+          "effects": [
+            {
+              "op": "extraCombatPhase",
+              "untapYourCreatures": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "duringYourMainPhase"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
         }
       ]
     }
@@ -6814,8 +7265,93 @@
   {
     "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
     "name": "Firkraag, Cunning Instigator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.",
+      "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls",
+          "effects": [
+            {
+              "op": "goad",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "triggerObjectHadToAttackThisCombat"
+                },
+                {
+                  "kind": "triggerObjectAttackingOpponent"
+                }
+              ]
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
@@ -7746,6 +8282,42 @@
     }
   },
   {
+    "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
+    "name": "Taunt from the Rampart",
+    "handledLines": [
+      "Goad all creatures your opponents control. Until your next turn, those creatures can't block."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Goad all creatures your opponents control. Until your next turn, those creatures can't block",
+        "effects": [
+          {
+            "op": "goadEachOpponent"
+          },
+          {
+            "duration": "untilYourNextTurn",
+            "op": "cantBlockEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
     "name": "Bottomless Pit",
     "handledLines": [
@@ -7966,6 +8538,83 @@
     "name": "Wear // Tear",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
+    "name": "Rite of the Raging Storm",
+    "handledLines": [
+      "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+      "Creatures named Lightning Rager can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "name",
+            "value": "Lightning Rager"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "trample",
+                  "haste"
+                ],
+                "name": "Lightning Rager",
+                "power": 5,
+                "subtypes": [
+                  "Elemental"
+                ],
+                "toughness": 1,
+                "triggers": [
+                  {
+                    "description": "At the beginning of the end step, sacrifice this token",
+                    "effects": [
+                      {
+                        "op": "sacrifice",
+                        "target": "source"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "each",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "typeLine": "Creature — Elemental",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "986f510c-e2ec-423e-a443-51a169939558",
@@ -9454,6 +10103,65 @@
     }
   },
   {
+    "oracleId": "b08633e9-7b8f-4f69-a3b7-8d982b17574c",
+    "name": "Willie Lumpkin, Postman",
+    "handledLines": [
+      "Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "op": "eventPlayerMayDraw",
+              "then": [
+                {
+                  "cantAttack": "you",
+                  "duration": "duringTheirNextTurn",
+                  "op": "addAttackRequirement",
+                  "relativeTo": "eventPlayer",
+                  "requirements": [],
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
     "name": "Swords to Plowshares",
     "handledLines": [
@@ -9571,6 +10279,76 @@
     }
   },
   {
+    "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
+    "name": "Life of the Party",
+    "handledLines": [
+      "When ~ enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+      "Whenever ~ attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Life of the Party attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "target": "source",
+              "toughness": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "When Life of the Party enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "eachOpponent": true,
+              "goadedForRestOfGame": true,
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              }
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "b2f09e41-0a91-4fb6-8804-874b3a5166b0",
     "name": "Rogue Refiner",
     "handledLines": [
@@ -9611,8 +10389,17 @@
   {
     "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
     "name": "Hexmark Destroyer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "minBlockers",
+          "minimum": 6
+        }
+      ]
+    }
   },
   {
     "oracleId": "b337c241-f2c4-48e3-a303-371b172fcd18",
@@ -9733,6 +10520,108 @@
             },
             {
               "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
+    "name": "Toby, Beastie Befriender",
+    "handledLines": [
+      "As long as you control four or more creature tokens, creature tokens you control have flying.",
+      "When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 4,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "isToken"
+                }
+              ]
+            }
+          },
+          "op": {
+            "addKeyword": "flying",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Beast",
+                "power": 4,
+                "ruleStatics": [
+                  {
+                    "kind": "cantAttackAlone"
+                  },
+                  {
+                    "kind": "cantBlockAlone"
+                  }
+                ],
+                "subtypes": [
+                  "Beast"
+                ],
+                "toughness": 4,
+                "typeLine": "Creature — Beast",
+                "types": [
+                  "Creature"
+                ]
+              }
             }
           ],
           "kind": "triggered",
@@ -9939,10 +10828,155 @@
     }
   },
   {
+    "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
+    "name": "War's Toll",
+    "handledLines": [
+      "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+      "Whenever an opponent taps a land for mana, tap all lands that player controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "opponentsAttackWithAll"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever an opponent taps a land for mana, tap all lands that player controls",
+          "effects": [
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "eventPlayer"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "forMana": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "becomesTapped"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
     "name": "Kardur, Doomscourge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+      "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able",
+          "effects": [
+            {
+              "duration": "untilYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "anyAttack"
+                },
+                {
+                  "kind": "notPlayer",
+                  "player": "you"
+                }
+              ],
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "bc328acc-8521-4581-88c3-99a7cb2c1cdb",
@@ -10354,6 +11388,77 @@
     }
   },
   {
+    "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
+    "name": "Silver Surfer, Galactus's Herald",
+    "handledLines": [
+      "When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+      "Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "name",
+                "value": "Galactus, Devourer of Worlds"
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able",
+          "effects": [
+            {
+              "duration": "endOfYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "player",
+                  "player": "eventPlayer"
+                }
+              ],
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "be2075af-1cd8-42fe-a29b-a0fd2b047a44",
     "name": "Lozhan, Dragons' Legacy",
     "handledLines": [
@@ -10678,8 +11783,21 @@
   {
     "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures with power less than this creature's power can't block creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "attackerFilter": {
+            "kind": "controller",
+            "who": "you"
+          },
+          "blockerPowerLessThanSource": true,
+          "kind": "cantBlockCreatures"
+        }
+      ]
+    }
   },
   {
     "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
@@ -13247,6 +14365,72 @@
     }
   },
   {
+    "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
+    "name": "Goblin Spymaster",
+    "handledLines": [
+      "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Goblin",
+                "power": 1,
+                "staticEffects": [
+                  {
+                    "affects": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        }
+                      ]
+                    },
+                    "op": {
+                      "layer": 6,
+                      "setMustAttackEachCombat": true
+                    }
+                  }
+                ],
+                "subtypes": [
+                  "Goblin"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Goblin",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
     "name": "Harvest Season",
     "handledLines": [
@@ -13336,8 +14520,68 @@
   {
     "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
     "name": "Combat Calligrapher",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Inklings can't attack you or planeswalkers you control.",
+      "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "subtype",
+            "value": "Inkling"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "defender": "attackedPlayer",
+              "op": "createTokenAttacking",
+              "player": "eventPlayer",
+              "spec": {
+                "colors": [
+                  "W",
+                  "B"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "name": "Inkling",
+                "power": 2,
+                "subtypes": [
+                  "Inkling"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Inkling",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "ee81f37b-2a81-46d7-8d2f-9091123846c4",
@@ -13606,8 +14850,74 @@
   {
     "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
     "name": "Eriette of the Charmed Apple",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+      "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "enchantedByAuraYouControl"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control",
+          "effects": [
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "f488f679-f5d5-4e61-b0c8-0b0eb622df0d",
@@ -14085,6 +15395,30 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "f9bca7af-29b6-46ba-b847-56715d09d1da",
+    "name": "Master Warcraft",
+    "handledLines": [
+      "Cast this spell only before attackers are declared.",
+      "You choose which creatures attack this turn.",
+      "You choose which creatures block this turn and how those creatures block."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "beforeAttackersDeclared"
+      },
+      "spellAbility": {
+        "description": "You choose which creatures attack this turn. You choose which creatures block this turn and how those creatures block",
+        "effects": [
+          {
+            "op": "chooseAttackersAndBlockers"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -14647,8 +15981,61 @@
   {
     "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
     "name": "Nils, Discipline Enforcer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
+      "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "cost": {
+            "perCounterOnCreature": true
+          },
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-academy-ruins",
@@ -17130,8 +18517,21 @@
   {
     "oracleId": "oracle-champion-of-lambholt",
     "name": "Champion of Lambholt",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures with power less than this creature's power can't block creatures you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "attackerFilter": {
+            "kind": "controller",
+            "who": "you"
+          },
+          "blockerPowerLessThanSource": true,
+          "kind": "cantBlockCreatures"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-chaos-warp",
@@ -17542,8 +18942,68 @@
   {
     "oracleId": "oracle-combat-calligrapher",
     "name": "Combat Calligrapher",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Inklings can't attack you or planeswalkers you control.",
+      "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "subtype",
+            "value": "Inkling"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "defender": "attackedPlayer",
+              "op": "createTokenAttacking",
+              "player": "eventPlayer",
+              "spec": {
+                "colors": [
+                  "W",
+                  "B"
+                ],
+                "keywords": [
+                  "flying"
+                ],
+                "name": "Inkling",
+                "power": 2,
+                "subtypes": [
+                  "Inkling"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Inkling",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "any",
+            "attacking": {
+              "planeswalkers": false,
+              "who": "opponent"
+            },
+            "perDefender": true,
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-combustible-gearhulk",
@@ -19048,8 +20508,74 @@
   {
     "oracleId": "oracle-eriette-of-the-charmed-apple",
     "name": "Eriette of the Charmed Apple",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+      "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "enchantedByAuraYouControl"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control",
+          "effects": [
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Aura"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-etali-primal-conqueror-etali-primal-sickness",
@@ -19298,6 +20824,31 @@
     }
   },
   {
+    "oracleId": "oracle-fight-or-flight",
+    "name": "Fight or Flight",
+    "handledLines": [
+      "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn",
+          "effects": [
+            {
+              "op": "separateIntoPilesLimitAttackers"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-firemane-commando",
     "name": "Firemane Commando",
     "handledLines": [
@@ -19360,8 +20911,93 @@
   {
     "oracleId": "oracle-firkraag-cunning-instigator",
     "name": "Firkraag, Cunning Instigator",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on ~ and you draw a card.",
+      "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls",
+          "effects": [
+            {
+              "op": "goad",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "aggregate": "byEventPlayer",
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "triggerObjectHadToAttackThisCombat"
+                },
+                {
+                  "kind": "triggerObjectAttackingOpponent"
+                }
+              ]
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-flameblast-dragon",
@@ -19930,6 +21566,40 @@
     }
   },
   {
+    "oracleId": "oracle-galactus-devourer-of-worlds",
+    "name": "Galactus, Devourer of Worlds",
+    "handledLines": [
+      "Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "attackRequirement",
+          "target": "opponentWithMostLife",
+          "unless": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 1,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "name",
+                  "value": "Silver Surfer, Galactus's Herald"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-game-trail",
     "name": "Game Trail",
     "handledLines": [
@@ -20305,6 +21975,72 @@
     }
   },
   {
+    "oracleId": "oracle-goblin-spymaster",
+    "name": "Goblin Spymaster",
+    "handledLines": [
+      "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Goblin",
+                "power": 1,
+                "staticEffects": [
+                  {
+                    "affects": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        }
+                      ]
+                    },
+                    "op": {
+                      "layer": 6,
+                      "setMustAttackEachCombat": true
+                    }
+                  }
+                ],
+                "subtypes": [
+                  "Goblin"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Goblin",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "opponent",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-grave-pact",
     "name": "Grave Pact",
     "handledLines": [
@@ -20522,8 +22258,17 @@
   {
     "oracleId": "oracle-hexmark-destroyer",
     "name": "Hexmark Destroyer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "minBlockers",
+          "minimum": 6
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-hoard-smelter-dragon",
@@ -20946,6 +22691,40 @@
     }
   },
   {
+    "oracleId": "oracle-illusionist-s-gambit",
+    "name": "Illusionist's Gambit",
+    "handledLines": [
+      "Cast this spell only during the declare blockers step on an opponent's turn.",
+      "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "duringStep",
+            "step": "declareBlockers"
+          },
+          {
+            "kind": "notYourTurn"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat",
+        "effects": [
+          {
+            "op": "removeAttackersFromCombat",
+            "thenCombat": true,
+            "untap": true
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-imp-s-mischief",
     "name": "Imp's Mischief",
     "handledLines": [
@@ -21325,8 +23104,93 @@
   {
     "oracleId": "oracle-kardur-doomscourge",
     "name": "Kardur, Doomscourge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "When ~ enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+      "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able",
+          "effects": [
+            {
+              "duration": "untilYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "anyAttack"
+                },
+                {
+                  "kind": "notPlayer",
+                  "player": "you"
+                }
+              ],
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentLosesLife"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  }
+                ]
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-karn-argent-defender",
@@ -21744,10 +23608,133 @@
     }
   },
   {
+    "oracleId": "oracle-life-of-the-party",
+    "name": "Life of the Party",
+    "handledLines": [
+      "When ~ enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+      "Whenever ~ attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Life of the Party attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "target": "source",
+              "toughness": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        },
+        {
+          "description": "When Life of the Party enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "eachOpponent": true,
+              "goadedForRestOfGame": true,
+              "op": "createTokenCopyOf",
+              "ref": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              }
+            },
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-lightning-runner",
     "name": "Lightning Runner",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever this creature attacks, you get {E}{E}, then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 2
+              },
+              "op": "gainEnergy"
+            },
+            {
+              "amount": {
+                "kind": "const",
+                "n": 8
+              },
+              "op": "mayPayEnergy",
+              "then": [
+                {
+                  "op": "untapEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "extraCombatPhase"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-liliana-of-the-veil",
@@ -22578,6 +24565,30 @@
     }
   },
   {
+    "oracleId": "oracle-master-warcraft",
+    "name": "Master Warcraft",
+    "handledLines": [
+      "Cast this spell only before attackers are declared.",
+      "You choose which creatures attack this turn.",
+      "You choose which creatures block this turn and how those creatures block."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "beforeAttackersDeclared"
+      },
+      "spellAbility": {
+        "description": "You choose which creatures attack this turn. You choose which creatures block this turn and how those creatures block",
+        "effects": [
+          {
+            "op": "chooseAttackersAndBlockers"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-mentor-of-the-meek",
     "name": "Mentor of the Meek",
     "handledLines": [
@@ -22801,6 +24812,76 @@
     "name": "Monster Manual // Zoological Study",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-moraug-fury-of-akoum",
+    "name": "Moraug, Fury of Akoum",
+    "handledLines": [
+      "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+      "Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "op": {
+            "layer": 7,
+            "power": {
+              "kind": "timesAttackedThisTurn"
+            },
+            "sublayer": "d",
+            "toughness": 0
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control",
+          "effects": [
+            {
+              "op": "extraCombatPhase",
+              "untapYourCreatures": true
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "duringYourMainPhase"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-mordant-dragon",
@@ -23360,8 +25441,61 @@
   {
     "oracleId": "oracle-nils-discipline-enforcer",
     "name": "Nils, Discipline Enforcer",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
+      "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "cost": {
+            "perCounterOnCreature": true
+          },
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "hasAnyCounter"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls",
+          "effects": [
+            {
+              "count": 1,
+              "counter": "+1/+1",
+              "op": "putCountersEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "creature",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-nissa-worldsoul-speaker",
@@ -24337,6 +26471,34 @@
     }
   },
   {
+    "oracleId": "oracle-pramikon-sky-rampart",
+    "name": "Pramikon, Sky Rampart",
+    "handledLines": [
+      "As ~ enters, choose left or right.",
+      "Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "entersChoosingOption": {
+        "options": [
+          {
+            "key": "left",
+            "label": "Left"
+          },
+          {
+            "key": "right",
+            "label": "Right"
+          }
+        ],
+        "prompt": "choose left or right"
+      },
+      "ruleStatics": [
+        {
+          "kind": "attackOnlyNearestOpponent"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-primal-might",
     "name": "Primal Might",
     "handledLines": [
@@ -25225,6 +27387,83 @@
     }
   },
   {
+    "oracleId": "oracle-rite-of-the-raging-storm",
+    "name": "Rite of the Raging Storm",
+    "handledLines": [
+      "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+      "Creatures named Lightning Rager can't attack you or planeswalkers you control."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "name",
+            "value": "Lightning Rager"
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager with trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "keywords": [
+                  "trample",
+                  "haste"
+                ],
+                "name": "Lightning Rager",
+                "power": 5,
+                "subtypes": [
+                  "Elemental"
+                ],
+                "toughness": 1,
+                "triggers": [
+                  {
+                    "description": "At the beginning of the end step, sacrifice this token",
+                    "effects": [
+                      {
+                        "op": "sacrifice",
+                        "target": "source"
+                      }
+                    ],
+                    "kind": "triggered",
+                    "targets": [],
+                    "trigger": {
+                      "player": "each",
+                      "when": "endStep"
+                    }
+                  }
+                ],
+                "typeLine": "Creature — Elemental",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-rogue-refiner",
     "name": "Rogue Refiner",
     "handledLines": [
@@ -26018,6 +28257,178 @@
           "Plains",
           "Swamp"
         ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-silver-surfer-galactus-s-herald",
+    "name": "Silver Surfer, Galactus's Herald",
+    "handledLines": [
+      "When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+      "Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "filter": {
+                "kind": "name",
+                "value": "Galactus, Devourer of Worlds"
+              },
+              "op": "searchLibrary",
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": true,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able",
+          "effects": [
+            {
+              "duration": "endOfYourNextTurn",
+              "op": "addAttackRequirement",
+              "requirements": [
+                {
+                  "kind": "player",
+                  "player": "eventPlayer"
+                }
+              ],
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-siren-s-call",
+    "name": "Siren's Call",
+    "handledLines": [
+      "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+      "Cast this spell only during an opponent's turn, before attackers are declared.",
+      "Creatures the active player controls attack this turn if able."
+    ],
+    "def": {
+      "castRestriction": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "notYourTurn"
+          },
+          {
+            "kind": "beforeAttackersDeclared"
+          }
+        ]
+      },
+      "spellAbility": {
+        "description": "Creatures the active player controls attack this turn if able. At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+        "effects": [
+          {
+            "duration": "thisTurn",
+            "op": "addAttackRequirement",
+            "relativeTo": "activePlayer",
+            "requirements": [
+              {
+                "kind": "anyAttack"
+              }
+            ],
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          {
+            "ability": {
+              "description": "Destroy all non-Wall creatures that player controls that didn't attack this turn, ignoring each they didn't control continuously since the beginning of the turn",
+              "effects": [
+                {
+                  "op": "destroyEach",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "subtype",
+                          "value": "Wall"
+                        }
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "eventPlayer"
+                      },
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "attackedThisTurn"
+                        }
+                      },
+                      {
+                        "kind": "controlledSinceTurnStart"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "kind": "triggered",
+              "targets": [],
+              "trigger": {
+                "player": "each",
+                "when": "endStep"
+              }
+            },
+            "affectedPlayer": "activePlayer",
+            "expiry": "endStep",
+            "op": "registerDelayedTrigger",
+            "when": "endStep"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
       }
     }
   },
@@ -26992,6 +29403,42 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-taunt-from-the-rampart",
+    "name": "Taunt from the Rampart",
+    "handledLines": [
+      "Goad all creatures your opponents control. Until your next turn, those creatures can't block."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Goad all creatures your opponents control. Until your next turn, those creatures can't block",
+        "effects": [
+          {
+            "op": "goadEachOpponent"
+          },
+          {
+            "duration": "untilYourNextTurn",
+            "op": "cantBlockEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-tender-wildguide",
     "name": "Tender Wildguide",
     "handledLines": [
@@ -27466,8 +29913,80 @@
   {
     "oracleId": "oracle-teyo-geometric-tactician",
     "name": "Teyo, Geometric Tactician",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "+1: You and target opponent each draw a card.",
+      "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "+1: You and target opponent each draw a card",
+            "effects": [
+              {
+                "op": "drawTargetAndController",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "delta": 1,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        },
+        {
+          "ability": {
+            "description": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent",
+            "effects": [
+              {
+                "op": "chooseOne",
+                "options": [
+                  {
+                    "description": "Left",
+                    "effects": [
+                      {
+                        "direction": "left",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  },
+                  {
+                    "description": "Right",
+                    "effects": [
+                      {
+                        "direction": "right",
+                        "duration": "untilYourNextTurn",
+                        "op": "limitAttacksToNearestOpponent"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "delta": -2,
+              "kind": "loyalty"
+            }
+          ],
+          "timing": "sorcery"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-the-haunt-of-hightower",
@@ -28044,6 +30563,108 @@
     }
   },
   {
+    "oracleId": "oracle-toby-beastie-befriender",
+    "name": "Toby, Beastie Befriender",
+    "handledLines": [
+      "As long as you control four or more creature tokens, creature tokens you control have flying.",
+      "When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\""
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "condition": {
+            "cmp": ">=",
+            "kind": "countPermanents",
+            "n": 4,
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "isToken"
+                }
+              ]
+            }
+          },
+          "op": {
+            "addKeyword": "flying",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Beast",
+                "power": 4,
+                "ruleStatics": [
+                  {
+                    "kind": "cantAttackAlone"
+                  },
+                  {
+                    "kind": "cantBlockAlone"
+                  }
+                ],
+                "subtypes": [
+                  "Beast"
+                ],
+                "toughness": 4,
+                "typeLine": "Creature — Beast",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-tomb-blade",
     "name": "Tomb Blade",
     "handledLines": [
@@ -28201,8 +30822,48 @@
   {
     "oracleId": "oracle-triarch-stalker",
     "name": "Triarch Stalker",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "Creatures attacking the last chosen player have menace.",
+      "Targeting Relay — At the beginning of combat on your turn, choose an opponent."
+    ],
+    "def": {
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "attackingChosenPlayer"
+              }
+            ]
+          },
+          "op": {
+            "addKeyword": "menace",
+            "layer": 6
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, choose an opponent",
+          "effects": [
+            {
+              "op": "chooseOpponentForSource"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-tribute-mage",
@@ -28846,6 +31507,66 @@
     }
   },
   {
+    "oracleId": "oracle-war-s-toll",
+    "name": "War's Toll",
+    "handledLines": [
+      "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+      "Whenever an opponent taps a land for mana, tap all lands that player controls."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "opponentsAttackWithAll"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever an opponent taps a land for mana, tap all lands that player controls",
+          "effects": [
+            {
+              "op": "tapEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "eventPlayer"
+                  }
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "forMana": true,
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "becomesTapped"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-waste-not",
     "name": "Waste Not",
     "handledLines": [
@@ -29194,6 +31915,65 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-willie-lumpkin-postman",
+    "name": "Willie Lumpkin, Postman",
+    "handledLines": [
+      "Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "draw"
+            },
+            {
+              "op": "eventPlayerMayDraw",
+              "then": [
+                {
+                  "cantAttack": "you",
+                  "duration": "duringTheirNextTurn",
+                  "op": "addAttackRequirement",
+                  "relativeTo": "eventPlayer",
+                  "requirements": [],
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
     }
   },
   {

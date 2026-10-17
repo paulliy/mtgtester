@@ -665,12 +665,7 @@ export function registerLIVING_ENERGYOverrides(): void {
     'Whenever one or more artifact creatures you control deal combat damage to a player, draw a card.',
   ]);
 
-  // Catalog audit living-energy-batch-1: extra combat untaps all permanents you control.
-  unsupportedCard(
-    '2f82b232-21ff-44cc-bc35-0999a1d1c52f',
-    'Lightning Runner',
-    'Untap all creatures you control is implemented as untapEach of all permanents you control.',
-  );
+  // Lightning Runner: restored in coverage PR07 (see coverage-pr07.ts).
 
   defineCard(
     '355603d1-f62d-407a-8fa9-74e7dca8ecf9',

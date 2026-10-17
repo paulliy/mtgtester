@@ -2343,6 +2343,214 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
     ],
   },
   {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Rite of the Raging Storm: a creature named Lightning Rager cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Nils, Discipline Enforcer: a creature with counters must pay to attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Combat Calligrapher: an Inkling cannot attack you'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Goblin Spymaster: at an opponent's end step that player creates a Goblin token"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Toby, Beastie Befriender: the Beast token cannot block alone'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: the attacker gets +X/+0 for the creatures you control'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Life of the Party: each opponent creates a goaded copy of it'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Galactus, Devourer of Worlds: it must attack the opponent with the most life'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: search your library for Galactus when it enters'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Silver Surfer: the target creature must attack the player it damaged'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Hexmark Destroyer: three blockers are not enough'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ["Champion of Lambholt: weaker creatures can't block your creatures"],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: ['Triarch Stalker: creatures attacking the chosen player have menace'],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+    ],
+  },
+  {
+    file: 'card-test-lab.spec.ts',
+    titlePath: [
+      'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+    ],
+  },
+  {
     file: 'combat-trigger-regressions.spec.ts',
     titlePath: ['Marchesa: keep dethrone after a life-total response'],
   },

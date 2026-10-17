@@ -42,10 +42,6 @@ const REASONS: Record<string, string> = {
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
     'Sacrifice alternative cost is missing, and copyTargetSpell copies original targets instead of choosing new ones.',
-  'Firkraag, Cunning Instigator':
-    'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
-  'Kardur, Doomscourge':
-    'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
   'Mana Sculpt':
     'Wizard intervening-if is omitted, and delayed manaSpent is not captured from the countered spell.',
   'Siren Stormtamer':
@@ -62,8 +58,6 @@ const REASONS: Record<string, string> = {
     'Choose a Background is claimed without a background companion implementation.',
   'Nighthawk Scavenger':
     "Power counts card types in all graveyards, not only opponents' graveyards.",
-  'Nils, Discipline Enforcer':
-    'End-step trigger counters every creature, and the attack-tax static is omitted.',
   "Olórin's Searing Light":
     'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
@@ -76,22 +70,17 @@ const REASONS: Record<string, string> = {
     'Prepare is implemented as a pump trigger when this creature attacks.',
   'Etali, Primal Conqueror // Etali, Primal Sickness':
     'Exile splices library cards without a zone-change, so leave-library events are skipped.',
-  'Eriette of the Charmed Apple': 'Cannot-attack-you static is claimed without an implementation.',
   'Herald of Amity':
     'Exile-and-cast-Aura is implemented as lookAtTopN putting an Aura onto the battlefield.',
   'Intermediate Chirography':
     'Class levels and later abilities are claimed without an implementation.',
   'Keen Duelist': 'Mutual reveal is implemented as drawRevealTopLoseManaValue on you only.',
-  'Combat Calligrapher':
-    'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
   'Malakir Rebirth // Malakir Mire': 'Spell face is claimed; only the land back is authored.',
   'Valakut Awakening // Valakut Stoneforge':
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
   'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
-  'Teyo, Geometric Tactician':
-    'The −2 directional attack restriction is claimed without an implementation.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
@@ -104,11 +93,8 @@ const REASONS: Record<string, string> = {
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
   'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
-  'Hexmark Destroyer': 'Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
-  'Triarch Stalker':
-    'Menace for attackers of the chosen opponent is implemented as all creatures in combat.',
   Biotransference: 'Type change omits creature spells and off-battlefield cards.',
   'The War in Heaven': 'Saga chapters are implemented as enter, upkeep, and end-step triggers.',
   'Out of the Tombs':
@@ -116,8 +102,6 @@ const REASONS: Record<string, string> = {
   'Szarekh, the Silent King':
     'Milled-this-way artifact-creature-or-Vehicle is implemented as any artifact creature in the graveyard.',
   'Trazyn the Infinite': 'Activated mana abilities of artifacts in the graveyard are omitted.',
-  'Lightning Runner':
-    'Untap all creatures you control is implemented as untapEach of all permanents you control.',
   'Saheeli, Radiant Creator':
     'The copy is a reflexive trigger after payment; the target is chosen before you decide to pay.',
   'Saheeli, Sublime Artificer': 'A +1 loyalty ability is authored that is not on the card.',
@@ -132,8 +116,6 @@ const REASONS: Record<string, string> = {
   'Druid of Purification':
     'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
-  'Champion of Lambholt':
-    "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
@@ -276,6 +258,16 @@ describe('Marchesa catalog audit containment', () => {
     'Mangara, the Diplomat',
     'Tomik, Wielder of Law',
     'Promise of Loyalty',
+    'Lightning Runner',
+    'Firkraag, Cunning Instigator',
+    'Eriette of the Charmed Apple',
+    'Nils, Discipline Enforcer',
+    'Combat Calligrapher',
+    'Kardur, Doomscourge',
+    'Hexmark Destroyer',
+    'Champion of Lambholt',
+    'Teyo, Geometric Tactician',
+    'Triarch Stalker',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

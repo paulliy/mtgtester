@@ -18,6 +18,9 @@ export interface ObjectFacts extends SourceCastState {
   /** Its name and definition as it last existed: a token that left has no card to ask. */
   name?: string;
   oracleId?: string;
+  /** The rules text and mana cost it showed, a copy's included: its card may show other ones. */
+  oracleText?: string;
+  manaCost?: string | null;
   candidate: SelectorCandidate;
   power: number;
   toughness: number;
@@ -55,6 +58,8 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     objectId: permanent.id,
     name: permanent.name,
     oracleId: permanent.oracleId,
+    oracleText: permanent.oracleText,
+    manaCost: permanent.manaCost,
     candidate: {
       ...candidate,
       types: [...candidate.types],

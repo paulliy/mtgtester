@@ -25,7 +25,7 @@ import type {
   ObjectId,
   PlayerId,
 } from '@mtg/shared';
-import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
+import { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { DecisionOutcome, EngineActionOption, GameGen } from '../decisions';
 import {
   combatDamageTraits,
@@ -35,7 +35,7 @@ import {
   flushDamageReflections,
   permanentSource,
 } from '../effects/resolve';
-import { computeCharacteristics } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
@@ -58,12 +58,23 @@ import {
   isAttackingPlayer,
   isCreaturePermanent,
   playersInApnapOrder,
+  opponentsOf,
   allowanceFor,
   gatherRuleStatics,
   manaSourcesFor,
+  nearestOpponentInDirection,
   triggersOf,
 } from '../state/queries';
-import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
+import type { RuleStaticEntry } from '../state/queries';
+import { evaluateCondition } from '../cards/condition';
+import type {
+  AttackRequirementEntry,
+  AttackRequirementRule,
+  CombatChoiceEntry,
+  EnginePermanent,
+  EnginePlayerState,
+  GameContext,
+} from '../state/types';
 import { emptyManaPools, runPrioritySequence } from '../turn/priority';
 import { queueStepTriggers } from '../turn/turn';
 
@@ -77,6 +88,10 @@ function creaturesOf(ctx: GameContext, playerId: PlayerId): EnginePermanent[] {
   return controlledPermanents(ctx, playerId).filter((p) => isCreaturePermanent(ctx, p));
 }
 
+/**
+ * The players whose goad applies to this creature. A goad outlasts a goader who left the game
+ * until their next turn would have begun (CR 800.4m); the stored entry carries that expiry.
+ */
 function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId> {
   const chars = computeCharacteristics(ctx, creature);
   return new Set([
@@ -85,13 +100,141 @@ function goaderIdsFor(ctx: GameContext, creature: EnginePermanent): Set<PlayerId
   ]);
 }
 
-function hasAttackRequirement(ctx: GameContext, creature: EnginePermanent): boolean {
+/** Does attacking this target obey one attack requirement (CR 508.1d)? */
+type AttackRequirement = (target: AttackTarget) => boolean;
+
+/** "Attacks each combat if able": any attack at all, a planeswalker included. */
+const attacksAnything: AttackRequirement = () => true;
+/** "Attacks a player other than P if able": a player, never a planeswalker. */
+const attacksPlayerOtherThan =
+  (playerId: PlayerId): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && target.player.id !== playerId;
+/** "Attacks P if able": that player, never one of their planeswalkers. */
+const attacksPlayer =
+  (playerId: PlayerId): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && target.player.id === playerId;
+
+/** "Attacks one of these players if able": a player, never a planeswalker. */
+const attacksOneOf =
+  (playerIds: readonly PlayerId[]): AttackRequirement =>
+  (target) =>
+    target.planeswalker === null && playerIds.includes(target.player.id);
+
+function requirementOf(rule: AttackRequirementRule): AttackRequirement {
+  switch (rule.kind) {
+    case 'anyAttack':
+      return attacksAnything;
+    case 'notPlayer':
+      return attacksPlayerOtherThan(rule.playerId);
+    case 'player':
+      return attacksPlayer(rule.playerId);
+  }
+}
+
+/**
+ * The stored requirement entries that apply to `creature` right now: naming it (or matching their
+ * live selector, CR 611.2c), and, for one that lasts "that combat", only while that combat is the
+ * one being run. An entry outlasts a controller who left the game for as long as its expiry says
+ * (CR 800.4m).
+ */
+function activeRequirementEntries(
+  ctx: GameContext,
+  creature: EnginePermanent,
+): AttackRequirementEntry[] {
+  return (ctx.state.attackRequirements ?? []).filter((entry) => {
+    if (entry.expires.kind === 'combat' && ctx.state.currentCombatId !== entry.expires.combatId)
+      return false;
+    // "During their next turn": only while that player is the active player in that turn.
+    if (
+      entry.expires.kind === 'theirNextTurn' &&
+      (ctx.state.currentTurnPlayer !== entry.expires.playerId ||
+        ctx.state.turnNumber <= entry.expires.setTurn)
+    )
+      return false;
+    return entry.affects.kind === 'objects'
+      ? entry.affects.objectIds.includes(creature.id)
+      : matchesSelector(ctx, creature, entry.affects.selector, {
+          cardId: entry.sourceCardId ?? '',
+          controllerId: entry.affects.viewpointId ?? entry.controllerId,
+        });
+  });
+}
+
+/**
+ * Every attack requirement on this creature: goads (each also an "attacks each combat"), the
+ * plain "attacks each combat if able" flags and statics, and the requirements stored by resolved
+ * spells and abilities whose affected set includes it (CR 611.2c). An effect whose controller has
+ * left the game no longer applies (CR 800.4a).
+ */
+function attackRequirementsFor(ctx: GameContext, creature: EnginePermanent): AttackRequirement[] {
   const chars = computeCharacteristics(ctx, creature);
-  return (
-    (creature.goadedBy?.length ?? 0) > 0 ||
-    (chars.staticGoadedBy?.length ?? 0) > 0 ||
+  const goaders = goaderIdsFor(ctx, creature);
+  const requirements: AttackRequirement[] = [];
+  if (
+    goaders.size > 0 ||
     creature.mustAttackThisTurn === true ||
     chars.mustAttackEachCombat === true
+  )
+    requirements.push(attacksAnything);
+  for (const goaderId of goaders) requirements.push(attacksPlayerOtherThan(goaderId));
+  for (const entry of activeRequirementEntries(ctx, creature))
+    for (const rule of entry.requirements) requirements.push(requirementOf(rule));
+  // "Attacks an opponent with the most life among your opponents each combat if able" (Galactus).
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'attackRequirement' || entry.sourceCardId !== creature.cardId)
+      continue;
+    const source = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+    if (entry.static.unless !== undefined && evaluateCondition(ctx, entry.static.unless, source))
+      continue;
+    const opponents = opponentsOf(ctx, entry.controllerId);
+    const most = Math.max(...opponents.map((opponent) => opponent.life));
+    requirements.push(
+      attacksOneOf(opponents.filter((opponent) => opponent.life === most).map((p) => p.id)),
+    );
+  }
+  return requirements;
+}
+
+const requirementsObeyed = (requirements: readonly AttackRequirement[], target: AttackTarget) =>
+  requirements.filter((requirement) => requirement(target)).length;
+
+/**
+ * "Can't attack alone" / "can't block alone" (Toby's Beast token, CR 506.5): a creature with the
+ * rule static, read off the creature itself (the static's source).
+ */
+function cantActAlone(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  kind: 'cantAttackAlone' | 'cantBlockAlone',
+): boolean {
+  return gatherRuleStatics(ctx).some(
+    (entry) => entry.static.kind === kind && entry.sourceCardId === creature.cardId,
+  );
+}
+
+/**
+ * Does a rule static require this player, as an opponent of its controller, to attack with every
+ * creature that can attack for free once any creature attacks (War's Toll)?
+ */
+function attacksWithAll(ctx: GameContext, attackingPlayerId: PlayerId): boolean {
+  return gatherRuleStatics(ctx).some(
+    (entry) =>
+      entry.static.kind === 'opponentsAttackWithAll' &&
+      entry.controllerId !== attackingPlayerId &&
+      !playerById(ctx, entry.controllerId).hasLost,
+  );
+}
+
+/** How many creatures must block this attacker together if any do, beyond menace's two. */
+function minBlockersOf(ctx: GameContext, attacker: EnginePermanent): number {
+  return gatherRuleStatics(ctx).reduce(
+    (most, entry) =>
+      entry.static.kind === 'minBlockers' && entry.sourceCardId === attacker.cardId
+        ? Math.max(most, entry.static.minimum)
+        : most,
+    0,
   );
 }
 
@@ -130,22 +273,66 @@ function attackTaxApplies(
   );
 }
 
-function attackTax(ctx: GameContext, defendingPlayerId: PlayerId, atPlaneswalker: boolean): number {
+/**
+ * Does `creature` match this "can't attack you or planeswalkers you control" static, read from the
+ * static controller's point of view (Combat Calligrapher, Eriette, Rite of the Raging Storm,
+ * Nils)? The static is about attacks on its controller, and on their planeswalkers.
+ */
+function attackRestrictionApplies(
+  ctx: GameContext,
+  entry: RuleStaticEntry,
+  creature: EnginePermanent,
+  defendingPlayerId: PlayerId,
+): boolean {
+  return (
+    entry.static.kind === 'attackRestriction' &&
+    entry.controllerId === defendingPlayerId &&
+    matchesSelector(ctx, creature, entry.static.filter, {
+      cardId: entry.sourceCardId,
+      controllerId: entry.controllerId,
+    })
+  );
+}
+
+/**
+ * What `creature` pays to attack this defender (CR 508.1g): the flat tax, and, for a conditional
+ * restriction (Nils), one generic mana for each counter of any kind on that creature.
+ */
+function attackTax(
+  ctx: GameContext,
+  defendingPlayerId: PlayerId,
+  atPlaneswalker: boolean,
+  creature: EnginePermanent,
+): number {
   return gatherRuleStatics(ctx).reduce((total, entry) => {
+    if (entry.static.kind === 'attackRestriction') {
+      if (
+        entry.static.cost === undefined ||
+        !attackRestrictionApplies(ctx, entry, creature, defendingPlayerId)
+      )
+        return total;
+      return (
+        total + Object.values(creature.counters).reduce((sum, count) => sum + Math.max(0, count), 0)
+      );
+    }
     if (!attackTaxApplies(entry, defendingPlayerId, atPlaneswalker)) return total;
     return entry.static.kind === 'attackTax' ? total + entry.static.amount : total;
   }, 0);
 }
 
+/** The joint cost of these creatures all attacking the same defender (CR 508.1g-h). */
 function attackCost(
   ctx: GameContext,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
-  count = 1,
+  creatures: readonly EnginePermanent[],
 ): ParsedManaCost {
   const cost = {
     ...emptyCost(),
-    generic: attackTax(ctx, defendingPlayerId, atPlaneswalker) * count,
+    generic: creatures.reduce(
+      (total, creature) => total + attackTax(ctx, defendingPlayerId, atPlaneswalker, creature),
+      0,
+    ),
   };
   const phyrexian = gatherRuleStatics(ctx).flatMap((entry) => {
     if (
@@ -156,7 +343,7 @@ function attackCost(
       return [];
     }
     const color = entry.static.phyrexianColor;
-    return Array.from({ length: count }, () => color);
+    return creatures.map(() => color);
   });
   return phyrexian.length > 0 ? { ...cost, phyrexian } : cost;
 }
@@ -169,12 +356,13 @@ function attackCost(
  */
 function canPayAttackTax(
   ctx: GameContext,
-  attackingPlayerId: PlayerId,
+  creature: EnginePermanent,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
 ): boolean {
-  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]);
   if (totalPips(cost) === 0) return true;
+  const attackingPlayerId = creature.controllerId;
   const player = playerById(ctx, attackingPlayerId);
   return canPay(
     cost,
@@ -199,43 +387,96 @@ function allAttackTargets(
 }
 
 /**
- * Promise of Loyalty: "Those creatures can't attack you or planeswalkers you control for as long
- * as they have a vow counter on them." The restriction covers the player and every planeswalker
- * that player controls.
+ * Hard attack restrictions (CR 508.1c), which always win over a requirement. Promise of Loyalty:
+ * "Those creatures can't attack you or planeswalkers you control for as long as they have a vow
+ * counter on them." And the statics that say the same of whatever matches a filter (Combat
+ * Calligrapher's Inklings, creatures enchanted by an Aura Eriette's controller controls, creatures
+ * named Lightning Rager): each covers the player and every planeswalker that player controls.
+ * Only the unconditional ones forbid; one with a cost is a tax (`attackTax`), never a ban. Pramikon's
+ * seat rule also forbids, for every target but the nearest opponent in its direction.
  */
-function attackRestrictionAllows(creature: EnginePermanent, target: AttackTarget): boolean {
-  return !(creature.cantAttackPlayerWhileCounter ?? []).some(
-    (restriction) =>
-      restriction.playerId === target.player.id &&
-      counterCount(creature.counters, restriction.counter) > 0,
-  );
+function attackRestrictionAllows(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  target: AttackTarget,
+): boolean {
+  if (
+    (creature.cantAttackPlayerWhileCounter ?? []).some(
+      (restriction) =>
+        restriction.playerId === target.player.id &&
+        counterCount(creature.counters, restriction.counter) > 0,
+    )
+  )
+    return false;
+  // "Can't attack you or planeswalkers you control" from a resolved spell (Illusionist's Gambit).
+  // "Only creatures in the chosen pile can attack" (Fight or Flight) bars everything outside it.
+  if (
+    activeRequirementEntries(ctx, creature).some((entry) =>
+      (entry.restrictions ?? []).some((rule) =>
+        rule.kind === 'cantAttackExcept'
+          ? !rule.objectIds.includes(creature.id)
+          : rule.playerId === target.player.id,
+      ),
+    )
+  )
+    return false;
+  // Teyo's −2: every player's attacks are limited to the nearest opponent in a direction.
+  if (
+    (ctx.state.attackDirections ?? []).some(
+      (entry) => !isNearestOpponent(ctx, creature, target, entry.direction),
+    )
+  )
+    return false;
+  return !gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind === 'attackOnlyNearestOpponent') {
+      const direction = ctx.state.battlefield.find(
+        (perm) => perm.cardId === entry.sourceCardId,
+      )?.chosenOption;
+      // A source with no direction chosen restricts nothing.
+      return (
+        (direction === 'left' || direction === 'right') &&
+        !isNearestOpponent(ctx, creature, target, direction)
+      );
+    }
+    return (
+      entry.static.kind === 'attackRestriction' &&
+      entry.static.cost === undefined &&
+      attackRestrictionApplies(ctx, entry, creature, target.player.id)
+    );
+  });
 }
 
 /**
- * Goad (CR 508.1d, 701.15b): how many of the creature's goad requirements attacking this target
- * obeys. Attacking a PLAYER P obeys each goader's requirement except P's own; attacking any
- * planeswalker obeys none.
+ * "Each player may attack only the nearest opponent in the chosen direction and planeswalkers
+ * controlled by that opponent" (Pramikon, Teyo): is this target that opponent or one of their
+ * planeswalkers, for `creature`'s controller?
  */
-function goadRequirementsSatisfied(target: AttackTarget, goaders: ReadonlySet<PlayerId>): number {
-  if (target.planeswalker !== null) return 0;
-  return goaders.size - (goaders.has(target.player.id) ? 1 : 0);
+function isNearestOpponent(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  target: AttackTarget,
+  direction: 'left' | 'right',
+): boolean {
+  return nearestOpponentInDirection(ctx, creature.controllerId, direction)?.id === target.player.id;
 }
 
 /**
- * Restrict `candidates` to targets obeying the maximum number of goad requirements achievable
- * among the FREE targets (CR 508.1d: a cost never forces the player to obey an additional
- * requirement, so cost-gated targets never raise the maximum).
+ * Restrict `candidates` to targets obeying the maximum number of requirements achievable among
+ * the FREE targets (CR 508.1d: a cost never forces the player to obey an additional
+ * requirement, so cost-gated targets never raise the maximum). Attacking a PLAYER P obeys each
+ * goader's "other than" requirement except P's own; attacking a planeswalker obeys only the plain
+ * "attacks each combat" ones.
  */
-function applyGoadScope(
+function applyRequirementScope(
   ctx: GameContext,
   creature: EnginePermanent,
   candidates: AttackTarget[],
   free: readonly AttackTarget[],
 ): AttackTarget[] {
-  const goaderIds = goaderIdsFor(ctx, creature);
-  if (goaderIds.size === 0) return candidates;
-  const maximum = Math.max(0, ...free.map((t) => goadRequirementsSatisfied(t, goaderIds)));
-  return candidates.filter((t) => goadRequirementsSatisfied(t, goaderIds) >= maximum);
+  const requirements = attackRequirementsFor(ctx, creature);
+  if (requirements.length === 0) return candidates;
+  const maximum = Math.max(0, ...free.map((t) => requirementsObeyed(requirements, t)));
+  return candidates.filter((t) => requirementsObeyed(requirements, t) >= maximum);
 }
 
 function attackTargetsFor(
@@ -244,15 +485,15 @@ function attackTargetsFor(
   opponents: readonly EnginePlayerState[],
 ): AttackTarget[] {
   const allowed = allAttackTargets(ctx, opponents).filter((t) =>
-    attackRestrictionAllows(creature, t),
+    attackRestrictionAllows(ctx, creature, t),
   );
   const payable = allowed.filter((t) =>
-    canPayAttackTax(ctx, creature.controllerId, t.player.id, t.planeswalker !== null),
+    canPayAttackTax(ctx, creature, t.player.id, t.planeswalker !== null),
   );
   const free = allowed.filter(
-    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+    (t) => totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
-  return applyGoadScope(ctx, creature, payable, free);
+  return applyRequirementScope(ctx, creature, payable, free);
 }
 
 /**
@@ -273,10 +514,32 @@ function freeAttackTargetsFor(
 ): AttackTarget[] {
   const free = allAttackTargets(ctx, opponents).filter(
     (t) =>
-      attackRestrictionAllows(creature, t) &&
-      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null)) === 0,
+      attackRestrictionAllows(ctx, creature, t) &&
+      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
   );
-  return applyGoadScope(ctx, creature, free, free);
+  return applyRequirementScope(ctx, creature, free, free);
+}
+
+/**
+ * The free targets this creature must attack one of (CR 508.1d), or none when no requirement can
+ * be obeyed at all: attacking has to obey the maximum number of requirements it can, and a
+ * creature none of whose requirements any free attack would obey (it must attack a player it
+ * can't attack) is not required to attack.
+ */
+function requiredAttackTargets(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  opponents: readonly EnginePlayerState[],
+): AttackTarget[] {
+  const requirements = attackRequirementsFor(ctx, creature);
+  if (requirements.length === 0) return [];
+  const free = allAttackTargets(ctx, opponents).filter(
+    (t) =>
+      attackRestrictionAllows(ctx, creature, t) &&
+      totalPips(attackCost(ctx, t.player.id, t.planeswalker !== null, [creature])) === 0,
+  );
+  const maximum = Math.max(0, ...free.map((t) => requirementsObeyed(requirements, t)));
+  return maximum === 0 ? [] : free.filter((t) => requirementsObeyed(requirements, t) >= maximum);
 }
 
 function* payAttackTax(
@@ -284,9 +547,9 @@ function* payAttackTax(
   attackingPlayerId: PlayerId,
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
-  count: number,
+  creatures: readonly EnginePermanent[],
 ): GameGen<void> {
-  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, count);
+  const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, creatures);
   if (totalPips(cost) === 0) return;
   yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
 }
@@ -296,18 +559,23 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   if (blocker.tapped || blocker.cantBlock === true || attacker.cantBeBlocked === true) return false;
   if (computeCharacteristics(ctx, attacker).cantBeBlocked) return false;
   if (ctx.state.creaturesCantBeBlockedThisTurn) return false;
-  for (const champion of ctx.state.battlefield) {
-    if (champion.controllerId === attacker.controllerId) {
-      const def = ctx.defs.get(champion.oracleId);
-      if (
-        def?.name === 'Champion of Lambholt' ||
-        def?.oracleId === 'c549b0fd-1e08-4873-952e-a14dc45a0fd2'
-      ) {
-        const champPower = effectivePT(ctx, champion).power;
-        const blockerPower = effectivePT(ctx, blocker).power;
-        if (blockerPower < champPower) return false;
-      }
-    }
+  // "Those creatures can't block" until a player's next turn (Taunt from the Rampart).
+  if ((ctx.state.blockRestrictions ?? []).some((entry) => entry.objectIds.includes(blocker.id)))
+    return false;
+  // "Creatures with power less than this creature's power can't block creatures you control"
+  // (Champion of Lambholt): a rule static of the source, read against its CURRENT power.
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'cantBlockCreatures') continue;
+    const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+    if (source === undefined) continue;
+    if (
+      matchesSelector(ctx, attacker, entry.static.attackerFilter, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+      }) &&
+      effectivePT(ctx, blocker).power < effectivePT(ctx, source).power
+    )
+      return false;
   }
   if (
     ctx.state.effects.some(
@@ -366,6 +634,27 @@ function commitAttacker(
 }
 
 /**
+ * Must this creature be declared as an attacker (CR 508.1d)? It has a requirement it can obey for
+ * free. A creature that can't attack alone obeys it only together with another creature that can
+ * be declared for free, so with no such partner it is not required to attack: nobody has to pay an
+ * attack cost to obey a requirement (CR 506.5, 508.1c, 508.1d).
+ */
+function mustAttackNow(
+  ctx: GameContext,
+  creature: EnginePermanent,
+  eligible: readonly EnginePermanent[],
+  opponents: readonly EnginePlayerState[],
+): boolean {
+  if (requiredAttackTargets(ctx, creature, opponents).length === 0) return false;
+  return (
+    !cantActAlone(ctx, creature, 'cantAttackAlone') ||
+    eligible.some(
+      (other) => other.id !== creature.id && freeAttackTargetsFor(ctx, other, opponents).length > 0,
+    )
+  );
+}
+
+/**
  * Build the per-creature legal-defender set for every eligible attacker (CR 508.1c/d) — the
  * data both the presentation layer and the offered menu are built from. `defenders` alone
  * already encodes restrictions and costs (item 15); `mustAttack` encodes the one requirement
@@ -381,9 +670,7 @@ function buildAttackSubjects(
   return eligible.map((creature) => {
     const pt = effectivePT(ctx, creature);
     const legal = attackTargetsFor(ctx, creature, opponents);
-    const mustAttack =
-      hasAttackRequirement(ctx, creature) &&
-      freeAttackTargetsFor(ctx, creature, opponents).length > 0;
+    const mustAttack = mustAttackNow(ctx, creature, eligible, opponents);
     return {
       subjectId: creature.id,
       name: creature.name,
@@ -394,7 +681,7 @@ function buildAttackSubjects(
         .map((t) => ({
           playerId: t.player.id,
           life: t.player.life,
-          attackTax: attackTax(ctx, t.player.id, false),
+          attackTax: attackTax(ctx, t.player.id, false, creature),
         })),
       planeswalkers: legal.flatMap((t) =>
         t.planeswalker === null
@@ -405,7 +692,7 @@ function buildAttackSubjects(
                 controllerId: t.player.id,
                 name: t.planeswalker.name,
                 loyalty: counterCount(t.planeswalker.counters, 'loyalty'),
-                attackTax: attackTax(ctx, t.player.id, true),
+                attackTax: attackTax(ctx, t.player.id, true, creature),
               },
             ],
       ),
@@ -514,11 +801,40 @@ function validateAttackDeclaration(
   attackingPlayerId: PlayerId,
   eligible: readonly EnginePermanent[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  /** False while only WHICH creatures attack is known (Master Warcraft): no defender, so no cost yet. */
+  costs = true,
 ): CombatViolation[] {
+  // CR 506.5: a creature that can't attack alone is declared only with another attacker.
+  const declared = eligible.filter((creature) => (assignment.get(creature.id) ?? null) !== null);
+  const lone = declared.length === 1 ? declared[0] : undefined;
+  if (lone !== undefined && cantActAlone(ctx, lone, 'cantAttackAlone'))
+    return [
+      {
+        subjectId: lone.id,
+        kind: 'attackAlone',
+        message: `${lone.name} can't attack alone`,
+      },
+    ];
+  // War's Toll: once any creature attacks, every creature that can attack for free must.
+  if (declared.length > 0 && attacksWithAll(ctx, attackingPlayerId)) {
+    const opponents = playersInApnapOrder(ctx).filter((p) => p.id !== attackingPlayerId);
+    const missing = eligible.filter(
+      (creature) =>
+        (assignment.get(creature.id) ?? null) === null &&
+        freeAttackTargetsFor(ctx, creature, opponents).length > 0,
+    );
+    if (missing.length > 0)
+      return missing.map((creature) => ({
+        subjectId: creature.id,
+        kind: 'attackWithAll' as const,
+        message: `${creature.name} must attack because another creature of yours attacks`,
+      }));
+  }
+  if (!costs) return [];
   const groups = groupByDefender(eligible, assignment);
   const totalCost = emptyCost();
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
-    const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures.length);
+    const cost = attackCost(ctx, defenderId, atPlaneswalker, creatures);
     totalCost.generic += cost.generic;
     totalCost.phyrexian = [...(totalCost.phyrexian ?? []), ...(cost.phyrexian ?? [])];
   }
@@ -534,8 +850,8 @@ function validateAttackDeclaration(
   if (payable) return [];
   const violations: CombatViolation[] = [];
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
-    if (totalPips(attackCost(ctx, defenderId, atPlaneswalker)) === 0) continue;
     for (const creature of creatures) {
+      if (totalPips(attackCost(ctx, defenderId, atPlaneswalker, [creature])) === 0) continue;
       violations.push({
         subjectId: creature.id,
         kind: 'attackTax',
@@ -557,11 +873,13 @@ function* applyAttackDeclaration(
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): GameGen<void> {
   for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
-    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures.length);
+    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
+    // War's Toll: every attacker that could attack for free was required to (Firkraag reads it).
+    const allMustAttack = attacksWithAll(ctx, ap.id);
     for (const creature of creatures) {
       const hadToAttack =
-        hasAttackRequirement(ctx, creature) &&
-        freeAttackTargetsFor(ctx, creature, opponents).length > 0;
+        mustAttackNow(ctx, creature, eligible, opponents) ||
+        (allMustAttack && freeAttackTargetsFor(ctx, creature, opponents).length > 0);
       commitAttacker(
         ctx,
         creature,
@@ -587,11 +905,36 @@ function repairAttackDeclaration(
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  costs = true,
 ): Map<ObjectId, AttackChoice | null> {
   const repaired = new Map(assignment);
-  let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+  let violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
   let guard = eligible.length + 1;
   while (violations.length > 0 && guard-- > 0) {
+    // A creature that can't attack alone, declared alone (CR 506.5): when it has a requirement
+    // the declaration has to obey (CR 508.1d), another creature joins it; otherwise it stands down.
+    const alone = violations.find((v) => v.kind === 'attackAlone');
+    if (alone !== undefined) {
+      const lone = eligible.find((c) => c.id === alone.subjectId) as EnginePermanent;
+      const partner = mustAttackNow(ctx, lone, eligible, opponents)
+        ? eligible
+            .filter((c) => c.id !== lone.id && freeAttackTargetsFor(ctx, c, opponents).length > 0)
+            .sort(
+              (a, b) =>
+                effectivePT(ctx, a).power - effectivePT(ctx, b).power || a.id.localeCompare(b.id),
+            )[0]
+        : undefined;
+      const target =
+        partner === undefined ? undefined : freeAttackTargetsFor(ctx, partner, opponents)[0];
+      if (partner !== undefined && target !== undefined)
+        repaired.set(partner.id, {
+          defenderId: target.player.id,
+          planeswalkerId: target.planeswalker?.id ?? null,
+        });
+      else repaired.set(lone.id, null);
+      violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
+      continue;
+    }
     const violatedIds = new Set(violations.map((v) => v.subjectId));
     const candidates = eligible
       .filter((c) => violatedIds.has(c.id))
@@ -600,18 +943,200 @@ function repairAttackDeclaration(
       );
     const pick = candidates[0];
     if (pick === undefined) break; // unreachable: every violation names an eligible subject
-    const mustAttack =
-      hasAttackRequirement(ctx, pick) && freeAttackTargetsFor(ctx, pick, opponents).length > 0;
-    const free = mustAttack ? freeAttackTargetsFor(ctx, pick, opponents)[0] : undefined;
+    // A creature that must join the attack goes at a target it can attack for free.
+    const joining = violations.some((v) => v.subjectId === pick.id && v.kind === 'attackWithAll');
+    const mustAttack = joining || mustAttackNow(ctx, pick, eligible, opponents);
+    const free = joining
+      ? freeAttackTargetsFor(ctx, pick, opponents)[0]
+      : mustAttack
+        ? requiredAttackTargets(ctx, pick, opponents)[0]
+        : undefined;
     repaired.set(
       pick.id,
       free === undefined
         ? null
         : { defenderId: free.player.id, planeswalkerId: free.planeswalker?.id ?? null },
     );
-    violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired);
+    violations = validateAttackDeclaration(ctx, attackingPlayerId, eligible, repaired, costs);
   }
   return repaired;
+}
+
+/**
+ * Whoever chooses this turn's attackers and every player's blocks (Master Warcraft), or null. A
+ * newer effect overrides an older one; one whose controller has left the game no longer applies
+ * (CR 800.4a).
+ */
+function combatChooserId(ctx: GameContext): PlayerId | null {
+  const entries = ctx.state.combatChoices ?? [];
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i] as CombatChoiceEntry;
+    if (entry.turn === ctx.state.turnNumber && !playerById(ctx, entry.casterId).hasLost)
+      return entry.casterId;
+  }
+  return null;
+}
+
+/** The set-only counterpart of `buildAttackOption`: each slot is "attacks" or "stays home". */
+function buildAttackSetOption(subjects: readonly AttackDeclarationSubject[]): EngineActionOption {
+  const base = buildAttackOption(subjects);
+  return {
+    ...base,
+    description: `Choose attackers (${subjects.length} eligible creature${subjects.length === 1 ? '' : 's'})`,
+    data: { ...base.data, chooseAttackers: true },
+    targets: subjects.map((s, i) => ({
+      slot: i,
+      options: [ATTACKS_TARGET, ...(s.mustAttack ? [] : [NO_ATTACK_TARGET])],
+    })),
+  };
+}
+
+/**
+ * "You choose which creatures attack this turn" (Master Warcraft), first half: the chooser picks
+ * the set from the creatures that can attack, held to the same requirements and joint rules as
+ * any declaration (CR 508.1c-d, 506.5) but with no defender yet, so no cost is checked here. Asked
+ * and repaired like `declareAttackers`.
+ */
+function* chooseAttackerSet(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  pool: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<EnginePermanent[]> {
+  const MAX_PROPOSALS = 2;
+  // Which creatures are in the set is all that matters; the defender is a placeholder.
+  const stand = { defenderId: opponents[0]?.id ?? ap.id, planeswalkerId: null };
+  const asAssignment = (set: ReadonlySet<ObjectId>) =>
+    new Map<ObjectId, AttackChoice | null>(pool.map((c) => [c.id, set.has(c.id) ? stand : null]));
+  let rejection: CombatRejection | undefined;
+  let set = new Set<ObjectId>();
+  for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
+    const subjects = buildAttackSubjects(ctx, pool, opponents);
+    const outcome = yield {
+      decisionType: 'declareAttackers',
+      player: chooserId,
+      prompt:
+        attempt === 1
+          ? `Choose which of ${ap.id}'s creatures attack: ${pool.length} eligible creature${pool.length === 1 ? '' : 's'}`
+          : `Choose which of ${ap.id}'s creatures attack — fix the flagged problem(s) and resubmit`,
+      options: [buildAttackSetOption(subjects)],
+      presentationAttackDeclaration: {
+        subjects,
+        mode: 'chooseAttackers',
+        attackingPlayer: ap.id,
+        ...(rejection !== undefined ? { rejection } : {}),
+      },
+    };
+    set = new Set(
+      pool.filter((_, i) => outcome.targets.get(i) === ATTACKS_TARGET).map((c) => c.id),
+    );
+    for (const subject of subjects) {
+      if (subject.mustAttack && !set.has(subject.subjectId)) {
+        throw new Error(
+          `engine bug: ${subject.subjectId} must attack but was left out of the chosen set`,
+        );
+      }
+    }
+    const violations = validateAttackDeclaration(ctx, ap.id, pool, asAssignment(set), false);
+    if (violations.length === 0) return pool.filter((c) => set.has(c.id));
+    rejection = { violations };
+  }
+  const repaired = repairAttackDeclaration(ctx, ap.id, pool, opponents, asAssignment(set), false);
+  emit(
+    ctx,
+    'attackDeclarationRepaired',
+    { violations: rejection?.violations.length ?? 0 },
+    chooserId,
+  );
+  return pool.filter((c) => repaired.get(c.id) !== null && repaired.get(c.id) !== undefined);
+}
+
+/**
+ * Second half: the attacking player chooses what each chosen creature attacks and pays for it
+ * (CR 508.1b, 508.1g). A creature with a way to attack that costs nothing must attack one; one
+ * that could attack only by paying may be declined (CR 508.1d), and is then left out of the
+ * assignment for the chooser to choose again. Asked and repaired like `declareAttackers`.
+ */
+function* assignChosenAttackers(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  members: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<Map<ObjectId, AttackChoice | null>> {
+  const MAX_PROPOSALS = 2;
+  let rejection: CombatRejection | undefined;
+  let assignment: Map<ObjectId, AttackChoice | null> = new Map();
+  for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
+    const subjects = buildAttackSubjects(ctx, members, opponents).map((subject) => ({
+      ...subject,
+      mustAttack:
+        freeAttackTargetsFor(
+          ctx,
+          members.find((c) => c.id === subject.subjectId) as EnginePermanent,
+          opponents,
+        ).length > 0,
+    }));
+    const outcome = yield {
+      decisionType: 'declareAttackers',
+      player: ap.id,
+      prompt:
+        attempt === 1
+          ? `Choose what each of the ${members.length} creature${members.length === 1 ? '' : 's'} ${chooserId} chose attacks`
+          : 'Choose what each chosen creature attacks — fix the flagged problem(s) and resubmit',
+      options: [buildAttackOption(subjects)],
+      presentationAttackDeclaration: {
+        subjects,
+        mode: 'assignChosen',
+        attackingPlayer: ap.id,
+        chosenBy: chooserId,
+        ...(rejection !== undefined ? { rejection } : {}),
+      },
+    };
+    assignment = readAttackAssignment(ctx, outcome, members);
+    for (const subject of subjects) {
+      if (subject.mustAttack && assignment.get(subject.subjectId) === null) {
+        throw new Error(`engine bug: ${subject.subjectId} must attack but was left undeclared`);
+      }
+    }
+    const violations = validateAttackDeclaration(ctx, ap.id, members, assignment);
+    if (violations.length === 0) return assignment;
+    rejection = { violations };
+  }
+  const repaired = repairAttackDeclaration(ctx, ap.id, members, opponents, assignment);
+  emit(ctx, 'attackDeclarationRepaired', { violations: rejection?.violations.length ?? 0 }, ap.id);
+  return repaired;
+}
+
+/**
+ * Declare attackers when someone else chooses which creatures attack (Master Warcraft): the
+ * chooser picks the set, the attacking player picks what each attacks, and a creature whose cost
+ * they decline can't attack, so the chooser chooses again among the rest (CR 508.1g-h).
+ */
+function* declareChosenAttackers(
+  ctx: GameContext,
+  ap: EnginePlayerState,
+  opponents: readonly EnginePlayerState[],
+  eligible: readonly EnginePermanent[],
+  chooserId: PlayerId,
+): GameGen<void> {
+  const declined = new Set<ObjectId>();
+  for (let round = 0; round <= eligible.length; round++) {
+    const pool = eligible.filter(
+      (c) => !declined.has(c.id) && attackTargetsFor(ctx, c, opponents).length > 0,
+    );
+    if (pool.length === 0) return;
+    const members = yield* chooseAttackerSet(ctx, ap, opponents, pool, chooserId);
+    if (members.length === 0) return;
+    const assignment = yield* assignChosenAttackers(ctx, ap, opponents, members, chooserId);
+    const dropped = members.filter((c) => (assignment.get(c.id) ?? null) === null);
+    if (dropped.length === 0) {
+      yield* applyAttackDeclaration(ctx, ap, members, opponents, assignment);
+      return;
+    }
+    for (const creature of dropped) declined.add(creature.id);
+  }
 }
 
 /**
@@ -638,7 +1163,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // creature was eligible to be in it.
   const eligible = creaturesOf(ctx, ap.id).filter((c) => canAttack(ctx, c));
 
-  if (eligible.length > 0) {
+  const chooserId = combatChooserId(ctx);
+  if (chooserId !== null && chooserId !== ap.id)
+    yield* declareChosenAttackers(ctx, ap, opponents, eligible, chooserId);
+  else if (eligible.length > 0) {
     const MAX_PROPOSALS = 2;
     let rejection: CombatRejection | undefined;
     let lastAssignment: Map<ObjectId, AttackChoice | null> = new Map();
@@ -698,7 +1226,10 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
   // Boast (CR 702.146a): "activate only if this creature attacked this turn" — tracked
   // separately from `attacking` (which clears at end of combat) so the check still holds
   // in a later main phase.
-  for (const perm of declared) perm.attackedThisTurn = true;
+  for (const perm of declared) {
+    perm.attackedThisTurn = true;
+    perm.timesAttackedThisTurn = (perm.timesAttackedThisTurn ?? 0) + 1;
+  }
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     // The defending player is woken for an attack on their planeswalker too (CR 509.1).
@@ -774,7 +1305,11 @@ function buildBlockSubjects(
 /** The single `EngineActionOption` a batched block declaration is proposed against — the
  * blocker-side mirror of `buildAttackOption`: one target slot per subject, that creature's legal
  * attackers plus `NO_BLOCK_TARGET`, omitted when `mustBlock`. */
-function buildBlockOption(subjects: readonly BlockDeclarationSubject[]): EngineActionOption {
+function buildBlockOption(
+  subjects: readonly BlockDeclarationSubject[],
+  /** Set when someone else chooses this defending player's blocks (Master Warcraft). */
+  blockingPlayer?: PlayerId,
+): EngineActionOption {
   return {
     type: 'blockDeclaration',
     description: `Declare blockers (${subjects.length} eligible creature${subjects.length === 1 ? '' : 's'})`,
@@ -785,6 +1320,7 @@ function buildBlockOption(subjects: readonly BlockDeclarationSubject[]): EngineA
         toughness: s.toughness,
         mustBlock: s.mustBlock,
       })),
+      ...(blockingPlayer !== undefined ? { blockingPlayer } : {}),
     },
     targets: subjects.map((s, i) => ({
       slot: i,
@@ -839,17 +1375,38 @@ function validateBlockDeclaration(
   const violations: CombatViolation[] = [];
   for (const [attackerId, blockers] of byAttacker) {
     const attacker = findPermanent(ctx, attackerId);
-    if (attacker === undefined || !hasKeyword(ctx, attacker, 'menace') || blockers.length >= 2) {
-      continue;
-    }
-    for (const blocker of blockers) {
-      violations.push({
-        subjectId: blocker.id,
-        kind: 'menace',
-        message: `${attacker.name} has menace and can't be blocked by only one creature`,
-      });
-    }
+    if (attacker === undefined) continue;
+    if (hasKeyword(ctx, attacker, 'menace') && blockers.length < 2)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'menace',
+          message: `${attacker.name} has menace and can't be blocked by only one creature`,
+        });
+      }
+    // "Can't be blocked except by N or more creatures": none, or at least N.
+    const needed = minBlockersOf(ctx, attacker);
+    if (needed > 2 && blockers.length < needed)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'minBlockers',
+          message: `${attacker.name} can't be blocked except by ${needed} or more creatures`,
+        });
+      }
   }
+  // CR 506.5: a creature that can't block alone blocks only if another creature of the same
+  // defending player is declared as a blocker too (this is that player's whole declaration).
+  const blocking = candidates.filter(
+    ({ blocker }) => (assignment.get(blocker.id) ?? null) !== null,
+  );
+  const lone = blocking.length === 1 ? blocking[0]?.blocker : undefined;
+  if (lone !== undefined && cantActAlone(ctx, lone, 'cantBlockAlone'))
+    violations.push({
+      subjectId: lone.id,
+      kind: 'blockAlone',
+      message: `${lone.name} can't block alone`,
+    });
   return violations;
 }
 
@@ -884,11 +1441,57 @@ function applyBlockDeclaration(
 }
 
 /**
+ * A group too small for menace or "can't be blocked except by N or more creatures" that holds a
+ * creature required to block grows to the minimum with its controller's idle creatures able to
+ * block that attacker, rather than standing the required creature down (CR 509.1c). Assigns
+ * nothing unless the whole gap can be filled, and fills each attacker at most once so the repair
+ * still terminates; returns whether it assigned.
+ */
+function fillRequiredBlockGroup(
+  ctx: GameContext,
+  candidates: readonly BlockCandidate[],
+  repaired: Map<ObjectId, ObjectId | null>,
+  violations: readonly CombatViolation[],
+  filled: Set<ObjectId>,
+): boolean {
+  const shortIds = new Set(
+    violations
+      .filter((v) => v.kind === 'menace' || v.kind === 'minBlockers')
+      .map((v) => v.subjectId),
+  );
+  for (const { blocker } of candidates) {
+    if (!shortIds.has(blocker.id) || blocker.mustBlockThisTurn !== true) continue;
+    const attackerId = repaired.get(blocker.id);
+    if (attackerId == null || filled.has(attackerId)) continue;
+    const attacker = findPermanent(ctx, attackerId);
+    if (attacker === undefined) continue;
+    const needed = Math.max(
+      hasKeyword(ctx, attacker, 'menace') ? 2 : 0,
+      minBlockersOf(ctx, attacker),
+    );
+    const current = candidates.filter((c) => repaired.get(c.blocker.id) === attackerId).length;
+    const idle = candidates.filter(
+      (c) =>
+        (repaired.get(c.blocker.id) ?? null) === null &&
+        c.blockable.some((a) => a.id === attackerId),
+    );
+    if (current + idle.length < needed) continue;
+    for (const partner of idle.slice(0, needed - current))
+      repaired.set(partner.blocker.id, attackerId);
+    filled.add(attackerId);
+    return true;
+  }
+  return false;
+}
+
+/**
  * Engine-owned repair (ADR 0023 item 17, blocker-side) — the `repairAttackDeclaration` pattern
  * applied to menace: repeatedly pick the lowest-power violating blocker (ties broken by id) and
  * fix just it. If it's `mustBlock`, first try redirecting it to a different legal attacker that
  * isn't itself under-blocked (never manufacturing a second menace violation); otherwise, or if no
- * such attacker exists, stand it down. Bounded by the candidate count so it always terminates.
+ * such attacker exists, stand it down. A too-small group holding a `mustBlock` creature is first
+ * grown to its minimum when enough idle creatures can join it. Bounded by the candidate count so
+ * it always terminates.
  */
 function repairBlockDeclaration(
   ctx: GameContext,
@@ -897,8 +1500,14 @@ function repairBlockDeclaration(
 ): Map<ObjectId, ObjectId | null> {
   const repaired = new Map(assignment);
   let violations = validateBlockDeclaration(ctx, candidates, repaired);
-  let guard = candidates.length + 1;
+  // Each candidate is stood down or redirected at most once, and each attacker filled at most once.
+  let guard = 2 * candidates.length + 1;
+  const filled = new Set<ObjectId>();
   while (violations.length > 0 && guard-- > 0) {
+    if (fillRequiredBlockGroup(ctx, candidates, repaired, violations, filled)) {
+      violations = validateBlockDeclaration(ctx, candidates, repaired);
+      continue;
+    }
     const violatedIds = new Set(violations.map((v) => v.subjectId));
     const pick = candidates
       .filter((c) => violatedIds.has(c.blocker.id))
@@ -909,9 +1518,45 @@ function repairBlockDeclaration(
       )[0];
     if (pick === undefined) break; // unreachable: every violation names a candidate
     const currentAttackerId = repaired.get(pick.blocker.id);
+    // A lone blocker that can't block alone stands down; no other attacker fixes that.
+    const alone = violations.some(
+      (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
+    );
+    // A required blocker that can't block alone keeps its block when another of its controller's
+    // idle creatures can block too (CR 506.5 counts every blocker that player declares): beside
+    // it on the same attacker, or else on any attacker that one creature may block by itself.
+    if (alone && pick.blocker.mustBlockThisTurn === true && currentAttackerId != null) {
+      const idle = candidates.filter(
+        (c) => c.blocker.id !== pick.blocker.id && (repaired.get(c.blocker.id) ?? null) === null,
+      );
+      const beside = idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId));
+      const elsewhere =
+        beside === undefined
+          ? idle
+              .map((c) => ({
+                c,
+                attacker: c.blockable.find(
+                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0,
+                ),
+              }))
+              .find((entry) => entry.attacker !== undefined)
+          : undefined;
+      const partner = beside ?? elsewhere?.c;
+      const partnerAttackerId = beside !== undefined ? currentAttackerId : elsewhere?.attacker?.id;
+      if (partner !== undefined && partnerAttackerId !== undefined) {
+        repaired.set(partner.blocker.id, partnerAttackerId);
+        violations = validateBlockDeclaration(ctx, candidates, repaired);
+        continue;
+      }
+    }
     const alternative =
-      pick.blocker.mustBlockThisTurn === true
-        ? pick.blockable.find((a) => a.id !== currentAttackerId && !hasKeyword(ctx, a, 'menace'))
+      pick.blocker.mustBlockThisTurn === true && !alone
+        ? pick.blockable.find(
+            (a) =>
+              a.id !== currentAttackerId &&
+              !hasKeyword(ctx, a, 'menace') &&
+              minBlockersOf(ctx, a) === 0,
+          )
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);
     violations = validateBlockDeclaration(ctx, candidates, repaired);
@@ -943,18 +1588,22 @@ function* declareBlockers(ctx: GameContext): GameGen<void> {
     let lastAssignment: Map<ObjectId, ObjectId | null> = new Map();
     let applied = false;
 
+    // Master Warcraft: someone else chooses this defending player's blocks.
+    const chooserId = combatChooserId(ctx);
+    const chosenFor = chooserId !== null && chooserId !== defenderId;
     for (let attempt = 1; attempt <= MAX_PROPOSALS; attempt++) {
       const subjects = buildBlockSubjects(ctx, candidates);
       const outcome = yield {
         decisionType: 'declareBlockers',
-        player: defenderId,
+        player: chosenFor ? chooserId : defenderId,
         prompt:
           attempt === 1
-            ? `Declare blockers: ${candidates.length} eligible creature${candidates.length === 1 ? '' : 's'}`
+            ? `Declare blockers${chosenFor ? ` for ${defenderId}` : ''}: ${candidates.length} eligible creature${candidates.length === 1 ? '' : 's'}`
             : 'Declare blockers — fix the flagged problem(s) and resubmit',
-        options: [buildBlockOption(subjects)],
+        options: [buildBlockOption(subjects, chosenFor ? defenderId : undefined)],
         presentationBlockDeclaration: {
           subjects,
+          ...(chosenFor ? { blockingPlayer: defenderId } : {}),
           ...(rejection !== undefined ? { rejection } : {}),
         },
       };
@@ -1430,6 +2079,7 @@ export function* runCombatPhase(ctx: GameContext): GameGen<void> {
   emptyManaPools(ctx);
 
   setStep(ctx, 'declareAttackers');
+  ctx.state.declareAttackersReachedThisTurn = true;
   yield* declareAttackers(ctx);
   const anyAttackers = attackers(ctx).length > 0;
   yield* runPrioritySequence(ctx);

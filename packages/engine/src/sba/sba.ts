@@ -24,6 +24,7 @@ import { computeCharacteristics } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
+import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
@@ -43,6 +44,7 @@ import type {
   EngineCardObject,
   EnginePermanent,
   EnginePlayerState,
+  EffectExpiry,
   EngineStackObject,
   GameContext,
   PendingTrigger,
@@ -54,6 +56,58 @@ function markLoss(ctx: GameContext, player: EnginePlayerState, reason: LossReaso
   player.hasLost = true;
   player.lossReason = reason;
   debug(ctx, 'sba', `${player.id} loses: ${reason}`);
+}
+
+/**
+ * CR 800.4m: when `departedId` leaves, a continuous effect lasting until their next turn, or until
+ * a point in it, lasts until that turn would have begun: neither ending now nor lasting forever.
+ * Their turn would begin as the turn of the player seated before them ends, so each such expiry
+ * (goad included, CR 701.15a) moves to the end of that player's next turn. An expiry already
+ * waiting on the departed player's own seat moves to the seat before theirs, unless this is that
+ * seat's normal turn: then the earlier player's turn would begin as this turn ends, and the
+ * expiry stays on it for the aborted turn's end (`expireDepartedPlayerEffects`).
+ */
+function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): void {
+  const seat = s.turnOrder.indexOf(departedId);
+  if (seat < 0) return;
+  let afterTurnOf: PlayerId | undefined;
+  for (let step = 1; step < s.turnOrder.length; step++) {
+    const id = s.turnOrder[(seat - step + s.turnOrder.length) % s.turnOrder.length] as PlayerId;
+    if (!s.players.find((p) => p.id === id)?.hasLost) {
+      afterTurnOf = id;
+      break;
+    }
+  }
+  if (afterTurnOf === undefined) return;
+  const departed = { afterTurnOf, fromTurn: s.turnNumber };
+  const keepsBoundary = departedId === s.currentTurnPlayer && s.normalTurnResumeAfter === undefined;
+  const remap = <T extends { expires: EffectExpiry }>(entries: T[] | undefined): void => {
+    for (const entry of entries ?? []) {
+      const expires = entry.expires;
+      if (
+        (expires.kind === 'untilNextTurn' || expires.kind === 'endOfNextTurn') &&
+        expires.playerId === departedId
+      )
+        entry.expires = { kind: 'departedNextTurn', ...departed };
+      else if (
+        expires.kind === 'departedNextTurn' &&
+        expires.afterTurnOf === departedId &&
+        !keepsBoundary
+      )
+        entry.expires = { ...expires, afterTurnOf };
+    }
+  };
+  remap(s.attackRequirements);
+  remap(s.attackDirections);
+  remap(s.blockRestrictions);
+  for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
+    for (const goad of perm.goadedBy ?? []) {
+      if (goad.permanent === true) continue;
+      if (goad.departed === undefined && goad.goaderId === departedId) goad.departed = departed;
+      else if (goad.departed?.afterTurnOf === departedId && !keepsBoundary)
+        goad.departed = { ...goad.departed, afterTurnOf };
+    }
+  }
 }
 
 /**
@@ -107,6 +161,11 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
     s.delayedTriggers = s.delayedTriggers.filter((t) => t.controllerId !== player.id);
+    // Effects they made that last until their next turn, or a point in it, last until that turn
+    // would have begun (CR 800.4m); every other duration runs as written.
+    outlastDepartedPlayer(s, player.id);
+    if (s.combatChoices !== undefined)
+      s.combatChoices = s.combatChoices.filter((entry) => entry.casterId !== player.id);
     s.stack = s.stack.filter(
       (so) => so.controllerId !== player.id && so.card?.ownerId !== player.id,
     );
@@ -534,6 +593,8 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     activeSlots = abilityModeTargetSlots(modes, selection);
     modeLabel = abilityModeLabel(modes, selection);
   }
+  // "For each player, up to one target …" (Nils): one optional slot per player in the game now.
+  ability = expandPerPlayerTargets(ctx, ability, trigger.controllerId);
   const specs = ability.targets;
   const chosen: ObjectId[] = [];
   const countTargets: Record<number, ObjectId[]> = {};
@@ -665,6 +726,7 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         player: trigger.controllerId,
         prompt:
           `${trigger.sourceName}: choose ${picked.length > 0 ? 'another' : 'a'} target ` +
+          (spec.controllerPlayer === undefined ? '' : `controlled by ${spec.controllerPlayer} `) +
           // "Any number of" has no upper bound to show.
           `(${picked.length}${Number.isFinite(effectiveMax) ? `/${effectiveMax}` : ''} chosen)` +
           `${canStop ? ', or stop choosing' : ''}.`,

@@ -240,7 +240,7 @@ export function onUpkeep(player: 'you' | 'each' = 'you'): TriggerHead {
 }
 
 /** "At the beginning of your/each end step". */
-export function onEndStep(player: 'you' | 'each' = 'you'): TriggerHead {
+export function onEndStep(player: 'you' | 'each' | 'opponent' = 'you'): TriggerHead {
   return { when: 'endStep', player };
 }
 
@@ -253,7 +253,7 @@ export function onDrawStep(player: 'you' | 'each' = 'you'): TriggerHead {
 }
 
 /** "At the beginning of combat on your/each turn". */
-export function onBeginCombat(player: 'you' | 'each' = 'you'): TriggerHead {
+export function onBeginCombat(player: 'you' | 'each' | 'opponent' = 'you'): TriggerHead {
   return { when: 'beginningOfCombat', player };
 }
 

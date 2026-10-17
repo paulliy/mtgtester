@@ -154,6 +154,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
           'withOtherAttackers',
           'counter',
           'byYou',
+          'forMana',
           'oncePerTurn',
         ]
       : family === 'cast'
@@ -301,6 +302,14 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
         path: `${path}.byYou`,
         message: 'a placing player requires a countersPut event',
       });
+    if (
+      head['forMana'] !== undefined &&
+      (head['forMana'] !== true || head['when'] !== 'becomesTapped')
+    )
+      issues.push({
+        path: `${path}.forMana`,
+        message: 'tapped for mana requires a becomesTapped event',
+      });
     if (head['oncePerTurn'] !== undefined && head['oncePerTurn'] !== true)
       issues.push({ path: `${path}.oncePerTurn`, message: 'once each turn is a flag' });
   } else if (family === 'cast') {
@@ -375,8 +384,12 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
                 'you',
                 'each',
                 'enchanted',
-                // "At the beginning of each opponent's upkeep".
-                ...(head['when'] === 'upkeep' ? ['opponent'] : []),
+                // "At the beginning of each opponent's upkeep / end step / combat".
+                ...(head['when'] === 'upkeep' ||
+                head['when'] === 'endStep' ||
+                head['when'] === 'beginningOfCombat'
+                  ? ['opponent']
+                  : []),
               ]
             : ['you', 'each']
     ).includes(head['player'] as string)

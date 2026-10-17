@@ -75,4 +75,31 @@ describe('Rules Primer', () => {
     expect(blockers).toContain('batched block declaration');
     expect(blockers).not.toContain('batched attack declaration');
   });
+
+  it('explains choosing another player’s attackers or blocks only when the decision is that', () => {
+    const plain = tacticianPrimerFor(request('declareAttackers'));
+    expect(plain).not.toContain('__attacks__');
+    expect(plain).not.toContain("another player's blocks");
+    const choosing = request('declareAttackers');
+    choosing.legalActions = [
+      {
+        id: 0,
+        type: 'attackDeclaration',
+        description: 'Choose attackers (2 eligible creatures)',
+        data: { chooseAttackers: true },
+      },
+    ];
+    expect(tacticianPrimerFor(choosing)).toContain('"__attacks__"');
+    const blocking = request('declareBlockers');
+    blocking.legalActions = [
+      {
+        id: 0,
+        type: 'blockDeclaration',
+        description: 'Declare blockers (1 eligible creature)',
+        data: { blockingPlayer: 'P3' },
+      },
+    ];
+    expect(tacticianPrimerFor(blocking)).toContain("another player's blocks");
+    expect(tacticianPrimerFor(blocking)).not.toContain('__attacks__');
+  });
 });

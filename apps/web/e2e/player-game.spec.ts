@@ -11,7 +11,7 @@ import { expect, test } from './setup-test';
  * opening hands; this scenario therefore casts whichever spell is available after its opening land
  * line instead of pinning to one card name.
  */
-const SEED = 'e2e-713';
+const SEED = 'e2e-1';
 
 test('a seeded player game plays a land, casts a spell, and abandons cleanly', async ({ page }) => {
   const playerActionRequestIds: string[] = [];

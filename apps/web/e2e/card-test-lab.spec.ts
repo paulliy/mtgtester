@@ -9116,13 +9116,11 @@ test('Michiko Konda: each opposing source that damages you makes its controller 
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.locator('.human-zone .life-badge')).toHaveText('34');
   await expect(page.getByText(/Michiko Konda.* sacrifice/i).first()).toBeVisible();
-  await expect(
-    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
-  ).toHaveText('40');
+  await expect(page.locator('.opponent[data-seat="P2"]').locator('.life-badge')).toHaveText('40');
   for (const seat of ['P3', 'P4']) {
-    await expect(
-      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
-    ).toHaveText('40');
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`).locator('.life-badge')).toHaveText(
+      '40',
+    );
   }
   await expect(permanent(page, 'Lab Ox')).toHaveCount(1);
   await expect(permanent(page, 'Forest')).toHaveCount(0);
@@ -9530,4 +9528,924 @@ test('Human Torch: a noncreature spell grants flying, double strike and haste, a
     ).toHaveText('34');
   }
   await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
+
+// Coverage PR07 (docs/plans/card-coverage-chunks.md).
+
+test('Promise of Loyalty: a vowed creature cannot attack its caster but can attack others', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Promise of Loyalty: a vowed creature cannot attack its caster but can attack others',
+  );
+  const spell = handCard(page, 'Promise of Loyalty');
+  await expect(spell).toHaveClass(/actionable/, { timeout: 15_000 });
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Keep Lab Ox: every player chooses in turn order, then the vow counters are put on.
+  await passStackUntil(
+    page,
+    page.getByText('Choose a creature to keep and put a vow counter on.', { exact: true }),
+  );
+  await page
+    .locator('.panel-group')
+    .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+    .getByRole('button', { name: 'Keep', exact: true })
+    .click();
+
+  // P2's vowed Lab Ox may not attack you, so it attacks P3.
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const seat of ['P1', 'P2']) {
+    const kept =
+      seat === 'P1' ? page.locator('.human-zone') : page.locator(`.opponent[data-seat="${seat}"]`);
+    await expect(kept.getByRole('img', { name: 'Lab Ox', exact: true })).toBeVisible();
+    await expect(kept.locator('.counters').filter({ hasText: /vow/i })).toBeVisible();
+    await expect(
+      kept
+        .locator('.object')
+        .filter({ has: page.getByRole('img', { name: 'Lab Servo', exact: true }) }),
+    ).toHaveCount(0);
+  }
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});
+
+test('Lightning Runner: paying eight energy untaps your creatures and adds a combat phase', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Lightning Runner: paying eight energy untaps your creatures and adds a combat phase',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lightning Runner' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The trigger gives {E}{E}, taking you to eight, and offers the payment.
+  const pay = page.getByRole('button', { name: 'Pay', exact: true });
+  await passUntil(page, pay);
+  await pay.click();
+
+  // Lab Ox untapped and the additional combat phase offers a second declaration.
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  for (const name of ['Lightning Runner', 'Lab Ox'])
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('28');
+});
+
+test('Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Firkraag: attacking an opponent with a Dragon goads one of that opponent’s creatures',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Firkraag' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+
+  // The trigger targets a creature the attacked player controls; goad Lab Ox.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/goad/i).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+});
+
+test('Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card', async ({
+  page,
+}) => {
+  const library = trackLibrary(page, 'P1');
+  await runScenario(
+    page,
+    'Firkraag: a goaded creature that deals combat damage to an opponent grows Firkraag and draws a card',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  expect(library.first() - library.last()).toBe(1);
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(permanent(page, 'Firkraag, Cunning Instigator')).toContainText('4/4');
+});
+
+test('Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eriette of the Charmed Apple: a creature enchanted by your Aura cannot attack you',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
+});
+
+test('Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Eriette of the Charmed Apple: at your end step each opponent loses X life and you gain X',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+  for (const seat of ['P2', 'P3', 'P4']) {
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('38');
+  }
+});
+
+test('Rite of the Raging Storm: a creature named Lightning Rager cannot attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Rite of the Raging Storm: a creature named Lightning Rager cannot attack you',
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('34');
+});
+
+test("Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Rite of the Raging Storm: each player's upkeep makes them a Lightning Rager that is sacrificed at the end step",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText(/Lightning Rager/).first()).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  // Sacrificed at the end step: no Lightning Rager is left on the battlefield.
+  await expect(permanent(page, 'Lightning Rager')).toHaveCount(0);
+});
+
+test('Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Nils, Discipline Enforcer: at your end step put a +1/+1 counter on up to one creature for each player',
+  );
+  // One prompt for each player in turn order: you first, then P2.
+  const prompt = (seat: string) =>
+    page.getByText(new RegExp(`choose a target controlled by ${seat}`)).first();
+  await passUntil(page, prompt('P1'));
+  await page.getByRole('button', { name: 'Target Lab Servo' }).click();
+  await passUntil(page, prompt('P2'));
+  await page.getByRole('button', { name: 'Target Lab Ox' }).click();
+
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Lab Servo')).toContainText('2/2');
+  await expect(permanent(page, 'Lab Ox')).toContainText('5/5');
+  await expect(permanent(page, 'Lab Bird')).toContainText('1/1');
+});
+
+test('Nils, Discipline Enforcer: a creature with counters must pay to attack you', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Nils, Discipline Enforcer: a creature with counters must pay to attack you',
+  );
+  // P2 paid {2} for Lab Ox's two counters and attacks you; decline to block with Nils.
+  await page.getByRole('button', { name: /Declare blockers/ }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('34');
+});
+
+test('Combat Calligrapher: an Inkling cannot attack you', async ({ page }) => {
+  await runScenario(page, 'Combat Calligrapher: an Inkling cannot attack you');
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  // P2 created the Inkling, so it is on P2's side of the board.
+  await expect(
+    page.locator('.opponent[data-seat="P2"]').getByRole('img', { name: 'Inkling', exact: true }),
+  ).toBeVisible();
+});
+
+test('Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Combat Calligrapher: a player attacking an opponent of yours creates a tapped attacking Inkling',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Ox' })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(permanent(page, 'Inkling')).toBeVisible();
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+});
+
+test("Goblin Spymaster: at an opponent's end step that player creates a Goblin token", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Goblin Spymaster: at an opponent's end step that player creates a Goblin token",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  // P2 created the Goblin, so it is on P2's side of the board and none is on yours.
+  await expect(
+    page.locator('.opponent[data-seat="P2"]').getByRole('img', { name: 'Goblin', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.human-zone').getByRole('img', { name: 'Goblin', exact: true }),
+  ).toHaveCount(0);
+});
+
+test('Toby, Beastie Befriender: the Beast token cannot block alone', async ({ page }) => {
+  await runScenario(page, 'Toby, Beastie Befriender: the Beast token cannot block alone');
+  const toby = handCard(page, 'Toby, Beastie Befriender');
+  await expect(toby).toHaveClass(/actionable/);
+  await toby.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Beast'));
+  // P2 attacks with Lab Ox. The Beast alone is not a legal declaration.
+  const declare = page.getByRole('button', { name: /Declare blockers/ });
+  await passUntil(page, declare);
+  await declare.click();
+  const rows = page.locator('.combat-assignment-row');
+  await rows
+    .filter({ has: page.getByText('Beast', { exact: true }) })
+    .getByRole('button', { name: 'Lab Ox' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await expect(page.getByText(/Beast can't block alone/)).toBeVisible();
+  // Adding Toby as a second blocker makes it legal.
+  await rows
+    .filter({ has: page.getByText('Toby, Beastie Befriender', { exact: true }) })
+    .getByRole('button', { name: 'Lab Ox' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
+
+test('Toby, Beastie Befriender: creature tokens have flying while you control four or more', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Toby, Beastie Befriender: creature tokens have flying while you control four or more',
+  );
+  const cast = async (card: string) => {
+    const hand = handCard(page, card).first();
+    await expect(hand).toHaveClass(/actionable/, { timeout: 15_000 });
+    await hand.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await confirm(page);
+  };
+  await cast('Toby, Beastie Befriender');
+  await passStackUntil(page, permanent(page, 'Beast'));
+  await expect(permanent(page, 'Beast')).not.toContainText(/flying/i);
+  for (let servos = 1; servos <= 3; servos++) {
+    await cast('Lab Token Forge');
+    await passStackUntil(
+      page,
+      servos === 1
+        ? permanent(page, 'Servo')
+        : permanent(page, 'Servo').filter({ hasText: `×${servos}` }),
+    );
+  }
+  await expect(permanent(page, 'Beast')).toContainText(/flying/i);
+  await expect(permanent(page, 'Servo')).toContainText(/flying/i);
+});
+
+test('Life of the Party: the attacker gets +X/+0 for the creatures you control', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Life of the Party: the attacker gets +X/+0 for the creatures you control',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Life of the Party', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('37');
+});
+
+test('Life of the Party: each opponent creates a goaded copy of it', async ({ page }) => {
+  await runScenario(page, 'Life of the Party: each opponent creates a goaded copy of it');
+  const party = handCard(page, 'Life of the Party');
+  await expect(party).toHaveClass(/actionable/);
+  await party.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // Each opponent now controls a copy.
+  for (const seat of ['P2', 'P3', 'P4'])
+    await passStackUntil(
+      page,
+      page
+        .locator(`.opponent[data-seat="${seat}"]`)
+        .getByRole('img', { name: 'Life of the Party', exact: true }),
+    );
+  // Your own combat: attack with nothing.
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  // P2's goaded copy had to attack, and not you.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+});
+
+test("Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Kardur, Doomscourge: opponents' creatures must attack, and not you, until your next turn",
+  );
+  const kardur = handCard(page, 'Kardur, Doomscourge');
+  await expect(kardur).toHaveClass(/actionable/);
+  await kardur.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Lab Ox had to attack and could not attack you: it hit P3.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});
+
+test('Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Kardur, Doomscourge: whenever an attacking creature dies, each opponent loses 1 and you gain 1',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(
+      page.locator('.opponent').filter({ hasText: seat }).locator('.life-badge'),
+    ).toHaveText('39');
+});
+
+test('Galactus, Devourer of Worlds: it must attack the opponent with the most life', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Galactus, Devourer of Worlds: it must attack the opponent with the most life',
+  );
+  // Its only legal declaration is made for you: it attacks P3 and nobody else.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('28');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('20');
+});
+
+test("Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Galactus, Devourer of Worlds: no requirement while you control Silver Surfer, Galactus's Herald",
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Galactus, Devourer of Worlds', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('8');
+});
+
+test('Silver Surfer: search your library for Galactus when it enters', async ({ page }) => {
+  await runScenario(page, 'Silver Surfer: search your library for Galactus when it enters');
+  const surfer = handCard(page, "Silver Surfer, Galactus's Herald");
+  await expect(surfer).toHaveClass(/actionable/);
+  await surfer.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await page.getByRole('button', { name: 'Yes' }).click({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Put into your hand' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.getByText('Galactus, Devourer of Worlds').first()).toBeVisible();
+});
+
+test('Silver Surfer: the target creature must attack the player it damaged', async ({ page }) => {
+  await runScenario(page, 'Silver Surfer: the target creature must attack the player it damaged');
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText("Silver Surfer, Galactus's Herald", { exact: true }) })
+    .getByRole('button', { name: 'P3' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // The combat damage trigger's one required target is chosen on the board, then confirmed.
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible({ timeout: 15_000 });
+  await permanent(page, 'Lab Ox').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(page.locator('.opponent[data-seat="P3"]').locator('.life-badge')).toHaveText('32');
+});
+
+test("Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Taunt from the Rampart: opponents' creatures are goaded and can't block until your next turn",
+  );
+  const taunt = handCard(page, 'Taunt from the Rampart');
+  await expect(taunt).toHaveClass(/actionable/);
+  await taunt.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Bird', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+});
+
+test('Hexmark Destroyer: three blockers are not enough', async ({ page }) => {
+  await runScenario(page, 'Hexmark Destroyer: three blockers are not enough');
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Hexmark Destroyer', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('34');
+  await expect(permanent(page, 'Lab Servo')).toContainText('×3');
+});
+
+test("Champion of Lambholt: weaker creatures can't block your creatures", async ({ page }) => {
+  await runScenario(page, "Champion of Lambholt: weaker creatures can't block your creatures");
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Lab Ox blocked and killed Lab Servo; Lab Bird could not block and is untouched.
+  await expect(permanent(page, 'Lab Servo')).toHaveCount(0);
+  await expect(permanent(page, 'Lab Bird')).toBeVisible();
+  await expect(permanent(page, 'Champion of Lambholt')).toContainText('3/3');
+});
+
+test('Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Pramikon, Sky Rampart: each player may attack only the nearest opponent in the chosen direction',
+  );
+  const pramikon = handCard(page, 'Pramikon, Sky Rampart');
+  await expect(pramikon).toHaveClass(/actionable/);
+  await pramikon.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/choose left or right/).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Right/ }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  const row = page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) });
+  // Only P4, the nearest opponent to the right, is a legal defender.
+  await expect(row.getByRole('button', { name: 'P2' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row.getByRole('button', { name: 'P4' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});
+
+test('Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Teyo, Geometric Tactician: the -2 limits attacks to the nearest opponent in the chosen direction',
+  );
+  const teyo = permanent(page, 'Teyo, Geometric Tactician');
+  await expect(teyo).toHaveClass(/actionable/);
+  await teyo.click();
+  await page.getByRole('button', { name: /−2: Choose left or right/ }).click();
+  await expect(page.getByText('Activate Teyo, Geometric Tactician')).toBeVisible();
+  await confirm(page);
+  await expect(page.getByText(/choose one/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /^Right/ }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  const row = page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) });
+  // Only P4, the nearest opponent to the right, is a legal defender.
+  await expect(row.getByRole('button', { name: 'P2' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row.getByRole('button', { name: 'P4' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P4' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('40');
+});
+
+test('Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Teyo, Geometric Tactician: the Wall token and the +1 draw for you and a target opponent',
+  );
+  const teyo = handCard(page, 'Teyo, Geometric Tactician');
+  await expect(teyo).toHaveClass(/actionable/);
+  await teyo.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passStackUntil(page, permanent(page, 'Wall'));
+  await expect(permanent(page, 'Wall')).toContainText('0/4');
+  const walker = permanent(page, 'Teyo, Geometric Tactician');
+  await expect(walker).toHaveClass(/actionable/);
+  await walker.click();
+  await page.getByRole('button', { name: /\+1: You and target opponent each draw a card/ }).click();
+  await expect(page.getByText('Activate Teyo, Geometric Tactician')).toBeVisible();
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone .hand-card')).toHaveCount(1);
+});
+
+test('Triarch Stalker: creatures attacking the chosen player have menace', async ({ page }) => {
+  await runScenario(page, 'Triarch Stalker: creatures attacking the chosen player have menace');
+  await expect(page.getByText(/choose an opponent/).first()).toBeVisible({ timeout: 15_000 });
+  await page
+    .locator('.panel-group')
+    .filter({ has: page.getByText('P2', { exact: true }) })
+    .getByRole('button', { name: 'Choose' })
+    .click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+});
+
+test("Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Illusionist's Gambit: remove the attackers, then an additional combat they cannot use against you",
+  );
+  const gambit = page.locator('.hand-card.actionable', { hasText: "Illusionist's Gambit" });
+  await passUntil(page, gambit);
+  await gambit.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('40');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+});
+
+test('Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Moraug, Fury of Akoum: landfall adds a combat phase and untaps your creatures, and each attack grows them',
+  );
+  const forest = handCard(page, 'Forest');
+  await expect(forest).toHaveClass(/actionable/);
+  await forest.click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  for (const name of ['Moraug, Fury of Akoum', 'Lab Ox'])
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: name })
+      .getByRole('button', { name: 'P2' })
+      .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('28');
+});
+
+test("Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "Siren's Call: the active player's creatures must attack, and the ones that did not are destroyed",
+  );
+  const siren = page.locator('.hand-card.actionable', { hasText: "Siren's Call" });
+  await passUntil(page, siren);
+  await siren.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('35');
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Bird', exact: true }),
+  ).toHaveCount(0);
+});
+
+test("War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    "War's Toll: an opponent's mana taps all their lands, and an attack by one creature is an attack by all",
+  );
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('36');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('39');
+});
+
+test('Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Willie Lumpkin: both players draw, then the one who drew cannot attack you on their next turn',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Willie Lumpkin, Postman', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P3' }).locator('.life-badge'),
+  ).toHaveText('36');
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('40');
+});
+
+test('Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Fight or Flight: you separate P2’s creatures into two piles and only the pile P2 chooses can attack',
+  );
+  for (const [name, pile] of [
+    ['Lab Ox', 2],
+    ['Lab Servo', 1],
+  ] as const) {
+    await passUntil(page, page.getByText(`Put ${name} in a pile.`, { exact: true }));
+    await page.getByRole('button', { name: `Put it in pile ${pile}`, exact: true }).click();
+  }
+  await passUntil(page, page.getByText(/game over/i).first());
+  // Only Lab Servo, in the pile P2 chose, attacked: one damage to you.
+  await expect(page.locator('.human-zone').locator('.life-badge').first()).toHaveText('39');
+});
+
+test('Fight or Flight: P2 separates your creatures and only the pile you choose can attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Fight or Flight: P2 separates your creatures and only the pile you choose can attack',
+  );
+  await passUntil(
+    page,
+    page.getByText(/choose a pile of creatures; only those can attack this turn/),
+  );
+  await expect(page.getByRole('button', { name: 'Attack with pile 1: Lab Ox' })).toBeVisible();
+  await page.getByRole('button', { name: 'Attack with pile 2: Lab Servo' }).click();
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  // Lab Ox is in the pile you did not choose: it is not offered any defender.
+  await expect(
+    page
+      .locator('.combat-assignment-row')
+      .filter({ has: page.getByText('Lab Ox', { exact: true }) })
+      .getByRole('button', { name: 'P2' }),
+  ).toHaveCount(0);
+  await page
+    .locator('.combat-assignment-row')
+    .filter({ has: page.getByText('Lab Servo', { exact: true }) })
+    .getByRole('button', { name: 'P2' })
+    .click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(
+    page.locator('.opponent').filter({ hasText: 'P2' }).locator('.life-badge'),
+  ).toHaveText('39');
+});
+
+test('Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Master Warcraft: you choose which of P2’s creatures attack, and how P3’s creatures block them',
+  );
+  const warcraft = page.locator('.hand-card.actionable', { hasText: 'Master Warcraft' });
+  await passUntil(page, warcraft);
+  await warcraft.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await confirm(page);
+  // You are asked which of P2's creatures attack: only that, no defender yet.
+  const choose = page.getByRole('button', { name: /Choose attackers/ });
+  await passUntil(page, choose);
+  await choose.click({ timeout: 15_000 });
+  await expect(page.getByText('Choose which of P2’s creatures attack')).toBeVisible();
+  const row = (name: string) =>
+    page.locator('.combat-assignment-row').filter({ has: page.getByText(name, { exact: true }) });
+  await expect(row('Lab Ox').getByRole('button', { name: 'P3' })).toHaveCount(0);
+  await row('Lab Servo').getByRole('button', { name: 'Attacks' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  // P2 chooses what Lab Servo attacks (P3); then you choose P3's blocks.
+  const blockers = page.getByRole('button', { name: /Declare blockers/ });
+  await passUntil(page, blockers);
+  await blockers.click({ timeout: 15_000 });
+  await expect(page.getByText('Declare blockers for P3', { exact: true })).toBeVisible();
+  await row('Lab Ox').getByRole('button', { name: 'Lab Servo' }).click();
+  await page.getByRole('button', { name: 'Confirm blocks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P3"] .life-badge')).toHaveText('40');
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Servo', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .permanents')
+      .getByRole('img', { name: 'Lab Ox', exact: true }),
+  ).toBeVisible();
+});
+
+test('Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Master Warcraft: P2 chooses which of your creatures attack and you choose what they attack',
+  );
+  const declare = page.getByRole('button', { name: /Declare attackers/ });
+  await passUntil(page, declare);
+  await declare.click({ timeout: 15_000 });
+  await expect(page.getByText('Choose what each creature P2 chose attacks')).toBeVisible();
+  // Only the creature P2 chose is offered, and it has no "stay home" choice.
+  const rows = page.locator('.combat-assignment-row');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Lab Servo');
+  await expect(rows.first().getByRole('button', { name: 'Stay home' })).toHaveCount(0);
+  await expect(rows.first().getByRole('button', { name: 'Decline to pay' })).toHaveCount(0);
+  await rows.first().getByRole('button', { name: 'P3' }).click();
+  await page.getByRole('button', { name: 'Confirm attacks' }).click();
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(page.locator('.opponent[data-seat="P3"] .life-badge')).toHaveText('39');
 });

@@ -92,10 +92,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying.',
   ]);
 
-  unimplemented('ee7ebbc1-2f9e-4867-a522-424869b6d772', 'Combat Calligrapher', [
-    "Inklings can't attack you or planeswalkers you control.",
-    "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
-  ]);
+  // Combat Calligrapher: restored in coverage PR07 (see coverage-pr07.ts).
 
   // Hateful Eidolon: restored in coverage PR05 (see silverquill-influence-remaining.ts).
 
@@ -144,10 +141,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     ruleStatics: [{ kind: 'costReduction', amount: constant(1), filter: ofSubtype('Aura') }],
   });
 
-  unimplemented('f43f5855-f297-4433-984b-18263b734cfc', 'Eriette of the Charmed Apple', [
-    "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
-    'At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.',
-  ]);
+  // Eriette of the Charmed Apple: restored in coverage PR07 (see coverage-pr07.ts).
 
   // Killian, Ink Duelist: restored in coverage PR02 (see silverquill-influence-remaining.ts).
 
@@ -201,14 +195,9 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
     'Enchanted creature gets +1/+1 and has protection from creatures.',
   ]);
 
-  unimplemented('e1d294e8-67b1-4a4a-86b8-f98f28a327d9', 'Promise of Loyalty', [
-    "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
-  ]);
+  // Promise of Loyalty: authored in white-black-control-promise.ts (recorded in coverage PR07).
 
-  unimplemented('ff6b52b7-ae3c-465b-b10e-901160e5230e', 'Nils, Discipline Enforcer', [
-    'At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.',
-    "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
-  ]);
+  // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
 
   unimplemented('7e00b0cd-d212-4604-ba07-da21f4fe00b0', 'Sram, Senior Edificer', [
     'Whenever you cast an Aura, Equipment, or Vehicle spell, draw a card.',

@@ -328,13 +328,7 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
       ],
     },
   );
-  // Catalog audit batch 8: snapshot goad is not a until-next-turn continuous, and inCombat
-  // includes blockers.
-  unsupportedCard(
-    'bc14356c-3a1a-47af-9a6e-2b449de0331f',
-    'Kardur, Doomscourge',
-    'Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers.',
-  );
+  // Kardur, Doomscourge: restored in coverage PR07 (see coverage-pr07.ts).
   defineCard(
     '73413bd5-8c40-4d45-8f05-c20c39ee4017',
     'Madame Null, Power Broker',

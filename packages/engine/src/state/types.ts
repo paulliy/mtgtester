@@ -21,6 +21,7 @@ import type {
   ObjectId,
   OracleCard,
   OracleId,
+  Phase,
   PermanentState,
   PlayerId,
   PlayerState,
@@ -35,7 +36,7 @@ import type {
   KeywordAbility,
 } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
-import type { SelectorCandidate } from '../cards/selector';
+import type { Selector, SelectorCandidate } from '../cards/selector';
 import type { TriggerScope } from '../cards/value';
 import type { Prng } from '../rng/prng';
 
@@ -47,6 +48,140 @@ export interface GoadRequirement {
   goaderId: PlayerId;
   /** Global turn number on which this requirement was created. */
   appliedTurn: number;
+  /**
+   * "Goaded for the rest of the game" (Life of the Party's tokens): never expires at the goader's
+   * next turn. It still ends when the creature leaves the battlefield; it outlasts a goader who
+   * leaves the game.
+   */
+  permanent?: true;
+  /**
+   * Set when the goader leaves the game: the goad lasts until their next turn would have begun
+   * (CR 800.4m), which is when the turn of `afterTurnOf`, seated before them, taken on or after
+   * turn `fromTurn` ends.
+   */
+  departed?: { afterTurnOf: PlayerId; fromTurn: number };
+}
+
+/**
+ * When an attack requirement made by a spell or ability ends. Both kinds count turns of one
+ * player from the turn the effect was made, so "your next turn" is the first of that player's
+ * turns after `setTurn`.
+ */
+export type EffectExpiry =
+  /** "Until your next turn": ends as that player's next turn begins (the untap step). */
+  | { kind: 'untilNextTurn'; playerId: PlayerId; setTurn: number }
+  /** "Until the end of your next turn": ends in the cleanup step of that player's next turn. */
+  | { kind: 'endOfNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "During their next turn": applies only while `playerId` is the active player in their first
+   * turn after `setTurn`, and ends in that turn's cleanup step (Willie Lumpkin).
+   */
+  | { kind: 'theirNextTurn'; playerId: PlayerId; setTurn: number }
+  /**
+   * "Until [a departed player's] next turn" or a point in it: when that player leaves the game, the
+   * effect lasts until that turn would have begun (CR 800.4m), which is when the turn of
+   * `afterTurnOf`, the player seated before them, taken on or after turn `fromTurn` ends.
+   */
+  | { kind: 'departedNextTurn'; afterTurnOf: PlayerId; fromTurn: number }
+  /** "This turn": ends in the cleanup step of the turn it was made (Siren's Call). */
+  | { kind: 'thisTurn'; turn: number }
+  /** "That combat": ends as the named combat phase ends (Illusionist's Gambit). */
+  | { kind: 'combat'; combatId: string };
+
+/** What an attack requirement entry forbids: attacking a player or the planeswalkers they control. */
+export type AttackRestrictionRule =
+  | { kind: 'cantAttackPlayer'; playerId: PlayerId }
+  /** "Only creatures in the chosen pile can attack": nothing outside these objects may attack at all. */
+  | { kind: 'cantAttackExcept'; objectIds: ObjectId[] };
+
+/** What attacking must achieve to obey one attack requirement (CR 508.1d). */
+export type AttackRequirementRule =
+  /** "Attacks each combat if able": attacking anything, a planeswalker included. */
+  | { kind: 'anyAttack' }
+  /** "Attacks a player other than P if able" (the goad's second half): a player, not a planeswalker. */
+  | { kind: 'notPlayer'; playerId: PlayerId }
+  /** "Attacks P each combat if able": that player, not one of their planeswalkers. */
+  | { kind: 'player'; playerId: PlayerId };
+
+/**
+ * A requirement made by a resolving spell or ability that is not a goad or a status of one
+ * permanent (Kardur, Silver Surfer). It is a rules modification, not a change to characteristics
+ * (CR 611.2c): a fixed set of objects, or, when the text names no fixed set, a selector read live
+ * so creatures that come under the affected players' control later are covered too.
+ */
+export interface AttackRequirementEntry {
+  id: string;
+  /** "You": the player who made the effect, and the point of view the selector is read from. */
+  controllerId: PlayerId;
+  sourceCardId?: CardId;
+  affects:
+    | { kind: 'objects'; objectIds: ObjectId[] }
+    /**
+     * Read live (CR 611.2c) from `viewpointId`'s point of view when it names a player other than
+     * the effect's controller: "creatures the active player controls" (Siren's Call).
+     */
+    | { kind: 'selector'; selector: Selector; viewpointId?: PlayerId };
+  requirements: AttackRequirementRule[];
+  /** What the affected creatures can't attack while it lasts; it beats the requirements (CR 508.1c). */
+  restrictions?: AttackRestrictionRule[];
+  expires: EffectExpiry;
+}
+
+/**
+ * "Until your next turn, those creatures can't block" (Taunt from the Rampart): a fixed set of
+ * objects named when the effect resolved (CR 611.2c) that can't be declared as blockers until the
+ * effect ends.
+ */
+export interface BlockRestrictionEntry {
+  id: string;
+  controllerId: PlayerId;
+  objectIds: ObjectId[];
+  expires: EffectExpiry;
+}
+
+/**
+ * "You choose which creatures attack this turn" and "which creatures block this turn and how"
+ * (Master Warcraft): until the end of the turn `casterId` makes the attack and block declarations
+ * that the attacking and the defending players would. A newer one overrides an older one.
+ */
+export interface CombatChoiceEntry {
+  id: string;
+  casterId: PlayerId;
+  sourceCardId: CardId;
+  turn: number;
+}
+
+/**
+ * "Until your next turn, each player may attack only the nearest opponent in the last chosen
+ * direction and planeswalkers controlled by that opponent" (Teyo, Geometric Tactician). A newer
+ * effect from the same card replaces the older one, so only the last choice is ever in force.
+ */
+export interface AttackDirectionEntry {
+  id: string;
+  controllerId: PlayerId;
+  /** The Teyo object that made it; a newer choice by the same object replaces its older one. */
+  sourceObjectId: string;
+  direction: 'left' | 'right';
+  expires: EffectExpiry;
+}
+
+/**
+ * "After this phase, there is an additional combat phase" (Lightning Runner, Moraug, Illusionist's
+ * Gambit): a combat phase inserted directly after the phase that was current when it was created.
+ * No main phase comes with it unless the text says so (`additionalMain`).
+ */
+export interface ExtraCombat {
+  id: string;
+  /** The phase it was created in; it runs as that phase ends. */
+  after: Phase;
+  controllerId: PlayerId;
+  sourceCardId: CardId;
+  sourceOracleId: OracleId;
+  sourceName: string;
+  /** "At the beginning of that combat, untap all creatures you control" (Moraug). */
+  untapAllAtBeginning?: true;
+  /** "…followed by an additional main phase" (Seize the Day). */
+  additionalMain?: true;
 }
 
 export interface EngineObject extends GameObject {
@@ -142,6 +277,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   cantBeBlocked?: boolean;
   /** Boast (CR 702.146): "activate only if this creature attacked this turn". */
   attackedThisTurn?: boolean;
+  /** How many times it was declared as an attacker this turn; tokens put onto the battlefield attacking never count. */
+  timesAttackedThisTurn?: number;
   /**
    * Indices into this permanent's `activatedAbilities` used this turn, for "activate only once
    * each turn" (CR 602.5f).
@@ -678,6 +815,14 @@ export interface EngineState extends GameState {
   extraTurns?: PlayerId[];
   phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;
+  /** Attack requirements made by resolved spells and abilities, until they expire (CR 508.1d). */
+  attackRequirements?: AttackRequirementEntry[];
+  /** Creatures that can't block because of a resolved spell or ability, until it expires. */
+  blockRestrictions?: BlockRestrictionEntry[];
+  /** Whoever chooses this turn's attackers and blockers in place of the usual players (Master Warcraft). */
+  combatChoices?: CombatChoiceEntry[];
+  /** Seat-direction limits on whom players may attack, until they expire (Teyo). */
+  attackDirections?: AttackDirectionEntry[];
   normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,
@@ -699,8 +844,16 @@ export interface EngineState extends GameState {
   combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
-  /** Number of additional combat phases to run after the current combat. */
-  extraCombatPhases: number;
+  /**
+   * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
+   * directly after the phase it was created in, ahead of anything scheduled after that phase
+   * earlier. Emptied at the end of the turn.
+   */
+  extraCombats: ExtraCombat[];
+  /** Has this turn reached the declare attackers step of a combat phase yet? Reset each turn. */
+  declareAttackersReachedThisTurn?: boolean;
+  /** The combat phase being run: `regular`, or the id of the `ExtraCombat` it is. */
+  currentCombatId?: string;
   /** The player who is currently the monarch, or null before the mechanic appears. */
   monarchPlayerId: PlayerId | null;
   /** Until-end-of-turn activated abilities temporarily granted to cards in graveyards. */

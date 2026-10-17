@@ -628,6 +628,23 @@
     "snapshotStatus": "pending"
   },
   {
+    "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
+    "name": "Champion of Lambholt",
+    "package": "PR07.01",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "cdfa9de4-7d7d-4638-8ac4-793ece6372dd",
     "name": "Changing Loyalty",
     "package": "PR02.25",
@@ -700,6 +717,23 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+    "name": "Combat Calligrapher",
+    "package": "PR07.05",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Inklings-cannot-attack-you is omitted, and the token trigger is unscoped."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "01f29158-2dc9-4b9d-b726-add5d3fd5782",
@@ -1131,6 +1165,23 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "f43f5855-f297-4433-984b-18263b734cfc",
+    "name": "Eriette of the Charmed Apple",
+    "package": "PR07.06",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Cannot-attack-you static is claimed without an implementation."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
     "package": "W2",
@@ -1196,15 +1247,20 @@
   {
     "oracleId": "2fc42640-983a-49ca-9020-7756135077b4",
     "name": "Fight or Flight",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.12",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles. Only creatures in the pile of their choice can attack this turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts",
+      "packages/server/src/ai/fight-or-flight-bot.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "69924636-138e-4baa-a378-0fd7df5b847d",
@@ -1239,6 +1295,23 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
+    "name": "Firkraag, Cunning Instigator",
+    "package": "PR07.07",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e119c709-bf9d-451e-827b-9787d455029a",
@@ -1491,15 +1564,19 @@
   {
     "oracleId": "4232995b-68c0-4514-8cde-bc62b9d1cbaa",
     "name": "Galactus, Devourer of Worlds",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.13",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Insatiable Hunger — ~ attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, ~'s Herald.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c51ed6e3-813b-49c4-b1de-7f92a77f8f6e",
@@ -1657,15 +1734,19 @@
   {
     "oracleId": "ec08df88-3c13-4940-a090-0c502b9b12f1",
     "name": "Goblin Spymaster",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.14",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "fc4f2cdb-966c-4576-8b37-b3d138f5710e",
@@ -1798,6 +1879,23 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
+    "oracleId": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+    "name": "Hexmark Destroyer",
+    "package": "PR07.02",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Cannot-be-blocked-except-by-six-or-more is implemented as cantBeBlocked."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "3bc13640-03f8-4b19-b0a4-7e7cb5271c0c",
     "name": "Hour of Reckoning",
     "package": "PR02.14",
@@ -1886,16 +1984,20 @@
   {
     "oracleId": "333745d9-e930-439b-94d6-3aeea2877f69",
     "name": "Illusionist's Gambit",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.17",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only during the declare blockers step on an opponent's turn.\"",
       "unrecognized rules text: \"Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase. Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
@@ -2052,6 +2154,23 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "bc14356c-3a1a-47af-9a6e-2b449de0331f",
+    "name": "Kardur, Doomscourge",
+    "package": "PR07.08",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Goad snapshots current creatures, and the death trigger fires for blockers as well as attackers."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
@@ -2217,16 +2336,37 @@
   {
     "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
     "name": "Life of the Party",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.18",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control.\"",
       "unrecognized rules text: \"When this creature enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2f82b232-21ff-44cc-bc35-0999a1d1c52f",
+    "name": "Lightning Runner",
+    "package": "PR07.03",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: Untap all creatures you control is implemented as untapEach of all permanents you control."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
@@ -2363,17 +2503,22 @@
   {
     "oracleId": "f9bca7af-29b6-46ba-b847-56715d09d1da",
     "name": "Master Warcraft",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.25",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only before attackers are declared.\"",
       "unrecognized rules text: \"You choose which creatures attack this turn.\"",
       "unrecognized rules text: \"You choose which creatures block this turn and how those creatures block.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts",
+      "packages/server/src/ai/master-warcraft-bot.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "fbe190eb-fd4b-40e7-9a17-48c96b60f653",
@@ -2523,16 +2668,20 @@
   {
     "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
     "name": "Moraug, Fury of Akoum",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.19",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Each creature you control gets +1/+0 for each time it has attacked this turn.\"",
       "unrecognized rules text: \"Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
@@ -2637,6 +2786,23 @@
     "behaviorTests": [],
     "interpretationTests": [],
     "snapshotStatus": "pending"
+  },
+  {
+    "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
+    "name": "Nils, Discipline Enforcer",
+    "package": "PR07.09",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [
+      "explicitly unsupported: End-step trigger counters every creature, and the attack-tax static is omitted."
+    ],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9a1fbe72-4a17-42be-8e23-d7d30a5e59c1",
@@ -2825,30 +2991,35 @@
   {
     "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
     "name": "Pramikon, Sky Rampart",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.20",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"As ~ enters, choose left or right.\"",
       "unrecognized rules text: \"Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
     "name": "Promise of Loyalty",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.\"",
-      "override for \"Promise of Loyalty\" has no executable behavior"
+    "package": "PR07.04",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/engine/tests/white-black-control-curse-promise.test.ts",
+      "apps/web/e2e/white-black-control-remaining-combat.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
@@ -3022,16 +3193,17 @@
   {
     "oracleId": "984f92dd-cb9b-4421-a8e6-75bfe566be10",
     "name": "Rite of the Raging Storm",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Creatures named Lightning Rager can't attack you or planeswalkers you control.\"",
-      "unrecognized rules text: \"At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"\""
+    "package": "PR07.21",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "ef5c93ae-91e0-4edb-b8a3-1171a3694bb8",
@@ -3367,31 +3539,39 @@
   {
     "oracleId": "be02005c-0e37-4dba-ac8e-3c69d06bbec2",
     "name": "Silver Surfer, Galactus's Herald",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.22",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.\"",
       "unrecognized rules text: \"Whenever ~ deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "269fc857-a052-4f0a-9759-467ccf42bebb",
     "name": "Siren's Call",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.26",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Cast this spell only during an opponent's turn, before attackers are declared.\"",
       "unrecognized rules text: \"Creatures the active player controls attack this turn if able.\"",
       "unrecognized rules text: \"At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cb377c27-39a6-42b4-8c89-80a9a2350e81",
@@ -3536,15 +3716,19 @@
   {
     "oracleId": "9138a768-d01d-4603-9bae-d3bff6cd2f61",
     "name": "Taunt from the Rampart",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.15",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Goad all creatures your opponents control. Until your next turn, those creatures can't block.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
@@ -3637,6 +3821,21 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785",
+    "name": "Teyo, Geometric Tactician",
+    "package": "PR07.10",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9b0abb58-4e2c-45dc-99b1-61a4cb79354b",
@@ -3775,16 +3974,20 @@
   {
     "oracleId": "b4c27c89-fa50-4cf0-bf37-039732d16fef",
     "name": "Toby, Beastie Befriender",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.23",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"When ~ enters, create a 4/4 white Beast creature token with \"~ can't attack or block alone.\"\"",
       "unrecognized rules text: \"As long as you control four or more creature tokens, creature tokens you control have flying.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
@@ -3882,6 +4085,21 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+    "name": "Triarch Stalker",
+    "package": "PR07.11",
+    "status": "modeled-focused-tests-passed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
@@ -4154,16 +4372,20 @@
   {
     "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
     "name": "War's Toll",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.24",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever an opponent taps a land for mana, tap all lands that player controls.\"",
       "unrecognized rules text: \"If a creature an opponent controls attacks, all creatures that opponent controls attack if able.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
@@ -4220,15 +4442,19 @@
   {
     "oracleId": "b08633e9-7b8f-4f69-a3b7-8d982b17574c",
     "name": "Willie Lumpkin, Postman",
-    "package": "W6",
-    "status": "pending",
+    "package": "PR07.16",
+    "status": "modeled-focused-tests-passed",
     "blockers": [
       "unrecognized rules text: \"Whenever ~ deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn.\""
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr07-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr07-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr07.test.ts",
+      "apps/web/e2e/card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
+    "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "499a4715-6776-461b-bee4-22ed172d455e",

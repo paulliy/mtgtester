@@ -162,12 +162,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   // (CR 308) and grants +10/+10, trample and annihilator 2 to the enchanted creature, the
   // annihilator as an attack trigger whose defending player sacrifices two permanents of their
   // choice.
-  // Catalog audit silverquill-remaining-batch-2: cannot-attack-you static omitted.
-  unsupportedCard(
-    'f43f5855-f297-4433-984b-18263b734cfc',
-    'Eriette of the Charmed Apple',
-    'Cannot-attack-you static is claimed without an implementation.',
-  );
+  // Eriette of the Charmed Apple: restored in coverage PR07 (see coverage-pr07.ts).
   // Fallen Ideal: restored in coverage PR05. Grants flying and the sacrifice ability to the
   // enchanted creature, which may sacrifice itself; returns this card to its owner's hand from the
   // graveyard.
@@ -274,12 +269,7 @@ export function registerSILVERQUILL_INFLUENCE_REMAININGOverrides(): void {
   );
   // Affinity plus targeting a modified permanent is not fully modeled.
   unimplemented('9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd', 'Pearl-Ear, Imperial Advisor', []);
-  // Catalog audit silverquill-remaining-batch-3: keep-one sacrifice and vow attack restriction.
-  unsupportedCard(
-    'e1d294e8-67b1-4a4a-86b8-f98f28a327d9',
-    'Promise of Loyalty',
-    'Keep-one sacrifice, vow counters, and attack restriction are unimplemented.',
-  );
+  // Promise of Loyalty: authored in white-black-control-promise.ts (recorded in coverage PR07).
   // Raffine's Guidance: restored in coverage PR02. The interpreter reads the {2}{W} graveyard
   // recast as an alternative cost, so no override remains.
   // Redemption Arc: restored in coverage PR05. The interpreter reads the granted indestructible and

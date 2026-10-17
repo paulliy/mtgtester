@@ -186,10 +186,10 @@ describe('Batch 3 subsystems and card overrides', () => {
           "Creatures with power less than this creature's power can't block creatures you control.\nWhenever another creature you control enters, put a +1/+1 counter on this creature.",
       }),
     );
-    expect(champion.modeled).toBe(false);
-    expect(champion.unmodeledReasons.join('\n')).toContain(
-      "The can't-block static is hardcoded by card name, so copies lack it and lost abilities still apply it.",
-    );
+    // Restored in coverage PR07: a rule static of the Champion, not a name check
+    // (pr07-card-coverage.test.ts).
+    expect(champion.modeled).toBe(true);
+    expect(champion.ruleStatics).toMatchObject([{ kind: 'cantBlockCreatures' }]);
 
     const curse = interpretCard(
       oracle({

@@ -445,6 +445,23 @@ export function makePermanent(
 }
 
 /**
+ * Remove a permanent from combat (CR 506.4): it stops being an attacking, blocking, blocked or
+ * unblocked creature. An attacker it was blocking REMAINS blocked (CR 509.1h), so its id stays in
+ * that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
+ */
+export function removeFromCombat(ctx: GameContext, perm: EnginePermanent): void {
+  perm.attacking = null;
+  perm.attackingPlaneswalker = null;
+  perm.attackedPlaneswalkerRemoved = false;
+  perm.blocking = null;
+  perm.blockedByOrdered = [];
+  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
+  for (const other of ctx.state.battlefield) {
+    if (other.blocking === perm.id) other.blocking = null;
+  }
+}
+
+/**
  * Apply a one-shot regeneration replacement (CR 701.19a). Returns true when destruction was
  * replaced. A "can't be regenerated" destruction bypasses the shield without consuming it.
  */
@@ -458,17 +475,8 @@ export function consumeRegenerationShield(
   perm.damageMarked = 0;
   perm.damagedByDeathtouch = false;
   perm.tapped = true;
-  perm.attacking = null;
-  perm.attackingPlaneswalker = null;
-  perm.attackedPlaneswalkerRemoved = false;
-  perm.blocking = null;
-  perm.blockedByOrdered = [];
-  perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
-  // Removed from combat (CR 701.19c). An attacker it was blocking REMAINS blocked (CR 509.1h), so
-  // its id stays in that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
-  for (const other of ctx.state.battlefield) {
-    if (other.blocking === perm.id) other.blocking = null;
-  }
+  // Removed from combat (CR 701.19c).
+  removeFromCombat(ctx, perm);
   emit(
     ctx,
     'regenerated',
@@ -1278,8 +1286,8 @@ function registerTokenDef(ctx: GameContext, spec: TokenSpec): OracleId {
         entersTapped: copyDefinition?.entersTapped ?? false,
         spellAbility: null,
         triggers: spec.triggers ?? [],
-        staticEffects: copyDefinition?.staticEffects ?? [],
-        ruleStatics: copyDefinition?.ruleStatics ?? [],
+        staticEffects: [...(copyDefinition?.staticEffects ?? []), ...(spec.staticEffects ?? [])],
+        ruleStatics: [...(copyDefinition?.ruleStatics ?? []), ...(spec.ruleStatics ?? [])],
         modeled: true,
         unmodeledReasons: [],
       }),
@@ -1815,6 +1823,8 @@ export interface TriggerEventSubject {
   toZone?: Zone;
   /** `countersPut`: the counter kinds this placement put on the permanent. */
   counterKinds?: readonly string[];
+  /** `becomesTapped`: it was tapped to activate a mana ability. */
+  forMana?: true;
 }
 
 /** Discard is an action, including when a replacement changes the card's destination. */
@@ -2133,6 +2143,7 @@ export function queueTriggersForEvent(
           return false;
         if ('byYou' in spec && spec.byYou === true && s.playerId !== source.controllerId)
           return false;
+        if ('forMana' in spec && spec.forMana === true && s.forMana !== true) return false;
         // "...attack an opponent" (Firkraag) is about attacking the player; a creature attacking
         // only a planeswalker of theirs isn't attacking that opponent.
         if (
@@ -2524,8 +2535,14 @@ export function queueTriggersForObject(
   ctx: GameContext,
   when: ObjectTriggerWhen,
   permanent: EnginePermanent,
+  /** `becomesTapped` for a mana ability: the player who activated it. */
+  tappedForMana?: PlayerId,
 ): void {
-  queueTriggersForEvent(ctx, when, [{ permanent }]);
+  queueTriggersForEvent(ctx, when, [
+    tappedForMana === undefined
+      ? { permanent }
+      : { permanent, forMana: true, playerId: tappedForMana },
+  ]);
 }
 
 /**

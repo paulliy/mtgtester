@@ -37,6 +37,8 @@ interface Scope {
   providedEventObject?: 'permanent' | 'card';
   eventPlayer?: boolean;
   providedEventPlayer?: boolean;
+  /** `attackDeclared` firing with one group, and one attacked player, for each defender. */
+  attackedPlayer?: boolean;
   movedToBattlefieldSlots?: ReadonlySet<number>;
   activeSlots?: readonly number[];
   narrowedDomains?: ReadonlyMap<number, readonly TargetDomain[]>;
@@ -219,6 +221,29 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       issues.push({
         path,
         message: 'variable-count target slots must follow every ordinary target slot',
+      });
+    }
+    if (spec.perPlayer !== undefined) {
+      if (
+        spec.perPlayer !== true ||
+        spec.count?.min !== 0 ||
+        spec.count.max !== 1 ||
+        spec.controller !== undefined ||
+        spec.controllerPlayer !== undefined ||
+        spec.slotGroup !== undefined ||
+        !knownDomain ||
+        !targetDomains(spec.kind).includes('permanent') ||
+        slot !== targets.length - 1
+      )
+        issues.push({
+          path: `${at}.perPlayer`,
+          message:
+            'a per-player target must be the last slot, an optional (0 to 1) battlefield permanent with no controller of its own',
+        });
+    } else if (spec.controllerPlayer !== undefined || spec.slotGroup !== undefined) {
+      issues.push({
+        path: at,
+        message: 'a player-bound slot is only produced by expanding a per-player target',
       });
     }
     if (
@@ -440,13 +465,27 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       if (scope?.providedEventPlayer !== undefined) eventPlayer = scope.providedEventPlayer;
       else if (trigger !== undefined) {
         try {
-          eventPlayer = triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen);
+          eventPlayer =
+            triggerProvidesEventPlayer(trigger.when as import('./ability').TriggerWhen) ||
+            // "Taps a land for mana": the player who activated the mana ability.
+            (trigger.when === 'becomesTapped' &&
+              (trigger as { forMana?: unknown }).forMana === true);
         } catch {
           // validateTriggerHead reports unsupported event heads.
         }
       }
     }
-    owningScope = { targets, eventPlayer, ...(eventObject === undefined ? {} : { eventObject }) };
+    const attackedPlayer =
+      record['kind'] === 'triggered' &&
+      (trigger as { when?: string; perDefender?: boolean } | undefined)?.when ===
+        'attackDeclared' &&
+      (trigger as { perDefender?: boolean }).perDefender === true;
+    owningScope = {
+      targets,
+      eventPlayer,
+      ...(attackedPlayer ? { attackedPlayer } : {}),
+      ...(eventObject === undefined ? {} : { eventObject }),
+    };
   }
   let checkedPermanentPossible = false;
   if (
@@ -616,6 +655,57 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       path: `${path}.includePlaneswalkers`,
       message: 'planeswalker attack tax must be true when present',
     });
+  if (record['op'] === 'addAttackRequirement') {
+    if ((record['target'] === undefined) === (record['selector'] === undefined))
+      issues.push({
+        path,
+        message: 'an attack requirement names either a target or a selector for its creatures',
+      });
+    if (
+      !['untilYourNextTurn', 'endOfYourNextTurn', 'thisTurn', 'duringTheirNextTurn'].includes(
+        String(record['duration']),
+      )
+    )
+      issues.push({ path: `${path}.duration`, message: 'unsupported attack requirement duration' });
+    const requirements = record['requirements'];
+    const valid = (entry: unknown): boolean => {
+      const rule = entry as Record<string, unknown> | null;
+      return (
+        rule !== null &&
+        typeof rule === 'object' &&
+        (rule['kind'] === 'anyAttack' ||
+          (rule['kind'] === 'notPlayer' && rule['player'] === 'you') ||
+          (rule['kind'] === 'player' && rule['player'] === 'eventPlayer'))
+      );
+    };
+    if (
+      !Array.isArray(requirements) ||
+      (requirements.length === 0 && record['cantAttack'] !== 'you') ||
+      !requirements.every(valid)
+    )
+      issues.push({
+        path: `${path}.requirements`,
+        message: 'an attack requirement needs at least one supported requirement',
+      });
+  }
+  if (record['kind'] === 'attackRestriction') {
+    if (record['includePlaneswalkers'] !== true)
+      issues.push({
+        path: `${path}.includePlaneswalkers`,
+        message: 'an attack restriction covers planeswalkers and must say so',
+      });
+    const cost = record['cost'];
+    if (
+      cost !== undefined &&
+      (cost === null ||
+        typeof cost !== 'object' ||
+        (cost as Record<string, unknown>)['perCounterOnCreature'] !== true)
+    )
+      issues.push({
+        path: `${path}.cost`,
+        message: 'an attack restriction cost must be per counter on the creature',
+      });
+  }
   if (
     [
       'transferCountersFromTriggerObject',
@@ -722,6 +812,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       issues.push({
         path: `${path}.${key}`,
         message: 'event player reference has no owning event player scope',
+      });
+    if (entry === 'attackedPlayer' && owningScope?.attackedPlayer !== true)
+      issues.push({
+        path: `${path}.${key}`,
+        message: 'attacked player reference needs a per-defender attack declaration trigger',
       });
     if (['activatedAbilities', 'manaAbilities'].includes(key) && Array.isArray(entry)) {
       for (const [index, ability] of entry.entries()) {

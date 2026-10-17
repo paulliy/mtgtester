@@ -310,6 +310,7 @@ describe('white-black control review regressions', () => {
     const repeatedPromise = cast(game, 'P1', 'Promise of Loyalty');
     resolve(game, repeatedPromise);
     expect(attackDefenders(game, 'P2', p2Vowed)).not.toContain('P1');
+    // CR 702.26f: the "for as long as" duration ends at phasing out, though the counter stays.
     phaseOutControlledPermanents(game, 'P2');
     phaseInAtUntap(game, 'P2');
     expect(attackDefenders(game, 'P2', p2Vowed)).toContain('P1');

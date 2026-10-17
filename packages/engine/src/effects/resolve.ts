@@ -11,7 +11,7 @@ import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellTargetOccurrences } from '../stack/target-occurrences';
-import { spellDefinitionOf } from '../state/queries';
+import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import {
   permanentManaValue,
@@ -30,7 +30,7 @@ import { assertManaRiders } from '../cards/mana-riders';
 import type { Color, ObjectId, PlayerId } from '@mtg/shared';
 import { ALL_COLORS } from '@mtg/shared';
 import { abilityModeSelections } from '../actions/ability-modes';
-import type { ManaRider, WardCost } from '../cards/ability';
+import type { AttackRequirementSpec, ManaRider, WardCost } from '../cards/ability';
 import type {
   Ability,
   AbilityCost,
@@ -43,7 +43,7 @@ import type {
 } from '../cards/definition';
 import { queueBecomesTargetedTriggers, queueWardTriggers } from '../actions/apply';
 import { evaluateCondition, isChoiceCondition, resolveCondition } from '../cards/condition';
-import { allOf, ofSupertype, ofType, selectMatches } from '../cards/selector';
+import { allOf, ofSupertype, ofType, selectMatches, YOURS } from '../cards/selector';
 import type { GameGen } from '../decisions';
 import { UnmodeledCardError } from '../errors';
 import {
@@ -81,6 +81,7 @@ import {
   applyTokenCreationReplacements,
   attachPermanent,
   consumeRegenerationShield,
+  removeFromCombat,
   createToken,
   changeController,
   createTokens,
@@ -129,6 +130,8 @@ import {
   resolveDynamicUnits,
 } from '../state/queries';
 import type {
+  AttackRequirementEntry,
+  AttackRequirementRule,
   DamageKeyword,
   EngineCardObject,
   EngineObject,
@@ -193,10 +196,27 @@ function findCardInAnyGraveyard(ctx: GameContext, id: ObjectId): EngineCardObjec
 }
 
 /** Apply CR 701.15a/d: one player contributes at most one active goad requirement. */
-function addGoadRequirement(ctx: GameContext, perm: EnginePermanent, goaderId: PlayerId): void {
+function addGoadRequirement(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  goaderId: PlayerId,
+  permanent = false,
+): void {
   const existing = perm.goadedBy ?? [];
-  if (existing.some((requirement) => requirement.goaderId === goaderId)) return;
-  perm.goadedBy = [...existing, { goaderId, appliedTurn: ctx.state.turnNumber }];
+  const same = existing.find((requirement) => requirement.goaderId === goaderId);
+  if (same !== undefined) {
+    // A goad that lasts for the rest of the game replaces one that would have expired.
+    if (permanent && same.permanent !== true) same.permanent = true;
+    return;
+  }
+  perm.goadedBy = [
+    ...existing,
+    {
+      goaderId,
+      appliedTurn: ctx.state.turnNumber,
+      ...(permanent ? { permanent: true as const } : {}),
+    },
+  ];
 }
 
 /**
@@ -1397,15 +1417,20 @@ export function* executeAbility(
       return currentId === null ? [] : [currentId];
     });
   const legalChosenPermanents = (slot: number): EnginePermanent[] => {
-    const spec = ability.targets[slot];
-    if (spec === undefined) return [];
-    const legal = (countTargets?.[slot] ?? []).flatMap((id) => {
-      if (!stillLegal(id, spec, slot)) return [];
-      const currentId = movedReferent(id);
-      const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
-      return permanent === undefined ? [] : [permanent as EnginePermanent];
+    // A per-player spec (Nils) was expanded into one slot per player; naming it names them all.
+    const slots = ability.targets.flatMap((candidate, index) =>
+      index === slot || candidate.slotGroup === slot ? [index] : [],
+    );
+    return slots.flatMap((index) => {
+      const spec = ability.targets[index];
+      if (spec === undefined) return [];
+      return (countTargets?.[index] ?? []).flatMap((id) => {
+        if (!stillLegal(id, spec, index)) return [];
+        const currentId = movedReferent(id);
+        const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
+        return permanent === undefined ? [] : [permanent as EnginePermanent];
+      });
     });
-    return legal;
   };
 
   /** Resolve an effect referent to an object id, or null when it is gone / no longer legal. */
@@ -2339,7 +2364,7 @@ export function* executeAbility(
       case 'destroyEach': {
         // CR 701.7: evaluate indestructibility before any static-granting permanent leaves.
         // Replacements and all death watchers likewise see one simultaneous departure event.
-        const affected = affectedBy(ctx, source, effect.selector);
+        const affected = affectedBy(ctx, source, effect.selector, extraScope?.eventPlayerId);
         const protectedIds = new Set(
           affected.filter((perm) => hasKeyword(ctx, perm, 'indestructible')).map((perm) => perm.id),
         );
@@ -2594,6 +2619,78 @@ export function* executeAbility(
         const pile = piles[choice.index];
         if (pile === undefined) throw new Error('engine bug: invalid sacrifice pile');
         yield* movePermanentsToGraveyard(ctx, pile, 'sacrifice');
+        break;
+      }
+      case 'separateIntoPilesLimitAttackers': {
+        const eventPlayerId = ref('eventPlayer') as unknown as PlayerId | null;
+        const attacker = ctx.state.players.find((player) => player.id === eventPlayerId);
+        if (attacker === undefined || attacker.hasLost) break;
+        const creatures = ctx.state.battlefield.filter(
+          (permanent) =>
+            permanent.controllerId === attacker.id && isCreaturePermanent(ctx, permanent),
+        );
+        const piles: [EnginePermanent[], EnginePermanent[]] = [[], []];
+        const describePile = (pile: readonly EnginePermanent[]) =>
+          pile.length === 0 ? 'empty' : pile.map((permanent) => permanent.name).join(', ');
+        // The controller separates (CR 700.3); the pile choice is the affected player's, and with
+        // no creature to separate there is nothing to choose between.
+        for (const creature of creatures) {
+          const choice = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `Put ${creature.name} in a pile.`,
+            options: [
+              {
+                type: 'pile1',
+                description: 'Put it in pile 1',
+                data: { pile: describePile(piles[0]) },
+              },
+              {
+                type: 'pile2',
+                description: 'Put it in pile 2',
+                data: { pile: describePile(piles[1]) },
+              },
+            ],
+          };
+          const pile = piles[choice.index];
+          if (pile === undefined) throw new Error('engine bug: invalid pile assignment');
+          pile.push(creature);
+        }
+        let allowed: EnginePermanent[] = [];
+        if (creatures.length > 0) {
+          const choice = yield {
+            decisionType: 'general',
+            player: attacker.id,
+            prompt: `${source.name}: choose a pile of creatures; only those can attack this turn.`,
+            options: piles.map((pile, index) => ({
+              type: 'attackPile',
+              description: `Attack with pile ${index + 1}: ${describePile(pile)}`,
+            })),
+          };
+          allowed = piles[choice.index] ?? [];
+        }
+        // Read live from the affected player's point of view (CR 611.2c): a creature that arrives
+        // later is in neither pile, so it can't attack. Two of these in one turn both bind.
+        (ctx.state.attackRequirements ??= []).push({
+          id: `ar-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          affects: {
+            kind: 'selector',
+            selector: allOf(ofType('Creature'), YOURS),
+            viewpointId: attacker.id,
+          },
+          requirements: [],
+          restrictions: [
+            { kind: 'cantAttackExcept', objectIds: allowed.map((permanent) => permanent.id) },
+          ],
+          expires: { kind: 'thisTurn', turn: ctx.state.turnNumber },
+        });
+        emit(ctx, 'attackRestriction', {
+          source: source.name,
+          player: attacker.id,
+          allowed: allowed.map((permanent) => permanent.name),
+        });
         break;
       }
       case 'sacrifice': {
@@ -3299,42 +3396,6 @@ export function* executeAbility(
         if (caster === undefined) break;
         loseLife(ctx, caster, 2);
         gainLife(ctx, controller, 2);
-        break;
-      }
-      case 'combatCalligrapher': {
-        const attackingPlayerId =
-          scope.eventPlayerId ??
-          (triggerObjectCardId === undefined
-            ? undefined
-            : findPermanent(ctx, triggerObjectCardId)?.controllerId);
-        const attacker =
-          triggerObjectCardId === undefined ? undefined : findPermanent(ctx, triggerObjectCardId);
-        if (
-          attackingPlayerId === undefined ||
-          attacker?.attacking === null ||
-          attacker?.attacking === undefined
-        )
-          break;
-        const token = createToken(
-          ctx,
-          {
-            name: 'Inkling',
-            typeLine: 'Creature — Inkling',
-            types: ['Creature'],
-            subtypes: ['Inkling'],
-            colors: ['W', 'B'],
-            power: 2,
-            toughness: 1,
-            keywords: ['flying'],
-          },
-          attackingPlayerId,
-        );
-        token.tapped = true;
-        token.attacking = attacker.attacking;
-        // It attacks what its attacker attacks, planeswalker included (CR 508.4a).
-        token.attackingPlaneswalker = attacker.attackingPlaneswalker;
-        token.attackedPlaneswalkerRemoved = attacker.attackedPlaneswalkerRemoved;
-        token.statuses.push('attacking');
         break;
       }
       case 'inkshield':
@@ -4880,20 +4941,38 @@ export function* executeAbility(
       case 'createTokenAttacking': {
         const count = amountOf(effect.count);
         if (count <= 0) break;
-        const defenders = (ctx.state.combat?.defendingPlayers ?? []).filter((id) => {
-          const player = ctx.state.players.find((candidate) => candidate.id === id);
-          return player !== undefined && !player.hasLost && id !== controller.id;
-        });
-        if (defenders.length === 0) break;
-        // "Tapped and attacking" names no player (CR 508.4): its controller chooses which defending
-        // player, or planeswalker one of them controls, it attacks.
-        const attackChoice = yield* chooseEnteringAttackTarget(
-          ctx,
-          controller,
-          source.name,
-          defenders,
-          true,
-        );
+        // The event player (the attacking player) creates them for "that attacking player".
+        const owner =
+          effect.player === 'eventPlayer'
+            ? scope.eventPlayerId === undefined
+              ? undefined
+              : playerById(ctx, scope.eventPlayerId)
+            : controller;
+        if (owner === undefined || owner.hasLost) break;
+        let attackChoice: { defenderId: PlayerId; planeswalkerId: ObjectId | null };
+        if (effect.defender === 'attackedPlayer') {
+          // "…that's attacking that opponent": the player the firing was about, not a planeswalker
+          // of theirs, and only while they are still in the game and not the token's controller.
+          const attacked = scope.attackedPlayerId;
+          const player = ctx.state.players.find((candidate) => candidate.id === attacked);
+          if (player === undefined || player.hasLost || player.id === owner.id) break;
+          attackChoice = { defenderId: player.id, planeswalkerId: null };
+        } else {
+          const defenders = (ctx.state.combat?.defendingPlayers ?? []).filter((id) => {
+            const player = ctx.state.players.find((candidate) => candidate.id === id);
+            return player !== undefined && !player.hasLost && id !== owner.id;
+          });
+          if (defenders.length === 0) break;
+          // "Tapped and attacking" names no player (CR 508.4): its controller chooses which
+          // defending player, or planeswalker one of them controls, it attacks.
+          attackChoice = yield* chooseEnteringAttackTarget(
+            ctx,
+            owner,
+            source.name,
+            defenders,
+            true,
+          );
+        }
         const spec = {
           ...effect.spec,
           ...(effect.powerOverride === undefined ? {} : { power: amountOf(effect.powerOverride) }),
@@ -4902,9 +4981,9 @@ export function* executeAbility(
             : { toughness: amountOf(effect.toughnessOverride) }),
         };
         const created: EnginePermanent[] = [];
-        const multiplier = tokenCreationMultiplierFor(ctx, controller.id);
+        const multiplier = tokenCreationMultiplierFor(ctx, owner.id);
         for (let i = 0; i < count * multiplier; i++) {
-          const token = createToken(ctx, spec, controller.id, false, false, false);
+          const token = createToken(ctx, spec, owner.id, false, false, false);
           token.tapped = true;
           token.attacking = attackChoice.defenderId;
           token.attackingPlaneswalker = attackChoice.planeswalkerId;
@@ -4922,7 +5001,7 @@ export function* executeAbility(
             'enters',
             created.map((permanent) => ({ permanent })),
           );
-          applyTokenCreationReplacements(ctx, spec, controller.id);
+          applyTokenCreationReplacements(ctx, spec, owner.id);
         }
         break;
       }
@@ -5008,9 +5087,37 @@ export function* executeAbility(
       }
       case 'createTokenCopyOf': {
         const t = ref(effect.ref);
-        const original = t === null ? undefined : findPermanent(ctx, t);
+        const live = t === null ? undefined : findPermanent(ctx, t);
         // The referent may have left before this resolved. `'triggerObject'` is not a target
-        // (CR 115.10a), so that is a no-op rather than a fizzle.
+        // (CR 115.10a), so that is a no-op rather than a fizzle. A trigger that copies ITS OWN
+        // source ("each opponent creates a copy of it") still copies it with its last known
+        // copiable values (CR 608.2h, 707.2): the source's definition at the time it triggered,
+        // which for a copy is the copied definition.
+        const lastKnownSourceDef = ctx.defs.get(source.oracleId);
+        // The copies show the rules text and cost it showed as it left (a copy's, for a copy of
+        // something); without those facts, the card itself, wherever it went.
+        const facts = source.lastKnownFacts;
+        const sourceCard =
+          live === undefined && facts?.oracleText === undefined
+            ? findObjectByCardId(ctx, source.cardId)
+            : undefined;
+        const original =
+          live ??
+          (effect.ref === 'source' && lastKnownSourceDef !== undefined
+            ? ({
+                id: source.id ?? source.cardId,
+                cardId: source.cardId,
+                oracleId: source.oracleId,
+                name: source.name,
+                typeLine: lastKnownSourceDef.typeLine,
+                oracleText: facts?.oracleText ?? sourceCard?.oracleText ?? '',
+                manaCost:
+                  facts?.oracleText !== undefined
+                    ? (facts.manaCost ?? null)
+                    : (sourceCard?.manaCost ?? null),
+                transformed: false,
+              } as unknown as EnginePermanent)
+            : undefined);
         if (original === undefined) break;
         const baseSpec = tokenSpecCopying(ctx, original, effect.exceptNonLegendary === true);
         const spec = {
@@ -5038,8 +5145,20 @@ export function* executeAbility(
             ? { keywords: [...new Set([...(baseSpec.keywords ?? []), ...effect.addKeywords])] }
             : {}),
         };
+        if (effect.eachOpponent === true) {
+          // Each opponent, in turn order from the active player, creates their own copies.
+          for (const opponent of opponentsOf(ctx, controller.id)) {
+            for (const token of createTokens(ctx, spec, amountOf(effect.count), opponent.id)) {
+              if (effect.goadedForRestOfGame === true)
+                addGoadRequirement(ctx, token, controller.id, true);
+            }
+          }
+          break;
+        }
         for (let i = 0; i < amountOf(effect.count); i++) {
           const token = createToken(ctx, spec, controller.id);
+          if (effect.goadedForRestOfGame === true)
+            addGoadRequirement(ctx, token, controller.id, true);
           if (effect.sacrificeAt === 'endStep') {
             ctx.state.delayedTriggers.push({
               id: `dt-${ctx.state.nextObjectNum++}`,
@@ -5349,6 +5468,169 @@ export function* executeAbility(
         }
         break;
       }
+      case 'addAttackRequirement': {
+        // The fixed set names its object now; a selector set is read live (CR 611.2c).
+        let affects: AttackRequirementEntry['affects'] | undefined;
+        if (effect.selector !== undefined)
+          affects = {
+            kind: 'selector',
+            selector: effect.selector,
+            ...(effect.relativeTo === 'activePlayer'
+              ? { viewpointId: ctx.state.currentTurnPlayer }
+              : effect.relativeTo === 'eventPlayer'
+                ? { viewpointId: ref('eventPlayer') as unknown as PlayerId }
+                : {}),
+          };
+        else {
+          const targetId = effect.target === undefined ? null : ref(effect.target);
+          if (targetId !== null) affects = { kind: 'objects', objectIds: [targetId] };
+        }
+        if (affects === undefined) break;
+        const playerRef = (spec: AttackRequirementSpec): AttackRequirementRule | null => {
+          if (spec.kind === 'anyAttack') return { kind: 'anyAttack' };
+          const playerId =
+            spec.kind === 'notPlayer' ? controller.id : (ref('eventPlayer') as unknown as PlayerId);
+          return { kind: spec.kind, playerId };
+        };
+        const requirements = effect.requirements.flatMap((spec) => playerRef(spec) ?? []);
+        const expires: AttackRequirementEntry['expires'] =
+          effect.duration === 'thisTurn'
+            ? { kind: 'thisTurn', turn: ctx.state.turnNumber }
+            : effect.duration === 'duringTheirNextTurn'
+              ? {
+                  kind: 'theirNextTurn',
+                  playerId:
+                    affects.kind === 'selector' && affects.viewpointId !== undefined
+                      ? affects.viewpointId
+                      : controller.id,
+                  setTurn: ctx.state.turnNumber,
+                }
+              : {
+                  kind: effect.duration === 'untilYourNextTurn' ? 'untilNextTurn' : 'endOfNextTurn',
+                  playerId: controller.id,
+                  setTurn: ctx.state.turnNumber,
+                };
+        (ctx.state.attackRequirements ??= []).push({
+          id: `ar-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          affects,
+          requirements,
+          ...(effect.cantAttack === 'you'
+            ? { restrictions: [{ kind: 'cantAttackPlayer' as const, playerId: controller.id }] }
+            : {}),
+          expires,
+        });
+        emit(ctx, 'attackRequirement', { source: source.name });
+        break;
+      }
+      case 'chooseAttackersAndBlockers': {
+        (ctx.state.combatChoices ??= []).push({
+          id: `cc-${ctx.state.nextObjectNum++}`,
+          casterId: controller.id,
+          sourceCardId: source.cardId,
+          turn: ctx.state.turnNumber,
+        });
+        emit(ctx, 'combatChoice', { source: source.name }, controller.id);
+        break;
+      }
+      case 'cantBlockEach': {
+        const objectIds = selectPermanents(ctx, effect.selector, {
+          cardId: source.cardId,
+          controllerId: controller.id,
+        }).map((perm) => perm.id);
+        (ctx.state.blockRestrictions ??= []).push({
+          id: `br-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          objectIds,
+          expires: {
+            kind: 'untilNextTurn',
+            playerId: controller.id,
+            setTurn: ctx.state.turnNumber,
+          },
+        });
+        break;
+      }
+      case 'limitAttacksToNearestOpponent': {
+        // "The last chosen direction" is this Teyo's own latest choice: it replaces what this
+        // object made before, while another Teyo (or this card back as a new object) makes an
+        // effect of its own, and disagreeing effects can leave no legal attack.
+        const sourceObjectId = source.id ?? source.cardId;
+        ctx.state.attackDirections = (ctx.state.attackDirections ?? []).filter(
+          (entry) => entry.sourceObjectId !== sourceObjectId,
+        );
+        ctx.state.attackDirections.push({
+          id: `ad-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          sourceObjectId,
+          direction: effect.direction,
+          expires: {
+            kind: 'untilNextTurn',
+            playerId: controller.id,
+            setTurn: ctx.state.turnNumber,
+          },
+        });
+        break;
+      }
+      case 'chooseOpponentForSource': {
+        const opponents = opponentsOf(ctx, controller.id);
+        if (opponents.length === 0) break;
+        let chosen = opponents[0] as (typeof opponents)[number];
+        if (opponents.length > 1) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: choose an opponent`,
+            // No `payload`: a player is not an on-screen source the web UI can focus, so the
+            // choice is read back by index and shown as one "Choose" button per player.
+            options: opponents.map((opponent) =>
+              playerOption(opponent.id, opponent.id, {
+                type: 'choosePlayer',
+                description: opponent.id,
+                verb: 'Choose',
+              }),
+            ),
+          };
+          chosen = opponents[outcome.index] ?? chosen;
+        }
+        // Only the permanent itself remembers it: a Stalker that has left has nothing to store on,
+        // and the same card back as a new object is not the one whose trigger this is (CR 400.7).
+        const holder = ctx.state.battlefield.find((perm) =>
+          source.id !== undefined ? perm.id === source.id : perm.cardId === source.cardId,
+        );
+        if (holder !== undefined) holder.chosenOption = chosen.id;
+        emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id });
+        break;
+      }
+      case 'removeAttackersFromCombat': {
+        const removed = ctx.state.battlefield.filter((perm) => perm.attacking !== null);
+        for (const perm of removed) {
+          removeFromCombat(ctx, perm);
+          if (effect.untap === true) perm.tapped = false;
+        }
+        emit(ctx, 'removedFromCombat', { source: source.name, count: removed.length });
+        if (effect.thenCombat === undefined) break;
+        const combatId = `ec-${ctx.state.nextObjectNum++}`;
+        ctx.state.extraCombats.unshift({
+          id: combatId,
+          after: ctx.state.phase,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+        });
+        if (removed.length > 0)
+          (ctx.state.attackRequirements ??= []).push({
+            id: `ar-${ctx.state.nextObjectNum++}`,
+            controllerId: controller.id,
+            sourceCardId: source.cardId,
+            affects: { kind: 'objects', objectIds: removed.map((perm) => perm.id) },
+            requirements: [{ kind: 'anyAttack' }],
+            restrictions: [{ kind: 'cantAttackPlayer', playerId: controller.id }],
+            expires: { kind: 'combat', combatId },
+          });
+        break;
+      }
       case 'forceAttack': {
         const targetId = ref(effect.target);
         const perm = targetId === null ? undefined : findPermanent(ctx, targetId);
@@ -5411,6 +5693,42 @@ export function* executeAbility(
         if (diff > 0) {
           yield* drawCards(ctx, controller, diff);
         }
+        break;
+      }
+      case 'eventPlayerMayDraw': {
+        const eventPlayerId = ref('eventPlayer') as unknown as PlayerId | null;
+        const drawer = ctx.state.players.find((player) => player.id === eventPlayerId);
+        if (drawer === undefined || drawer.hasLost) break;
+        const outcome = yield {
+          decisionType: 'general',
+          player: drawer.id,
+          prompt: `${source.name}: draw a card?`,
+          options: [
+            plainOption({ type: 'draw', description: 'Draw a card', verb: 'Draw', role: 'affirm' }),
+            plainOption({
+              type: 'decline',
+              description: 'Do not draw',
+              verb: 'Decline',
+              role: 'decline',
+            }),
+          ],
+        };
+        if (outcome.index !== 0) break;
+        // "If they do" means a card was actually drawn: an attempt on an empty library, or a draw
+        // replaced by something else, is not drawing one (CR 121.3, 614.6).
+        const drawnBefore = drawer.cardsDrawnThisTurn;
+        yield* drawCards(ctx, drawer, 1);
+        if (drawer.cardsDrawnThisTurn === drawnBefore) break;
+        yield* executeAbility(
+          ctx,
+          source,
+          { ...ability, effects: effect.then },
+          targets,
+          triggerObjectCardId,
+          extraScope,
+          countTargets,
+          divisionAmounts,
+        );
         break;
       }
       case 'drawUpToN': {
@@ -5695,7 +6013,17 @@ export function* executeAbility(
         break;
       }
       case 'extraCombatPhase':
-        ctx.state.extraCombatPhases += 1;
+        // Directly after the current phase, ahead of anything scheduled after it earlier.
+        ctx.state.extraCombats.unshift({
+          id: `ec-${ctx.state.nextObjectNum++}`,
+          after: ctx.state.phase,
+          controllerId: controller.id,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          sourceName: source.name,
+          ...(effect.untapYourCreatures === true ? { untapAllAtBeginning: true as const } : {}),
+          ...(effect.additionalMain === true ? { additionalMain: true as const } : {}),
+        });
         break;
       case 'becomeMonarch':
         ctx.state.monarchPlayerId = controller.id;
@@ -6629,9 +6957,11 @@ export function* executeAbility(
         const affectedPlayerId =
           effect.affectedPlayer === 'sourceController'
             ? source.controllerId
-            : effect.affectedPlayer === 'targetController'
-              ? capturedTargetController
-              : undefined;
+            : effect.affectedPlayer === 'activePlayer'
+              ? ctx.state.currentTurnPlayer
+              : effect.affectedPlayer === 'targetController'
+                ? capturedTargetController
+                : undefined;
         if (effect.affectedPlayer === 'targetController' && affectedPlayerId === undefined) {
           throw new Error(
             `engine bug: ${source.name} affected target controller could not be captured`,
@@ -6789,7 +7119,7 @@ export function* executeAbility(
         break;
       }
       case 'tapEach': {
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
+        for (const perm of affectedBy(ctx, source, effect.selector, extraScope?.eventPlayerId)) {
           if (perm.tapped) continue;
           perm.tapped = true;
           queueTriggersForObject(ctx, 'becomesTapped', perm);
@@ -8146,7 +8476,12 @@ export function* payAbilityCosts(
     switch (cost.kind) {
       case 'tap':
         perm.tapped = true;
-        queueTriggersForObject(ctx, 'becomesTapped', perm);
+        queueTriggersForObject(
+          ctx,
+          'becomesTapped',
+          perm,
+          tapEvent === 'tapForMana' ? player.id : undefined,
+        );
         emit(ctx, tapEvent, { name: perm.name, cardId: perm.cardId }, player.id);
         break;
       case 'tapOther': {

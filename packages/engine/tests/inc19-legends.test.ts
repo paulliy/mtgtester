@@ -214,6 +214,8 @@ describe('Ur-Dragon residual-card implementation', () => {
     const executable = new Set([
       // Coverage PR06: the entering Dragon is the damage source.
       'Dragon Tempest',
+      // Coverage PR07: the goad and the damaging creature's intervening-if are modeled.
+      'Firkraag, Cunning Instigator',
       'Iymrith, Desert Doom',
       // Coverage PR01: the bounce mode's total-mana-value budget is modeled.
       'Kairi, the Swirling Sky',

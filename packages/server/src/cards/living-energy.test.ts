@@ -29,7 +29,6 @@ function realCard(name: string): OracleCard {
 }
 
 const CATALOG_CONTAINED = new Set([
-  'Lightning Runner',
   'Saheeli, Radiant Creator',
   'Saheeli, Sublime Artificer',
   'Aetherworks Marvel',

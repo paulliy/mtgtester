@@ -204,9 +204,7 @@ export function registerNECRON_DYNASTIESOverrides(): void {
     },
   );
 
-  unimplemented('b3329240-c812-45ea-a7f8-4d79cd4ed515', 'Hexmark Destroyer', [
-    "Multi-threat Eliminator — ~ can't be blocked except by six or more creatures.",
-  ]);
+  // Hexmark Destroyer: restored in coverage PR07 (see coverage-pr07.ts).
 
   unimplemented('10f274f9-9044-447b-81c9-d4906ad9e6be', 'Illuminor Szeras', [
     "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value.",
@@ -382,8 +380,5 @@ export function registerNECRON_DYNASTIESOverrides(): void {
 
   // Triarch Praetorian: restored in coverage PR03 (see necron-dynasties-remaining.ts).
 
-  unimplemented('1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3', 'Triarch Stalker', [
-    'Targeting Relay — At the beginning of combat on your turn, choose an opponent.',
-    'Creatures attacking the last chosen player have menace.',
-  ]);
+  // Triarch Stalker: restored in coverage PR07 (see coverage-pr07.ts).
 }

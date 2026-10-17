@@ -1052,26 +1052,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "bc14356c-3a1a-47af-9a6e-2b449de0331f": {
-      "name": "Kardur, Doomscourge",
-      "oracleSha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
-          "implementation": ["explicitly unsupported; goad snapshots current creatures"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
-        },
-        {
-          "oracleText": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
-          "implementation": ["explicitly unsupported; inCombat includes blockers"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "35e2f82e-7ca3-4a92-9134-b7999eef5337": {
       "name": "Mana Sculpt",
       "oracleSha256": "0b2d95dd1b6129ea13122d2493cb1b94b5f20d66a2848532a52aa2f805a15e4e",
@@ -1211,19 +1191,33 @@
     "ff6b52b7-ae3c-465b-b10e-901160e5230e": {
       "name": "Nils, Discipline Enforcer",
       "oracleSha256": "4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "nils-end-step-counters",
           "oracleText": "At the beginning of your end step, for each player, put a +1/+1 counter on up to one target creature that player controls.",
-          "implementation": ["explicitly unsupported; counters every creature"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored end-step trigger on your end step only with a per-player target spec expanded as it goes on the stack (CR 603.3d) into one optional slot for each player still in the game, in turn order from you and you included, each limited to creatures that player controls and each chosen on its own, so at most one creature per player and any player may be left out; on resolution every chosen creature that is still a creature that player controls gets a +1/+1 counter (CR 608.2b), and a player who has left the game has no slot"
+          ],
+          "engineTestIds": [
+            "nils-pinned-oracle-supported",
+            "nils-per-player-targets",
+            "nils-up-to-one",
+            "nils-options-per-player",
+            "nils-eliminated-player",
+            "nils-recheck-on-resolution",
+            "nils-whole-turn"
+          ],
+          "viewerScenarioIds": ["nils-viewer-end-step-counters"]
         },
         {
+          "id": "nils-counters-attack-tax",
           "oracleText": "Each creature with one or more counters on it can't attack you or planeswalkers you control unless its controller pays {X}, where X is the number of counters on that creature.",
-          "implementation": ["explicitly unsupported; attack-tax static omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static with a creature-has-any-counter filter and a per-counter cost: a creature with counters of any kind can attack you or a planeswalker you control only if its controller pays one generic mana for each counter on it, charged per creature, summed for every creature attacking you, and never forced (CR 508.1d, 508.1g-h); a creature without counters, and attacks on anyone else, cost nothing"
+          ],
+          "engineTestIds": ["nils-pinned-oracle-supported", "nils-attack-tax", "nils-whole-turn"],
+          "viewerScenarioIds": ["nils-viewer-counters-attack-tax"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1716,13 +1710,34 @@
     "f43f5855-f297-4433-984b-18263b734cfc": {
       "name": "Eriette of the Charmed Apple",
       "oracleSha256": "427382fa2460cff57a7df369156701a3a2c58178f0cec4ef5d1bf7909f937023",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "eriette-enchanted-cant-attack-you",
           "oracleText": "Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control.",
-          "implementation": ["explicitly unsupported; cannot-attack-you static omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static whose filter is enchanted-by-an-Aura-you-control: such a creature, whoever controls it or the Aura's other attachments, is never offered you or a planeswalker you control as an attack target (CR 508.1c), while a creature enchanted only by another player's Aura, or by a non-Aura enchantment, is unaffected; it follows the Aura as it attaches and leaves, and beats an attack requirement"
+          ],
+          "engineTestIds": [
+            "eriette-pinned-oracle-supported",
+            "eriette-cant-attack-you",
+            "eriette-restriction-follows-the-aura",
+            "eriette-cast-and-attack"
+          ],
+          "viewerScenarioIds": ["eriette-viewer-enchanted-cant-attack-you"]
+        },
+        {
+          "id": "eriette-end-step-drain",
+          "oracleText": "At the beginning of your end step, each opponent loses X life and you gain X life, where X is the number of Auras you control.",
+          "implementation": [
+            "authored end-step trigger on your end step only, whose X counts every Aura you control (on creatures, on players, on any permanent; not another player's Auras and not non-Aura enchantments) as it resolves; each opponent loses X life and you gain X life"
+          ],
+          "engineTestIds": [
+            "eriette-pinned-oracle-supported",
+            "eriette-drain",
+            "eriette-drain-your-turn-only"
+          ],
+          "viewerScenarioIds": ["eriette-viewer-end-step-drain"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2229,13 +2244,37 @@
     "ee7ebbc1-2f9e-4867-a522-424869b6d772": {
       "name": "Combat Calligrapher",
       "oracleSha256": "14ed62e99aefd29f2bdb7438445b5787d32bdb14c528e3a05d8e02154c55bc25",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "combat-calligrapher-inklings-cant-attack-you",
           "oracleText": "Inklings can't attack you or planeswalkers you control.",
-          "implementation": ["explicitly unsupported; cannot-attack-you omitted; trigger unscoped"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attackRestriction rule static whose filter is the Inkling subtype: any Inkling, token or not and whoever controls it, is never offered you or a planeswalker you control as an attack target (CR 508.1c); other creatures, and Inklings attacking anyone else, are unaffected"
+          ],
+          "engineTestIds": [
+            "combat-calligrapher-pinned-oracle-supported",
+            "combat-calligrapher-inklings-cant-attack-you",
+            "combat-calligrapher-token-is-an-inkling"
+          ],
+          "viewerScenarioIds": ["combat-calligrapher-viewer-inkling-cant-attack-you"]
+        },
+        {
+          "id": "combat-calligrapher-attacker-creates-inkling",
+          "oracleText": "Whenever a player attacks one of your opponents, that attacking player creates a tapped 2/1 white and black Inkling creature token with flying that's attacking that opponent.",
+          "implementation": [
+            "authored attackDeclared trigger, one for each opponent of yours attacked (an attack on a planeswalker, on you, or on a planeswalker of yours is not), whose createTokenAttacking effect makes the token for the attacking player (the event player, who may be you) tapped and attacking exactly that opponent; the token enters attacking without being declared, so no attack trigger sees it and its own restriction does not apply (CR 506.3, 508.4); nothing is made if that opponent has left the game, and two Calligraphers trigger separately"
+          ],
+          "engineTestIds": [
+            "combat-calligrapher-pinned-oracle-supported",
+            "combat-calligrapher-token",
+            "combat-calligrapher-you-attack",
+            "combat-calligrapher-not-you",
+            "combat-calligrapher-per-opponent",
+            "combat-calligrapher-two",
+            "combat-calligrapher-defender-gone"
+          ],
+          "viewerScenarioIds": ["combat-calligrapher-viewer-attacker-creates-inkling"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -2612,20 +2651,6 @@
         }
       ],
       "gameplayAiScenarioIds": ["smothering-tithe-ai-payment-quality"]
-    },
-    "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
-      "name": "Teyo, Geometric Tactician",
-      "oracleSha256": "c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
-          "implementation": ["explicitly unsupported; −2 directional restriction omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
     },
     "1093fdb6-bd4f-46a8-92e3-5aa46b52bb4f": {
       "name": "Weathered Wayfarer",
@@ -3530,22 +3555,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "b3329240-c812-45ea-a7f8-4d79cd4ed515": {
-      "name": "Hexmark Destroyer",
-      "oracleSha256": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "This creature can't be blocked except by six or more creatures.",
-          "implementation": [
-            "explicitly unsupported; except-six-or-more implemented as cantBeBlocked"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "425fea06-76ec-4cd9-bd3b-750504fd7fd2": {
       "name": "Imotekh the Stormlord",
       "oracleSha256": "389742a3862725250d3388b5fa5f0200082ca1cf88295b1f2472ff1e31a9c14c",
@@ -3682,22 +3691,6 @@
             "triarch-praetorian-unearth-needs-mana-and-sorcery-timing"
           ],
           "viewerScenarioIds": ["triarch-praetorian-viewer-unearth"]
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3": {
-      "name": "Triarch Stalker",
-      "oracleSha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Creatures attacking the last chosen player have menace.",
-          "implementation": [
-            "explicitly unsupported; chosen-opponent attackers implemented as all in combat"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
         }
       ],
       "gameplayAiScenarioIds": []
@@ -4212,13 +4205,23 @@
     "2f82b232-21ff-44cc-bc35-0999a1d1c52f": {
       "name": "Lightning Runner",
       "oracleSha256": "3c1a95336f34a682447de952888e4e51c9a8490195569c715edf15cbba6b2b43",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "lightning-runner-attack-trigger",
           "oracleText": "Whenever this creature attacks, you get {E}{E} (two energy counters), then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an additional combat phase.",
-          "implementation": ["explicitly unsupported; untapEach of all permanents you control"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "authored attack trigger of the creature itself: gainEnergy 2, then mayPayEnergy 8 whose payment untaps only creatures you control (not other permanents, and not an opponent's creatures) and creates one additional combat phase right after the current one (CR 500.8); the energy is gained and paid in the same resolution, declining or having fewer than eight energy does neither, and an additional combat made during an additional combat is run once"
+          ],
+          "engineTestIds": [
+            "lightning-runner-pinned-oracle-supported",
+            "lightning-runner-pay-eight",
+            "lightning-runner-decline",
+            "lightning-runner-short-of-energy",
+            "lightning-runner-chained",
+            "lightning-runner-opponent-attack"
+          ],
+          "viewerScenarioIds": ["lightning-runner-viewer-pay-energy-extra-combat"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -6127,15 +6130,38 @@
     "81dad7c5-5950-4c45-adb0-cf1a15a74250": {
       "name": "Firkraag, Cunning Instigator",
       "oracleSha256": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "firkraag-dragon-attack-goad",
+          "oracleText": "Whenever one or more Dragons you control attack an opponent, goad target creature that player controls.",
+          "implementation": [
+            "authored attacks trigger with byEventPlayer grouping: one trigger for each opponent attacked by one or more Dragons you control (a Dragon attacking only a planeswalker, a non-Dragon, and an opponent's Dragon do not trigger it), whose target is a creature that attacked player controls and which is goaded by you (CR 701.15)"
+          ],
+          "engineTestIds": [
+            "firkraag-pinned-oracle-supported",
+            "firkraag-dragons-attack-goad",
+            "firkraag-each-opponent",
+            "firkraag-negatives",
+            "firkraag-goad-then-damage"
+          ],
+          "viewerScenarioIds": ["firkraag-viewer-dragon-attack-goads"]
+        },
+        {
+          "id": "firkraag-forced-attack-damage",
           "oracleText": "Whenever a creature deals combat damage to one of your opponents, if that creature had to attack this combat, you put a +1/+1 counter on Firkraag and you draw a card.",
           "implementation": [
-            "explicitly unsupported; intervening-if checks Firkraag not the damaging creature"
+            "authored dealsCombatDamageToPlayer trigger for any creature with an intervening-if (CR 603.4) on the damaging creature, not on Firkraag: it had to attack this combat and the damaged player is one of your opponents; checked as it triggers and as it resolves, from last known information if the creature has left the battlefield (CR 608.2h); the creature may be any player's, yours included"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "firkraag-pinned-oracle-supported",
+            "firkraag-draw-and-counter",
+            "firkraag-damage-negatives",
+            "firkraag-any-creature",
+            "firkraag-last-known-information",
+            "firkraag-goad-then-damage"
+          ],
+          "viewerScenarioIds": ["firkraag-viewer-goaded-damage-draws"]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -6207,20 +6233,6 @@
         {
           "oracleText": "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.",
           "implementation": ["explicitly unsupported; exiled lands can be played"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "c549b0fd-1e08-4873-952e-a14dc45a0fd2": {
-      "name": "Champion of Lambholt",
-      "oracleSha256": "7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Creatures with power less than this creature's power can't block creatures you control.\nWhenever another creature you control enters, put a +1/+1 counter on this creature.",
-          "implementation": ["explicitly unsupported; can't-block is hardcoded by card name"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
         }
@@ -12097,6 +12109,727 @@
         }
       ],
       "gameplayAiScenarioIds": ["hunted-phantasm-viewer-opponent-tokens"]
+    },
+    "984f92dd-cb9b-4421-a8e6-75bfe566be10": {
+      "name": "Rite of the Raging Storm",
+      "oracleSha256": "8084d5a45cbb44df44eb1f24fae2549e89b2b59f375e1901b47aed4f9cf22725",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "rite-of-the-raging-storm-named-cant-attack-you",
+          "oracleText": "Creatures named Lightning Rager can't attack you or planeswalkers you control.",
+          "implementation": [
+            "authored attackRestriction rule static whose filter is the exact name Lightning Rager (the new name selector, reading the current name): any creature of that name, token or not and whoever controls it, a copy of one included, can't attack you or planeswalkers you control (CR 508.1c), while a differently named creature and a face-down creature (no name, CR 708.2) can"
+          ],
+          "engineTestIds": [
+            "rite-of-the-raging-storm-pinned-oracle-supported",
+            "rite-of-the-raging-storm-cant-attack-you",
+            "rite-of-the-raging-storm-copies-and-face-down",
+            "rite-of-the-raging-storm-two-rites",
+            "rite-of-the-raging-storm-whole-turn"
+          ],
+          "viewerScenarioIds": ["rite-of-the-raging-storm-viewer-named-cant-attack-you"]
+        },
+        {
+          "id": "rite-of-the-raging-storm-upkeep-token",
+          "oracleText": "At the beginning of each player's upkeep, that player creates a 5/1 red Elemental creature token named Lightning Rager. It has trample, haste, and \"At the beginning of the end step, sacrifice this token.\"",
+          "implementation": [
+            "authored upkeep trigger for each player's upkeep that creates the token for that player (the event player, not your own), a 5/1 red Elemental creature named Lightning Rager with trample, haste and its own end-step ability that sacrifices it at the beginning of the next end step, whoever's turn it is (CR 111, 603.7)"
+          ],
+          "engineTestIds": [
+            "rite-of-the-raging-storm-pinned-oracle-supported",
+            "rite-of-the-raging-storm-upkeep-token",
+            "rite-of-the-raging-storm-two-rites",
+            "rite-of-the-raging-storm-sacrifice",
+            "rite-of-the-raging-storm-whole-turn"
+          ],
+          "viewerScenarioIds": ["rite-of-the-raging-storm-viewer-upkeep-token"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ec08df88-3c13-4940-a090-0c502b9b12f1": {
+      "name": "Goblin Spymaster",
+      "oracleSha256": "dc6ec963c76cddaf6add831da4fd2f1eaf97c23fc0b035f66702f1ecefc40736",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "goblin-spymaster-opponent-end-step-token",
+          "oracleText": "At the beginning of each opponent's end step, that player creates a 1/1 red Goblin creature token with \"Creatures you control attack each combat if able.\"",
+          "implementation": [
+            "authored end-step trigger for each opponent's end step that creates the token for that player (the event player, not Goblin Spymaster's controller): a 1/1 red Goblin creature whose own static ability, new TokenSpec staticEffects, makes every creature its controller controls attack each combat if able (CR 508.1d); it covers creatures that player gets later, follows the token if control of it changes, and ends when the token leaves the battlefield, whatever happens to Goblin Spymaster"
+          ],
+          "engineTestIds": [
+            "goblin-spymaster-pinned-oracle-supported",
+            "goblin-spymaster-opponent-end-step",
+            "goblin-spymaster-token-forces-attack",
+            "goblin-spymaster-token-control",
+            "goblin-spymaster-token-leaves",
+            "goblin-spymaster-whole-game"
+          ],
+          "viewerScenarioIds": ["goblin-spymaster-viewer-opponent-end-step-token"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b4c27c89-fa50-4cf0-bf37-039732d16fef": {
+      "name": "Toby, Beastie Befriender",
+      "oracleSha256": "ab14f8f89747265e1dc7c2837a49999e1ab57539f9ff54794f332d4f8da17ab0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "toby-beast-token-cant-attack-or-block-alone",
+          "oracleText": "When Toby enters, create a 4/4 white Beast creature token with \"This token can't attack or block alone.\"",
+          "implementation": [
+            "authored enters trigger that creates a 4/4 white Beast creature token whose own rule statics (new TokenSpec ruleStatics: cantAttackAlone, cantBlockAlone) say it is declared as an attacker only if another creature is also declared as an attacker, and as a blocker only if another creature of the same defending player is also declared as a blocker in that player's declaration (CR 506.5); a declaration that breaks it is rejected with the new attackAlone/blockAlone violations and, if still wrong, repaired by the engine: a lone blocking Beast stands down, a lone attacking Beast stands down unless it has an attack requirement it can obey, in which case another creature that can attack is declared with it (CR 508.1d); a Beast that has an attack requirement but no other creature that could be declared is not required to attack"
+          ],
+          "engineTestIds": [
+            "toby-pinned-oracle-supported",
+            "toby-beast-token",
+            "toby-cant-attack-alone",
+            "toby-attack-alone-required",
+            "toby-cant-block-alone",
+            "toby-restriction-scope",
+            "toby-whole-game"
+          ],
+          "viewerScenarioIds": ["toby-viewer-beast-cant-block-alone"]
+        },
+        {
+          "id": "toby-creature-tokens-have-flying",
+          "oracleText": "As long as you control four or more creature tokens, creature tokens you control have flying.",
+          "implementation": [
+            "authored layer 6 static that gives flying to every creature token you control while you control four or more creature tokens; the count is judged on the characteristics the layers have produced so far (a static condition that counts permanents is now evaluated inside the layer pass, CR 613.8a), so it is checked continuously, counts only creature tokens, and stops the moment you control three or Toby leaves"
+          ],
+          "engineTestIds": ["toby-pinned-oracle-supported", "toby-flying", "toby-flying-count"],
+          "viewerScenarioIds": ["toby-viewer-flying-with-four-tokens"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b2d1f87b-a11f-43eb-8b89-b48945320d73": {
+      "name": "Life of the Party",
+      "oracleSha256": "6244452d742f3bd5bb3fe11e45312ee784ee2f7b695ea8b0dff970658c43243c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "life-of-the-party-attack-pump",
+          "oracleText": "Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of creatures you control.",
+          "implementation": [
+            "authored attack trigger that gives Life of the Party itself +X/+0 until end of turn, where X is the number of creatures you control, counted as the trigger resolves"
+          ],
+          "engineTestIds": [
+            "life-of-the-party-pinned-oracle-supported",
+            "life-of-the-party-attack-pump"
+          ],
+          "viewerScenarioIds": ["life-of-the-party-viewer-attack-pump"]
+        },
+        {
+          "id": "life-of-the-party-goaded-copies",
+          "oracleText": "When this creature enters, if it's not a token, each opponent creates a token that's a copy of it. The tokens are goaded for the rest of the game.",
+          "implementation": [
+            "authored enters trigger with an intervening-if (checked as it triggers and as it resolves, CR 603.4) that the source is not a token; each opponent of the controller, as the creator, creates their own token copy under their own control (createTokenCopyOf eachOpponent), copied from the source's last known copiable values if it has already left the battlefield (CR 608.2h), and the ability's controller goads every copy for the rest of the game (goadedForRestOfGame: a goad flagged permanent is not removed at the goader's next turn, CR 701.15, and ends when the goader leaves the game, CR 800.4a); the copies' own enters triggers do nothing because they are tokens"
+          ],
+          "engineTestIds": [
+            "life-of-the-party-pinned-oracle-supported",
+            "life-of-the-party-copies",
+            "life-of-the-party-token-no-copies",
+            "life-of-the-party-goaded-forever",
+            "life-of-the-party-goader-leaves",
+            "life-of-the-party-left-before-resolving",
+            "life-of-the-party-whole-game"
+          ],
+          "viewerScenarioIds": ["life-of-the-party-viewer-goaded-copies"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bc14356c-3a1a-47af-9a6e-2b449de0331f": {
+      "name": "Kardur, Doomscourge",
+      "oracleSha256": "72604f8eb1df87c4020f3d5029549aca480358b6e0ebbb6e680f72dae76bcaa7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kardur-opponents-attack-not-you",
+          "oracleText": "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+          "implementation": [
+            "authored enters trigger that stores an attack requirement (the new addAttackRequirement effect) for every creature your opponents control, read live so creatures they get later are covered (CR 611.2c), with two requirements counted separately: attack each combat, and attack a player other than you; a declaration obeys the maximum possible (CR 508.1d): a planeswalker attack obeys only the first, so a creature that can attack another player must, and one that can't must still attack you or a planeswalker; it lasts until your next turn begins, whether or not Kardur is still on the battlefield, and ends early if you leave the game"
+          ],
+          "engineTestIds": [
+            "kardur-pinned-oracle-supported",
+            "kardur-enters-requirement",
+            "kardur-opponents-must-attack-not-you",
+            "kardur-later-arrivals",
+            "kardur-planeswalker-ruling",
+            "kardur-until-your-next-turn",
+            "kardur-whole-game"
+          ],
+          "viewerScenarioIds": ["kardur-viewer-must-attack-not-you"]
+        },
+        {
+          "id": "kardur-attacking-creature-dies-drain",
+          "oracleText": "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life.",
+          "implementation": [
+            "authored dies trigger whose subject is a creature that was attacking as it died (combat role read from last known information), controlled by anyone: each opponent loses 1 life and you gain 1; a blocking creature, or a creature that dies outside combat, does not trigger it; each attacker that dies triggers it once, Kardur's own death included"
+          ],
+          "engineTestIds": [
+            "kardur-pinned-oracle-supported",
+            "kardur-attacker-dies-drain",
+            "kardur-blockers-dont-count",
+            "kardur-trade-and-multiple",
+            "kardur-whole-game"
+          ],
+          "viewerScenarioIds": ["kardur-viewer-attacker-dies-drain"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4232995b-68c0-4514-8cde-bc62b9d1cbaa": {
+      "name": "Galactus, Devourer of Worlds",
+      "oracleSha256": "d71a8ad0835e3e153d9026cce25fb4ed98e23778c66a132719b06efd69b53b42",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "galactus-insatiable-hunger",
+          "oracleText": "Insatiable Hunger \u2014 Galactus attacks an opponent with the most life among your opponents each combat if able unless you control a creature named Silver Surfer, Galactus's Herald.",
+          "implementation": [
+            "authored attackRequirement rule static of Galactus itself (lost with its abilities): as attackers are declared, the opponents of its controller with the most life are read (any of them on a tie, players who left the game excluded) and attacking one of those players obeys the requirement; a planeswalker never does, and a restriction wins (CR 508.1c), so when Galactus cannot attack such a player nothing is required of it (CR 508.1d); the requirement does not apply while its controller controls a creature named Silver Surfer, Galactus's Herald (an opponent's, or one with a similar name, does not lift it); the exile trigger and the keywords are read by the interpreter"
+          ],
+          "engineTestIds": [
+            "galactus-pinned-oracle-supported",
+            "galactus-attacks-most-life",
+            "galactus-ties",
+            "galactus-life-now",
+            "galactus-unable",
+            "galactus-silver-surfer",
+            "galactus-control",
+            "galactus-whole-game"
+          ],
+          "viewerScenarioIds": [
+            "galactus-viewer-attacks-most-life",
+            "galactus-viewer-herald-lifts-requirement"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "be02005c-0e37-4dba-ac8e-3c69d06bbec2": {
+      "name": "Silver Surfer, Galactus's Herald",
+      "oracleSha256": "76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "silver-surfer-search-galactus",
+          "oracleText": "When Silver Surfer enters, you may search your library for a card named Galactus, Devourer of Worlds, reveal it, put it into your hand, then shuffle.",
+          "implementation": [
+            "authored optional enters trigger: declining searches nothing and shuffles nothing; accepting searches your library for a card with the exact name Galactus, Devourer of Worlds (the new name selector on library cards), reveals it and puts it into your hand, and shuffles even when nothing is found (a similar name is not found)"
+          ],
+          "engineTestIds": [
+            "silver-surfer-pinned-oracle-supported",
+            "silver-surfer-search",
+            "silver-surfer-search-fails"
+          ],
+          "viewerScenarioIds": ["silver-surfer-viewer-search-galactus"]
+        },
+        {
+          "id": "silver-surfer-attack-that-player",
+          "oracleText": "Whenever Silver Surfer deals combat damage to a player, until the end of your next turn, target creature attacks that player each combat if able.",
+          "implementation": [
+            "authored combat-damage trigger with any creature as target, whoever controls it: it stores an attack requirement (addAttackRequirement) for that object to attack the damaged player (a planeswalker of theirs never obeys it, and a creature that can't attack that player isn't required to attack at all) until the end of your next turn: it lasts through the other players' turns and all of your next turn and ends in that turn's cleanup step"
+          ],
+          "engineTestIds": [
+            "silver-surfer-pinned-oracle-supported",
+            "silver-surfer-attack-that-player",
+            "silver-surfer-duration",
+            "silver-surfer-own-creature-and-unable"
+          ],
+          "viewerScenarioIds": ["silver-surfer-viewer-attack-that-player"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9138a768-d01d-4603-9bae-d3bff6cd2f61": {
+      "name": "Taunt from the Rampart",
+      "oracleSha256": "977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "taunt-goad-and-cant-block",
+          "oracleText": "Goad all creatures your opponents control. Until your next turn, those creatures can't block.",
+          "implementation": [
+            "authored sorcery: goadEachOpponent goads every creature your opponents control as it resolves, and the new cantBlockEach effect records the same set (the creatures matching your opponents' creatures as it resolves, fixed, CR 611.2c) in the block-restriction store so they can't be declared as blockers; both end as your next turn begins; a creature an opponent gets afterwards is neither goaded nor restricted, one that changes hands stays affected, and your own creatures are unaffected"
+          ],
+          "engineTestIds": [
+            "taunt-pinned-oracle-supported",
+            "taunt-goads-all",
+            "taunt-cant-block",
+            "taunt-fixed-set",
+            "taunt-until-your-next-turn",
+            "taunt-whole-game"
+          ],
+          "viewerScenarioIds": ["taunt-viewer-goad-and-cant-block"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b3329240-c812-45ea-a7f8-4d79cd4ed515": {
+      "name": "Hexmark Destroyer",
+      "oracleSha256": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "hexmark-destroyer-six-blockers",
+          "oracleText": "This creature can't be blocked except by six or more creatures.",
+          "implementation": [
+            "authored minBlockers rule static of Hexmark Destroyer itself (lost with its abilities, present on copies): once its defending player's block declaration is known, it is either unblocked or blocked by at least six creatures (CR 509.1b); a declaration with one to five blockers is rejected with the new minBlockers violation and, if still wrong, repaired by dropping all of its blockers; other attackers, and menace, are unaffected; unearth is read by the interpreter"
+          ],
+          "engineTestIds": [
+            "hexmark-pinned-oracle-supported",
+            "hexmark-unblocked-or-six",
+            "hexmark-too-few",
+            "hexmark-others-unaffected",
+            "hexmark-copy-and-lost-abilities",
+            "hexmark-whole-game"
+          ],
+          "viewerScenarioIds": ["hexmark-viewer-needs-six-blockers"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c549b0fd-1e08-4873-952e-a14dc45a0fd2": {
+      "name": "Champion of Lambholt",
+      "oracleSha256": "7ae06980c1fe8ea421f90e6a5b8485a93182c677e9ea37a94ab5511d11012f63",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "champion-of-lambholt-weaker-cant-block",
+          "oracleText": "Creatures with power less than this creature's power can't block creatures you control.",
+          "implementation": [
+            "authored cantBlockCreatures rule static of the Champion itself, replacing the hardcoded name check in combat.ts: a creature whose power is less than the Champion's CURRENT power (counters, anthems) can't be declared as a blocker of a creature its controller controls, whoever the blockers' controller is; it is lost with the Champion's abilities, present on copies, and gone when the Champion leaves; it does not restrict blocks of other players' attackers; the counter trigger is read by the interpreter"
+          ],
+          "engineTestIds": [
+            "champion-pinned-oracle-supported",
+            "champion-power-less",
+            "champion-only-yours",
+            "champion-copies-and-lost-abilities",
+            "champion-leaves",
+            "champion-whole-game"
+          ],
+          "viewerScenarioIds": ["champion-of-lambholt-viewer-weaker-cant-block"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "377d0fa7-1b3d-4b97-b066-dceeff3734d0": {
+      "name": "Pramikon, Sky Rampart",
+      "oracleSha256": "d702c231a2760d45148ddb29a6d6a89916d769c2b1f04d12b6e4d7e709733a9a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "pramikon-choose-direction",
+          "oracleText": "As Pramikon enters, choose left or right.",
+          "implementation": [
+            "authored entersChoosingOption of left or right: the direction is chosen as a replacement as it enters, so it exists before anything can attack, and is stored as the permanent's chosen option"
+          ],
+          "engineTestIds": [
+            "pramikon-pinned-oracle-supported",
+            "pramikon-whole-game",
+            "pramikon-no-choice-no-restriction"
+          ],
+          "viewerScenarioIds": ["pramikon-viewer-nearest-opponent"]
+        },
+        {
+          "id": "pramikon-attack-only-nearest",
+          "oracleText": "Each player may attack only the nearest opponent in the chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": [
+            "authored attackOnlyNearestOpponent rule static of Pramikon itself, read at the attack restriction choke point: every player, its controller included, may attack only the nearest opponent in the chosen direction (left is the next player in turn order, right the previous one, skipping players who have left the game) and that opponent's planeswalkers; several such statics intersect and can leave no legal attack, in which case a requirement such as goad no longer applies; creatures put onto the battlefield attacking are not limited; it ends when Pramikon leaves"
+          ],
+          "engineTestIds": [
+            "pramikon-left-right",
+            "pramikon-planeswalkers",
+            "pramikon-skips-eliminated",
+            "pramikon-intersect",
+            "pramikon-requirements",
+            "pramikon-leaves",
+            "pramikon-not-attacking-tokens",
+            "pramikon-whole-game"
+          ],
+          "viewerScenarioIds": ["pramikon-viewer-nearest-opponent"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0dfdf1a1-a3a9-490f-bd9d-dcba088c6785": {
+      "name": "Teyo, Geometric Tactician",
+      "oracleSha256": "c6459f9ac45f2d5ad423b289921a8f98cc6ca5336aaf4fdd57ed8d564de23ade",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "teyo-etb-wall",
+          "oracleText": "When Teyo enters, create a 0/4 white Wall creature token with defender and flying.",
+          "implementation": [
+            "interpreter-read enters trigger creating a 0/4 white Wall token with defender and flying"
+          ],
+          "engineTestIds": ["teyo-pinned-oracle-supported", "teyo-enters-wall"],
+          "viewerScenarioIds": ["teyo-viewer-wall-and-plus-one"]
+        },
+        {
+          "id": "teyo-plus-one-draw",
+          "oracleText": "+1: You and target opponent each draw a card.",
+          "implementation": [
+            "authored +1 loyalty ability targeting an opponent, drawTargetAndController: you and that opponent each draw one card"
+          ],
+          "engineTestIds": ["teyo-plus-one-draw", "teyo-plus-one-opponent-only"],
+          "viewerScenarioIds": ["teyo-viewer-wall-and-plus-one"]
+        },
+        {
+          "id": "teyo-minus-two-direction",
+          "oracleText": "−2: Choose left or right. Until your next turn, each player may attack only the nearest opponent in the last chosen direction and planeswalkers controlled by that opponent.",
+          "implementation": [
+            "authored −2 loyalty ability: a resolution-time left or right choice that records an attack-direction limit in game state until its controller's next turn begins; a newer −2 from the same card replaces the older entry so only the last choice applies; the combat restriction choke point allows only the nearest opponent in that direction (skipping players who left) and that opponent's planeswalkers, and it composes with Pramikon's static, possibly leaving no legal attack; the limit ends if its controller leaves the game"
+          ],
+          "engineTestIds": [
+            "teyo-minus-two-direction",
+            "teyo-left",
+            "teyo-planeswalkers",
+            "teyo-until-your-next-turn",
+            "teyo-outlasts-teyo",
+            "teyo-last-choice-wins",
+            "teyo-with-pramikon",
+            "teyo-controller-left",
+            "teyo-whole-game"
+          ],
+          "viewerScenarioIds": ["teyo-viewer-minus-two-direction"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3": {
+      "name": "Triarch Stalker",
+      "oracleSha256": "7042199aac64458d8a1613d741ff94a5cb545ca6b184502770943558e69ea338",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "triarch-stalker-choose-opponent",
+          "oracleText": "Targeting Relay — At the beginning of combat on your turn, choose an opponent.",
+          "implementation": [
+            "authored beginning-of-combat trigger (your turn only) with chooseOpponentForSource: its controller chooses an opponent as the trigger resolves, stored on the Stalker as its chosen option so each new choice replaces the last"
+          ],
+          "engineTestIds": [
+            "triarch-stalker-pinned-oracle-supported",
+            "triarch-stalker-choose-opponent",
+            "triarch-stalker-only-your-turn",
+            "triarch-stalker-last-chosen"
+          ],
+          "viewerScenarioIds": ["triarch-stalker-viewer-menace"]
+        },
+        {
+          "id": "triarch-stalker-menace",
+          "oracleText": "Creatures attacking the last chosen player have menace.",
+          "implementation": [
+            "authored layer 6 static of the Stalker granting menace to creatures of any controller that are attacking the player stored in its chosen option (the player, not their planeswalkers, via the attackingChosenPlayer selector); nothing has menace before a choice or once the Stalker has left"
+          ],
+          "engineTestIds": [
+            "triarch-stalker-menace",
+            "triarch-stalker-not-planeswalkers",
+            "triarch-stalker-no-choice-yet",
+            "triarch-stalker-leaves",
+            "triarch-stalker-whole-game"
+          ],
+          "viewerScenarioIds": ["triarch-stalker-viewer-menace"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "333745d9-e930-439b-94d6-3aeea2877f69": {
+      "name": "Illusionist's Gambit",
+      "oracleSha256": "11fe7642c0a68a5c2ad0e32127d111997ddff524b1bf634e725c78264698d4b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "illusionists-gambit-cast-timing",
+          "oracleText": "Cast this spell only during the declare blockers step on an opponent's turn.",
+          "implementation": [
+            "authored castRestriction allOf duringStep declareBlockers and notYourTurn, enforced when offering and when casting"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-pinned-oracle-supported",
+            "illusionists-gambit-cast-timing"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        },
+        {
+          "id": "illusionists-gambit-remove-untap",
+          "oracleText": "Remove all attacking creatures from combat and untap them. After this phase, there is an additional combat phase.",
+          "implementation": [
+            "removeAttackersFromCombat: every attacking creature is removed from combat (blockers of it stop blocking) and untapped before any damage, and an additional combat phase is inserted directly after the current combat"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-removes-and-untaps",
+            "illusionists-gambit-additional-combat"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        },
+        {
+          "id": "illusionists-gambit-extra-combat-requirement",
+          "oracleText": "Each of those creatures attacks that combat if able. They can't attack you or planeswalkers you control that combat.",
+          "implementation": [
+            "the removed creatures are a fixed set bound to that one combat in the attack requirement store: they attack that combat if able and cannot attack the Gambit's controller or their planeswalkers (restrictions beat requirements, so with nobody else to attack they are not required to); creatures not attacking when it resolved are in neither set; the entry ends with that combat"
+          ],
+          "engineTestIds": [
+            "illusionists-gambit-additional-combat",
+            "illusionists-gambit-attacks-others",
+            "illusionists-gambit-restriction-beats-requirement",
+            "illusionists-gambit-that-combat-only"
+          ],
+          "viewerScenarioIds": ["illusionists-gambit-viewer-remove-and-redirect"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6288c0cb-cf32-4ae9-abf0-104ec71654fa": {
+      "name": "Moraug, Fury of Akoum",
+      "oracleSha256": "2f43c33f9dfea9bcffe2778bf5f70f7255d4d813328c45a02e41698d8e995694",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "moraug-pump-per-attack",
+          "oracleText": "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+          "implementation": [
+            "authored layer 7d static over creatures you control whose power is the new timesAttackedThisTurn value, read once per affected creature: its own count of times declared as an attacker this turn (never for tokens put onto the battlefield attacking), reset at the start of each turn and folded into the layer cache fingerprint"
+          ],
+          "engineTestIds": [
+            "moraug-pinned-oracle-supported",
+            "moraug-pump-per-attack",
+            "moraug-resets-each-turn",
+            "moraug-declared-attacks-only"
+          ],
+          "viewerScenarioIds": ["moraug-viewer-landfall-extra-combat"]
+        },
+        {
+          "id": "moraug-landfall-extra-combat",
+          "oracleText": "Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+          "implementation": [
+            "authored landfall trigger with a duringYourMainPhase intervening-if (checked as it triggers and as it resolves) creating an additional combat phase inserted directly after the current main phase, with a beginning-of-that-combat trigger that untaps all creatures its controller controls"
+          ],
+          "engineTestIds": [
+            "moraug-landfall-first-main",
+            "moraug-landfall-second-main",
+            "moraug-landfall-conditions",
+            "moraug-landfall-rechecked",
+            "moraug-whole-game"
+          ],
+          "viewerScenarioIds": ["moraug-viewer-landfall-extra-combat"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "269fc857-a052-4f0a-9759-467ccf42bebb": {
+      "name": "Siren's Call",
+      "oracleSha256": "71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "sirens-call-cast-timing",
+          "oracleText": "Cast this spell only during an opponent's turn, before attackers are declared.",
+          "implementation": [
+            "authored castRestriction allOf notYourTurn and beforeAttackersDeclared (the turn has not reached the declare attackers step of its first combat), enforced when offering and when casting"
+          ],
+          "engineTestIds": ["sirens-call-pinned-oracle-supported", "sirens-call-cast-timing"],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        },
+        {
+          "id": "sirens-call-must-attack",
+          "oracleText": "Creatures the active player controls attack this turn if able.",
+          "implementation": [
+            "addAttackRequirement with a live selector read from the active player's point of view (a rules modification, CR 611.2c, so creatures arriving later are covered) and a this-turn expiry that ends in the cleanup step"
+          ],
+          "engineTestIds": [
+            "sirens-call-must-attack",
+            "sirens-call-later-arrivals",
+            "sirens-call-this-turn-only",
+            "sirens-call-whole-game"
+          ],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        },
+        {
+          "id": "sirens-call-end-step-destruction",
+          "oracleText": "At the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+          "implementation": [
+            "registerDelayedTrigger at the next end step remembering the active player, destroying creatures that player controls that are not Walls, did not attack (declared attackers only, via the attackedThisTurn selector fact) and have been controlled continuously since their controller's turn began"
+          ],
+          "engineTestIds": ["sirens-call-end-step-destruction", "sirens-call-whole-game"],
+          "viewerScenarioIds": ["sirens-call-viewer-attack-or-die"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ba4e4afb-24bb-47de-aba8-89d21b11d45c": {
+      "name": "War's Toll",
+      "oracleSha256": "715b41d0cd1402f6bfbb0639a40dc11ba07df7b410fde9d856b17d50b271b5e0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "wars-toll-taps-lands",
+          "oracleText": "Whenever an opponent taps a land for mana, tap all lands that player controls.",
+          "implementation": [
+            "authored becomesTapped trigger with the new forMana flag (a land tapped to activate a mana ability, with the activating player as event player), over lands opponents control; it taps every land the event player controls through a tap effect, which is not tapping for mana and so cannot loop"
+          ],
+          "engineTestIds": [
+            "wars-toll-pinned-oracle-supported",
+            "wars-toll-taps-all-lands",
+            "wars-toll-not-yours",
+            "wars-toll-not-effects",
+            "wars-toll-whole-game"
+          ],
+          "viewerScenarioIds": ["wars-toll-viewer-taps-lands-and-forces-attack"]
+        },
+        {
+          "id": "wars-toll-attack-with-all",
+          "oracleText": "If a creature an opponent controls attacks, all creatures that opponent controls attack if able.",
+          "implementation": [
+            "opponentsAttackWithAll rule static read on the whole attack declaration of each opponent of the controller: with at least one attacker declared, every creature that can attack without paying a cost must be declared (violation attackWithAll, repaired by adding them), while declaring no attack at all stays legal (CR 508.1d)"
+          ],
+          "engineTestIds": [
+            "wars-toll-all-attack",
+            "wars-toll-attack-with-none",
+            "wars-toll-only-able-creatures",
+            "wars-toll-costs-excused",
+            "wars-toll-leaves",
+            "wars-toll-whole-game"
+          ],
+          "viewerScenarioIds": ["wars-toll-viewer-taps-lands-and-forces-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b08633e9-7b8f-4f69-a3b7-8d982b17574c": {
+      "name": "Willie Lumpkin, Postman",
+      "oracleSha256": "33c6149e7443a3b97484dc3ce01515a81e91e83af46a878ca95da0c306685429",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "willie-lumpkin-unblockable",
+          "oracleText": "Willie Lumpkin can't be blocked.",
+          "implementation": ["interpreter-read layer 6 setCantBeBlocked static of Willie itself"],
+          "engineTestIds": ["willie-pinned-oracle-supported", "willie-unblockable"],
+          "viewerScenarioIds": ["willie-lumpkin-viewer-draw-then-cant-attack"]
+        },
+        {
+          "id": "willie-lumpkin-draws-and-restricts",
+          "oracleText": "Whenever Willie Lumpkin deals combat damage to an opponent, you draw a card and that player may draw a card. If they do, that player can't attack you or permanents you control during their next turn.",
+          "implementation": [
+            "authored dealsCombatDamageToPlayer trigger: its controller draws, then the damaged player is asked whether to draw (eventPlayerMayDraw) and only if they do, an attack requirement store entry (a live selector read from that player's point of view, so later creatures are covered) forbids them to attack the controller or their planeswalkers (battles are not modeled) during their next turn: it applies only while they are the active player in their first turn after, and ends in that turn's cleanup step"
+          ],
+          "engineTestIds": [
+            "willie-both-draw",
+            "willie-decline",
+            "willie-cant-attack-you",
+            "willie-their-next-turn-only",
+            "willie-later-creatures",
+            "willie-whole-game"
+          ],
+          "viewerScenarioIds": ["willie-lumpkin-viewer-draw-then-cant-attack"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2fc42640-983a-49ca-9020-7756135077b4": {
+      "name": "Fight or Flight",
+      "oracleSha256": "87361a2f2f9561600e683449cee33346035b87c01ba17471e690dbeb90c4a1b7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "fight-or-flight-separate-and-choose",
+          "oracleText": "At the beginning of combat on each opponent's turn, separate all creatures that player controls into two piles.",
+          "implementation": [
+            "authored beginningOfCombat trigger for each opponent's turn running separateIntoPilesLimitAttackers: the enchantment's controller puts each of the active player's creatures in pile 1 or 2 one decision at a time, then the active player chooses a pile (either pile may be empty); with no creatures there is nothing to choose between"
+          ],
+          "engineTestIds": [
+            "fight-or-flight-pinned-oracle-supported",
+            "fight-or-flight-controller-separates",
+            "fight-or-flight-active-player-chooses",
+            "fight-or-flight-extra-combat"
+          ],
+          "viewerScenarioIds": ["fight-or-flight-viewer-separate", "fight-or-flight-viewer-choose"]
+        },
+        {
+          "id": "fight-or-flight-pile-attacks",
+          "oracleText": "Only creatures in the pile of their choice can attack this turn.",
+          "implementation": [
+            "a this-turn entry in the attack requirement store whose live selector covers every creature the active player controls (CR 611.2c, so later arrivals are in no pile) and whose cantAttackExcept restriction names the chosen pile; restrictions beat requirements, and two of them bind together"
+          ],
+          "engineTestIds": [
+            "fight-or-flight-only-chosen-pile-attacks",
+            "fight-or-flight-later-arrivals",
+            "fight-or-flight-this-turn-only",
+            "fight-or-flight-beats-must-attack",
+            "fight-or-flight-two-copies",
+            "fight-or-flight-whole-game"
+          ],
+          "viewerScenarioIds": ["fight-or-flight-viewer-separate", "fight-or-flight-viewer-choose"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f9bca7af-29b6-46ba-b847-56715d09d1da": {
+      "name": "Master Warcraft",
+      "oracleSha256": "bc2e3cc5eaa6fe0dc6973c574f93a6693183f420215430d9f5a63b29ac59776a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "master-warcraft-cast-timing",
+          "oracleText": "Cast this spell only before attackers are declared.",
+          "implementation": [
+            "authored castRestriction beforeAttackersDeclared (the turn has not reached the declare attackers step of its first combat), enforced when offering and when casting; nothing limits it to an opponent's turn"
+          ],
+          "engineTestIds": [
+            "master-warcraft-pinned-oracle-supported",
+            "master-warcraft-cast-timing"
+          ],
+          "viewerScenarioIds": [
+            "master-warcraft-viewer-choose-attackers-and-blocks",
+            "master-warcraft-viewer-assign-chosen-attackers"
+          ]
+        },
+        {
+          "id": "master-warcraft-attackers",
+          "oracleText": "You choose which creatures attack this turn.",
+          "implementation": [
+            "chooseAttackersAndBlockers records the caster for the turn (the newest one wins, ended in cleanup or when the caster leaves the game); each declaration of attackers by another player becomes two decisions: the caster chooses the set from the creatures that can attack (requirements and the joint rules of CR 506.5 and 508.1d bind it, a creature with no legal attack is not offered), then the attacking player chooses what each chosen creature attacks and pays its costs, and may decline only a creature that has no attack that costs nothing, which leaves it out so the caster chooses again; the active player declares as usual when they are the caster"
+          ],
+          "engineTestIds": [
+            "master-warcraft-chooses-attackers",
+            "master-warcraft-active-player-assigns",
+            "master-warcraft-requirements",
+            "master-warcraft-joint-rules",
+            "master-warcraft-costs",
+            "master-warcraft-costs-paid",
+            "master-warcraft-caster-attacks",
+            "master-warcraft-whole-turn",
+            "master-warcraft-newest-wins",
+            "master-warcraft-whole-game"
+          ],
+          "viewerScenarioIds": [
+            "master-warcraft-viewer-choose-attackers-and-blocks",
+            "master-warcraft-viewer-assign-chosen-attackers"
+          ]
+        },
+        {
+          "id": "master-warcraft-blockers",
+          "oracleText": "You choose which creatures block this turn and how those creatures block.",
+          "implementation": [
+            "each defending player's block declaration is asked of the caster instead (one decision per defending player, validated and repaired as usual, with the player whose creatures they are named in the presentation); damage assignment stays with the attacking player"
+          ],
+          "engineTestIds": [
+            "master-warcraft-chooses-blocks",
+            "master-warcraft-caster-defends",
+            "master-warcraft-caster-attacks",
+            "master-warcraft-whole-game"
+          ],
+          "viewerScenarioIds": ["master-warcraft-viewer-choose-attackers-and-blocks"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

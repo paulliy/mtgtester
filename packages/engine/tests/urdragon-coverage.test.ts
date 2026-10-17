@@ -140,6 +140,8 @@ const MODELED = [
   'Vaevictis Asmadi, the Dire',
   // Coverage PR06: the entering Dragon is the damage source.
   'Dragon Tempest',
+  // Coverage PR07: the goad and the damaging creature's intervening-if are modeled.
+  'Firkraag, Cunning Instigator',
 ].sort();
 
 describe('The Ur-Dragon deck â€” model coverage', () => {

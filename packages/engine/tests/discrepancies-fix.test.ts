@@ -73,7 +73,7 @@ describe('Discrepancy Fixes & CR Compliance', () => {
   });
 
   describe('Firkraag, Cunning Instigator — Forced Combat Intervening-If', () => {
-    it('is catalog-contained because the intervening-if checks Firkraag, not the damaging creature', () => {
+    it('is modeled with an intervening-if about the creature that dealt damage, not Firkraag (coverage PR07)', () => {
       const raw = oracle({
         oracleId: '81dad7c5-5950-4c45-adb0-cf1a15a74250',
         name: 'Firkraag, Cunning Instigator',
@@ -87,10 +87,17 @@ describe('Discrepancy Fixes & CR Compliance', () => {
       });
 
       const def = interpretCard(raw);
-      expect(def.modeled).toBe(false);
-      expect(def.unmodeledReasons.join('\n')).toContain(
-        'The intervening-if checks whether Firkraag had to attack, not the creature that dealt damage.',
-      );
+      expect(def.modeled).toBe(true);
+      expect(def.triggers[1]?.trigger).toMatchObject({
+        when: 'dealsCombatDamageToPlayer',
+        condition: {
+          kind: 'allOf',
+          of: [
+            { kind: 'triggerObjectHadToAttackThisCombat' },
+            { kind: 'triggerObjectAttackingOpponent' },
+          ],
+        },
+      });
     });
   });
 });

@@ -176,12 +176,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     },
   );
   // Breena, the Demagogue: restored in coverage PR06 (see coverage-pr06.ts).
-  // Catalog audit queen-batch-2: Inklings-cannot-attack-you omitted; trigger unscoped.
-  unsupportedCard(
-    'ee7ebbc1-2f9e-4867-a522-424869b6d772',
-    'Combat Calligrapher',
-    'Inklings-cannot-attack-you is omitted, and the token trigger is unscoped.',
-  );
+  // Combat Calligrapher: restored in coverage PR07 (see coverage-pr07.ts).
   // Comeuppance: restored in coverage PR06 (see coverage-pr06.ts).
   defineCard(
     'ee81f37b-2a81-46d7-8d2f-9091123846c4',
@@ -304,12 +299,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Nighthawk Scavenger',
     "Power counts card types in all graveyards, not only opponents' graveyards.",
   );
-  // Catalog audit queen-batch-1: putCountersEach hits every creature; attack-tax static omitted.
-  unsupportedCard(
-    'ff6b52b7-ae3c-465b-b10e-901160e5230e',
-    'Nils, Discipline Enforcer',
-    'End-step trigger counters every creature, and the attack-tax static is omitted.',
-  );
+  // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
   // Catalog audit queen-batch-1: threshold damage clause is claimed but not authored.
   unsupportedCard(
     'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',
@@ -349,12 +339,6 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Sunforger: restored in coverage PR05. The interpreter reads Equip {3} and the unattach
   // activation that casts a found instant for free, so no override remains.
-  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
-  unsupportedCard(
-    '0dfdf1a1-3a9a-490f-bd9d-dcba088c6785',
-    'Teyo, Geometric Tactician',
-    'The −2 directional attack restriction is claimed without an implementation.',
-  );
   // Catalog audit queen-batch-1: mill/exile/cast cascade is claimed as counter only.
   unsupportedCard(
     '6623cb85-fb1e-4561-8b21-0977c25096c2',
@@ -380,10 +364,5 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Kambal, Consul of Allocation: restored in coverage PR03. The interpreter reads the
   // opponent-cast trigger and "that player loses 2 life and you gain 2 life", so no override remains.
-  // Catalog audit queen-batch-3: −2 attack restriction claimed without an implementation.
-  unsupportedCard(
-    '0dfdf1a1-a3a9-490f-bd9d-dcba088c6785',
-    'Teyo, Geometric Tactician',
-    'The −2 directional attack restriction is claimed without an implementation.',
-  );
+  // Teyo, Geometric Tactician: restored in coverage PR07 (see coverage-pr07.ts).
 }

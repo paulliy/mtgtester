@@ -249,6 +249,11 @@ export type Value =
   | { kind: 'countOpponentsWithFewerCreatures' }
   | { kind: 'creaturesDiedThisTurn' }
   | { kind: 'powerOfSource' }
+  /**
+   * How many times the AFFECTED creature has attacked this turn (Moraug): a layer Value read once
+   * per object the static applies to, counting declared attacks only.
+   */
+  | { kind: 'timesAttackedThisTurn' }
   | { kind: 'toughnessOfSource' }
   /** Current power of an announced permanent target at resolution. */
   | { kind: 'powerOfTarget'; target: EffectRef }
@@ -324,6 +329,7 @@ export function isDynamicValue(value: Value): boolean {
     case 'lifeTotal':
     case 'countOpponentsWithFewerCreatures':
     case 'creaturesDiedThisTurn':
+    case 'timesAttackedThisTurn':
     case 'powerOfSource':
     case 'toughnessOfSource':
     case 'powerOfTarget':
@@ -388,6 +394,7 @@ export function needsScope(value: Value): boolean {
     case 'lifeTotal':
     case 'countOpponentsWithFewerCreatures':
     case 'creaturesDiedThisTurn':
+    case 'timesAttackedThisTurn':
     case 'powerOfSource':
     case 'toughnessOfSource':
     case 'powerOfTarget':
@@ -446,6 +453,8 @@ export function devotionTo(ctx: GameContext, controllerId: PlayerId, color: Colo
  */
 export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents'> & {
   sourceCounters?: Readonly<Record<string, number>>;
+  /** For `timesAttackedThisTurn`: the count of the one object the effect is being applied to. */
+  affectedTimesAttacked?: number;
   countAurasYouControlAttachedToCreatures?: () => number;
   countAurasAttachedToSource?: () => number;
 };
@@ -466,6 +475,8 @@ export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValue
       if (scope?.controllerId === undefined)
         throw new Error('your graveyard types require a controller');
       return cardTypesInAllGraveyards(ctx, scope.controllerId);
+    case 'timesAttackedThisTurn':
+      return scope?.affectedTimesAttacked ?? 0;
     case 'countersOnSelf':
       if (scope?.sourceCounters === undefined) {
         throw new Error('engine bug: source counters need a layer evaluation scope');

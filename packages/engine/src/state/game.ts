@@ -156,7 +156,7 @@ export function createGame(config: GameConfig): GameContext {
     damageDealtToPlayersThisTurn: {},
     lifeLostThisTurn: {},
     combatDamagePlayersBySource: {},
-    extraCombatPhases: 0,
+    extraCombats: [],
     monarchPlayerId: null,
     temporaryGraveyardAbilities: {},
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,

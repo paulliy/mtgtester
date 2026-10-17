@@ -1,3 +1,4 @@
+import type { Step } from '@mtg/shared';
 import { playerLifeLocked } from '../state/phasing';
 import { counterCount } from '../state/counters';
 import {
@@ -167,6 +168,15 @@ export type Condition =
   | { kind: 'notYourTurn' }
   /** "During your turn" — checked against the trigger source's controller. */
   | { kind: 'yourTurn' }
+  /** "Cast this spell only during the declare blockers step": the game is in that step now. */
+  | { kind: 'duringStep'; step: Step }
+  /**
+   * "Cast this spell only before attackers are declared": this turn has not yet reached the
+   * declare attackers step of its first combat phase (Siren's Call, Master Warcraft).
+   */
+  | { kind: 'beforeAttackersDeclared' }
+  /** "If it's your main phase" (Moraug): your turn, during either main phase. */
+  | { kind: 'duringYourMainPhase' }
   /** Dethrone: the defending player has the most life, or is tied for the most life. */
   | { kind: 'attackingPlayerHasMoreLife' }
   /** The defending player has more life than the ability's controller. */
@@ -267,6 +277,9 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'opponentIsMonarch':
     case 'notYourTurn':
     case 'yourTurn':
+    case 'duringStep':
+    case 'beforeAttackersDeclared':
+    case 'duringYourMainPhase':
     case 'attackingPlayerHasMoreLife':
     case 'attackingPlayerHasMoreLifeThanYou':
     case 'defendingOpponentHasMoreLifeThanAnother':
@@ -400,6 +413,15 @@ export function evaluateCondition(
       return ctx.state.currentTurnPlayer !== source.controllerId;
     case 'yourTurn':
       return ctx.state.currentTurnPlayer === source.controllerId;
+    case 'duringStep':
+      return ctx.state.step === condition.step;
+    case 'beforeAttackersDeclared':
+      return ctx.state.declareAttackersReachedThisTurn !== true;
+    case 'duringYourMainPhase':
+      return (
+        ctx.state.currentTurnPlayer === source.controllerId &&
+        (ctx.state.phase === 'precombatMain' || ctx.state.phase === 'postcombatMain')
+      );
     case 'triggerObjectAttackingOpponent': {
       if (source.triggerObjectCardId === undefined) return false;
       const defenderId = defenderIdOf(eventObjectState(ctx, scope));

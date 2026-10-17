@@ -156,6 +156,31 @@ describe('generateCommanderDeck', () => {
     ).toThrow(/not a modeled legendary creature/);
   });
 
+  it('passes over a drawn commander whose identity cannot fill the 99', () => {
+    // A white commander, with no Plains and too few cards to fill all 99, sits beside the green one.
+    const base = testPool();
+    const thin = buildSupportedPool([
+      ...base.cards.map((entry) => entry.card),
+      card({
+        name: 'Thin White General',
+        typeLine: 'Legendary Creature — Test Captain',
+        supertypes: ['Legendary'],
+        types: ['Creature'],
+        colors: ['W'],
+        colorIdentity: ['W'],
+      }),
+    ]);
+    const commanders = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      commanders.add(generateCommanderDeck(thin, { seed: `seed-${i}` }).commander.name);
+    }
+    expect([...commanders]).toEqual(['Test General']);
+    // A commander asked for by name has no fallback.
+    expect(() =>
+      generateCommanderDeck(thin, { seed: 'a', commanderName: 'Thin White General' }),
+    ).toThrow(/identity \{W\}.*need \d+/);
+  });
+
   it('renders to a ParsedDeck that totals 100 cards', () => {
     const deck = generateCommanderDeck(testPool(), { seed: 'a' });
     const parsed = toParsedDeck(deck, 'test');

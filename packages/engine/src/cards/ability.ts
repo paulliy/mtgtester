@@ -8,11 +8,13 @@
  * depend on it without a cycle.
  */
 
-import type { Color, ManaCostString } from '@mtg/shared';
+import type { Color, ManaCostString, PlayerId } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
 import type { Value } from './value';
+import type { StaticEffect } from './continuous-types';
+import type { RuleStatic } from './rule-statics';
 
 /** A ward payment (CR 702.21b). Target legality never depends on ability to pay it. */
 export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; amount: number };
@@ -470,12 +472,33 @@ export interface TargetSpec {
   graveyardOwnerSlot?: number;
   graveyardOwnerScope?: 'controller' | 'opponent' | 'any';
   /**
+   * "For each player, … up to one target creature that player controls" (Nils, Discipline
+   * Enforcer): when the triggered ability is put on the stack this one spec becomes one optional
+   * slot (`count` 0 to 1, which it must declare itself) for each player still in the game, in
+   * turn order starting with the ability's controller (CR 603.3d), each limited to that
+   * player's permanents. It must be the LAST target spec of a triggered ability; an effect that
+   * names its slot (`…EachChosen`) acts on every slot of the group.
+   */
+  perPlayer?: true;
+  /** Set when a `perPlayer` spec is expanded: only permanents this player controls may be chosen. */
+  controllerPlayer?: PlayerId;
+  /** Set when a `perPlayer` spec is expanded: the index of the spec this slot was expanded from. */
+  slotGroup?: number;
+  /**
    * "Target untapped creature" (Backlash) — the tapped state a battlefield permanent must have
    * when chosen and again as the spell or ability resolves (CR 608.2b). Selectors deliberately
    * cannot read tapped-ness (see selector.ts), so it lives on the target spec.
    */
   tapState?: 'untapped' | 'tapped';
 }
+
+/** One requirement an `addAttackRequirement` effect makes, with the players it names as references. */
+export type AttackRequirementSpec =
+  | { kind: 'anyAttack' }
+  /** "a player other than you" */
+  | { kind: 'notPlayer'; player: 'you' }
+  /** "that player" */
+  | { kind: 'player'; player: 'eventPlayer' };
 
 /**
  * What a "targeted" primitive acts on.
@@ -574,6 +597,14 @@ export type Effect =
   | { op: 'sacrificeTargetPlayerCreature'; target: EffectRef }
   | { op: 'eachPlayerKeepsCreatureWithVow' }
   | { op: 'separatePermanentsIntoPilesThenSacrifice'; target: EffectRef }
+  /**
+   * "Separate all creatures that player controls into two piles. Only creatures in the pile of
+   * their choice can attack this turn" (Fight or Flight): the effect's controller separates the
+   * event player's creatures, that player chooses a pile, and a restriction until the end of the
+   * turn lets only the creatures in it attack. It is a rules modification (CR 611.2c), so a
+   * creature that arrives later is in neither pile and can't attack.
+   */
+  | { op: 'separateIntoPilesLimitAttackers' }
   | { op: 'dealDamage'; target: EffectRef; amount: Value; source?: EffectRef } // to the slot's creature or player
   /**
    * "deals N damage to target opponent unless that player sacrifices a creature of their
@@ -754,7 +785,6 @@ export type Effect =
   | { op: 'angelGrace' }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
-  | { op: 'combatCalligrapher' }
   | { op: 'inkshield' }
   | { op: 'gisela' }
   | { op: 'humbleDefector'; target: EffectRef }
@@ -1024,13 +1054,24 @@ export type Effect =
       /** "Create N tapped … tokens" — they enter tapped, not enter then tap. */
       tapped?: boolean;
     }
-  /** Create a batch of tokens tapped and attacking a defending player chosen on resolution. */
+  /**
+   * Create a batch of tokens tapped and attacking a defending player chosen on resolution. They
+   * were never declared as attackers (CR 506.3, 508.4): no attack trigger, no attack restriction
+   * or cost applies to them.
+   *
+   * `player: 'eventPlayer'` makes the event player (the attacking player) the tokens' controller
+   * instead of the ability's controller (Combat Calligrapher: "that attacking player creates …"),
+   * and `defender: 'attackedPlayer'` names the player they attack, the one an `attackDeclared`
+   * `perDefender` firing is about, instead of letting their controller choose.
+   */
   | {
       op: 'createTokenAttacking';
       spec: TokenSpec;
       count: Value;
       powerOverride?: number | Value;
       toughnessOverride?: number | Value;
+      player?: 'eventPlayer';
+      defender?: 'attackedPlayer';
     }
   /** Create one token already attached to an announced permanent target. */
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }
@@ -1066,6 +1107,17 @@ export type Effect =
       toughnessOverride?: number | Value;
       addKeywords?: KeywordAbility[];
       sacrificeAt?: 'endStep';
+      /**
+       * "Each opponent creates a token that's a copy of it" (Life of the Party): each opponent of
+       * the ability's controller is the creator and controls their own copies, and any
+       * replacement of THEIR token creation applies.
+       */
+      eachOpponent?: true;
+      /**
+       * "The tokens are goaded for the rest of the game": the ability's controller goads each copy
+       * and the goad never expires on its own (CR 701.15, 800.4a).
+       */
+      goadedForRestOfGame?: true;
     }
   /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
   | {
@@ -1306,7 +1358,7 @@ export type Effect =
       target?: EffectRef;
       controller?: 'source' | 'targetController';
       /** Player referenced as `eventPlayer` when the delayed ability resolves. */
-      affectedPlayer?: 'sourceController' | 'targetController';
+      affectedPlayer?: 'sourceController' | 'targetController' | 'activePlayer';
       /**
        * Remember the permanent itself rather than its card: if it leaves the battlefield before
        * the delayed ability resolves, it is a new object and the effect does nothing (CR 400.7).
@@ -1326,6 +1378,73 @@ export type Effect =
   | { op: 'grantHasteOnResolution'; target: EffectRef }
   | { op: 'overloadBounceAllNonlandOpponents' }
   | { op: 'goad'; target: EffectRef }
+  /**
+   * "You choose which creatures attack this turn. You choose which creatures block this turn and
+   * how those creatures block" (Master Warcraft): until the end of the turn the effect's
+   * controller chooses the set of attackers and every defending player's blocks, though the
+   * attacking player still chooses what each attacker attacks and pays its costs.
+   */
+  | { op: 'chooseAttackersAndBlockers' }
+  /**
+   * "Until your next turn, creatures your opponents control attack each combat if able and attack
+   * a player other than you if able" (Kardur), "target creature attacks that player each combat if
+   * able until the end of your next turn" (Silver Surfer). A rules modification, not a goad
+   * status (CR 611.2c): `target` names a fixed object; `selector` is read live relative to the
+   * ability's controller, so creatures that arrive later are covered too.
+   */
+  | {
+      op: 'addAttackRequirement';
+      target?: EffectRef;
+      selector?: Selector;
+      requirements: AttackRequirementSpec[];
+      duration: 'untilYourNextTurn' | 'endOfYourNextTurn' | 'thisTurn' | 'duringTheirNextTurn';
+      /**
+       * "you" in the selector is the player whose turn it is as this resolves (`activePlayer`), or
+       * the player involved in the firing event (`eventPlayer`), not the controller. For
+       * `duringTheirNextTurn` it is also the player whose next turn it lasts through.
+       */
+      relativeTo?: 'activePlayer' | 'eventPlayer';
+      /** "can't attack you or planeswalkers you control": the controller and what they control. */
+      cantAttack?: 'you';
+    }
+  /**
+   * "That player may draw a card. If they do, …" (Willie Lumpkin): the event player chooses, and
+   * `then` resolves only if they chose to draw.
+   */
+  | { op: 'eventPlayerMayDraw'; then: Effect[] }
+  /**
+   * "Until your next turn, those creatures can't block" (Taunt from the Rampart): the creatures
+   * matching `selector` as this resolves, a fixed set (CR 611.2c).
+   */
+  | { op: 'cantBlockEach'; selector: Selector; duration: 'untilYourNextTurn' }
+  /**
+   * "Until your next turn, each player may attack only the nearest opponent in the last chosen
+   * direction and planeswalkers controlled by that opponent" (Teyo's −2, after its left/right
+   * choice). It replaces any earlier effect of the same card.
+   */
+  | {
+      op: 'limitAttacksToNearestOpponent';
+      direction: 'left' | 'right';
+      duration: 'untilYourNextTurn';
+    }
+  /**
+   * "Choose an opponent" as this resolves (Triarch Stalker's Targeting Relay): the controller
+   * picks one, stored on the source permanent as its chosen option so a later choice replaces it
+   * ("the last chosen player") and its statics can read it back.
+   */
+  | { op: 'chooseOpponentForSource' }
+  /**
+   * "Remove all attacking creatures from combat and untap them" (Illusionist's Gambit), and, with
+   * `thenCombat` (those creatures must attack if able and can't attack the controller or their
+   * planeswalkers), "after this phase, there is an additional combat phase. Each of those creatures
+   * attacks that combat if able. They can't attack you or planeswalkers you control that combat":
+   * the removed creatures are a fixed set (CR 611.2c) bound to that one combat.
+   */
+  | {
+      op: 'removeAttackersFromCombat';
+      untap?: true;
+      thenCombat?: true;
+    }
   | { op: 'forceAttack'; target: EffectRef }
   | { op: 'forceAttackEach'; selector: Selector }
   | { op: 'doublePower'; selector: Selector }
@@ -1369,7 +1488,13 @@ export type Effect =
   | { op: 'castForLifeFromZones'; selector: Selector; zones: ('hand' | 'graveyard')[] }
   | { op: 'castOneFromHandFreeUpTo'; maxManaValue: number }
   | { op: 'setMustBlockThisTurn'; target: EffectRef }
-  | { op: 'extraCombatPhase' }
+  /**
+   * "After this phase, there is an additional combat phase": inserted directly after the phase
+   * that is current as this resolves (CR 500.8). `additionalMain` adds the main phase some cards
+   * put after it; `untapYourCreatures` untaps all creatures the controller controls as that combat
+   * begins, as a triggered ability.
+   */
+  | { op: 'extraCombatPhase'; additionalMain?: true; untapYourCreatures?: true }
   /** Make the ability's controller the monarch (CR  monarch). */
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }
@@ -1566,6 +1691,13 @@ export interface TokenSpec {
   triggers?: Ability[];
   manaAbilities?: ManaAbilitySpec[];
   activatedAbilities?: ActivatedAbility[];
+  /**
+   * The token's own static abilities ("Creatures you control attack each combat if able."). A
+   * selector in them is relative to the token's controller; they end when the token leaves.
+   */
+  staticEffects?: StaticEffect[];
+  /** The token's own rule-modifying statics ("This token can't attack or block alone."). */
+  ruleStatics?: RuleStatic[];
   legendary?: boolean;
   /** Apply haste to each token created from this spec until the current end step. */
   grantHasteUntilEot?: boolean;
@@ -1709,6 +1841,12 @@ export type TriggerHead =
       counter?: string;
       /** `countersPut`: "Whenever **you** put a counter on …" — the placing player is the controller. */
       byYou?: true;
+      /**
+       * `becomesTapped` only: the permanent was tapped to activate a mana ability ("taps a land for
+       * mana", War's Toll), not by a tap effect or another cost. The player who tapped it is the
+       * event player.
+       */
+      forMana?: true;
       /** "This ability triggers only once each turn." */
       oncePerTurn?: true;
     }
