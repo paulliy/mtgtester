@@ -5201,8 +5201,29 @@
   {
     "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
     "name": "Druid of Purification",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, starting with you, each player may choose an artifact or enchantment you don't control. Destroy each permanent chosen this way.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Starting with you, each player may choose an artifact or enchantment you do not control. Destroy each permanent chosen this way",
+          "effects": [
+            {
+              "op": "druidPurification"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
@@ -20280,8 +20301,29 @@
   {
     "oracleId": "oracle-druid-of-purification",
     "name": "Druid of Purification",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, starting with you, each player may choose an artifact or enchantment you don't control. Destroy each permanent chosen this way.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Starting with you, each player may choose an artifact or enchantment you do not control. Destroy each permanent chosen this way",
+          "effects": [
+            {
+              "op": "druidPurification"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-duelist-s-heritage",

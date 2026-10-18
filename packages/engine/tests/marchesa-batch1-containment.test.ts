@@ -109,8 +109,6 @@ const REASONS: Record<string, string> = {
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
-  'Druid of Purification':
-    'Each player chooses a permanent they do not control, not a permanent you do not control.',
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
@@ -121,6 +119,7 @@ describe('Marchesa catalog audit containment', () => {
     'Mob Rule',
     'Cytoplast Manipulator',
     'Humble Defector',
+    'Druid of Purification',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',

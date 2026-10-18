@@ -6127,20 +6127,28 @@ export function* executeAbility(
         emit(ctx, 'monarch', { player: controller.id }, controller.id);
         break;
       case 'druidPurification': {
-        const chosen: EnginePermanent[] = [];
-        const orderedPlayers = [controller, ...opponentsOf(ctx, controller.id)];
-        for (const player of orderedPlayers) {
+        const abilityControllerId = controller.id;
+        const startIndex = ctx.state.turnOrder.indexOf(abilityControllerId);
+        if (startIndex < 0)
+          throw new Error('engine bug: Druid choice controller is absent from turn order');
+        const orderedPlayerIds = [
+          ...ctx.state.turnOrder.slice(startIndex),
+          ...ctx.state.turnOrder.slice(0, startIndex),
+        ].filter((id) => !playerById(ctx, id).hasLost);
+        const allChosen: EnginePermanent[] = [];
+        for (const playerId of orderedPlayerIds) {
+          const player = playerById(ctx, playerId);
           const options = ctx.state.battlefield.filter((perm) => {
             const chars = computeCharacteristics(ctx, perm);
             return (
-              perm.controllerId !== player.id &&
+              perm.controllerId !== abilityControllerId &&
               (chars.types.includes('Artifact') || chars.types.includes('Enchantment'))
             );
           });
           const outcome = yield {
             decisionType: 'general',
             player: player.id,
-            prompt: `${source.name}: choose an artifact or enchantment you don't control to destroy, or choose none.`,
+            prompt: `${source.name}: choose an artifact or enchantment ${controller.id} doesn't control to destroy, or choose none.`,
             options: [
               plainOption({ type: 'decline', description: 'Choose none', verb: 'Skip' }),
               ...options.map((perm) =>
@@ -6155,14 +6163,43 @@ export function* executeAbility(
           };
           if (outcome.index > 0) {
             const picked = options[outcome.index - 1];
-            if (picked !== undefined) chosen.push(picked);
+            if (picked !== undefined) allChosen.push(picked);
+          }
+          const picked = outcome.index > 0 ? options[outcome.index - 1] : undefined;
+          emit(
+            ctx,
+            'permanentChoice',
+            {
+              source: source.name,
+              name: picked?.name ?? null,
+              objectId: picked?.id ?? null,
+            },
+            player.id,
+          );
+        }
+        const uniqueChosen: EnginePermanent[] = [];
+        const seen = new Set<ObjectId>();
+        for (const perm of allChosen) {
+          if (seen.has(perm.id)) continue;
+          seen.add(perm.id);
+          const current = findPermanent(ctx, perm.id);
+          if (current !== undefined) uniqueChosen.push(current);
+        }
+        const protectedIds = new Set(
+          uniqueChosen
+            .filter((perm) => hasKeyword(ctx, perm, 'indestructible'))
+            .map((perm) => perm.id),
+        );
+        const destroyed: EnginePermanent[] = [];
+        for (const perm of uniqueChosen) {
+          if (protectedIds.has(perm.id)) {
+            emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
+          } else if (!consumeRegenerationShield(ctx, perm, false)) {
+            emit(ctx, 'destroy', { target: perm.name, source: source.name });
+            destroyed.push(perm);
           }
         }
-        for (const perm of chosen) {
-          const current = findPermanent(ctx, perm.id);
-          if (current === undefined) continue;
-          yield* destroyPermanent(ctx, source, current);
-        }
+        yield* movePermanentsToGraveyard(ctx, destroyed);
         break;
       }
       case 'exileTargetWithSource': {

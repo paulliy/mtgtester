@@ -368,6 +368,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       return { ...base, text: description };
     }
 
+    case 'permanentChoice':
+      return {
+        ...base,
+        text: `${str(p, 'source') ?? 'An ability'}: chooses ${str(p, 'name') ?? 'no permanent'}`,
+      };
+
     case 'castSpell':
       return p['duringResolution'] === true
         ? { ...base, text: `casts ${str(p, 'name') ?? 'a spell'} without paying its mana cost` }

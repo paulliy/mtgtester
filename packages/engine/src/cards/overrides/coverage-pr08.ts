@@ -6,7 +6,7 @@
  */
 import type { CardDefinition } from '../definition';
 import { allOf, hasCounter, ofType } from '../selector';
-import { activated, mana, spell, targetSlots, TAP } from '../templates';
+import { activated, mana, onEtb, spell, targetSlots, triggered, TAP } from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -57,6 +57,22 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  defineCard(
+    '5bb32efd-9e58-4021-bbda-4ffccfa1d601',
+    'Druid of Purification',
+    [
+      'unrecognized rules text: "When this creature enters, starting with you, each player may choose an artifact or enchantment you don\'t control. Destroy each permanent chosen this way."',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [{ op: 'druidPurification' }],
+          description:
+            'Starting with you, each player may choose an artifact or enchantment you do not control. Destroy each permanent chosen this way',
+        }),
+      ],
+    },
+  );
   const humbleTargets = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
   defineCard(
     '1582e16d-4825-4cc5-b12c-449c45e4e449',

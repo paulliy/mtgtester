@@ -1,5 +1,8 @@
 /** Every PR08 scenario is exercised by pr08-card-test-lab.spec.ts. */
 export const PR08_SCENARIO_IDS: readonly string[] = [
+  'druid-of-purification-viewer-duplicates',
+  'druid-of-purification-viewer-decline',
+  'druid-of-purification-viewer-shroud',
   'mob-rule-viewer-large',
   'mob-rule-viewer-small',
   'mob-rule-viewer-cleanup',

@@ -4558,5 +4558,21 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-humble-defector.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
+    "name": "Druid of Purification",
+    "package": "PR08.02",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-druid-of-purification.test.ts",
+      "packages/engine/tests/pr08-druid-casting.test.ts",
+      "packages/server/src/cards/pr08-druid-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-druid-of-purification.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

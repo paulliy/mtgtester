@@ -5616,15 +5616,37 @@
     "5bb32efd-9e58-4021-bbda-4ffccfa1d601": {
       "name": "Druid of Purification",
       "oracleSha256": "ad0aec5a820bd47f7731dc2f6350d35f77a1277ebb5a26936dd47d863df62633",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "druid-purification-ordered-choices-and-destruction",
           "oracleText": "When this creature enters, starting with you, each player may choose an artifact or enchantment you don't control. Destroy each permanent chosen this way.",
           "implementation": [
-            "explicitly unsupported; each player chooses a permanent they do not control"
+            "onEtb trigger; druidPurification rotates living players from the ability controller, offers a shared non-targeting pool excluding that controller, publishes each optional choice, deduplicates exact objects, evaluates indestructibility before departures, and batches destruction through normal regeneration and simultaneous death handling"
           ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "engineTestIds": [
+            "druid-pinned-oracle-supported",
+            "druid-all-menus-and-decline",
+            "druid-turn-order",
+            "druid-no-eligible-permanents",
+            "druid-duplicate-choice-once",
+            "druid-public-choices",
+            "druid-nontargeting",
+            "druid-indestructible",
+            "druid-regeneration",
+            "druid-protection-before-departure",
+            "druid-simultaneous-death-watchers",
+            "druid-original-controller-and-source-leaves",
+            "druid-normal-cast-shared-target",
+            "druid-distinct-choices",
+            "druid-cast-starting-with-you-order",
+            "druid-cast-cost-and-timing"
+          ],
+          "viewerScenarioIds": [
+            "druid-of-purification-viewer-duplicates",
+            "druid-of-purification-viewer-decline",
+            "druid-of-purification-viewer-shroud"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

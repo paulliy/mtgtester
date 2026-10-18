@@ -12689,6 +12689,74 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function druidPurificationScenario(
+  gameId: GameId,
+  mode: 'duplicates' | 'decline' | 'shroud',
+): CardTestScenario {
+  const druid = pinnedFrom(COVERAGE_PR08, 'Druid of Purification');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const own = card({
+    oracleId: 'lab-pr08-own-artifact',
+    name: 'Lab Own Artifact',
+    typeLine: 'Artifact',
+  });
+  const chosen = card({
+    oracleId: `lab-pr08-${mode}-artifact`,
+    name: mode === 'shroud' ? 'Lab Shrouded Artifact' : 'Lab Shared Artifact',
+    typeLine: 'Artifact',
+    ...(mode === 'shroud' ? { oracleText: 'Shroud' } : {}),
+  });
+  const choose: DecisionProvider = {
+    decide(request) {
+      const action = request.legalActions.some((a) => a.description === `Destroy ${chosen.name}`)
+        ? request.legalActions.find((a) =>
+            mode === 'decline' ? a.type === 'decline' : a.description === `Destroy ${chosen.name}`,
+          )
+        : (request.legalActions.find((a) => a.type === 'pass') ?? request.legalActions[0]);
+      if (!action) throw new Error('Druid lab has no scripted legal choice');
+      return { requestId: request.requestId, actionId: action.id };
+    },
+  };
+  return pr01Scenario(gameId, {
+    id: `druid-of-purification-viewer-${mode}`,
+    title: `Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`,
+    instructions: [
+      'Cast Druid of Purification using four Forests and resolve its enters trigger.',
+      mode === 'decline'
+        ? 'Choose none. Each opponent also declines.'
+        : `Choose ${chosen.name}. Each opponent chooses that same permanent, including its controller.`,
+      'Earlier choices are public. Your own artifact is excluded from every choice menu.',
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'Four public choices of no permanent; both artifacts remain.'
+        : 'Four public choices of the same permanent, followed by one destruction. Your own artifact remains.',
+    oracleSha256: druid.sha256,
+    clauseIds: ['druid-purification-ordered-choices-and-destruction'],
+    decks: {
+      P1: [druid.card, witness, own, FOREST, FOREST, FOREST, FOREST],
+      P2: [chosen, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Druid of Purification', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', own.name] },
+        { playerId: 'P2', cardNames: [chosen.name] },
+      ],
+    },
+    decisionProviderOverrides: { P2: choose, P3: choose, P4: choose },
+  });
+}
+
 function humbleDefectorScenario(gameId: GameId, offTurn: boolean): CardTestScenario {
   const humble = pinnedFrom(COVERAGE_PR08, 'Humble Defector');
   const witness = card({
@@ -14585,6 +14653,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
       (gameId: GameId) => pr08CutADealScenario(id, gameId),
     ]),
   ),
+  'druid-of-purification-viewer-duplicates': (gameId) =>
+    druidPurificationScenario(gameId, 'duplicates'),
+  'druid-of-purification-viewer-decline': (gameId) => druidPurificationScenario(gameId, 'decline'),
+  'druid-of-purification-viewer-shroud': (gameId) => druidPurificationScenario(gameId, 'shroud'),
   'humble-defector-viewer-draw-then-opponent-takes-control': (gameId) =>
     humbleDefectorScenario(gameId, false),
   'humble-defector-viewer-off-turn': (gameId) => humbleDefectorScenario(gameId, true),

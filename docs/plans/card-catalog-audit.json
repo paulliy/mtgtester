@@ -5572,7 +5572,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 50,
+      "uniqueOracleIds": 49,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 25,
+      "uniqueOracleIds": 24,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6899,6 +6899,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr08",
       "note": "The fail-closed registration is replaced by coverage-pr08.ts. The activated ability has real your-turn timing, draws before transferring its exact source to a targeted opponent, and fizzles wholly if its sole target is illegal. Source departure and blink do not suppress the draw or transfer another incarnation. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
+      "name": "Druid of Purification",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "Replaced by coverage-pr08.ts: every chooser excludes permanents controlled by the ability controller, including when a chooser owns the chosen permanent. Current Oracle says you do not control; the historical containment note reverses that rule. Choices are public, ordered and complete before one simultaneous destruction of each distinct chosen permanent. Historical audit rows remain as history."
     }
   ]
 }

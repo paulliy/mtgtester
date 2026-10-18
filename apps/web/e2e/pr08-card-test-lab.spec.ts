@@ -6,6 +6,45 @@ test.use({ trace: 'on', screenshot: 'on' });
 test.setTimeout(60_000);
 
 const exercised = new Set<string>();
+
+for (const mode of ['duplicates', 'decline', 'shroud'] as const) {
+  test(`Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`, async ({
+    page,
+  }) => {
+    await runScenario(
+      page,
+      `Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`,
+    );
+    const name = mode === 'shroud' ? 'Lab Shrouded Artifact' : 'Lab Shared Artifact';
+    await castPr08Card(page, 'Druid of Purification');
+    await passStackUntil(page, page.getByRole('button', { name: 'Choose none', exact: true }));
+    await expect(page.locator('.decision .prompt')).toContainText("P1 doesn't control");
+    await expect(humanPermanent(page, 'Lab Own Artifact')).not.toHaveClass(/actionable/);
+    await expect(opponentPermanent(page, name)).toHaveClass(/actionable/);
+    if (mode === 'decline')
+      await page.getByRole('button', { name: 'Choose none', exact: true }).click();
+    else {
+      await opponentPermanent(page, name).click();
+      await confirm(page);
+    }
+    await expect(page.getByRole('button', { name: 'Pass priority', exact: true })).toBeVisible();
+    await expect(humanPermanent(page, 'Druid of Purification')).toBeVisible();
+    await expect(humanPermanent(page, 'Lab Own Artifact')).toBeVisible();
+    await expect(opponentPermanent(page, name)).toHaveCount(mode === 'decline' ? 1 : 0);
+    await expect(humanPermanent(page, 'Forest').locator('.tile')).toHaveClass(/tapped/);
+    await expect(humanPermanent(page, 'Forest').locator('.stack-count-badge')).toHaveText('×4');
+    const publicChoices = page
+      .locator('.log .line .text')
+      .filter({ hasText: /Druid of Purification.*: chooses / });
+    await expect(publicChoices).toHaveCount(4);
+    if (mode === 'decline')
+      await expect(publicChoices.filter({ hasText: /: chooses no permanent$/ })).toHaveCount(4);
+    else
+      await expect(publicChoices.filter({ hasText: new RegExp(`: chooses ${name}$`) })).toHaveCount(
+        4,
+      );
+  });
+}
 test.afterAll(() => expect([...exercised].sort()).toEqual([...PR08_SCENARIO_IDS].sort()));
 
 async function runScenario(page: Page, title: string): Promise<void> {
