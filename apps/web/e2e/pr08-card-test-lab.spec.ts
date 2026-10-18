@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import type { ServerToClientMessage } from '../../../packages/shared/src/index';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
 
 test.describe.configure({ mode: 'serial' });
@@ -6,6 +7,7 @@ test.use({ trace: 'on', screenshot: 'on' });
 test.setTimeout(60_000);
 
 const exercised = new Set<string>();
+const frontiers = new WeakMap<Page, { requestId: string; stackSize: number }>();
 
 for (const mode of ['cast-search-and-gift', 'empty-library'] as const) {
   test(`Wishclaw Talisman: ${mode === 'cast-search-and-gift' ? 'cast, search, then choose the recipient' : 'empty library still gives control'}`, async ({
@@ -119,6 +121,19 @@ for (const mode of ['duplicates', 'decline', 'shroud'] as const) {
 test.afterAll(() => expect([...exercised].sort()).toEqual([...PR08_SCENARIO_IDS].sort()));
 
 async function runScenario(page: Page, title: string): Promise<void> {
+  const frontier = { requestId: '', stackSize: 0 };
+  frontiers.set(page, frontier);
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerActionRequired') {
+        frontier.requestId = frame.payload.request.requestId;
+        frontier.stackSize = frame.payload.state.stack.length;
+      } else if (frame.type === 'playerStateSnapshot') {
+        frontier.stackSize = frame.payload.state.stack.length;
+      }
+    }),
+  );
   await page.goto('/card-test-lab');
   await expect(page.getByRole('heading', { name: 'Card Test Lab' })).toBeVisible();
   const picker = page.locator('#scenario-select');
@@ -155,14 +170,24 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
 }
 
 async function passStackUntil(page: Page, target: Locator): Promise<void> {
-  const empty = page.getByText('empty', { exact: true });
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const frontier = frontiers.get(page)!;
+  let submittedRequestId = '';
   await expect
     .poll(
       async () => {
         if (await target.isVisible()) return true;
-        if ((await empty.count()) === 0 && (await pass.isEnabled()))
-          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        // A resolving stack may reach a new empty-stack priority request before Vue has rendered
+        // the permanent. Never pass that request merely because the old stack DOM is still visible.
+        if (
+          frontier.stackSize > 0 &&
+          frontier.requestId !== submittedRequestId &&
+          (await pass.isVisible()) &&
+          (await pass.isEnabled())
+        ) {
+          submittedRequestId = frontier.requestId;
+          await pass.click();
+        }
         return false;
       },
       { timeout: 15_000 },
