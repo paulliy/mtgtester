@@ -13130,6 +13130,58 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "223504ba-174a-46f2-a4a2-5d663a82dfd3": {
+      "name": "Alicia Masters, Skilled Sculptor",
+      "oracleSha256": "ec7af585cca0a36073614bba7446b7d7b2aaa339e874ced506af201a7f51c466",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "alicia-masters-begin-combat-treasure-if-noncreature-spell-this-turn",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a Treasure token.",
+          "implementation": [
+            "onBeginCombat you; castSpellThisTurn noncreature intervening-if at queue and resolution; shared Treasure catalog with tap/sacrifice mana costs"
+          ],
+          "engineTestIds": [
+            "alicia-masters-pinned-oracle-supported",
+            "alicia-masters-normal-cast-pays-one-and-one-red-and-enters-the-battlefield",
+            "alicia-masters-normal-cast-rejects-missing-red-and-insufficient-total",
+            "alicia-masters-combat-trigger-creates-the-treasure-after-a-noncreature-spell-this-turn",
+            "alicia-masters-treasure-is-a-real-mana-source-that-taps-and-sacrifices-itself",
+            "alicia-masters-combat-trigger-needs-your-own-combat",
+            "alicia-masters-combat-trigger-ignores-another-players-noncreature-spell",
+            "alicia-masters-combat-trigger-ignores-a-creature-spell-cast-this-turn",
+            "alicia-masters-combat-trigger-ignores-a-land-played-this-turn",
+            "alicia-masters-combat-trigger-ignores-a-spell-cast-on-a-previous-turn",
+            "alicia-masters-intervening-if-is-checked-again-as-the-trigger-resolves"
+          ],
+          "viewerScenarioIds": [
+            "alicia-masters-viewer-combat-treasure-and-owner-control",
+            "alicia-masters-viewer-no-noncreature-spell"
+          ]
+        },
+        {
+          "id": "alicia-masters-end-step-each-player-reclaims-own-creatures",
+          "oracleText": "Sense the Good — At the beginning of your end step, each player gains control of all creatures they own.",
+          "implementation": [
+            "onEndStep you captures original ability controller; regainControlOfOwnCreatures freezes current creatures and grants fresh permanent control to each living owner, including already-controlled creatures; no noncreature or future-arrival sweep"
+          ],
+          "engineTestIds": [
+            "alicia-masters-end-step-restores-every-players-own-creatures",
+            "alicia-masters-end-step-is-your-end-step-only",
+            "alicia-masters-end-step-leaves-noncreatures-alone",
+            "alicia-masters-end-step-freezes-the-creature-set-before-any-control-change",
+            "alicia-masters-end-step-does-not-reach-a-creature-that-arrives-later",
+            "alicia-masters-end-step-still-resolves-after-the-source-leaves",
+            "alicia-masters-end-step-grants-through-the-original-ability-controller"
+          ],
+          "viewerScenarioIds": [
+            "alicia-masters-viewer-combat-treasure-and-owner-control",
+            "alicia-masters-viewer-no-noncreature-spell"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

@@ -95,19 +95,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
-    "name": "Alicia Masters, Skilled Sculptor",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Sense the Good — At the beginning of your end step, each player gains control of all creatures they own.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
     "name": "Angelic Destiny",
     "package": "PR05.16",
@@ -4595,6 +4582,22 @@
       "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr08-akroan-horse.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
+    "name": "Alicia Masters, Skilled Sculptor",
+    "package": "PR08.14",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-alicia-masters.test.ts",
+      "packages/engine/tests/owner-control-restoration-contract.test.ts",
+      "packages/server/src/cards/pr08-alicia-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-alicia-masters.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

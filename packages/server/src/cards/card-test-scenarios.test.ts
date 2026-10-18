@@ -66,6 +66,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'humble-defector-viewer-off-turn',
       'reins-of-power-viewer-swap-and-cleanup',
       'reins-of-power-viewer-empty-caster',
+      'alicia-masters-viewer-combat-treasure-and-owner-control',
+      'alicia-masters-viewer-no-noncreature-spell',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

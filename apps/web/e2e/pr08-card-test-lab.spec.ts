@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import type { ServerToClientMessage } from '../../../packages/shared/src/index';
+import type { PlayerBoardState, ServerToClientMessage } from '../../../packages/shared/src/index';
 import { PR08_SCENARIO_IDS } from '../../../packages/server/src/cards/pr08-scenario-catalog';
 
 test.describe.configure({ mode: 'serial' });
@@ -554,4 +554,274 @@ test('Reins of Power: only the opponent group exists when the caster has no crea
     seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.keywords[title*="haste"]'),
   ).toHaveCount(0);
   await expect(humanPermanent(page, 'Island').locator('.stack-count-badge')).toHaveText('×4');
+});
+
+// --- Coverage PR08.14: Alicia Masters, Skilled Sculptor ---
+//
+// One board, two runs. "At the beginning of combat on your turn, if you've cast a noncreature
+// spell this turn" is read at the START of combat, so the run that produces a Treasure has to put
+// the noncreature spell on the stack while it is still in the main phase. The end-step line has no
+// condition at all, so it runs identically either way.
+//
+// The arrangement under test is ownership vs. holding: P1's creature is held by P2, P2's creature
+// is held by P1, P3's NONCREATURE artifact is held by P1, and P3 keeps a bystander nobody holds.
+// The browser proves which PANEL each permanent is rendered in — that is the controller, the fact
+// the UI actually shows — and the wire frames prove the ownership the panels cannot display.
+
+const ALICIA = 'Alicia Masters, Skilled Sculptor';
+const ALICIA_WITNESS = 'Lab Priority Witness';
+const ALICIA_TREASURE = 'Treasure';
+const ALICIA_P1_OWNED_HELD_BY_P2 = 'Lab Reclaimed Ox';
+const ALICIA_P2_OWNED_HELD_BY_P1 = 'Lab Borrowed Golem';
+const ALICIA_P3_OWNED_RELIC_HELD_BY_P1 = 'Lab Pledged Relic';
+const ALICIA_P3_BYSTANDER = 'Lab Bystander Golem';
+
+/**
+ * The real `PlayerBoardState` frames this run received over the wire, in order. Ownership is not
+ * drawn on any panel, so it is read from the very frame the panels were rendered from — an
+ * observation of the protocol, not a poke at page or engine state, and never a fabricated UI.
+ */
+function recordPlayerBoards(page: Page): PlayerBoardState[] {
+  const boards: PlayerBoardState[] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
+      if (frame.type === 'playerStateSnapshot') boards.push(frame.payload.state);
+      else if (frame.type === 'playerActionRequired') boards.push(frame.payload.state);
+    }),
+  );
+  return boards;
+}
+
+/** The public action-log lines, in the order the engine emitted them. */
+async function logLines(page: Page): Promise<string[]> {
+  return page.locator('.log .line .text').allInnerTexts();
+}
+
+function indexOfLine(lines: readonly string[], pattern: RegExp): number {
+  return lines.findIndex((line) => pattern.test(line));
+}
+
+/**
+ * The last wire board matching `predicate`, polled so a late frame is never read as a missing one.
+ * The panels are rendered from these same frames, so this reads ownership from exactly the state
+ * the assertions above are looking at.
+ */
+async function wireBoardWhere(
+  boards: readonly PlayerBoardState[],
+  predicate: (board: PlayerBoardState) => boolean,
+  what: string,
+): Promise<PlayerBoardState> {
+  await expect
+    .poll(() => boards.filter(predicate).length, { timeout: 15_000, message: what })
+    .toBeGreaterThan(0);
+  return boards.filter(predicate).at(-1)!;
+}
+
+/** The one permanent of that name on a published board, so ownership reads are unambiguous. */
+function permanentOn(board: PlayerBoardState, name: string) {
+  const found = board.battlefield.filter((entry) => entry.name === name);
+  expect(found, `${name} appears once on the published board`).toHaveLength(1);
+  return found[0]!;
+}
+
+/** The arranged board, asserted before anything is cast: only the HOLDING is unusual. */
+async function expectAliciaArrangement(page: Page): Promise<void> {
+  await expect(handCard(page, ALICIA)).toBeVisible();
+  await expect(handCard(page, ALICIA_WITNESS)).toBeVisible();
+  await expect(humanPermanent(page, ALICIA)).toHaveCount(0);
+  await expect(opponentPermanent(page, ALICIA_P1_OWNED_HELD_BY_P2)).toHaveCount(1);
+  await expect(humanPermanent(page, ALICIA_P2_OWNED_HELD_BY_P1).locator('.tile')).toHaveClass(
+    /tapped/,
+  );
+  await expect(humanPermanent(page, ALICIA_P3_OWNED_RELIC_HELD_BY_P1)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', ALICIA_P3_BYSTANDER)).toHaveCount(1);
+  await expect(page.getByRole('img', { name: ALICIA_TREASURE, exact: true })).toHaveCount(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('20');
+}
+
+/** Cast Alicia through the ordinary path: pick her out of hand, read the real payment preview. */
+async function castAlicia(page: Page): Promise<void> {
+  const card = handCard(page, ALICIA);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  // The ordinary mana selection for the printed {1}{R} over exactly the two untapped Mountains.
+  await expect(page.getByText(/Auto-pay: Mountain ×2/)).toBeVisible();
+  await confirm(page);
+}
+
+test('Alicia Masters: a noncreature spell this turn makes a Treasure, then each player reclaims their own creatures', async ({
+  page,
+}) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(
+    page,
+    'Alicia Masters: a noncreature spell this turn makes a Treasure, then each player reclaims their own creatures',
+  );
+  await expectAliciaArrangement(page);
+
+  await castAlicia(page);
+  const alicia = humanPermanent(page, ALICIA);
+  await passStackUntil(page, alicia);
+  await expect(alicia).toHaveCount(1);
+  // {1}{R} really left the lands: both Mountains are tapped and stacked as one group.
+  await expect(humanPermanent(page, 'Mountain').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Mountain').locator('.stack-count-badge')).toHaveText('×2');
+
+  // The intervening if reads the cast history at the START of combat, so the noncreature spell has
+  // to go down while it is still the main phase — after Alicia, and before combat.
+  const witness = handCard(page, ALICIA_WITNESS);
+  await expect(witness).toHaveClass(/actionable/);
+  await witness.click();
+  await confirm(page);
+
+  // With nothing left in hand and no permanent to activate, every remaining window is all-pass and
+  // the engine resolves it, so this simply waits for the run to finish on its own terms.
+  await passUntil(page, page.getByText(/game over/i).first());
+
+  // Exactly one Treasure, on your own board, and it is not one of the creatures.
+  await expect(humanPermanent(page, ALICIA_TREASURE)).toHaveCount(1);
+  await expect(page.getByRole('img', { name: ALICIA_TREASURE, exact: true })).toHaveCount(1);
+  await expect(humanPermanent(page, ALICIA_TREASURE).locator('.tile')).not.toHaveClass(/tapped/);
+  // The witness really resolved its printed effect: P1 gained the life the instant prints.
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('21');
+  await expect(handCard(page, ALICIA_WITNESS)).toHaveCount(0);
+
+  // "each player gains control of all creatures they own": both stolen creatures changed panels,
+  // P3's bystander never moved, and P3's NONCREATURE artifact stayed with P1 because it is not a
+  // creature.
+  await expect(humanPermanent(page, ALICIA_P1_OWNED_HELD_BY_P2)).toHaveCount(1);
+  await expect(opponentPermanent(page, ALICIA_P1_OWNED_HELD_BY_P2)).toHaveCount(0);
+  await expect(opponentPermanent(page, ALICIA_P2_OWNED_HELD_BY_P1)).toHaveCount(1);
+  await expect(humanPermanent(page, ALICIA_P2_OWNED_HELD_BY_P1)).toHaveCount(0);
+  await expect(humanPermanent(page, ALICIA)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', ALICIA_P3_BYSTANDER)).toHaveCount(1);
+  await expect(opponentPermanent(page, ALICIA_P3_BYSTANDER)).toHaveCount(0);
+  await expect(humanPermanent(page, ALICIA_P3_OWNED_RELIC_HELD_BY_P1)).toHaveCount(1);
+  await expect(page.getByRole('img', { name: ALICIA_P3_OWNED_RELIC_HELD_BY_P1 })).toHaveCount(1);
+
+  // The same wire frames the panels were rendered from name the owners the panels cannot show:
+  // the Treasure and P2's returned creature are owned by their owners, and P3's noncreature
+  // artifact is still owned by P3 while P1 keeps holding it.
+  const restored = await wireBoardWhere(
+    boards,
+    (board) =>
+      board.battlefield.some(
+        (entry) => entry.name === ALICIA_P2_OWNED_HELD_BY_P1 && entry.controller === 'P2',
+      ),
+    'the end step returned P2’s creature on a published board',
+  );
+  expect(permanentOn(restored, ALICIA_TREASURE)).toMatchObject({
+    owner: 'P1',
+    controller: 'P1',
+    tapped: false,
+  });
+  expect(permanentOn(restored, ALICIA_P1_OWNED_HELD_BY_P2)).toMatchObject({
+    owner: 'P1',
+    controller: 'P1',
+  });
+  expect(permanentOn(restored, ALICIA_P2_OWNED_HELD_BY_P1)).toMatchObject({
+    owner: 'P2',
+    controller: 'P2',
+  });
+  expect(permanentOn(restored, ALICIA_P3_OWNED_RELIC_HELD_BY_P1)).toMatchObject({
+    owner: 'P3',
+    controller: 'P1',
+  });
+  expect(permanentOn(restored, ALICIA_P3_BYSTANDER)).toMatchObject({
+    owner: 'P3',
+    controller: 'P3',
+  });
+
+  // The public log is the timing evidence: both casts, the real life gain, the combat ability and
+  // then the end-step ability, in that order.
+  const lines = await logLines(page);
+  expect(
+    indexOfLine(lines, /^Cast Alicia Masters, Skilled Sculptor \(\{1\}\{R\}\)$/),
+  ).toBeGreaterThanOrEqual(0);
+  expect(indexOfLine(lines, /^Cast Lab Priority Witness \(\{0\}\)$/)).toBeGreaterThanOrEqual(0);
+  expect(indexOfLine(lines, /gains 1 life/)).toBeGreaterThanOrEqual(0);
+  const combatLine = indexOfLine(lines, /create a Treasure token resolves$/);
+  const endStepLine = indexOfLine(
+    lines,
+    /each player gains control of all creatures they own resolves$/,
+  );
+  expect(combatLine).toBeGreaterThanOrEqual(0);
+  expect(endStepLine).toBeGreaterThan(combatLine);
+  // Combat really was combat-free: the 0-power defenders under test can neither attack nor block,
+  // so no attack declaration and no combat damage was ever announced.
+  expect(indexOfLine(lines, /^attacks with /)).toBe(-1);
+  expect(indexOfLine(lines, /combat damage/)).toBe(-1);
+});
+
+test('Alicia Masters: no noncreature spell this turn makes no Treasure, but creatures still return to their owners', async ({
+  page,
+}) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(
+    page,
+    'Alicia Masters: no noncreature spell this turn makes no Treasure, but creatures still return to their owners',
+  );
+  await expectAliciaArrangement(page);
+
+  await castAlicia(page);
+  await passStackUntil(page, humanPermanent(page, ALICIA));
+  await expect(humanPermanent(page, ALICIA)).toHaveCount(1);
+  await expect(humanPermanent(page, 'Mountain').locator('.tile')).toHaveClass(/tapped/);
+
+  // The witness is deliberately left in hand: casting nothing else is what keeps the intervening
+  // if false, and it stays castable the whole way through the combat and end steps.
+  await expect(handCard(page, ALICIA_WITNESS)).toHaveClass(/actionable/);
+  await passUntil(page, page.getByText(/game over/i).first());
+
+  // No Treasure was ever made. Waiting for the end-step frame FIRST is what makes this a real
+  // negative: it proves frames kept arriving through combat and the end step, so "no Treasure in
+  // any frame" is an observation of the whole run rather than of its first moment.
+  const restored = await wireBoardWhere(
+    boards,
+    (board) =>
+      board.battlefield.some(
+        (entry) => entry.name === ALICIA_P2_OWNED_HELD_BY_P1 && entry.controller === 'P2',
+      ),
+    'the end step returned P2’s creature on a published board',
+  );
+  await expect(page.getByRole('img', { name: ALICIA_TREASURE, exact: true })).toHaveCount(0);
+  expect(
+    boards.flatMap((board) => board.battlefield).filter((entry) => entry.name === ALICIA_TREASURE),
+  ).toHaveLength(0);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('20');
+  // Still in hand at the end: the run really never cast it, so the intervening if stayed false for
+  // the whole turn instead of the replay quietly casting the witness on our behalf.
+  await expect(handCard(page, ALICIA_WITNESS)).toHaveCount(1);
+  await expect(handCard(page, ALICIA_WITNESS)).toContainText(ALICIA_WITNESS);
+
+  // "Sense the Good" has no condition, so the restoration happened exactly as in the positive run.
+  await expect(humanPermanent(page, ALICIA_P1_OWNED_HELD_BY_P2)).toHaveCount(1);
+  await expect(opponentPermanent(page, ALICIA_P1_OWNED_HELD_BY_P2)).toHaveCount(0);
+  await expect(opponentPermanent(page, ALICIA_P2_OWNED_HELD_BY_P1)).toHaveCount(1);
+  await expect(humanPermanent(page, ALICIA_P2_OWNED_HELD_BY_P1)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P3', ALICIA_P3_BYSTANDER)).toHaveCount(1);
+  await expect(humanPermanent(page, ALICIA_P3_OWNED_RELIC_HELD_BY_P1)).toHaveCount(1);
+
+  expect(permanentOn(restored, ALICIA_P1_OWNED_HELD_BY_P2)).toMatchObject({
+    owner: 'P1',
+    controller: 'P1',
+  });
+  expect(permanentOn(restored, ALICIA_P2_OWNED_HELD_BY_P1)).toMatchObject({
+    owner: 'P2',
+    controller: 'P2',
+  });
+  expect(permanentOn(restored, ALICIA_P3_OWNED_RELIC_HELD_BY_P1)).toMatchObject({
+    owner: 'P3',
+    controller: 'P1',
+  });
+
+  // Only the end-step ability was ever a public resolution: the combat line never fired and the
+  // witness was never cast.
+  const lines = await logLines(page);
+  expect(indexOfLine(lines, /create a Treasure token resolves$/)).toBe(-1);
+  expect(indexOfLine(lines, /^Cast Lab Priority Witness/)).toBe(-1);
+  expect(
+    indexOfLine(lines, /each player gains control of all creatures they own resolves$/),
+  ).toBeGreaterThanOrEqual(0);
 });

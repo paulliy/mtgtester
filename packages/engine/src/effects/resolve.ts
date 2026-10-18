@@ -2339,12 +2339,35 @@ export function* executeAbility(
         break;
       }
       case 'regainControlOfOwnCreatures': {
-        for (const perm of ctx.state.battlefield) {
-          const chars = computeCharacteristics(ctx, perm);
-          if (chars.types.includes('Creature') && perm.controllerId !== perm.ownerId) {
-            changeController(ctx, perm, perm.ownerId);
-          }
-        }
+        // "Each player gains control of all creatures they own" (Trostani Disciple, Alicia Masters,
+        // Skilled Sculptor). The set of affected objects is decided ONCE, when the effect resolves:
+        // each grant is a new control-changing effect with its own effect timestamp, and a type
+        // can depend on who controls the permanent ("Artifacts you control are creatures"), so a
+        // per-iteration `computeCharacteristics` would let an earlier grant change what a later
+        // permanent is and sweep up an object that was not a creature when this effect began.
+        // Noncreatures are excluded and anything that arrives later is not.
+        //
+        // EVERY living owner's own creature is granted, including one its owner ALREADY controls:
+        // a creature's characteristics are chosen as this resolves, but the record is a fresh
+        // permanent control change that must survive whatever temporary control history sits
+        // under it. Adding it even with no controller transition (CR 613.7 sets no layer
+        // timestamp and CR 302.6/506.4 need none) is what stops an older "until end of turn" grant
+        // from taking the creature back at the cleanup step when it expires (CR 514.2).
+        //
+        // `ownerId` is the grant's recipient throughout — never the current `controllerId` — and
+        // `changeController` keeps the timestamped record stack plus its entry-facts fallback, so
+        // an expired record still falls back to what lies beneath it.
+        const livingOwners = new Set(
+          ctx.state.players.filter((player) => !player.hasLost).map((player) => player.id),
+        );
+        const grants = ctx.state.battlefield.filter(
+          (perm) =>
+            livingOwners.has(perm.ownerId) &&
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+        );
+        // No zone change and no state-based action runs between grants: the whole grant is one
+        // effect, so nothing is destroyed or exiled out from under a later owner.
+        for (const perm of grants) changeController(ctx, perm, perm.ownerId);
         break;
       }
       case 'swapCreatureControlUntilEot': {

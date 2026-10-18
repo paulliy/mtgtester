@@ -13151,6 +13151,142 @@ function reinsOfPowerScenario(
   });
 }
 
+/**
+ * Coverage PR08.14: Alicia Masters, Skilled Sculptor. Two prepared states of ONE board, so the
+ * only difference between them is whether P1 casts a noncreature spell before combat.
+ *
+ * The board is the part "Sense the Good" is about, and it is arranged so that every sentence can
+ * be observed rather than assumed: one creature P1 owns is held by P2, one creature P2 owns is
+ * held by P1, one NONCREATURE artifact P3 owns is held by P1, and P3 keeps a bystander creature
+ * nobody is holding. Ownership is arranged with `playerId` and only the holder with `controllerId`;
+ * nothing pokes the state afterwards, so both scenarios start from the same authoritative facts.
+ *
+ * All four fixture creatures are 0-power defenders. That is a real modeled card shape (the generic
+ * interpreter reads the printed power/toughness and the `Defender` keyword line), and it is what
+ * keeps `continueThroughCombat` free of attacker and blocker choosers: the combat that witnesses
+ * the intervening if is a combat with no combat in it.
+ */
+const LAB_RECLAIMED_OX = card({
+  oracleId: 'lab-pr08-reclaimed-ox',
+  name: 'Lab Reclaimed Ox',
+  typeLine: 'Creature — Ox',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_BORROWED_GOLEM = card({
+  oracleId: 'lab-pr08-borrowed-golem',
+  name: 'Lab Borrowed Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_PLEDGED_RELIC = card({
+  oracleId: 'lab-pr08-pledged-relic',
+  name: 'Lab Pledged Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_BYSTANDER_GOLEM = card({
+  oracleId: 'lab-pr08-bystander-golem',
+  name: 'Lab Bystander Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+
+function aliciaMastersScenario(
+  gameId: GameId,
+  mode: 'combat-treasure-and-owner-control' | 'no-noncreature-spell',
+): CardTestScenario {
+  const alicia = pinnedFrom(COVERAGE_PR08, 'Alicia Masters, Skilled Sculptor');
+  /**
+   * The cast-history witness for the intervening if. A real, fully interpreter-modeled {0} instant
+   * rather than a blank placeholder: a blank spell would have to be force-declared `modeled: true`
+   * with no interpretable effect at all, which is exactly the fake support
+   * docs/guides/card-modeling-and-testing.md forbids. Casting it gains real life, so the scenarios
+   * can prove the cast happened rather than assume it.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = [MOUNTAIN, MOUNTAIN];
+  const castWitness = mode === 'combat-treasure-and-owner-control';
+  return pr01Scenario(gameId, {
+    id: `alicia-masters-viewer-${mode}`,
+    title: castWitness
+      ? 'Alicia Masters: a noncreature spell this turn makes a Treasure, then each player reclaims their own creatures'
+      : 'Alicia Masters: no noncreature spell this turn makes no Treasure, but creatures still return to their owners',
+    instructions: [
+      'Cast Alicia Masters, Skilled Sculptor with your two Mountains and let it resolve.',
+      castWitness
+        ? "Cast Lab Priority Witness before combat: it is the noncreature spell this turn that Alicia's intervening if reads."
+        : 'Do not cast Lab Priority Witness. Only a creature spell has been cast this turn.',
+      'Pass through combat: the Treasure, if any, is created at the beginning of combat, before the end step.',
+      'Pass through your end step: each player takes back every creature they own.',
+    ],
+    expectedOutcome: castWitness
+      ? 'Exactly one Treasure you own appears when combat begins, and at your end step your Lab Reclaimed Ox and P2’s Lab Borrowed Golem each return to their owner. P3’s noncreature Lab Pledged Relic stays yours, and P3’s Lab Bystander Golem never moves.'
+      : 'No Treasure is ever created, because no noncreature spell was cast this turn. Your end step still returns your Lab Reclaimed Ox and P2’s Lab Borrowed Golem to their owners, leaves P3’s Lab Pledged Relic with you, and leaves P3’s bystander alone.',
+    oracleSha256: alicia.sha256,
+    clauseIds: [
+      'alicia-masters-begin-combat-treasure-if-noncreature-spell-this-turn',
+      'alicia-masters-end-step-each-player-reclaims-own-creatures',
+    ],
+    decks: {
+      P1: [alicia.card, witness, ...mountains, LAB_RECLAIMED_OX, ...PR01_FILLER],
+      P2: [LAB_BORROWED_GOLEM, ...PR01_FILLER],
+      P3: [LAB_BYSTANDER_GOLEM, LAB_PLEDGED_RELIC, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      // Pinned so the witness's printed life gain is a real, scenario-owned number rather than a
+      // function of the 40-life default.
+      lifeTotals: [
+        { playerId: 'P1', life: 20 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Alicia Masters, Skilled Sculptor', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_RECLAIMED_OX.name], controllerId: 'P2' },
+        {
+          playerId: 'P2',
+          cardNames: [LAB_BORROWED_GOLEM.name],
+          controllerId: 'P1',
+          tapped: true,
+        },
+        { playerId: 'P3', cardNames: [LAB_PLEDGED_RELIC.name], controllerId: 'P1' },
+        { playerId: 'P3', cardNames: [LAB_BYSTANDER_GOLEM.name] },
+      ],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks(), P3: neverBlocks(), P4: neverBlocks() },
+  });
+}
+
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
   const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
@@ -14896,6 +15032,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'reins-of-power-viewer-swap-and-cleanup': (gameId) =>
     reinsOfPowerScenario(gameId, 'swap-and-cleanup'),
   'reins-of-power-viewer-empty-caster': (gameId) => reinsOfPowerScenario(gameId, 'empty-caster'),
+  'alicia-masters-viewer-combat-treasure-and-owner-control': (gameId) =>
+    aliciaMastersScenario(gameId, 'combat-treasure-and-owner-control'),
+  'alicia-masters-viewer-no-noncreature-spell': (gameId) =>
+    aliciaMastersScenario(gameId, 'no-noncreature-spell'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,

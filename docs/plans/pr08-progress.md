@@ -8,7 +8,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
-and Akroan Horse are the first eight implementation increments. The other 15 cards remain unsupported. The seven reopened quality-audit cards now belong
+Akroan Horse, and Alicia Masters, Skilled Sculptor are the first nine implementation increments.
+The other 14 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -258,3 +259,28 @@ after a subprocess returned without its diagnostic text. An unchanged isolated r
 the setup inventory subprocess before reaching that test. The push gate remains unresolved; no
 timeout or assertion was weakened. The frozen six-card full suite continues separately with bulk
 data enabled.
+
+## Alicia Masters increment (PR08.14)
+
+The normal cast pays one generic and one red mana. The existing interpreter's combat trigger is
+retained, including the noncreature-cast intervening-if at both queue and resolution. The Treasure
+uses the catalog's tap-and-sacrifice mana ability. The end-step instruction freezes the creatures
+present at resolution, then gives each living owner a fresh permanent control effect, even when
+that owner already controls the creature. Control-dependent type changes cannot expand the frozen
+set. Noncreatures and later arrivals are excluded; queued abilities survive source departure and
+retain their original controller.
+
+Twenty card tests, seven independent owner-restoration contracts and three production-lab replays
+passed. Reverting the executor failed four behavioral regressions, and reverting the registration
+failed nine card scenarios, with exact source restoration after each run. The integrated run passed
+202 tests across 22 suites; lab registration and manifest checks passed 94 tests across three suites.
+All 22 PR08 real-viewer scenarios passed after correcting the payment-preview locator from an ASCII
+`x` to the UI's multiplication sign. Both typechecks, lint, reviewed snapshots, benchmark pins and
+the web build passed. Revision-bound receipts are generated after committing.
+
+The frozen inventory measures 795/906 (700/802 deck cards, 189/200 staples); the expanded report
+measures 753/855. The bulk non-land inventory contains 6,475 modeled cards. Review eligibility is
+still a final completion requirement; scripted lab decisions do not constitute live gameplay-AI
+evaluation. The separate frozen six-card full run exposed existing five-second session-presentation
+and 15-second async-provider timeouts. Those assertions and timeouts remain unchanged, and push
+validation remains outstanding.

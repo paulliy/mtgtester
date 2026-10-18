@@ -2219,6 +2219,89 @@
     "def": {}
   },
   {
+    "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
+    "name": "Alicia Masters, Skilled Sculptor",
+    "handledLines": [
+      "unrecognized rules text: \"Sense the Good — At the beginning of your end step, each player gains control of all creatures they own.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a Treasure token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "At the beginning of your end step, each player gains control of all creatures they own",
+          "effects": [
+            {
+              "op": "regainControlOfOwnCreatures"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
     "name": "Myriad Landscape",
     "handledLines": [
@@ -17058,6 +17141,89 @@
           "trigger": {
             "player": "you",
             "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-alicia-masters-skilled-sculptor",
+    "name": "Alicia Masters, Skilled Sculptor",
+    "handledLines": [
+      "unrecognized rules text: \"Sense the Good — At the beginning of your end step, each player gains control of all creatures they own.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a Treasure token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [],
+                "manaAbilities": [
+                  {
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ],
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ]
+                  }
+                ],
+                "name": "Treasure",
+                "power": null,
+                "subtypes": [
+                  "Treasure"
+                ],
+                "toughness": null,
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        },
+        {
+          "description": "At the beginning of your end step, each player gains control of all creatures they own",
+          "effects": [
+            {
+              "op": "regainControlOfOwnCreatures"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
           }
         }
       ]

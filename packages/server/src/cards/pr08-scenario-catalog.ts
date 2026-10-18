@@ -20,4 +20,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'humble-defector-viewer-off-turn',
   'reins-of-power-viewer-swap-and-cleanup',
   'reins-of-power-viewer-empty-caster',
+  'alicia-masters-viewer-combat-treasure-and-owner-control',
+  'alicia-masters-viewer-no-noncreature-spell',
 ];

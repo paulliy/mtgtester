@@ -10,6 +10,8 @@ import { allOf, hasCounter, ofType } from '../selector';
 import {
   activated,
   mana,
+  onBeginCombat,
+  onEndStep,
   onEtb,
   onUpkeep,
   removeCountersCost,
@@ -19,7 +21,7 @@ import {
   TAP,
 } from '../templates';
 import { constant } from '../value';
-import { SOLDIER_1_1 } from '../tokens';
+import { SOLDIER_1_1, TREASURE } from '../tokens';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -218,6 +220,34 @@ export function registerCoveragePr08Overrides(): void {
           ],
           description:
             'Search your library for a card, put it into your hand, then shuffle. An opponent gains control of Wishclaw Talisman (activate only during your turn)',
+        }),
+      ],
+    },
+  );
+  // Alicia Masters, Skilled Sculptor. The interpreter already models the combat line exactly as
+  // printed — "if you've cast a noncreature spell this turn" is the CR 603.4 intervening-if, read
+  // at the queue and again as the ability resolves — so that ability is carried across verbatim
+  // rather than rewritten, with its Treasure coming from the shared token catalog. Only "Sense the
+  // Good" needs authoring: it is the same global owner-restoration primitive Trostani Disciple
+  // already uses, which grants every living owner each creature it owns.
+  defineCard(
+    '223504ba-174a-46f2-a4a2-5d663a82dfd3',
+    'Alicia Masters, Skilled Sculptor',
+    [
+      'unrecognized rules text: "Sense the Good — At the beginning of your end step, each player gains control of all creatures they own."',
+    ],
+    {
+      triggers: [
+        triggered(onBeginCombat('you'), {
+          condition: { kind: 'castSpellThisTurn', category: 'noncreature', cmp: '>=', n: 1 },
+          effects: [{ op: 'createToken', spec: TREASURE, count: constant(1) }],
+          description:
+            "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a Treasure token",
+        }),
+        triggered(onEndStep('you'), {
+          effects: [{ op: 'regainControlOfOwnCreatures' }],
+          description:
+            'At the beginning of your end step, each player gains control of all creatures they own',
         }),
       ],
     },
