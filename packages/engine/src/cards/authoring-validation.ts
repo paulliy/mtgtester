@@ -522,13 +522,30 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         if (recipient === null || typeof recipient !== 'object' || Array.isArray(recipient)) {
           issues.push({
             path: `${path}.recipient`,
-            message: 'recipient must be { targetPlayer: number }',
+            message: 'recipient must be { targetPlayer: number } or { chooseOpponent: true }',
           });
         } else {
+          // Two disjoint recipient branches, exactly one per object. Naming both is ambiguous
+          // (which controller wins?), naming neither has no recipient at all — an empty object
+          // must not silently fall back to "the ability controller", which would read as an
+          // authored-but-absent choice rather than a mistake.
           const r = recipient as Record<string, unknown>;
-          if (!Object.prototype.hasOwnProperty.call(r, 'targetPlayer')) {
-            issues.push({ path: `${path}.recipient`, message: 'recipient must name targetPlayer' });
-          } else {
+          const namesSlot = Object.prototype.hasOwnProperty.call(r, 'targetPlayer');
+          const namesChoice = Object.prototype.hasOwnProperty.call(r, 'chooseOpponent');
+          for (const key of Object.keys(r)) {
+            if (key !== 'targetPlayer' && key !== 'chooseOpponent') {
+              issues.push({
+                path: `${path}.recipient`,
+                message: 'recipient only supports targetPlayer or chooseOpponent',
+              });
+            }
+          }
+          if (namesSlot && namesChoice) {
+            issues.push({
+              path: `${path}.recipient`,
+              message: 'recipient names targetPlayer and chooseOpponent; use exactly one branch',
+            });
+          } else if (namesSlot) {
             const slot = r['targetPlayer'];
             if (typeof slot !== 'number' || !Number.isSafeInteger(slot) || slot < 0) {
               issues.push({
@@ -543,14 +560,20 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
                 owningScope,
                 issues,
               );
-          }
-          for (const key of Object.keys(r)) {
-            if (key !== 'targetPlayer') {
+          } else if (namesChoice) {
+            // `chooseOpponent` is a flag, not a slot: anything other than the boolean true is a
+            // typo or a mistyped value, never a falsey branch to be ignored.
+            if (r['chooseOpponent'] !== true) {
               issues.push({
-                path: `${path}.recipient`,
-                message: 'recipient only supports targetPlayer',
+                path: `${path}.recipient.chooseOpponent`,
+                message: 'recipient chooseOpponent must be the boolean true',
               });
             }
+          } else {
+            issues.push({
+              path: `${path}.recipient`,
+              message: 'recipient must name targetPlayer or chooseOpponent',
+            });
           }
         }
       }

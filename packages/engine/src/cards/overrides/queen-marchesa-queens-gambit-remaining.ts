@@ -346,12 +346,9 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Weathered Wayfarer: restored in coverage PR02. The interpreter reads the revealed land search
   // and its "an opponent controls more lands than you" activation condition.
-  // Catalog audit queen-batch-3: opponent-gains-control omitted.
-  unsupportedCard(
-    '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',
-    'Wishclaw Talisman',
-    'Opponent-gains-control is omitted from the search activation.',
-  );
+  // Wishclaw Talisman: restored in coverage PR08 (see coverage-pr08.ts). The interpreter reads
+  // "enters with three wish counters"; the activation, its costs and the resolved-time opponent
+  // choice are authored there.
   // Kambal, Consul of Allocation: restored in coverage PR03. The interpreter reads the
   // opponent-cast trigger and "that player loses 2 life and you gain 2 life", so no override remains.
   // Teyo, Geometric Tactician: restored in coverage PR07 (see coverage-pr07.ts).

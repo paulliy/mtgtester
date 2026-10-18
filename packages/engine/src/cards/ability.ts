@@ -843,8 +843,19 @@ export type Effect =
       op: 'gainControlTarget';
       target: EffectRef;
       duration?: GainControlIRDuration;
-      /** Omitted: ability controller. Otherwise an ordinary player target slot. */
-      recipient?: { targetPlayer: number };
+      /**
+       * Who ends up controlling the permanent. Omitted: the ability's controller.
+       *
+       * `{ targetPlayer: n }` names an ORDINARY player target slot chosen when the ability was
+       * announced (Humble Defector). `{ chooseOpponent: true }` instead makes the recipient
+       * itself a choice made as the effect resolves (CR 608.2d — the ability's controller chooses,
+       * the player who cast the spell), among the living opponents of that controller at that
+       * moment. The choice is NOT a target, so nothing about it is a targeting restriction: a
+       * player with hexproof or shroud is still eligible, and there is no target slot to announce.
+       * It is asked in instruction order, so it happens after any earlier instruction of the same
+       * resolution (Wishclaw Talisman searches and shuffles before the gift).
+       */
+      recipient?: { targetPlayer: number } | { chooseOpponent: true };
     }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
@@ -977,8 +988,8 @@ export type Effect =
   | { op: 'damageEachOtherOpponent'; amount: Value }
   /**
    * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). One
-   * `destinations` entry per card that may be found — each independently offers "find or
-   * decline" (CR 701.19c). `count` (Harvest Season's "up to X, where X is...") repeats
+   * `destinations` entry per card. A stated quality permits finding nothing; an unrestricted
+   * quantity must find as many as possible. `count` (Harvest Season's "up to X, where X is...") repeats
    * `destinations[0]` that many times instead of a fixed-length array, since the number of
    * cards that may be found isn't known until resolution.
    */
@@ -990,7 +1001,7 @@ export type Effect =
       differentNames?: boolean;
       /** Preserve the found cards' stable identities for later effects in this resolution. */
       bind?: string;
-      /** Surface CR 701.19c's legal failure-to-find choice even for one distinct card name. */
+      /** An explicitly optional unrestricted search; stated-quality searches may always fail to find. */
       allowFailToFind?: boolean;
       /**
        * "…, reveal it, …" (CR 701.16a): each found card is shown to every player, even when its

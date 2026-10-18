@@ -1125,6 +1125,40 @@ function describeMassEffect(affected: EnginePermanent[], clause: string): string
 }
 
 /**
+ * "An opponent gains control of …" (Wishclaw Talisman) — the recipient is not a target but a
+ * choice made as the effect resolves (CR 608.2d: the ability's controller chooses, the same
+ * player who cast the spell in a spell's case). The eligible set is the LIVING opponents of that
+ * controller, not of the permanent: an earlier control change on the permanent cannot rewrite who
+ * is asked. Nothing about the choice is a targeting restriction, so a player with hexproof or
+ * shroud is still offered; a player who has left the game is not eligible.
+ *
+ * Returns null when no opponent is left — the caller performs nothing, and the rest of the
+ * resolution (already done, e.g. the search and shuffle) stands (CR 608.2h).
+ */
+function* chooseOpponentRecipient(
+  ctx: GameContext,
+  source: EffectSource,
+  chooserId: PlayerId,
+  permanentName: string,
+): GameGen<PlayerId | null> {
+  const eligible = ctx.state.players.filter((player) => !player.hasLost && player.id !== chooserId);
+  if (eligible.length === 0) return null;
+  const outcome = yield {
+    decisionType: 'general',
+    player: chooserId,
+    prompt: `${source.name}: choose an opponent to gain control of ${permanentName}`,
+    options: eligible.map((player) =>
+      playerOption(player.id, player.id, {
+        type: 'choosePlayer',
+        description: `${player.id} gains control of ${permanentName}`,
+        verb: 'Give control to',
+      }),
+    ),
+  };
+  return eligible[outcome.index]?.id ?? null;
+}
+
+/**
  * Resolve a control-change duration at runtime. The source-bound IR value stays declarative
  * ('whileSourceOnBattlefield') and becomes the source's exact ObjectId here: an effect whose
  * source is not ON the battlefield when its duration starts gives no effect at all (CR 611.2b),
@@ -2746,13 +2780,22 @@ export function* executeAbility(
         const duration = resolveControlChangeDuration(ctx, source, effect.duration);
         if (perm === undefined || duration === null) break;
         let newController = source.controllerId;
-        if (effect.recipient?.targetPlayer !== undefined) {
-          const recipientId = ref(effect.recipient.targetPlayer);
-          const recipient = ctx.state.players.find(
-            (player) => player.id === recipientId && !player.hasLost,
+        const recipient = effect.recipient;
+        if (
+          recipient !== undefined &&
+          'chooseOpponent' in recipient &&
+          recipient.chooseOpponent === true
+        ) {
+          const opponent = yield* chooseOpponentRecipient(ctx, source, controller.id, perm.name);
+          if (opponent === null) break;
+          newController = opponent;
+        } else if (recipient !== undefined && 'targetPlayer' in recipient) {
+          const recipientId = ref(recipient.targetPlayer);
+          const player = ctx.state.players.find(
+            (candidate) => candidate.id === recipientId && !candidate.hasLost,
           );
-          if (recipient === undefined) break;
-          newController = recipient.id;
+          if (player === undefined) break;
+          newController = player.id;
         }
         const change = perm.controllerId !== newController;
         changeController(ctx, perm, newController, duration);
@@ -7712,9 +7755,8 @@ export function shuffleLibrary(ctx: GameContext, player: EnginePlayerState): voi
 /**
  * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19).
  *
- * One decision per destination, each offering the matching cards plus "find nothing" — CR
- * 701.19c never requires a player to find a card, and a search with fewer matches than
- * destinations simply stops early.
+ * A stated quality permits failure to find (CR 701.19b); an unrestricted quantity must find
+ * as many as possible (CR 701.19d). An explicitly optional search may also find nothing.
  */
 function* searchLibrary(
   ctx: GameContext,
@@ -7729,6 +7771,8 @@ function* searchLibrary(
   cardFilter: (card: EngineCardObject) => boolean = () => true,
 ): GameGen<string[]> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
+  const canFindNothing =
+    allowFailToFind || differentNames || filter.kind !== 'allOf' || filter.of.length > 0;
   const chosenNames = new Set<string>();
   const foundCardIds: string[] = [];
   // CR 701.16a: a revealed card is public to every player whatever zone it goes to.
@@ -7755,10 +7799,10 @@ function* searchLibrary(
           ? 'on top of your library'
           : `into your ${destination.zone}`;
 
-    // Auto-select when all matching cards share the same name (e.g., mono-color basic
-    // land search): the choice is meaningless and would waste an AI call.
+    // A mandatory unrestricted search with one matching name has no meaningful card choice.
+    // Quality searches must still offer the legal choice to find nothing.
     const distinctNames = new Set(matches.map((c) => c.name));
-    if (!allowFailToFind && distinctNames.size === 1) {
+    if (!canFindNothing && distinctNames.size === 1) {
       const card = matches[0] as EngineCardObject;
       foundCardIds.push(card.cardId);
       if (destination.zone === 'libraryTop') {
@@ -7797,13 +7841,16 @@ function* searchLibrary(
             verb: `Put ${where}`,
           }),
         ),
-        // CR 701.19c: searching never obliges you to find.
-        plainOption({
-          type: 'findNothing',
-          description: 'Find nothing',
-          verb: 'Find nothing',
-          role: 'decline',
-        }),
+        ...(canFindNothing
+          ? [
+              plainOption({
+                type: 'findNothing',
+                description: 'Find nothing',
+                verb: 'Find nothing',
+                role: 'decline',
+              }),
+            ]
+          : []),
       ],
     };
     if (outcome.index >= matches.length) break;

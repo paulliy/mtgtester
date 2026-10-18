@@ -272,7 +272,13 @@ const shapes = {
     sacrificeAt: leaf,
     requirements: { array: { object: { kind: leaf, player: leaf } } },
     duration: leaf,
-    recipient: { object: { targetPlayer: leaf } },
+    // `gainControlTarget` names its recipient in exactly one of two disjoint shapes: an ordinary
+    // player target slot chosen at announcement, or the resolved-time `chooseOpponent` flag. A
+    // value naming both (or neither) matches no single branch and fails closed here as well as in
+    // `validateCardDefinition`.
+    recipient: {
+      union: [{ object: { targetPlayer: leaf } }, { object: { chooseOpponent: leaf } }],
+    },
     eachOpponent: leaf,
     goadedForRestOfGame: leaf,
     untilEot: leaf,

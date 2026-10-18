@@ -169,6 +169,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Watcher for Tomorrow',
       'Weathered Wayfarer',
       'Will of the Mardu',
+      'Wishclaw Talisman',
     ]);
   });
 });

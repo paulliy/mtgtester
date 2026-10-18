@@ -12689,6 +12689,91 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function wishclawScenario(
+  gameId: GameId,
+  mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn',
+): CardTestScenario {
+  const talisman = pinnedFrom(COVERAGE_PR08, 'Wishclaw Talisman');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const alpha = card({
+    oracleId: 'lab-pr08-wishclaw-alpha',
+    name: 'Lab Wishclaw Alpha',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const beta = card({
+    oracleId: 'lab-pr08-wishclaw-beta',
+    name: 'Lab Wishclaw Beta',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const cast = mode === 'cast-search-and-gift';
+  const swamps = Array.from({ length: cast ? 3 : 1 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: `wishclaw-talisman-viewer-${mode}`,
+    title: `Wishclaw Talisman: ${cast ? 'cast, search, then choose the recipient' : mode === 'empty-library' ? 'empty library still gives control' : 'cannot activate off your turn'}`,
+    instructions:
+      mode === 'off-turn'
+        ? ['It is P2’s turn. Your instant can be cast, but Wishclaw cannot activate.']
+        : [
+            ...(cast
+              ? ['Cast Wishclaw Talisman with two Swamps; it enters with three wish counters.']
+              : []),
+            'Activate, paying one mana, tapping the artifact and removing one wish counter.',
+            cast
+              ? 'Find Lab Wishclaw Beta. The unrestricted search has no Find nothing option.'
+              : 'The empty library offers no search choice.',
+            'After the search and shuffle, choose P3 to gain control. This choice has no target.',
+          ],
+    expectedOutcome:
+      mode === 'off-turn'
+        ? 'Wishclaw stays untapped with three wish counters and cannot activate.'
+        : `P3 controls the tapped artifact with two wish counters. ${cast ? 'Lab Wishclaw Beta is in your hand.' : 'Your hand remains unchanged.'}`,
+    oracleSha256: talisman.sha256,
+    clauseIds: cast
+      ? [
+          'wishclaw-enters-three-wish',
+          'wishclaw-search-then-opponent-control',
+          'wishclaw-your-turn-timing',
+        ]
+      : mode === 'off-turn'
+        ? ['wishclaw-your-turn-timing']
+        : ['wishclaw-search-then-opponent-control'],
+    decks: {
+      P1: [talisman.card, witness, ...swamps, ...(cast ? [alpha, beta] : [])],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: mode === 'off-turn' ? 'P2' : 'P1',
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: cast
+            ? ['Wishclaw Talisman', 'Lab Priority Witness']
+            : ['Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((p) => p.name) },
+        ...(cast
+          ? []
+          : [{ playerId: 'P1' as const, cardNames: ['Wishclaw Talisman'], counters: { wish: 3 } }]),
+      ],
+    },
+  });
+}
+
 function druidPurificationScenario(
   gameId: GameId,
   mode: 'duplicates' | 'decline' | 'shroud',
@@ -14653,6 +14738,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
       (gameId: GameId) => pr08CutADealScenario(id, gameId),
     ]),
   ),
+  'wishclaw-talisman-viewer-cast-search-and-gift': (gameId) =>
+    wishclawScenario(gameId, 'cast-search-and-gift'),
+  'wishclaw-talisman-viewer-empty-library': (gameId) => wishclawScenario(gameId, 'empty-library'),
+  'wishclaw-talisman-viewer-off-turn': (gameId) => wishclawScenario(gameId, 'off-turn'),
   'druid-of-purification-viewer-duplicates': (gameId) =>
     druidPurificationScenario(gameId, 'duplicates'),
   'druid-of-purification-viewer-decline': (gameId) => druidPurificationScenario(gameId, 'decline'),

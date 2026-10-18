@@ -5,8 +5,18 @@
  * Unfinished cards remain explicitly unsupported in their original deck registrations.
  */
 import type { CardDefinition } from '../definition';
+import { searchLibraryCards } from '../effect-builders';
 import { allOf, hasCounter, ofType } from '../selector';
-import { activated, mana, onEtb, spell, targetSlots, triggered, TAP } from '../templates';
+import {
+  activated,
+  mana,
+  onEtb,
+  removeCountersCost,
+  spell,
+  targetSlots,
+  triggered,
+  TAP,
+} from '../templates';
 import { constant } from '../value';
 import { defineCard } from './index';
 
@@ -142,4 +152,34 @@ export function registerCoveragePr08Overrides(): void {
     },
   );
   defineCard('acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce', 'Mob Rule', MOB_RULE_HANDLED_LINES, MOB_RULE);
+  // "enters with three wish counters" is read by the interpreter as `entersWithCounters` and kept;
+  // only the activation below is authored here. The printed gift names no target, so the ordinary
+  // source activation has no player slot at all — the recipient is chosen as the effect resolves,
+  // after the search and shuffle have already been performed.
+  defineCard(
+    '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',
+    'Wishclaw Talisman',
+    [
+      'unrecognized rules text: "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn."',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [mana('{1}'), TAP, removeCountersCost('wish', 1)],
+          timing: 'yourTurn',
+          effects: [
+            searchLibraryCards(allOf(), [{ zone: 'hand' }]),
+            { op: 'shuffle' },
+            {
+              op: 'gainControlTarget',
+              target: 'source',
+              recipient: { chooseOpponent: true },
+            },
+          ],
+          description:
+            'Search your library for a card, put it into your hand, then shuffle. An opponent gains control of Wishclaw Talisman (activate only during your turn)',
+        }),
+      ],
+    },
+  );
 }

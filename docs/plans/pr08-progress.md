@@ -7,8 +7,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
-and Cytoplast Manipulator were the first three implementation increments; Humble Defector is the
-fourth. The other 19 cards remain unsupported. The seven reopened quality-audit cards now belong
+Cytoplast Manipulator, Humble Defector, Druid of Purification, and Wishclaw Talisman are the first
+six implementation increments. The other 17 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -159,3 +159,39 @@ The clean-tree full suite/card gate is rerun separately before the next implemen
 
 The frozen population measures 790/906 (695/802 deck cards, 189/200 staples); the expanded default
 deck report measures 748/855. Gameplay-AI quality has not been evaluated with a live provider.
+
+## Druid of Purification increment (PR08.02)
+
+Each living player chooses in APNAP order starting with the ability's controller. Every choice
+uses that controller's artifact/enchantment exclusion, permits declining, and is public without
+targeting. All choices precede destruction; duplicate choices destroy once. The destruction batch
+preserves indestructibility, regeneration and simultaneous death observations.
+
+Fourteen direct engine tests, five normal-casting tests, three lab replays and three real-viewer
+scenarios passed. Regression tests failed the previous executor before the corrected implementation
+was restored. Both typechecks, lint, formatting, reviewed snapshots, benchmark pins and web build
+passed. The clean-tree card gate passed 140 suites and 4,261 tests at `87016a33`; generated receipts
+bind 148 engine cases and 13 real-viewer scenarios to that revision. A separate full-suite run is
+still pending. The frozen inventory measured 791/906; the expanded report measured 749/855.
+
+## Wishclaw Talisman increment (PR08.05)
+
+The normal artifact cast retains its three-wish-counter replacement. Activation pays one mana,
+taps and removes one wish counter during its controller's turn. It searches and shuffles before
+the ability's original controller chooses a living opponent without targeting; the exact source
+object then changes control permanently. Empty-library and departed-source cases preserve the
+remaining applicable instructions; blink never substitutes a new incarnation.
+
+Main review corrected an optional unrestricted search and an unusable recipient presentation.
+Independent regressions failed those drafts and the previous search helper. Stated-quality
+searches may still find nothing even with one matching card name; unrestricted searches must
+find as many cards as possible. Two old optimization assertions and a Cultivate payment test now
+exercise that legal search decision instead of assuming automatic selection.
+
+The 36 focused engine/server tests and 16 real PR08 viewer scenarios passed. The broader engine
+run passed 293 suites and failed three search-assumption tests; all three affected suites then
+passed 36 tests after the corrections above. Generated evidence, clean-tree gates and the complete
+local suite are refreshed separately against committed revisions. The frozen inventory measures
+792/906 (697/802 deck cards, 189/200 staples), the expanded report measures 750/855, and the bulk
+non-land inventory contains 6,472 modeled cards. These are inventory counts, not review evidence.
+Gameplay-AI quality remains unevaluated with a live provider; the lab uses scripted legal choices.

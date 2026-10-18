@@ -4574,5 +4574,22 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-druid-of-purification.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
+    "name": "Wishclaw Talisman",
+    "package": "PR08.05",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-wishclaw-talisman.test.ts",
+      "packages/engine/tests/resolution-control-recipient-contract.test.ts",
+      "packages/engine/tests/library-search-choice-contract.test.ts",
+      "packages/server/src/cards/pr08-wishclaw-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-wishclaw-talisman.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

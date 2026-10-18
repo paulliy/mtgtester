@@ -33,6 +33,7 @@ const IMPLEMENTED = new Set<string>([
   'Cytoplast Manipulator',
   'Humble Defector',
   'Druid of Purification',
+  'Wishclaw Talisman',
 ]);
 function canonical(input: unknown): unknown {
   if (Array.isArray(input)) return input.map(canonical);

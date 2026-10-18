@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 24,
+      "uniqueOracleIds": 23,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6906,6 +6906,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
       "restoredIn": "coverage-pr08",
       "note": "Replaced by coverage-pr08.ts: every chooser excludes permanents controlled by the ability controller, including when a chooser owns the chosen permanent. Current Oracle says you do not control; the historical containment note reverses that rule. Choices are public, ordered and complete before one simultaneous destruction of each distinct chosen permanent. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
+      "name": "Wishclaw Talisman",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. The artifact enters with three wish counters, pays {1}, tap and one wish only on its controller’s turn, searches and shuffles before a nontargeting living-opponent choice, then permanently gives that exact source object away. Empty library and source departure do not stop the remaining applicable instructions. Historical audit rows remain as history."
     }
   ]
 }

@@ -78,7 +78,6 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
@@ -120,6 +119,7 @@ describe('Marchesa catalog audit containment', () => {
     'Cytoplast Manipulator',
     'Humble Defector',
     'Druid of Purification',
+    'Wishclaw Talisman',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',

@@ -7,6 +7,77 @@ test.setTimeout(60_000);
 
 const exercised = new Set<string>();
 
+for (const mode of ['cast-search-and-gift', 'empty-library'] as const) {
+  test(`Wishclaw Talisman: ${mode === 'cast-search-and-gift' ? 'cast, search, then choose the recipient' : 'empty library still gives control'}`, async ({
+    page,
+  }) => {
+    const cast = mode === 'cast-search-and-gift';
+    await runScenario(
+      page,
+      `Wishclaw Talisman: ${cast ? 'cast, search, then choose the recipient' : 'empty library still gives control'}`,
+    );
+    const source = humanPermanent(page, 'Wishclaw Talisman');
+    if (cast) {
+      await castPr08Card(page, 'Wishclaw Talisman');
+      await passStackUntil(page, source);
+    }
+    await expect(source.locator('.counters')).toContainText('wish×3');
+    await expect(source).toHaveClass(/actionable/);
+    await source.click();
+    await expect(page.getByText(/Auto-pay/)).toBeVisible();
+    await expect(page.getByText(/Target 1 of 1/)).toHaveCount(0);
+    await confirm(page);
+    const panel = page.locator('.decision-panel');
+    if (cast) {
+      const find = panel
+        .locator('.panel-group')
+        .filter({ hasText: 'Lab Wishclaw Beta' })
+        .getByRole('button', { name: 'Put into your hand', exact: true });
+      await passStackUntil(page, find);
+      await expect(page.getByRole('button', { name: 'Find nothing', exact: true })).toHaveCount(0);
+      await expect(source.locator('.tile')).toHaveClass(/tapped/);
+      await expect(source.locator('.counters')).toContainText('wish×2');
+      await find.click();
+      await expect(handCard(page, 'Lab Wishclaw Beta')).toBeVisible();
+    }
+    const gift = panel
+      .locator('.panel-group')
+      .filter({ hasText: 'P3' })
+      .getByRole('button', { name: 'Give control to', exact: true });
+    await passStackUntil(page, gift);
+    await expect(panel.locator('.group-player')).toHaveText(['P2', 'P3', 'P4']);
+    for (const seat of ['P2', 'P3', 'P4'])
+      await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
+    await expect(source.locator('.counters')).toContainText('wish×2');
+    await expect(source.locator('.tile')).toHaveClass(/tapped/);
+    await gift.click();
+    const given = page
+      .locator('.opponent[data-seat="P3"] .object:not(.board-card-leave-active)')
+      .filter({ has: page.getByRole('img', { name: 'Wishclaw Talisman', exact: true }) });
+    await expect(given).toBeVisible();
+    await expect(source).toHaveCount(0);
+    await expect(given.locator('.tile')).toHaveClass(/tapped/);
+    await expect(given.locator('.counters')).toContainText('wish×2');
+    await expect(page.locator('.human-zone .hand-card:not(.hand-card-leave-active)')).toHaveCount(
+      cast ? 2 : 1,
+    );
+    await expect(handCard(page, 'Lab Wishclaw Alpha')).toHaveCount(0);
+    const swamp = humanPermanent(page, 'Swamp');
+    await expect(swamp.locator('.tile')).toHaveClass(/tapped/);
+    if (cast) await expect(swamp.locator('.stack-count-badge')).toHaveText('×3');
+  });
+}
+
+test('Wishclaw Talisman: cannot activate off your turn', async ({ page }) => {
+  await runScenario(page, 'Wishclaw Talisman: cannot activate off your turn');
+  await expect(page.locator('.turn-badge')).toContainText('P2');
+  await expect(handCard(page, 'Lab Priority Witness')).toHaveClass(/actionable/);
+  const source = humanPermanent(page, 'Wishclaw Talisman');
+  await expect(source).not.toHaveClass(/actionable/);
+  await expect(source.locator('.tile')).not.toHaveClass(/tapped/);
+  await expect(source.locator('.counters')).toContainText('wish×3');
+});
+
 for (const mode of ['duplicates', 'decline', 'shroud'] as const) {
   test(`Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`, async ({
     page,

@@ -7366,8 +7366,69 @@
   {
     "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
     "name": "Wishclaw Talisman",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search your library for a card, put it into your hand, then shuffle. An opponent gains control of Wishclaw Talisman (activate only during your turn)",
+            "effects": [
+              {
+                "destinations": [
+                  {
+                    "zone": "hand"
+                  }
+                ],
+                "filter": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "op": "searchLibrary"
+              },
+              {
+                "op": "shuffle"
+              },
+              {
+                "op": "gainControlTarget",
+                "recipient": {
+                  "chooseOpponent": true
+                },
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "count": 1,
+              "counter": "wish",
+              "kind": "removeCounters"
+            }
+          ],
+          "timing": "yourTurn"
+        }
+      ]
+    }
   },
   {
     "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
@@ -32349,8 +32410,69 @@
   {
     "oracleId": "oracle-wishclaw-talisman",
     "name": "Wishclaw Talisman",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact. Activate only during your turn.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Search your library for a card, put it into your hand, then shuffle. An opponent gains control of Wishclaw Talisman (activate only during your turn)",
+            "effects": [
+              {
+                "destinations": [
+                  {
+                    "zone": "hand"
+                  }
+                ],
+                "filter": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "op": "searchLibrary"
+              },
+              {
+                "op": "shuffle"
+              },
+              {
+                "op": "gainControlTarget",
+                "recipient": {
+                  "chooseOpponent": true
+                },
+                "target": "source"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            },
+            {
+              "count": 1,
+              "counter": "wish",
+              "kind": "removeCounters"
+            }
+          ],
+          "timing": "yourTurn"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-zopandrel-hunger-dominus",

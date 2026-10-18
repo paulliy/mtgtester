@@ -2751,13 +2751,59 @@
     "81c70ae7-3c18-4c9b-8505-e4db9e0e6518": {
       "name": "Wishclaw Talisman",
       "oracleSha256": "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "An opponent gains control of this artifact. Activate only during your turn.",
-          "implementation": ["explicitly unsupported; opponent-gains-control omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "wishclaw-enters-three-wish",
+          "oracleText": "This artifact enters with three wish counters on it.",
+          "implementation": [
+            "interpreter entersWithCounters replacement; normal {1}{B} artifact cast"
+          ],
+          "engineTestIds": [
+            "wishclaw-talisman-pinned-oracle-supported",
+            "wishclaw-talisman-normal-cast-pays-one-black-and-enters-with-three-wish",
+            "wishclaw-talisman-normal-cast-needs-black-and-a-main-phase"
+          ],
+          "viewerScenarioIds": ["wishclaw-talisman-viewer-cast-search-and-gift"]
+        },
+        {
+          "id": "wishclaw-search-then-opponent-control",
+          "oracleText": "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artifact.",
+          "implementation": [
+            "{1}, tap, remove one wish as real activation costs; unrestricted mandatory card search to hand followed by shuffle; gainControlTarget of the exact source, with a living opponent chosen by the ability controller at resolution, without targeting"
+          ],
+          "engineTestIds": [
+            "wishclaw-talisman-activation-pays-one-mana-taps-and-removes-one-wish",
+            "wishclaw-talisman-search-and-shuffle-precede-the-opponent-choice",
+            "wishclaw-talisman-opponent-choice-offers-every-living-opponent",
+            "wishclaw-talisman-empty-library-still-shuffles-and-transfers",
+            "wishclaw-talisman-source-gone-still-searches",
+            "wishclaw-talisman-source-blink-is-not-inherited",
+            "wishclaw-talisman-controller-change-before-resolution-keeps-the-original-controller",
+            "wishclaw-talisman-activation-requires-one-wish-one-mana-and-an-untapped-source",
+            "wishclaw-talisman-gift-is-permanent-and-survives-an-older-end-of-turn-grant",
+            "wishclaw-talisman-three-activations-consume-one-wish-each",
+            "wishclaw-talisman-unrestricted-search-must-find"
+          ],
+          "viewerScenarioIds": [
+            "wishclaw-talisman-viewer-cast-search-and-gift",
+            "wishclaw-talisman-viewer-empty-library"
+          ]
+        },
+        {
+          "id": "wishclaw-your-turn-timing",
+          "oracleText": "Activate only during your turn.",
+          "implementation": [
+            "yourTurn activation timing, independent of phase or stack; original ability controller retains the resolving ability"
+          ],
+          "engineTestIds": [
+            "wishclaw-talisman-your-turn-timing-allows-combat-and-rejects-another-turn",
+            "wishclaw-talisman-controller-change-before-resolution-keeps-the-original-controller"
+          ],
+          "viewerScenarioIds": [
+            "wishclaw-talisman-viewer-cast-search-and-gift",
+            "wishclaw-talisman-viewer-off-turn"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

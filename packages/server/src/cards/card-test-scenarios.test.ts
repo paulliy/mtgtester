@@ -46,6 +46,9 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'wishclaw-talisman-viewer-cast-search-and-gift',
+      'wishclaw-talisman-viewer-empty-library',
+      'wishclaw-talisman-viewer-off-turn',
       'druid-of-purification-viewer-duplicates',
       'druid-of-purification-viewer-decline',
       'druid-of-purification-viewer-shroud',
