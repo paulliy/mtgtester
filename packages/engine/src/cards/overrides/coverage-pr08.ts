@@ -67,6 +67,22 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  const reinsTargets = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
+  defineCard(
+    '96381388-1e82-411c-8290-1f3e909d3b5f',
+    'Reins of Power',
+    [
+      'unrecognized rules text: "Untap all creatures you control and all creatures target opponent controls. You and that opponent each gain control of all creatures the other controls until end of turn. Those creatures gain haste until end of turn."',
+    ],
+    {
+      spellAbility: spell({
+        targets: reinsTargets.targets,
+        effects: [{ op: 'swapCreatureControlUntilEot', target: reinsTargets.slot.opponent }],
+        description:
+          'Untap both players’ creatures, then gain control of each other’s creatures with haste until end of turn',
+      }),
+    },
+  );
   defineCard(
     '5bb32efd-9e58-4021-bbda-4ffccfa1d601',
     'Druid of Purification',

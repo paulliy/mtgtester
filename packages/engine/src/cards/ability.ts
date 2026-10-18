@@ -1294,6 +1294,8 @@ export type Effect =
       returnUnder: 'owner' | 'sourceController';
     }
   | { op: 'regainControlOfOwnCreatures' }
+  /** Untap both groups, then freeze both current creature sets and swap control with haste. */
+  | { op: 'swapCreatureControlUntilEot'; target: number }
   | { op: 'exileTargetGraveyardAndBuffIfCreature'; targetSlot: number }
   | {
       op: 'pumpTargetPlayerCreaturesUntilEot';

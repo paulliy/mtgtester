@@ -921,6 +921,7 @@ const families = {
       mayPayEnergyThenReflexive: true,
       putCountersOnSourceThenReflexive: true,
       gainControlTarget: true,
+      swapCreatureControlUntilEot: true,
       putCounters: true,
       putCountersEach: true,
       putCountersOnCreaturesTargetPlayerControls: true,

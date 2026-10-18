@@ -392,3 +392,115 @@ test('Humble Defector: cannot activate off your turn', async ({ page }) => {
   await expect(source).not.toHaveClass(/actionable/);
   await expect(source.locator('.tap-badge')).toHaveCount(0);
 });
+
+// --- Coverage PR08.17: Reins of Power (untap both groups, swap until end of turn, haste) ---
+
+/** A seat's permanent strip entry for one card name; `.object` is the actionable wrapper. */
+function seatPermanent(page: Page, seat: string, name: string) {
+  return page
+    .locator(`.opponent[data-seat="${seat}"] .object:not(.board-card-leave-active)`)
+    .filter({ has: page.getByRole('img', { name, exact: true }) });
+}
+
+/**
+ * Cast Reins of Power the normal way: pick it out of hand, see the real auto-pay preview, then
+ * target P2 through the real player-target chooser. The caster is never a legal target.
+ */
+async function castReinsOnP2(page: Page): Promise<void> {
+  const spell = handCard(page, 'Reins of Power');
+  await expect(spell).toHaveClass(/actionable/);
+  await spell.click();
+  await expect(page.getByText(/Auto-pay/)).toBeVisible();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.locator('.human-zone > header')).not.toHaveClass(/targetable/);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).toHaveClass(/targetable/);
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await confirm(page);
+}
+
+test('Reins of Power: both groups swap, then control returns at cleanup', async ({ page }) => {
+  await runScenario(page, 'Reins of Power: both groups swap, then control returns at cleanup');
+  // Pre-cast arrangement: your own 2/2 and P2's 4/4 are both tapped, P3's Servo is tapped too.
+  await expect(humanPermanent(page, 'Lab Trader').locator('.tile')).toHaveClass(/tapped/);
+  await expect(opponentPermanent(page, 'Lab Ox').locator('.tile')).toHaveClass(/tapped/);
+  await expect(seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.tile')).toHaveClass(
+    /tapped/,
+  );
+
+  await castReinsOnP2(page);
+  // The creatures cross zones: P2's Ox is now yours, and your own Trader is now P2's.
+  const ox = humanPermanent(page, 'Lab Ox');
+  await passStackUntil(page, ox);
+  const trader = opponentPermanent(page, 'Lab Trader');
+  await expect(ox).toHaveCount(1);
+  await expect(trader).toHaveCount(1);
+  await expect(humanPermanent(page, 'Lab Trader')).toHaveCount(0);
+  await expect(opponentPermanent(page, 'Lab Ox')).toHaveCount(0);
+
+  // Both groups were untapped and given haste; only the two named groups, never P3's creature.
+  for (const swapped of [ox, trader]) {
+    await expect(swapped.locator('.tile')).not.toHaveClass(/tapped/);
+    await expect(swapped.locator('.keywords[title*="haste"]')).toHaveCount(1);
+  }
+  await expect(seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.tile')).toHaveClass(
+    /tapped/,
+  );
+  await expect(
+    seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.keywords[title*="haste"]'),
+  ).toHaveCount(0);
+
+  // {2}{U}{U} really left your lands: all four Islands are tapped, stacked as one group.
+  await expect(humanPermanent(page, 'Island').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Island').locator('.stack-count-badge')).toHaveText('×4');
+  await expect(handCard(page, 'Lab Priority Witness')).toBeVisible();
+
+  // Pass to cleanup: control returns, haste expires, and the untap is not undone by either.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(opponentPermanent(page, 'Lab Ox')).toHaveCount(1);
+  await expect(humanPermanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(humanPermanent(page, 'Lab Trader')).toHaveCount(1);
+  await expect(opponentPermanent(page, 'Lab Trader')).toHaveCount(0);
+  await expect(opponentPermanent(page, 'Lab Ox').locator('.tile')).not.toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Lab Trader').locator('.tile')).not.toHaveClass(/tapped/);
+  await expect(page.locator('.human-zone .keywords[title*="haste"]')).toHaveCount(0);
+  await expect(
+    page
+      .locator('.opponent[data-seat="P2"] .object')
+      .filter({ has: page.getByRole('img', { name: 'Lab Ox', exact: true }) })
+      .locator('.keywords[title*="haste"]'),
+  ).toHaveCount(0);
+  // P3 was never in either group, so it is still the same tapped creature.
+  await expect(seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.tile')).toHaveClass(
+    /tapped/,
+  );
+});
+
+test('Reins of Power: only the opponent group exists when the caster has no creatures', async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Reins of Power: only the opponent group exists when the caster has no creatures',
+  );
+  // The caster's own group really is empty: only the stacked Islands sit on your side.
+  await expect(page.locator('.human-zone .object:not(.board-card-leave-active)')).toHaveCount(1);
+  await expect(opponentPermanent(page, 'Lab Ox').locator('.tile')).toHaveClass(/tapped/);
+
+  await castReinsOnP2(page);
+  const ox = humanPermanent(page, 'Lab Ox');
+  await passStackUntil(page, ox);
+  await expect(ox).toHaveCount(1);
+  await expect(ox.locator('.tile')).not.toHaveClass(/tapped/);
+  await expect(ox.locator('.keywords[title*="haste"]')).toHaveCount(1);
+  await expect(opponentPermanent(page, 'Lab Ox')).toHaveCount(0);
+  await expect(page.getByRole('img', { name: 'Lab Trader', exact: true })).toHaveCount(0);
+  // The uninvolved third player's creature is still untouched and still tapped.
+  await expect(seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.tile')).toHaveClass(
+    /tapped/,
+  );
+  await expect(
+    seatPermanent(page, 'P3', 'Lab Uninvolved Servo').locator('.keywords[title*="haste"]'),
+  ).toHaveCount(0);
+  await expect(humanPermanent(page, 'Island').locator('.stack-count-badge')).toHaveText('×4');
+});

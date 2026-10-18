@@ -8634,6 +8634,31 @@
     }
   },
   {
+    "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
+    "name": "Reins of Power",
+    "handledLines": [
+      "unrecognized rules text: \"Untap all creatures you control and all creatures target opponent controls. You and that opponent each gain control of all creatures the other controls until end of turn. Those creatures gain haste until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Untap both players’ creatures, then gain control of each other’s creatures with haste until end of turn",
+        "effects": [
+          {
+            "op": "swapCreatureControlUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
+    }
+  },
+  {
     "oracleId": "979a5d92-1c67-4fa4-b932-638b0cc1adcd",
     "name": "Commander's Insignia",
     "handledLines": [
@@ -27407,6 +27432,31 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-reins-of-power",
+    "name": "Reins of Power",
+    "handledLines": [
+      "unrecognized rules text: \"Untap all creatures you control and all creatures target opponent controls. You and that opponent each gain control of all creatures the other controls until end of turn. Those creatures gain haste until end of turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Untap both players’ creatures, then gain control of each other’s creatures with haste until end of turn",
+        "effects": [
+          {
+            "op": "swapCreatureControlUntilEot",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "player"
+          }
+        ]
+      }
     }
   },
   {

@@ -453,6 +453,7 @@ const effectExpressions = {
   mayPayEnergyThenReflexive: { min: finite },
   putCountersOnSourceThenReflexive: { counter: text, count: finite },
   gainControlTarget: {},
+  swapCreatureControlUntilEot: {},
   putCounters: { count: numericExpression },
   putCountersEach: { selector: selector, count: numericExpression },
   putCountersOnCreaturesTargetPlayerControls: { count: numericExpression },

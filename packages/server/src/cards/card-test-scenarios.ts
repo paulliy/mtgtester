@@ -13017,6 +13017,91 @@ function mobRuleScenario(gameId: GameId, mode: 'large' | 'small' | 'cleanup'): C
   });
 }
 
+/**
+ * Coverage PR08.17: Reins of Power. The two scenarios differ ONLY in whether the caster starts
+ * with a creature of their own, because "all creatures you control" may legitimately be an empty
+ * set — neither group is all-or-nothing.
+ *
+ * Both arrange the same tapped creatures and the same four Islands, cast the printed {2}{U}{U}
+ * through the production cast/priority stack, and target P2. Only the caster's own creature and
+ * the target opponent's creature swap; the third player's creature never enters either set, so it
+ * stays tapped under its own controller in both.
+ */
+const LAB_TRADER = card({
+  oracleId: 'lab-pr08-trader',
+  name: 'Lab Trader',
+  typeLine: 'Creature — Trader',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+/** Deliberately not named "Lab Servo": the uninvolved third player's creature must be nameable. */
+const LAB_UNINVOLVED_SERVO = card({
+  oracleId: 'lab-pr08-uninvolved-servo',
+  name: 'Lab Uninvolved Servo',
+  typeLine: 'Artifact Creature — Servo',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function reinsOfPowerScenario(
+  gameId: GameId,
+  mode: 'swap-and-cleanup' | 'empty-caster',
+): CardTestScenario {
+  const reins = pinnedFrom(COVERAGE_PR08, 'Reins of Power');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const cleanup = mode === 'swap-and-cleanup';
+  const islands = Array.from({ length: 4 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `reins-of-power-viewer-${mode}`,
+    title: `Reins of Power: ${cleanup ? 'both groups swap, then control returns at cleanup' : 'only the opponent group exists when the caster has no creatures'}`,
+    instructions: [
+      'Cast Reins of Power with your four Islands, target P2, and let it resolve.',
+      cleanup
+        ? 'Your Lab Trader (2/2) and P2’s Lab Ox (4/4) change controllers untapped with haste; P3’s Lab Uninvolved Servo is untouched.'
+        : 'You control no creatures, so only P2’s Lab Ox moves: it becomes yours, untapped and with haste. P3’s Lab Uninvolved Servo is untouched.',
+      cleanup
+        ? 'Pass to the cleanup step: both creatures return to their original controllers, lose haste, and stay untapped.'
+        : 'P3’s Lab Uninvolved Servo stays tapped under P3 because neither player’s group ever included it.',
+    ],
+    expectedOutcome: cleanup
+      ? 'After cleanup P1 controls Lab Trader and P2 controls Lab Ox again, none of them has haste, all stay untapped, and P3’s Lab Uninvolved Servo never moved.'
+      : 'P1 controls the untapped, hasty Lab Ox; P3’s Lab Uninvolved Servo remains tapped under P3.',
+    oracleSha256: reins.sha256,
+    clauseIds: [
+      'reins-untap-both-groups',
+      'reins-swap-until-end-of-turn',
+      'reins-haste-the-affected-creatures',
+    ],
+    decks: {
+      P1: [reins.card, witness, ...islands, ...(cleanup ? [LAB_TRADER] : [])],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: [LAB_UNINVOLVED_SERVO, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Reins of Power', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(cleanup ? [{ playerId: 'P1' as const, cardNames: ['Lab Trader'], tapped: true }] : []),
+        { playerId: 'P2', cardNames: ['Lab Ox'], tapped: true },
+        { playerId: 'P3', cardNames: ['Lab Uninvolved Servo'], tapped: true },
+      ],
+      ...(cleanup ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
   const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
@@ -14756,6 +14841,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
   'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
   'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),
+  'reins-of-power-viewer-swap-and-cleanup': (gameId) =>
+    reinsOfPowerScenario(gameId, 'swap-and-cleanup'),
+  'reins-of-power-viewer-empty-caster': (gameId) => reinsOfPowerScenario(gameId, 'empty-caster'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,

@@ -177,6 +177,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   mayPayEnergyThenReflexive: {},
   putCountersOnSourceThenReflexive: {},
   gainControlTarget: { target: permanent },
+  swapCreatureControlUntilEot: { target: player },
   putCounters: { target: permanent },
   putCountersEach: {},
   putCountersOnCreaturesTargetPlayerControls: { target: player },

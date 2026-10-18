@@ -2346,6 +2346,57 @@ export function* executeAbility(
         }
         break;
       }
+      case 'swapCreatureControlUntilEot': {
+        const opponentId = ref(effect.target);
+        const opponent = ctx.state.players.find(
+          (player) => player.id === opponentId && !player.hasLost,
+        );
+        if (opponent === undefined) break;
+        const creatures = () =>
+          ctx.state.battlefield.filter(
+            (perm) =>
+              (perm.controllerId === controller.id || perm.controllerId === opponent.id) &&
+              computeCharacteristics(ctx, perm).types.includes('Creature'),
+          );
+        const toUntap = creatures();
+        for (const perm of toUntap) perm.tapped = false;
+        emit(ctx, 'untap', {
+          source: source.name,
+          objects: toUntap.map((perm) => ({
+            id: perm.id,
+            name: perm.faceDown ? 'Face-down permanent' : perm.name,
+          })),
+        });
+        // The control instruction follows the untap instruction. Both sets must be read now,
+        // before either grant changes controller-dependent creature characteristics (CR 611.2c).
+        const affected = creatures();
+        const grants = affected.map((perm) => ({
+          perm,
+          recipient: perm.controllerId === controller.id ? opponent.id : controller.id,
+        }));
+        for (const { perm, recipient } of grants) {
+          changeController(ctx, perm, recipient, { kind: 'untilEndOfTurn' });
+          emit(ctx, 'gainControl', {
+            source: source.name,
+            target: perm.name,
+            newController: recipient,
+          });
+        }
+        for (const perm of affected) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${perm.name} gains haste until end of turn`,
+            targetCardIds: [perm.cardId],
+            targetObjectIds: [perm.id],
+            kind: 'grantKeyword',
+            keyword: 'haste',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+          emit(ctx, 'grantKeyword', { source: source.name, target: perm.name, keyword: 'haste' });
+        }
+        break;
+      }
       case 'returnToHandEachChosen': {
         // "Return up to two other target nonland permanents to their owners' hands" (Marang
         // River Regent) — the `returnToHand` analog of `dealDamageEachChosen` above: every

@@ -13010,6 +13010,73 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "96381388-1e82-411c-8290-1f3e909d3b5f": {
+      "name": "Reins of Power",
+      "oracleSha256": "d83ab9041af563dfad9ec6940c985c7a25de35b0ecfc955793da7577e2c591c2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "reins-untap-both-groups",
+          "oracleText": "Untap all creatures you control and all creatures target opponent controls.",
+          "implementation": [
+            "swapCreatureControlUntilEot: untap the complete initial union before recomputing the creature sets"
+          ],
+          "engineTestIds": [
+            "reins-normal-cast-untaps-swaps-and-grants-haste",
+            "reins-cast-cost-needs-two-blue-and-four-mana",
+            "reins-instant-speed-is-legal-on-an-opponent-turn-and-in-combat",
+            "reins-target-is-an-opponent-player-only",
+            "reins-sole-target-illegal-at-resolution-fizzles-everything",
+            "reins-untap-that-removes-the-creature-type-drops-the-permanent",
+            "reins-untap-that-adds-the-creature-type-includes-the-permanent"
+          ],
+          "viewerScenarioIds": [
+            "reins-of-power-viewer-swap-and-cleanup",
+            "reins-of-power-viewer-empty-caster"
+          ]
+        },
+        {
+          "id": "reins-swap-until-end-of-turn",
+          "oracleText": "You and that opponent each gain control of all creatures the other controls until end of turn.",
+          "implementation": [
+            "swapCreatureControlUntilEot: both post-untap controller groups are frozen before the first timestamped untilEndOfTurn control grant; either group may be empty"
+          ],
+          "engineTestIds": [
+            "reins-normal-cast-untaps-swaps-and-grants-haste",
+            "reins-owner-is-irrelevant-to-group-membership",
+            "reins-both-sets-frozen-before-the-first-control-change",
+            "reins-cleanup-restores-the-underlying-controller-not-the-owner",
+            "reins-a-later-permanent-control-grant-survives-cleanup",
+            "reins-permanents-arriving-before-resolution-join-the-swap",
+            "reins-permanents-arriving-after-resolution-are-unaffected",
+            "reins-control-change-removes-creatures-from-combat"
+          ],
+          "viewerScenarioIds": [
+            "reins-of-power-viewer-swap-and-cleanup",
+            "reins-of-power-viewer-empty-caster"
+          ]
+        },
+        {
+          "id": "reins-haste-the-affected-creatures",
+          "oracleText": "Those creatures gain haste until end of turn.",
+          "implementation": [
+            "swapCreatureControlUntilEot: grant haste until end of turn to the exact frozen post-untap object set"
+          ],
+          "engineTestIds": [
+            "reins-normal-cast-untaps-swaps-and-grants-haste",
+            "reins-both-sets-frozen-before-the-first-control-change",
+            "reins-a-blinked-permanent-does-not-inherit-control-or-haste",
+            "reins-permanents-arriving-after-resolution-are-unaffected",
+            "reins-cleanup-restores-the-underlying-controller-not-the-owner"
+          ],
+          "viewerScenarioIds": [
+            "reins-of-power-viewer-swap-and-cleanup",
+            "reins-of-power-viewer-empty-caster"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

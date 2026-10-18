@@ -3104,19 +3104,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
-    "name": "Reins of Power",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Untap all creatures you control and all creatures target opponent controls. You and that opponent each gain control of all creatures the other controls until end of turn. Those creatures gain haste until end of turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
     "name": "Resurrection Orb",
     "package": "PR05.11",
@@ -4590,6 +4577,22 @@
       "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr08-wishclaw-talisman.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
+    "name": "Reins of Power",
+    "package": "PR08.17",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-reins-of-power.test.ts",
+      "packages/engine/tests/swap-creature-control-contract.test.ts",
+      "packages/server/src/cards/pr08-reins-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-reins-of-power.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

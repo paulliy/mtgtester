@@ -7,8 +7,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
-Cytoplast Manipulator, Humble Defector, Druid of Purification, and Wishclaw Talisman are the first
-six implementation increments. The other 17 cards remain unsupported. The seven reopened quality-audit cards now belong
+Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, and Reins of Power
+are the first seven implementation increments. The other 16 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -171,8 +171,9 @@ Fourteen direct engine tests, five normal-casting tests, three lab replays and t
 scenarios passed. Regression tests failed the previous executor before the corrected implementation
 was restored. Both typechecks, lint, formatting, reviewed snapshots, benchmark pins and web build
 passed. The clean-tree card gate passed 140 suites and 4,261 tests at `87016a33`; generated receipts
-bind 148 engine cases and 13 real-viewer scenarios to that revision. A separate full-suite run is
-still pending. The frozen inventory measured 791/906; the expanded report measured 749/855.
+bind 148 engine cases and 13 real-viewer scenarios to that revision. The separate full-suite run
+passed 435 suites and 6,970 tests, with 36 existing skips in optional bulk-data suites. That validated
+checkpoint was pushed. The frozen inventory measured 791/906; the expanded report measured 749/855.
 
 ## Wishclaw Talisman increment (PR08.05)
 
@@ -195,3 +196,37 @@ local suite are refreshed separately against committed revisions. The frozen inv
 792/906 (697/802 deck cards, 189/200 staples), the expanded report measures 750/855, and the bulk
 non-land inventory contains 6,472 modeled cards. These are inventory counts, not review evidence.
 Gameplay-AI quality remains unevaluated with a live provider; the lab uses scripted legal choices.
+
+The clean-tree six-card gate passed 144 suites and 4,297 tests. The first commit-bound viewer run
+exposed a driver race that passed a new empty-stack priority request before Vue rendered the
+resolved permanent. `cbf4355c` synchronizes passes with authoritative WebSocket request IDs and
+stack state; all 16 viewer scenarios then passed. Generated receipts at that revision bind 184
+engine tests, 16 viewer scenarios, 605 source hashes and retained validated traces.
+
+The optional bulk data was then loaded into the validation checkout. All five additional suites
+passed 39 tests after `1f4bc74b` corrected stale restoration inventories and replaced Druid's obsolete
+containment assertion with a four-chooser behavioral regression. The complete six-card suite,
+including those formerly skipped optional suites, runs separately on the frozen checkout.
+
+## Reins of Power increment (PR08.17)
+
+The instant pays its printed cost and targets one opponent. Its first instruction untaps both
+creature groups. The executor then recomputes creature membership, freezes both groups before any
+control grant, and gives those exact objects temporary control effects and haste. Either group
+may be empty. Cleanup restores the underlying controller rather than the owner, preserves a newer
+permanent grant, removes haste and leaves the creatures untapped. A blinked object inherits neither
+effect; later arrivals are excluded and control changes remove combat participants from combat.
+
+Nineteen card tests, five independent primitive tests and two production-lab replays passed.
+Mutation checks caught reading the set before untapping, recomputing the haste set after changing
+control, and using permanent duration; fixed bytes were restored. All 18 real PR08 viewer scenarios
+passed, including a full swap through cleanup and an empty caster group. The broader engine run
+passed 297 suites and 5,141 tests, with the previously observed async-provider timeout; that suite
+then passed both tests in 10.7 seconds with its original 15-second timeout and assertions unchanged.
+Both typechecks, lint, reviewed snapshots, benchmark pins and the web build passed. Current receipts
+and the complete clean-tree push gates are generated separately against committed revisions.
+
+The frozen inventory measures 793/906 (698/802 deck cards, 189/200 staples); the expanded report
+measures 751/855. The bulk non-land inventory contains 6,473 modeled cards. Implementation review
+and executable primitive eligibility remain separate final completion requirements. Gameplay-AI
+quality has not been evaluated with a live provider.
