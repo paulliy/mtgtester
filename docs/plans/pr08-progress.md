@@ -7,8 +7,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
-Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, and Reins of Power
-are the first seven implementation increments. The other 16 cards remain unsupported. The seven reopened quality-audit cards now belong
+Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
+and Akroan Horse are the first eight implementation increments. The other 15 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -230,3 +230,31 @@ The frozen inventory measures 793/906 (698/802 deck cards, 189/200 staples); the
 measures 751/855. The bulk non-land inventory contains 6,473 modeled cards. Implementation review
 and executable primitive eligibility remain separate final completion requirements. Gameplay-AI
 quality has not been evaluated with a live provider.
+
+## Akroan Horse increment (PR08.20)
+
+The normal four-mana artifact-creature cast retains defender. Its enter trigger asks the original
+ability controller to choose a living opponent without targeting, then grants that player permanent
+control of the exact source object. A blinked incarnation is excluded. The upkeep trigger belongs
+to the Horse's current controller; each living opponent of that ability controller creates a white
+1/1 Soldier. The shared multiplayer token helper applies each creator's ownership and replacements
+and queues entry observations only after the complete simultaneous batch exists.
+
+Twelve card tests, seven independent token contracts and two production-lab tests passed. Reverting
+the registration made the normal cast explicitly unsupported; replacing simultaneous creation with
+sequential creation failed the entry-observer regression. Fixed bytes were restored after each bite.
+The isolated broader engine run passed 298 suites and 5,137 tests; the integrated PR08 run passed
+177 tests across 20 suites. All 20 real PR08 viewer scenarios passed. Both typechecks, lint,
+formatting, reviewed snapshots, benchmark pin refresh and the web build are checked locally.
+Revision-bound receipts are regenerated after the implementation commit.
+
+The frozen inventory measures 794/906 (699/802 deck cards, 189/200 staples); the expanded report
+measures 752/855. The bulk non-land inventory contains 6,474 modeled cards. Implementation review
+and executable primitive eligibility remain separate final completion requirements. Gameplay-AI
+quality has not been evaluated with a live provider.
+
+The seven-card clean-tree gate passed 4,322 tests and failed one expected CLI diagnostic assertion
+after a subprocess returned without its diagnostic text. An unchanged isolated retry failed during
+the setup inventory subprocess before reaching that test. The push gate remains unresolved; no
+timeout or assertion was weakened. The frozen six-card full suite continues separately with bulk
+data enabled.

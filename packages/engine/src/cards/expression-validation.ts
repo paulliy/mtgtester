@@ -532,6 +532,7 @@ const effectExpressions = {
   createTokenForEachOpponent: {},
   createTokenForPlayer: { count: numberValue },
   createTokenForEachPlayerExceptTarget: { count: numberValue },
+  eachOpponentCreatesTokens: { count: numberValue },
   createTokenCopyOf: {
     count: numberValue,
     powerOverride: optional(numericExpression),

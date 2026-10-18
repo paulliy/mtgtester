@@ -8179,6 +8179,71 @@
     }
   },
   {
+    "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
+    "name": "Akroan Horse",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token.\"",
+      "unrecognized rules text: \"When this creature enters, an opponent gains control of it.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "An opponent gains control of Akroan Horse",
+          "effects": [
+            {
+              "op": "gainControlTarget",
+              "recipient": {
+                "chooseOpponent": true
+              },
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Each opponent creates a 1/1 white Soldier creature token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentCreatesTokens",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Soldier",
+                "power": 1,
+                "subtypes": [
+                  "Soldier"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Soldier",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "8d24c12a-a300-4199-b2a9-3d5ead8df617",
     "name": "Reluctant Role Model",
     "handledLines": [
@@ -16928,6 +16993,71 @@
               }
             },
             "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-akroan-horse",
+    "name": "Akroan Horse",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token.\"",
+      "unrecognized rules text: \"When this creature enters, an opponent gains control of it.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "An opponent gains control of Akroan Horse",
+          "effects": [
+            {
+              "op": "gainControlTarget",
+              "recipient": {
+                "chooseOpponent": true
+              },
+              "target": "source"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Each opponent creates a 1/1 white Soldier creature token",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "eachOpponentCreatesTokens",
+              "spec": {
+                "colors": [
+                  "W"
+                ],
+                "name": "Soldier",
+                "power": 1,
+                "subtypes": [
+                  "Soldier"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Soldier",
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
           }
         }
       ]

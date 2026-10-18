@@ -81,20 +81,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
-    "name": "Akroan Horse",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When this creature enters, an opponent gains control of it.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "81c6c4f0-81ad-463c-a42b-60a73e6d70f3",
     "name": "Alexios, Deimos of Kosmos",
     "package": "W6",
@@ -4593,6 +4579,22 @@
       "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr08-reins-of-power.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
+    "name": "Akroan Horse",
+    "package": "PR08.20",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-akroan-horse.test.ts",
+      "packages/engine/tests/multiplayer-token-creation-contract.test.ts",
+      "packages/server/src/cards/pr08-akroan-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-akroan-horse.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

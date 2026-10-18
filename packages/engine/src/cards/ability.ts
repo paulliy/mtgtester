@@ -1121,6 +1121,8 @@ export type Effect =
       opponentsOnly?: true;
     }
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
+  /** Each living opponent creates these tokens under their own control. */
+  | { op: 'eachOpponentCreatesTokens'; spec: TokenSpec; count: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
    *

@@ -992,6 +992,7 @@ const families = {
       createTokenForEachOpponent: true,
       createTokenForPlayer: true,
       createTokenForEachPlayerExceptTarget: true,
+      eachOpponentCreatesTokens: true,
       createTokenCopyOf: true,
       becomeCopyOf: true,
       becomeCopyOfTarget: true,

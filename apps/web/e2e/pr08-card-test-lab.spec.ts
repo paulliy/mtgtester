@@ -9,6 +9,57 @@ test.setTimeout(60_000);
 const exercised = new Set<string>();
 const frontiers = new WeakMap<Page, { requestId: string; stackSize: number }>();
 
+for (const upkeep of [false, true]) {
+  test(`Akroan Horse: ${upkeep ? 'the recipient upkeep gives each opponent a Soldier' : 'cast and choose an opponent to gain control'}`, async ({
+    page,
+  }) => {
+    await runScenario(
+      page,
+      `Akroan Horse: ${upkeep ? 'the recipient upkeep gives each opponent a Soldier' : 'cast and choose an opponent to gain control'}`,
+    );
+    await castPr08Card(page, 'Akroan Horse');
+    const gift = page
+      .locator('.decision-panel .panel-group')
+      .filter({ hasText: 'P2' })
+      .getByRole('button', { name: 'Give control to', exact: true });
+    await passStackUntil(page, gift);
+    await expect(page.getByText(/Target 1 of 1/)).toHaveCount(0);
+    await expect(page.locator('.decision-panel .group-player')).toHaveText(['P2', 'P3', 'P4']);
+    await expect(humanPermanent(page, 'Swamp').locator('.tile')).toHaveClass(/tapped/);
+    await expect(humanPermanent(page, 'Swamp').locator('.stack-count-badge')).toHaveText('×4');
+    for (const seat of ['P2', 'P3', 'P4'])
+      await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
+    await gift.click();
+    const horse = page
+      .locator('.opponent[data-seat="P2"] .object:not(.board-card-leave-active)')
+      .filter({ has: page.getByRole('img', { name: 'Akroan Horse', exact: true }) });
+    await expect(horse).toBeVisible();
+    await expect(humanPermanent(page, 'Akroan Horse')).toHaveCount(0);
+    await expect(horse.locator('.tile')).not.toHaveClass(/tapped/);
+    await expect(horse.locator('.keywords[title*="defender"]')).toHaveCount(1);
+    await expect(page.getByRole('img', { name: 'Soldier', exact: true })).toHaveCount(0);
+    if (upkeep) {
+      const mine = humanPermanent(page, 'Soldier');
+      await passUntil(page, mine);
+      await expect(page.locator('.turn-badge')).toContainText('P2');
+      await expect(mine).toHaveCount(1);
+      await expect(mine.locator('.tile')).not.toHaveClass(/tapped/);
+      for (const seat of ['P3', 'P4']) {
+        const soldier = page
+          .locator(`.opponent[data-seat="${seat}"] .object`)
+          .filter({ has: page.getByRole('img', { name: 'Soldier', exact: true }) });
+        await expect(soldier).toHaveCount(1);
+        await expect(soldier.locator('.tile')).not.toHaveClass(/tapped/);
+      }
+      await expect(
+        page
+          .locator('.opponent[data-seat="P2"] .object')
+          .filter({ has: page.getByRole('img', { name: 'Soldier', exact: true }) }),
+      ).toHaveCount(0);
+    }
+  });
+}
+
 for (const mode of ['cast-search-and-gift', 'empty-library'] as const) {
   test(`Wishclaw Talisman: ${mode === 'cast-search-and-gift' ? 'cast, search, then choose the recipient' : 'empty library still gives control'}`, async ({
     page,

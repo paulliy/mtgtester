@@ -34,6 +34,7 @@ const IMPLEMENTED = new Set<string>([
   'Humble Defector',
   'Druid of Purification',
   'Wishclaw Talisman',
+  'Akroan Horse',
   'Reins of Power',
 ]);
 function canonical(input: unknown): unknown {

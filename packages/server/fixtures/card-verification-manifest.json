@@ -13077,6 +13077,59 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "8d0213d7-9e25-49d2-93fa-1d346cb2e869": {
+      "name": "Akroan Horse",
+      "oracleSha256": "83e907f8af52ee2b8de87ca43905d79928e624e451b4dce7b9ae752f7fb1954f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "akroan-defender",
+          "oracleText": "Defender",
+          "implementation": [
+            "interpreter defender keyword; normal combat declaration excludes an untapped nonsick Horse"
+          ],
+          "engineTestIds": ["akroan-pinned-oracle-and-alias", "akroan-defender-prevents-attacking"],
+          "viewerScenarioIds": [
+            "akroan-horse-viewer-cast-and-gift",
+            "akroan-horse-viewer-recipient-upkeep"
+          ]
+        },
+        {
+          "id": "akroan-enter-opponent-control",
+          "oracleText": "When this creature enters, an opponent gains control of it.",
+          "implementation": [
+            "normal {4} artifact-creature cast, ETB trigger stack, gainControlTarget exact source with resolution-time non-target chooseOpponent recipient, permanent timestamp"
+          ],
+          "engineTestIds": [
+            "akroan-normal-cast-pays-four-then-gifts",
+            "akroan-cast-needs-four-and-sorcery-timing",
+            "akroan-recipient-is-not-a-target",
+            "akroan-departed-etb-source-is-not-replaced",
+            "akroan-gift-masks-an-older-temporary-grant"
+          ],
+          "viewerScenarioIds": [
+            "akroan-horse-viewer-cast-and-gift",
+            "akroan-horse-viewer-recipient-upkeep"
+          ]
+        },
+        {
+          "id": "akroan-current-controller-upkeep",
+          "oracleText": "At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token.",
+          "implementation": [
+            "onUpkeep you captures the current controller; eachOpponentCreatesTokens excludes that ability controller and lost players; simultaneous token batches apply each creator ownership and token replacements"
+          ],
+          "engineTestIds": [
+            "akroan-original-caster-upkeep-does-not-trigger",
+            "akroan-new-controller-upkeep-gives-each-opponent-a-soldier",
+            "akroan-living-opponents-only",
+            "akroan-upkeep-ability-keeps-its-controller",
+            "akroan-upkeep-survives-source-departure"
+          ],
+          "viewerScenarioIds": ["akroan-horse-viewer-recipient-upkeep"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

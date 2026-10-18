@@ -11,6 +11,7 @@ import {
   activated,
   mana,
   onEtb,
+  onUpkeep,
   removeCountersCost,
   spell,
   targetSlots,
@@ -18,6 +19,7 @@ import {
   TAP,
 } from '../templates';
 import { constant } from '../value';
+import { SOLDIER_1_1 } from '../tokens';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -67,6 +69,28 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  defineCard(
+    '8d0213d7-9e25-49d2-93fa-1d346cb2e869',
+    'Akroan Horse',
+    [
+      'unrecognized rules text: "When this creature enters, an opponent gains control of it."',
+      'unrecognized rules text: "At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token."',
+    ],
+    {
+      triggers: [
+        triggered(onEtb(), {
+          effects: [
+            { op: 'gainControlTarget', target: 'source', recipient: { chooseOpponent: true } },
+          ],
+          description: 'An opponent gains control of Akroan Horse',
+        }),
+        triggered(onUpkeep(), {
+          effects: [{ op: 'eachOpponentCreatesTokens', spec: SOLDIER_1_1, count: constant(1) }],
+          description: 'Each opponent creates a 1/1 white Soldier creature token',
+        }),
+      ],
+    },
+  );
   const reinsTargets = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
   defineCard(
     '96381388-1e82-411c-8290-1f3e909d3b5f',

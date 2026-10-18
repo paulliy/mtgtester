@@ -86,6 +86,7 @@ import {
   changeController,
   refreshControlEffects,
   createTokens,
+  createTokensForPlayers,
   makePermanent,
   canAttach,
   moveObject,
@@ -5202,6 +5203,15 @@ export function* executeAbility(
             createTokens(ctx, effect.spec, amountOf(effect.count), player.id);
           }
         }
+        break;
+      }
+      case 'eachOpponentCreatesTokens': {
+        createTokensForPlayers(
+          ctx,
+          effect.spec,
+          amountOf(effect.count),
+          opponentsOf(ctx, controller.id).map((player) => player.id),
+        );
         break;
       }
       case 'createTokenForEachOpponent': {

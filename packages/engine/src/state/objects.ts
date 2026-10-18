@@ -1551,7 +1551,19 @@ export function applyTokenCreationReplacements(
   ctx: GameContext,
   spec: TokenSpec,
   controllerId: PlayerId,
+  deferredEvents?: EnginePermanent[],
 ): void {
+  const createAdditional = (additional: TokenSpec): void => {
+    const token = createToken(
+      ctx,
+      additional,
+      controllerId,
+      false,
+      deferredEvents === undefined,
+      deferredEvents === undefined,
+    );
+    deferredEvents?.push(token);
+  };
   if (spec.types.includes('Creature')) {
     const replacements = ctx.state.battlefield
       .filter((candidate) => candidate.controllerId === controllerId)
@@ -1559,7 +1571,7 @@ export function applyTokenCreationReplacements(
         const def = ctx.defs.get(candidate.oracleId);
         return def?.tokenCreationReplacement === undefined ? [] : [def.tokenCreationReplacement];
       });
-    for (const replacement of replacements) createToken(ctx, replacement, controllerId, false);
+    for (const replacement of replacements) createAdditional(replacement);
   }
   if (
     spec.types.includes('Artifact') &&
@@ -1569,21 +1581,16 @@ export function applyTokenCreationReplacements(
       return def?.ruleStatics.some((rs) => rs.kind === 'artifactTokenCreatesThopter') ?? false;
     })
   ) {
-    createToken(
-      ctx,
-      {
-        name: 'Thopter',
-        typeLine: 'Artifact Creature — Thopter',
-        types: ['Artifact', 'Creature'],
-        subtypes: ['Thopter'],
-        colors: [],
-        power: 1,
-        toughness: 1,
-        keywords: ['flying'],
-      },
-      controllerId,
-      false,
-    );
+    createAdditional({
+      name: 'Thopter',
+      typeLine: 'Artifact Creature — Thopter',
+      types: ['Artifact', 'Creature'],
+      subtypes: ['Thopter'],
+      colors: [],
+      power: 1,
+      toughness: 1,
+      keywords: ['flying'],
+    });
   }
 }
 
@@ -1682,6 +1689,35 @@ export function createTokens(
     );
     applyTokenCreationReplacements(ctx, spec, controllerId);
   }
+  return created;
+}
+
+/** Multiple players create tokens simultaneously (CR 101.4), with ownership per creator. */
+export function createTokensForPlayers(
+  ctx: GameContext,
+  spec: TokenSpec,
+  count: number,
+  creators: readonly PlayerId[],
+): EnginePermanent[] {
+  // Read every creator's multiplier before any token enters. All entries precede any ETB or
+  // token-created observation, including additional tokens from the existing replacements.
+  const plans = [...new Set(creators)]
+    .filter((id) => ctx.state.players.some((player) => player.id === id && !player.hasLost))
+    .map((id) => ({ id, count: count * tokenCreationMultiplierFor(ctx, id) }));
+  const created: EnginePermanent[] = [];
+  for (const plan of plans) {
+    for (let index = 0; index < plan.count; index++)
+      created.push(createToken(ctx, spec, plan.id, false, false, false));
+  }
+  for (const plan of plans) {
+    if (plan.count > 0) applyTokenCreationReplacements(ctx, spec, plan.id, created);
+  }
+  queueTokenCreatedEvent(ctx, created);
+  queueTriggersForEvent(
+    ctx,
+    'enters',
+    created.map((permanent) => ({ permanent })),
+  );
   return created;
 }
 

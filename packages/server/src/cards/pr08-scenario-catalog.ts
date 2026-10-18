@@ -1,5 +1,7 @@
 /** Every PR08 scenario is exercised by pr08-card-test-lab.spec.ts. */
 export const PR08_SCENARIO_IDS: readonly string[] = [
+  'akroan-horse-viewer-cast-and-gift',
+  'akroan-horse-viewer-recipient-upkeep',
   'wishclaw-talisman-viewer-cast-search-and-gift',
   'wishclaw-talisman-viewer-empty-library',
   'wishclaw-talisman-viewer-off-turn',

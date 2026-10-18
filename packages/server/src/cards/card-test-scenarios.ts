@@ -12689,6 +12689,55 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function akroanHorseScenario(
+  gameId: GameId,
+  mode: 'cast-and-gift' | 'recipient-upkeep',
+): CardTestScenario {
+  const horse = pinnedFrom(COVERAGE_PR08, 'Akroan Horse');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const upkeep = mode === 'recipient-upkeep';
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'akroan-horse-viewer-' + mode,
+    title:
+      'Akroan Horse: ' +
+      (upkeep
+        ? 'the recipient upkeep gives each opponent a Soldier'
+        : 'cast and choose an opponent to gain control'),
+    instructions: [
+      'Cast Akroan Horse with four Swamps, then choose P2 without targeting.',
+      ...(upkeep
+        ? ['Pass to P2’s upkeep. P1, P3 and P4 each create a Soldier; P2 does not.']
+        : ['P2 controls the untapped Horse with defender.']),
+    ],
+    expectedOutcome: upkeep
+      ? 'P2 controls Akroan Horse. P1, P3 and P4 each own and control an untapped 1/1 white Soldier.'
+      : 'P2 controls the untapped 0/4 Horse with defender; P1 still owns it.',
+    oracleSha256: horse.sha256,
+    clauseIds: upkeep
+      ? ['akroan-defender', 'akroan-enter-opponent-control', 'akroan-current-controller-upkeep']
+      : ['akroan-defender', 'akroan-enter-opponent-control'],
+    decks: {
+      P1: [horse.card, witness, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Akroan Horse', 'Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((p) => p.name) }],
+      ...(upkeep ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
 function wishclawScenario(
   gameId: GameId,
   mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn',
@@ -14817,6 +14866,9 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  'akroan-horse-viewer-cast-and-gift': (gameId) => akroanHorseScenario(gameId, 'cast-and-gift'),
+  'akroan-horse-viewer-recipient-upkeep': (gameId) =>
+    akroanHorseScenario(gameId, 'recipient-upkeep'),
   ...Object.fromEntries(
     PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
       id,

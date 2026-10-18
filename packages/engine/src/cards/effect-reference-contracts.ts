@@ -248,6 +248,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   createTokenForEachOpponent: {},
   createTokenForPlayer: { target: player },
   createTokenForEachPlayerExceptTarget: { target: player },
+  eachOpponentCreatesTokens: {},
   createTokenCopyOf: { ref: permanent },
   becomeCopyOf: { ref: permanent },
   becomeCopyOfTarget: { target: permanent, ref: permanent },
