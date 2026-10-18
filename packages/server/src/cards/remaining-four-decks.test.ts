@@ -77,7 +77,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
       "Songbirds' Blessing",
-      'Mob Rule',
       'Caged Sun',
       'Mystic Forge',
       'Biotransference',
@@ -88,7 +87,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       // Catalog audit batch 1: retarget authored as copyTargetSpell.
       'Bolt Bend',
       'Deflecting Swat',
-      'Cytoplast Manipulator',
       'Flare of Duplication',
       'Twilight Diviner',
       'Siren Stormtamer',
@@ -112,9 +110,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Chaos Warp',
-      'Humble Defector',
-      'Wishclaw Talisman',
-      'Brash Taunter',
       'Scheming Symmetry',
       'Shadrix Silverquill',
     ]);
