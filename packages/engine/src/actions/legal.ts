@@ -1613,6 +1613,7 @@ export function computePriorityOptions(
         continue;
       }
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      if (activated.timing === 'yourTurn' && !isActive) continue;
       // CR 602.5f — "activate only once each turn", tracked on the permanent.
       if (activated.oncePerTurn === true && perm.activationsThisTurn.includes(index)) continue;
       // CR 702.177: an exhaust ability can be activated only once for this object, ever.
@@ -1798,6 +1799,7 @@ export function computePriorityOptions(
     for (const [index, activated] of def.activatedAbilities.entries()) {
       if (activated.zone !== 'hand') continue;
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      if (activated.timing === 'yourTurn' && !isActive) continue;
       const allows = allowanceFor(ctx, player.id, {
         kind: 'activateAbility',
         sourceOracleId: card.oracleId,
@@ -1872,6 +1874,7 @@ export function computePriorityOptions(
     for (const [index, activated] of activatedAbilities.entries()) {
       if (activated.zone !== 'graveyard') continue;
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
+      if (activated.timing === 'yourTurn' && !isActive) continue;
       const allows = allowanceFor(ctx, player.id, {
         kind: 'activateAbility',
         sourceOracleId: card.oracleId,

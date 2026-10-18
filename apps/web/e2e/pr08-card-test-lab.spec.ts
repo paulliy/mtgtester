@@ -220,3 +220,40 @@ test('Cytoplast Manipulator: steal a countered creature until the source leaves'
   await expect(humanPermanent(page, 'Lab Ox')).toHaveCount(0);
   await expect(source).toHaveCount(0);
 });
+
+test('Humble Defector: draw two and give it to the chosen opponent', async ({ page }) => {
+  await runScenario(page, 'Humble Defector: draw two and give it to the chosen opponent');
+  const source = humanPermanent(page, 'Humble Defector');
+  const before = await page.locator('.human-zone .hand-card:not(.hand-card-leave-active)').count();
+  await expect(source).toHaveClass(/actionable/);
+  await source.click();
+  const ability = page.getByRole('button', { name: /Draw two cards, then target opponent/ });
+  if (await ability.isVisible()) await ability.click();
+  await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
+  await expect(page.locator('.human-zone > header')).not.toHaveClass(/targetable/);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).toHaveClass(/targetable/);
+  await page.locator('.opponent[data-seat="P3"] > header').click();
+  await confirm(page);
+  const given = page
+    .locator('.opponent[data-seat="P3"] .object:not(.board-card-leave-active)')
+    .filter({ has: page.getByRole('img', { name: 'Humble Defector', exact: true }) });
+  await passStackUntil(page, given);
+  await expect(source).toHaveCount(0);
+  await expect(given.locator('.tile')).toHaveClass(/tapped/);
+  await expect(page.locator('.human-zone .hand-card:not(.hand-card-leave-active)')).toHaveCount(
+    before + 2,
+  );
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).toContainText('0 in hand');
+});
+
+test('Humble Defector: cannot activate off your turn', async ({ page }) => {
+  await runScenario(page, 'Humble Defector: cannot activate off your turn');
+  await expect(page.locator('.turn-badge')).toContainText('P2');
+  await expect(handCard(page, 'Lab Priority Witness')).toHaveClass(/actionable/);
+  const source = humanPermanent(page, 'Humble Defector');
+  await expect(source).toBeVisible();
+  await expect(source).not.toHaveClass(/actionable/);
+  await expect(source.locator('.tap-badge')).toHaveCount(0);
+});

@@ -149,8 +149,8 @@ export interface ActivatedAbility {
   ability: Ability;
   /** An activation restriction checked while legal options are generated and applied. */
   condition?: Condition;
-  /** "Activate only as a sorcery" — main phase, empty stack, your turn (CR 602.5d). */
-  timing: 'any' | 'sorcery';
+  /** Sorcery requires main/empty stack/your turn; yourTurn only requires the active player. */
+  timing: 'any' | 'sorcery' | 'yourTurn';
   /**
    * "Activate only once each turn" (CR 602.5f). Tracked per *permanent*, not per card: two
    * copies of Beledros each get their own activation.
@@ -839,7 +839,13 @@ export type Effect =
    * source ObjectId at runtime; a source off the battlefield at that moment gives no effect,
    * CR 611.2b). Omitted, the steal is permanent.
    */
-  | { op: 'gainControlTarget'; target: EffectRef; duration?: GainControlIRDuration }
+  | {
+      op: 'gainControlTarget';
+      target: EffectRef;
+      duration?: GainControlIRDuration;
+      /** Omitted: ability controller. Otherwise an ordinary player target slot. */
+      recipient?: { targetPlayer: number };
+    }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
   | {

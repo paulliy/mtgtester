@@ -7,6 +7,7 @@
 import type { CardDefinition } from '../definition';
 import { allOf, hasCounter, ofType } from '../selector';
 import { activated, mana, spell, targetSlots, TAP } from '../templates';
+import { constant } from '../value';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -56,6 +57,33 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  const humbleTargets = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
+  defineCard(
+    '1582e16d-4825-4cc5-b12c-449c45e4e449',
+    'Humble Defector',
+    [
+      '{T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn.',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          costs: [TAP],
+          timing: 'yourTurn',
+          targets: humbleTargets.targets,
+          effects: [
+            { op: 'draw', count: constant(2) },
+            {
+              op: 'gainControlTarget',
+              target: 'source',
+              recipient: { targetPlayer: humbleTargets.slot.opponent },
+            },
+          ],
+          description:
+            'Draw two cards, then target opponent gains control of Humble Defector (activate only during your turn)',
+        }),
+      ],
+    },
+  );
   const cytoplastTargets = targetSlots({
     counteredCreature: { kind: 'creature', filter: hasCounter('+1/+1') },
   });

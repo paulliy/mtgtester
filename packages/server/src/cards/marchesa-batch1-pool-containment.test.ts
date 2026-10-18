@@ -88,6 +88,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Hateful Eidolon',
       'Hexmark Destroyer',
       'Hour of Reckoning',
+      'Humble Defector',
       'Hunting Wilds',
       'Idol of Oblivion',
       'Illuminor Szeras',

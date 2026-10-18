@@ -2598,13 +2598,46 @@
     "1582e16d-4825-4cc5-b12c-449c45e4e449": {
       "name": "Humble Defector",
       "oracleSha256": "ab20c63164ea397b563967afac0fda59a57eedf602b7e4ecc3845c3cb092a3dc",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "humble-defector-draw-then-transfer",
+          "oracleText": "{T}: Draw two cards. Target opponent gains control of this creature.",
+          "implementation": [
+            "tap cost and ordinary opponent player target",
+            "draw 2 then gainControlTarget exact source with recipient targetPlayer:0; source departure does not suppress the draw"
+          ],
+          "engineTestIds": [
+            "humble-defector-pinned-oracle-supported",
+            "humble-defector-draw-then-transfer",
+            "humble-defector-activation-rejections",
+            "humble-defector-illegal-opponent-fizzles",
+            "humble-defector-source-leaves-still-draws",
+            "humble-defector-blink-no-transfer",
+            "humble-defector-source-phases",
+            "humble-defector-normal-cast-pays-one-generic-one-red-and-resolves",
+            "humble-defector-normal-cast-unavailable-without-red",
+            "humble-defector-normal-cast-rejects-wrong-turn-main-and-combat",
+            "humble-defector-activates-after-ready-cast-and-transfers-to-p3",
+            "humble-defector-pending-ability-retains-original-controller-and-target",
+            "humble-defector-gain-control-target-recipient-preserves-until-eot-and-same-controller"
+          ],
+          "viewerScenarioIds": ["humble-defector-viewer-draw-then-opponent-takes-control"]
+        },
+        {
+          "id": "humble-defector-your-turn-timing",
           "oracleText": "Activate only during your turn.",
-          "implementation": ["explicitly unsupported; timing any"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "ActivatedAbility timing yourTurn checked in battlefield, hand and graveyard menus; no main-phase or empty-stack restriction"
+          ],
+          "engineTestIds": [
+            "humble-defector-your-turn-timing",
+            "humble-defector-new-controller-activates"
+          ],
+          "viewerScenarioIds": [
+            "humble-defector-viewer-draw-then-opponent-takes-control",
+            "humble-defector-viewer-off-turn"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []

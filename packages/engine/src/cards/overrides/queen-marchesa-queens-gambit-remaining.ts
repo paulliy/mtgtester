@@ -243,12 +243,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     { ruleStatics: [{ kind: 'damageDoubledToOpponents' }, { kind: 'damageHalvedToYou' }] },
   );
-  // Catalog audit queen-batch-3: activate-only-during-your-turn is timing any.
-  unsupportedCard(
-    '1582e16d-4825-4cc5-b12c-449c45e4e449',
-    'Humble Defector',
-    'Activate-only-during-your-turn is implemented as timing any.',
-  );
+  // Humble Defector: restored in coverage PR08.03 (see coverage-pr08-humble-defector.ts).
   defineCard(
     'da93264e-4e04-401a-9809-e4e1056cf604',
     'Inkshield',

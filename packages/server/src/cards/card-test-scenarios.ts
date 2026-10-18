@@ -12689,6 +12689,53 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function humbleDefectorScenario(gameId: GameId, offTurn: boolean): CardTestScenario {
+  const humble = pinnedFrom(COVERAGE_PR08, 'Humble Defector');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  return pr01Scenario(gameId, {
+    id: offTurn
+      ? 'humble-defector-viewer-off-turn'
+      : 'humble-defector-viewer-draw-then-opponent-takes-control',
+    title: offTurn
+      ? 'Humble Defector: cannot activate off your turn'
+      : 'Humble Defector: draw two and give it to the chosen opponent',
+    instructions: offTurn
+      ? [
+          "It is P2's turn. You have priority and can cast Lab Priority Witness, an instant.",
+          'Humble Defector is untapped, but its ability is unavailable because it is not your turn.',
+        ]
+      : [
+          'Activate Humble Defector, pay the tap cost, and target P3.',
+          'Resolve the ability: you draw two cards, then P3 gains control of the same tapped creature.',
+        ],
+    expectedOutcome: offTurn
+      ? 'The instant is available, but Humble Defector has no legal activation.'
+      : 'Your hand grows by two and P3 controls Humble Defector, still tapped. No opponent draws.',
+    oracleSha256: humble.sha256,
+    clauseIds: offTurn
+      ? ['humble-defector-your-turn-timing']
+      : ['humble-defector-draw-then-transfer', 'humble-defector-your-turn-timing'],
+    decks: {
+      P1: [humble.card, witness, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: offTurn ? 'P2' : 'P1',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Humble Defector'] }],
+    },
+  });
+}
+
 function cytoplastScenario(
   gameId: GameId,
   mode: 'graft-yes' | 'graft-no' | 'control-duration',
@@ -14538,6 +14585,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
       (gameId: GameId) => pr08CutADealScenario(id, gameId),
     ]),
   ),
+  'humble-defector-viewer-draw-then-opponent-takes-control': (gameId) =>
+    humbleDefectorScenario(gameId, false),
+  'humble-defector-viewer-off-turn': (gameId) => humbleDefectorScenario(gameId, true),
   'cytoplast-manipulator-viewer-graft-yes': (gameId) => cytoplastScenario(gameId, 'graft-yes'),
   'cytoplast-manipulator-viewer-graft-no': (gameId) => cytoplastScenario(gameId, 'graft-no'),
   'cytoplast-manipulator-viewer-control-duration': (gameId) =>

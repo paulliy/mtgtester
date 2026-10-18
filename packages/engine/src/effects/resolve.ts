@@ -2745,13 +2745,22 @@ export function* executeAbility(
         const perm = t === null ? undefined : findPermanent(ctx, t);
         const duration = resolveControlChangeDuration(ctx, source, effect.duration);
         if (perm === undefined || duration === null) break;
-        const change = perm.controllerId !== source.controllerId;
-        changeController(ctx, perm, source.controllerId, duration);
+        let newController = source.controllerId;
+        if (effect.recipient?.targetPlayer !== undefined) {
+          const recipientId = ref(effect.recipient.targetPlayer);
+          const recipient = ctx.state.players.find(
+            (player) => player.id === recipientId && !player.hasLost,
+          );
+          if (recipient === undefined) break;
+          newController = recipient.id;
+        }
+        const change = perm.controllerId !== newController;
+        changeController(ctx, perm, newController, duration);
         if (change)
           emit(ctx, 'gainControl', {
             source: source.name,
             target: perm.name,
-            newController: source.controllerId,
+            newController,
           });
         break;
       }

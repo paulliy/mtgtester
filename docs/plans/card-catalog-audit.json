@@ -6892,6 +6892,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
       "restoredIn": "coverage-pr08",
       "note": "The fail-closed registration is replaced by coverage-pr08.ts. Existing Graft replacement and optional transfer are retained. Control lasts while the exact source object remains on the battlefield, including source departure and phasing; losing the target counter after resolution does not end it. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "1582e16d-4825-4cc5-b12c-449c45e4e449",
+      "name": "Humble Defector",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The activated ability has real your-turn timing, draws before transferring its exact source to a targeted opponent, and fizzles wholly if its sole target is illegal. Source departure and blink do not suppress the draw or transfer another incarnation. Historical audit rows remain as history."
     }
   ]
 }

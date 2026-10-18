@@ -7,7 +7,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
-and Cytoplast Manipulator are the first three implementation increments; the other 20 cards remain unsupported. The seven reopened quality-audit cards now belong
+and Cytoplast Manipulator were the first three implementation increments; Humble Defector is the
+fourth. The other 19 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -136,3 +137,25 @@ The frozen population now measures 789/906 (694/802 deck cards, 189/200 staples)
 default deck report measures 747/855. Gameplay-AI quality remains unevaluated with a live
 provider. Implementation review labels and primitive eligibility are separate final completion
 requirements; current declarations remain `implemented-unreviewed` until that review is complete.
+
+## Humble Defector increment (PR08.03)
+
+The activated timing now distinguishes "during your turn" from sorcery timing in battlefield,
+hand, and graveyard menus. The new control recipient names an ordinary player target slot,
+validated for its domain, count, and mode ownership. A non-string timing cannot pass through
+string coercion. The ability pays its tap cost, draws two for its original controller, then
+transfers its exact source to the targeted opponent. An illegal sole target fizzles the whole
+ability; source departure, blink, or phasing still permits the draw without transferring a
+different incarnation. A permanent transfer to the already-current recipient masks older
+temporary effects.
+
+All 20 card engine tests, 20 independent recipient/timing contracts, and two production-lab
+replays passed. New regressions fail the prior engine for off-turn timing and opponent control
+transfer; four additional regressions failed the draft's coercion, count, or field-owner validation.
+The integrated run passed 451 tests across 27 suites. All ten real PR08 viewer scenarios
+passed, including the off-turn case while the human holds priority with a legal instant.
+Both typechecks, lint, formatting, reviewed snapshots, benchmark pins, and the web build passed.
+The clean-tree full suite/card gate is rerun separately before the next implementation push.
+
+The frozen population measures 790/906 (695/802 deck cards, 189/200 staples); the expanded default
+deck report measures 748/855. Gameplay-AI quality has not been evaluated with a live provider.

@@ -78,7 +78,6 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
   'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
   'Scheming Symmetry':
     'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
@@ -121,6 +120,7 @@ describe('Marchesa catalog audit containment', () => {
     // PR08 normal-cast, cleanup and frozen-set tests replace the containment requirement.
     'Mob Rule',
     'Cytoplast Manipulator',
+    'Humble Defector',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',

@@ -511,6 +511,50 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   if (typeof record['op'] === 'string') {
     const op = record['op'] as Effect['op'];
     validateEffectExpressions(record as unknown as Effect, path, issues);
+    if (Object.hasOwn(record, 'recipient') && op !== 'gainControlTarget')
+      issues.push({
+        path: `${path}.recipient`,
+        message: 'recipient is implemented only for gainControlTarget',
+      });
+    if (op === 'gainControlTarget') {
+      const recipient = record['recipient'];
+      if (recipient !== undefined) {
+        if (recipient === null || typeof recipient !== 'object' || Array.isArray(recipient)) {
+          issues.push({
+            path: `${path}.recipient`,
+            message: 'recipient must be { targetPlayer: number }',
+          });
+        } else {
+          const r = recipient as Record<string, unknown>;
+          if (!Object.prototype.hasOwnProperty.call(r, 'targetPlayer')) {
+            issues.push({ path: `${path}.recipient`, message: 'recipient must name targetPlayer' });
+          } else {
+            const slot = r['targetPlayer'];
+            if (typeof slot !== 'number' || !Number.isSafeInteger(slot) || slot < 0) {
+              issues.push({
+                path: `${path}.recipient.targetPlayer`,
+                message: 'recipient targetPlayer must be a nonnegative integer slot',
+              });
+            } else
+              checkReference(
+                slot,
+                `${path}.recipient.targetPlayer`,
+                { domains: ['player'], selection: 'ordinary' },
+                owningScope,
+                issues,
+              );
+          }
+          for (const key of Object.keys(r)) {
+            if (key !== 'targetPlayer') {
+              issues.push({
+                path: `${path}.recipient`,
+                message: 'recipient only supports targetPlayer',
+              });
+            }
+          }
+        }
+      }
+    }
     if (op === 'noOp')
       issues.push({
         path,
@@ -844,6 +888,18 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             path: `${path}.${key}[${index}].ability`,
             message: 'activated entry requires an activated ability',
           });
+        if (key === 'activatedAbilities' && ability !== null && typeof ability === 'object') {
+          const timing = (ability as { timing?: unknown }).timing;
+          if (
+            timing !== undefined &&
+            (typeof timing !== 'string' || !['any', 'sorcery', 'yourTurn'].includes(timing))
+          ) {
+            issues.push({
+              path: `${path}.${key}[${index}].timing`,
+              message: 'activated timing must be any, sorcery, or yourTurn',
+            });
+          }
+        }
         if (key === 'manaAbilities' && ability !== null && typeof ability === 'object')
           validateManaRiders(ability.onActivate, `${path}.${key}[${index}].onActivate`, issues);
       }

@@ -54,6 +54,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'cytoplast-manipulator-viewer-graft-yes',
       'cytoplast-manipulator-viewer-graft-no',
       'cytoplast-manipulator-viewer-control-duration',
+      'humble-defector-viewer-draw-then-opponent-takes-control',
+      'humble-defector-viewer-off-turn',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

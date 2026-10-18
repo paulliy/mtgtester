@@ -8,4 +8,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'cytoplast-manipulator-viewer-graft-yes',
   'cytoplast-manipulator-viewer-graft-no',
   'cytoplast-manipulator-viewer-control-duration',
+  'humble-defector-viewer-draw-then-opponent-takes-control',
+  'humble-defector-viewer-off-turn',
 ];

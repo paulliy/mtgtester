@@ -272,6 +272,7 @@ const shapes = {
     sacrificeAt: leaf,
     requirements: { array: { object: { kind: leaf, player: leaf } } },
     duration: leaf,
+    recipient: { object: { targetPlayer: leaf } },
     eachOpponent: leaf,
     goadedForRestOfGame: leaf,
     untilEot: leaf,
