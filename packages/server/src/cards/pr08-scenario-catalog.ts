@@ -27,4 +27,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'reins-of-power-viewer-empty-caster',
   'alicia-masters-viewer-combat-treasure-and-owner-control',
   'alicia-masters-viewer-no-noncreature-spell',
+  'benevolent-offering-viewer-different-opponents',
+  'benevolent-offering-viewer-same-opponent',
 ];

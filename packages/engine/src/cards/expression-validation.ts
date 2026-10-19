@@ -534,6 +534,8 @@ const effectExpressions = {
   createTokenForPlayer: { count: numberValue },
   createTokenForEachPlayerExceptTarget: { count: numberValue },
   eachOpponentCreatesTokens: { count: numberValue },
+  shareTokensWithChosenOpponent: { count: numberValue },
+  shareCreatureLifeWithChosenOpponent: { amount: numberValue },
   createTokenCopyOf: {
     count: numberValue,
     powerOverride: optional(numericExpression),

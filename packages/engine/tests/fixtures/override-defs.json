@@ -3950,6 +3950,55 @@
     }
   },
   {
+    "oracleId": "3db8466c-864f-48ba-b617-f2c863dfdcbd",
+    "name": "Benevolent Offering",
+    "handledLines": [
+      "unrecognized rules text: \"Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying.\"",
+      "unrecognized rules text: \"Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose an opponent to create three Spirits each, then choose an opponent to gain life for your own creatures",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 3
+            },
+            "op": "shareTokensWithChosenOpponent",
+            "spec": {
+              "colors": [
+                "W"
+              ],
+              "keywords": [
+                "flying"
+              ],
+              "name": "Spirit",
+              "power": 1,
+              "subtypes": [
+                "Spirit"
+              ],
+              "toughness": 1,
+              "typeLine": "Creature — Spirit",
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "shareCreatureLifeWithChosenOpponent"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "3db9bf7b-da4e-428f-aa5d-a0cd1afeb16c",
     "name": "Backlash",
     "handledLines": [
@@ -18195,6 +18244,55 @@
             "kind": "cardInGraveyard"
           }
         ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-benevolent-offering",
+    "name": "Benevolent Offering",
+    "handledLines": [
+      "unrecognized rules text: \"Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying.\"",
+      "unrecognized rules text: \"Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose an opponent to create three Spirits each, then choose an opponent to gain life for your own creatures",
+        "effects": [
+          {
+            "count": {
+              "kind": "const",
+              "n": 3
+            },
+            "op": "shareTokensWithChosenOpponent",
+            "spec": {
+              "colors": [
+                "W"
+              ],
+              "keywords": [
+                "flying"
+              ],
+              "name": "Spirit",
+              "power": 1,
+              "subtypes": [
+                "Spirit"
+              ],
+              "toughness": 1,
+              "typeLine": "Creature — Spirit",
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          {
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "op": "shareCreatureLifeWithChosenOpponent"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
       }
     }
   },

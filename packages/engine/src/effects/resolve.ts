@@ -575,10 +575,22 @@ function* dealDamageToObject(
 }
 
 export function gainLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
-  if (amount <= 0 || playerLifeLocked(ctx, player.id)) return;
-  player.life += amount;
-  emit(ctx, 'lifeGain', { player: player.id, amount, life: player.life });
-  queuePlayerTriggersForEvent(ctx, 'gainsLife', player.id, amount);
+  gainLifeForPlayers(ctx, [{ player, amount }]);
+}
+
+/** Simultaneous gains update every life total before any trigger observes the event. */
+function gainLifeForPlayers(
+  ctx: GameContext,
+  grants: readonly { player: EnginePlayerState; amount: number }[],
+): void {
+  const gains = grants.filter(
+    ({ player, amount }) => amount > 0 && !playerLifeLocked(ctx, player.id),
+  );
+  for (const { player, amount } of gains) player.life += amount;
+  for (const { player, amount } of gains) {
+    emit(ctx, 'lifeGain', { player: player.id, amount, life: player.life });
+    queuePlayerTriggersForEvent(ctx, 'gainsLife', player.id, amount);
+  }
 }
 
 export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
@@ -1123,6 +1135,33 @@ function affectedBy(
 /** "Grizzly Bears, Llanowar Elves get +3/+3 until end of turn" — the locked-in set, by name. */
 function describeMassEffect(affected: EnginePermanent[], clause: string): string {
   return `${affected.map((p) => p.name).join(', ')} ${clause} until end of turn`;
+}
+
+/** A public resolution choice, independent of player targeting restrictions. */
+function* chooseOpponentForSharedEffect(
+  ctx: GameContext,
+  source: EffectSource,
+  chooserId: PlayerId,
+  purpose: string,
+): GameGen<PlayerId | null> {
+  const eligible = opponentsOf(ctx, chooserId);
+  if (eligible.length === 0) return null;
+  const outcome = yield {
+    decisionType: 'general',
+    player: chooserId,
+    prompt: `${source.name}: choose an opponent ${purpose}`,
+    options: eligible.map((player) =>
+      playerOption(player.id, player.id, {
+        type: 'choosePlayer',
+        description: `${player.id} ${purpose}`,
+        verb: 'Choose',
+      }),
+    ),
+  };
+  const chosen = eligible[outcome.index];
+  if (chosen === undefined) throw new Error('engine bug: invalid mandatory opponent choice');
+  emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id }, chooserId);
+  return chosen.id;
 }
 
 /**
@@ -5249,6 +5288,45 @@ export function* executeAbility(
           amountOf(effect.count),
           opponentsOf(ctx, controller.id).map((player) => player.id),
         );
+        break;
+      }
+      case 'shareTokensWithChosenOpponent': {
+        const chosen = yield* chooseOpponentForSharedEffect(
+          ctx,
+          source,
+          controller.id,
+          'to create tokens with you',
+        );
+        createTokensForPlayers(ctx, effect.spec, amountOf(effect.count), [
+          controller.id,
+          ...(chosen === null ? [] : [chosen]),
+        ]);
+        break;
+      }
+      case 'shareCreatureLifeWithChosenOpponent': {
+        const chosen = yield* chooseOpponentForSharedEffect(
+          ctx,
+          source,
+          controller.id,
+          'to gain life for their creatures',
+        );
+        const recipients = new Set([controller.id, ...(chosen === null ? [] : [chosen])]);
+        const amount = amountOf(effect.amount);
+        // Determine both amounts before gaining life: a life-dependent type effect must not
+        // change the other player's creature count partway through this simultaneous event.
+        const grants = playersInApnapOrder(ctx)
+          .filter((player) => !player.hasLost && recipients.has(player.id))
+          .map((player) => ({
+            player,
+            amount:
+              amount *
+              ctx.state.battlefield.filter(
+                (permanent) =>
+                  permanent.controllerId === player.id &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              ).length,
+          }));
+        gainLifeForPlayers(ctx, grants);
         break;
       }
       case 'createTokenForEachOpponent': {

@@ -249,6 +249,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   createTokenForPlayer: { target: player },
   createTokenForEachPlayerExceptTarget: { target: player },
   eachOpponentCreatesTokens: {},
+  shareTokensWithChosenOpponent: {},
+  shareCreatureLifeWithChosenOpponent: {},
   createTokenCopyOf: { ref: permanent },
   becomeCopyOf: { ref: permanent },
   becomeCopyOfTarget: { target: permanent, ref: permanent },

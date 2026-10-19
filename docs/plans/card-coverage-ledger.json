@@ -295,16 +295,18 @@
   {
     "oracleId": "3db8466c-864f-48ba-b617-f2c863dfdcbd",
     "name": "Benevolent Offering",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying.\"",
-      "unrecognized rules text: \"Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control.\""
+    "package": "PR08.22",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-benevolent-offering.test.ts",
+      "packages/engine/tests/shared-opponent-contract.test.ts",
+      "packages/server/src/cards/pr08-benevolent-offering-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-benevolent-offering.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",

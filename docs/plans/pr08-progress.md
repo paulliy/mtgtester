@@ -8,8 +8,9 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
-Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, and Kazuul, Tyrant of the Cliffs
-are the first eleven implementation increments. The other 12 cards remain unsupported. The seven reopened quality-audit cards now belong
+Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, Kazuul, Tyrant of the Cliffs,
+and Benevolent Offering are the first twelve implementation increments. The other 11 cards
+remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -344,3 +345,23 @@ The frozen inventory measures 797/906 (702/802 deck cards, 189/200 staples); the
 measures 755/855. The bulk non-land inventory contains 6,477 modeled cards. Implementation review
 eligibility remains a final completion requirement. Gameplay-AI quality has not been evaluated
 with a live provider; the deterministic lab scripts provide correctness observations only.
+
+## Benevolent Offering increment (PR08.22)
+
+The printed instant pays four mana including white. Its controller chooses a living opponent
+on resolution without targeting, then both creators simultaneously make three catalog 1/1
+white flying Spirits using their own token replacements and ownership. A fresh second choice
+may name the same opponent. Both creature counts are read after the tokens exist and before
+either life gain; every life total updates before a life-gain trigger observes the event.
+
+Ten card tests, seven independent shared-opponent contracts and three production-lab replays
+passed. The mutation checks rejected the previous registration, sequential token creation,
+sequential life observations and a recomputed creature count, restoring fixed bytes each time.
+The integrated run passed 444 tests. All 29 real PR08 viewer scenarios passed, including both
+independent-opponent choices, non-target menus, token counts and ownership, and each recipient's
+own life total. Both typechecks, lint, formatting, reviewed registry snapshots and refreshed
+benchmark pins passed. Current-revision receipts are generated after committing.
+
+The frozen inventory measures 798/906 (703/802 deck cards, 189/200 staples); the expanded report
+measures 756/855. The bulk non-land inventory contains 6,478 modeled cards. Implementation review
+eligibility remains separate, and no live gameplay-AI quality evaluation is claimed.

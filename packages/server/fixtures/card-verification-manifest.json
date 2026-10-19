@@ -13269,6 +13269,54 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3db8466c-864f-48ba-b617-f2c863dfdcbd": {
+      "name": "Benevolent Offering",
+      "oracleSha256": "4da93215102bbd43f1bc01e0ded2313ab4923995859e87e016e2a5481e09739a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "benevolent-offering-spirit-sharing",
+          "oracleText": "Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying.",
+          "implementation": [
+            "normal {3}{W} instant cast; original ability controller chooses a living opponent without targeting; shareTokensWithChosenOpponent creates simultaneous batches for both creators using catalog white flying Spirits and each creator ownership/replacements"
+          ],
+          "engineTestIds": [
+            "offering-pinned-oracle-and-alias",
+            "offering-normal-cast-independent-opponents",
+            "offering-same-opponent-allowed",
+            "offering-tokens-precede-life-choice",
+            "offering-choices-do-not-target",
+            "offering-lost-opponent-excluded",
+            "offering-instant-on-opponent-turn",
+            "offering-needs-white-and-four-total",
+            "offering-recipient-token-replacement"
+          ],
+          "viewerScenarioIds": [
+            "benevolent-offering-viewer-different-opponents",
+            "benevolent-offering-viewer-same-opponent"
+          ]
+        },
+        {
+          "id": "benevolent-offering-creature-life-sharing",
+          "oracleText": "Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control.",
+          "implementation": [
+            "a second independent living-opponent choice may repeat the first; shareCreatureLifeWithChosenOpponent freezes each current creature count after token creation and simultaneously applies both life gains before trigger observations; each amount uses its own controller, with noncreatures excluded"
+          ],
+          "engineTestIds": [
+            "offering-normal-cast-independent-opponents",
+            "offering-same-opponent-allowed",
+            "offering-tokens-precede-life-choice",
+            "offering-creatures-count-by-controller",
+            "offering-recipient-token-replacement"
+          ],
+          "viewerScenarioIds": [
+            "benevolent-offering-viewer-different-opponents",
+            "benevolent-offering-viewer-same-opponent"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

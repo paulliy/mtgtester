@@ -1124,6 +1124,10 @@ export type Effect =
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
   /** Each living opponent creates these tokens under their own control. */
   | { op: 'eachOpponentCreatesTokens'; spec: TokenSpec; count: Value }
+  /** Resolution-time non-target opponent choice, followed by both players creating tokens. */
+  | { op: 'shareTokensWithChosenOpponent'; spec: TokenSpec; count: Value }
+  /** A fresh opponent choice; both players gain life based on their own current creatures. */
+  | { op: 'shareCreatureLifeWithChosenOpponent'; amount: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
    *

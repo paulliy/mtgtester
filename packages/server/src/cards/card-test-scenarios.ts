@@ -13473,6 +13473,128 @@ function aliciaMastersScenario(
   });
 }
 
+/**
+ * Coverage PR08.22: Benevolent Offering. Two prepared states of ONE board, so the only difference
+ * the runs are allowed to have is the second opponent choice the rules explicitly allow to repeat.
+ *
+ * The board is arranged so both printed sentences are arithmetic rather than prose. P1 holds one
+ * creature, P2 holds one, P3 holds two, and P4 holds a NONCREATURE artifact: "for each creature you
+ * control" and "for each creature they control" therefore read four different numbers over the
+ * course of one resolution — 4, 4, 2 and 0 — and an artifact owner who never gains anything proves
+ * the count is over creatures, not permanents.
+ *
+ * Every fixture creature is a printed 0/3 with the printed `Defender` keyword line, so the generic
+ * interpreter models each of them completely. That also keeps the run out of combat entirely: the
+ * scenarios never advance past the precombat priority window the spell resolves in.
+ */
+const LAB_OFFERING_SENTINEL = card({
+  oracleId: 'lab-pr08-offering-sentinel',
+  name: 'Lab Offering Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_WALL = card({
+  oracleId: 'lab-pr08-offering-wall',
+  name: 'Lab Offering Wall',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_GOLEM = card({
+  oracleId: 'lab-pr08-offering-golem',
+  name: 'Lab Offering Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_RELIC = card({
+  oracleId: 'lab-pr08-offering-relic',
+  name: 'Lab Silent Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+
+function benevolentOfferingScenario(
+  gameId: GameId,
+  mode: 'different-opponents' | 'same-opponent',
+): CardTestScenario {
+  const offering = pinnedFrom(COVERAGE_PR08, 'Benevolent Offering');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder: a blank spell
+   * would have to be force-declared `modeled: true` with nothing to resolve, which is the fake
+   * support docs/guides/card-modeling-and-testing.md forbids. It is never cast. It stays in hand,
+   * and it is castable, so the board still offers P1 a real action after the spell resolves — which
+   * is what makes "priority is still open, nothing else has to happen" an observation rather than
+   * an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS, PLAINS];
+  const sameOpponent = mode === 'same-opponent';
+  return pr01Scenario(gameId, {
+    id: `benevolent-offering-viewer-${mode}`,
+    title: sameOpponent
+      ? 'Benevolent Offering: choose the same opponent twice, for the Spirits and for the life'
+      : 'Benevolent Offering: choose P2 for the Spirits and P3 for the life',
+    instructions: [
+      'Cast Benevolent Offering with your four Plains and let it resolve. It asks twice, and only you are ever asked.',
+      sameOpponent
+        ? 'Choose P2 both times: the second question is fresh, so the same opponent may answer it again.'
+        : 'Choose P2 for the Spirits, then choose P3 for the life. The two instructions are independent.',
+      'The second question arrives only after all six Spirits already exist, and each creature is then counted at 2 life to its own controller.',
+      'Stop there: the run ends on the precombat priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: sameOpponent
+      ? 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you and P2 each gain 8 life — 2 for each of the four creatures you control, and 2 for each of P2’s four. P3 and P4 are untouched at 40.'
+      : 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you gain 8 life (2 for each of your four creatures) while P3 gains 4 (2 for each of its two). P2 and P4 stay at 40.',
+    oracleSha256: offering.sha256,
+    clauseIds: ['benevolent-offering-spirit-sharing', 'benevolent-offering-creature-life-sharing'],
+    decks: {
+      P1: [offering.card, witness, ...plains, LAB_OFFERING_SENTINEL, ...PR01_FILLER],
+      P2: [LAB_OFFERING_WALL, ...PR01_FILLER],
+      P3: [LAB_OFFERING_GOLEM, LAB_OFFERING_GOLEM, ...PR01_FILLER],
+      P4: [LAB_OFFERING_RELIC, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so every printed "+2 per creature" is a scenario-owned number and never a function
+      // of an incidental default. Nobody starts on a life total the counts could not distinguish.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Benevolent Offering', 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window, with the
+      // source in the graveyard and the unused witness still castable in hand.
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_OFFERING_SENTINEL.name] },
+        { playerId: 'P2', cardNames: [LAB_OFFERING_WALL.name] },
+        { playerId: 'P3', cardNames: [LAB_OFFERING_GOLEM.name, LAB_OFFERING_GOLEM.name] },
+        { playerId: 'P4', cardNames: [LAB_OFFERING_RELIC.name] },
+      ],
+    },
+  });
+}
+
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
   const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
@@ -15229,6 +15351,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     aliciaMastersScenario(gameId, 'combat-treasure-and-owner-control'),
   'alicia-masters-viewer-no-noncreature-spell': (gameId) =>
     aliciaMastersScenario(gameId, 'no-noncreature-spell'),
+  'benevolent-offering-viewer-different-opponents': (gameId) =>
+    benevolentOfferingScenario(gameId, 'different-opponents'),
+  'benevolent-offering-viewer-same-opponent': (gameId) =>
+    benevolentOfferingScenario(gameId, 'same-opponent'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,

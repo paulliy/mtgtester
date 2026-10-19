@@ -982,3 +982,256 @@ test('Alicia Masters: no noncreature spell this turn makes no Treasure, but crea
     indexOfLine(lines, /each player gains control of all creatures they own resolves$/),
   ).toBeGreaterThanOrEqual(0);
 });
+
+// --- Coverage PR08.22: Benevolent Offering ---
+//
+// One board, two runs. The two printed instructions are INDEPENDENT: the first names an opponent
+// for the Spirits, the second asks again from scratch and may name the same one. Nothing here is
+// arranged after the fact — the browser casts the printed {3}{W} instant out of hand, pays with the
+// four real Plains, and answers both questions through the real decision panel.
+//
+// Both questions are resolution choices, not targets, so the panel must never offer a target slot,
+// never highlight a board, and never include the caster in the menu. The board is arranged with
+// printed 0/3 Defenders and one printed noncreature artifact so "2 life per creature" reads four
+// different numbers: P1 and P2 both hold four creatures once the Spirits exist, P3 holds two, and
+// P4 holds none.
+
+const OFFERING = 'Benevolent Offering';
+const OFFERING_WITNESS = 'Lab Priority Witness';
+const OFFERING_SPIRIT = 'Spirit';
+const OFFERING_P1_CREATURE = 'Lab Offering Sentinel';
+const OFFERING_P2_CREATURE = 'Lab Offering Wall';
+const OFFERING_P3_CREATURE = 'Lab Offering Golem';
+const OFFERING_P4_NONCREATURE = 'Lab Silent Relic';
+const SPIRIT_PROMPT = 'Benevolent Offering: choose an opponent to create tokens with you';
+const LIFE_PROMPT = 'Benevolent Offering: choose an opponent to gain life for their creatures';
+
+/**
+ * One seat's Spirit group. Three identical tokens render as ONE tile with a `×3` badge, not three
+ * objects — so a count of 1 here is the correct expectation and three would be a false failure.
+ */
+function seatSpirits(page: Page, seat: 'own' | 'P2' | 'P3' | 'P4') {
+  const zone =
+    seat === 'own' ? page.locator('.human-zone') : page.locator(`.opponent[data-seat="${seat}"]`);
+  return zone
+    .locator('.object:not(.board-card-leave-active)')
+    .filter({ has: page.getByRole('img', { name: OFFERING_SPIRIT, exact: true }) });
+}
+
+/** The real opponent menu: one group per living opponent, one "Choose" button in each. */
+function opponentChoice(page: Page, seat: string) {
+  return page
+    .locator('.decision-panel .panel-group')
+    .filter({ has: page.locator('.group-player', { hasText: new RegExp(`^${seat}$`) }) })
+    .getByRole('button', { name: 'Choose', exact: true });
+}
+
+function seatLife(page: Page, seat: 'own' | 'P2' | 'P3' | 'P4') {
+  return seat === 'own'
+    ? page.locator('.human-zone .life-badge')
+    : page.locator(`.opponent[data-seat="${seat}"] .life-badge`);
+}
+
+/** The arranged board, asserted before anything is cast. */
+async function expectOfferingArrangement(page: Page): Promise<void> {
+  await expect(handCard(page, OFFERING)).toBeVisible();
+  await expect(handCard(page, OFFERING_WITNESS)).toBeVisible();
+  // Four identical untapped Plains render as one tile with a ×4 badge.
+  await expect(humanPermanent(page, 'Plains')).toHaveCount(1);
+  await expect(humanPermanent(page, 'Plains').locator('.stack-count-badge')).toHaveText('×4');
+  await expect(humanPermanent(page, 'Plains').locator('.tile')).not.toHaveClass(/tapped/);
+  await expect(humanPermanent(page, OFFERING_P1_CREATURE)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', OFFERING_P2_CREATURE)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', OFFERING_P3_CREATURE)).toHaveCount(1);
+  await expect(
+    seatPermanent(page, 'P3', OFFERING_P3_CREATURE).locator('.stack-count-badge'),
+  ).toHaveText('×2');
+  await expect(seatPermanent(page, 'P4', OFFERING_P4_NONCREATURE)).toHaveCount(1);
+  for (const seat of ['own', 'P2', 'P3', 'P4'] as const)
+    await expect(seatLife(page, seat)).toHaveText('40');
+  // Nothing exists yet.
+  await expect(page.getByRole('img', { name: OFFERING_SPIRIT, exact: true })).toHaveCount(0);
+}
+
+/** Cast the printed instant the ordinary way and pay it with the four Plains. */
+async function castOffering(page: Page): Promise<void> {
+  const card = handCard(page, OFFERING);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  // The real payment preview for the printed {3}{W}: the multiplication sign is U+00D7.
+  await expect(page.getByText(/Auto-pay: Plains ×4/)).toBeVisible();
+  // An instant with no "target a player" clause offers no target slot at all.
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  await expect(page.getByText(/All \d+ targets? selected/)).toHaveCount(0);
+  await confirm(page);
+}
+
+/** Assert one opponent menu: exactly the three opponents, the printed prompt, and no targeting. */
+async function expectOpponentMenu(page: Page, prompt: string): Promise<void> {
+  await expect(page.locator('.decision-panel .panel-prompt')).toHaveText(prompt);
+  // Every living opponent and never the caster.
+  await expect(page.locator('.decision-panel .group-player')).toHaveText(['P2', 'P3', 'P4']);
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  await expect(page.locator('.human-zone > header')).not.toHaveClass(/targetable/);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
+}
+
+/** Six Spirits, three for each creator: one tile, three copies, untapped, 1/1, flying. */
+async function expectSpiritTriplets(page: Page): Promise<void> {
+  for (const seat of ['own', 'P2'] as const) {
+    const group = seatSpirits(page, seat);
+    await expect(group).toHaveCount(1);
+    await expect(group.locator('.stack-count-badge')).toHaveText('×3');
+    await expect(group.locator('.tile')).not.toHaveClass(/tapped/);
+    await expect(group.locator('.keywords[title*="flying"]')).toHaveCount(1);
+    await expect(group.locator('.pt')).toHaveText('1/1');
+  }
+  // Neither bystander was given a token.
+  await expect(seatSpirits(page, 'P3')).toHaveCount(0);
+  await expect(seatSpirits(page, 'P4')).toHaveCount(0);
+}
+
+test('Benevolent Offering: choose P2 for the Spirits and P3 for the life', async ({ page }) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(page, 'Benevolent Offering: choose P2 for the Spirits and P3 for the life');
+  await expectOfferingArrangement(page);
+
+  await castOffering(page);
+
+  // The first question, on the board as arranged: no Spirit exists yet.
+  const firstChoice = opponentChoice(page, 'P2');
+  await passStackUntil(page, firstChoice);
+  await expectOpponentMenu(page, SPIRIT_PROMPT);
+  await expect(seatSpirits(page, 'own')).toHaveCount(0);
+
+  await firstChoice.click();
+  await expectSpiritTriplets(page);
+
+  // {3}{W} really left the lands: all four Plains tapped and stacked as one group.
+  await expect(humanPermanent(page, 'Plains').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Plains').locator('.stack-count-badge')).toHaveText('×4');
+
+  // The second question is fresh and independent — and the opponent that just made Spirits with
+  // us is still on the menu, because the printed text lets it answer both.
+  const secondChoice = opponentChoice(page, 'P3');
+  await expect(secondChoice).toBeVisible();
+  await expectOpponentMenu(page, LIFE_PROMPT);
+
+  await secondChoice.click();
+
+  // "You gain 2 life for each creature you control": four creatures for you (your own plus the
+  // three Spirits just made) and two for P3. P2 and P4 held nobody's choice, so neither moves.
+  await expect(seatLife(page, 'own')).toHaveText('48');
+  await expect(seatLife(page, 'P2')).toHaveText('40');
+  await expect(seatLife(page, 'P3')).toHaveText('44');
+  await expect(seatLife(page, 'P4')).toHaveText('40');
+  await expectSpiritTriplets(page);
+
+  // The source is an instant: it is gone from hand and never became a permanent, and the run
+  // stopped in the precombat priority window it resolved in — the unused witness is still
+  // castable there, which is the proof that priority really is still open.
+  await expect(handCard(page, OFFERING)).toHaveCount(0);
+  await expect(handCard(page, OFFERING_WITNESS)).toHaveClass(/actionable/);
+  await expect(humanPermanent(page, OFFERING)).toHaveCount(0);
+
+  // Ownership is not drawn on any panel, so it is read from the very frames the panels were
+  // rendered from: each creator owns and controls its own three, and nobody lost.
+  const settled = await wireBoardWhere(
+    boards,
+    (board) =>
+      board.battlefield.filter((entry) => entry.name === OFFERING_SPIRIT).length === 6 &&
+      board.seats.find((seat) => seat.seat === 'P1')!.life === 48,
+    'the published board carries all six Spirits and the settled life totals',
+  );
+  const spirits = settled.battlefield.filter((entry) => entry.name === OFFERING_SPIRIT);
+  expect(
+    spirits.map((entry) => `${entry.owner}/${entry.controller}/${entry.tapped}`).sort(),
+  ).toEqual([
+    'P1/P1/false',
+    'P1/P1/false',
+    'P1/P1/false',
+    'P2/P2/false',
+    'P2/P2/false',
+    'P2/P2/false',
+  ]);
+  expect(spirits.every((entry) => entry.power === 1 && entry.toughness === 1)).toBe(true);
+  expect(spirits.every((entry) => entry.keywords.includes('flying'))).toBe(true);
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}:${seat.hasLost}`)).toEqual([
+    'P1:48:false',
+    'P2:40:false',
+    'P3:44:false',
+    'P4:40:false',
+  ]);
+  // The pre-existing board never moved: only tokens were added.
+  expect(
+    settled.battlefield.filter((entry) => entry.name === OFFERING_P4_NONCREATURE),
+  ).toHaveLength(1);
+
+  // The public log narrates the cast and both life gains. The two opponent choices themselves have
+  // no formatter — they are read from the panel above, never invented as log lines.
+  const lines = await logLines(page);
+  expect(
+    indexOfLine(lines, new RegExp(`^Cast ${OFFERING} \\(\\{3\\}\\{W\\}\\)$`)),
+  ).toBeGreaterThanOrEqual(0);
+  expect(indexOfLine(lines, /gains 8 life/)).toBeGreaterThanOrEqual(0);
+  expect(indexOfLine(lines, /gains 4 life/)).toBeGreaterThanOrEqual(0);
+});
+
+test('Benevolent Offering: choose the same opponent twice, for the Spirits and for the life', async ({
+  page,
+}) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(
+    page,
+    'Benevolent Offering: choose the same opponent twice, for the Spirits and for the life',
+  );
+  await expectOfferingArrangement(page);
+
+  await castOffering(page);
+
+  const firstChoice = opponentChoice(page, 'P2');
+  await passStackUntil(page, firstChoice);
+  await expectOpponentMenu(page, SPIRIT_PROMPT);
+  await firstChoice.click();
+  await expectSpiritTriplets(page);
+  await expect(humanPermanent(page, 'Plains').locator('.stack-count-badge')).toHaveText('×4');
+
+  // P2 answers the second question too. That is what the printed text allows, and it is the only
+  // difference between this run and the other one.
+  const secondChoice = opponentChoice(page, 'P2');
+  await expect(secondChoice).toBeVisible();
+  await expectOpponentMenu(page, LIFE_PROMPT);
+  await secondChoice.click();
+
+  // P2 now holds four creatures too — its own plus the three it just made — so both players gain 8.
+  await expect(seatLife(page, 'own')).toHaveText('48');
+  await expect(seatLife(page, 'P2')).toHaveText('48');
+  await expect(seatLife(page, 'P3')).toHaveText('40');
+  await expect(seatLife(page, 'P4')).toHaveText('40');
+  await expectSpiritTriplets(page);
+  await expect(handCard(page, OFFERING_WITNESS)).toHaveClass(/actionable/);
+
+  const settled = await wireBoardWhere(
+    boards,
+    (board) =>
+      board.battlefield.filter((entry) => entry.name === OFFERING_SPIRIT).length === 6 &&
+      board.seats.find((seat) => seat.seat === 'P2')!.life === 48,
+    'the published board carries all six Spirits and the settled life totals',
+  );
+  const spirits = settled.battlefield.filter((entry) => entry.name === OFFERING_SPIRIT);
+  expect(spirits.map((entry) => `${entry.owner}/${entry.controller}`).sort()).toEqual([
+    'P1/P1',
+    'P1/P1',
+    'P1/P1',
+    'P2/P2',
+    'P2/P2',
+    'P2/P2',
+  ]);
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}:${seat.hasLost}`)).toEqual([
+    'P1:48:false',
+    'P2:48:false',
+    'P3:40:false',
+    'P4:40:false',
+  ]);
+});

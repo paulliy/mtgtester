@@ -993,6 +993,8 @@ const families = {
       createTokenForPlayer: true,
       createTokenForEachPlayerExceptTarget: true,
       eachOpponentCreatesTokens: true,
+      shareTokensWithChosenOpponent: true,
+      shareCreatureLifeWithChosenOpponent: true,
       createTokenCopyOf: true,
       becomeCopyOf: true,
       becomeCopyOfTarget: true,

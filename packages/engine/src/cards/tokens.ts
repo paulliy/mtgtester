@@ -134,6 +134,15 @@ export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({
   artifact: true,
 });
 
+export const SPIRIT_1_1_FLYING: TokenSpec = creatureToken({
+  name: 'Spirit',
+  subtypes: ['Spirit'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  keywords: ['flying'],
+});
+
 export const BIRD_1_1_FLYING: TokenSpec = creatureToken({
   name: 'Bird',
   subtypes: ['Bird'],
@@ -522,6 +531,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   ASSASSIN_1_1,
   NECRON_WARRIOR_2_2,
   BIRD_1_1_FLYING,
+  SPIRIT_1_1_FLYING,
   DRAGON_5_5_FLYING,
   BEAST_3_3_GREEN,
   THOPTER_1_1_FLYING,

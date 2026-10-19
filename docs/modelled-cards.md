@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6477 modeled non-land cards
+**Total**: 6478 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -498,6 +498,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Benalish Knight
 - Benalish Marshal
 - Beneath the Sands
+- Benevolent Offering
 - Benthic Giant
 - Bequeathal
 - Beregond of the Guard

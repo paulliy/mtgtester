@@ -23,7 +23,7 @@ import {
   whenAttacks,
 } from '../templates';
 import { constant } from '../value';
-import { SOLDIER_1_1, TREASURE, OGRE_3_3_RED } from '../tokens';
+import { SOLDIER_1_1, TREASURE, OGRE_3_3_RED, SPIRIT_1_1_FLYING } from '../tokens';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -73,6 +73,24 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  defineCard(
+    '3db8466c-864f-48ba-b617-f2c863dfdcbd',
+    'Benevolent Offering',
+    [
+      'unrecognized rules text: "Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying."',
+      'unrecognized rules text: "Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          { op: 'shareTokensWithChosenOpponent', spec: SPIRIT_1_1_FLYING, count: constant(3) },
+          { op: 'shareCreatureLifeWithChosenOpponent', amount: constant(2) },
+        ],
+        description:
+          'Choose an opponent to create three Spirits each, then choose an opponent to gain life for your own creatures',
+      }),
+    },
+  );
   const symmetryTargets = targetSlots({ players: { kind: 'player', count: { min: 2, max: 2 } } });
   defineCard(
     '6dfb50d7-359b-4644-90e3-7ecdacee7c12',
