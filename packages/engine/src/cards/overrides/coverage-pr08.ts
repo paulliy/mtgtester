@@ -10,6 +10,7 @@ import { allOf, hasCounter, ofType } from '../selector';
 import {
   activated,
   mana,
+  manaCost,
   onBeginCombat,
   onEndStep,
   onEtb,
@@ -19,9 +20,10 @@ import {
   targetSlots,
   triggered,
   TAP,
+  whenAttacks,
 } from '../templates';
 import { constant } from '../value';
-import { SOLDIER_1_1, TREASURE } from '../tokens';
+import { SOLDIER_1_1, TREASURE, OGRE_3_3_RED } from '../tokens';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -265,6 +267,44 @@ export function registerCoveragePr08Overrides(): void {
           description:
             'At the beginning of your end step, each player gains control of all creatures they own',
         }),
+      ],
+    },
+  );
+  // Kazuul, Tyrant of the Cliffs: a genuine intervening-if over the trigger's own event
+  // permanent (CR 603.4), checked both as the attack triggers and again as the ability resolves.
+  // The attacker is the trigger's EVENT OBJECT, so the payment is read back through the original
+  // permanent — current controller while it lingers, departure last-known-information once it
+  // has left (CR 608.2h), never a blinked reincarnation. The event-object condition rejects a
+  // redirect: "if you're the defending player" follows the attack's own defender, retained
+  // through removal from combat (CR 508.5) rather than the current combat assignment. An
+  // opponent's planeswalker-attack is an attack for this trigger; its defending player is the
+  // planeswalker's controller (CR 508.1b). Battles stay unsupported until PR11's battles
+  // support lands. "Unless that creature's controller pays {3}" is an `eventObjectController`
+  // payer, not the ability's controller and not the cast event player.
+  defineCard(
+    'f8bf3d91-cb50-48ce-88c6-cdcb37b64b57',
+    'Kazuul, Tyrant of the Cliffs',
+    [
+      'unrecognized rules text: "Whenever a creature an opponent controls attacks, if you\'re the defending player, create a 3/3 red Ogre creature token unless that creature\'s controller pays {3}."',
+    ],
+    {
+      triggers: [
+        triggered(
+          whenAttacks(allOf(ofType('Creature'), { kind: 'controller', who: 'opponents' })),
+          {
+            condition: { kind: 'eventObjectDefendingPlayerIsYou' },
+            effects: [
+              {
+                op: 'unlessPays',
+                payer: 'eventObjectController',
+                cost: manaCost('{3}'),
+                then: [{ op: 'createToken', spec: OGRE_3_3_RED, count: constant(1) }],
+              },
+            ],
+            description:
+              "Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}",
+          },
+        ),
       ],
     },
   );

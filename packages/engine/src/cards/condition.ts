@@ -199,6 +199,22 @@ export type Condition =
    * one other opponent of the ability's controller (Breena). A player who left the game is no one.
    */
   | { kind: 'attackedPlayerHasMoreLifeThanAnotherOpponent' }
+  /**
+   * "Whenever a creature an opponent controls attacks, **if you're the defending player**"
+   * (Kazuul, Tyrant of the Cliffs): a genuine intervening-if over the trigger's exact original
+   * event permanent (CR 603.4), checked when the attack triggers and again as the ability
+   * resolves. The defending player is the player attacked, or the controller of the planeswalker
+   * attacked (CMM release notes include the planeswalker's controller; battles stay unsupported
+   * until PR11). The answer follows CR 508.5's retained information, not the current combat
+   * assignment: if the attacker still attacks, its current defending player (`attacking` names
+   * that player for a player and a planeswalker attack alike, CR 508.1b); once combat assignment
+   * for it ended (removed from combat, controller change, phasing, player departure), the
+   * `lastAttackingDefendingPlayerId` retained at that clear, or the captured event. A redirect
+   * to another player keeps the recheck honest — the last-id field follows the redirect, never
+   * the original event — while `SelectorCandidate.attackingDefendingPlayerId` stays strictly
+   * current-combat and the `attackingYouOrYourPlaneswalker` selector keeps its semantics.
+   */
+  | { kind: 'eventObjectDefendingPlayerIsYou' }
   | { kind: 'allOf'; of: Condition[] }
   | { kind: 'anyOf'; of: Condition[] }
   | { kind: 'eventPlayerDrawCount'; cmp: Comparison; n: number }
@@ -287,6 +303,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'attackGroupAttackingYou':
     case 'attackWasNotAtYou':
     case 'attackedPlayerHasMoreLifeThanAnotherOpponent':
+    case 'eventObjectDefendingPlayerIsYou':
     case 'eventPlayerDrawCount':
     case 'notFirstDrawInOwnDrawStep':
     case 'cardsInYourGraveyard':
@@ -445,6 +462,23 @@ export function evaluateCondition(
       return opponentsOf(ctx, source.controllerId).some(
         (other) => other.id !== attacked.id && attacked.life > other.life,
       );
+    }
+    case 'eventObjectDefendingPlayerIsYou': {
+      // Over the trigger's exact original event object only: no `triggerObjectCardId` fallback,
+      // which is how a blinked new incarnation could answer for a departed attacker (CR 400.7,
+      // 603.7). Unbound scope fails closed — an event it was never authored for is not "you".
+      if ((scope.triggerObjectId ?? scope.eventObjectId) === undefined) return false;
+      const eventObject = eventObjectState(ctx, scope);
+      if (eventObject === undefined) return false;
+      const retainedDefender =
+        'candidate' in eventObject
+          ? eventObject.lastAttackingDefendingPlayerId
+          : (eventObject.attacking ?? eventObject.lastAttackingDefendingPlayerId);
+      // The last resort IS the captured original event: the facts the trigger scope took at the
+      // event (refreshed to departure LKI if the attacker left before the recheck, CR 608.2h).
+      const defenderId =
+        retainedDefender ?? scope.triggerObjectFacts?.lastAttackingDefendingPlayerId;
+      return defenderId === source.controllerId;
     }
     case 'opponentCount':
       return compare(opponentsOf(ctx, source.controllerId).length, condition.cmp, condition.n);

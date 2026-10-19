@@ -6505,7 +6505,19 @@ export function* executeAbility(
         break;
       }
       case 'unlessPays': {
-        const payerId = effect.payer === 'eventPlayer' ? scope.eventPlayerId : controller.id;
+        let payerId: PlayerId | undefined;
+        if (effect.payer === 'eventPlayer') {
+          payerId = scope.eventPlayerId;
+        } else if (effect.payer === 'controller') {
+          payerId = controller.id;
+        } else {
+          // 'eventObjectController' — ask the CURRENT controller of the exact original event
+          // permanent; once it has departed, the controller it last had (departure LKI,
+          // CR 608.2h). Never the ability's event player, never a blinked new incarnation.
+          if ((scope.triggerObjectId ?? scope.eventObjectId) === undefined)
+            throw new Error(source.name + ': unlessPays has no exact event object');
+          payerId = eventObjectFacts(ctx, scope)?.candidate.controllerId as PlayerId | undefined;
+        }
         if (payerId === undefined) throw new Error(source.name + ': unlessPays has no payer');
         const payer = playerById(ctx, payerId);
         // "…pays {X}, where X is this creature's power" — resolved now, against the source as it
@@ -6515,7 +6527,11 @@ export function* executeAbility(
             ? effect.cost
             : addGeneric(effect.cost, evaluateValueIn(ctx, effect.genericValue, scope));
         const costDescription = describeManaCost(owed);
-        const canAfford = canPay(owed, payer.manaEntries, manaSourcesFor(ctx, payer.id));
+        const canAfford =
+          // A payer who left the game cannot pay (CR 800.4): no prompt, just the unpaid branch.
+          // Scoped to the event-object payer so the existing payer values behave exactly as before.
+          !(effect.payer === 'eventObjectController' && payer.hasLost) &&
+          canPay(owed, payer.manaEntries, manaSourcesFor(ctx, payer.id));
         let paid = false;
         let notPaidReason: 'declined' | 'unable' = 'unable';
         if (canAfford) {

@@ -46,6 +46,9 @@ describe('deterministic Card Test Lab scenarios', () => {
 
   it('lists every registered scenario in catalog order', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
+      'kazuul-viewer-decline',
+      'kazuul-viewer-pay',
+      'kazuul-viewer-other-defender',
       'akroan-horse-viewer-cast-and-gift',
       'akroan-horse-viewer-recipient-upkeep',
       'scheming-symmetry-viewer-you-and-opponent',

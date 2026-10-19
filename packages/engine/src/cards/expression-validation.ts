@@ -284,6 +284,7 @@ const conditionShapes = {
   },
   attackWasNotAtYou: {},
   attackedPlayerHasMoreLifeThanAnotherOpponent: {},
+  eventObjectDefendingPlayerIsYou: {},
   allOf: { of: arrayOf(condition) },
   anyOf: { of: arrayOf(condition) },
   eventPlayerDrawCount: { cmp: oneOf('>=', '<=', '=='), n: finite },

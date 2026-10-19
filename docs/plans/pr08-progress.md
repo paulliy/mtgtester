@@ -8,8 +8,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
-Akroan Horse, Alicia Masters, Skilled Sculptor, and Scheming Symmetry are the first ten implementation increments.
-The other 13 cards remain unsupported. The seven reopened quality-audit cards now belong
+Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, and Kazuul, Tyrant of the Cliffs
+are the first eleven implementation increments. The other 12 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -315,3 +315,32 @@ plus a cold-start lint probe's unchanged five-second timeout. The restoration re
 Scheming Symmetry to the supported-pool expectation and records its registration's move from
 the historical Queen Marchesa file to PR08. The historical unsupported audit remains intact.
 The affected suites and complete gate are rerun after this correction.
+
+The corrected clean-tree ten-card gate passed all 156 suites and 4,395 tests at `c254a08e`.
+The complete bulk-enabled suite runs separately on that frozen revision.
+
+## Kazuul, Tyrant of the Cliffs increment (PR08.16)
+
+The printed creature costs three generic and two red mana. Each opposing creature's attack
+triggers only when the ability controller is the defending player, including an attack on that
+player's planeswalker. The genuine intervening-if is checked again at resolution against the
+exact original attacker, retaining its defender after combat removal and using departure facts
+after it leaves. The attacker’s current controller, or its departure controller, may pay three
+mana. Declining or being unable to pay creates one catalog 3/3 red Ogre for the original ability
+controller before blockers. Existing combat selectors retain their current-combat meaning.
+
+Main review found and rejected physical-card-ID fallbacks in both new identity readers. Two
+regressions failed against those fallbacks; an out-of-band mutation run restored the exact fixed
+bytes afterward. Generic payment fixtures now print the matching instructions and are normally
+cast before their attack events. Fourteen card tests, 31 independent identity/payment contracts
+and three production-lab replays cover normal costs and timing, two attackers, payments, source
+departure, control changes, and genuine player/planeswalker combat declarations. The reviewed
+run including adjacent identity/combat suites passed 112 tests; the integrated run passed 473
+tests across 40 suites. All 27 real PR08 viewer scenarios, both typechecks, lint, formatting,
+reviewed snapshots, refreshed benchmark pins and the web build passed. Current-revision receipts
+are regenerated after committing.
+
+The frozen inventory measures 797/906 (702/802 deck cards, 189/200 staples); the expanded report
+measures 755/855. The bulk non-land inventory contains 6,477 modeled cards. Implementation review
+eligibility remains a final completion requirement. Gameplay-AI quality has not been evaluated
+with a live provider; the deterministic lab scripts provide correctness observations only.

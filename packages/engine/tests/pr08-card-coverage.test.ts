@@ -36,6 +36,7 @@ const IMPLEMENTED = new Set<string>([
   'Wishclaw Talisman',
   'Akroan Horse',
   'Scheming Symmetry',
+  'Kazuul, Tyrant of the Cliffs',
   'Alicia Masters, Skilled Sculptor',
   'Reins of Power',
 ]);

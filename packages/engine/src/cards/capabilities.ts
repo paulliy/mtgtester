@@ -1335,6 +1335,7 @@ const families = {
       allOf: true,
       anyOf: true,
       eventPlayerDrawCount: true,
+      eventObjectDefendingPlayerIsYou: true,
       notFirstDrawInOwnDrawStep: true,
       cardsInYourGraveyard: true,
       sourceHasCounters: true,

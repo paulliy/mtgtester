@@ -9,6 +9,53 @@ test.setTimeout(60_000);
 const exercised = new Set<string>();
 const frontiers = new WeakMap<Page, { requestId: string; stackSize: number }>();
 
+for (const mode of ['decline', 'pay', 'other-defender'] as const) {
+  const title =
+    'Kazuul: ' +
+    (mode === 'decline'
+      ? 'an attacking opponent declines and you create an Ogre before blockers'
+      : mode === 'pay'
+        ? 'the attacking creature controller pays three and you create no Ogre'
+        : 'an attack on another player creates no Ogre');
+  test(title, async ({ page }) => {
+    const boards = recordPlayerBoards(page);
+    await runScenario(page, title);
+    await castPr08Card(page, 'Kazuul, Tyrant of the Cliffs');
+    await passStackUntil(page, humanPermanent(page, 'Kazuul, Tyrant of the Cliffs'));
+    await expect(humanPermanent(page, 'Forest').locator('.tile')).toHaveClass(/tapped/);
+    await expect(humanPermanent(page, 'Mountain').locator('.tile')).toHaveClass(/tapped/);
+    const log = page.locator('.log .line .text');
+    if (mode === 'other-defender') {
+      await passUntil(page, page.getByText(/game over/i).first());
+      await expect(log.filter({ hasText: /attacks with 1 creature/ })).toHaveCount(1);
+      await expect(page.locator('.opponent[data-seat="P3"] .life-badge')).toHaveText('39');
+      await expect(log.filter({ hasText: /pay.*for Kazuul/ })).toHaveCount(0);
+    } else {
+      await passUntil(page, log.filter({ hasText: /create a 3\/3 red Ogre.*resolves$/ }));
+      const observed = await wireBoardWhere(
+        boards,
+        (board) =>
+          board.battlefield.filter(
+            (entry) => entry.name === 'Forest' && entry.controller === 'P2' && entry.tapped,
+          ).length === (mode === 'pay' ? 3 : 0) &&
+          board.battlefield.filter((entry) => entry.name === 'Ogre').length ===
+            (mode === 'decline' ? 1 : 0),
+        'the attacking creature controller paid only when choosing to pay',
+      );
+      expect(observed.battlefield.filter((entry) => entry.name === 'Ogre')).toHaveLength(
+        mode === 'decline' ? 1 : 0,
+      );
+    }
+    await expect(humanPermanent(page, 'Ogre')).toHaveCount(mode === 'decline' ? 1 : 0);
+    await expect(opponentPermanent(page, 'Ogre')).toHaveCount(0);
+    if (mode === 'decline') {
+      await expect(humanPermanent(page, 'Ogre').locator('.pt')).toHaveText('3/3');
+      await passUntil(page, page.getByText(/Declare blockers/).first());
+    }
+    await expect(page.getByRole('button', { name: 'Pay {3}', exact: true })).toHaveCount(0);
+  });
+}
+
 for (const upkeep of [false, true]) {
   test(`Akroan Horse: ${upkeep ? 'the recipient upkeep gives each opponent a Soldier' : 'cast and choose an opponent to gain control'}`, async ({
     page,

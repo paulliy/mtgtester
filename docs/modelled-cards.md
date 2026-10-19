@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6476 modeled non-land cards
+**Total**: 6477 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -2956,6 +2956,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Kazandu Blademaster
 - Kazandu Nectarpot
 - Kazuul Warlord
+- Kazuul, Tyrant of the Cliffs
 - Kederekt Creeper
 - Kederekt Leviathan
 - Keen Buccaneer

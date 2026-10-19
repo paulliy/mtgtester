@@ -266,6 +266,15 @@ export const WARRIOR_1_1_RED: TokenSpec = creatureToken({
   toughness: 1,
 });
 
+/** Kazuul, Tyrant of the Cliffs' paid-in tax refund: "create a 3/3 red Ogre creature token". */
+export const OGRE_3_3_RED: TokenSpec = creatureToken({
+  name: 'Ogre',
+  subtypes: ['Ogre'],
+  colors: ['R'],
+  power: 3,
+  toughness: 3,
+});
+
 export const NINJA_1_1_BLACK: TokenSpec = creatureToken({
   name: 'Ninja',
   subtypes: ['Ninja'],
@@ -525,6 +534,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   VAMPIRE_1_1_LIFELINK_WHITE,
   SKELETON_4_1_MENACE_BLACK,
   WARRIOR_1_1_RED,
+  OGRE_3_3_RED,
   NINJA_1_1_BLACK,
   RABBIT_1_1_WHITE,
   SPIDER_2_2_REACH_GREEN,

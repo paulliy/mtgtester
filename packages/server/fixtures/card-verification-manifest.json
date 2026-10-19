@@ -13217,6 +13217,58 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57": {
+      "name": "Kazuul, Tyrant of the Cliffs",
+      "oracleSha256": "5abee12570a0c0eb3f59f49417651ea5416ef70a985d592cf714d5457c008c0c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "kazuul-opponent-attack-defending-player",
+          "oracleText": "Whenever a creature an opponent controls attacks, if you're the defending player,",
+          "implementation": [
+            "ordinary {3}{R}{R} creature cast; opponent-creature attacks event and genuine eventObjectDefendingPlayerIsYou intervening-if, checked at queue and resolution against the exact original attacker; retains defender through removal from combat and departure LKI; an attacked planeswalker makes its controller the defending player"
+          ],
+          "engineTestIds": [
+            "kazuul-pinned-oracle-supported",
+            "kazuul-normal-cast-pays-three-generic-two-red-and-resolves",
+            "kazuul-normal-cast-unavailable-without-double-red",
+            "kazuul-normal-cast-timing-and-total-mana",
+            "kazuul-attack-on-another-player-triggers-nothing",
+            "kazuul-only-defending-players-copy-triggers",
+            "kazuul-planeswalker-you",
+            "kazuul-planeswalker-other",
+            "kazuul-planeswalker-attack-still-defended-after-the-walker-leaves",
+            "kazuul-selector-containment"
+          ],
+          "viewerScenarioIds": [
+            "kazuul-viewer-decline",
+            "kazuul-viewer-pay",
+            "kazuul-viewer-other-defender"
+          ]
+        },
+        {
+          "id": "kazuul-event-creature-controller-payment",
+          "oracleText": "create a 3/3 red Ogre creature token unless that creature's controller pays {3}.",
+          "implementation": [
+            "unlessPays eventObjectController reads the exact original event object current controller or departure LKI; original ability controller creates one catalog red 3/3 Ogre on unable/declined payment; eliminated payers are not prompted; real mana payment precedes blockers"
+          ],
+          "engineTestIds": [
+            "kazuul-two-attackers-two-triggers-pay-one-decline-one-before-blocks",
+            "kazuul-single-attacker-pays-and-no-token",
+            "kazuul-gone-the-trigger-still-resolves-for-its-frozen-controller",
+            "kazuul-payer-is-the-current-controller-after-a-control-change",
+            "kazuul-planeswalker-you",
+            "kazuul-planeswalker-other"
+          ],
+          "viewerScenarioIds": [
+            "kazuul-viewer-decline",
+            "kazuul-viewer-pay",
+            "kazuul-viewer-other-defender"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

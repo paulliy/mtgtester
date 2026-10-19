@@ -33,6 +33,7 @@ import {
   moveObject,
   movePermanentsToGraveyard,
   refreshControlEffects,
+  retainAttackDefender,
   returnExiledUntilLeaves,
 } from '../state/objects';
 import {
@@ -178,6 +179,7 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
       if (perm.attacking === player.id) {
+        retainAttackDefender(perm);
         perm.attacking = null;
         perm.attackingPlaneswalker = null;
         perm.attackedPlaneswalkerRemoved = false;

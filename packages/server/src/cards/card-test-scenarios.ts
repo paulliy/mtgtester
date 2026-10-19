@@ -12689,6 +12689,78 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
   };
 }
 
+function kazuulScenario(
+  gameId: GameId,
+  mode: 'decline' | 'pay' | 'other-defender',
+): CardTestScenario {
+  const kazuul = pinnedFrom(COVERAGE_PR08, 'Kazuul, Tyrant of the Cliffs');
+  const witness = card({
+    oracleId: 'lab-kazuul-priority-witness',
+    name: 'Lab Kazuul Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 1 life.',
+  });
+  const lands = [FOREST, FOREST, FOREST, MOUNTAIN, MOUNTAIN];
+  const attacker = attackPlayerWithEverything(mode === 'other-defender' ? 'P3' : 'P1');
+  return pr01Scenario(gameId, {
+    id: 'kazuul-viewer-' + mode,
+    title:
+      'Kazuul: ' +
+      (mode === 'decline'
+        ? 'an attacking opponent declines and you create an Ogre before blockers'
+        : mode === 'pay'
+          ? 'the attacking creature controller pays three and you create no Ogre'
+          : 'an attack on another player creates no Ogre'),
+    instructions: [
+      'Cast Kazuul for {3}{R}{R}. Keep the priority witness in hand and pass to P2 combat.',
+      mode === 'other-defender'
+        ? 'P2 attacks P3, so Kazuul must not trigger.'
+        : 'P2 attacks you and ' +
+          (mode === 'pay'
+            ? 'pays {3} using three Forests.'
+            : 'declines to pay {3}; you create an Ogre before blockers.'),
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'P1 controls a 3/3 red Ogre before declaring blockers; P2 has paid no mana.'
+        : mode === 'pay'
+          ? 'P2 tapped three Forests to pay {3}. P1 controls no Ogre.'
+          : 'P2 attacked P3. Kazuul did not trigger and no Ogre exists.',
+    oracleSha256: kazuul.sha256,
+    clauseIds: [
+      'kazuul-opponent-attack-defending-player',
+      'kazuul-event-creature-controller-payment',
+    ],
+    decks: {
+      P1: [kazuul.card, witness, ...lands],
+      P2: [LAB_SERVO, FOREST, FOREST, FOREST, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: [kazuul.card.name, witness.name] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Forest', 'Forest', 'Forest'] },
+      ],
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: {
+      P2: {
+        decide(request) {
+          const payment = request.legalActions.find(
+            (action) => action.description === (mode === 'pay' ? 'Pay {3}' : "Don't pay {3}"),
+          );
+          return payment === undefined
+            ? attacker.decide(request)
+            : { requestId: request.requestId, actionId: payment.id };
+        },
+      },
+    },
+  });
+}
+
 function akroanHorseScenario(
   gameId: GameId,
   mode: 'cast-and-gift' | 'recipient-upkeep',
@@ -15116,6 +15188,9 @@ export const CARD_TEST_SCENARIO_IDS = [
 ] as const;
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  'kazuul-viewer-decline': (gameId) => kazuulScenario(gameId, 'decline'),
+  'kazuul-viewer-pay': (gameId) => kazuulScenario(gameId, 'pay'),
+  'kazuul-viewer-other-defender': (gameId) => kazuulScenario(gameId, 'other-defender'),
   'akroan-horse-viewer-cast-and-gift': (gameId) => akroanHorseScenario(gameId, 'cast-and-gift'),
   'akroan-horse-viewer-recipient-upkeep': (gameId) =>
     akroanHorseScenario(gameId, 'recipient-upkeep'),

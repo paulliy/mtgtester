@@ -2148,15 +2148,19 @@
   {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}.\""
+    "package": "PR08.16",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-kazuul.test.ts",
+      "packages/engine/tests/defending-player-event-contract.test.ts",
+      "packages/engine/tests/event-object-payer-contract.test.ts",
+      "packages/server/src/cards/pr08-kazuul-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-kazuul.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "23f86ee2-b1e3-45c2-bfd5-044919033922",

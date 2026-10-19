@@ -34,6 +34,10 @@ export interface AuthoringIssue {
 interface Scope {
   targets: TargetSpec[];
   eventObject?: 'permanent' | 'card';
+  /** The event object is the ability's own source — a `self` subject binds no event object id. */
+  selfEventObject?: boolean;
+  /** The owning trigger binds an attacking creature's defending player (an `attacks` event). */
+  attackEventObject?: boolean;
   providedEventObject?: 'permanent' | 'card';
   eventPlayer?: boolean;
   providedEventPlayer?: boolean;
@@ -480,11 +484,19 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       (trigger as { when?: string; perDefender?: boolean } | undefined)?.when ===
         'attackDeclared' &&
       (trigger as { perDefender?: boolean }).perDefender === true;
+    const attackEventObject =
+      record['kind'] === 'triggered' &&
+      trigger?.when === 'attacks' &&
+      trigger.subject?.kind === 'permanent';
     owningScope = {
       targets,
       eventPlayer,
       ...(attackedPlayer ? { attackedPlayer } : {}),
       ...(eventObject === undefined ? {} : { eventObject }),
+      ...(record['kind'] === 'triggered' && trigger?.subject?.kind === 'self'
+        ? { selfEventObject: true }
+        : {}),
+      ...(attackEventObject ? { attackEventObject: true } : {}),
     };
   }
   let checkedPermanentPossible = false;
@@ -812,6 +824,32 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       path,
       message: 'event object information requires an owning permanent event scope',
     });
+  if (valueKind === 'eventObjectDefendingPlayerIsYou') {
+    if (owningScope?.eventObject !== 'permanent')
+      issues.push({
+        path,
+        message: 'event object defending player check requires an owning permanent event scope',
+      });
+    else if (owningScope.attackEventObject !== true)
+      issues.push({
+        path,
+        message: 'event object defending player check requires a creature attack event',
+      });
+  }
+  if (record['op'] === 'unlessPays') {
+    const payer = record['payer'];
+    if (!['eventPlayer', 'controller', 'eventObjectController'].includes(payer as string))
+      issues.push({ path: `${path}.payer`, message: 'unknown payer' });
+    else if (payer === 'eventObjectController') {
+      // A `self` subject binds no event object id, so there is no exact original permanent to
+      // read a controller from at resolution; a card-scope event has no permanent at all.
+      if (owningScope?.eventObject !== 'permanent' || owningScope.selfEventObject === true)
+        issues.push({
+          path: `${path}.payer`,
+          message: 'event object controller payer requires an owning permanent event-object scope',
+        });
+    }
+  }
   if (
     [
       'countPermanentsControlledByTarget',

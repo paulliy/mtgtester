@@ -29,6 +29,15 @@ export interface ObjectFacts extends SourceCastState {
   tapped: boolean;
   loseAbilities?: boolean;
   hadToAttackThisCombat: boolean;
+  /**
+   * The defending player of the attack these facts captured (or the one retained through its
+   * removal from combat), read directly off `EnginePermanent.attacking`/`lastAttackingDefendingPlayerId`:
+   * `perm.attacking` IS the defending player id for a player and a planeswalker attack alike
+   * (CR 508.1b), so no `candidateOf(includeCombatDefender)` re-read — that would recurse into the
+   * layers. Independent of `candidate`, whose `attackingDefendingPlayerId` stays current-combat
+   * only (CR 506.4): a Kazuul-style recheck must keep the last defender after removal from combat.
+   */
+  lastAttackingDefendingPlayerId?: string;
   enteredTurnNumber: number;
   chosenOption?: string;
   classLevel?: number;
@@ -54,6 +63,10 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
         computeCharacteristics(ctx, other).subtypes.includes('Aura'),
     )
     .map((aura) => aura.controllerId);
+  // Outside `computeCharacteristics`/`candidateOf` on purpose: `permanent.attacking` already
+  // names the defending player for both kinds of attack, so capturing here never re-runs layers.
+  const lastAttackingDefendingPlayerId =
+    permanent.attacking ?? permanent.lastAttackingDefendingPlayerId;
   return {
     objectId: permanent.id,
     name: permanent.name,
@@ -76,6 +89,7 @@ export function captureObjectFacts(ctx: GameContext, permanent: EnginePermanent)
     tapped: permanent.tapped,
     loseAbilities: chars.loseAbilities,
     hadToAttackThisCombat: permanent.hadToAttackThisCombat === true,
+    ...(lastAttackingDefendingPlayerId === undefined ? {} : { lastAttackingDefendingPlayerId }),
     enteredTurnNumber: permanent.enteredTurnNumber,
     ...(permanent.chosenOption === undefined ? {} : { chosenOption: permanent.chosenOption }),
     ...(permanent.classLevel === undefined ? {} : { classLevel: permanent.classLevel }),

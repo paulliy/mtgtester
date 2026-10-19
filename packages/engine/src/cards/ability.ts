@@ -1370,10 +1370,16 @@ export type Effect =
    * mana whose amount is only known at resolution, ADDED to whatever `cost` prints. It is a
    * separate field rather than a `Value`-typed `cost` because every other user of this op pays
    * a printed cost, and `ParsedManaCost` is the shape `canPay` and `payManaCost` both take.
+   *
+   * `payer: 'eventObjectController'` asks the CURRENT controller of the exact original event
+   * permanent — once it has departed, the controller it last had (departure LKI, CR 608.2h),
+   * never the ability's `eventPlayer` and never a blinked new incarnation. It is only valid
+   * with an owning permanent event-object scope (a non-self trigger subject); a payer who has
+   * left the game cannot pay, so the unpaid branch runs with no prompt (CR 800.4).
    */
   | {
       op: 'unlessPays';
-      payer: 'eventPlayer' | 'controller';
+      payer: 'eventPlayer' | 'controller' | 'eventObjectController';
       cost: ParsedManaCost;
       genericValue?: Value;
       then: Effect[];

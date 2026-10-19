@@ -15739,6 +15739,85 @@
     }
   },
   {
+    "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
+    "name": "Kazuul, Tyrant of the Cliffs",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "unlessPays",
+              "payer": "eventObjectController",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Ogre",
+                    "power": 3,
+                    "subtypes": [
+                      "Ogre"
+                    ],
+                    "toughness": 3,
+                    "typeLine": "Creature — Ogre",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "eventObjectDefendingPlayerIsYou"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "f8e17f4f-080d-4bba-bd05-ca27e94ccecc",
     "name": "Terror of the Peaks",
     "handledLines": [
@@ -23927,6 +24006,85 @@
             ]
           },
           "kind": "suppressObjectTriggers"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-kazuul-tyrant-of-the-cliffs",
+    "name": "Kazuul, Tyrant of the Cliffs",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}",
+          "effects": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 3
+              },
+              "op": "unlessPays",
+              "payer": "eventObjectController",
+              "then": [
+                {
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  },
+                  "op": "createToken",
+                  "spec": {
+                    "colors": [
+                      "R"
+                    ],
+                    "name": "Ogre",
+                    "power": 3,
+                    "subtypes": [
+                      "Ogre"
+                    ],
+                    "toughness": 3,
+                    "typeLine": "Creature — Ogre",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "kind": "eventObjectDefendingPlayerIsYou"
+            },
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  }
+                ]
+              }
+            },
+            "when": "attacks"
+          }
         }
       ]
     }

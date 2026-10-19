@@ -250,6 +250,17 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
    */
   attackedPlaneswalkerRemoved: boolean;
+  /**
+   * Private identity of the attack this creature made most recently: the defending player
+   * (attacked player, or the controller of the planeswalker it attacked, CR 508.1b) as that
+   * attack stood when combat assignment for it ended. Retained at every path that clears
+   * `attacking` so a CR 603.4 recheck over the exact original attacker (Kazuul) can still name
+   * the last defending player of a removed-from-combat or departed attacker; a new declaration
+   * overwrites it through the retain-then-clear order, so only the latest attack survives.
+   * Never copied into `SelectorCandidate.attackingDefendingPlayerId`, which stays strictly
+   * current-combat. Facts only for the engine; the public projections never see it.
+   */
+  lastAttackingDefendingPlayerId?: PlayerId;
   /** A chosen assignment prohibition lasts through all combats of this turn. */
   assignsNoCombatDamageTurn?: number;
   /** A resolved effect's fixed attack prohibition, active while the named counter remains. */

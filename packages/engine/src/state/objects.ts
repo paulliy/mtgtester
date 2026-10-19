@@ -290,6 +290,18 @@ export function changeController(
   applyControllerTransition(ctx, perm, controllerId);
 }
 
+/**
+ * Keep the defending player of the attack combat assignment is about to end (CR 508.5). Called
+ * immediately before every path clears `attacking` — removal from combat, a controller change,
+ * combat cleanup, phasing, a player leaving — so an intervening-if over the exact original
+ * attacker (Kazuul's "if you're the defending player") still answers with the LAST defending
+ * player instead of losing the event. A still-current `attacking` wins at the read site; a new
+ * attack simply overwrites this through the same retain-then-clear order.
+ */
+export function retainAttackDefender(perm: EnginePermanent): void {
+  if (perm.attacking !== null) perm.lastAttackingDefendingPlayerId = perm.attacking;
+}
+
 /** Both a new effect and an expired effect can cause a controller transition (CR 302.6, 506.4). */
 function applyControllerTransition(
   ctx: GameContext,
@@ -300,6 +312,7 @@ function applyControllerTransition(
   perm.controllerId = controllerId;
   if (!transition) return;
   perm.summoningSick = true;
+  retainAttackDefender(perm);
   perm.attacking = null;
   perm.attackingPlaneswalker = null;
   perm.attackedPlaneswalkerRemoved = false;
@@ -551,6 +564,7 @@ export function makePermanent(
  * that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
  */
 export function removeFromCombat(ctx: GameContext, perm: EnginePermanent): void {
+  retainAttackDefender(perm);
   perm.attacking = null;
   perm.attackingPlaneswalker = null;
   perm.attackedPlaneswalkerRemoved = false;

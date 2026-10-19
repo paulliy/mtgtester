@@ -1,5 +1,8 @@
 /** Every PR08 scenario is exercised by pr08-card-test-lab.spec.ts. */
 export const PR08_SCENARIO_IDS: readonly string[] = [
+  'kazuul-viewer-decline',
+  'kazuul-viewer-pay',
+  'kazuul-viewer-other-defender',
   'akroan-horse-viewer-cast-and-gift',
   'akroan-horse-viewer-recipient-upkeep',
   'scheming-symmetry-viewer-you-and-opponent',

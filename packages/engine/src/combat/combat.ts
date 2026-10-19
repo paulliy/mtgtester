@@ -46,6 +46,7 @@ import {
   queueAttackDeclarationTriggers,
   queueTriggersForEvent,
   queueTriggersForObject,
+  retainAttackDefender,
 } from '../state/objects';
 import {
   attackedPlaneswalker,
@@ -2061,6 +2062,7 @@ function firstStrikeStepNeeded(ctx: GameContext): boolean {
 
 function endCombatCleanup(ctx: GameContext): void {
   for (const perm of ctx.state.battlefield) {
+    retainAttackDefender(perm);
     perm.attacking = null;
     perm.attackingPlaneswalker = null;
     perm.attackedPlaneswalkerRemoved = false;
