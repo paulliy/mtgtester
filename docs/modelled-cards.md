@@ -3,7 +3,7 @@
 Generated from the engine-supported card pool.
 This is an interpreter-support inventory. Card behavior verification is tracked separately in the card verification manifest.
 
-**Total**: 6479 modeled non-land cards
+**Total**: 6480 modeled non-land cards
 
 - +2 Mace
 - A Realm Reborn
@@ -83,6 +83,7 @@ This is an interpreter-support inventory. Card behavior verification is tracked 
 - Aggravated Assault
 - Aggressive Mammoth
 - Aggressive Urge
+- Agitator Ant
 - Agonizing Syphon
 - Agony Warp
 - Aid the Fallen

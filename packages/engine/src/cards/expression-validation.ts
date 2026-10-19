@@ -624,6 +624,7 @@ const effectExpressions = {
   extraCombatPhase: {},
   becomeMonarch: {},
   druidPurification: {},
+  eachPlayerMayPutCountersAndGoad: { count: numericExpression },
   voteAndExileMost: { selector: selector },
   exileTargetWithSource: {},
   exileAndManifestTarget: {},
@@ -669,6 +670,7 @@ const effectExpressions = {
  * Malformed payloads surface as authoring issues, never silently pass.
  */
 const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
+  eachPlayerMayPutCountersAndGoad: { counter: text },
   gainControlTarget: { duration: optional(controlDuration) },
   gainControl: {
     duration: optional(controlDuration),

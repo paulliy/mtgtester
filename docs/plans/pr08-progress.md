@@ -9,7 +9,7 @@ PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
 Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, Kazuul, Tyrant of the Cliffs,
-and Benevolent Offering, followed by Council's Judgment, are the first thirteen implementation increments. The other 10 cards
+and Benevolent Offering, followed by Council's Judgment and Agitator Ant, are the first fourteen implementation increments. The other nine cards
 remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
@@ -393,3 +393,27 @@ tests; no assertion, timeout or unsupported mechanic was weakened.
 
 Implementation review eligibility and current revision-bound receipts remain separate completion
 requirements. Scripted lab decisions do not constitute live gameplay-AI quality evaluation.
+
+## Agitator Ant increment (PR08.13)
+
+The printed three-mana creature triggers at its controller's end step. Each living player may
+choose a creature they control without targeting, in APNAP order. All choices precede a
+simultaneous counter batch; only creatures that actually receive counters are goaded by the
+original ability controller. Counter replacements and prevention retain each chooser as the
+placing player. Goad survives cleanup and expires as the goading player's next turn begins.
+
+Fourteen card tests, thirteen independent counter/goad contracts and four production-lab
+replays passed. Mutation checks rejected sequential placement, goading a prevented placement,
+cleanup expiry and the previous unsupported registration, with exact source restoration.
+Main review added an authoring regression rejecting empty and nontext counter names, and made
+the independent fixtures print the instructions they execute. The integrated run passed all
+558 tests across 50 suites. Both typechecks, lint, formatting and reviewed snapshots passed.
+All 33 real-viewer scenarios passed, including Ant's accept and decline paths, counter statistics
+and the required opposing attack. Revision-bound receipts are generated separately against the
+final implementation revision.
+
+The frozen inventory measures 800/906 (705/802 deck cards, 189/200 staples); the expanded report
+measures 758/855. The bulk non-land inventory contains 6,480 modeled cards. The thirteen-card
+clean-tree card gate passed all 167 suites and 4,497 tests. Its complete bulk-enabled suite
+continues on the frozen thirteen-card revision. Final implementation review and primitive
+eligibility remain required, and no live gameplay-AI quality evaluation is claimed.

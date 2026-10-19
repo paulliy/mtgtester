@@ -77,6 +77,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'benevolent-offering-viewer-same-opponent',
       'councils-judgment-viewer-tied-votes',
       'councils-judgment-viewer-unanimous-hexproof',
+      'agitator-ant-viewer-accept',
+      'agitator-ant-viewer-decline',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

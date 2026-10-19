@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
@@ -15469,6 +15470,183 @@ export const CARD_TEST_SCENARIO_IDS = [
   'body-launderer-viewer-return',
 ] as const;
 
+// --- Coverage PR08.13: Agitator Ant (each player may put counters; goad what got them) ---
+//
+// ONE board, two runs. The clause is a single APNAP instruction, so the board is arranged to make
+// every half of it observable: P1 casts the printed {2}{R} creature normally and is asked first;
+// P2 controls one ordinary 2/2 and is asked next; P3 controls another and is asked last; P4
+// controls NO creature, so it is never asked at all. A player is only ever offered the creatures
+// THEY control, so P1's single menu naming only Agitator Ant is itself a result.
+//
+// Both runs finish P1's turn, so the counters and the goad must survive a real cleanup step, and
+// then run P2's real turn: in the accepting run P2's scripted seat sends its goaded Bear at P3,
+// which is the only place the viewer can SEE the goad (the published board projection carries no
+// goad field). In the declining run P1, P2 and P3 all decline, nothing is placed and nothing is
+// goaded — including on P2's own end step, which is not "your end step".
+const LAB_ANT_BEAR = card({
+  oracleId: 'lab-pr08-ant-bear',
+  name: 'Lab Ant Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+const LAB_ANT_CUB = card({
+  oracleId: 'lab-pr08-ant-cub',
+  name: 'Lab Ant Cub',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+/**
+ * A seat answering the Ant's per-player counter menu, then playing the rest of its turn. `pick` is
+ * the creature this seat puts counters on (or null to decline); `attack` is the player its own
+ * creatures are sent at, or null to stay home. Everything else passes.
+ */
+function antEndStepSeat(pick: string | null, attack: PlayerId | null): DecisionProvider {
+  return {
+    decide(request) {
+      const antMenu = request.legalActions.some((action) =>
+        action.description.startsWith('Put 2 +1/+1 counters on '),
+      );
+      if (antMenu) {
+        const wanted = pick === null ? 'Put no counters' : `Put 2 +1/+1 counters on ${pick}`;
+        const action = request.legalActions.find((entry) => entry.description === wanted);
+        if (action === undefined)
+          throw new Error(
+            `No "${wanted}" among [${request.legalActions.map((entry) => entry.description).join(', ')}]`,
+          );
+        return { requestId: request.requestId, actionId: action.id };
+      }
+      if (attack !== null) {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (declare !== undefined) {
+          return {
+            requestId: request.requestId,
+            actionId: declare.id,
+            targets: (declare.targets ?? []).map((slot) => ({
+              slot: slot.slot,
+              choice: slot.options.includes(attack) ? attack : (slot.options[0] as string),
+            })),
+          };
+        }
+      }
+      // A creature that is NOT goaded may legally stay home, so the declining run still reaches a
+      // real attack declaration; answer it with the engine's own "attack with nothing" choice.
+      const declares = request.legalActions.find((action) => action.type === 'attackDeclaration');
+      if (declares !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: declares.id,
+          targets: (declares.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_ATTACK_TARGET)
+              ? NO_ATTACK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      // Nothing scripted here blocks: a block declaration is still a real decision, and answering
+      // it with the engine's own "no block" choice is what the viewer's "Confirm blocks" sends.
+      const blocks = request.legalActions.find((action) => action.type === 'blockDeclaration');
+      if (blocks !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: blocks.id,
+          targets: (blocks.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_BLOCK_TARGET)
+              ? NO_BLOCK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTestScenario {
+  const ant = pinnedFrom(COVERAGE_PR08, 'Agitator Ant');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder (see the Benevolent
+   * Offering board): it is never cast, but it stays in hand and is castable, so the last priority
+   * window is a real one rather than an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-ant-priority-witness',
+    name: 'Lab Ant Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const accept = mode === 'accept';
+  return pr01Scenario(gameId, {
+    id: `agitator-ant-viewer-${mode}`,
+    title: accept
+      ? 'Agitator Ant: accepting counters goads the chosen creatures'
+      : 'Agitator Ant: declining counters leaves its creature ungoaded',
+    instructions: [
+      'Cast Agitator Ant from your hand with the Mountain and the two Forests. The spell has no targets.',
+      accept
+        ? 'At your end step, choose Agitator Ant for your own two +1/+1 counters. P2 then chooses its own Bear and P3 declines.'
+        : 'At your end step, decline: you put no counters, and P2 and P3 decline too. P4 controls no creature and is never asked.',
+      accept
+        ? 'On P2’s next turn the goaded Bear attacks P3 instead of you, and the counters and the goad both survive the cleanup step.'
+        : 'Agitator Ant is still a 2/2 with no counters, and P2’s end step triggers nothing.',
+    ],
+    expectedOutcome: accept
+      ? 'Agitator Ant is a 4/4 and P2’s Lab Ant Bear is a 4/4, both goaded by you; P3’s Lab Ant Cub stays 2/2. On P2’s turn the Bear attacks P3, who drops to 36, and never you.'
+      : 'Nothing is placed and nothing is goaded: Agitator Ant is a 2/2, P2’s Lab Ant Bear and P3’s Lab Ant Cub are untouched 2/2s, and only P1, P2 and P3 were ever asked.',
+    oracleSha256: ant.sha256,
+    clauseIds: ['agitator-ant-end-step-counter-choice', 'agitator-ant-goad-positive-placements'],
+    decks: {
+      P1: [ant.card, witness, MOUNTAIN, FOREST, FOREST, ...PR01_FILLER],
+      P2: [LAB_ANT_BEAR, ...PR01_FILLER],
+      P3: [LAB_ANT_CUB, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Agitator Ant', 'Lab Ant Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Ant Bear'] },
+        { playerId: 'P3', cardNames: ['Lab Ant Cub'] },
+        // P4 deliberately starts with no creature: it is never asked for a choice.
+      ],
+      // P1's combat, postcombat main and end step, the cleanup step, then P2's whole turn.
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+      continueThroughNextTurn: true,
+    },
+    decisionProviderOverrides: {
+      // P1 answers in the viewer; these two are the seats whose own menus the browser never sees.
+      P2: antEndStepSeat(accept ? 'Lab Ant Bear' : null, accept ? 'P3' : null),
+      P3: antEndStepSeat(null, null),
+    },
+  });
+}
+
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
   'kazuul-viewer-decline': (gameId) => kazuulScenario(gameId, 'decline'),
   'kazuul-viewer-pay': (gameId) => kazuulScenario(gameId, 'pay'),
@@ -15480,6 +15658,8 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     schemingSymmetryScenario(gameId, 'you-and-opponent'),
   'scheming-symmetry-viewer-two-opponents-empty-library': (gameId) =>
     schemingSymmetryScenario(gameId, 'two-opponents-empty-library'),
+  'agitator-ant-viewer-accept': (gameId) => agitatorAntScenario(gameId, 'accept'),
+  'agitator-ant-viewer-decline': (gameId) => agitatorAntScenario(gameId, 'decline'),
   ...Object.fromEntries(
     PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
       id,

@@ -1053,8 +1053,126 @@ function doubleEachPlayerCounter(
 }
 
 /**
+ * One requested counter placement in a simultaneous batch (Agitator Ant, CR 608.2d): several
+ * placements planned together against the ONE pre-placement board state, applied together, and
+ * observed together by one `countersPut` event — not a loop of `addCounters` calls, which would
+ * let a later placement's trigger observe an earlier placement's counters.
+ */
+interface CounterPlacement {
+  perm: EnginePermanent;
+  counter: string;
+  count: number;
+  /** Whose "put counters this way" event each placement is (`countersPut` rows' `playerId`). */
+  placingPlayerId: PlayerId;
+}
+
+/**
+ * Place every requested batch of counters as one simultaneous event (CR 608.2d): plan ALL
+ * positive requested amounts and their replacements from the PRE-placement state, capture the
+ * before-counts and expire counter-bound attack restrictions correctly, then apply every
+ * mutation and timestamp BEFORE any `countersPut` trigger observes anything, one counters log
+ * per placement, ONE batched `countersPut` event whose rows name each actual placer, and then
+ * the existing counter-threshold triggers read against the batch's before/final values.
+ *
+ * Returns the amounts ACTUALLY placed per selected permanent: zero for a nonpositive request,
+ * zero for a placement fully replaced to zero (which still logs its 0, like the single path,
+ * but is never a row of the batched event — no counters were put).
+ */
+function addCounterPlacements(
+  ctx: GameContext,
+  source: EffectSource,
+  placements: readonly CounterPlacement[],
+): Map<ObjectId, number> {
+  const planned: {
+    placement: CounterPlacement;
+    before: number;
+    adjustedCount: number;
+  }[] = [];
+  // Planning reads only pre-placement state: replacements were consulted before any placement
+  // in this batch moved anything (they are counters "put ... this way", one batch).
+  for (const placement of placements) {
+    if (placement.count <= 0) continue;
+    expireCounterBoundAttackRestrictions(placement.perm);
+    planned.push({
+      placement,
+      before: counterCount(placement.perm.counters, placement.counter),
+      adjustedCount: counterAmountAfterReplacements(
+        ctx,
+        placement.perm,
+        placement.counter,
+        placement.count,
+      ),
+    });
+  }
+  for (const { placement, adjustedCount } of planned) {
+    if (adjustedCount <= 0) continue;
+    setCounterCount(
+      placement.perm.counters,
+      placement.counter,
+      counterCount(placement.perm.counters, placement.counter) + adjustedCount,
+    );
+    placement.perm.counterTimestamps ??= {};
+    setCounterCount(placement.perm.counterTimestamps, placement.counter, ctx.state.nextTimestamp++);
+  }
+  for (const { placement, adjustedCount } of planned) {
+    emit(ctx, 'counters', {
+      source: source.name,
+      target: placement.perm.name,
+      targetCardId: placement.perm.cardId,
+      counter: placement.counter,
+      added: adjustedCount,
+      total: counterCount(placement.perm.counters, placement.counter),
+    });
+  }
+  const actual = new Map<ObjectId, number>();
+  for (const placement of placements) actual.set(placement.perm.id, 0);
+  // One batched event: aggregate "one or more counters are put" triggers read every placement.
+  queueTriggersForEvent(
+    ctx,
+    'countersPut',
+    planned
+      .filter(({ adjustedCount }) => adjustedCount > 0)
+      .map(({ placement, adjustedCount }) => {
+        actual.set(placement.perm.id, adjustedCount);
+        return {
+          permanent: placement.perm,
+          playerId: placement.placingPlayerId,
+          counterKinds: [placement.counter],
+        };
+      }),
+  );
+  for (const { placement, before, adjustedCount } of planned) {
+    if (adjustedCount <= 0) continue;
+    const def = ctx.defs.get(placement.perm.oracleId);
+    for (const threshold of def?.counterThresholdTriggers ?? []) {
+      const final = counterCount(placement.perm.counters, placement.counter);
+      if (
+        threshold.counter !== placement.counter ||
+        before >= threshold.threshold ||
+        final < threshold.threshold
+      )
+        continue;
+      const copies = 1 + additionalTypedTriggerCopies(ctx, placement.perm);
+      for (let copy = 0; copy < copies; copy++) {
+        ctx.state.pendingTriggers.push({
+          controllerId: placement.perm.controllerId,
+          sourceCardId: placement.perm.cardId,
+          sourceObjectId: placement.perm.id,
+          sourceOracleId: placement.perm.oracleId,
+          sourceName: placement.perm.name,
+          ability: threshold.ability,
+        });
+      }
+    }
+  }
+  return actual;
+}
+
+/**
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
+ * A single placement is the one-placement case of the simultaneous batch, with the ability's
+ * controller as the placing player; the return value stays "counters actually placed".
  */
 function addCounters(
   ctx: GameContext,
@@ -1063,48 +1181,85 @@ function addCounters(
   counter: string,
   count: number,
 ): number {
-  if (count <= 0) return 0;
-  expireCounterBoundAttackRestrictions(perm);
-  const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
-  const before = counterCount(perm.counters, counter);
-  setCounterCount(perm.counters, counter, counterCount(perm.counters, counter) + adjustedCount);
-  if (adjustedCount > 0) {
-    perm.counterTimestamps ??= {};
-    setCounterCount(perm.counterTimestamps, counter, ctx.state.nextTimestamp++);
+  const actual = addCounterPlacements(ctx, source, [
+    { perm, counter, count, placingPlayerId: source.controllerId },
+  ]);
+  return actual.get(perm.id) ?? 0;
+}
+
+/**
+ * "Each player may put N <counter> counters on a creature they control. Goad each creature that
+ * had counters put on it this way." — the whole clause is one resolution in APNAP order
+ * (CR 101.4): the ACTIVE player starts, not the ability's controller.
+ *
+ * Every choice is collected before any counter moves (CR 608.2d): "each player may" is one
+ * instruction, so no player's choice can see what another player's choice received. The
+ * choices are each player's own, made public as they are made; a player with no creature is
+ * not asked. A player who declines puts nothing. The goad is always applied by the ability's
+ * controller (CR 701.15a), never by the chooser merely for choosing, and only on creatures
+ * that actually received counters: a placement
+ * fully replaced to zero put none.
+ */
+function* eachPlayerMayPutCountersAndGoad(
+  ctx: GameContext,
+  source: EffectSource,
+  goaderId: PlayerId,
+  effect: Extract<Effect, { op: 'eachPlayerMayPutCountersAndGoad' }>,
+  count: number,
+): GameGen<void> {
+  const choices: { playerId: PlayerId; perm: EnginePermanent }[] = [];
+  for (const player of playersInApnapOrder(ctx)) {
+    // "on a creature they control": each player picks among the creatures THEY control as this
+    // instruction resolves — no target slots, so hexproof and shroud do not distinguish
+    // anything; and a player controlling no creature is not prompted at all.
+    const creatures = ctx.state.battlefield.filter(
+      (perm) =>
+        perm.controllerId === player.id &&
+        computeCharacteristics(ctx, perm).types.includes('Creature'),
+    );
+    if (creatures.length === 0) continue;
+    const picked = yield* chooseCard(ctx, {
+      player: player.id,
+      prompt: `${source.name}: put ${count} ${effect.counter} counters on a creature you control, or put none.`,
+      cards: creatures,
+      type: 'putCounters',
+      verb: 'Choose',
+      describe: (perm) => `Put ${count} ${effect.counter} counters on ${perm.name}`,
+      decline: { type: 'decline', description: 'Put no counters', verb: 'Decline' },
+    });
+    // The choice is public the moment it is made (druidPurification's precedent), with the
+    // chooser as the acting player. No raw card payload: the standard picker reads the choice
+    // back by index, which keeps the option reachable for hidden-zone picks too.
+    emit(
+      ctx,
+      'permanentChoice',
+      { source: source.name, name: picked?.name ?? null, objectId: picked?.id ?? null },
+      player.id,
+    );
+    if (picked !== null) choices.push({ playerId: player.id, perm: picked });
   }
-  emit(ctx, 'counters', {
-    source: source.name,
-    target: perm.name,
-    targetCardId: perm.cardId,
-    counter,
-    added: adjustedCount,
-    total: counterCount(perm.counters, counter),
-  });
-  if (adjustedCount > 0)
-    queueTriggersForEvent(ctx, 'countersPut', [
-      { permanent: perm, playerId: source.controllerId, counterKinds: [counter] },
-    ]);
-  const def = ctx.defs.get(perm.oracleId);
-  for (const threshold of def?.counterThresholdTriggers ?? []) {
-    if (
-      threshold.counter !== counter ||
-      before >= threshold.threshold ||
-      counterCount(perm.counters, counter) < threshold.threshold
-    )
-      continue;
-    const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
-    for (let copy = 0; copy < copies; copy++) {
-      ctx.state.pendingTriggers.push({
-        controllerId: perm.controllerId,
-        sourceCardId: perm.cardId,
-        sourceObjectId: perm.id,
-        sourceOracleId: perm.oracleId,
-        sourceName: perm.name,
-        ability: threshold.ability,
-      });
-    }
+  // All choices are frozen before the batch, and each frozen object is rechecked on the
+  // battlefield as the batch is assembled: a creature that left the battlefield between the
+  // choice and the counters is a new object (CR 400.7) and receives nothing.
+  const placements: CounterPlacement[] = [];
+  for (const { playerId, perm } of choices) {
+    const current = findPermanent(ctx, perm.id);
+    if (current === undefined) continue;
+    placements.push({
+      perm: current,
+      counter: effect.counter,
+      count,
+      placingPlayerId: playerId,
+    });
   }
-  return adjustedCount;
+  const placed = addCounterPlacements(ctx, source, placements);
+  for (const { perm } of choices) {
+    if ((placed.get(perm.id) ?? 0) <= 0) continue;
+    const goaded = findPermanent(ctx, perm.id);
+    if (goaded === undefined) continue;
+    addGoadRequirement(ctx, goaded, goaderId);
+    emit(ctx, 'goad', { target: goaded.name, source: source.name });
+  }
 }
 
 /**
@@ -6421,6 +6576,15 @@ export function* executeAbility(
         yield* movePermanentsToGraveyard(ctx, destroyed);
         break;
       }
+      case 'eachPlayerMayPutCountersAndGoad':
+        yield* eachPlayerMayPutCountersAndGoad(
+          ctx,
+          source,
+          controller.id,
+          effect,
+          amountOf(effect.count),
+        );
+        break;
       case 'voteAndExileMost': {
         // The candidate set is fixed as the ability resolves (CR 611.2c) and is measured against
         // the ability's ORIGINAL controller — "each player votes for a permanent you don't

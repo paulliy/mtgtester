@@ -1555,6 +1555,23 @@ export type Effect =
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }
   /**
+   * "At the beginning of your end step, each player may put N `<counter>` counters on a creature
+   * they control. Goad each creature that had counters put on it this way." (Agitator Ant) — one
+   * op rather than `putCounters` plus `goad`, because the two sentences are not independent: the
+   * goaders are exactly the creatures the counters were placed on (CR 701.15a — goading is done
+   * by this ability's controller, not by each chooser).
+   *
+   * The choices are not targets (CR 115.10a — each player picks their own creature as the
+   * ability resolves): hexproof and shroud do not matter, and "a creature they control" cannot
+   * be a target slot, because every player in the game chooses, not one announced player. All
+   * choices are collected before any counters move (CR 608.2d — "each player may" is one
+   * instruction in one resolution), so no player's choice can see the counters another player's
+   * earlier choice received. A placement whose amount survives counter-placement replacements
+   * as zero is not "counters put on it this way" (a creature had counters put on it this way
+   * only when it received at least one), so it is not goaded (CR 107.1f mirrors this distinction).
+   */
+  | { op: 'eachPlayerMayPutCountersAndGoad'; counter: string; count: Value }
+  /**
    * "Starting with you, each player votes for a … permanent you don't control. Exile each
    * permanent with the most votes or tied for most votes." (Council's Judgment)
    *

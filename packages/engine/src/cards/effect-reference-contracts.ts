@@ -337,6 +337,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   extraCombatPhase: {},
   becomeMonarch: {},
   druidPurification: {},
+  eachPlayerMayPutCountersAndGoad: {},
   voteAndExileMost: {},
   exileTargetWithSource: { target: permanent },
   exileAndManifestTarget: { target: permanent },

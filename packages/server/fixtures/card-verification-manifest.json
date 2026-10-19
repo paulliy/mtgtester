@@ -13369,6 +13369,52 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "abe377f8-35f0-4dea-a681-91d31a36815c": {
+      "name": "Agitator Ant",
+      "oracleSha256": "02655069d32bb3566e265f4d4ee06a65e89067c753c393dcb57eca89f7cbb53a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "agitator-ant-end-step-counter-choice",
+          "oracleText": "At the beginning of your end step, each player may put two +1/+1 counters on a creature they control.",
+          "implementation": [
+            "normal {2}{R} creature cast, own end-step trigger; each living player chooses its own creature without targeting or may decline, APNAP from active player; all choices precede a simultaneous counter batch, consulting replacements and before-counts before any updates; each player is the actual placer, ordinary timestamps and threshold triggers preserved"
+          ],
+          "engineTestIds": [
+            "agitator-pinned-oracle-supported",
+            "agitator-pinned-def-is-clean",
+            "agitator-normal-cast-pays-two-generic-and-one-red-and-enters-unremarkable",
+            "agitator-normal-cast-rejects-insufficient-mana-and-nonmain-timing",
+            "agitator-end-step-is-your-end-step-only",
+            "agitator-apnap-active-first-choices-frozen-before-counters",
+            "agitator-empty-players-not-asked-and-decline-puts-nothing",
+            "agitator-doubling-season-replacement",
+            "agitator-replacement-to-zero-logs-the-zero-and-never-goads",
+            "agitator-queued-trigger-outlives-its-source-and-keeps-its-controller"
+          ],
+          "viewerScenarioIds": ["agitator-ant-viewer-accept", "agitator-ant-viewer-decline"]
+        },
+        {
+          "id": "agitator-ant-goad-positive-placements",
+          "oracleText": "Goad each creature that had counters put on it this way.",
+          "implementation": [
+            "only exact selected incarnations receiving a positive actual placement are goaded by the original ability controller until that player next turn begins; cleanup and later counter removal do not end goad, blink does not copy it, and ordinary attack requirements apply"
+          ],
+          "engineTestIds": [
+            "agitator-empty-players-not-asked-and-decline-puts-nothing",
+            "agitator-doubling-season-replacement",
+            "agitator-replacement-to-zero-logs-the-zero-and-never-goads",
+            "agitator-queued-trigger-outlives-its-source-and-keeps-its-controller",
+            "agitator-goaded-creature-must-attack-and-spare-its-goader",
+            "agitator-goad-expires-at-the-goaders-next-turn-not-cleanup",
+            "agitator-removing-counters-keeps-the-goad",
+            "agitator-blink-new-incarnation"
+          ],
+          "viewerScenarioIds": ["agitator-ant-viewer-accept", "agitator-ant-viewer-decline"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

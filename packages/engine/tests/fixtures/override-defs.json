@@ -10298,6 +10298,36 @@
     }
   },
   {
+    "oracleId": "abe377f8-35f0-4dea-a681-91d31a36815c",
+    "name": "Agitator Ant",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "+1/+1",
+              "op": "eachPlayerMayPutCountersAndGoad"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
     "name": "Firemane Commando",
     "handledLines": [
@@ -17083,6 +17113,36 @@
     "name": "Aetherworks Marvel",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-agitator-ant",
+    "name": "Agitator Ant",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 2
+              },
+              "counter": "+1/+1",
+              "op": "eachPlayerMayPutCountersAndGoad"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-ajani-caller-of-the-pride",

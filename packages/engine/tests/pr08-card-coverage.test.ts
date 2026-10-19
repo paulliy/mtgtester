@@ -39,6 +39,7 @@ const IMPLEMENTED = new Set<string>([
   'Kazuul, Tyrant of the Cliffs',
   'Benevolent Offering',
   "Council's Judgment",
+  'Agitator Ant',
   'Alicia Masters, Skilled Sculptor',
   'Reins of Power',
 ]);

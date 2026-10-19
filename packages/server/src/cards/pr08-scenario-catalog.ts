@@ -31,4 +31,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'benevolent-offering-viewer-same-opponent',
   'councils-judgment-viewer-tied-votes',
   'councils-judgment-viewer-unanimous-hexproof',
+  'agitator-ant-viewer-accept',
+  'agitator-ant-viewer-decline',
 ];

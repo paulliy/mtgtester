@@ -1463,3 +1463,266 @@ test("Council's Judgment: unanimous votes exile a creature with hexproof", async
     'P4:40:false',
   ]);
 });
+
+// --- Coverage PR08.13: Agitator Ant ---
+//
+// One board, two runs. "Each player may put two +1/+1 counters on a creature they control. Goad
+// each creature that had counters put on it this way." is ONE resolution-time choice set in APNAP
+// order, so the board is arranged to make every half of it observable: the browser casts the
+// printed {2}{R} creature out of hand and pays it with the Mountain and two Forests; P2 controls
+// one ordinary 2/2 Bear, P3 another, and P4 controls nothing at all.
+//
+// The counters are read from the board itself (a `+1/+1×2` badge and a 4/4 P/T), and the GOAD is
+// read from the only place the viewer can show it: on P2's own turn the goaded Bear must attack
+// another player, and it does. The published board projection carries no goad field, so nothing
+// here asserts one — that would be inventing a wire fact.
+//
+// The three choice menus are resolution choices, never targets: the panel must offer no target
+// slot, must highlight no board panel, and must name only the chooser's OWN creatures.
+
+const ANT = 'Agitator Ant';
+const ANT_WITNESS = 'Lab Ant Priority Witness';
+const ANT_P2_BEAR = 'Lab Ant Bear';
+const ANT_P3_CUB = 'Lab Ant Cub';
+const ANT_ASK = 'put 2 +1/+1 counters on a creature you control, or put none.';
+
+/** The arranged board, asserted before anything is cast. */
+async function expectAntArrangement(page: Page): Promise<void> {
+  await expect(handCard(page, ANT)).toBeVisible();
+  await expect(handCard(page, ANT_WITNESS)).toBeVisible();
+  await expect(humanPermanent(page, ANT)).toHaveCount(0);
+  // Two identical Forests render as one tile with a ×2 badge.
+  await expect(humanPermanent(page, 'Forest')).toHaveCount(1);
+  await expect(humanPermanent(page, 'Forest').locator('.stack-count-badge')).toHaveText('×2');
+  await expect(humanPermanent(page, 'Mountain')).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', ANT_P2_BEAR)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', ANT_P3_CUB)).toHaveCount(1);
+  // P4 deliberately controls no creature.
+  await expect(page.locator('.opponent[data-seat="P4"] .object')).toHaveCount(0);
+  for (const seat of ['own', 'P2', 'P3', 'P4'] as const)
+    await expect(seatLife(page, seat)).toHaveText('40');
+}
+
+/** P1's own Ant menu: its own creature only, a decline, and never a target slot. */
+async function expectOwnAntMenu(page: Page): Promise<void> {
+  const panel = page.locator('.decision-panel');
+  await expect(panel.locator('.panel-prompt')).toContainText(ANT_ASK);
+  // No target slots and no selection counter: this is a resolution choice, not a target.
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  await expect(page.getByText(/All \d+ targets? selected/)).toHaveCount(0);
+  // Nothing on the board is highlighted as a legal target, on either side of the table.
+  await expect(page.locator('.human-zone > header')).not.toHaveClass(/targetable/);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
+  // Only your OWN creatures are named — never an opponent's — plus the printed decline.
+  await expect(panel.locator('.group-card span')).toHaveText([ANT]);
+  await expect(page.getByRole('button', { name: 'Put no counters', exact: true })).toHaveCount(1);
+}
+
+test('Agitator Ant: accepting counters goads the chosen creatures', async ({ page }) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(page, 'Agitator Ant: accepting counters goads the chosen creatures');
+  await expectAntArrangement(page);
+
+  // Cast the printed {2}{R} creature the ordinary way. It has no targets, so no target slot.
+  await castPr08Card(page, ANT);
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  const ant = humanPermanent(page, ANT);
+  await passStackUntil(page, ant);
+  await expect(humanPermanent(page, 'Mountain').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Forest').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Forest').locator('.stack-count-badge')).toHaveText('×2');
+  // It enters as an ordinary 2/2: no counters and nothing goaded yet.
+  await expect(ant.locator('.pt')).toHaveText('2/2');
+  await expect(ant.getByText(/\+1\/\+1/)).toHaveCount(0);
+
+  // Your own end step asks you. The trigger reached the menu through the ordinary end step.
+  const chooseAnt = page
+    .locator('.decision-panel .panel-group')
+    .filter({ hasText: ANT })
+    .getByRole('button', { name: 'Choose', exact: true });
+  await passUntil(page, chooseAnt);
+  await expectOwnAntMenu(page);
+  await expect(ant.getByText(/\+1\/\+1/)).toHaveCount(0);
+  await chooseAnt.click();
+
+  // P2's and P3's choices are their own private menus: this seat never sees either, and nothing
+  // moves until the last of the three choices exists.
+  await expect(ant.locator('.counters')).toHaveText('+1/+1×2');
+  // Both placements really landed, and the goad really went on: Agitator Ant and P2's Bear are
+  // 4/4s, while P3's declining Cub is untouched.
+  await expect(ant.locator('.pt')).toHaveText('4/4');
+  await expect(seatPermanent(page, 'P2', ANT_P2_BEAR).locator('.pt')).toHaveText('4/4');
+  await expect(seatPermanent(page, 'P2', ANT_P2_BEAR).locator('.counters')).toHaveText('+1/+1×2');
+  await expect(seatPermanent(page, 'P3', ANT_P3_CUB).locator('.pt')).toHaveText('2/2');
+  await expect(seatPermanent(page, 'P3', ANT_P3_CUB).getByText(/\+1\/\+1/)).toHaveCount(0);
+  // No opponent menu was ever shown to this seat: P2 and P3 answered their own choices.
+  await expect(page.locator('.decision-panel .group-player')).toHaveCount(0);
+
+  // The choices are public: yours and P2's, each with its own chooser, P3's decline published as
+  // a decline. The asking source is the whole stack entry, so the lines are matched on their tail.
+  const lines = await logLines(page);
+  expect(
+    lines.filter((line) =>
+      /^Agitator Ant — At the beginning of your end step.*: chooses Agitator Ant$/.test(
+        line.trim(),
+      ),
+    ),
+    'your own choice is public',
+  ).toHaveLength(1);
+  expect(
+    lines.filter((line) =>
+      new RegExp(
+        `^Agitator Ant — At the beginning of your end step.*: chooses ${ANT_P2_BEAR}$`,
+      ).test(line.trim()),
+    ),
+    "P2's choice is public",
+  ).toHaveLength(1);
+  expect(
+    lines.filter((line) =>
+      /^Agitator Ant — At the beginning of your end step.*: chooses no permanent$/.test(
+        line.trim(),
+      ),
+    ),
+    "P3's decline is public too",
+  ).toHaveLength(1);
+
+  // P2's real turn follows: the cleanup step does not end a goad, so its Bear must attack — and
+  // it must attack a player other than you.
+  await passUntil(page, page.getByText(/game over/i).first());
+  await expect(seatLife(page, 'own')).toHaveText('40');
+  await expect(seatLife(page, 'P2')).toHaveText('40');
+  await expect(seatLife(page, 'P3')).toHaveText('36');
+  await expect(seatLife(page, 'P4')).toHaveText('40');
+  const finished = await logLines(page);
+  expect(
+    finished.filter((line) => /attacks with 1 creature/.test(line)),
+    'exactly one combat, and it was the goaded Bear',
+  ).toHaveLength(1);
+
+  // The counters and the 4/4 statistics outlived the cleanup step and the combat.
+  await expect(ant.locator('.pt')).toHaveText('4/4');
+  await expect(ant.locator('.counters')).toHaveText('+1/+1×2');
+  await expect(seatPermanent(page, 'P2', ANT_P2_BEAR).locator('.pt')).toHaveText('4/4');
+  // The published board carries the counters and never a goad field; the forced attack above is
+  // the goad's public proof.
+  const settled = await wireBoardWhere(
+    boards,
+    (board) => board.battlefield.some((entry) => entry.name === ANT && entry.power === 4),
+    'the published board carries the counters as effective statistics',
+  );
+  expect(
+    settled.battlefield
+      .filter((entry) => entry.power !== null)
+      .map(
+        (entry) =>
+          `${entry.name}/${entry.controller}/${entry.power}/${entry.counters['+1/+1'] ?? 0}`,
+      )
+      .sort(),
+  ).toEqual([`${ANT}/P1/4/2`, `${ANT_P2_BEAR}/P2/4/2`, `${ANT_P3_CUB}/P3/2/0`].sort());
+  // The three arranged lands are still there, still P1's, and still carry no counters.
+  expect(settled.battlefield.filter((entry) => entry.name === 'Forest')).toHaveLength(2);
+  expect(
+    settled.battlefield
+      .filter((entry) => entry.name === 'Forest' || entry.name === 'Mountain')
+      .every((land) => land.controller === 'P1' && land.power === null),
+  ).toBe(true);
+  expect(
+    settled.battlefield.some((entry) => Object.keys(entry).some((key) => key.includes('goad'))),
+  ).toBe(false);
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}`)).toEqual([
+    'P1:40',
+    'P2:40',
+    'P3:36',
+    'P4:40',
+  ]);
+  // Nobody's hidden cards crossed the wire: the only new names are the arranged board's.
+  expect(settled.battlefield.some((entry) => entry.name === ANT_WITNESS)).toBe(false);
+  // The run finished: nothing is left on offer, and no opponent menu was ever rendered here.
+  await expectOwnAntMenuIsGone(page);
+  await expect(page.locator('.decision-panel .group-player')).toHaveCount(0);
+});
+
+/** After the choice resolves the panel is gone; the next thing on offer is ordinary priority. */
+async function expectOwnAntMenuIsGone(page: Page): Promise<void> {
+  await expect(page.locator('.decision-panel')).toHaveCount(0);
+}
+
+test('Agitator Ant: declining counters leaves its creature ungoaded', async ({ page }) => {
+  const boards = recordPlayerBoards(page);
+  await runScenario(page, 'Agitator Ant: declining counters leaves its creature ungoaded');
+  await expectAntArrangement(page);
+
+  await castPr08Card(page, ANT);
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  const ant = humanPermanent(page, ANT);
+  await passStackUntil(page, ant);
+  await expect(ant.locator('.pt')).toHaveText('2/2');
+
+  // The same menu, on the same board: the printed choice is optional, and declining is a real
+  // answer to it rather than a skipped screen.
+  const decline = page.getByRole('button', { name: 'Put no counters', exact: true });
+  await passUntil(page, decline);
+  await expectOwnAntMenu(page);
+  await decline.click();
+
+  // Nothing was placed and nothing was goaded — including on your own Ant, and including on P2's
+  // and P3's creatures, whose own seats declined as well.
+  await expect(ant.getByText(/\+1\/\+1/)).toHaveCount(0);
+  await expect(ant.locator('.pt')).toHaveText('2/2');
+  for (const seat of ['P2', 'P3'] as const) {
+    const bystander = seatPermanent(page, seat, seat === 'P2' ? ANT_P2_BEAR : ANT_P3_CUB);
+    await expect(bystander.locator('.pt')).toHaveText('2/2');
+    await expect(bystander.getByText(/\+1\/\+1/)).toHaveCount(0);
+  }
+  const lines = await logLines(page);
+  expect(
+    lines.filter((line) =>
+      /^Agitator Ant — At the beginning of your end step.*: chooses no permanent$/.test(
+        line.trim(),
+      ),
+    ),
+    'all three declines are public',
+  ).toHaveLength(3);
+
+  // P2's turn follows and nothing is forced: an un-goaded Bear may stay home, and nobody loses
+  // life. P2's own end step is not "your end step", so the Ant never triggers a second time.
+  await passUntil(page, page.getByText(/game over/i).first());
+  for (const seat of ['own', 'P2', 'P3', 'P4'] as const)
+    await expect(seatLife(page, seat)).toHaveText('40');
+  const finished = await logLines(page);
+  expect(
+    finished.filter((line) => /attacks with/.test(line)),
+    'no combat at all',
+  ).toHaveLength(0);
+  expect(
+    finished.filter((line) =>
+      /^Agitator Ant — At the beginning of your end step.*resolves$/.test(line.trim()),
+    ),
+    'the Ant resolved exactly once',
+  ).toHaveLength(1);
+
+  const settled = await wireBoardWhere(
+    boards,
+    (board) => board.seats.find((seat) => seat.seat === 'P3')?.life === 40,
+    'the published board carries the settled life totals',
+  );
+  expect(
+    settled.battlefield
+      .filter((entry) => entry.power !== null)
+      .map(
+        (entry) =>
+          `${entry.name}/${entry.power}/${entry.toughness}/${entry.counters['+1/+1'] ?? 0}`,
+      )
+      .sort(),
+  ).toEqual([`${ANT}/2/2/0`, `${ANT_P2_BEAR}/2/2/0`, `${ANT_P3_CUB}/2/2/0`].sort());
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}`)).toEqual([
+    'P1:40',
+    'P2:40',
+    'P3:40',
+    'P4:40',
+  ]);
+  // The run finished with nothing on offer, and no opponent menu was ever rendered for this seat.
+  await expectOwnAntMenuIsGone(page);
+  await expect(page.locator('.decision-panel .group-player')).toHaveCount(0);
+});

@@ -73,6 +73,31 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  // Agitator Ant. Both sentences are one unmodeled line — the printed goad lives inside the
+  // reminder text, so the keyword list stayed empty — and they are one clause in the engine:
+  // "each player may put two +1/+1 counters on a creature they control" is one resolution-time
+  // APNAP choice set (CR 101.4), and "goad each creature that had counters put on it this way"
+  // reads back exactly the placements that survived replacements with a positive amount, goaded
+  // by this ability's controller until the goader's next turn begins, as tracked by the
+  // existing goad store and removed in `turn.ts`.
+  defineCard(
+    'abe377f8-35f0-4dea-a681-91d31a36815c',
+    'Agitator Ant',
+    [
+      'unrecognized rules text: "At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way."',
+    ],
+    {
+      triggers: [
+        triggered(onEndStep('you'), {
+          effects: [
+            { op: 'eachPlayerMayPutCountersAndGoad', counter: '+1/+1', count: constant(2) },
+          ],
+          description:
+            'At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.',
+        }),
+      ],
+    },
+  );
   // Council's Judgment. "Will of the council —" is a keyword reminder line with no rules content,
   // so only the sentence below needs authoring. The vote is untargeted, so the ability carries no
   // target slot at all: the candidate pool is every nonland permanent the caster does not control,
