@@ -624,6 +624,7 @@ const effectExpressions = {
   extraCombatPhase: {},
   becomeMonarch: {},
   druidPurification: {},
+  voteAndExileMost: { selector: selector },
   exileTargetWithSource: {},
   exileAndManifestTarget: {},
   blinkTarget: {},

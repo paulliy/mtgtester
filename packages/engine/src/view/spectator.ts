@@ -374,6 +374,14 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
         text: `${str(p, 'source') ?? 'An ability'}: chooses ${str(p, 'name') ?? 'no permanent'}`,
       };
 
+    // A council vote names a battlefield permanent, so it is public like every other board fact —
+    // and the log says who voted for what, not just that someone voted.
+    case 'vote':
+      return {
+        ...base,
+        text: `${str(p, 'source') ?? 'An ability'}: ${str(p, 'voter') ?? 'a player'} votes for ${str(p, 'name') ?? 'a permanent'}`,
+      };
+
     case 'castSpell':
       return p['duringResolution'] === true
         ? { ...base, text: `casts ${str(p, 'name') ?? 'a spell'} without paying its mana cost` }

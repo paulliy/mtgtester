@@ -6421,6 +6421,57 @@ export function* executeAbility(
         yield* movePermanentsToGraveyard(ctx, destroyed);
         break;
       }
+      case 'voteAndExileMost': {
+        // The candidate set is fixed as the ability resolves (CR 611.2c) and is measured against
+        // the ability's ORIGINAL controller — "each player votes for a permanent you don't
+        // control". Nothing here is a target: hexproof, shroud and protection remove no option.
+        const abilityControllerId = controller.id;
+        const candidates = affectedBy(ctx, source, effect.selector);
+        if (candidates.length === 0) break;
+        const startIndex = ctx.state.turnOrder.indexOf(abilityControllerId);
+        if (startIndex < 0)
+          throw new Error('engine bug: vote controller is absent from turn order');
+        // "Starting with you": the rotation runs from the ability controller's own turn slot, not
+        // the active player's. Every living player votes — there is no "may" and no abstain — and
+        // every vote is collected before anything leaves (CR 608.2c).
+        const orderedPlayerIds = [
+          ...ctx.state.turnOrder.slice(startIndex),
+          ...ctx.state.turnOrder.slice(0, startIndex),
+        ].filter((id) => !playerById(ctx, id).hasLost);
+        const tally = new Map<ObjectId, number>();
+        for (const playerId of orderedPlayerIds) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: playerId,
+            prompt: `${source.name}: vote for a permanent ${abilityControllerId} doesn't control.`,
+            options: candidates.map((perm) =>
+              cardOption(ctx, perm, {
+                type: 'chooseCard',
+                description: `Vote for ${perm.name}`,
+                verb: 'Vote',
+              }),
+            ),
+          };
+          const picked = candidates[outcome.index];
+          if (picked === undefined) throw new Error('engine bug: vote choice is not a candidate');
+          tally.set(picked.id, (tally.get(picked.id) ?? 0) + 1);
+          // Battlefield permanents are public information, so the vote itself is: source, voter,
+          // and the exact object named. No library or hand identity is involved.
+          emit(
+            ctx,
+            'vote',
+            { source: source.name, voter: playerId, objectId: picked.id, name: picked.name },
+            playerId,
+          );
+        }
+        // "each permanent with the most votes or tied for most votes": counted by permanent
+        // object, never by card name, so two copies of the same card are two separate candidates.
+        // Zero-vote candidates cannot match — `most` is at least one. All winners leave together.
+        const most = Math.max(...tally.values());
+        const winners = candidates.filter((perm) => tally.get(perm.id) === most);
+        yield* movePermanentsTogether(ctx, winners, { zone: 'exile' });
+        break;
+      }
       case 'exileTargetWithSource': {
         const targetId = ref(effect.target);
         const target = targetId === null ? undefined : findPermanent(ctx, targetId);

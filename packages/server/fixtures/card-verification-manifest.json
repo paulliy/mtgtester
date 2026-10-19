@@ -13317,6 +13317,58 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "acf4d685-a718-42f7-9a7a-dee069ae8db2": {
+      "name": "Council's Judgment",
+      "oracleSha256": "fc8ad609d7a659cefbc858742af30f585db3edc89eca1de03dec248a1e8eb0a1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "councils-judgment-public-voting",
+          "oracleText": "Will of the council — Starting with you, each player votes for a nonland permanent you don't control.",
+          "implementation": [
+            "normal {1}{W}{W} sorcery cast without targets; voteAndExileMost fixes the source-relative nonland opponent-controlled pool and asks every living player in turn order starting with the original ability controller; votes are mandatory, public and bind exact object IDs; hexproof, shroud and protection do not restrict votes"
+          ],
+          "engineTestIds": [
+            "councils-judgment-pinned-oracle",
+            "councils-judgment-caster-votes",
+            "councils-judgment-turn-order",
+            "councils-judgment-candidate-pool",
+            "councils-judgment-control-not-ownership",
+            "councils-judgment-nontargeting",
+            "councils-judgment-no-candidates",
+            "councils-judgment-no-targets",
+            "councils-judgment-public-votes",
+            "councils-judgment-normal-cast-plurality",
+            "councils-judgment-cast-cost-and-timing"
+          ],
+          "viewerScenarioIds": [
+            "councils-judgment-viewer-tied-votes",
+            "councils-judgment-viewer-unanimous-hexproof"
+          ]
+        },
+        {
+          "id": "councils-judgment-most-votes-exile",
+          "oracleText": "Exile each permanent with the most votes or tied for most votes.",
+          "implementation": [
+            "tally the fixed object IDs after every vote; exile every positive highest-vote winner together in one departure event; no candidates means no votes or exile; zero-vote objects remain"
+          ],
+          "engineTestIds": [
+            "councils-judgment-plurality",
+            "councils-judgment-tie",
+            "councils-judgment-all-different",
+            "councils-judgment-unanimous",
+            "councils-judgment-no-candidates",
+            "councils-judgment-normal-cast-plurality",
+            "councils-judgment-public-votes"
+          ],
+          "viewerScenarioIds": [
+            "councils-judgment-viewer-tied-votes",
+            "councils-judgment-viewer-unanimous-hexproof"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

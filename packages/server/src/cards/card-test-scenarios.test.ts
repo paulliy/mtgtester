@@ -75,6 +75,8 @@ describe('deterministic Card Test Lab scenarios', () => {
       'alicia-masters-viewer-no-noncreature-spell',
       'benevolent-offering-viewer-different-opponents',
       'benevolent-offering-viewer-same-opponent',
+      'councils-judgment-viewer-tied-votes',
+      'councils-judgment-viewer-unanimous-hexproof',
       'breena-viewer-opponent-life-aggregate',
       'duelists-heritage-viewer-single-optional-target',
       'duress-viewer',

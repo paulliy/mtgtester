@@ -823,15 +823,18 @@
   {
     "oracleId": "acf4d685-a718-42f7-9a7a-dee069ae8db2",
     "name": "Council's Judgment",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Starting with you, each player votes for a nonland permanent you don't control. Exile each permanent with the most votes or tied for most votes.\""
+    "package": "PR08.15",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-councils-judgment.test.ts",
+      "packages/engine/tests/vote-exile-contract.test.ts",
+      "packages/server/src/cards/pr08-councils-judgment-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-councils-judgment.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",

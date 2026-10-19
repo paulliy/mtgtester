@@ -1554,6 +1554,17 @@ export type Effect =
   /** Make the ability's controller the monarch (CR  monarch). */
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }
+  /**
+   * "Starting with you, each player votes for a … permanent you don't control. Exile each
+   * permanent with the most votes or tied for most votes." (Council's Judgment)
+   *
+   * A public, untargeted vote, not a target spec: hexproof, shroud and protection never remove a
+   * candidate, and nobody may decline. The candidate set is the ability's `selector`, measured
+   * against the ability's original controller; the rotation starts at that controller's own turn
+   * slot and covers every living player, whoever holds priority. Every vote is recorded before
+   * anything leaves, and the winners are counted by permanent object, never by card name.
+   */
+  | { op: 'voteAndExileMost'; selector: Selector }
   | { op: 'exileTargetWithSource'; target: EffectRef }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
   | { op: 'blinkTarget'; target: EffectRef }

@@ -11557,6 +11557,23 @@ function neverBlocks(): DecisionProvider {
 }
 
 /**
+ * An opponent seat that votes for one named permanent whenever Council's Judgment asks it to, and
+ * otherwise passes. It answers exactly the vote it is offered — by the printed option's own
+ * description — so a seat that is never asked falls through to the ordinary pass.
+ */
+function votesFor(name: string): DecisionProvider {
+  return {
+    decide(request) {
+      const vote = request.legalActions.find(
+        (candidate) => candidate.description === `Vote for ${name}`,
+      );
+      if (vote !== undefined) return { requestId: request.requestId, actionId: vote.id };
+      return passOrNoBlock(request);
+    },
+  };
+}
+
+/**
  * An opponent seat that answers a sacrifice-or-lose prompt with `answer` ('decline' takes the
  * loss, otherwise the option whose description contains it), never blocks, and otherwise passes.
  */
@@ -13595,6 +13612,149 @@ function benevolentOfferingScenario(
   });
 }
 
+/**
+ * Coverage PR08.15: Council's Judgment. One board, two runs, and the ONLY difference is how the
+ * four votes land.
+ *
+ * Printed: {1}{W}{W} Sorcery — "Will of the council — Starting with you, each player votes for a
+ * nonland permanent you don't control. Exile each permanent with the most votes or tied for most
+ * votes."
+ *
+ * The board is arranged so every printed instruction is arithmetic rather than prose:
+ *
+ *  - P1 controls a NONLAND permanent of their own (Lab Council Relic) plus three Plains, so the
+ *    pool has something to exclude and `{1}{W}{W}` has exactly three real white sources.
+ *  - P2, P3 and P4 each control exactly ONE opponent nonland permanent, so the vote menu is three
+ *    options in a fixed order and "a permanent you don't control" cannot be satisfied by a land.
+ *  - P2 also controls a Forest, which is a land and therefore never on the menu — the exclusion is
+ *    by printed type, not by who holds the permanent.
+ *
+ * In the tied run the tally is 2:2:0, so "the most votes OR TIED FOR MOST votes" has to exile TWO
+ * permanents and spare the one nobody voted for. In the unanimous run the tally is 4:0:0, so
+ * exactly ONE leaves — and the object it names is a printed 0/3 with `Defender` and `Hexproof`,
+ * which the generic interpreter models completely. A vote is not a target, so hexproof removes no
+ * option and saves nothing: that is the printed sentence under test, not an accident of the board.
+ *
+ * The {0} instant witness is a real, fully interpreter-modeled card rather than a blank
+ * placeholder. It is never cast; it stays in hand, castable, so the run stops in the post-resolution
+ * priority window and "priority is still open" is an observation rather than an assumption.
+ */
+const LAB_COUNCIL_ALPHA = card({
+  oracleId: 'lab-pr08-council-alpha',
+  name: 'Lab Council Alpha',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_BETA = card({
+  oracleId: 'lab-pr08-council-beta',
+  name: 'Lab Council Beta',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_GAMMA = card({
+  oracleId: 'lab-pr08-council-gamma',
+  name: 'Lab Council Gamma',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_RELIC = card({
+  oracleId: 'lab-pr08-council-relic',
+  name: 'Lab Council Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+/**
+ * A printed 0/3 with two printed keyword lines. `Hexproof` is what makes the unanimous run's
+ * negative observable: the ability is non-targeting, so the keyword must cost the creature nothing.
+ */
+const LAB_COUNCIL_SENTINEL = card({
+  oracleId: 'lab-pr08-council-warded-sentinel',
+  name: 'Lab Council Warded Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender\nHexproof',
+});
+
+function councilsJudgmentScenario(
+  gameId: GameId,
+  mode: 'tied-votes' | 'unanimous-hexproof',
+): CardTestScenario {
+  const council = pinnedFrom(COVERAGE_PR08, "Council's Judgment");
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS];
+  const hexproofRun = mode === 'unanimous-hexproof';
+  // The two runs share every other element, so nothing but the vote pattern differs.
+  const p2Permanent = hexproofRun ? LAB_COUNCIL_SENTINEL : LAB_COUNCIL_ALPHA;
+  const unanimousTarget = LAB_COUNCIL_SENTINEL.name;
+  return pr01Scenario(gameId, {
+    id: `councils-judgment-viewer-${mode}`,
+    title: hexproofRun
+      ? "Council's Judgment: unanimous votes exile a creature with hexproof"
+      : "Council's Judgment: tied votes exile both winners and spare the unvoted permanent",
+    instructions: [
+      `Cast Council's Judgment from your hand with your three Plains and let it resolve.`,
+      hexproofRun
+        ? 'Every player votes for Lab Council Warded Sentinel, including P2 — its hexproof removes no option and spares it nothing.'
+        : 'Vote for Lab Council Alpha; P2 also votes for Lab Council Alpha, P3 and P4 both vote for Lab Council Beta.',
+      'The votes are cast in turn order starting with you, and every one of them is public before anything leaves.',
+      'Stop there: the run ends in the priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: hexproofRun
+      ? 'The four public votes name Lab Council Warded Sentinel, so it alone has the most votes and it alone is exiled. Lab Council Beta, Lab Council Gamma, your own Lab Council Relic and your three Plains stay where they are, and P2’s Forest is never a legal vote.'
+      : 'The four public votes tie 2:2 between Lab Council Alpha and Lab Council Beta, and both are exiled together as the tied highest counts. Lab Council Gamma got no vote and stays, as do your own Lab Council Relic, your three Plains and P2’s Forest.',
+    oracleSha256: council.sha256,
+    clauseIds: ['councils-judgment-public-voting', 'councils-judgment-most-votes-exile'],
+    decks: {
+      P1: [council.card, witness, ...plains, LAB_COUNCIL_RELIC, ...PR01_FILLER],
+      P2: [p2Permanent, FOREST, ...PR01_FILLER],
+      P3: [LAB_COUNCIL_BETA, ...PR01_FILLER],
+      P4: [LAB_COUNCIL_GAMMA, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so the unused {0} witness's printed "+1 life" would be a scenario-owned 40 -> 41
+      // rather than a function of an incidental default.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ["Council's Judgment", 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window.
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...plains.map((land) => land.name), LAB_COUNCIL_RELIC.name],
+        },
+        { playerId: 'P2', cardNames: [p2Permanent.name, FOREST.name] },
+        { playerId: 'P3', cardNames: [LAB_COUNCIL_BETA.name] },
+        { playerId: 'P4', cardNames: [LAB_COUNCIL_GAMMA.name] },
+      ],
+    },
+    // Only the three opponent seats are scripted; P1 is the human seat in the real lab, and the
+    // replay test answers every vote itself, so neither seat's choice is injected into an outcome.
+    decisionProviderOverrides: {
+      P2: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_ALPHA.name),
+      P3: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+      P4: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+    },
+  });
+}
+
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
   const promise = pinnedFrom(COVERAGE_PR07, 'Promise of Loyalty');
   const plains = [PLAINS, PLAINS, PLAINS, PLAINS, PLAINS];
@@ -15355,6 +15515,9 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     benevolentOfferingScenario(gameId, 'different-opponents'),
   'benevolent-offering-viewer-same-opponent': (gameId) =>
     benevolentOfferingScenario(gameId, 'same-opponent'),
+  'councils-judgment-viewer-tied-votes': (gameId) => councilsJudgmentScenario(gameId, 'tied-votes'),
+  'councils-judgment-viewer-unanimous-hexproof': (gameId) =>
+    councilsJudgmentScenario(gameId, 'unanimous-hexproof'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,

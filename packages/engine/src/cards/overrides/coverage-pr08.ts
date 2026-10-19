@@ -6,7 +6,7 @@
  */
 import type { CardDefinition } from '../definition';
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, hasCounter, ofType } from '../selector';
+import { allOf, hasCounter, not, ofType, OPPONENTS } from '../selector';
 import {
   activated,
   mana,
@@ -73,6 +73,25 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  // Council's Judgment. "Will of the council —" is a keyword reminder line with no rules content,
+  // so only the sentence below needs authoring. The vote is untargeted, so the ability carries no
+  // target slot at all: the candidate pool is every nonland permanent the caster does not control,
+  // and hexproof/shroud exclude nothing. "each permanent with the most votes or tied for most
+  // votes" is counted by permanent object, never by card name.
+  defineCard(
+    'acf4d685-a718-42f7-9a7a-dee069ae8db2',
+    "Council's Judgment",
+    [
+      'unrecognized rules text: "Starting with you, each player votes for a nonland permanent you don\'t control. Exile each permanent with the most votes or tied for most votes."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [{ op: 'voteAndExileMost', selector: allOf(not(ofType('Land')), OPPONENTS) }],
+        description:
+          'Starting with you, each player votes for a nonland permanent you do not control, then exile each permanent with the most votes or tied for most votes',
+      }),
+    },
+  );
   defineCard(
     '3db8466c-864f-48ba-b617-f2c863dfdcbd',
     'Benevolent Offering',

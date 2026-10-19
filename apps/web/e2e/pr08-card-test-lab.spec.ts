@@ -1235,3 +1235,231 @@ test('Benevolent Offering: choose the same opponent twice, for the Spirits and f
     'P4:40:false',
   ]);
 });
+
+// --- Coverage PR08.15: Council's Judgment ---
+//
+// One board, two runs, and the ONLY difference is how the four votes land. The browser casts the
+// printed {1}{W}{W} SORCERY out of hand, pays with the three real Plains, answers its own vote
+// through the real decision panel, and the three opponent seats answer theirs through the
+// scenario's deterministic seat providers.
+//
+// Nothing here is arranged after the fact. A vote is NOT a target, so the panel offers no target
+// slot and never highlights a board, and that is also why P2's hexproof in the unanimous run costs
+// the Sentinel nothing. The candidate pool is fixed when the ability resolves: the three opponents'
+// NONLAND permanents, in a fixed order, with the caster's own artifact and every land excluded.
+
+const COUNCIL = "Council's Judgment";
+const COUNCIL_WITNESS = 'Lab Priority Witness';
+const COUNCIL_ALPHA = 'Lab Council Alpha';
+const COUNCIL_BETA = 'Lab Council Beta';
+const COUNCIL_GAMMA = 'Lab Council Gamma';
+const COUNCIL_RELIC = 'Lab Council Relic';
+const COUNCIL_SENTINEL = 'Lab Council Warded Sentinel';
+const COUNCIL_VOTE_PROMPT = "Council's Judgment: vote for a permanent P1 doesn't control.";
+
+/** One vote option: the group carrying that permanent's card face, and its "Vote" button. */
+function councilVoteOption(page: Page, name: string) {
+  return page
+    .locator('.decision-panel .panel-group')
+    .filter({ has: page.locator('.group-card', { hasText: name }) })
+    .getByRole('button', { name: 'Vote', exact: true });
+}
+
+/** The public action-log lines the council emitted, in engine order. */
+function councilVoteLog(page: Page) {
+  return page
+    .locator('.log .line .text')
+    .filter({ hasText: /^Council's Judgment: P\d votes for / });
+}
+
+/** The arranged board, asserted before anything is cast. Both runs share its shape. */
+async function expectCouncilArrangement(page: Page, p2Permanent: string): Promise<void> {
+  await expect(handCard(page, COUNCIL)).toBeVisible();
+  await expect(handCard(page, COUNCIL_WITNESS)).toBeVisible();
+  // Three identical untapped Plains render as one tile with a ×3 badge.
+  await expect(humanPermanent(page, 'Plains')).toHaveCount(1);
+  await expect(humanPermanent(page, 'Plains').locator('.stack-count-badge')).toHaveText('×3');
+  await expect(humanPermanent(page, 'Plains').locator('.tile')).not.toHaveClass(/tapped/);
+  // The caster's OWN nonland permanent is on the board and is never a legal vote.
+  await expect(humanPermanent(page, COUNCIL_RELIC)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', p2Permanent)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', 'Forest')).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', COUNCIL_BETA)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P4', COUNCIL_GAMMA)).toHaveCount(1);
+  for (const seat of ['own', 'P2', 'P3', 'P4'] as const)
+    await expect(seatLife(page, seat)).toHaveText('40');
+  // The spell starts in hand, never on the battlefield.
+  await expect(humanPermanent(page, COUNCIL)).toHaveCount(0);
+}
+
+/** Cast the printed sorcery the ordinary way and pay it with the three Plains. */
+async function castCouncil(page: Page): Promise<void> {
+  const card = handCard(page, COUNCIL);
+  await expect(card).toHaveClass(/actionable/);
+  await card.click();
+  // The real payment preview for the printed {1}{W}{W}; the multiplication sign is U+00D7.
+  await expect(page.getByText(/Auto-pay: Plains ×3/)).toBeVisible();
+  // A non-targeting sorcery offers no target slot at all.
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  await confirm(page);
+}
+
+/**
+ * The one real vote menu P1 is asked for: exactly the printed prompt, exactly the three opponent
+ * nonland permanents, one "Vote" button each, and neither a target slot nor an abstain option.
+ */
+async function expectCouncilVotePanel(page: Page, candidates: string[]): Promise<void> {
+  await expect(page.locator('.decision-panel .panel-prompt')).toHaveText(COUNCIL_VOTE_PROMPT);
+  const panel = page.locator('.decision-panel');
+  await expect(panel.locator('.panel-group')).toHaveCount(candidates.length);
+  await expect(panel.getByRole('button', { name: 'Vote', exact: true })).toHaveCount(
+    candidates.length,
+  );
+  await expect(panel.locator('.group-card')).toHaveCount(candidates.length);
+  for (const name of candidates) {
+    await expect(panel.locator('.group-card').filter({ hasText: name })).toHaveCount(1);
+  }
+  // Nobody may abstain and nothing is a target: no such buttons, no target slot, no highlighting.
+  await expect(panel.getByRole('button', { name: /abstain|skip|choose none/i })).toHaveCount(0);
+  await expect(page.getByText(/Target \d of \d/)).toHaveCount(0);
+  await expect(page.getByText(/All \d+ targets? selected/)).toHaveCount(0);
+  await expect(page.locator('.human-zone > header')).not.toHaveClass(/targetable/);
+  for (const seat of ['P2', 'P3', 'P4'])
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
+  // The caster's own nonland permanent and every land are absent from the pool.
+  await expect(panel.locator('.group-card').filter({ hasText: COUNCIL_RELIC })).toHaveCount(0);
+  await expect(panel.locator('.group-card').filter({ hasText: /Plains|Forest/ })).toHaveCount(0);
+}
+
+test("Council's Judgment: tied votes exile both winners and spare the unvoted permanent", async ({
+  page,
+}) => {
+  const title = "Council's Judgment: tied votes exile both winners and spare the unvoted permanent";
+  const boards = recordPlayerBoards(page);
+  await runScenario(page, title);
+  await expectCouncilArrangement(page, COUNCIL_ALPHA);
+
+  await castCouncil(page);
+
+  // "Starting with you": P1 is asked FIRST, on the same pool as everybody else, and nothing has
+  // left while the question is still open — not even after the earlier seats would have voted.
+  const voteForAlpha = councilVoteOption(page, COUNCIL_ALPHA);
+  await passStackUntil(page, voteForAlpha);
+  await expectCouncilVotePanel(page, [COUNCIL_ALPHA, COUNCIL_BETA, COUNCIL_GAMMA]);
+  await expect(councilVoteLog(page)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P2', COUNCIL_ALPHA)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P3', COUNCIL_BETA)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P4', COUNCIL_GAMMA)).toHaveCount(1);
+  // {1}{W}{W} really left the lands: all three Plains tapped and stacked as one group.
+  await expect(humanPermanent(page, 'Plains').locator('.tile')).toHaveClass(/tapped/);
+  await expect(humanPermanent(page, 'Plains').locator('.stack-count-badge')).toHaveText('×3');
+  await voteForAlpha.click();
+
+  // P2 votes Alpha too and P3/P4 both vote Beta, so the tally is 2:2:0. Every one of the four votes
+  // is public and public means public: the whole log is on P1's own screen.
+  await expect(councilVoteLog(page)).toHaveText([
+    `${COUNCIL}: P1 votes for ${COUNCIL_ALPHA}`,
+    `${COUNCIL}: P2 votes for ${COUNCIL_ALPHA}`,
+    `${COUNCIL}: P3 votes for ${COUNCIL_BETA}`,
+    `${COUNCIL}: P4 votes for ${COUNCIL_BETA}`,
+  ]);
+
+  // "or tied for most votes": BOTH tied winners leave. The permanent nobody voted for stays.
+  await expect(seatPermanent(page, 'P2', COUNCIL_ALPHA)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P3', COUNCIL_BETA)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P4', COUNCIL_GAMMA)).toHaveCount(1);
+  await expect(humanPermanent(page, COUNCIL_RELIC)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', 'Forest')).toHaveCount(1);
+
+  // The source is a sorcery: it is gone from hand and never became a permanent, and the run
+  // stopped in the priority window it resolved in — the unused witness is still castable there,
+  // which is the proof that priority really is still open.
+  await expect(handCard(page, COUNCIL)).toHaveCount(0);
+  await expect(humanPermanent(page, COUNCIL)).toHaveCount(0);
+  await expect(handCard(page, COUNCIL_WITNESS)).toHaveClass(/actionable/);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+  await expect(seatLife(page, 'P2')).toHaveText('40');
+  await expect(seatLife(page, 'P3')).toHaveText('40');
+  await expect(seatLife(page, 'P4')).toHaveText('40');
+
+  // The settled board the panels were rendered from carries exactly the two departures, so the
+  // exiles are a real published zone change rather than a rendering of a local guess.
+  const settled = await wireBoardWhere(
+    boards,
+    (board) =>
+      !board.battlefield.some((entry) => entry.name === COUNCIL_ALPHA) &&
+      !board.battlefield.some((entry) => entry.name === COUNCIL_BETA) &&
+      board.battlefield.some((entry) => entry.name === COUNCIL_GAMMA),
+    'the published board carries both exiled winners and the unvoted bystander',
+  );
+  expect(permanentOn(settled, COUNCIL_GAMMA)).toMatchObject({ owner: 'P4', controller: 'P4' });
+  expect(permanentOn(settled, COUNCIL_RELIC)).toMatchObject({ owner: 'P1', controller: 'P1' });
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}:${seat.hasLost}`)).toEqual([
+    'P1:40:false',
+    'P2:40:false',
+    'P3:40:false',
+    'P4:40:false',
+  ]);
+  expect(
+    indexOfLine(await logLines(page), /^Cast Council's Judgment \(\{1\}\{W\}\{W\}\)$/),
+  ).toBeGreaterThanOrEqual(0);
+});
+
+test("Council's Judgment: unanimous votes exile a creature with hexproof", async ({ page }) => {
+  const title = "Council's Judgment: unanimous votes exile a creature with hexproof";
+  const boards = recordPlayerBoards(page);
+  await runScenario(page, title);
+  await expectCouncilArrangement(page, COUNCIL_SENTINEL);
+
+  // The hexproof permanent is a real printed 0/3 with both printed keywords rendered.
+  const sentinel = seatPermanent(page, 'P2', COUNCIL_SENTINEL);
+  await expect(sentinel).toHaveCount(1);
+  await expect(sentinel.locator('.pt')).toHaveText('0/3');
+  await expect(sentinel.locator('.keywords[title*="defender"]')).toHaveCount(1);
+  await expect(sentinel.locator('.keywords[title*="hexproof"]')).toHaveCount(1);
+
+  await castCouncil(page);
+
+  // A vote is not a target, so hexproof removes no option: the Sentinel is simply on the menu.
+  const voteForSentinel = councilVoteOption(page, COUNCIL_SENTINEL);
+  await passStackUntil(page, voteForSentinel);
+  await expectCouncilVotePanel(page, [COUNCIL_SENTINEL, COUNCIL_BETA, COUNCIL_GAMMA]);
+  await expect(councilVoteLog(page)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P2', COUNCIL_SENTINEL)).toHaveCount(1);
+  await expect(humanPermanent(page, 'Plains').locator('.tile')).toHaveClass(/tapped/);
+  await voteForSentinel.click();
+
+  await expect(councilVoteLog(page)).toHaveText([
+    `${COUNCIL}: P1 votes for ${COUNCIL_SENTINEL}`,
+    `${COUNCIL}: P2 votes for ${COUNCIL_SENTINEL}`,
+    `${COUNCIL}: P3 votes for ${COUNCIL_SENTINEL}`,
+    `${COUNCIL}: P4 votes for ${COUNCIL_SENTINEL}`,
+  ]);
+
+  // 4:0:0 — only the unanimous winner has "the most votes", and only it leaves. Every zero-vote
+  // bystander, the caster's own permanent and all four lands stay exactly where they were.
+  await expect(seatPermanent(page, 'P2', COUNCIL_SENTINEL)).toHaveCount(0);
+  await expect(seatPermanent(page, 'P3', COUNCIL_BETA)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P4', COUNCIL_GAMMA)).toHaveCount(1);
+  await expect(humanPermanent(page, COUNCIL_RELIC)).toHaveCount(1);
+  await expect(seatPermanent(page, 'P2', 'Forest')).toHaveCount(1);
+  await expect(handCard(page, COUNCIL)).toHaveCount(0);
+  await expect(handCard(page, COUNCIL_WITNESS)).toHaveClass(/actionable/);
+  await expect(page.locator('.human-zone .life-badge')).toHaveText('40');
+
+  const settled = await wireBoardWhere(
+    boards,
+    (board) =>
+      !board.battlefield.some((entry) => entry.name === COUNCIL_SENTINEL) &&
+      board.battlefield.some((entry) => entry.name === COUNCIL_BETA),
+    'the published board carries the unanimously exiled Sentinel and its zero-vote bystanders',
+  );
+  expect(permanentOn(settled, COUNCIL_BETA)).toMatchObject({ owner: 'P3', controller: 'P3' });
+  expect(permanentOn(settled, COUNCIL_GAMMA)).toMatchObject({ owner: 'P4', controller: 'P4' });
+  expect(settled.seats.map((seat) => `${seat.seat}:${seat.life}:${seat.hasLost}`)).toEqual([
+    'P1:40:false',
+    'P2:40:false',
+    'P3:40:false',
+    'P4:40:false',
+  ]);
+});

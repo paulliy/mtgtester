@@ -1079,6 +1079,7 @@ const families = {
       extraCombatPhase: true,
       becomeMonarch: true,
       druidPurification: true,
+      voteAndExileMost: true,
       exileTargetWithSource: true,
       exileAndManifestTarget: true,
       blinkTarget: true,

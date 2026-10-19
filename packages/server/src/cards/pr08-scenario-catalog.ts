@@ -29,4 +29,6 @@ export const PR08_SCENARIO_IDS: readonly string[] = [
   'alicia-masters-viewer-no-noncreature-spell',
   'benevolent-offering-viewer-different-opponents',
   'benevolent-offering-viewer-same-opponent',
+  'councils-judgment-viewer-tied-votes',
+  'councils-judgment-viewer-unanimous-hexproof',
 ];

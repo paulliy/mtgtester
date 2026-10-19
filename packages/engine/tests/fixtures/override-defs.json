@@ -10477,6 +10477,41 @@
     }
   },
   {
+    "oracleId": "acf4d685-a718-42f7-9a7a-dee069ae8db2",
+    "name": "Council's Judgment",
+    "handledLines": [
+      "unrecognized rules text: \"Starting with you, each player votes for a nonland permanent you don't control. Exile each permanent with the most votes or tied for most votes.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Starting with you, each player votes for a nonland permanent you do not control, then exile each permanent with the most votes or tied for most votes",
+        "effects": [
+          {
+            "op": "voteAndExileMost",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
     "handledLines": [],
@@ -20012,6 +20047,41 @@
           "timing": "any"
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-council-s-judgment",
+    "name": "Council's Judgment",
+    "handledLines": [
+      "unrecognized rules text: \"Starting with you, each player votes for a nonland permanent you don't control. Exile each permanent with the most votes or tied for most votes.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Starting with you, each player votes for a nonland permanent you do not control, then exile each permanent with the most votes or tied for most votes",
+        "effects": [
+          {
+            "op": "voteAndExileMost",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {

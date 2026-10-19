@@ -9,7 +9,7 @@ PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
 Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, Kazuul, Tyrant of the Cliffs,
-and Benevolent Offering are the first twelve implementation increments. The other 11 cards
+and Benevolent Offering, followed by Council's Judgment, are the first thirteen implementation increments. The other 10 cards
 remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
@@ -365,3 +365,31 @@ benchmark pins passed. Current-revision receipts are generated after committing.
 The frozen inventory measures 798/906 (703/802 deck cards, 189/200 staples); the expanded report
 measures 756/855. The bulk non-land inventory contains 6,478 modeled cards. Implementation review
 eligibility remains separate, and no live gameplay-AI quality evaluation is claimed.
+
+## Council's Judgment increment (PR08.15)
+
+The normal sorcery cast pays one generic and two white mana without choosing targets. Every
+living player votes in turn order starting with the original ability controller, from one fixed
+pool of nonland permanents that controller does not control. Votes are mandatory and public;
+hexproof, shroud and protection do not remove candidates. Every vote precedes movement, then
+all positive highest-vote winners leave together for exile, including every tied winner.
+
+Seventeen card tests, nine independent voting contracts and three production-lab replays passed.
+Main review strengthened the simultaneous-departure test: a departing artifact observer must see
+both winners leave. Sequential exile failed that test, with exact source restoration afterward.
+The first live viewer run exposed an unnecessary string payload routing votes as board actions;
+an independent normal-cast regression failed against that payload, and the corrected vote options
+use the standard decision panel. All 31 real PR08 viewer scenarios then passed. A server test
+type error was corrected by reading authoritative permanents when computing characteristics.
+The final integrated engine/lab run passed 478 tests across 45 suites. Both typechecks, lint,
+formatting, reviewed snapshots, refreshed benchmark pins and the web build passed.
+
+The frozen inventory measures 799/906 (704/802 deck cards, 189/200 staples); the expanded report
+measures 757/855. The bulk non-land inventory contains 6,479 modeled cards. The separate frozen
+twelve-card full suite passed all 463 suites and 7,211 tests at `849cfb65`. Its preceding ten-card
+run passed 7,142 tests and exposed one stale bulk-deck assertion still listing Scheming Symmetry
+as unsupported. Removing that restored card from the expected backlog passed all five affected
+tests; no assertion, timeout or unsupported mechanic was weakened.
+
+Implementation review eligibility and current revision-bound receipts remain separate completion
+requirements. Scripted lab decisions do not constitute live gameplay-AI quality evaluation.
