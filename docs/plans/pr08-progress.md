@@ -8,8 +8,8 @@ Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
 Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
-Akroan Horse, and Alicia Masters, Skilled Sculptor are the first nine implementation increments.
-The other 14 cards remain unsupported. The seven reopened quality-audit cards now belong
+Akroan Horse, Alicia Masters, Skilled Sculptor, and Scheming Symmetry are the first ten implementation increments.
+The other 13 cards remain unsupported. The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation
@@ -284,3 +284,28 @@ still a final completion requirement; scripted lab decisions do not constitute l
 evaluation. The separate frozen six-card full run exposed existing five-second session-presentation
 and 15-second async-provider timeouts. Those assertions and timeouts remain unchanged, and push
 validation remains outstanding.
+
+## Scheming Symmetry increment (PR08.04)
+
+The printed black sorcery announces exactly two distinct living player targets. Each legal target
+privately searches its own library in APNAP order, including the caster when targeted. All choices
+precede the shuffles. The selected cards stay outside their libraries' seeded remainder shuffles,
+then return on top with the same object identities. Empty libraries still shuffle, and an
+unrestricted nonempty search cannot decline. A single illegal target does not stop the other;
+with both targets illegal the spell does not resolve.
+
+Eleven card tests, seven independent search contracts and three production-lab replays passed.
+Regressions rejected the previous nonshuffling executor and contained registration, with exact
+source restoration. The integrated run passed 312 tests across 28 suites. All 24 real PR08 viewer
+scenarios passed after correcting a zero-mana witness's confirmation step. The new scenarios
+assert private choices against WebSocket frames and the rendered view; shuffle ordering and
+seeded permutations are asserted against authoritative engine state. Both typechecks, lint,
+formatting, reviewed snapshots, benchmark pins and the web build passed. Revision-bound receipts
+are generated after committing.
+
+The frozen inventory measures 796/906 (701/802 deck cards, 189/200 staples); the expanded report
+measures 754/855. The bulk non-land inventory contains 6,476 modeled cards. The frozen six-card
+full suite passed 441 suites and failed three timing checks; an unchanged retry is running. The
+nine-card gate passed 4,327 tests but failed its inventory subprocess during setup, leaving 47
+tests unexecuted. No timeout or assertion was weakened. Push validation and final implementation
+review remain outstanding; scripted lab decisions are not live gameplay-AI evaluation.

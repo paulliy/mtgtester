@@ -4599,5 +4599,21 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-alicia-masters.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
+    "name": "Scheming Symmetry",
+    "package": "PR08.04",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-scheming-symmetry.test.ts",
+      "packages/engine/tests/multiplayer-search-contract.test.ts",
+      "packages/server/src/cards/pr08-scheming-symmetry-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-scheming-symmetry.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

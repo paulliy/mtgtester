@@ -163,7 +163,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   shadrixModes: {},
   masterOfCeremonies: {},
   drawTargetAndControllerN: { target: player },
-  schemingSymmetry: {},
+  schemingSymmetry: { targetSlot: many(player) },
   kambal: {},
   destroyAndCreateTokensEqualToManaValue: { target: permanent },
   exile: { target: permanent },

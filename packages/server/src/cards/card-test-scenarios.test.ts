@@ -48,6 +48,8 @@ describe('deterministic Card Test Lab scenarios', () => {
     expect(listCardTestScenarios().map((entry) => entry.id)).toEqual([
       'akroan-horse-viewer-cast-and-gift',
       'akroan-horse-viewer-recipient-upkeep',
+      'scheming-symmetry-viewer-you-and-opponent',
+      'scheming-symmetry-viewer-two-opponents-empty-library',
       'wishclaw-talisman-viewer-cast-search-and-gift',
       'wishclaw-talisman-viewer-empty-library',
       'wishclaw-talisman-viewer-off-turn',

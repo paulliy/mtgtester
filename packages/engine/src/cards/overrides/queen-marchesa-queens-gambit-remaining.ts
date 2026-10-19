@@ -302,12 +302,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     'Reverberate',
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   );
-  // Catalog audit queen-batch-4: shuffle-then-top is move-to-top without shuffling.
-  unsupportedCard(
-    '6dfb50d7-359b-4644-90e3-7ecdacee7c12',
-    'Scheming Symmetry',
-    'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
-  );
+  // Scheming Symmetry: restored with private APNAP searches and shuffle-then-top in PR08.
   defineCard(
     '34b90d3e-f48c-41ff-b3e4-5cab7a9cd597',
     'Secret Rendezvous',

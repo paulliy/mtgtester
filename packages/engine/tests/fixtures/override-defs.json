@@ -6234,8 +6234,30 @@
   {
     "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
     "name": "Scheming Symmetry",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Two target players each privately search, shuffle, and put the found card on top",
+        "effects": [
+          {
+            "op": "schemingSymmetry",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": 2,
+              "min": 2
+            },
+            "kind": "player"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "6e64f1e0-ddd6-4ee7-8797-086e234b02e8",
@@ -28513,8 +28535,30 @@
   {
     "oracleId": "oracle-scheming-symmetry",
     "name": "Scheming Symmetry",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Two target players each privately search, shuffle, and put the found card on top",
+        "effects": [
+          {
+            "op": "schemingSymmetry",
+            "targetSlot": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "count": {
+              "max": 2,
+              "min": 2
+            },
+            "kind": "player"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-scriv-the-obligator",

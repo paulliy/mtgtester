@@ -3553,21 +3553,35 @@ export function* executeAbility(
         break;
       }
       case 'schemingSymmetry': {
-        for (const slot of [0, 1]) {
-          const targetId = ref(slot);
-          const target =
-            targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-          if (target === undefined || target.library.length === 0) continue;
-          const chosen = yield* chooseCard(ctx, {
-            player: target.id,
-            prompt: `${source.name}: choose a card to put on top of your library`,
-            cards: target.library,
-            type: 'search',
-            verb: 'Choose',
-          });
-          if (chosen !== null)
-            yield* moveObject(ctx, chosen, { zone: 'library', libraryPosition: 'top' });
+        const targetIds = new Set(chosenReferents(effect.targetSlot));
+        const searchers = playersInApnapOrder(ctx).filter(
+          (player) => !player.hasLost && targetIds.has(player.id),
+        );
+        const selections: { player: EnginePlayerState; card: EngineCardObject | null }[] = [];
+        // Unrestricted searches must find a card in a nonempty library. Hidden choices are made
+        // in APNAP order; a search never targets or reveals the found card (CR 101.4, 701.19).
+        for (const player of searchers) {
+          const card =
+            player.library.length === 0
+              ? null
+              : yield* chooseCard(ctx, {
+                  player: player.id,
+                  prompt: `${source.name}: choose a card to put on top of your library`,
+                  cards: player.library,
+                  type: 'search',
+                  verb: 'Choose',
+                });
+          if (player.library.length > 0 && card === null)
+            throw new Error('engine bug: mandatory library search did not choose a card');
+          selections.push({ player, card });
         }
+        for (const { player, card } of selections) {
+          // Set the found card aside during the shuffle, retaining its library object identity
+          // (CR 701.19b). Even an empty library is shuffled. No moveObject/zone-change event occurs.
+          if (card !== null) player.library.splice(player.library.indexOf(card), 1);
+          shuffleLibrary(ctx, player);
+        }
+        for (const { player, card } of selections) if (card !== null) player.library.unshift(card);
         break;
       }
       case 'kambal': {

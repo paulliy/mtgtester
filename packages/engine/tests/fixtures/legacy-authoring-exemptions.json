@@ -613,7 +613,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "0f1aa5faf6bc40d495569567f4af52c5dd3930e745de007f19f9927d18a0247a",
+      "sha256": "c4503f4476c2823e63c7bd08a0e911e11f39938c1ca3357aae56a6da3c54ed27",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {

@@ -131,6 +131,116 @@ test('Wishclaw Talisman: cannot activate off your turn', async ({ page }) => {
   await expect(source.locator('.counters')).toContainText('wish×3');
 });
 
+/**
+ * Records every server frame the viewing seat receives. Read-only observation of the real socket:
+ * used to prove an opponent's private library identity never crosses the wire. No mocking, no
+ * routing, no private backend calls.
+ */
+function recordFrames(page: Page): string[] {
+  const frames: string[] = [];
+  page.on('websocket', (socket) =>
+    socket.on('framereceived', ({ payload }) => {
+      frames.push(payload.toString());
+    }),
+  );
+  return frames;
+}
+
+/** A hand card that is currently castable, so it only matches once priority is really offered. */
+function actionableHandCard(page: Page, name: string) {
+  return page
+    .locator('.human-zone .hand-card.actionable:not(.hand-card-leave-active)')
+    .filter({ hasText: name });
+}
+
+test('Scheming Symmetry: you and an opponent each search their own library', async ({ page }) => {
+  const title = 'Scheming Symmetry: you and an opponent each search their own library';
+  const frames = recordFrames(page);
+  await runScenario(page, title);
+  const panel = page.locator('.decision-panel');
+
+  // Cast through the ordinary menu; the printed {B} really leaves P1's only Swamp tapped.
+  await castPr08Card(page, 'Scheming Symmetry');
+
+  // Two ordinary counted target pickers. The first offers every player; the second drops the
+  // already-picked seat, so the same player cannot be chosen twice.
+  await expect(page.getByText(/Choose target 1 for/)).toBeVisible({ timeout: 15_000 });
+  for (const seat of ['P1', 'P2', 'P3', 'P4'])
+    await expect(panel.getByRole('button', { name: `Target ${seat}`, exact: true })).toBeVisible();
+  await panel.getByRole('button', { name: 'Target P1', exact: true }).click();
+  await expect(page.getByText(/Choose target 2 for/)).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Target P1', exact: true })).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: 'Target P2', exact: true })).toBeVisible();
+  await panel.getByRole('button', { name: 'Target P2', exact: true }).click();
+  await expect(humanPermanent(page, 'Swamp').locator('.tile')).toHaveClass(/tapped/);
+
+  // Resolving asks P1 for a private choice from P1's OWN library, and only from it.
+  const mine = panel
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Symmetry P1 Alpha' })
+    .getByRole('button', { name: 'Choose', exact: true });
+  await passStackUntil(page, mine);
+  await expect(panel.getByRole('button', { name: 'Choose', exact: true })).toHaveCount(2);
+  await expect(panel).toContainText('Lab Symmetry P1 Beta');
+  // An unrestricted search must find a card, so there is no decline option.
+  await expect(page.getByRole('button', { name: /Find nothing/ })).toHaveCount(0);
+  await mine.click();
+
+  // P2's search is P2's own decision: the scripted seat answers it and P1 sees no such menu.
+  await passStackUntil(page, actionableHandCard(page, 'Lab Symmetry Draw Witness'));
+  await expect(panel.locator('.panel-group').filter({ hasText: 'P2' })).toHaveCount(0);
+
+  // Prove the chosen card really sits on P1's own top of library by drawing it normally.
+  await actionableHandCard(page, 'Lab Symmetry Draw Witness').click();
+  await confirm(page);
+  await passStackUntil(page, handCard(page, 'Lab Symmetry P1 Alpha'));
+  await expect(handCard(page, 'Lab Symmetry P1 Alpha')).toBeVisible();
+  await expect(handCard(page, 'Lab Symmetry P1 Beta')).toHaveCount(0);
+
+  // The resolution is narrated publicly, but P2's private choice never appears anywhere.
+  await expect(page.getByText(/Scheming Symmetry resolves/i).first()).toBeVisible();
+  await expect(page.getByText('Choose Lab Symmetry P1 Alpha').first()).toBeVisible();
+  for (const name of ['Lab Symmetry P2 Alpha', 'Lab Symmetry P2 Beta'])
+    expect(frames.join('\n'), `${name} leaked over the wire`).not.toContain(name);
+  await expect(page.getByText(/Lab Symmetry P2/)).toHaveCount(0);
+});
+
+test('Scheming Symmetry: two opponents search, one with an empty library', async ({ page }) => {
+  const title = 'Scheming Symmetry: two opponents search, one with an empty library';
+  const frames = recordFrames(page);
+  await runScenario(page, title);
+  const panel = page.locator('.decision-panel');
+
+  await castPr08Card(page, 'Scheming Symmetry');
+
+  // P1 targets two opponents and is not a target itself.
+  await expect(page.getByText(/Choose target 1 for/)).toBeVisible({ timeout: 15_000 });
+  await panel.getByRole('button', { name: 'Target P2', exact: true }).click();
+  await expect(page.getByText(/Choose target 2 for/)).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Target P2', exact: true })).toHaveCount(0);
+  await panel.getByRole('button', { name: 'Target P3', exact: true }).click();
+  await expect(humanPermanent(page, 'Swamp').locator('.tile')).toHaveClass(/tapped/);
+
+  // P1 is never asked to search, so P1 is never offered a search menu at all.
+  await passStackUntil(
+    page,
+    page.locator('.log .line .text').filter({ hasText: /^Scheming Symmetry resolves$/ }),
+  );
+  await expect(page.locator('.decision-panel')).toHaveCount(0);
+  await expect(page.getByText(/choose a card to put on top of your library/i)).toHaveCount(0);
+
+  // The kept witness is still castable in the final priority window, and P1's library is intact.
+  await expect(actionableHandCard(page, 'Lab Symmetry Draw Witness')).toHaveCount(1);
+  await expect(actionableHandCard(page, 'Lab Priority Witness')).toHaveCount(1);
+  await expect(page.getByText(/Scheming Symmetry resolves/i).first()).toBeVisible();
+
+  // P3's private identity never reaches P1's wire or the DOM, and P1's hand is untouched.
+  for (const name of ['Lab Symmetry P3 Alpha', 'Lab Symmetry P3 Beta'])
+    expect(frames.join('\n'), `${name} leaked over the wire`).not.toContain(name);
+  await expect(page.getByText(/Lab Symmetry P3/)).toHaveCount(0);
+  await expect(handCard(page, 'Lab Symmetry P1 Alpha')).toHaveCount(0);
+});
+
 for (const mode of ['duplicates', 'decline', 'shroud'] as const) {
   test(`Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`, async ({
     page,

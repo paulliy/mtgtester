@@ -78,8 +78,6 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  'Scheming Symmetry':
-    'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
   'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
@@ -268,6 +266,8 @@ describe('Marchesa catalog audit containment', () => {
     'Triarch Stalker',
     // Coverage PR08.01 (docs/plans/card-coverage-chunks.md).
     'Cut a Deal',
+    // Coverage PR08.04 (docs/plans/card-coverage-chunks.md).
+    'Scheming Symmetry',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

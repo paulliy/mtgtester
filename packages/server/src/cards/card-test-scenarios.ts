@@ -12738,6 +12738,120 @@ function akroanHorseScenario(
   });
 }
 
+/**
+ * An opponent seat that privately searches: it takes only its own named library card when asked
+ * to choose, and passes every ordinary priority window otherwise. The name it searches for is
+ * private to that seat, so this only ever answers the searcher's own decision.
+ */
+function searchOwnRelic(chosenName: string): DecisionProvider {
+  return {
+    decide(request) {
+      const pick = request.legalActions.find(
+        (action) => action.type === 'search' && action.description === `Choose ${chosenName}`,
+      );
+      if (pick !== undefined) return { requestId: request.requestId, actionId: pick.id };
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return {
+        requestId: request.requestId,
+        actionId: (pass ?? request.legalActions[0]!).id,
+      };
+    },
+  };
+}
+
+/**
+ * Coverage PR08.04 Scheming Symmetry. Both targets search their OWN library, so the seat names are
+ * the privacy boundary: P1's panel only ever offers P1's own relics, and no P2/P3 relic name may
+ * reach P1's wire, log or DOM.
+ */
+function schemingSymmetryScenario(
+  gameId: GameId,
+  mode: 'you-and-opponent' | 'two-opponents-empty-library',
+): CardTestScenario {
+  const symmetry = pinnedFrom(COVERAGE_PR08, 'Scheming Symmetry');
+  const drawWitness = card({
+    oracleId: 'lab-pr08-symmetry-draw-witness',
+    name: 'Lab Symmetry Draw Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'Draw a card.',
+  });
+  const priorityWitness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  /** Distinct plain artifacts per seat, so a leaked identity names the seat that leaked it. */
+  const relics = (seat: string) =>
+    (['Alpha', 'Beta'] as const).map((suffix) =>
+      card({
+        oracleId: `lab-pr08-symmetry-${seat.toLowerCase()}-${suffix.toLowerCase()}`,
+        name: `Lab Symmetry ${seat} ${suffix}`,
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        cmc: 0,
+      }),
+    );
+  const p1Relics = relics('P1');
+  const p2Relics = relics('P2');
+  const p3Relics = relics('P3');
+  const you = mode === 'you-and-opponent';
+  // P2's library is empty here: every card P2 owns is arranged onto the battlefield, so the search
+  // has nothing to find while P3's still has two cards. P1 is not a target in either mode.
+  const p2Deck = you ? p2Relics : [FOREST];
+  return pr01Scenario(gameId, {
+    id: `scheming-symmetry-viewer-${mode}`,
+    title: `Scheming Symmetry: ${you ? 'you and an opponent each search their own library' : 'two opponents search, one with an empty library'}`,
+    instructions: you
+      ? [
+          'Cast Scheming Symmetry with the Swamp, then pick P1 as target 1 and P2 as target 2.',
+          'Choose your own Lab Symmetry P1 Alpha; P2’s search is P2’s own private choice.',
+          'Both libraries shuffle and each chosen card sits on its owner’s top.',
+          'Cast Lab Symmetry Draw Witness to draw the card your own search put on top.',
+        ]
+      : [
+          'Cast Scheming Symmetry with the Swamp, then pick P2 as target 1 and P3 as target 2.',
+          'P1 is not a target, so P1 is never asked to search and P1’s library is untouched.',
+          'P2’s empty library needs no choice, but P2 still shuffles; P3 searches privately.',
+          'Lab Symmetry Draw Witness stays in hand so the final priority window is yours.',
+        ],
+    expectedOutcome: you
+      ? 'Each target’s own chosen card is on top of its own shuffled library, and drawing proves P1 chose from P1’s library only.'
+      : 'P2’s empty library is still shuffled, P3’s chosen card is on top of P3’s own shuffled library, and P1’s library never moved.',
+    // No opponent library card name may appear in this metadata: the lab ships it to every seat
+    // over the wire and renders it in the DOM, which is exactly the boundary under test.
+    oracleSha256: symmetry.sha256,
+    clauseIds: ['scheming-symmetry-two-target-players', 'scheming-symmetry-search-shuffle-top'],
+    decks: {
+      P1: [symmetry.card, drawWitness, priorityWitness, SWAMP, ...p1Relics],
+      P2: p2Deck,
+      P3: you ? PR01_FILLER : p3Relics,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Scheming Symmetry', 'Lab Symmetry Draw Witness', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp'] },
+        ...(you ? [] : [{ playerId: 'P2' as const, cardNames: ['Forest'] }]),
+      ],
+    },
+    decisionProviderOverrides: {
+      ...(you
+        ? { P2: searchOwnRelic('Lab Symmetry P2 Alpha') }
+        : { P3: searchOwnRelic('Lab Symmetry P3 Alpha') }),
+    },
+  });
+}
+
 function wishclawScenario(
   gameId: GameId,
   mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn',
@@ -15005,6 +15119,10 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'akroan-horse-viewer-cast-and-gift': (gameId) => akroanHorseScenario(gameId, 'cast-and-gift'),
   'akroan-horse-viewer-recipient-upkeep': (gameId) =>
     akroanHorseScenario(gameId, 'recipient-upkeep'),
+  'scheming-symmetry-viewer-you-and-opponent': (gameId) =>
+    schemingSymmetryScenario(gameId, 'you-and-opponent'),
+  'scheming-symmetry-viewer-two-opponents-empty-library': (gameId) =>
+    schemingSymmetryScenario(gameId, 'two-opponents-empty-library'),
   ...Object.fromEntries(
     PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
       id,

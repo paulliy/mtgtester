@@ -798,7 +798,8 @@ export type Effect =
   | { op: 'shadrixModes' }
   | { op: 'masterOfCeremonies' }
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
-  | { op: 'schemingSymmetry' }
+  /** Each chosen player searches, shuffles, then puts the found card on top without a zone change. */
+  | { op: 'schemingSymmetry'; targetSlot: number }
   | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature

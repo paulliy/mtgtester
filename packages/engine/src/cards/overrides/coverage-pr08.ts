@@ -71,6 +71,22 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  const symmetryTargets = targetSlots({ players: { kind: 'player', count: { min: 2, max: 2 } } });
+  defineCard(
+    '6dfb50d7-359b-4644-90e3-7ecdacee7c12',
+    'Scheming Symmetry',
+    [
+      'unrecognized rules text: "Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top."',
+    ],
+    {
+      spellAbility: spell({
+        targets: symmetryTargets.targets,
+        effects: [{ op: 'schemingSymmetry', targetSlot: symmetryTargets.slot.players }],
+        description:
+          'Two target players each privately search, shuffle, and put the found card on top',
+      }),
+    },
+  );
   defineCard(
     '8d0213d7-9e25-49d2-93fa-1d346cb2e869',
     'Akroan Horse',

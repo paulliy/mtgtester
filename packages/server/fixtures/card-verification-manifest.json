@@ -3039,13 +3039,48 @@
     "6dfb50d7-359b-4644-90e3-7ecdacee7c12": {
       "name": "Scheming Symmetry",
       "oracleSha256": "9e799e443627ee3054fa6cf4b389234fd499ffe819f291da1d3e566ba6ad4ed7",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
+          "id": "scheming-symmetry-two-target-players",
+          "oracleText": "Choose two target players.",
+          "implementation": [
+            "normal {B} sorcery announcement with counted player target slot exactly two distinct living players; caster may be included; target legality rechecked separately"
+          ],
+          "engineTestIds": [
+            "symmetry-pinned-oracle-and-alias",
+            "symmetry-normal-cast-shuffle-before-top",
+            "symmetry-two-opponent-targets",
+            "symmetry-black-mana-and-sorcery-timing",
+            "symmetry-target-domain",
+            "symmetry-two-distinct-targets-required",
+            "symmetry-one-illegal-target",
+            "symmetry-all-targets-illegal"
+          ],
+          "viewerScenarioIds": [
+            "scheming-symmetry-viewer-you-and-opponent",
+            "scheming-symmetry-viewer-two-opponents-empty-library"
+          ]
+        },
+        {
+          "id": "scheming-symmetry-search-shuffle-top",
           "oracleText": "Each of them searches their library for a card, then shuffles and puts that card on top.",
-          "implementation": ["explicitly unsupported; move to top without shuffle"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "schemingSymmetry explicit counted player binding; private mandatory searches in APNAP order; all choices precede shuffles, empty libraries shuffle, found card stays outside seeded remainder permutation then returns on top with unchanged object identity"
+          ],
+          "engineTestIds": [
+            "symmetry-normal-cast-shuffle-before-top",
+            "symmetry-two-opponent-targets",
+            "symmetry-one-illegal-target",
+            "symmetry-all-targets-illegal",
+            "symmetry-empty-library-still-shuffles",
+            "symmetry-single-card-libraries",
+            "symmetry-stable-library-identities"
+          ],
+          "viewerScenarioIds": [
+            "scheming-symmetry-viewer-you-and-opponent",
+            "scheming-symmetry-viewer-two-opponents-empty-library"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
