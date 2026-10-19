@@ -110,7 +110,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Chaos Warp',
-      'Scheming Symmetry',
       'Shadrix Silverquill',
     ]);
     const observedUnmodeled = new Set<string>();
