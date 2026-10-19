@@ -309,3 +309,9 @@ full suite passed 441 suites and failed three timing checks; an unchanged retry 
 nine-card gate passed 4,327 tests but failed its inventory subprocess during setup, leaving 47
 tests unexecuted. No timeout or assertion was weakened. Push validation and final implementation
 review remain outstanding; scripted lab decisions are not live gameplay-AI evaluation.
+
+The ten-card clean-tree gate passed 4,392 tests and failed two stale restoration inventories
+plus a cold-start lint probe's unchanged five-second timeout. The restoration review adds
+Scheming Symmetry to the supported-pool expectation and records its registration's move from
+the historical Queen Marchesa file to PR08. The historical unsupported audit remains intact.
+The affected suites and complete gate are rerun after this correction.

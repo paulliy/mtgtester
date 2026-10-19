@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 23,
+      "uniqueOracleIds": 22,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6913,6 +6913,13 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr08",
       "note": "The containment is replaced by coverage-pr08.ts. The artifact enters with three wish counters, pays {1}, tap and one wish only on its controller’s turn, searches and shuffles before a nontargeting living-opponent choice, then permanently gives that exact source object away. Empty library and source departure do not stop the remaining applicable instructions. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
+      "name": "Scheming Symmetry",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. Exactly two player targets privately search their own libraries in APNAP order; found cards are excluded from the seeded remainder shuffles, then returned on top without changing object identity. Empty libraries still shuffle. Historical audit rows remain as history."
     }
   ]
 }
