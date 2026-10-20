@@ -29,6 +29,7 @@ import { generateWarRoomVerificationEvidence } from '../../../../scripts/generat
 import {
   getViewerEvidenceSourceFiles,
   discoverGeneratorSourceFiles,
+  discoverGeneratorSourceFilesForEntries,
   loadViewerEvidence,
   validateCurrentEvidenceSources,
 } from '../../../../scripts/card-evidence-input';
@@ -296,6 +297,76 @@ describe(
           'packages/engine/package.json',
           'packages/engine/src/require.ts',
         ]);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it('batched primitive discovery equals the independent root closures', async () => {
+      const { PRIMITIVE_CONTRACTS } =
+        await import('../../../../scripts/contracts/primitive-contracts');
+      const entries = [
+        ...new Set(
+          PRIMITIVE_CONTRACTS.flatMap((contract) => contract.cases.map((entry) => entry.file)),
+        ),
+      ];
+      const expected = [
+        ...new Set(entries.flatMap((entry) => discoverGeneratorSourceFiles(process.cwd(), entry))),
+      ].sort();
+      expect(discoverGeneratorSourceFilesForEntries(process.cwd(), entries)).toEqual(expected);
+    });
+
+    it('batched discovery rechecks changed imports and installed routing on every capture', () => {
+      const root = mkdtempSync(resolve(scratch, 'synthetic-batch-'));
+      try {
+        const engine = resolve(root, 'packages/engine');
+        mkdirSync(resolve(engine, 'src'), { recursive: true });
+        mkdirSync(resolve(root, 'node_modules/@mtg'), { recursive: true });
+        symlinkSync(engine, resolve(root, 'node_modules/@mtg/engine'), 'junction');
+        writeFileSync(resolve(root, 'one.ts'), "import '@mtg/engine'; import './shared';");
+        writeFileSync(resolve(root, 'two.ts'), "import './shared';");
+        writeFileSync(
+          resolve(root, 'shared.ts'),
+          "import './data.json'; import type { Phantom } from './erased-type'; import { readFileSync } from 'node:fs'; readFileSync('payload.json', 'utf8');",
+        );
+        writeFileSync(resolve(root, 'data.json'), '{}');
+        writeFileSync(resolve(root, 'payload.json'), '{}');
+        writeFileSync(resolve(root, 'erased-type.ts'), 'export interface Phantom {}');
+        for (const name of ['first', 'second'])
+          writeFileSync(resolve(engine, `src/${name}.ts`), 'export const unit = true;');
+        const metadata = (entry: string) =>
+          JSON.stringify({
+            name: '@mtg/engine',
+            exports: { '.': { require: `./src/${entry}.ts` } },
+          });
+        writeFileSync(resolve(engine, 'package.json'), metadata('first'));
+        const entries = ['one.ts', 'two.ts'];
+        const before = discoverGeneratorSourceFilesForEntries(root, entries);
+        expect(before).toEqual(
+          [
+            ...new Set(entries.flatMap((entry) => discoverGeneratorSourceFiles(root, entry))),
+          ].sort(),
+        );
+        expect(before).toContain('data.json');
+        expect(before).toContain('payload.json');
+        expect(before).not.toContain('erased-type.ts');
+        expect(before).toContain('packages/engine/src/first.ts');
+        writeFileSync(resolve(root, 'two.ts'), "import './added';");
+        writeFileSync(resolve(root, 'added.ts'), 'export const added = true;');
+        writeFileSync(resolve(engine, 'package.json'), metadata('second'));
+        const after = discoverGeneratorSourceFilesForEntries(root, entries);
+        expect(after).toContain('added.ts');
+        expect(after).toContain('packages/engine/src/second.ts');
+        expect(after).not.toContain('packages/engine/src/first.ts');
+        expect(after).toEqual(
+          [
+            ...new Set(entries.flatMap((entry) => discoverGeneratorSourceFiles(root, entry))),
+          ].sort(),
+        );
+        writeFileSync(resolve(root, 'two.ts'), "import './missing';");
+        expect(() => discoverGeneratorSourceFilesForEntries(root, entries)).toThrow(
+          'unresolved runtime import',
+        );
       } finally {
         rmSync(root, { recursive: true, force: true });
       }

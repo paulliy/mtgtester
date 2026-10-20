@@ -58,6 +58,12 @@ snapshots, full tests, card gate, benchmark contracts, and web build remain sepa
 The PR description records their final execution results and tested commit. Generated receipts
 and traces are local artifacts, not hand-authored success declarations.
 
+The larger primitive registry also exposed repeated dependency discovery across 22 test roots.
+Primitive capture now shares one fresh discovery state per capture, preserving independent
+traversals and the exact union of source paths. Equivalence tests compare all production roots
+with separate discovery calls; scratch tests verify fresh import, data, and installed export
+routing checks. There is no shared state between captures and no source-check bypass.
+
 ## Inventory and limits
 
 The frozen original population reaches **809/906** (from 786/906): 713/802 deck cards and 190/200

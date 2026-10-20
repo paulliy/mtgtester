@@ -604,6 +604,20 @@ function sourceIdentity(root: string, paths: string[]): string {
 export function discoverGeneratorSourceFiles(repoRoot: string, generatorPath: string): string[] {
   return discoverGeneratorSources(repoRoot, generatorPath, discoveryState(repoRoot)).files;
 }
+/** Share resolution work within one capture; every call starts with fresh routing and source state. */
+export function discoverGeneratorSourceFilesForEntries(
+  repoRoot: string,
+  entryPaths: readonly string[],
+): string[] {
+  const state = discoveryState(repoRoot);
+  return [
+    ...new Set(
+      [...new Set(entryPaths)].flatMap(
+        (path) => discoverGeneratorSources(repoRoot, path, state).files,
+      ),
+    ),
+  ].sort();
+}
 function discoverGeneratorSources(
   repoRoot: string,
   generatorPath: string,
