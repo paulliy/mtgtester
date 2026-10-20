@@ -1515,7 +1515,8 @@ async function expectOwnAntMenu(page: Page): Promise<void> {
   for (const seat of ['P2', 'P3', 'P4'])
     await expect(page.locator(`.opponent[data-seat="${seat}"]`)).not.toHaveClass(/targetable/);
   // Only your OWN creatures are named — never an opponent's — plus the printed decline.
-  await expect(panel.locator('.group-card span')).toHaveText([ANT]);
+  // Read the name label without the card-art fallback's initials.
+  await expect(panel.locator('.group-card > span')).toHaveText([ANT]);
   await expect(page.getByRole('button', { name: 'Put no counters', exact: true })).toHaveCount(1);
 }
 
