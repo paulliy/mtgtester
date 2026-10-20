@@ -11,11 +11,21 @@ import { addMana } from '../src/mana/pool';
 import { playerById } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { moveObject } from '../src/state/objects';
+import { runCombatPhase } from '../src/combat/combat';
 import { interpretCard } from '../src/cards/interpret';
 import { runPrioritySequence } from '../src/turn/priority';
 import type { GameContext } from '../src/state/types';
 import type { PendingDecision } from '../src/decisions';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  declareAttacks,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  spawn,
+} from './fixtures';
 
 function setup(id: string) {
   const ctx = createGame(
@@ -338,4 +348,76 @@ describe('bounded original PR08 independent Graft behavior', () => {
         expect(source.counters['+1/+1']).toBe(accept ? 1 : 2);
       });
     }
+});
+
+function runKazuulAttack(defendingPlayer: 'P1' | 'P3', pay: boolean) {
+  const { ctx, d, card } = setup('kazuul');
+  cast(ctx, d, card);
+  const attacker = spawn(
+    ctx,
+    'P2',
+    oracle({ name: 'Independent attacking creature', typeLine: 'Creature — Bear' }),
+  );
+  for (let i = 0; i < 3; i++) spawn(ctx, 'P2', forest());
+  ctx.state.currentTurnPlayer = 'P2';
+  ctx.state.activePlayerIndex = 1;
+  ctx.state.phase = 'combat';
+  const result = pump(runCombatPhase(ctx), (decision: PendingDecision) => {
+    if (decision.decisionType === 'declareAttackers')
+      return declareAttacks(decision, (id) => (id === attacker.id ? defendingPlayer : null));
+    if (decision.decisionType === 'general' && decision.prompt.includes('pay {3}')) {
+      const index = decision.options.findIndex(
+        (option) => option.description === (pay ? 'Pay {3}' : "Don't pay {3}"),
+      );
+      if (index < 0)
+        throw new Error(
+          `Kazuul payment choice missing: ${decision.options.map((option) => option.description).join(' | ')}`,
+        );
+      return { index, targets: new Map() };
+    }
+    return {
+      index: Math.max(
+        0,
+        decision.options.findIndex((option) => option.type === 'pass'),
+      ),
+      targets: new Map(),
+    };
+  });
+  return { ctx, decisions: result.decisions };
+}
+
+describe('bounded original PR08 independent Kazuul attack behavior', () => {
+  it('Condition.eventObjectDefendingPlayerIsYou / kazuul-attack-positive — paid independent cast sees an attack on its controller', () => {
+    const { ctx, decisions } = runKazuulAttack('P1', false);
+    expect(decisions.some((decision) => decision.prompt.includes('pay {3}'))).toBe(true);
+    expect(
+      ctx.state.battlefield.filter(
+        (permanent) =>
+          permanent.isToken && permanent.name === 'Ogre' && permanent.controllerId === 'P1',
+      ),
+    ).toHaveLength(1);
+  });
+  it('Condition.eventObjectDefendingPlayerIsYou / kazuul-attack-negative — attack on another defender creates no Ogre', () => {
+    const { ctx, decisions } = runKazuulAttack('P3', false);
+    expect(decisions.some((decision) => decision.prompt.includes('pay {3}'))).toBe(false);
+    expect(
+      ctx.state.battlefield.filter((permanent) => permanent.isToken && permanent.name === 'Ogre'),
+    ).toHaveLength(0);
+  });
+  it('Effect.unlessPays / kazuul-unless-pays-positive — declining payment creates an Ogre', () => {
+    const { ctx } = runKazuulAttack('P1', false);
+    expect(
+      ctx.state.battlefield.filter(
+        (permanent) =>
+          permanent.isToken && permanent.name === 'Ogre' && permanent.controllerId === 'P1',
+      ),
+    ).toHaveLength(1);
+  });
+  it('Effect.unlessPays / kazuul-unless-pays-negative — paying {3} suppresses the Ogre', () => {
+    const { ctx, decisions } = runKazuulAttack('P1', true);
+    expect(decisions.some((decision) => decision.prompt.includes('pay {3}'))).toBe(true);
+    expect(
+      ctx.state.battlefield.filter((permanent) => permanent.isToken && permanent.name === 'Ogre'),
+    ).toHaveLength(0);
+  });
 });

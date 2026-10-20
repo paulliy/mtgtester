@@ -192,7 +192,8 @@ beforeAll(async () => {
     {
       cwd: root,
       encoding: 'utf8',
-      timeout: 30_000,
+      // The registry now executes over 950 tests, including paid multiplayer compositions.
+      timeout: 120_000,
     },
   );
   if (run.status !== 0)
@@ -208,7 +209,7 @@ beforeAll(async () => {
       `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
-}, 65_000);
+}, 155_000);
 afterEach(async () => {
   vi.restoreAllMocks();
   await yieldToEventLoop();

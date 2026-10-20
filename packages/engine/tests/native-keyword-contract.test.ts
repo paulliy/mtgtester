@@ -109,7 +109,11 @@ describe('independent printed keyword combat contracts', () => {
       for (const alternative of alternatives) expect(contract.supports(alternative)).toBe(false);
       expect(Object.isFrozen(contract)).toBe(true);
       expect(Object.isFrozen(contract.cases)).toBe(true);
-      expect(contract.cases.map((entry) => entry.role)).toEqual(['positive', 'negative']);
+      expect(
+        contract.cases
+          .filter((entry) => entry.file === 'packages/engine/tests/native-keyword-contract.test.ts')
+          .map((entry) => entry.role),
+      ).toEqual(['positive', 'negative']);
     },
   );
   it('flying excludes an ordinary ground blocker after a normal cast', () => {

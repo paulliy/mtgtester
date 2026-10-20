@@ -617,6 +617,24 @@ const originalNineRuntimeCases: Readonly<Record<string, readonly PrimitiveCase[]
         'removes the trigger without a token after the attack was redirected to another player',
       ],
     },
+    {
+      id: 'original-pr08-kazuul-independent-attack-positive',
+      role: 'positive',
+      file: 'packages/engine/tests/bounded-pr08-original-nine-contract.test.ts',
+      titlePath: [
+        'bounded original PR08 independent Kazuul attack behavior',
+        'Condition.eventObjectDefendingPlayerIsYou / kazuul-attack-positive — paid independent cast sees an attack on its controller',
+      ],
+    },
+    {
+      id: 'original-pr08-kazuul-independent-attack-negative',
+      role: 'negative',
+      file: 'packages/engine/tests/bounded-pr08-original-nine-contract.test.ts',
+      titlePath: [
+        'bounded original PR08 independent Kazuul attack behavior',
+        'Condition.eventObjectDefendingPlayerIsYou / kazuul-attack-negative — attack on another defender creates no Ogre',
+      ],
+    },
   ],
   'Effect.unlessPays': [
     {
@@ -635,6 +653,24 @@ const originalNineRuntimeCases: Readonly<Record<string, readonly PrimitiveCase[]
       titlePath: [
         'unlessPays eventObjectController payer',
         'prompts the event permanent controller, who can pay to suppress the wrapped effect',
+      ],
+    },
+    {
+      id: 'original-pr08-kazuul-independent-unless-positive',
+      role: 'positive',
+      file: 'packages/engine/tests/bounded-pr08-original-nine-contract.test.ts',
+      titlePath: [
+        'bounded original PR08 independent Kazuul attack behavior',
+        'Effect.unlessPays / kazuul-unless-pays-positive — declining payment creates an Ogre',
+      ],
+    },
+    {
+      id: 'original-pr08-kazuul-independent-unless-negative',
+      role: 'negative',
+      file: 'packages/engine/tests/bounded-pr08-original-nine-contract.test.ts',
+      titlePath: [
+        'bounded original PR08 independent Kazuul attack behavior',
+        'Effect.unlessPays / kazuul-unless-pays-negative — paying {3} suppresses the Ogre',
       ],
     },
   ],
