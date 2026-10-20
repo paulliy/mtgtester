@@ -556,6 +556,7 @@ describe('MatchRunner — decision anchor sequences (ADR 0022)', () => {
   it('anchors each decision to the first event that decision produced', async () => {
     const engine = makeEngine();
     const anchors: number[] = [];
+    const sampleSize = 40;
     /** `[claimed anchor, sequence the decision's events actually started at]` pairs. */
     const firstOfEachRun: Array<[number, number]> = [];
     let previous: number | null = null;
@@ -584,16 +585,15 @@ describe('MatchRunner — decision anchor sequences (ADR 0022)', () => {
         }
         previous = anchorSequence;
         anchors.push(anchorSequence);
+        // Resolved providers can keep the microtask queue busy until the whole game ends,
+        // starving a waitFor timer. This contract needs a bounded sequence of decisions.
+        if (anchors.length === sampleSize) runner.abandon();
       },
     });
 
-    const run = runner.run();
-    await waitFor(() => {
-      expect(anchors.length).toBeGreaterThan(3);
-    });
-    runner.abandon();
-    await run;
+    await runner.run();
 
+    expect(anchors).toHaveLength(sampleSize);
     expect(firstOfEachRun.length).toBeGreaterThan(0);
     // The anchor must never point *past* the decision's own events — that would attach the
     // reasoning to a later play than the one it explains.
