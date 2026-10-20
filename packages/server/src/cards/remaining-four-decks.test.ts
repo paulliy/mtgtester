@@ -92,11 +92,9 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Siren Stormtamer',
       'Smokestack',
       'Mana Sculpt',
-      'Vindictive Lich',
       "Angel's Grace",
       'Display of Power',
       'Nighthawk Scavenger',
-      "Olórin's Searing Light",
       'Reverberate',
       "Tibalt's Trickery",
       'Arcane Lighthouse',
@@ -110,7 +108,6 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
       'Chaos Warp',
-      'Shadrix Silverquill',
     ]);
     const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {

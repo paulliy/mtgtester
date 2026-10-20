@@ -613,7 +613,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "c4503f4476c2823e63c7bd08a0e911e11f39938c1ca3357aae56a6da3c54ed27",
+      "sha256": "6d87bcee555d2f3c2ffd235732395f469993f802d7d62196064084a4106b9822",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
@@ -778,7 +778,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "445abdb912c68741fc4d0b423c1cdb8a2102ac8d184ccb5bc2c2924605d077fb",
+      "sha256": "c36280fa21a4552a00a778369a7073dfd20dca031b59d798e1bb8737c5d7a15f",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

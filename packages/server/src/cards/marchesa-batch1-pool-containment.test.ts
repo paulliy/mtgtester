@@ -16,7 +16,7 @@ const fixture = JSON.parse(
 ) as PinnedFixture;
 
 describe('Marchesa catalog audit supported-pool containment', () => {
-  // Fail-closed restorations plus the coverage PR01 and PR02 cards (docs/plans/card-coverage-chunks.md).
+  // Fail-closed restorations and coverage slices, including the reviewed PR08 restorations.
   it('includes exactly the independently restored slices', () => {
     const pool = buildSupportedPool(fixture.cards.map(({ card }) => card));
     expect(pool.considered).toBe(198);
@@ -117,6 +117,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Necron Deathmark',
       'Nils, Discipline Enforcer',
       'Nullmage Shepherd',
+      "Olórin's Searing Light",
       'Peema Trailblazer',
       'Pensive Professor',
       'Plasmancer',
@@ -139,6 +140,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       'Scourge of Valkas',
       'Screams from Within',
       'Selfless Squire',
+      'Shadrix Silverquill',
       'Shard of the Nightbringer',
       'Shard of the Void Dragon',
       'Sheltered by Ghosts',
@@ -165,6 +167,7 @@ describe('Marchesa catalog audit supported-pool containment', () => {
       "Tyrant's Familiar",
       'Vastwood Surge',
       'Vigean Graftmage',
+      'Vindictive Lich',
       'Voice of Many',
       'War Room',
       'Watcher for Tomorrow',

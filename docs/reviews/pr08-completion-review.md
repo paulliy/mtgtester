@@ -21,6 +21,12 @@ The seven reopened quality-audit cards remain in PR12.
 - Distinct modal player targets could strand later choices under partial peer graphs.
   Authoring now accepts the complete reciprocal same-domain relation supported by the chooser.
 
+The integration audit also aligned the exact supported-pool and unsupported-backlog lists for
+Olórin, Shadrix, and Vindictive Lich, and refreshed benchmark compatibility pins with
+`ai-bench refresh --suite core-fast --write`. The two existing legacy registrar fingerprints
+changed only because obsolete unsupported registrations were removed: normalized AST comparison
+found no other code changes, and no new legacy exemption was added.
+
 The review also checked real costs and targets, source-incarnation identity, simultaneous
 multiplayer actions, ownership versus control, optional searches, overload, sacrifice and attack
 restrictions, ability loss, phasing, and private owner-library choices. Unsupported executable
