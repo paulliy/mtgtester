@@ -17,7 +17,7 @@ describe('pinned rotating control and Survivor viewer scenarios', () => {
         if (step.kind === 'continue') continue;
         const request = step.request;
         if (request.decidingPlayer === 'P2')
-          scenario.engine.submit(scenario.decisionProviderOverrides!.P2!.decide(request));
+          scenario.engine.submit(scenario.decisionProviderOverrides!['P2']!.decide(request));
         else {
           let action = !cast
             ? request.legalActions.find((action) => action.type === 'castSpell')

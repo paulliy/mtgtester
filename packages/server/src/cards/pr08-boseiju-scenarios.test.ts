@@ -26,7 +26,7 @@ function run(id: (typeof BOSEIJU_SCENARIO_IDS)[number]) {
     const actions = request.legalActions;
     if (request.decidingPlayer === 'P2') {
       if (request.prompt.toLowerCase().includes('search your library')) searchPrompt = true;
-      const provider = scenario.decisionProviderOverrides?.P2;
+      const provider = scenario.decisionProviderOverrides?.['P2'];
       if (provider === undefined) throw new Error('Missing scripted P2 provider');
       const response = provider.decide(request);
       const picked = actions.find((candidate) => candidate.id === response.actionId);
