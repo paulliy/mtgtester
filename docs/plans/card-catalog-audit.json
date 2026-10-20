@@ -5593,7 +5593,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 22,
+      "uniqueOracleIds": 20,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5614,7 +5614,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6920,6 +6920,34 @@
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
       "restoredIn": "coverage-pr08",
       "note": "The containment is replaced by coverage-pr08.ts. Exactly two player targets privately search their own libraries in APNAP order; found cards are excluded from the seeded remainder shuffles, then returned on top without changing object identity. Empty libraries still shuffle. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
+      "name": "Vindictive Lich",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former choose-one containment is replaced by nonrepeatable one-to-three modes with distinct opponent targets, a genuine death trigger, and normal cast evidence. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
+      "name": "Olórin's Searing Light",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former omitted-damage containment is replaced by greatest-power simultaneous exile and conditional simultaneous player damage using pre-exile power. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former modal containment is replaced by optional choose-two nonrepeatable modes and different player targets. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The earlier duplicate unsupported registration is removed; coverage-pr08.ts authors the optional distinct-player modes. Historical audit rows remain as history; current verification is in the card manifest."
     }
   ]
 }

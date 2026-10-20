@@ -291,11 +291,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
   // Catalog audit queen-batch-1: threshold damage clause is claimed but not authored.
-  unsupportedCard(
-    'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',
-    "Olórin's Searing Light",
-    'Graveyard-threshold opponent damage is claimed without an implementation.',
-  );
+  // Olórin: restored in coverage PR08.
+
   // Catalog audit queen-batch-1: copyTargetSpell copies original targets.
   unsupportedCard(
     'a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca',
@@ -311,11 +308,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Selfless Squire: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-5: optional choose-two is mandatory; duplicate modes allowed.
-  unsupportedCard(
-    '2143f413-7baa-4fd6-a7ca-32f52bfa553f',
-    'Shadrix Silverquill',
-    'Optional choose-two is mandatory, and the same mode can be chosen twice.',
-  );
+  // Shadrix Silverquill: restored in coverage PR08.
+
   defineCard(
     '153376c9-dffd-458c-8ce3-a4c8269bc4e9',
     'Smothering Tithe',

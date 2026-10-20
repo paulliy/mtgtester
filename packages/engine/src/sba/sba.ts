@@ -542,20 +542,18 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   let modeLabel: string | undefined;
   const modes = trigger.ability.modes;
   if (modes !== undefined) {
-    const selections = legalAbilityModeSelections(
-      trigger.ability,
-      (spec) =>
-        computeTargetOptions(
-          ctx,
-          spec,
-          trigger.controllerId,
-          sourceColors,
-          trigger.scope?.eventPlayerId,
-          undefined,
-          trigger.sourceCardId,
-          true,
-          trigger.sourceFacts,
-        ).length,
+    const selections = legalAbilityModeSelections(trigger.ability, (spec) =>
+      computeTargetOptions(
+        ctx,
+        spec,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        undefined,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      ),
     );
     if (selections.length === 0) {
       emit(
@@ -630,7 +628,40 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     ordinarySlots.push({ slot: i, options });
   }
 
-  if (ordinarySlots.length > 0) {
+  if (ordinarySlots.some(({ slot }) => specs[slot]?.differentPlayerTargetSlots !== undefined)) {
+    for (const { slot } of ordinarySlots) {
+      const options = computeTargetOptions(
+        ctx,
+        specs[slot]!,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        chosen,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      );
+      if (options.length === 0)
+        throw new Error('engine bug: modal distinct-player targets have no assignment');
+      const targetSlots = [{ slot, options }];
+      const outcome = yield {
+        decisionType: 'chooseTargets',
+        player: trigger.controllerId,
+        prompt: `Choose target player for ${trigger.sourceName}: ${modes?.options.find((option) => option.targetSlots?.includes(slot))?.description ?? 'ability'}`,
+        options: [
+          {
+            type: 'chooseTargets',
+            description: `Target player for ${trigger.sourceName}`,
+            targets: targetSlots,
+            interaction: { kind: 'choice', targetSlots },
+          },
+        ],
+      };
+      const picked = outcome.targets.get(slot) ?? options[0]!;
+      if (!options.includes(picked)) throw new Error('engine bug: invalid distinct-player target');
+      chosen[slot] = picked;
+    }
+  } else if (ordinarySlots.length > 0) {
     // `trigger.sourceCardId` is the STABLE card identity (`EnginePermanent.cardId`), which
     // survives zone changes — it is NOT the battlefield object id the web UI keys permanents by
     // (`EnginePermanent.id`, freshly minted every zone change, incl. entering the battlefield;

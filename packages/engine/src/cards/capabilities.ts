@@ -165,6 +165,7 @@ const shapes = {
     amountFromSacrificedManaValue: leaf,
   } satisfies Fields<Objects<ManaAbilitySpec>>,
   TargetSpec: {
+    differentPlayerTargetSlots: { array: leaf },
     spellTargetsPermanentYouControl: leaf,
     spellHasSingleTarget: leaf,
     kind: leaf,
@@ -185,6 +186,8 @@ const shapes = {
     slotGroup: leaf,
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
+    damageIfGraveyardSpellsAtLeast: leaf,
+    types: { array: leaf },
     level: leaf,
     additionalMain: leaf,
     relativeTo: leaf,
@@ -435,6 +438,7 @@ const shapes = {
         minChoices: leaf,
         maxChoices: leaf,
         repeatable: leaf,
+        optional: leaf,
         maxChoicesIf: {
           object: {
             condition: { node: 'Condition' },
@@ -1031,6 +1035,9 @@ const families = {
       exileUntilSourceLeaves: true,
       exileTargetAndControllerMaySearchBasicLandTapped: true,
       removeTargetAndControllerMaySearchBasicLand: true,
+      destroyTargetAndControllerMaySearchBasicTypedLand: true,
+      exileCreatureAndControllerSearchBasicLand: true,
+      exileEachCreatureAndControllersSearchBasicLands: true,
       populate: true,
       untapAttackingPlayerNonlandPermanents: true,
       dealDamageDivided: true,
@@ -1079,6 +1086,9 @@ const families = {
       extraCombatPhase: true,
       becomeMonarch: true,
       druidPurification: true,
+      attackingCreaturesToOwnerLibraries: true,
+      rotateSourceAtUpkeep: true,
+      choosePermanentTypesThenSacrificeOthers: true,
       eachPlayerMayPutCountersAndGoad: true,
       voteAndExileMost: true,
       exileTargetWithSource: true,
@@ -1354,6 +1364,9 @@ const families = {
     prefix: 'RuleStatic',
     discriminator: 'kind',
     tags: {
+      cantBlockMatching: true,
+      cantBeSacrificed: true,
+      cantAttackOwner: true,
       costReduction: true,
       opponentNonHandSpellCostIncrease: true,
       cantBeCountered: true,

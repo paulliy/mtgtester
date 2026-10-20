@@ -20,6 +20,13 @@ const ORACLE_ID = 'ab1cc360-b9de-48d9-9983-4dfe4a7d2a37';
 const ORACLE_SHA256 = '7d764e957064fa08627fd48a85e1ea9aa50de341ffa09a88c2d36d0598156746';
 
 const SOURCE_FILES = [
+  'packages/engine/src/effects/owner-library-choices.ts',
+  'packages/server/src/cards/pr08-boseiju-scenarios.ts',
+  'packages/server/src/cards/pr08-modal-player-scenarios.ts',
+  'packages/server/src/cards/pr08-olorin-scenarios.ts',
+  'packages/server/src/cards/pr08-remaining-scenarios.ts',
+  'packages/server/src/cards/pr08-rotating-survivor-scenarios.ts',
+  'packages/server/src/cards/pr08-winds-of-abandon-scenarios.ts',
   'packages/server/src/cards/pr08-cut-a-deal-scenarios.ts',
   'packages/server/src/cards/pr08-scenario-catalog.ts',
   'packages/engine/tests/fixtures/coverage-pr08-oracle.json',

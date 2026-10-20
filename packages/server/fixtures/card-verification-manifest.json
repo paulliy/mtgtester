@@ -1102,13 +1102,26 @@
     "6dc7f837-158f-4ccf-86a5-a07a20891ec5": {
       "name": "Vindictive Lich",
       "oracleSha256": "d04dc4ea8e3fb88bf5c805e6882677aba7418b9d72ee93aa585c7bab085f08a6",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "When this creature dies, choose one or more. Each mode must target a different player.",
-          "implementation": ["explicitly unsupported; choose-one, one opponent"],
-          "engineTestIds": ["marchesa-catalog-contained"],
-          "viewerScenarioIds": []
+          "id": "lich-death-distinct-modes",
+          "oracleText": "When this creature dies, choose one or more. Each mode must target a different player.\n• Target opponent sacrifices a creature of their choice.\n• Target opponent discards two cards.\n• Target opponent loses 5 life.",
+          "implementation": [
+            "exact onDies trigger with last-known controller; nonrepeatable choose one to three modes, each with a different opponent target",
+            "sacrificeTargetPlayerCreature, discardTarget count2, loseLifeTarget amount5; individual illegal modes skip and all-illegal targets fizzle"
+          ],
+          "engineTestIds": [
+            "lich-definition-and-cast",
+            "modal-card-cast-cost-timing",
+            "lich-single-opponent",
+            "lich-three-distinct-modes",
+            "lich-illegal-mode-skips-locally-and-all-illegal-targets-fizzle"
+          ],
+          "viewerScenarioIds": [
+            "vindictive-lich-viewer-distinct-two-modes",
+            "vindictive-lich-viewer-distinct-three-modes"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -1258,13 +1271,39 @@
     "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe": {
       "name": "Olórin's Searing Light",
       "oracleSha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "If there are two or more instant and/or sorcery cards in your graveyard, Olórin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
-          "implementation": ["explicitly unsupported; threshold damage omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "olorin-greatest-power-exile",
+          "oracleText": "Each opponent exiles a creature with the greatest power among creatures that player controls.",
+          "implementation": [
+            "sacrificeGreatestEachOpponent action exile, creature power metric, APNAP choices, simultaneous movement"
+          ],
+          "engineTestIds": [
+            "olorin-pinned-definition",
+            "olorin-normal-cast-greatest",
+            "olorin-negative-power"
+          ],
+          "viewerScenarioIds": [
+            "olorin-viewer-spell-mastery-damage",
+            "olorin-viewer-without-spell-mastery"
+          ]
+        },
+        {
+          "id": "olorin-spell-mastery-damage",
+          "oracleText": "Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, Olórin's Searing Light deals damage to each opponent equal to the power of the creature they exiled.",
+          "implementation": [
+            "damageIfGraveyardSpellsAtLeast: count instant/sorcery cards after exile; damage based on pre-exile power, with simultaneous player damage observations"
+          ],
+          "engineTestIds": [
+            "olorin-spell-mastery-negative",
+            "olorin-last-known-power",
+            "olorin-simultaneous-damage"
+          ],
+          "viewerScenarioIds": [
+            "olorin-viewer-spell-mastery-damage",
+            "olorin-viewer-without-spell-mastery"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -3111,13 +3150,36 @@
     "2143f413-7baa-4fd6-a7ca-32f52bfa553f": {
       "name": "Shadrix Silverquill",
       "oracleSha256": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
-      "implementationStatus": "unsupported",
+      "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
-          "oracleText": "At the beginning of combat on your turn, you may choose two. Each mode must target a different player.",
-          "implementation": ["explicitly unsupported; mandatory choose-two; duplicate modes"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "id": "shadrix-flying-double-strike",
+          "oracleText": "Flying, double strike",
+          "implementation": ["printed flying and double strike keywords"],
+          "engineTestIds": ["shadrix-definition-and-cast"],
+          "viewerScenarioIds": [
+            "shadrix-viewer-distinct-combat-modes",
+            "shadrix-viewer-decline-combat-modes"
+          ]
+        },
+        {
+          "id": "shadrix-combat-distinct-modes",
+          "oracleText": "At the beginning of combat on your turn, you may choose two. Each mode must target a different player.\n• Target player creates a 2/1 white and black Inkling creature token with flying.\n• Target player draws a card and loses 1 life.\n• Target player puts a +1/+1 counter on each creature they control.",
+          "implementation": [
+            "optional nonrepeatable choose-two modes announced at beginning of your combat",
+            "differentPlayerTargetSlots: sequential ordinary player choices with joint mode feasibility",
+            "createTokenForPlayer; drawTarget+loseLifeTarget; putCountersOnCreaturesTargetPlayerControls"
+          ],
+          "engineTestIds": [
+            "shadrix-begincombat-owner-and-no-modes",
+            "shadrix-choose-two-and-distinct-players",
+            "shadrix-modes-need-two-distinct-players",
+            "modal-card-cast-cost-timing"
+          ],
+          "viewerScenarioIds": [
+            "shadrix-viewer-distinct-combat-modes",
+            "shadrix-viewer-decline-combat-modes"
+          ]
         }
       ],
       "gameplayAiScenarioIds": []
@@ -13412,6 +13474,227 @@
             "agitator-blink-new-incarnation"
           ],
           "viewerScenarioIds": ["agitator-ant-viewer-accept", "agitator-ant-viewer-decline"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d": {
+      "name": "Tragic Arrogance",
+      "oracleSha256": "a2e733310ed1fbf125e9dc0b96ed73c2eef86583aed89eafe1c0f3c5bce8f213",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "tragic-arrogance-choose-permanent-types-then-sacrifice-other-nonlands",
+          "oracleText": "For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.",
+          "implementation": [
+            "choosePermanentTypesThenSacrificeOthers: mandatory controller choices from pre-event characteristics, repeated multitype selection, simultaneous sacrifice of other nonlands"
+          ],
+          "engineTestIds": [
+            "tragic-arrogance-pinned-definition",
+            "tragic-arrogance-cast-timing",
+            "tragic-arrogance-controller-chooses",
+            "tragic-arrogance-multitype-kept-once",
+            "tragic-arrogance-skips-empty-types-and-keeps-lands",
+            "tragic-arrogance-simultaneous-sacrifices"
+          ],
+          "viewerScenarioIds": [
+            "tragic-arrogance-viewer-keeps-artifact-creature-twice",
+            "tragic-arrogance-viewer-skips-missing-types"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48369aec-a991-4bef-8554-01c84302b063": {
+      "name": "Aetherspouts",
+      "oracleSha256": "e9fdf15040b36de302358c10ec5d475df068174c144c585e4b2aca553fcaa666",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "aetherspouts-each-attacker-owner-chooses-top-or-bottom-of-library",
+          "oracleText": "For each attacking creature, its owner puts it on their choice of the top or bottom of their library.",
+          "implementation": [
+            "attackingCreaturesToOwnerLibraries: owners choose top/bottom and private ordering, simultaneous departure with commander replacements and new object identities"
+          ],
+          "engineTestIds": [
+            "aetherspouts-pinned-definition",
+            "aetherspouts-normal-cast",
+            "aetherspouts-owner-order",
+            "aetherspouts-commanders-and-tokens",
+            "aetherspouts-no-attackers",
+            "aetherspouts-insufficient-cost"
+          ],
+          "viewerScenarioIds": [
+            "aetherspouts-viewer-owner-alpha-top-beta-bottom",
+            "aetherspouts-viewer-owner-alpha-bottom-beta-top"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bf1341dd-41a3-49f6-87ec-63170dde4324": {
+      "name": "Boseiju, Who Endures",
+      "oracleSha256": "e13a9c4ab62181dc08a0dc0efb251f9bfb97aa8fce2c5545561f0b78e868970f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "boseiju-channel-target-search",
+          "oracleText": "Channel — {1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.",
+          "implementation": [
+            "hand activation: printed channel/discard cost and opposing target",
+            "destroyTargetAndControllerMaySearchBasicTypedLand: pre-destruction controller may search by basic subtype, enters normally, shuffles only if searched"
+          ],
+          "engineTestIds": [
+            "boseiju-pinned-hand-channel",
+            "boseiju-legal-targets",
+            "boseiju-may-decline",
+            "boseiju-invalidated-target",
+            "boseiju-basic-subtype-search",
+            "boseiju-search-intrinsic-tap",
+            "boseiju-indestructible-and-fail-to-find"
+          ],
+          "viewerScenarioIds": [
+            "boseiju-viewer-channel-decline-search",
+            "boseiju-viewer-channel-legendary-discount-search-forest"
+          ]
+        },
+        {
+          "id": "boseiju-legendary-cost-reduction",
+          "oracleText": "This ability costs {1} less to activate for each legendary creature you control.",
+          "implementation": [
+            "selfOnly activated cost reduction counts controlled legendary creatures and reduces generic cost only"
+          ],
+          "engineTestIds": ["boseiju-generic-discount"],
+          "viewerScenarioIds": [
+            "boseiju-viewer-channel-decline-search",
+            "boseiju-viewer-channel-legendary-discount-search-forest"
+          ]
+        },
+        {
+          "id": "boseiju-land-mana",
+          "oracleText": "{T}: Add {G}.",
+          "implementation": [
+            "ordinary legendary land play and green mana ability with normal tap payment"
+          ],
+          "engineTestIds": ["boseiju-land-mana"],
+          "viewerScenarioIds": ["boseiju-viewer-land-mana"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "499a4715-6776-461b-bee4-22ed172d455e": {
+      "name": "Winds of Abandon",
+      "oracleSha256": "62f5a964ae8ac62e5f3f9ee30f5c4ca887a1b438d1af4bcf43ae256998350143",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "winds-of-abandon-targeted-exile-search",
+          "oracleText": "Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle.",
+          "implementation": [
+            "exileCreatureAndControllerSearchBasicLand: frozen target controller, one optional fail-to-find per actual exile, basic lands enter together tapped then shuffle"
+          ],
+          "engineTestIds": [
+            "winds-pinned-definition",
+            "winds-targets",
+            "winds-cost-timing",
+            "winds-base-search",
+            "winds-fail-to-find",
+            "winds-fizzle"
+          ],
+          "viewerScenarioIds": ["winds-of-abandon-viewer-targeted-search"]
+        },
+        {
+          "id": "winds-of-abandon-overload-exile-search",
+          "oracleText": "Overload {4}{W}{W} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+          "implementation": [
+            "deriveOverloadAbility: bounded lowering to untargeted opposing creatures",
+            "exileEachCreatureAndControllersSearchBasicLands: simultaneous exile and all searches before simultaneous tapped entry"
+          ],
+          "engineTestIds": [
+            "winds-overload-targetless",
+            "winds-overload-search-batch",
+            "winds-cost-timing"
+          ],
+          "viewerScenarioIds": ["winds-of-abandon-viewer-overload-searches"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81c6c4f0-81ad-463c-a42b-60a73e6d70f3": {
+      "name": "Alexios, Deimos of Kosmos",
+      "oracleSha256": "e32a494aba692a9dd95ad02e77a8f9a27744e1a0ed3bb7896c03f7691ca5c171",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "alexios-trample-combat-restrictions",
+          "oracleText": "Trample\nAlexios attacks each combat if able, can't be sacrificed, and can't attack its owner.",
+          "implementation": [
+            "printed trample; self must attack if able; cantBeSacrificed for effects and costs; cantAttackOwner excludes owner player only"
+          ],
+          "engineTestIds": [
+            "pr08-alexios-varchild-01",
+            "pr08-alexios-varchild-03",
+            "pr08-alexios-varchild-04",
+            "pr08-alexios-varchild-05",
+            "pr08-alexios-varchild-07",
+            "pr08-alexios-varchild-13",
+            "pr08-alexios-varchild-16"
+          ],
+          "viewerScenarioIds": ["alexios-viewer-cast-and-upkeep-rotation"]
+        },
+        {
+          "id": "alexios-each-upkeep-rotation",
+          "oracleText": "At the beginning of each player's upkeep, that player gains control of Alexios, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn.",
+          "implementation": [
+            "each upkeep trigger; exact source object control transition, untap, active player places counter, haste until end of turn"
+          ],
+          "engineTestIds": ["pr08-alexios-varchild-02", "pr08-alexios-varchild-06"],
+          "viewerScenarioIds": ["alexios-viewer-cast-and-upkeep-rotation"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "26ae37ab-91f8-4113-beb0-1154f9b62d28": {
+      "name": "Varchild, Betrayer of Kjeldor",
+      "oracleSha256": "04ba70c67014069858dcb1361c33002279471f1afe6a57438689d248a8df0b68",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "id": "varchild-combat-survivors",
+          "oracleText": "Whenever Varchild deals combat damage to a player, that player creates that many 1/1 red Survivor creature tokens.",
+          "implementation": [
+            "dealsCombatDamageToPlayer exact event recipient and actual damage; createTokenForPlayer with shared red Survivor definition"
+          ],
+          "engineTestIds": [
+            "pr08-alexios-varchild-01",
+            "pr08-alexios-varchild-12",
+            "pr08-alexios-varchild-15",
+            "pr08-alexios-varchild-17"
+          ],
+          "viewerScenarioIds": ["varchild-viewer-combat-creates-survivors"]
+        },
+        {
+          "id": "varchild-opposing-survivor-restrictions",
+          "oracleText": "Survivors your opponents control can't block, and they can't attack you or planeswalkers you control.",
+          "implementation": [
+            "cantBlockMatching and attackRestriction filter all opposing Survivors, including planeswalker defense"
+          ],
+          "engineTestIds": [
+            "pr08-alexios-varchild-08",
+            "pr08-alexios-varchild-09",
+            "pr08-alexios-varchild-10",
+            "pr08-alexios-varchild-14"
+          ],
+          "viewerScenarioIds": ["varchild-viewer-combat-creates-survivors"]
+        },
+        {
+          "id": "varchild-leaves-gains-survivors",
+          "oracleText": "When Varchild leaves the battlefield, gain control of all Survivors.",
+          "implementation": [
+            "exact leave trigger retained after departure; gain permanent control of all current Survivors at resolution"
+          ],
+          "engineTestIds": ["pr08-alexios-varchild-11"],
+          "viewerScenarioIds": ["varchild-viewer-cast-death-gains-survivors"]
         }
       ],
       "gameplayAiScenarioIds": []

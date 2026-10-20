@@ -28,6 +28,15 @@ const pins = (
 ).cards;
 // Move a card into this set only with its complete behavioral tests and lab requirements.
 const IMPLEMENTED = new Set<string>([
+  'Tragic Arrogance',
+  'Aetherspouts',
+  'Boseiju, Who Endures',
+  'Winds of Abandon',
+  'Shadrix Silverquill',
+  'Vindictive Lich',
+  'Alexios, Deimos of Kosmos',
+  'Varchild, Betrayer of Kjeldor',
+  "Olórin's Searing Light",
   'Mob Rule',
   'Cut a Deal',
   'Cytoplast Manipulator',
@@ -77,10 +86,12 @@ describe('PR08 Oracle pins and containment', () => {
       .filter((name) => /^pr08.*\.test\.ts$/.test(name))
       .map((name) => readFileSync(join(import.meta.dirname, name), 'utf8'))
       .join('\n');
-    const viewerSource = readFileSync(
-      resolve('packages/server/src/cards/card-test-scenarios.ts'),
-      'utf8',
-    );
+    const viewerSource =
+      readdirSync(resolve('packages/server/src/cards'))
+        .filter((name) => /^pr08.*scenarios\.ts$/.test(name))
+        .map((name) => readFileSync(resolve('packages/server/src/cards', name), 'utf8'))
+        .join('\n') +
+      readFileSync(resolve('packages/server/src/cards/card-test-scenarios.ts'), 'utf8');
     for (const pin of pins.filter((pin) => IMPLEMENTED.has(pin.card.name))) {
       const card = manifest.cards[pin.card.oracleId];
       expect(card?.oracleSha256, pin.card.name).toBe(pin.sha256);

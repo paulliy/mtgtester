@@ -524,7 +524,16 @@ export const FOOD: TokenSpec = {
  * printed Treasure once did across `overrides/`. `interpret.ts` canonicalizes its parsed spec
  * against this list (by deep structural equality) so a match returns the SAME object, not a copy.
  */
+export const SURVIVOR_1_1_RED = creatureToken({
+  name: 'Survivor',
+  subtypes: ['Survivor'],
+  colors: ['R'],
+  power: 1,
+  toughness: 1,
+});
+
 export const ALL_TOKENS: TokenSpec[] = [
+  SURVIVOR_1_1_RED,
   ZOMBIE_2_2_BLACK,
   SOLDIER_1_1_LIFELINK,
   INKLING_2_1_FLYING,

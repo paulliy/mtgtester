@@ -2,7 +2,7 @@ import { counterCount, setCounterCount } from './counters';
 import { playerLifeLocked } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { attackedPlaneswalker, spellDefinitionOf } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -804,6 +804,12 @@ export function* moveObject(
   dest: MoveDestination,
 ): GameGen<EngineCardObject | EnginePermanent | null> {
   const from = obj.zone;
+  if (
+    from === 'battlefield' &&
+    dest.reason === 'sacrifice' &&
+    !canBeSacrificed(ctx, obj as EnginePermanent)
+  )
+    return obj;
   let target: MoveDestination = dest;
 
   // CR 702.84a: an unearthed permanent that would leave the battlefield is exiled instead. Applied
@@ -921,7 +927,11 @@ export function* moveObject(
   if (obj.isToken && from === 'battlefield' && target.zone !== 'battlefield') {
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
-    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      if (target.reason === 'sacrifice')
+        queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
+    }
     expireSourceControlEffects(ctx, obj.id);
     releaseFixedEffects(ctx, obj.cardId);
     if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
@@ -1144,7 +1154,11 @@ export function* moveObject(
   // card-zone triggers or linked returns inspect the new battlefield. Batch departures have
   // already captured their firings together in movePermanentsTogether.
   if (keepForLeaveProcessing) {
-    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      if (target.reason === 'sacrifice')
+        queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
+    }
     expireSourceControlEffects(ctx, obj.id);
   }
 
@@ -1192,10 +1206,6 @@ export function* moveObject(
       [obj as EngineCardObject],
       target.zone === 'battlefield' ? [next.id] : [],
     );
-  }
-
-  if (target.reason === 'sacrifice' && from === 'battlefield') {
-    queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
   }
 
   // Triggers: enters on arriving, dies on battlefield → graveyard.
@@ -1254,9 +1264,15 @@ export function* moveObjects(
   const departing =
     destination.zone === 'battlefield'
       ? []
-      : objects.filter((object): object is EnginePermanent => object.zone === 'battlefield');
+      : objects.filter(
+          (object): object is EnginePermanent =>
+            object.zone === 'battlefield' &&
+            (destination.reason !== 'sacrifice' || canBeSacrificed(ctx, object as EnginePermanent)),
+        );
   const departed =
-    departing.length > 0 ? yield* movePermanentsTogether(ctx, departing, destination) : [];
+    departing.length > 0
+      ? yield* movePermanentsTogether(ctx, departing, destination, destination.reason)
+      : [];
   for (const object of objects) {
     const departure = departing.indexOf(object as EnginePermanent);
     if (departure >= 0) {
@@ -3031,7 +3047,14 @@ export function* movePermanentsToGraveyard(
   permanents: EnginePermanent[],
   reason?: 'sacrifice',
 ): GameGen<void> {
-  yield* movePermanentsTogether(ctx, permanents, { zone: 'graveyard' }, reason);
+  yield* movePermanentsTogether(
+    ctx,
+    reason === 'sacrifice'
+      ? permanents.filter((permanent) => canBeSacrificed(ctx, permanent))
+      : permanents,
+    { zone: 'graveyard' },
+    reason,
+  );
 }
 
 /**
@@ -3043,17 +3066,29 @@ export function* movePermanentsToGraveyard(
 export function* movePermanentsTogether(
   ctx: GameContext,
   permanents: EnginePermanent[],
-  destination: Pick<MoveDestination, 'zone' | 'libraryPosition'>,
+  destination:
+    | Pick<MoveDestination, 'zone' | 'libraryPosition'>
+    | ((permanent: EnginePermanent) => Pick<MoveDestination, 'zone' | 'libraryPosition'>),
   reason?: 'sacrifice',
 ): GameGen<(EngineCardObject | EnginePermanent | null)[]> {
   if (permanents.length === 0) return [];
+  const destinationOf = (permanent: EnginePermanent) =>
+    typeof destination === 'function' ? destination(permanent) : destination;
+  // Plan the entire event before a departure can change controllers or other board facts.
+  const plannedDestinations = new Map(
+    permanents.map((permanent) => [permanent.id, destinationOf(permanent)]),
+  );
   const departureFacts = new Map(
     permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
   );
   const destinations = new Map(
     permanents.map((perm) => [
       perm.id,
-      graveyardDestination(ctx, perm, leavesBattlefieldTo(perm, destination.zone)),
+      graveyardDestination(
+        ctx,
+        perm,
+        leavesBattlefieldTo(perm, plannedDestinations.get(perm.id)!.zone),
+      ),
     ]),
   );
   // Only what really reaches the graveyard dies.
@@ -3087,7 +3122,7 @@ export function* movePermanentsTogether(
   const moved: (EngineCardObject | EnginePermanent | null)[] = [];
   for (const perm of permanents) {
     const next = yield* moveObject(ctx, perm, {
-      ...destination,
+      ...plannedDestinations.get(perm.id)!,
       zone: destinations.get(perm.id)!,
       deferLeaveProcessing: true,
       deferCardZoneTriggers: true,

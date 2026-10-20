@@ -431,6 +431,8 @@ export type TargetKind =
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
   kind: TargetKind;
+  /** These ordinary target slots must name different players. Inactive mode slots are absent. */
+  differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
   spellTargetsPermanentYouControl?: true;
   spellHasSingleTarget?: true;
@@ -632,6 +634,8 @@ export type Effect =
       selector: 'creature' | 'creatureOrPlaneswalker';
       metric: 'power' | 'manaValue';
       action: 'sacrifice' | 'exile';
+      /** After exile, deal each player its creature's last-known power if spell mastery holds. */
+      damageIfGraveyardSpellsAtLeast?: number;
     }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
   | { op: 'transferCountersFromTriggerObjectToChosenCreatures'; targetSlot: number }
@@ -1313,6 +1317,9 @@ export type Effect =
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
+  | { op: 'destroyTargetAndControllerMaySearchBasicTypedLand'; target: EffectRef }
+  | { op: 'exileCreatureAndControllerSearchBasicLand'; target: EffectRef }
+  | { op: 'exileEachCreatureAndControllersSearchBasicLands'; selector: Selector }
   /** Remove a target, then let its controller search for a basic land (Path/Trophy). */
   | {
       op: 'removeTargetAndControllerMaySearchBasicLand';
@@ -1554,6 +1561,12 @@ export type Effect =
   /** Make the ability's controller the monarch (CR  monarch). */
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }
+  | { op: 'attackingCreaturesToOwnerLibraries' }
+  /** The active player gains this exact source, untaps it, puts a counter and grants haste. */
+  | { op: 'rotateSourceAtUpkeep' }
+  /** The controller chooses one permanent of each type for each player, then all other
+   * nonlands are sacrificed together. A multitype permanent can satisfy several choices. */
+  | { op: 'choosePermanentTypesThenSacrificeOthers'; types: string[] }
   /**
    * "At the beginning of your end step, each player may put N `<counter>` counters on a creature
    * they control. Goad each creature that had counters put on it this way." (Agitator Ant) — one
@@ -2066,6 +2079,8 @@ export interface Ability {
     maxChoices: number;
     /** Whether a modal choice may select the same mode more than once. */
     repeatable?: boolean;
+    /** Trigger announcement may decline the entire fixed modal selection, choosing no modes. */
+    optional?: true;
     /** A state-dependent maximum announced at cast time (for example, two while controlling a commander). */
     maxChoicesIf?: { condition: import('./condition').Condition; maxChoices: number };
     /** Escalate-style cost paid once for every chosen mode beyond the first. */

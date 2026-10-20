@@ -47,7 +47,6 @@ const REASONS: Record<string, string> = {
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
-  'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   'Display of Power':
@@ -56,8 +55,6 @@ const REASONS: Record<string, string> = {
     'Choose a Background is claimed without a background companion implementation.',
   'Nighthawk Scavenger':
     "Power counts card types in all graveyards, not only opponents' graveyards.",
-  "Olórin's Searing Light":
-    'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
@@ -78,7 +75,6 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
@@ -112,6 +108,9 @@ const REASONS: Record<string, string> = {
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    'Vindictive Lich',
+    'Shadrix Silverquill',
+    "Olórin's Searing Light",
     // PR08 normal-cast, cleanup and frozen-set tests replace the containment requirement.
     'Mob Rule',
     'Cytoplast Manipulator',

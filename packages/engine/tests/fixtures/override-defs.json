@@ -2215,8 +2215,131 @@
   {
     "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
     "name": "Shadrix Silverquill",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of combat on your turn, you may choose two. Each mode must target a different player.\"",
+      "unrecognized rules text: \"• Target player creates a 2/1 white and black Inkling creature token with flying.\"",
+      "unrecognized rules text: \"• Target player draws a card and loses 1 life.\"",
+      "unrecognized rules text: \"• Target player puts a +1/+1 counter on each creature they control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, you may choose two modes targeting different players",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 2,
+            "minChoices": 2,
+            "optional": true,
+            "options": [
+              {
+                "description": "Target player creates an Inkling",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenForPlayer",
+                    "spec": {
+                      "colors": [
+                        "W",
+                        "B"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Inkling",
+                      "power": 2,
+                      "subtypes": [
+                        "Inkling"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Inkling",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Target player draws a card and loses 1 life",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "drawTarget",
+                    "target": 1
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "loseLifeTarget",
+                    "target": 1
+                  }
+                ],
+                "targetSlots": [
+                  1
+                ]
+              },
+              {
+                "description": "Target player puts a +1/+1 counter on each creature they control",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "counter": "+1/+1",
+                    "op": "putCountersOnCreaturesTargetPlayerControls",
+                    "target": 2
+                  }
+                ],
+                "targetSlots": [
+                  2
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "differentPlayerTargetSlots": [
+                1,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "differentPlayerTargetSlots": [
+                0,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "differentPlayerTargetSlots": [
+                0,
+                1
+              ],
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
@@ -2549,6 +2672,108 @@
         "kind": "spell",
         "targets": []
       }
+    }
+  },
+  {
+    "oracleId": "26ae37ab-91f8-4113-beb0-1154f9b62d28",
+    "name": "Varchild, Betrayer of Kjeldor",
+    "handledLines": [
+      "unrecognized rules text: \"Survivors your opponents control can't block, and they can't attack you or planeswalkers you control.\"",
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, that player creates that many 1/1 red Survivor creature tokens.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Survivor"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "cantBlockMatching"
+        },
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Survivor"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "The player dealt combat damage creates that many 1/1 red Survivors",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Survivor",
+                "power": 1,
+                "subtypes": [
+                  "Survivor"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Survivor",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        },
+        {
+          "description": "Gain control of all Survivors",
+          "effects": [
+            {
+              "op": "gainControl",
+              "selector": {
+                "kind": "subtype",
+                "value": "Survivor"
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "leavesBattlefield"
+          }
+        }
+      ]
     }
   },
   {
@@ -4366,6 +4591,50 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "48369aec-a991-4bef-8554-01c84302b063",
+    "name": "Aetherspouts",
+    "handledLines": [
+      "unrecognized rules text: \"For each attacking creature, its owner puts it on their choice of the top or bottom of their library.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each attacking creature goes to the top or bottom of its owner’s library, as that owner chooses",
+        "effects": [
+          {
+            "op": "attackingCreaturesToOwnerLibraries"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
+    "oracleId": "499a4715-6776-461b-bee4-22ed172d455e",
+    "name": "Winds of Abandon",
+    "handledLines": [
+      "unrecognized rules text: \"Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature you do not control; its controller searches for a basic land, puts it onto the battlefield tapped, then shuffles",
+        "effects": [
+          {
+            "op": "exileCreatureAndControllerSearchBasicLand",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {
@@ -6277,8 +6546,103 @@
   {
     "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
     "name": "Vindictive Lich",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature dies, choose one or more. Each mode must target a different player.\"",
+      "unrecognized rules text: \"• Target opponent discards two cards.\"",
+      "unrecognized rules text: \"• Target opponent loses 5 life.\"",
+      "unrecognized rules text: \"• Target opponent sacrifices a creature of their choice.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Vindictive Lich dies, choose one or more modes targeting different opponents",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 3,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Target opponent sacrifices a creature",
+                "effects": [
+                  {
+                    "op": "sacrificeTargetPlayerCreature",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Target opponent discards two cards",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 2
+                    },
+                    "op": "discardTarget",
+                    "target": 1
+                  }
+                ],
+                "targetSlots": [
+                  1
+                ]
+              },
+              {
+                "description": "Target opponent loses 5 life",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 5
+                    },
+                    "op": "loseLifeTarget",
+                    "target": 2
+                  }
+                ],
+                "targetSlots": [
+                  2
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                1,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                0,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                0,
+                1
+              ],
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
@@ -7518,6 +7882,51 @@
     "def": {}
   },
   {
+    "oracleId": "81c6c4f0-81ad-463c-a42b-60a73e6d70f3",
+    "name": "Alexios, Deimos of Kosmos",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player gains control of ~, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn.\"",
+      "unrecognized rules text: \"~ attacks each combat if able, can't be sacrificed, and can't attack its owner.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeSacrificed"
+        },
+        {
+          "kind": "cantAttackOwner"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setMustAttackEachCombat": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "The upkeep player gains control of Alexios, untaps it, puts a +1/+1 counter on it, and gives it haste until end of turn",
+          "effects": [
+            {
+              "op": "rotateSourceAtUpkeep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
     "name": "Wishclaw Talisman",
     "handledLines": [
@@ -8117,6 +8526,31 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
+    "name": "Tragic Arrogance",
+    "handledLines": [
+      "unrecognized rules text: \"For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose an artifact, creature, enchantment and planeswalker for each player; they sacrifice all other nonland permanents",
+        "effects": [
+          {
+            "op": "choosePermanentTypesThenSacrificeOthers",
+            "types": [
+              "Artifact",
+              "Creature",
+              "Enchantment",
+              "Planeswalker"
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -12150,6 +12584,109 @@
     }
   },
   {
+    "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
+    "name": "Boseiju, Who Endures",
+    "handledLines": [
+      "unrecognized rules text: \"{1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — destroy an opposing artifact, enchantment or nonbasic land; its controller may search for a land with a basic land type",
+            "effects": [
+              {
+                "op": "destroyTargetAndControllerMaySearchBasicTypedLand",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Land"
+                        },
+                        {
+                          "kind": "not",
+                          "of": {
+                            "kind": "supertype",
+                            "value": "Basic"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
     "name": "Mordant Dragon",
     "handledLines": [
@@ -14575,8 +15112,26 @@
   {
     "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
     "name": "Olórin's Searing Light",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each opponent exiles a creature with the greatest power among creatures that player controls.\"",
+      "unrecognized rules text: \"If there are two or more instant and/or sorcery cards in your graveyard, ~ deals damage to each opponent equal to the power of the creature they exiled.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent exiles a greatest-power creature; with spell mastery, deal that opponent its creature’s last-known power in damage",
+        "effects": [
+          {
+            "action": "exile",
+            "damageIfGraveyardSpellsAtLeast": 2,
+            "metric": "power",
+            "op": "sacrificeGreatestEachOpponent",
+            "selector": "creature"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "e70f5520-1b9c-4351-8484-30f0dc692e01",
@@ -16908,6 +17463,25 @@
     }
   },
   {
+    "oracleId": "oracle-aetherspouts",
+    "name": "Aetherspouts",
+    "handledLines": [
+      "unrecognized rules text: \"For each attacking creature, its owner puts it on their choice of the top or bottom of their library.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each attacking creature goes to the top or bottom of its owner’s library, as that owner chooses",
+        "effects": [
+          {
+            "op": "attackingCreaturesToOwnerLibraries"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-aethersquall-ancient",
     "name": "Aethersquall Ancient",
     "handledLines": [
@@ -17385,6 +17959,51 @@
           "targets": [],
           "trigger": {
             "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-alexios-deimos-of-kosmos",
+    "name": "Alexios, Deimos of Kosmos",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of each player's upkeep, that player gains control of ~, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn.\"",
+      "unrecognized rules text: \"~ attacks each combat if able, can't be sacrificed, and can't attack its owner.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeSacrificed"
+        },
+        {
+          "kind": "cantAttackOwner"
+        }
+      ],
+      "staticEffects": [
+        {
+          "affects": {
+            "kind": "self"
+          },
+          "op": {
+            "layer": 6,
+            "setMustAttackEachCombat": true
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "description": "The upkeep player gains control of Alexios, untaps it, puts a +1/+1 counter on it, and gives it haste until end of turn",
+          "effects": [
+            {
+              "op": "rotateSourceAtUpkeep"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "each",
             "when": "upkeep"
           }
         }
@@ -18812,6 +19431,109 @@
             },
             "when": "enters"
           }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-boseiju-who-endures",
+    "name": "Boseiju, Who Endures",
+    "handledLines": [
+      "unrecognized rules text: \"{1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Channel — destroy an opposing artifact, enchantment or nonbasic land; its controller may search for a land with a basic land type",
+            "effects": [
+              {
+                "op": "destroyTargetAndControllerMaySearchBasicTypedLand",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "opponent",
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Land"
+                        },
+                        {
+                          "kind": "not",
+                          "of": {
+                            "kind": "supertype",
+                            "value": "Basic"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "amount": {
+            "kind": "countPermanents",
+            "scope": "you",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                }
+              ]
+            }
+          },
+          "appliesTo": "activate",
+          "kind": "costReduction",
+          "selfOnly": true
         }
       ]
     }
@@ -26765,8 +27487,26 @@
   {
     "oracleId": "oracle-ol-rin-s-searing-light",
     "name": "Olórin's Searing Light",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Each opponent exiles a creature with the greatest power among creatures that player controls.\"",
+      "unrecognized rules text: \"If there are two or more instant and/or sorcery cards in your graveyard, ~ deals damage to each opponent equal to the power of the creature they exiled.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Each opponent exiles a greatest-power creature; with spell mastery, deal that opponent its creature’s last-known power in damage",
+        "effects": [
+          {
+            "action": "exile",
+            "damageIfGraveyardSpellsAtLeast": 2,
+            "metric": "power",
+            "op": "sacrificeGreatestEachOpponent",
+            "selector": "creature"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-one-with-the-machine",
@@ -29383,8 +30123,131 @@
   {
     "oracleId": "oracle-shadrix-silverquill",
     "name": "Shadrix Silverquill",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of combat on your turn, you may choose two. Each mode must target a different player.\"",
+      "unrecognized rules text: \"• Target player creates a 2/1 white and black Inkling creature token with flying.\"",
+      "unrecognized rules text: \"• Target player draws a card and loses 1 life.\"",
+      "unrecognized rules text: \"• Target player puts a +1/+1 counter on each creature they control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "At the beginning of combat on your turn, you may choose two modes targeting different players",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 2,
+            "minChoices": 2,
+            "optional": true,
+            "options": [
+              {
+                "description": "Target player creates an Inkling",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "createTokenForPlayer",
+                    "spec": {
+                      "colors": [
+                        "W",
+                        "B"
+                      ],
+                      "keywords": [
+                        "flying"
+                      ],
+                      "name": "Inkling",
+                      "power": 2,
+                      "subtypes": [
+                        "Inkling"
+                      ],
+                      "toughness": 1,
+                      "typeLine": "Creature — Inkling",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Target player draws a card and loses 1 life",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "drawTarget",
+                    "target": 1
+                  },
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "op": "loseLifeTarget",
+                    "target": 1
+                  }
+                ],
+                "targetSlots": [
+                  1
+                ]
+              },
+              {
+                "description": "Target player puts a +1/+1 counter on each creature they control",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    },
+                    "counter": "+1/+1",
+                    "op": "putCountersOnCreaturesTargetPlayerControls",
+                    "target": 2
+                  }
+                ],
+                "targetSlots": [
+                  2
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "differentPlayerTargetSlots": [
+                1,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "differentPlayerTargetSlots": [
+                0,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "differentPlayerTargetSlots": [
+                0,
+                1
+              ],
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-shamanic-revelation",
@@ -32001,6 +32864,31 @@
     "compose": "append"
   },
   {
+    "oracleId": "oracle-tragic-arrogance",
+    "name": "Tragic Arrogance",
+    "handledLines": [
+      "unrecognized rules text: \"For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Choose an artifact, creature, enchantment and planeswalker for each player; they sacrifice all other nonland permanents",
+        "effects": [
+          {
+            "op": "choosePermanentTypesThenSacrificeOthers",
+            "types": [
+              "Artifact",
+              "Creature",
+              "Enchantment",
+              "Planeswalker"
+            ]
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-transcendent-envoy",
     "name": "Transcendent Envoy",
     "handledLines": [],
@@ -32416,6 +33304,108 @@
     "def": {}
   },
   {
+    "oracleId": "oracle-varchild-betrayer-of-kjeldor",
+    "name": "Varchild, Betrayer of Kjeldor",
+    "handledLines": [
+      "unrecognized rules text: \"Survivors your opponents control can't block, and they can't attack you or planeswalkers you control.\"",
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, that player creates that many 1/1 red Survivor creature tokens.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Survivor"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "kind": "cantBlockMatching"
+        },
+        {
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Survivor"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          },
+          "includePlaneswalkers": true,
+          "kind": "attackRestriction"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "The player dealt combat damage creates that many 1/1 red Survivors",
+          "effects": [
+            {
+              "count": {
+                "kind": "damageDealt"
+              },
+              "op": "createTokenForPlayer",
+              "spec": {
+                "colors": [
+                  "R"
+                ],
+                "name": "Survivor",
+                "power": 1,
+                "subtypes": [
+                  "Survivor"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Survivor",
+                "types": [
+                  "Creature"
+                ]
+              },
+              "target": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        },
+        {
+          "description": "Gain control of all Survivors",
+          "effects": [
+            {
+              "op": "gainControl",
+              "selector": {
+                "kind": "subtype",
+                "value": "Survivor"
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "leavesBattlefield"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-vastwood-surge",
     "name": "Vastwood Surge",
     "handledLines": [
@@ -32578,8 +33568,103 @@
   {
     "oracleId": "oracle-vindictive-lich",
     "name": "Vindictive Lich",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature dies, choose one or more. Each mode must target a different player.\"",
+      "unrecognized rules text: \"• Target opponent discards two cards.\"",
+      "unrecognized rules text: \"• Target opponent loses 5 life.\"",
+      "unrecognized rules text: \"• Target opponent sacrifices a creature of their choice.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "When Vindictive Lich dies, choose one or more modes targeting different opponents",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 3,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Target opponent sacrifices a creature",
+                "effects": [
+                  {
+                    "op": "sacrificeTargetPlayerCreature",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Target opponent discards two cards",
+                "effects": [
+                  {
+                    "count": {
+                      "kind": "const",
+                      "n": 2
+                    },
+                    "op": "discardTarget",
+                    "target": 1
+                  }
+                ],
+                "targetSlots": [
+                  1
+                ]
+              },
+              {
+                "description": "Target opponent loses 5 life",
+                "effects": [
+                  {
+                    "amount": {
+                      "kind": "const",
+                      "n": 5
+                    },
+                    "op": "loseLifeTarget",
+                    "target": 2
+                  }
+                ],
+                "targetSlots": [
+                  2
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                1,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                0,
+                2
+              ],
+              "kind": "player"
+            },
+            {
+              "controller": "opponent",
+              "differentPlayerTargetSlots": [
+                0,
+                1
+              ],
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-vineglimmer-snarl",
@@ -33181,6 +34266,31 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-winds-of-abandon",
+    "name": "Winds of Abandon",
+    "handledLines": [
+      "unrecognized rules text: \"Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile target creature you do not control; its controller searches for a basic land, puts it onto the battlefield tapped, then shuffles",
+        "effects": [
+          {
+            "op": "exileCreatureAndControllerSearchBasicLand",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "controller": "opponent",
+            "kind": "creature"
+          }
+        ]
+      }
     }
   },
   {

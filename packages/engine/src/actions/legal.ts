@@ -1717,10 +1717,7 @@ export function computePriorityOptions(
         const selections: (number[] | undefined)[] =
           modes === undefined
             ? [undefined]
-            : legalAbilityModeSelections(
-                activated.ability,
-                (spec) => targetOptionsFor(spec).length,
-              );
+            : legalAbilityModeSelections(activated.ability, (spec) => targetOptionsFor(spec));
 
         for (const selectedModes of selections) {
           const activeSlots =

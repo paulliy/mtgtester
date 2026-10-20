@@ -4,9 +4,9 @@
  * Each registration lands with pinned Oracle clauses, behavioral tests and real lab scenarios.
  * Unfinished cards remain explicitly unsupported in their original deck registrations.
  */
-import type { CardDefinition } from '../definition';
+import type { CardDefinition, TargetSpec } from '../definition';
 import { searchLibraryCards } from '../effect-builders';
-import { allOf, hasCounter, not, ofType, OPPONENTS } from '../selector';
+import { allOf, anyOf, hasCounter, not, ofType, ofSubtype, OPPONENTS } from '../selector';
 import {
   activated,
   mana,
@@ -14,6 +14,7 @@ import {
   onBeginCombat,
   onEndStep,
   onEtb,
+  onDies,
   onUpkeep,
   removeCountersCost,
   spell,
@@ -23,7 +24,14 @@ import {
   whenAttacks,
 } from '../templates';
 import { constant } from '../value';
-import { SOLDIER_1_1, TREASURE, OGRE_3_3_RED, SPIRIT_1_1_FLYING } from '../tokens';
+import {
+  SOLDIER_1_1,
+  TREASURE,
+  OGRE_3_3_RED,
+  SPIRIT_1_1_FLYING,
+  INKLING_2_1_FLYING,
+  SURVIVOR_1_1_RED,
+} from '../tokens';
 import { defineCard } from './index';
 
 export const MOB_RULE_HANDLED_LINES = [
@@ -73,6 +81,324 @@ export const MOB_RULE: Partial<CardDefinition> = {
 };
 
 export function registerCoveragePr08Overrides(): void {
+  defineCard(
+    '81c6c4f0-81ad-463c-a42b-60a73e6d70f3',
+    'Alexios, Deimos of Kosmos',
+    [
+      'unrecognized rules text: "~ attacks each combat if able, can\'t be sacrificed, and can\'t attack its owner."',
+      'unrecognized rules text: "At the beginning of each player\'s upkeep, that player gains control of ~, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn."',
+    ],
+    {
+      staticEffects: [
+        { affects: { kind: 'self' }, op: { layer: 6, setMustAttackEachCombat: true } },
+      ],
+      ruleStatics: [{ kind: 'cantBeSacrificed' }, { kind: 'cantAttackOwner' }],
+      triggers: [
+        triggered(onUpkeep('each'), {
+          effects: [{ op: 'rotateSourceAtUpkeep' }],
+          description:
+            'The upkeep player gains control of Alexios, untaps it, puts a +1/+1 counter on it, and gives it haste until end of turn',
+        }),
+      ],
+    },
+  );
+  defineCard(
+    'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',
+    "Olórin's Searing Light",
+    [
+      'unrecognized rules text: "Each opponent exiles a creature with the greatest power among creatures that player controls."',
+      'unrecognized rules text: "If there are two or more instant and/or sorcery cards in your graveyard, ~ deals damage to each opponent equal to the power of the creature they exiled."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'sacrificeGreatestEachOpponent',
+            selector: 'creature',
+            metric: 'power',
+            action: 'exile',
+            damageIfGraveyardSpellsAtLeast: 2,
+          },
+        ],
+        description:
+          'Each opponent exiles a greatest-power creature; with spell mastery, deal that opponent its creature’s last-known power in damage',
+      }),
+    },
+  );
+  defineCard(
+    '26ae37ab-91f8-4113-beb0-1154f9b62d28',
+    'Varchild, Betrayer of Kjeldor',
+    [
+      'unrecognized rules text: "Whenever ~ deals combat damage to a player, that player creates that many 1/1 red Survivor creature tokens."',
+      'unrecognized rules text: "Survivors your opponents control can\'t block, and they can\'t attack you or planeswalkers you control."',
+    ],
+    {
+      triggers: [
+        triggered(
+          { when: 'dealsCombatDamageToPlayer', subject: { kind: 'self' } },
+          {
+            effects: [
+              {
+                op: 'createTokenForPlayer',
+                target: 'eventPlayer',
+                spec: SURVIVOR_1_1_RED,
+                count: { kind: 'damageDealt' },
+              },
+            ],
+            description: 'The player dealt combat damage creates that many 1/1 red Survivors',
+          },
+        ),
+        triggered(
+          { when: 'leavesBattlefield', subject: { kind: 'self' } },
+          {
+            effects: [{ op: 'gainControl', selector: ofSubtype('Survivor') }],
+            description: 'Gain control of all Survivors',
+          },
+        ),
+      ],
+      ruleStatics: [
+        { kind: 'cantBlockMatching', filter: allOf(ofSubtype('Survivor'), OPPONENTS) },
+        {
+          kind: 'attackRestriction',
+          filter: allOf(ofSubtype('Survivor'), OPPONENTS),
+          includePlaneswalkers: true,
+        },
+      ],
+    },
+  );
+  const differentPlayers = (targets: TargetSpec[]): TargetSpec[] =>
+    targets.map((target, slot) => ({
+      ...target,
+      differentPlayerTargetSlots: targets
+        .map((_, index) => index)
+        .filter((other) => other !== slot),
+    }));
+  const shadrixTargets = targetSlots({
+    tokenPlayer: { kind: 'player' },
+    drawPlayer: { kind: 'player' },
+    counterPlayer: { kind: 'player' },
+  });
+  defineCard(
+    '2143f413-7baa-4fd6-a7ca-32f52bfa553f',
+    'Shadrix Silverquill',
+    [
+      'unrecognized rules text: "At the beginning of combat on your turn, you may choose two. Each mode must target a different player."',
+      'unrecognized rules text: "• Target player creates a 2/1 white and black Inkling creature token with flying."',
+      'unrecognized rules text: "• Target player draws a card and loses 1 life."',
+      'unrecognized rules text: "• Target player puts a +1/+1 counter on each creature they control."',
+    ],
+    {
+      triggers: [
+        triggered(onBeginCombat('you'), {
+          targets: differentPlayers(shadrixTargets.targets),
+          effects: [],
+          modes: {
+            minChoices: 2,
+            maxChoices: 2,
+            optional: true,
+            options: [
+              {
+                description: 'Target player creates an Inkling',
+                targetSlots: [shadrixTargets.slot.tokenPlayer],
+                effects: [
+                  {
+                    op: 'createTokenForPlayer',
+                    target: shadrixTargets.slot.tokenPlayer,
+                    spec: INKLING_2_1_FLYING,
+                    count: constant(1),
+                  },
+                ],
+              },
+              {
+                description: 'Target player draws a card and loses 1 life',
+                targetSlots: [shadrixTargets.slot.drawPlayer],
+                effects: [
+                  { op: 'drawTarget', target: shadrixTargets.slot.drawPlayer, count: constant(1) },
+                  {
+                    op: 'loseLifeTarget',
+                    target: shadrixTargets.slot.drawPlayer,
+                    amount: constant(1),
+                  },
+                ],
+              },
+              {
+                description: 'Target player puts a +1/+1 counter on each creature they control',
+                targetSlots: [shadrixTargets.slot.counterPlayer],
+                effects: [
+                  {
+                    op: 'putCountersOnCreaturesTargetPlayerControls',
+                    target: shadrixTargets.slot.counterPlayer,
+                    counter: '+1/+1',
+                    count: constant(1),
+                  },
+                ],
+              },
+            ],
+          },
+          description:
+            'At the beginning of combat on your turn, you may choose two modes targeting different players',
+        }),
+      ],
+    },
+  );
+  const lichTargets = targetSlots({
+    sacrificePlayer: { kind: 'player', controller: 'opponent' },
+    discardPlayer: { kind: 'player', controller: 'opponent' },
+    lifePlayer: { kind: 'player', controller: 'opponent' },
+  });
+  defineCard(
+    '6dc7f837-158f-4ccf-86a5-a07a20891ec5',
+    'Vindictive Lich',
+    [
+      'unrecognized rules text: "When this creature dies, choose one or more. Each mode must target a different player."',
+      'unrecognized rules text: "• Target opponent sacrifices a creature of their choice."',
+      'unrecognized rules text: "• Target opponent discards two cards."',
+      'unrecognized rules text: "• Target opponent loses 5 life."',
+    ],
+    {
+      triggers: [
+        triggered(onDies(), {
+          targets: differentPlayers(lichTargets.targets),
+          effects: [],
+          modes: {
+            minChoices: 1,
+            maxChoices: 3,
+            options: [
+              {
+                description: 'Target opponent sacrifices a creature',
+                targetSlots: [lichTargets.slot.sacrificePlayer],
+                effects: [
+                  { op: 'sacrificeTargetPlayerCreature', target: lichTargets.slot.sacrificePlayer },
+                ],
+              },
+              {
+                description: 'Target opponent discards two cards',
+                targetSlots: [lichTargets.slot.discardPlayer],
+                effects: [
+                  {
+                    op: 'discardTarget',
+                    target: lichTargets.slot.discardPlayer,
+                    count: constant(2),
+                  },
+                ],
+              },
+              {
+                description: 'Target opponent loses 5 life',
+                targetSlots: [lichTargets.slot.lifePlayer],
+                effects: [
+                  {
+                    op: 'loseLifeTarget',
+                    target: lichTargets.slot.lifePlayer,
+                    amount: constant(5),
+                  },
+                ],
+              },
+            ],
+          },
+          description:
+            'When Vindictive Lich dies, choose one or more modes targeting different opponents',
+        }),
+      ],
+    },
+  );
+  const windsTargets = targetSlots({ creature: { kind: 'creature', controller: 'opponent' } });
+  defineCard(
+    '499a4715-6776-461b-bee4-22ed172d455e',
+    'Winds of Abandon',
+    [
+      'unrecognized rules text: "Exile target creature you don\'t control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle."',
+    ],
+    {
+      spellAbility: spell({
+        targets: windsTargets.targets,
+        effects: [
+          { op: 'exileCreatureAndControllerSearchBasicLand', target: windsTargets.slot.creature },
+        ],
+        description:
+          'Exile target creature you do not control; its controller searches for a basic land, puts it onto the battlefield tapped, then shuffles',
+      }),
+    },
+  );
+  const boseijuTargets = targetSlots({
+    permanent: {
+      kind: 'permanent',
+      controller: 'opponent',
+      filter: anyOf(
+        ofType('Artifact'),
+        ofType('Enchantment'),
+        allOf(ofType('Land'), not({ kind: 'supertype', value: 'Basic' })),
+      ),
+    },
+  });
+  defineCard(
+    'bf1341dd-41a3-49f6-87ec-63170dde4324',
+    'Boseiju, Who Endures',
+    [
+      'unrecognized rules text: "{1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control."',
+    ],
+    {
+      activatedAbilities: [
+        activated({
+          zone: 'hand',
+          costs: [mana('{1}{G}'), { kind: 'discardSelf' }],
+          targets: boseijuTargets.targets,
+          effects: [
+            {
+              op: 'destroyTargetAndControllerMaySearchBasicTypedLand',
+              target: boseijuTargets.slot.permanent,
+            },
+          ],
+          description:
+            'Channel — destroy an opposing artifact, enchantment or nonbasic land; its controller may search for a land with a basic land type',
+        }),
+      ],
+      ruleStatics: [
+        {
+          kind: 'costReduction',
+          appliesTo: 'activate',
+          selfOnly: true,
+          amount: {
+            kind: 'countPermanents',
+            selector: allOf(ofType('Creature'), { kind: 'supertype', value: 'Legendary' }),
+            scope: 'you',
+          },
+        },
+      ],
+    },
+  );
+  defineCard(
+    '48369aec-a991-4bef-8554-01c84302b063',
+    'Aetherspouts',
+    [
+      'unrecognized rules text: "For each attacking creature, its owner puts it on their choice of the top or bottom of their library."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [{ op: 'attackingCreaturesToOwnerLibraries' }],
+        description:
+          'Each attacking creature goes to the top or bottom of its owner’s library, as that owner chooses',
+      }),
+    },
+  );
+  defineCard(
+    '8a29bd35-33ef-4317-9fe5-8aaff5d7d64d',
+    'Tragic Arrogance',
+    [
+      'unrecognized rules text: "For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control."',
+    ],
+    {
+      spellAbility: spell({
+        effects: [
+          {
+            op: 'choosePermanentTypesThenSacrificeOthers',
+            types: ['Artifact', 'Creature', 'Enchantment', 'Planeswalker'],
+          },
+        ],
+        description:
+          'Choose an artifact, creature, enchantment and planeswalker for each player; they sacrifice all other nonland permanents',
+      }),
+    },
+  );
   // Agitator Ant. Both sentences are one unmodeled line — the printed goad lives inside the
   // reminder text, so the keyword list stayed empty — and they are one clause in the engine:
   // "each player may put two +1/+1 counters on a creature they control" is one resolution-time

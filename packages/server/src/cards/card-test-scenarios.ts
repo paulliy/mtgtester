@@ -100,6 +100,26 @@ import {
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
 import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
+import {
+  PR08_REMAINING_SCENARIO_IDS,
+  pr08TragicArroganceScenario,
+  AETHERSPOUTS_SCENARIO_IDS,
+  pr08AetherspoutsScenario,
+} from './pr08-remaining-scenarios';
+import {
+  PR08_MODAL_PLAYER_SCENARIO_IDS,
+  pr08ModalPlayerScenario,
+} from './pr08-modal-player-scenarios';
+import {
+  ROTATING_SURVIVOR_SCENARIO_IDS,
+  pr08RotatingSurvivorScenario,
+} from './pr08-rotating-survivor-scenarios';
+import {
+  WINDS_OF_ABANDON_SCENARIO_IDS,
+  pr08WindsOfAbandonScenario,
+} from './pr08-winds-of-abandon-scenarios';
+import { OLORIN_SCENARIO_IDS, pr08OlorinScenario } from './pr08-olorin-scenarios';
+import { BOSEIJU_SCENARIO_IDS, pr08BoseijuScenario } from './pr08-boseiju-scenarios';
 import { PR08_CUT_A_DEAL_SCENARIO_IDS, pr08CutADealScenario } from './pr08-cut-a-deal-scenarios';
 import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
@@ -15103,6 +15123,13 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...PR08_REMAINING_SCENARIO_IDS,
+  ...AETHERSPOUTS_SCENARIO_IDS,
+  ...BOSEIJU_SCENARIO_IDS,
+  ...OLORIN_SCENARIO_IDS,
+  ...WINDS_OF_ABANDON_SCENARIO_IDS,
+  ...ROTATING_SURVIVOR_SCENARIO_IDS,
+  ...PR08_MODAL_PLAYER_SCENARIO_IDS,
   ...PR08_SCENARIO_IDS,
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
@@ -15664,6 +15691,42 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
     PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
       id,
       (gameId: GameId) => pr08CutADealScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_REMAINING_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08TragicArroganceScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_MODAL_PLAYER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08ModalPlayerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    ROTATING_SURVIVOR_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08RotatingSurvivorScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WINDS_OF_ABANDON_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08WindsOfAbandonScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    OLORIN_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08OlorinScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    BOSEIJU_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08BoseijuScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    AETHERSPOUTS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08AetherspoutsScenario(id, gameId),
     ]),
   ),
   'wishclaw-talisman-viewer-cast-search-and-gift': (gameId) =>

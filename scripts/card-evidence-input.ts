@@ -353,6 +353,11 @@ async function validateZip(bytes: Buffer) {
     );
   }
 }
+
+/** Validate a retained trace for another bounded, source-bound verification runner. */
+export async function validateViewerTraceZip(bytes: Buffer): Promise<void> {
+  await validateZip(Buffer.from(bytes));
+}
 // JSON.parse supplies the full grammar check; token inspection adds duplicate-key rejection.
 function uniqueJson(text: string): unknown {
   const value: unknown = JSON.parse(text);

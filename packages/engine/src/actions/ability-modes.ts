@@ -11,12 +11,14 @@
 
 import type { TargetSpec } from '../cards/definition';
 import type { Ability } from '../cards/ability';
+import type { ObjectId } from '@mtg/shared';
 
 export type AbilityModes = NonNullable<Ability['modes']>;
 
 /** Every legal mode subset by count alone (CR 700.2d), before target availability. */
 export function abilityModeSelections(modes: AbilityModes): number[][] {
   const out: number[][] = [];
+  if (modes.optional === true && modes.minChoices > 0) out.push([]);
   const visit = (next: number, chosen: number[]): void => {
     if (chosen.length >= modes.minChoices && chosen.length <= modes.maxChoices)
       out.push([...chosen]);
@@ -47,6 +49,7 @@ export function abilityModeTargetSlots(
 
 /** "Target creature gets +2/+2 …; Proliferate" — the human-readable label of a selection. */
 export function abilityModeLabel(modes: AbilityModes, selection: readonly number[]): string {
+  if (selection.length === 0) return 'Choose no modes';
   return selection
     .map((index) => modes.options[index]?.description ?? `mode ${index + 1}`)
     .join('; ');
@@ -73,16 +76,47 @@ export function slotIsActive(activeSlots: readonly number[] | undefined, slot: n
  */
 export function legalAbilityModeSelections(
   ability: Ability,
-  optionsFor: (spec: TargetSpec, slot: number) => number,
+  optionsFor: (spec: TargetSpec, slot: number) => number | readonly ObjectId[],
 ): number[][] {
   const modes = ability.modes;
   if (modes === undefined) return [];
   return abilityModeSelections(modes).filter((selection) => {
     const activeSlots = abilityModeTargetSlots(modes, selection);
-    return ability.targets.every((spec, slot) => {
+    const domains = new Map<number, readonly ObjectId[]>();
+    const available = ability.targets.every((spec, slot) => {
       if (!slotIsActive(activeSlots, slot)) return true;
-      const available = optionsFor(spec, slot);
-      return spec.count !== undefined ? available >= spec.count.min : available > 0;
+      const choices = optionsFor(spec, slot);
+      if (typeof choices !== 'number') domains.set(slot, choices);
+      const count = typeof choices === 'number' ? choices : choices.length;
+      return spec.count !== undefined ? count >= spec.count.min : count > 0;
     });
+    if (!available) return false;
+    const distinctSlots = ability.targets.flatMap((spec, slot) =>
+      slotIsActive(activeSlots, slot) && spec.differentPlayerTargetSlots !== undefined
+        ? [slot]
+        : [],
+    );
+    if (distinctSlots.length === 0) return true;
+    const assigned = new Map<number, ObjectId>();
+    const assign = (index: number): boolean => {
+      if (index === distinctSlots.length) return true;
+      const slot = distinctSlots[index]!;
+      return (domains.get(slot) ?? []).some((id) => {
+        if (
+          [...assigned].some(
+            ([other, chosen]) =>
+              chosen === id &&
+              (ability.targets[slot]?.differentPlayerTargetSlots?.includes(other) ||
+                ability.targets[other]?.differentPlayerTargetSlots?.includes(slot)),
+          )
+        )
+          return false;
+        assigned.set(slot, id);
+        const result = assign(index + 1);
+        assigned.delete(slot);
+        return result;
+      });
+    };
+    return assign(0);
   });
 }

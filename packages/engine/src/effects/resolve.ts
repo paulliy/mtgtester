@@ -1,4 +1,5 @@
 import { playerLifeLocked, phaseOutControlledPermanents } from '../state/phasing';
+import { returnToOwnerLibraryChoices } from './owner-library-choices';
 import {
   counterCount,
   setCounterCount,
@@ -126,6 +127,7 @@ import {
   convokeSourcesFor,
   spellHasConvoke,
   sacrificeCandidateAllowed,
+  canBeSacrificed,
   selfMayTap,
   resolveConditionalUnits,
   resolveDynamicAmount,
@@ -336,17 +338,21 @@ export function* dealDamageToPlayer(
     sourceIsCommander: boolean;
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
+    /** Internal simultaneous player-damage batch: modifiers were planned before any life changed. */
+    preparedAmount?: true;
+    deferredObservations?: (() => void)[];
   },
 ): GameGen<number> {
   if (amount <= 0) return 0;
   // Replacement and prevention effects (CR 616.1): the combat shield, the damage doublers and
   // halvers, ordered by the damaged player when the order matters.
-  amount = (yield* applyDamageModifiers(ctx, {
-    source,
-    recipient: { kind: 'player', player: target },
-    amount,
-    combat: opts.combat,
-  })).amount;
+  if (opts.preparedAmount !== true)
+    amount = (yield* applyDamageModifiers(ctx, {
+      source,
+      recipient: { kind: 'player', player: target },
+      amount,
+      combat: opts.combat,
+    })).amount;
   if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
@@ -387,27 +393,72 @@ export function* dealDamageToPlayer(
     target.commanderDamageTaken[source.cardId] =
       (target.commanderDamageTaken[source.cardId] ?? 0) + amount;
   }
-  if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
-  emit(ctx, 'damage', {
-    source: source.name,
-    sourceCardId: source.cardId,
-    controller: source.controllerId,
-    target: target.id,
-    amount,
-    combat: opts.combat,
-    commanderDamage: opts.combat && opts.sourceIsCommander,
-  });
-  // "Whenever a source ... deals damage to you" watches damage actually dealt, once per source's
-  // damage event, infect included (CR 702.90b).
-  queuePlayerTriggersForEvent(ctx, 'playerDealtDamage', target.id, amount, source.controllerId);
-  // "Whenever this creature deals damage to an opponent" needs damage actually dealt (after every
-  // modifier), so it is queued here, only for a source still on the battlefield.
-  const damagingPermanent = ctx.state.battlefield.find((permanent) => permanent.id === source.id);
-  if (damagingPermanent !== undefined && damagingPermanent.controllerId !== target.id)
-    queueTriggersForEvent(ctx, 'dealsDamageToOpponent', [
-      { permanent: damagingPermanent, amount, playerId: target.id },
-    ]);
+  const observe = () => {
+    if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+    emit(ctx, 'damage', {
+      source: source.name,
+      sourceCardId: source.cardId,
+      controller: source.controllerId,
+      target: target.id,
+      amount,
+      combat: opts.combat,
+      commanderDamage: opts.combat && opts.sourceIsCommander,
+    });
+    // "Whenever a source ... deals damage to you" watches damage actually dealt, once per source's
+    // damage event, infect included (CR 702.90b).
+    queuePlayerTriggersForEvent(ctx, 'playerDealtDamage', target.id, amount, source.controllerId);
+    // "Whenever this creature deals damage to an opponent" needs damage actually dealt (after every
+    // modifier), so it is queued here, only for a source still on the battlefield.
+    const damagingPermanent = ctx.state.battlefield.find((permanent) => permanent.id === source.id);
+    if (damagingPermanent !== undefined && damagingPermanent.controllerId !== target.id)
+      queueTriggersForEvent(ctx, 'dealsDamageToOpponent', [
+        { permanent: damagingPermanent, amount, playerId: target.id },
+      ]);
+  };
+  if (opts.deferredObservations === undefined) observe();
+  else opts.deferredObservations.push(observe);
   return amount;
+}
+
+/** One source deals varying amounts to several players as a single damage event. */
+function* dealDamageToPlayersTogether(
+  ctx: GameContext,
+  source: EffectSource,
+  hits: { player: EnginePlayerState; amount: number }[],
+): GameGen<void> {
+  const plans: { player: EnginePlayerState; amount: number }[] = [];
+  for (const hit of hits) {
+    if (hit.amount <= 0 || hit.player.hasLost) continue;
+    const adjusted = yield* applyDamageModifiers(ctx, {
+      source,
+      recipient: { kind: 'player', player: hit.player },
+      amount: hit.amount,
+      combat: false,
+    });
+    plans.push({ player: hit.player, amount: adjusted.amount });
+  }
+  const observations: (() => void)[] = [];
+  const permanent = ctx.state.battlefield.find((entry) => entry.id === source.id);
+  const lifelink =
+    permanent === undefined
+      ? source.lastKnownDamageKeywords?.includes('lifelink') === true
+      : hasKeyword(ctx, permanent, 'lifelink');
+  const infect =
+    permanent === undefined
+      ? source.lastKnownDamageKeywords?.includes('infect') === true
+      : hasKeyword(ctx, permanent, 'infect');
+  let total = 0;
+  for (const plan of plans)
+    total += yield* dealDamageToPlayer(ctx, source, plan.player, plan.amount, {
+      combat: false,
+      sourceIsCommander: false,
+      sourceHasLifelink: false,
+      sourceHasInfect: infect,
+      preparedAmount: true,
+      deferredObservations: observations,
+    });
+  if (lifelink) gainLife(ctx, playerById(ctx, source.controllerId), total);
+  for (const observe of observations) observe();
 }
 
 /**
@@ -2203,6 +2254,7 @@ export function* executeAbility(
         const creatures = ctx.state.battlefield.filter(
           (p) =>
             p.controllerId === targetPlayer.id &&
+            canBeSacrificed(ctx, p) &&
             computeCharacteristics(ctx, p).types.includes('Creature'),
         );
         let sacrificed = false;
@@ -2396,6 +2448,95 @@ export function* executeAbility(
         ];
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
+        break;
+      }
+      case 'exileCreatureAndControllerSearchBasicLand':
+      case 'exileEachCreatureAndControllersSearchBasicLands': {
+        const targetId =
+          effect.op === 'exileCreatureAndControllerSearchBasicLand' ? ref(effect.target) : null;
+        const affected =
+          effect.op === 'exileEachCreatureAndControllersSearchBasicLands'
+            ? affectedBy(ctx, source, effect.selector)
+            : ctx.state.battlefield.filter((permanent) => permanent.id === targetId);
+        const beneficiaries = affected.map((permanent) => permanent.controllerId);
+        const moved = yield* movePermanentsTogether(ctx, affected, { zone: 'exile' });
+        const searches = new Map<PlayerId, number>();
+        affected.forEach((permanent, index) => {
+          if (permanent.isToken || moved[index]?.zone === 'exile') {
+            const player = beneficiaries[index]!;
+            searches.set(player, (searches.get(player) ?? 0) + 1);
+          }
+        });
+        const found: { card: EngineCardObject; playerId: PlayerId }[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost) continue;
+          for (let search = 0; search < (searches.get(player.id) ?? 0); search++) {
+            const candidates = player.library.filter((card) => {
+              const def = getDefByOracleId(ctx, card.oracleId, card.name);
+              return (
+                def.types.includes('Land') &&
+                def.supertypes.includes('Basic') &&
+                !found.some((entry) => entry.card.id === card.id)
+              );
+            });
+            const card = yield* chooseCard(ctx, {
+              player: player.id,
+              prompt: `${source.name}: search for a basic land (${search + 1} of ${searches.get(player.id)})`,
+              cards: candidates,
+              type: 'search',
+              verb: 'Find',
+              decline: { type: 'decline', description: 'Fail to find a land', verb: 'Skip' },
+            });
+            if (card !== null) found.push({ card, playerId: player.id });
+          }
+        }
+        // All searches precede entry. Move as one event so entry observers see every land.
+        // Each card goes to its owner's battlefield; these library cards are owned by searchers.
+        yield* moveObjects(
+          ctx,
+          found.map((entry) => entry.card),
+          { zone: 'battlefield', entersTapped: true },
+        );
+        for (const player of playersInApnapOrder(ctx))
+          if (searches.has(player.id) && !player.hasLost) shuffleLibrary(ctx, player);
+        break;
+      }
+      case 'destroyTargetAndControllerMaySearchBasicTypedLand': {
+        const targetId = ref(effect.target);
+        const permanent = targetId === null ? undefined : findPermanent(ctx, targetId);
+        if (permanent === undefined) break;
+        const beneficiary = playerById(ctx, permanent.controllerId);
+        yield* destroyPermanent(ctx, source, permanent);
+        const response = yield {
+          decisionType: 'general',
+          player: beneficiary.id,
+          prompt: `${source.name}: search your library for a land with a basic land type?`,
+          options: [
+            { type: 'search', description: 'Search library' },
+            { type: 'decline', description: 'Do not search' },
+          ],
+        };
+        if (response.index !== 0) break;
+        const lands = beneficiary.library.filter((card) => {
+          const def = getDefByOracleId(ctx, card.oracleId, card.name);
+          return (
+            def.types.includes('Land') &&
+            def.subtypes.some((type) =>
+              ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'].includes(type),
+            )
+          );
+        });
+        const chosen = yield* chooseCard(ctx, {
+          player: beneficiary.id,
+          prompt: `${source.name}: choose a land with a basic land type`,
+          cards: lands,
+          type: 'search',
+          verb: 'Find',
+          decline: { type: 'decline', description: 'Fail to find a land', verb: 'Skip' },
+        });
+        if (chosen !== null)
+          yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: beneficiary.id });
+        shuffleLibrary(ctx, beneficiary);
         break;
       }
       case 'removeTargetAndControllerMaySearchBasicLand': {
@@ -3416,6 +3557,7 @@ export function* executeAbility(
         const permanents = ctx.state.battlefield.filter(
           (permanent) =>
             permanent.controllerId === player.id &&
+            canBeSacrificed(ctx, permanent) &&
             !computeCharacteristics(ctx, permanent).types.includes('Land'),
         );
         const choices = [
@@ -4095,7 +4237,12 @@ export function* executeAbility(
       case 'sacrificeSourceThenReflexive': {
         const perm = sourcePermanent();
         // Only a permanent you control can be sacrificed (CR 701.21a).
-        if (perm === undefined || perm.controllerId !== source.controllerId) break;
+        if (
+          perm === undefined ||
+          perm.controllerId !== source.controllerId ||
+          !canBeSacrificed(ctx, perm)
+        )
+          break;
         yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
         ctx.state.pendingTriggers.push({
           controllerId: source.controllerId,
@@ -4221,6 +4368,7 @@ export function* executeAbility(
         const metricOf = (perm: EnginePermanent): number =>
           effect.metric === 'power' ? effectivePT(ctx, perm).power : permanentManaValue(ctx, perm);
         const selected: EnginePermanent[] = [];
+        const hits: { player: EnginePlayerState; amount: number }[] = [];
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>
@@ -4234,7 +4382,7 @@ export function* executeAbility(
                 );
               })(),
           );
-          const greatest = Math.max(0, ...candidates.map((perm) => metricOf(perm)));
+          const greatest = Math.max(-Infinity, ...candidates.map((perm) => metricOf(perm)));
           const choices = candidates.filter((perm) => metricOf(perm) === greatest);
           const metricLabel = effect.metric === 'power' ? 'power' : 'mana value';
           const verb = effect.action === 'exile' ? 'Exile' : 'Sacrifice';
@@ -4242,14 +4390,32 @@ export function* executeAbility(
             player: opponent.id,
             prompt: `${source.name}: ${verb.toLowerCase()} a permanent with the greatest ${metricLabel}`,
             cards: choices,
-            type: 'sacrifice',
+            type: effect.action,
             verb,
           });
-          if (chosen !== null) selected.push(chosen as EnginePermanent);
+          if (chosen !== null) {
+            selected.push(chosen);
+            hits.push({ player: opponent, amount: metricOf(chosen) });
+          }
         }
         // CR 101.4: each opponent chooses in APNAP order, then all of them are moved at once.
-        if (effect.action === 'exile') yield* moveObjects(ctx, selected, { zone: 'exile' });
-        else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
+        if (effect.action === 'exile') {
+          const moved = yield* moveObjects(ctx, selected, { zone: 'exile' });
+          const threshold = effect.damageIfGraveyardSpellsAtLeast;
+          if (
+            threshold !== undefined &&
+            controller.graveyard.filter((card) => {
+              const def = getDefByOracleId(ctx, card.oracleId, card.name);
+              return def.types.includes('Instant') || def.types.includes('Sorcery');
+            }).length >= threshold
+          ) {
+            yield* dealDamageToPlayersTogether(
+              ctx,
+              source,
+              hits.filter((_, index) => selected[index]?.isToken || moved[index]?.zone === 'exile'),
+            );
+          }
+        } else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
       case 'transferCountersFromTriggerObject': {
@@ -6500,6 +6666,73 @@ export function* executeAbility(
         ctx.state.monarchPlayerId = controller.id;
         emit(ctx, 'monarch', { player: controller.id }, controller.id);
         break;
+      case 'rotateSourceAtUpkeep': {
+        const permanent = sourcePermanent();
+        const player = ctx.state.players.find(
+          (entry) => entry.id === ctx.state.currentTurnPlayer && !entry.hasLost,
+        );
+        if (permanent === undefined || player === undefined) break;
+        changeController(ctx, permanent, player.id);
+        permanent.tapped = false;
+        addCounters(ctx, { ...source, controllerId: player.id }, permanent, '+1/+1', 1);
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${permanent.name} gains haste until end of turn`,
+          targetCardIds: [permanent.cardId],
+          targetObjectIds: [permanent.id],
+          kind: 'grantKeyword',
+          keyword: 'haste',
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'gainControl', {
+          source: source.name,
+          target: permanent.name,
+          newController: player.id,
+        });
+        break;
+      }
+      case 'attackingCreaturesToOwnerLibraries':
+        yield* returnToOwnerLibraryChoices(
+          ctx,
+          source.name,
+          ctx.state.battlefield.filter(
+            (permanent) =>
+              permanent.attacking !== null &&
+              computeCharacteristics(ctx, permanent).types.includes('Creature'),
+          ),
+        );
+        break;
+      case 'choosePermanentTypesThenSacrificeOthers': {
+        const kept = new Set<ObjectId>();
+        const board = ctx.state.battlefield.map((permanent) => ({
+          permanent,
+          types: computeCharacteristics(ctx, permanent).types,
+        }));
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost) continue;
+          for (const type of effect.types) {
+            const picked = yield* chooseCard(ctx, {
+              player: controller.id,
+              prompt: `${source.name}: choose ${player.id}'s ${type.toLowerCase()} to keep`,
+              cards: board
+                .filter(
+                  (entry) =>
+                    entry.permanent.controllerId === player.id && entry.types.includes(type),
+                )
+                .map((entry) => entry.permanent),
+              type: 'chooseCard',
+              verb: 'Keep',
+            });
+            if (picked !== null) kept.add(picked.id);
+          }
+        }
+        const sacrificed = board
+          .filter(({ permanent, types }) => !types.includes('Land') && !kept.has(permanent.id))
+          .map(({ permanent }) => permanent);
+        yield* movePermanentsToGraveyard(ctx, sacrificed, 'sacrifice');
+        break;
+      }
       case 'druidPurification': {
         const abilityControllerId = controller.id;
         const startIndex = ctx.state.turnOrder.indexOf(abilityControllerId);
@@ -8929,7 +9162,7 @@ export function* payManaCost(
             .filter(
               (p) =>
                 p.controllerId === player.id &&
-                sacrificeCandidateAllowed(remaining, perm, p) &&
+                sacrificeCandidateAllowed(ctx, remaining, perm, p) &&
                 matchesSelector(ctx, p, remaining.selector, {
                   cardId: perm.cardId,
                   controllerId: player.id,
@@ -9196,7 +9429,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              sacrificeCandidateAllowed(cost, perm, candidate) &&
+              sacrificeCandidateAllowed(ctx, cost, perm, candidate) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,

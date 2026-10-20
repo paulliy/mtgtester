@@ -10,16 +10,38 @@ watcher reverted to its owner before observing the Manipulator's death. The new
 `cytoplast-departure-observer` regression failed on the pushed checkpoint. Departure firings now
 retain the pre-event controller before source-bound control ends; post-event graveyard observers
 and linked returns see the reverted controller. Focused control-lifetime and zone-identity checks
-passed after the fix. Final implementation review and current engine/viewer evidence remain open.
+passed after the fix. The follow-up also repairs sacrifice observations before control expires,
+single-token sacrifice observations, and forwarding the sacrifice reason through `moveObjects`.
+Independent regressions exercise those paths. Greatest-power selection now handles a board whose
+creatures all have negative power.
+
+All nine remaining implementations are present: Tragic Arrogance, Aetherspouts, Boseiju, Who
+Endures, Winds of Abandon, Shadrix Silverquill, Vindictive Lich, Alexios, Deimos of Kosmos,
+Varchild, Betrayer of Kjeldor, and Olórin's Searing Light. Normal paid casts/activations and
+positive/negative engine cases cover their Oracle clauses. The real viewer catalog now has 51
+PR08 scenarios, including channel and land mana, overload, three distinct Lich modes, upkeep
+control rotation, and combat/departure Survivor triggers.
+
+Primitive declarations are bounded by independently authored executable compositions; they do
+not use card identities or names as exceptions. Each capability has its own actual positive and
+negative execution. Extra executable instructions, changed costs, and unsupported target shapes
+remain outside those scopes. Final clean-tree receipts and repository gates run after the
+implementation checkpoint. The PR remains draft until those checks complete.
+
+The fixture-backed inventory now measures **809/906**, exactly the original PR08 target:
+**713/802** original deck cards and **190/200** staples. Expanded default inventory is
+**766/855**. The documented 2026-08-28 bulk snapshot contains 38,626 cards; on that same input the
+previous checkpoint models 6,449 nonlands and this implementation models 6,457, with all eight
+new nonlands added and no regression. The earlier 6,480 inventory in this historical log does not reproduce on this snapshot and is
+not the denominator for this comparison. Inventory remains
+separate from correctness evidence. Live gameplay-AI quality has not been evaluated.
 
 ## Scope and status
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
-Expected combined inventory after implementation is 809/906 from 786/906. Mob Rule, Cut a Deal,
-Cytoplast Manipulator, Humble Defector, Druid of Purification, Wishclaw Talisman, Reins of Power,
-Akroan Horse, Alicia Masters, Skilled Sculptor, Scheming Symmetry, Kazuul, Tyrant of the Cliffs,
-and Benevolent Offering, followed by Council's Judgment and Agitator Ant, are the first fourteen implementation increments. The other nine cards
-remain unsupported. The seven reopened quality-audit cards now belong
+Combined inventory after implementation is 809/906 from 786/906. All 23 assigned cards have
+implementations; the earlier per-card increments below remain the historical work log.
+The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 
 ## GitHub Actions limitation

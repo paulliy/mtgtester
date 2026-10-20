@@ -162,6 +162,34 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
       issues.push({ path: at, message: 'invalid target specification' });
       continue;
     }
+    if (spec.differentPlayerTargetSlots !== undefined) {
+      const others = spec.differentPlayerTargetSlots;
+      if (
+        spec.kind !== 'player' ||
+        spec.count !== undefined ||
+        spec.filter !== undefined ||
+        !Array.isArray(others) ||
+        others.length === 0 ||
+        others.length !== targets.length - 1 ||
+        new Set(others).size !== others.length ||
+        others.some(
+          (other) =>
+            !integer(other) ||
+            other === slot ||
+            targets[other]?.kind !== 'player' ||
+            targets[other]?.count !== undefined ||
+            targets[other]?.filter !== undefined ||
+            targets[other]?.controller !== spec.controller ||
+            targets[other]?.controllerPlayer !== spec.controllerPlayer ||
+            !targets[other]?.differentPlayerTargetSlots?.includes(slot),
+        )
+      )
+        issues.push({
+          path: `${at}.differentPlayerTargetSlots`,
+          message:
+            'distinct player targets require every other ordinary player slot in the same domain',
+        });
+    }
     if (
       spec.spellTargetsPermanentYouControl !== undefined &&
       (spec.spellTargetsPermanentYouControl !== true ||
@@ -767,6 +795,30 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         message: 'an attack requirement needs at least one supported requirement',
       });
   }
+  if (
+    Array.isArray(record['targets']) &&
+    record['targets'].some(
+      (spec) => spec !== null && typeof spec === 'object' && 'differentPlayerTargetSlots' in spec,
+    )
+  ) {
+    const modes = record['modes'] as { repeatable?: boolean } | undefined;
+    if (record['kind'] !== 'triggered' || modes === undefined || modes.repeatable === true)
+      issues.push({
+        path,
+        message: 'distinct player target slots require nonrepeatable triggered modes',
+      });
+  }
+  if (
+    record['op'] === 'sacrificeGreatestEachOpponent' &&
+    record['damageIfGraveyardSpellsAtLeast'] !== undefined &&
+    (record['action'] !== 'exile' ||
+      record['metric'] !== 'power' ||
+      record['selector'] !== 'creature')
+  )
+    issues.push({
+      path,
+      message: 'conditional greatest-power damage requires exiling creatures by power',
+    });
   if (record['kind'] === 'attackRestriction') {
     if (record['includePlaneswalkers'] !== true)
       issues.push({
@@ -1086,12 +1138,21 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         minChoices: number;
         maxChoices: number;
         repeatable?: boolean;
+        optional?: true;
         options: { targetSlots?: number[] }[];
       };
       if (!Array.isArray(modes.options)) {
         issues.push({ path: `${path}.modes`, message: 'mode options must be an array' });
         continue;
       }
+      if (
+        modes.optional !== undefined &&
+        (modes.optional !== true || record['kind'] !== 'triggered')
+      )
+        issues.push({
+          path: `${path}.modes.optional`,
+          message: 'optional fixed modal choices require a triggered ability and true flag',
+        });
       if (
         !integer(modes.minChoices) ||
         !integer(modes.maxChoices) ||

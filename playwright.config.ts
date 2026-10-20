@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 /** The Card Test Lab backend port. The dev server proxies `/ws`, `/api`, and `/health` here. */
 const LAB_SERVER_PORT = 3101;
+// Permit the installed system browser in managed development environments.
+const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: './apps/web/e2e',
@@ -15,7 +17,12 @@ export default defineConfig({
   // Card Test Lab traces are viewer-verification evidence (docs/guides/card-modeling-and-testing.md):
   // they must survive passing runs, not just failures.
   preserveOutput: 'always',
-  use: { baseURL: 'http://127.0.0.1:5173' },
+  use: {
+    baseURL: 'http://127.0.0.1:5173',
+    ...(chromiumExecutable === undefined
+      ? {}
+      : { launchOptions: { executablePath: chromiumExecutable } }),
+  },
   webServer: [
     {
       // Offline lab backend: empty pool, no database, no bulk Scryfall file. The Card Test Lab

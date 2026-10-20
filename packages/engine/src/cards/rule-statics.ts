@@ -17,6 +17,9 @@ import type { Selector } from './selector';
 import type { Value } from './value';
 
 export type RuleStatic =
+  | { kind: 'cantBlockMatching'; filter: Selector }
+  | { kind: 'cantBeSacrificed' }
+  | { kind: 'cantAttackOwner' }
   | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
   | { kind: 'beginOnBattlefieldFromOpeningHand' }
   | { kind: 'effectDiscardMayGoToLibraryTop' }
