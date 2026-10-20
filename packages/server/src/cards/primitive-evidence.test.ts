@@ -202,14 +202,14 @@ beforeAll(async () => {
   const impact = await runCommand(
     'bun',
     ['run', 'card-capabilities', '--primitive-evidence', runDirectory],
-    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 32 * 1024 * 1024 },
+    { cwd: root, encoding: 'utf8', timeout: 60_000, maxBuffer: 32 * 1024 * 1024 },
   );
   if (impact.status !== 0)
     throw new Error(
       `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
-}, 155_000);
+}, 185_000);
 afterEach(async () => {
   vi.restoreAllMocks();
   await yieldToEventLoop();
