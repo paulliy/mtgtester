@@ -3,6 +3,15 @@
 Prepared 2026-10-17. Draft PR: <https://github.com/paulliy/mtgtester/pull/26>.
 Branch: `cards/pr08-control-choices`, based on `origin/main` at `af01d793`.
 
+## Follow-up implementation review
+
+The normal Cytoplast Manipulator activation exposed a departure-order defect: a stolen death
+watcher reverted to its owner before observing the Manipulator's death. The new
+`cytoplast-departure-observer` regression failed on the pushed checkpoint. Departure firings now
+retain the pre-event controller before source-bound control ends; post-event graveyard observers
+and linked returns see the reverted controller. Focused control-lifetime and zone-identity checks
+passed after the fix. Final implementation review and current engine/viewer evidence remain open.
+
 ## Scope and status
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).

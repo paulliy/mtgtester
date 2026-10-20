@@ -106,6 +106,28 @@ function announce(ctx: GameContext, source: EnginePermanent, target: EnginePerma
 }
 
 describe('Cytoplast Manipulator (PR08.06)', () => {
+  it('cytoplast-departure-observer — a stolen death watcher uses its controller before the control source dies', () => {
+    const ctx = pod('cytoplast-departure-observer');
+    const source = ready(ctx);
+    const watcher = spawn(
+      ctx,
+      'P2',
+      bear('Stolen death watcher', 'Whenever a creature you control dies, you gain 1 life.'),
+    );
+    watcher.counters['+1/+1'] = 1;
+    announce(ctx, source, watcher);
+    settle(ctx);
+    expect(watcher.controllerId).toBe('P1');
+    pump(moveObject(ctx, source, { zone: 'graveyard' }));
+    expect(watcher.controllerId).toBe('P2');
+    const trigger = ctx.state.pendingTriggers.find(
+      (entry) => entry.sourceCardId === watcher.cardId,
+    );
+    expect(trigger, 'death is observed before the source-bound control effect ends').toBeDefined();
+    expect(trigger?.controllerId).toBe('P1');
+    settle(ctx);
+    expect(ctx.state.players.map((player) => player.life)).toEqual([41, 40, 40, 40]);
+  });
   it('cytoplast-pinned-oracle-supported — retains Graft and authors the exact duration and counter target', () => {
     expect(pin.sha256).toBe('faac653c0a227cf33a3c44758770b9fed072d8d1fab969d7def6eb9d8c19f642');
     for (const card of [pin.card, { ...pin.card, oracleId: 'oracle-cytoplast-manipulator' }]) {

@@ -906,11 +906,6 @@ export function* moveObject(
   // animated land that dies is a creature dying (CR 113.7a, 603.10a).
   const keepForLeaveProcessing = from === 'battlefield' && target.zone !== 'battlefield';
   removeFromCurrentZone(ctx, obj, keepForLeaveProcessing);
-  // A control-change effect tracking this permanent by its exact object id ends when it leaves
-  // the battlefield; a later blink incarnation is a NEW id and restores none of them (CR 400.7,
-  // 611.2b). The departing object's own copies die with it; these end everyone else's.
-  if (from === 'battlefield' && target.zone !== 'battlefield')
-    expireSourceControlEffects(ctx, obj.id);
   // An ability granted to a card in a graveyard ("gains unearth {3} until end of turn") does not
   // follow it to a new zone: it is a new object there (CR 400.7).
   if (from === 'graveyard') delete ctx.state.temporaryGraveyardAbilities[obj.cardId];
@@ -927,6 +922,7 @@ export function* moveObject(
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
     if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    expireSourceControlEffects(ctx, obj.id);
     releaseFixedEffects(ctx, obj.cardId);
     if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
     return null;
@@ -1142,6 +1138,16 @@ export function* moveObject(
     target.zone === 'hand' || target.zone === 'library' ? null : next.id,
   );
 
+  // Leave/death triggers look back to the controller before this event (CR 603.10a).
+  // A stolen watcher still observes its control source leaving under its old controller.
+  // End source-bound control only after those firings are captured, but before post-event
+  // card-zone triggers or linked returns inspect the new battlefield. Batch departures have
+  // already captured their firings together in movePermanentsTogether.
+  if (keepForLeaveProcessing) {
+    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    expireSourceControlEffects(ctx, obj.id);
+  }
+
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
     // A face-down permanent leaving the battlefield is revealed (CR 708.9).
@@ -1201,7 +1207,8 @@ export function* moveObject(
     queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
-    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (!keepForLeaveProcessing && !target.deferLeaveProcessing)
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
     if (keepForLeaveProcessing) releaseFixedEffects(ctx, obj.cardId);
     if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
   }
