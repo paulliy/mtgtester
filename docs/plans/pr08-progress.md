@@ -25,8 +25,13 @@ control rotation, and combat/departure Survivor triggers.
 Primitive declarations are bounded by independently authored executable compositions; they do
 not use card identities or names as exceptions. Each capability has its own actual positive and
 negative execution. Extra executable instructions, changed costs, and unsupported target shapes
-remain outside those scopes. Final clean-tree receipts and repository gates run after the
-implementation checkpoint. The PR remains draft until those checks complete.
+remain outside those scopes. The implementation audit and exact-pin primitive eligibility check cover all 23 cards.
+At `fec91e9f`, all 956 primitive-suite tests passed and all 23 definitions were eligible,
+with 828 distinct required executions across 121 capabilities. The final committed tree must
+generate fresh receipts and pass repository gates before the draft is marked ready.
+The reproducible runner is `bun run test:pr08-verification <new-output> <current-primitive-evidence>`.
+See [the review report](../reviews/pr08-completion-review.md) and the PR description for final
+execution results; declarations do not supply pass/fail evidence.
 
 The fixture-backed inventory now measures **809/906**, exactly the original PR08 target:
 **713/802** original deck cards and **190/200** staples. Expanded default inventory is
@@ -40,7 +45,7 @@ separate from correctness evidence. Live gameplay-AI quality has not been evalua
 
 PR08 retains the 23 cards in [the coverage chunks](card-coverage-chunks.md#pr08-control-changes-and-multiplayer-choices).
 Combined inventory after implementation is 809/906 from 786/906. All 23 assigned cards have
-implementations; the earlier per-card increments below remain the historical work log.
+reviewed implementations; the earlier per-card increments below remain the historical work log.
 The seven reopened quality-audit cards now belong
 to PR12, as requested by the user.
 

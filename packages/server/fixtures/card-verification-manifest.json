@@ -348,7 +348,7 @@
     "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37": {
       "name": "Cytoplast Manipulator",
       "oracleSha256": "faac653c0a227cf33a3c44758770b9fed072d8d1fab969d7def6eb9d8c19f642",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "cytoplast-graft",
@@ -1102,7 +1102,7 @@
     "6dc7f837-158f-4ccf-86a5-a07a20891ec5": {
       "name": "Vindictive Lich",
       "oracleSha256": "d04dc4ea8e3fb88bf5c805e6882677aba7418b9d72ee93aa585c7bab085f08a6",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "lich-death-distinct-modes",
@@ -1271,7 +1271,7 @@
     "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe": {
       "name": "Olórin's Searing Light",
       "oracleSha256": "74b48c19f85169bedb91b2a35f8d7d0315725b1c5e5f74d820366ace70a43641",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "olorin-greatest-power-exile",
@@ -2637,7 +2637,7 @@
     "1582e16d-4825-4cc5-b12c-449c45e4e449": {
       "name": "Humble Defector",
       "oracleSha256": "ab20c63164ea397b563967afac0fda59a57eedf602b7e4ecc3845c3cb092a3dc",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "humble-defector-draw-then-transfer",
@@ -2790,7 +2790,7 @@
     "81c70ae7-3c18-4c9b-8505-e4db9e0e6518": {
       "name": "Wishclaw Talisman",
       "oracleSha256": "446292abbc221b8f58e0346f35354508e4d3b7866c29c7f51c91c80a046f1c33",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "wishclaw-enters-three-wish",
@@ -3078,7 +3078,7 @@
     "6dfb50d7-359b-4644-90e3-7ecdacee7c12": {
       "name": "Scheming Symmetry",
       "oracleSha256": "9e799e443627ee3054fa6cf4b389234fd499ffe819f291da1d3e566ba6ad4ed7",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "scheming-symmetry-two-target-players",
@@ -3150,7 +3150,7 @@
     "2143f413-7baa-4fd6-a7ca-32f52bfa553f": {
       "name": "Shadrix Silverquill",
       "oracleSha256": "b3b27d30058d4a228950317e549d90e7bef45703c68c5015257378827bebfd5a",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "shadrix-flying-double-strike",
@@ -3333,7 +3333,7 @@
     "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce": {
       "name": "Mob Rule",
       "oracleSha256": "f34b00942fd781e1187f12ee0f9754a3d1ea743e739fa323a27558ad9e647828",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "mob-rule-mode-announcement",
@@ -5759,7 +5759,7 @@
     "5bb32efd-9e58-4021-bbda-4ffccfa1d601": {
       "name": "Druid of Purification",
       "oracleSha256": "ad0aec5a820bd47f7731dc2f6350d35f77a1277ebb5a26936dd47d863df62633",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "druid-purification-ordered-choices-and-destruction",
@@ -6173,7 +6173,7 @@
     "8b5cffd5-5db3-4151-9275-d91387554412": {
       "name": "Cut a Deal",
       "oracleSha256": "ebb114b6bfc41cef8114727a540ffd8b6f277c16b451d9652f5e2e1025a29b2d",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "oracleText": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way.",
@@ -13111,7 +13111,7 @@
     "96381388-1e82-411c-8290-1f3e909d3b5f": {
       "name": "Reins of Power",
       "oracleSha256": "d83ab9041af563dfad9ec6940c985c7a25de35b0ecfc955793da7577e2c591c2",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "reins-untap-both-groups",
@@ -13178,7 +13178,7 @@
     "8d0213d7-9e25-49d2-93fa-1d346cb2e869": {
       "name": "Akroan Horse",
       "oracleSha256": "83e907f8af52ee2b8de87ca43905d79928e624e451b4dce7b9ae752f7fb1954f",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "akroan-defender",
@@ -13231,7 +13231,7 @@
     "223504ba-174a-46f2-a4a2-5d663a82dfd3": {
       "name": "Alicia Masters, Skilled Sculptor",
       "oracleSha256": "ec7af585cca0a36073614bba7446b7d7b2aaa339e874ced506af201a7f51c466",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "alicia-masters-begin-combat-treasure-if-noncreature-spell-this-turn",
@@ -13283,7 +13283,7 @@
     "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57": {
       "name": "Kazuul, Tyrant of the Cliffs",
       "oracleSha256": "5abee12570a0c0eb3f59f49417651ea5416ef70a985d592cf714d5457c008c0c",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "kazuul-opponent-attack-defending-player",
@@ -13335,7 +13335,7 @@
     "3db8466c-864f-48ba-b617-f2c863dfdcbd": {
       "name": "Benevolent Offering",
       "oracleSha256": "4da93215102bbd43f1bc01e0ded2313ab4923995859e87e016e2a5481e09739a",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "benevolent-offering-spirit-sharing",
@@ -13383,7 +13383,7 @@
     "acf4d685-a718-42f7-9a7a-dee069ae8db2": {
       "name": "Council's Judgment",
       "oracleSha256": "fc8ad609d7a659cefbc858742af30f585db3edc89eca1de03dec248a1e8eb0a1",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "councils-judgment-public-voting",
@@ -13435,7 +13435,7 @@
     "abe377f8-35f0-4dea-a681-91d31a36815c": {
       "name": "Agitator Ant",
       "oracleSha256": "02655069d32bb3566e265f4d4ee06a65e89067c753c393dcb57eca89f7cbb53a",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "agitator-ant-end-step-counter-choice",
@@ -13481,7 +13481,7 @@
     "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d": {
       "name": "Tragic Arrogance",
       "oracleSha256": "a2e733310ed1fbf125e9dc0b96ed73c2eef86583aed89eafe1c0f3c5bce8f213",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "tragic-arrogance-choose-permanent-types-then-sacrifice-other-nonlands",
@@ -13508,7 +13508,7 @@
     "48369aec-a991-4bef-8554-01c84302b063": {
       "name": "Aetherspouts",
       "oracleSha256": "e9fdf15040b36de302358c10ec5d475df068174c144c585e4b2aca553fcaa666",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "aetherspouts-each-attacker-owner-chooses-top-or-bottom-of-library",
@@ -13535,7 +13535,7 @@
     "bf1341dd-41a3-49f6-87ec-63170dde4324": {
       "name": "Boseiju, Who Endures",
       "oracleSha256": "e13a9c4ab62181dc08a0dc0efb251f9bfb97aa8fce2c5545561f0b78e868970f",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "boseiju-channel-target-search",
@@ -13585,7 +13585,7 @@
     "499a4715-6776-461b-bee4-22ed172d455e": {
       "name": "Winds of Abandon",
       "oracleSha256": "62f5a964ae8ac62e5f3f9ee30f5c4ca887a1b438d1af4bcf43ae256998350143",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "winds-of-abandon-targeted-exile-search",
@@ -13623,7 +13623,7 @@
     "81c6c4f0-81ad-463c-a42b-60a73e6d70f3": {
       "name": "Alexios, Deimos of Kosmos",
       "oracleSha256": "e32a494aba692a9dd95ad02e77a8f9a27744e1a0ed3bb7896c03f7691ca5c171",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "alexios-trample-combat-restrictions",
@@ -13657,7 +13657,7 @@
     "26ae37ab-91f8-4113-beb0-1154f9b62d28": {
       "name": "Varchild, Betrayer of Kjeldor",
       "oracleSha256": "04ba70c67014069858dcb1361c33002279471f1afe6a57438689d248a8df0b68",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "clauses": [
         {
           "id": "varchild-combat-survivors",
