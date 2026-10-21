@@ -1252,7 +1252,12 @@ export type Effect =
       op: 'lookAtTopN';
       count: number;
       /** What may be taken from among them, and where it goes. Optional — "you may". */
-      mayPut?: { filter: Selector; destination: SearchDestination };
+      mayPut?: {
+        filter: Selector;
+        destination: SearchDestination;
+        /** Publicly reveal only the chosen card before moving it (CR 701.16). */
+        reveal?: true;
+      };
       /** Where everything not taken ends up. */
       rest: 'bottomRandom' | 'topAnyOrder';
       /** After replacing the looked-at cards, offer to shuffle the whole library. */

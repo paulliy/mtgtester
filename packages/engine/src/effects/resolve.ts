@@ -8235,7 +8235,9 @@ function* lookAtTopN(
   player: EnginePlayerState,
   effect: Extract<Effect, { op: 'lookAtTopN' }>,
 ): GameGen<void> {
-  const looked = player.library.splice(0, effect.count);
+  // Looking does not move cards out of the library. Keep them there while decisions or a
+  // destination replacement suspend resolution, so counts and zone queries remain accurate.
+  const looked = player.library.slice(0, effect.count);
   if (looked.length === 0) return;
 
   const mayPut = effect.mayPut;
@@ -8277,24 +8279,23 @@ function* lookAtTopN(
     }
   }
 
-  const rest = looked.filter((card) => card !== taken);
-  if (effect.rest === 'topAnyOrder') {
-    const ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
-    player.library.unshift(...ordered);
-  } else {
-    ctx.rng.shuffle(rest);
-    player.library.push(...rest);
-  }
-  emit(
-    ctx,
-    'lookAtTop',
-    { player: player.id, looked: looked.length, took: taken?.name ?? null },
-    player.id,
-  );
-
   if (taken !== undefined) {
     const destination = mayPut!.destination;
+    if (mayPut!.reveal === true) {
+      emit(
+        ctx,
+        'revealCard',
+        {
+          player: player.id,
+          cardId: taken.cardId,
+          name: taken.name,
+          revealed: true,
+        },
+        player.id,
+      );
+    }
     if (destination.zone === 'libraryTop') {
+      player.library.splice(player.library.indexOf(taken), 1);
       player.library.unshift(taken);
     } else if (destination.zone === 'battlefield') {
       yield* moveObject(ctx, taken, {
@@ -8306,6 +8307,35 @@ function* lookAtTopN(
       yield* moveObject(ctx, taken, { zone: destination.zone });
     }
   }
+
+  // Move the chosen card first, then reorder only the remainder. Reordering within a library
+  // is not a zone change; the chosen card's actual move above uses the normal transition path.
+  const rest = looked.filter((card) => card !== taken);
+  let ordered = rest;
+  if (effect.rest === 'topAnyOrder') {
+    ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
+  } else {
+    ctx.rng.shuffle(ordered);
+  }
+  const restIds = new Set(rest.map((card) => card.cardId));
+  player.library = player.library.filter((card) => !restIds.has(card.cardId));
+  if (effect.rest === 'topAnyOrder') {
+    const offset = taken !== undefined && mayPut?.destination.zone === 'libraryTop' ? 1 : 0;
+    player.library.splice(offset, 0, ...ordered);
+  } else {
+    player.library.push(...ordered);
+  }
+  emit(
+    ctx,
+    'lookAtTop',
+    {
+      player: player.id,
+      looked: looked.length,
+      took: taken?.name ?? null,
+      ...(taken !== undefined && mayPut?.reveal === true ? { revealed: true } : {}),
+    },
+    player.id,
+  );
 
   if (effect.mayShuffle === true) {
     const outcome = yield {

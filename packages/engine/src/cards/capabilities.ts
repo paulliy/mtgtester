@@ -293,6 +293,7 @@ const shapes = {
       object: {
         filter: { node: 'Selector' },
         destination: { node: 'SearchDestination' },
+        reveal: leaf,
       } satisfies Fields<Objects<Property<Effect, 'mayPut'>>>,
     },
     rest: leaf,

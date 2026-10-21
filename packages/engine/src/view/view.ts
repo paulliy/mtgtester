@@ -172,6 +172,10 @@ function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
     const to = e.payload['to'];
     if (from === 'library' || to === 'library') return null;
   }
+  if (e.type === 'lookAtTop' && e.payload['player'] !== viewer && e.payload['revealed'] !== true) {
+    const { took: _privateName, ...publicPayload } = e.payload;
+    return { ...e, payload: publicPayload };
+  }
   if (e.type === 'searchFound') {
     const searcher = e.payload['player'];
     const destination = e.payload['to'];
