@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { createGame } from '../src/state/game';
@@ -12,7 +13,9 @@ import { presentedCard } from '../src/present';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const pins = (
-  JSON.parse(readFileSync('packages/engine/tests/fixtures/coverage-pr08-oracle.json', 'utf8')) as {
+  JSON.parse(
+    readFileSync(join(import.meta.dirname, 'fixtures/coverage-pr08-oracle.json'), 'utf8'),
+  ) as {
     cards: { card: OracleCard }[];
   }
 ).cards;
