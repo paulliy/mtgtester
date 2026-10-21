@@ -205,7 +205,7 @@ describe('PR08 Alexios and Varchild', () => {
         };
       },
     );
-    expect(prompts.join('\n')).not.toContain(a.id);
+    expect(prompts.join('\n')).not.toContain(a.name);
     expect(ctx.state.battlefield).toContain(a);
   });
 

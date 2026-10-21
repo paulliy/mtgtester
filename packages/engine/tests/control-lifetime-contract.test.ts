@@ -5,7 +5,12 @@ import { validateEffectExpressions } from '../src/cards/expression-validation';
 import { endUntilEotEffects, executeAbility } from '../src/effects/resolve';
 import { spell } from '../src/cards/templates';
 import { createGame } from '../src/state/game';
-import { changeController, moveObject, refreshControlEffects } from '../src/state/objects';
+import {
+  changeController,
+  controlledBy,
+  moveObject,
+  refreshControlEffects,
+} from '../src/state/objects';
 import { phaseOutControlledPermanents, phaseInAtUntap } from '../src/state/phasing';
 import { priorityCheckpoint } from '../src/sba/sba';
 import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -129,6 +134,44 @@ describe('timestamped control lifetimes', () => {
     expect(returned.ownerId).toBe('P4');
     expect(returned.controllerId).toBe('P3');
   });
+
+  it.each(['untilEndOfTurn', 'whileSourceOnBattlefield'] as const)(
+    'does not revert to a departed initial controller when %s ends',
+    (kind) => {
+      const { ctx, creature } = setup();
+      const hand = pump(moveObject(ctx, creature, { zone: 'hand' })).value;
+      const returned = pump(
+        moveObject(ctx, hand!, { zone: 'battlefield', controllerId: 'P2' }),
+      ).value;
+      if (!returned || returned.zone !== 'battlefield' || !('controllerId' in returned))
+        throw new Error('Witness did not return');
+      const source = spawn(ctx, 'P3', oracle({ name: 'Retained control source' }));
+      changeController(
+        ctx,
+        returned,
+        'P3',
+        kind === 'untilEndOfTurn' ? { kind } : { kind, sourceObjectId: source.id },
+      );
+      ctx.state.players.find((player) => player.id === 'P2')!.hasLost = true;
+      pump(priorityCheckpoint(ctx));
+      expect(returned.controllerId).toBe('P3');
+      returned.summoningSick = false;
+      returned.attacking = 'P1';
+      const timestamp = returned.timestamp;
+      if (kind === 'untilEndOfTurn') endUntilEotEffects(ctx);
+      else pump(moveObject(ctx, source, { zone: 'graveyard' }));
+      pump(priorityCheckpoint(ctx));
+      expect(returned.controllerId).toBe('P3');
+      expect(controlledBy(returned)).toBe('P3');
+      expect(ctx.state.battlefield).toContain(returned);
+      expect(returned.summoningSick).toBe(false);
+      expect(returned.attacking).toBe('P1');
+      expect(returned.timestamp).toBe(timestamp);
+      expect(returned.controlChanges ?? []).toHaveLength(0);
+      changeController(ctx, returned, 'P1');
+      expect(returned.controllerId).toBe('P1');
+    },
+  );
 
   it('a source-bound ability resolving after its source left produces no control effect', () => {
     const { ctx, creature } = setup();

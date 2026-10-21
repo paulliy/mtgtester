@@ -499,7 +499,7 @@ describe('Kazuul, Tyrant of the Cliffs', () => {
     expect(selectMatches(candidate(), { kind: 'combatRole', role: 'attacking' }, you)).toBe(false);
   });
 
-  it.each([
+  for (const { title, defender, expected } of [
     {
       title: 'kazuul-planeswalker-you — ordinary combat declaration against your planeswalker',
       defender: 'P1',
@@ -511,39 +511,41 @@ describe('Kazuul, Tyrant of the Cliffs', () => {
       defender: 'P3',
       expected: 0,
     },
-  ] as const)('$title', ({ title, defender, expected }) => {
-    const ctx = pod(title);
-    spawn(ctx, 'P1', kazuulPin.card);
-    const walker = spawn(
-      ctx,
-      defender,
-      oracle({
-        name: 'Cliff Walker',
-        typeLine: 'Planeswalker — Cliff',
-        loyalty: '4',
-      }),
-    );
-    const attacker = spawn(ctx, 'P2', witnessCard());
-    for (let index = 0; index < 3; index++) spawn(ctx, 'P2', forest());
-    combatPod(ctx, 'P2');
-    let prompts = 0,
-      declared = false;
-    pump(runCombatPhase(ctx), (decision) => {
-      if (decision.decisionType === 'declareAttackers') {
-        declared = true;
-        expect(decision.options[0]!.targets![0]!.options).toContain(walker.id);
-        return declareAttacks(decision, (id) => (id === attacker.id ? walker.id : null));
-      }
-      if (isPayPrompt(decision)) {
-        prompts++;
-        return payChoice(decision, 'decline');
-      }
-      return passOutcome(decision);
+  ] as const) {
+    it(title, () => {
+      const ctx = pod(title);
+      spawn(ctx, 'P1', kazuulPin.card);
+      const walker = spawn(
+        ctx,
+        defender,
+        oracle({
+          name: 'Cliff Walker',
+          typeLine: 'Planeswalker — Cliff',
+          loyalty: '4',
+        }),
+      );
+      const attacker = spawn(ctx, 'P2', witnessCard());
+      for (let index = 0; index < 3; index++) spawn(ctx, 'P2', forest());
+      combatPod(ctx, 'P2');
+      let prompts = 0,
+        declared = false;
+      pump(runCombatPhase(ctx), (decision) => {
+        if (decision.decisionType === 'declareAttackers') {
+          declared = true;
+          expect(decision.options[0]!.targets![0]!.options).toContain(walker.id);
+          return declareAttacks(decision, (id) => (id === attacker.id ? walker.id : null));
+        }
+        if (isPayPrompt(decision)) {
+          prompts++;
+          return payChoice(decision, 'decline');
+        }
+        return passOutcome(decision);
+      });
+      expect(declared).toBe(true);
+      expect(prompts).toBe(expected);
+      expect(ogers(ctx, 'P1')).toHaveLength(expected);
+      expect(walker.counters['loyalty']).toBe(2);
+      expect(events(ctx, 'unlessNotPaid')).toHaveLength(expected);
     });
-    expect(declared).toBe(true);
-    expect(prompts).toBe(expected);
-    expect(ogers(ctx, 'P1')).toHaveLength(expected);
-    expect(walker.counters['loyalty']).toBe(2);
-    expect(events(ctx, 'unlessNotPaid')).toHaveLength(expected);
-  });
+  }
 });

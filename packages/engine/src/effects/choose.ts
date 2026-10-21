@@ -47,6 +47,7 @@ export function* chooseCard<T extends EngineCardObject | EnginePermanent>(
   // on-screen element, which stranded the option behind an unreachable click target.
   const options = cards.map((card) =>
     cardOption(ctx, card, {
+      viewerId: spec.player,
       type: spec.type,
       description: spec.describe?.(card) ?? `${spec.verb} ${card.name}`,
       verb: spec.verb,

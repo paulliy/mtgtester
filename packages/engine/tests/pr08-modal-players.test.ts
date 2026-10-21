@@ -302,6 +302,31 @@ describe('PR08 modal player targets', () => {
     );
   });
 
+  it('shadrix-target-player-places-counters — an opponent triggers their own Mikey and Leo', () => {
+    const ctx = pod('shadrix-counter-placer');
+    const shadrix = spawn(ctx, 'P1', shadrixPin!.card);
+    const mikey = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Mikey & Leo, Chaos & Order',
+        typeLine: 'Legendary Creature — Mutant Ninja Turtle',
+        oracleText:
+          'Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn.',
+      }),
+    );
+    expect(ctx.defs.get(mikey.oracleId)?.modeled).toBe(true);
+    const before = playerById(ctx, 'P2').hand.length;
+    resolveShadrix(
+      ctx,
+      shadrix,
+      ['Target player creates an Inkling', 'Target player puts a +1/+1 counter'],
+      ['P1', 'P2'],
+    );
+    expect(mikey.counters['+1/+1']).toBe(1);
+    expect(playerById(ctx, 'P2').hand).toHaveLength(before + 1);
+  });
+
   it('lich-definition-and-cast — models printed cost and death trigger', () => {
     const definition = interpretCard(lichPin!.card);
     expect(definition.modeled).toBe(true);

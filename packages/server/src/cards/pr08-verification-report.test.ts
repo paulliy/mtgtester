@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -16,13 +15,44 @@ const requirement = {
   oracleSha256: 'a'.repeat(64),
   clauseIds: ['independent-clause'],
 };
-beforeAll(() => {
-  const zip = execFileSync('python', [
-    '-c',
-    'import io,sys,zipfile\nb=io.BytesIO()\nwith zipfile.ZipFile(b,"w",zipfile.ZIP_DEFLATED) as z:\n z.writestr("0-trace.trace",\'{"version":8,"type":"context-options","browserName":"chromium"}\\n{"type":"before","callId":"call@1","apiName":"page.goto"}\\n\')\nsys.stdout.buffer.write(b.getvalue())',
-  ]);
-  writeFileSync(tracePath, zip);
-});
+/** Build a single stored ZIP entry, including its CRC, without external executables. */
+function traceZip(): Buffer {
+  const name = Buffer.from('0-trace.trace');
+  const content = Buffer.from(
+    '{"version":8,"type":"context-options","browserName":"chromium"}\n' +
+      '{"type":"before","callId":"call@1","apiName":"page.goto"}\n',
+  );
+  let checksum = 0xffffffff;
+  for (const byte of content) {
+    checksum ^= byte;
+    for (let bit = 0; bit < 8; bit++)
+      checksum = (checksum >>> 1) ^ ((checksum & 1) === 1 ? 0xedb88320 : 0);
+  }
+  checksum = (checksum ^ 0xffffffff) >>> 0;
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt32LE(checksum, 14);
+  local.writeUInt32LE(content.length, 18);
+  local.writeUInt32LE(content.length, 22);
+  local.writeUInt16LE(name.length, 26);
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt32LE(checksum, 16);
+  central.writeUInt32LE(content.length, 20);
+  central.writeUInt32LE(content.length, 24);
+  central.writeUInt16LE(name.length, 28);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(central.length + name.length, 12);
+  end.writeUInt32LE(local.length + name.length + content.length, 16);
+  return Buffer.concat([local, name, content, central, name, end]);
+}
+beforeAll(() => writeFileSync(tracePath, traceZip()));
 afterAll(() => rmSync(directory, { recursive: true, force: true }));
 function engine() {
   return {
@@ -102,6 +132,14 @@ describe('PR08 generated report validation', () => {
         'proof-positive',
       ]),
     ).toThrow('assertion count');
+  });
+  it('rejects case IDs that only appear as suffixes of another ID', () => {
+    const report = engine();
+    report.testResults[0]!.assertionResults[0]!.fullName =
+      'Independent group x-proof-positive — exercises another case';
+    expect(() => validatePr08EngineReport(report, ['proof-positive'])).toThrow('case missing');
+    report.testResults[0]!.assertionResults[0]!.fullName = 'proof-positive — standalone case';
+    expect(validatePr08EngineReport(report, ['proof-positive']).passed).toBe(1);
   });
   it('accepts exactly one first-attempt browser assertion with an actual CRC-valid trace', async () => {
     const traces = await validate(viewer());

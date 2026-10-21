@@ -15,9 +15,9 @@ single-token sacrifice observations, and forwarding the sacrifice reason through
 Independent regressions exercise those paths. Greatest-power selection now handles a board whose
 creatures all have negative power.
 
-All nine remaining implementations are present: Tragic Arrogance, Aetherspouts, Boseiju, Who
-Endures, Winds of Abandon, Shadrix Silverquill, Vindictive Lich, Alexios, Deimos of Kosmos,
-Varchild, Betrayer of Kjeldor, and Olórin's Searing Light. Normal paid casts/activations and
+All nine remaining implementations are present: Tragic Arrogance; Aetherspouts; Boseiju, Who
+Endures; Winds of Abandon; Shadrix Silverquill; Vindictive Lich; Alexios, Deimos of Kosmos;
+Varchild, Betrayer of Kjeldor; and Olórin's Searing Light. Normal paid casts/activations and
 positive/negative engine cases cover their Oracle clauses. The real viewer catalog now has 51
 PR08 scenarios, including channel and land mana, overload, three distinct Lich modes, upkeep
 control rotation, and combat/departure Survivor triggers.

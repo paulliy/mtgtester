@@ -69,7 +69,7 @@ export function validatePr08EngineReport(input: unknown, requiredIds: readonly s
   );
   for (const id of new Set(requiredIds))
     requireValue(
-      names.some((name) => name.includes(`${id} —`)),
+      names.some((name) => name.startsWith(`${id} —`) || name.includes(` ${id} —`)),
       `engine clause case missing: ${id}`,
     );
   return { passed: report['numPassedTests'], requiredIds: [...new Set(requiredIds)].sort() };

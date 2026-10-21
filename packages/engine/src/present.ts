@@ -27,12 +27,20 @@ export function presentedCard(
   ctx: GameContext,
   obj: EngineCardObject | EnginePermanent,
   controller?: string,
+  viewerId?: string,
 ): PresentedCard {
+  // A choice panel crosses the same visibility boundary as the board. Art IDs and printed
+  // types identify a face-down card too; only its current controller may see those details.
+  const hidden =
+    obj.zone === 'battlefield' &&
+    'controllerId' in obj &&
+    (obj.faceDown || obj.statuses.includes('faceDown')) &&
+    obj.controllerId !== viewerId;
   return {
     objectId: obj.id,
-    name: obj.name,
-    scryfallId: scryfallIdOf(ctx, obj.oracleId),
-    typeLine: obj.typeLine,
+    name: hidden ? 'Face-down permanent' : obj.name,
+    scryfallId: hidden ? null : scryfallIdOf(ctx, obj.oracleId),
+    typeLine: hidden ? 'Creature' : obj.typeLine,
     zone: obj.zone,
     ...(controller !== undefined ? { controller } : {}),
   };
@@ -63,9 +71,12 @@ interface OptionBase {
 export function cardOption(
   ctx: GameContext,
   card: EngineCardObject | EnginePermanent,
-  opts: OptionBase & { controller?: string },
+  opts: OptionBase & { controller?: string; viewerId?: string },
 ): EngineActionOption {
-  const subject: ActionSubject = { kind: 'card', card: presentedCard(ctx, card, opts.controller) };
+  const subject: ActionSubject = {
+    kind: 'card',
+    card: presentedCard(ctx, card, opts.controller, opts.viewerId),
+  };
   return {
     type: opts.type,
     description: opts.description,

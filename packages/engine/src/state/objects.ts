@@ -278,6 +278,8 @@ export function changeController(
   controllerId: PlayerId,
   duration: ControlChangeDuration = { kind: 'permanent' },
 ): void {
+  // CR 800.4b: an object cannot change control to a player who left the game.
+  if (ctx.state.players.some((player) => player.id === controllerId && player.hasLost)) return;
   if (duration.kind === 'whileSourceOnBattlefield') {
     const { sourceObjectId } = duration;
     if (!ctx.state.battlefield.some((source) => source.id === sourceObjectId)) return;
@@ -308,6 +310,9 @@ function applyControllerTransition(
   perm: EnginePermanent,
   controllerId: PlayerId,
 ): void {
+  // A duration can end after the initial controller departed. The object keeps its current
+  // controller in that case (CR 800.4b); this is not a new control-changing effect.
+  if (ctx.state.players.some((player) => player.id === controllerId && player.hasLost)) return;
   const transition = perm.controllerId !== controllerId;
   perm.controllerId = controllerId;
   if (!transition) return;
@@ -327,13 +332,19 @@ function applyControllerTransition(
   }
 }
 
-/** The controller the permanent's surviving control-change records (or entry facts) give. */
+/** Current controller, with a record/entry fallback for card-shaped control-history queries. */
 export function controlledBy(perm: {
+  controllerId?: PlayerId;
   controlChanges?: ControlChange[];
   defaultControllerId?: PlayerId;
   ownerId: PlayerId;
 }): PlayerId {
-  return perm.controlChanges?.at(-1)?.controllerId ?? perm.defaultControllerId ?? perm.ownerId;
+  return (
+    perm.controllerId ??
+    perm.controlChanges?.at(-1)?.controllerId ??
+    perm.defaultControllerId ??
+    perm.ownerId
+  );
 }
 
 /**
@@ -373,7 +384,8 @@ export function refreshControlEffects(
   });
   if (surviving.length === 0) delete perm.controlChanges;
   else perm.controlChanges = surviving;
-  applyControllerTransition(ctx, perm, controlledBy(perm));
+  const nextController = surviving.at(-1)?.controllerId ?? perm.defaultControllerId ?? perm.ownerId;
+  applyControllerTransition(ctx, perm, nextController);
 }
 
 /**

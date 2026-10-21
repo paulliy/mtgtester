@@ -3252,13 +3252,21 @@ export function* executeAbility(
         const playerId = ref(effect.target);
         if (playerId === null) break;
         const count = amountOf(effect.count);
-        for (const permanent of ctx.state.battlefield.filter(
+        const permanents = ctx.state.battlefield.filter(
           (candidate) =>
             candidate.controllerId === playerId &&
             computeCharacteristics(ctx, candidate).types.includes('Creature'),
-        )) {
-          addCounters(ctx, source, permanent, effect.counter, count);
-        }
+        );
+        addCounterPlacements(
+          ctx,
+          source,
+          permanents.map((perm) => ({
+            perm,
+            counter: effect.counter,
+            count,
+            placingPlayerId: playerId as PlayerId,
+          })),
+        );
         break;
       }
       case 'returnToHandEach': {
@@ -6843,6 +6851,7 @@ export function* executeAbility(
             prompt: `${source.name}: vote for a permanent ${abilityControllerId} doesn't control.`,
             options: candidates.map((perm) =>
               cardOption(ctx, perm, {
+                viewerId: playerId,
                 type: 'chooseCard',
                 description: `Vote for ${perm.name}`,
                 verb: 'Vote',

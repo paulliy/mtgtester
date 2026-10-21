@@ -3,8 +3,8 @@
 Review date: 2026-10-20. Pull request: <https://github.com/paulliy/mtgtester/pull/26>.
 
 The implementation audit covers all 23 assigned cards, including the nine previously remaining
-cards: Tragic Arrogance, Aetherspouts, Boseiju, Who Endures, Winds of Abandon, Shadrix Silverquill,
-Vindictive Lich, Alexios, Deimos of Kosmos, Varchild, Betrayer of Kjeldor, and Olórin’s Searing Light.
+cards: Tragic Arrogance; Aetherspouts; Boseiju, Who Endures; Winds of Abandon; Shadrix Silverquill;
+Vindictive Lich; Alexios, Deimos of Kosmos; Varchild, Betrayer of Kjeldor; and Olórin’s Searing Light.
 The seven reopened quality-audit cards remain in PR12.
 
 ## Findings and fixes
@@ -31,6 +31,15 @@ The review also checked real costs and targets, source-incarnation identity, sim
 multiplayer actions, ownership versus control, optional searches, overload, sacrifice and attack
 restrictions, ability loss, phasing, and private owner-library choices. Unsupported executable
 composition variants remain outside the bounded primitive scopes.
+
+The PR-comment follow-up closes an evidence-ID suffix match, removes the report test's Python
+executable dependency with a CRC-valid ZIP built in Node, corrects two ineffective negative
+assertions, and reconciles all 23 ledger entries. Kazuul's two parameterized combat cases now
+retain their complete IDs in native test reports. Control expiry cannot restore a departed
+initial controller; it retains the current living controller without adding a phantom effect
+or disturbing combat. Independent normal-path regressions also fix Shadrix counter placement
+being attributed to the source controller, and redact opponents' face-down identities from
+Council's Judgment and Tragic Arrogance choice presentations.
 
 ## Evidence requirements and reproduction
 

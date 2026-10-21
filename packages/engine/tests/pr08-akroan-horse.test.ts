@@ -138,7 +138,9 @@ describe('Akroan Horse (PR08.20)', () => {
     const { decisions } = pump(runCombatPhase(ctx), (d) => answer(d));
     expect(decisions.filter((d) => d.decisionType === 'declareAttackers')).toEqual([]);
     expect(
-      ctx.state.eventLog.some((e) => e.type === 'attacks' && e.payload['name'] === 'Akroan Horse'),
+      ctx.state.eventLog.some(
+        (e) => e.type === 'attack' && e.payload['attacker'] === 'Akroan Horse',
+      ),
     ).toBe(false);
   });
   it('akroan-recipient-is-not-a-target — a hexproof opponent remains eligible and the caster is absent', () => {
