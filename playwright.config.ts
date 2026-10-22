@@ -12,7 +12,20 @@ export default defineConfig({
   // Card Test Lab traces are viewer-verification evidence (docs/guides/card-modeling-and-testing.md):
   // they must survive passing runs, not just failures.
   preserveOutput: 'always',
-  use: { baseURL: 'http://127.0.0.1:5173' },
+  use: {
+    baseURL: 'http://127.0.0.1:5173',
+    // The player board folds its log into a Game info column that starts closed; specs read the
+    // log as part of the board, so every browser starts with that column open.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://127.0.0.1:5173',
+          localStorage: [{ name: 'mtg.playerGameInfoOpen', value: 'true' }],
+        },
+      ],
+    },
+  },
   webServer: [
     {
       // Offline lab backend: empty pool, no database, no bulk Scryfall file. The Card Test Lab
