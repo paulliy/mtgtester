@@ -1,6 +1,6 @@
 # PR09: library access and casting during resolution
 
-Branch: `cards/pr09-library-casting`. Draft: [PR #27](https://github.com/paulliy/mtgtester/pull/27).
+Branch: `cards/pr09-library-casting`. Pull request: [PR #27](https://github.com/paulliy/mtgtester/pull/27).
 PR08 ([PR #26](https://github.com/paulliy/mtgtester/pull/26)) has merged. PR09 targets `main`
 and includes the current base, `89f6605f8b7dfa82d5b9c13a48b2a8adb5684c7a`.
 Evidence is regenerated against the final committed tree.

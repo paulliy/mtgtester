@@ -161,6 +161,7 @@ function castCardFromHand(
   card: OracleCard,
   mana: ('C' | Color)[],
   answer: (decision: PendingDecision) => DecisionOutcome = pass,
+  castTargets: Map<number, string> = new Map(),
 ) {
   const object = conjure(ctx, playerId, card, 'hand');
   addMana(
@@ -175,11 +176,38 @@ function castCardFromHand(
   pump(
     applyPriorityAction(ctx, playerById(ctx, playerId), option!.payload as PriorityActionPayload, {
       index: 0,
-      targets: new Map(),
+      targets: castTargets,
     }),
   );
   settle(ctx, answer);
   return object;
+}
+
+function exerciseCubeWard(ctx: GameContext, cube: EnginePermanent, payWard: boolean) {
+  let wardChoices = 0;
+  const removal = castCardFromHand(
+    ctx,
+    'P2',
+    testCard('Independent Cube ward removal', '{1}', 'Instant', {
+      oracleText: 'Destroy target artifact.',
+    }),
+    ['C', 'C', 'C'],
+    (decision) => {
+      wardChoices++;
+      const index = decision.options.findIndex(
+        (option) => option.type === (payWard ? 'payCost' : 'decline'),
+      );
+      expect(index).toBeGreaterThanOrEqual(0);
+      return { index, targets: new Map() };
+    },
+    new Map([[0, cube.id]]),
+  );
+  expect(wardChoices).toBe(1);
+  expect(ctx.state.battlefield.some((permanent) => permanent.id === cube.id)).toBe(!payWard);
+  expect(playerById(ctx, 'P2').manaEntries).toHaveLength(payWard ? 0 : 2);
+  expect(playerById(ctx, 'P2').graveyard.some((card) => card.cardId === removal.cardId)).toBe(true);
+  expect(ctx.state.eventLog.some((event) => event.type === 'wardPaid')).toBe(payWard);
+  expect(ctx.state.eventLog.some((event) => event.type === 'counterSpell')).toBe(!payWard);
 }
 
 function resolveCombat(
@@ -969,6 +997,7 @@ describe('independent bounded PR09 library compositions', () => {
             ),
           ).toBe(true);
           expect(playerById(ctx, 'P1').library).toHaveLength(5);
+          exerciseCubeWard(ctx, cube, true);
         } else if (id === 'aetherworks-marvel') {
           const marvel = castComposition(ctx, id, ['C', 'C', 'C', 'C'])!;
           const energyBeforeDeath = playerById(ctx, 'P1').energy;
@@ -1765,7 +1794,8 @@ describe('independent bounded PR09 library compositions', () => {
             true,
           );
         } else if (id === 'cosmic-cube') {
-          castComposition(ctx, id, ['C', 'C', 'C', 'C', 'C']);
+          const cube = castComposition(ctx, id, ['C', 'C', 'C', 'C', 'C'])!;
+          exerciseCubeWard(ctx, cube, false);
           const attacker = spawn(
             ctx,
             'P1',

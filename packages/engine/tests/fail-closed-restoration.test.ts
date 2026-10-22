@@ -69,14 +69,6 @@ const restored = [
 // Toxic Deluge was restored in coverage PR02; its gate is packages/engine/tests/pr02-card-coverage.test.ts.
 const expected = [
   {
-    oracleId: '07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8',
-    name: 'Chaos Warp',
-    sha256: '91d1633155fb401878a9c262aec1695bc6c94cf12b7c014d358242dac30f55d7',
-    reason:
-      'explicitly unsupported: The top card is not revealed; a nonpermanent remains hidden on top of the library.',
-    clauseCount: 1,
-  },
-  {
     oracleId: 'ae120613-97d6-4393-b39d-c3e6c076f5d6',
     name: 'Deflecting Swat',
     sha256: '59d61f13ab689ea2b364e26bf4c2216a6038b75fbbd09c680af867abd759feac',
@@ -88,6 +80,9 @@ const expected = [
 
 const fixture = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/marchesa-batch1-oracle.json'), 'utf8'),
+) as PinnedFixture;
+const pr09Fixture = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr09-oracle.json'), 'utf8'),
 ) as PinnedFixture;
 const manifest = JSON.parse(
   readFileSync(resolve('packages/server/fixtures/card-verification-manifest.json'), 'utf8'),
@@ -151,6 +146,33 @@ describe('fail-closed restoration baseline', () => {
         `${card.name} fixture alias`,
       ).toBe(true);
     }
+  });
+
+  it('recognizes the PR09 Chaos Warp restoration from its current pin and viewer clauses', () => {
+    const pin = pr09Fixture.cards.find(
+      (entry) => entry.card.oracleId === '07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8',
+    );
+    expect(pin?.sha256).toBe('0a92bef047916a597355070ad23e806e609a1f66affb5af24a5e236d1f961014');
+    expect(pin?.card.name).toBe('Chaos Warp');
+    expect(interpretCard(pin!.card).modeled).toBe(true);
+
+    const alias = interpretCard({
+      ...pin!.card,
+      oracleId: 'oracle-chaos-warp',
+    });
+    expect(alias.modeled).toBe(true);
+
+    const entry = manifest.cards[pin!.card.oracleId] as
+      (ManifestCard & { oracleSha256: string; implementationStatus: string }) | undefined;
+    expect(entry?.name).toBe('Chaos Warp');
+    expect(entry?.oracleSha256).toBe(pin!.sha256);
+    expect(entry?.implementationStatus).toBe('implemented-reviewed');
+    expect(entry?.clauses).toHaveLength(1);
+    expect(entry?.clauses[0]?.oracleText).toBe(pin!.card.oracleText);
+    expect(entry?.clauses[0]?.viewerScenarioIds).toEqual([
+      'pr09-chaos-warp-viewer-positive',
+      'pr09-chaos-warp-viewer-negative',
+    ]);
   });
 
   it('declares pinned clause-level engine and viewer requirements without handwritten results', () => {
