@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { Readable } from 'node:stream';
 import ts from 'typescript';
 import { dirname, extname, isAbsolute, relative, resolve, sep, win32 } from 'node:path';
@@ -820,15 +821,36 @@ function discoverGeneratorSources(
             argument.arguments.length === 1
               ? argument.arguments[0]
               : argument;
+          const moduleRelative =
+            literal &&
+            ts.isNewExpression(literal) &&
+            ts.isIdentifier(literal.expression) &&
+            literal.expression.text === 'URL' &&
+            literal.arguments?.length === 2 &&
+            ts.isStringLiteralLike(literal.arguments[0]!) &&
+            /^(\.\/|\.\.\/)/.test(literal.arguments[0]!.text) &&
+            ts.isPropertyAccessExpression(literal.arguments[1]!) &&
+            literal.arguments[1]!.name.text === 'url' &&
+            ts.isMetaProperty(literal.arguments[1]!.expression) &&
+            literal.arguments[1]!.expression.keywordToken === ts.SyntaxKind.ImportKeyword &&
+            literal.arguments[1]!.expression.name.text === 'meta'
+              ? relative(
+                  root,
+                  fileURLToPath(new URL(literal.arguments[0]!.text, pathToFileURL(absolute))),
+                )
+                  .split(sep)
+                  .join('/')
+              : undefined;
           requireInput(
-            literal && ts.isStringLiteralLike(literal),
+            moduleRelative !== undefined || (literal && ts.isStringLiteralLike(literal)),
             `unresolved consumed data path: ${path}`,
           );
-          canonicalSourcePath(literal.text);
-          const input = resolve(root, literal.text);
+          const dataPath = moduleRelative ?? (literal as ts.StringLiteralLike).text;
+          canonicalSourcePath(dataPath);
+          const input = resolve(root, dataPath);
           const actual = confinedFile(root, input);
-          data.push([generatorPath, absolute, name, String(node.pos), literal.text, input, actual]);
-          inputs.add(literal.text);
+          data.push([generatorPath, absolute, name, String(node.pos), dataPath, input, actual]);
+          inputs.add(dataPath);
         }
       }
       ts.forEachChild(node, visit);

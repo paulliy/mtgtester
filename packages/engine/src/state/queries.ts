@@ -821,6 +821,7 @@ export function canPayNonManaCosts(
       case 'discardHand':
         // Discarding the entire hand is payable even when that hand is empty.
         break;
+      case 'returnUnblockedAttacker':
       case 'exileOtherCardsFromGraveyard':
         // Supported only by the spell-cost path, not battlefield activations.
         return false;
@@ -1373,10 +1374,8 @@ function spellZoneCandidate(
   ownerId: PlayerId,
   spellDefinition: CardDefinition | undefined,
 ): SelectorCandidate {
-  const candidate = cardZoneCandidate(ctx, card, ownerId);
-  return spellDefinition === undefined
-    ? candidate
-    : { ...candidate, types: spellDefinition.types, subtypes: spellDefinition.subtypes };
+  const candidate = cardZoneCandidate(ctx, card, ownerId, spellDefinition);
+  return spellDefinition === undefined ? candidate : { ...candidate, name: spellDefinition.name };
 }
 
 /**

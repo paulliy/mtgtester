@@ -78,6 +78,7 @@ function addManaCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
   const hybrid = [...(a.hybrid ?? []), ...(b.hybrid ?? [])];
   const phyrexian = [...(a.phyrexian ?? []), ...(b.phyrexian ?? [])];
   return {
+    ...(a.spendAsAnyColor === true || b.spendAsAnyColor === true ? { spendAsAnyColor: true } : {}),
     generic: a.generic + b.generic,
     colorless: a.colorless + b.colorless,
     colored: {
@@ -371,7 +372,12 @@ function* proposeCast(
   payload: Extract<PriorityActionPayload, { kind: 'castSpell' }>,
   outcome: DecisionOutcome,
   /** Internal, immediate permission from the resolving instruction, never a client payload. */
-  resolutionPermission?: { card: EngineCardObject; withoutManaCost: true; lifeCost?: number },
+  resolutionPermission?: {
+    card: EngineCardObject;
+    withoutManaCost: true;
+    lifeCost?: number;
+    exileIfGraveyardFromStack?: true;
+  },
 ): GameGen<void> {
   const s = ctx.state;
   if (!s.players.includes(player) || player.hasLost) throw new Error('invalid casting player');
@@ -530,19 +536,22 @@ function* proposeCast(
         selectedAlternative.kind === 'bestow');
     // So does a permission to cast it from the top of the library or a graveyard (CR 118.9);
     // that permission is checked against the bestowed spell below.
-    const zonePermissionBestow =
-      selectedAlternative.kind === 'bestow' &&
-      (payload.fromLibraryTop === true ||
-        (payload.fromGraveyard === true && def.castFromGraveyard !== true));
+    const zonePermissionAlternative =
+      (selectedAlternative.kind === 'bestow' &&
+        (payload.fromLibraryTop === true ||
+          (payload.fromGraveyard === true && def.castFromGraveyard !== true))) ||
+      (payload.fromLibraryTop === true &&
+        from === undefined &&
+        ['adventure', 'omen', 'mdfc'].includes(selectedAlternative.kind));
     if (
       (!freeSpellFace &&
-        !zonePermissionBestow &&
+        !zonePermissionAlternative &&
         (payload.fromLibraryTop === true ||
           (payload.fromExile === true && !temporaryExileSpellFace && !freeSpellFace))) ||
       (payload.fromCommand && from === 'hand') ||
       (payload.fromExile === true && from === 'hand' && !freeSpellFace) ||
       (!freeSpellFace &&
-        !zonePermissionBestow &&
+        !zonePermissionAlternative &&
         (payload.fromGraveyard === true
           ? from !== 'graveyard'
           : from === 'graveyard' || from === 'exile'))
@@ -598,7 +607,9 @@ function* proposeCast(
   }
   if (resolutionPermission === undefined) {
     const instantSpeed =
-      printedSpellDef.types.includes('Instant') || printedSpellDef.keywords.includes('flash');
+      printedSpellDef.types.includes('Instant') ||
+      printedSpellDef.keywords.includes('flash') ||
+      selectedAlternative?.instantTiming === true;
     if (
       (plotCast || !instantSpeed) &&
       (s.currentTurnPlayer !== player.id ||
@@ -610,9 +621,8 @@ function* proposeCast(
       throw new Error('casting player does not have priority');
   }
   let consumeZonePermission: 'libraryTop' | 'graveyard' | undefined;
-  // A zone permission is checked against the spell being cast: a bestowed card is an Aura
-  // enchantment spell, not a creature spell (CR 601.3e, 702.103b).
-  const permissionSpell = payload.alternativeCast === 'bestow' ? printedSpellDef : undefined;
+  // Zone permissions inspect all characteristics of the selected spell face (CR 601.3e).
+  const permissionSpell = printedSpellDef;
   if (
     resolutionPermission === undefined &&
     payload.fromGraveyard === true &&
@@ -891,6 +901,12 @@ function* proposeCast(
       throw new Error('illegal action: the reduced cast needs a matching target');
     }
   }
+  if (
+    payload.fromExile === true &&
+    obj.playableUntilEotBy === player.id &&
+    obj.spendAsAnyColorUntilEot === true
+  )
+    cost = { ...cost, spendAsAnyColor: true };
   // Payment preview narrows targeting continuations before anything is paid.
   const beforeTargetReduction = applyRed(addManaCosts(cost, manaPortionOf(castingAdditionalCosts)));
   // Convoke (CR 702.51): untapped creatures may help pay for this spell.
@@ -1017,6 +1033,9 @@ function* proposeCast(
   }
 
   Object.assign(spellCard, {
+    ...(resolutionPermission?.exileIfGraveyardFromStack === true
+      ? { exileIfGraveyardFromStack: true }
+      : {}),
     ...(payload.alternativeCast === 'mdfc' ? { face: 'back' as const } : {}),
     ...(abilityDef.optionalAdditionalCost !== undefined && (payload.optionalCostCount ?? 0) > 0
       ? {

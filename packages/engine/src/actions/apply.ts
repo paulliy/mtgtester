@@ -146,6 +146,10 @@ export function* applyPriorityAction(
       throw new Error('engine bug: pass is not applied via applyPriorityAction');
 
     case 'playLand': {
+      const temporaryExileCard = ctx.state.exile.find((card) => card.id === payload.objectId);
+      if (payload.fromExile === true && temporaryExileCard?.castOnlyUntilEot === true) {
+        throw new Error('a cast-only permission does not allow playing a land');
+      }
       const sourceZone =
         payload.fromLibraryTop === true
           ? player.library

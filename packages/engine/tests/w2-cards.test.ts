@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ObjectId, OracleCard } from '@mtg/shared';
@@ -45,6 +46,20 @@ import {
 const oracleCards = JSON.parse(
   readFileSync(join(import.meta.dirname, '../../server/fixtures/coverage-oracle.json'), 'utf8'),
 ) as OracleCard[];
+const pr09Fixture = JSON.parse(
+  readFileSync(join(import.meta.dirname, 'fixtures/coverage-pr09-oracle.json'), 'utf8'),
+) as { cards: { sha256: string; card: OracleCard }[] };
+const pr09Etali = pr09Fixture.cards.find(
+  ({ card }) => card.name === 'Etali, Primal Conqueror // Etali, Primal Sickness',
+)!;
+const pr09Manifest = JSON.parse(
+  readFileSync(
+    join(import.meta.dirname, '../../server/fixtures/card-verification-manifest.json'),
+    'utf8',
+  ),
+) as {
+  cards: Record<string, { oracleSha256: string; viewerScenarioIds: string[] }>;
+};
 
 const names = [
   'Baxter Building',
@@ -69,7 +84,7 @@ const names = [
 ] as const;
 
 const real = (name: (typeof names)[number]): OracleCard =>
-  oracleCards.find((card) => card.name === name)!;
+  name === pr09Etali.card.name ? pr09Etali.card : oracleCards.find((card) => card.name === name)!;
 const definitions = new Map<string, ReturnType<typeof interpretCard>>(
   names.map((name) => [name, interpretCard(real(name))]),
 );
@@ -89,23 +104,12 @@ function pod(seed: string): GameContext {
   return ctx;
 }
 
-const contained = new Set<string>(['Etali, Primal Conqueror // Etali, Primal Sickness']);
-
 describe('W2 card coverage', () => {
-  it('fully models the frozen Oracle fixtures that are not catalog-contained', () => {
+  it('fully models the frozen Oracle fixtures', () => {
     for (const name of names) {
-      if (contained.has(name)) continue;
       const def = definitions.get(name)!;
       expect(def.unmodeledReasons, name).toEqual([]);
       expect(def.modeled, name).toBe(true);
-    }
-  });
-
-  it('marks contained search-reveal overclaims unmodeled', () => {
-    for (const name of contained) {
-      const def = definitions.get(name)!;
-      expect(def.modeled, name).toBe(false);
-      expect(def.unmodeledReasons.join('\n'), name).toContain('explicitly unsupported:');
     }
   });
 
@@ -506,12 +510,22 @@ describe('W2 card coverage', () => {
     expect(ninjas.map((ninja) => ninja.attacking).sort()).toEqual(['P2', 'P3', 'P4']);
   });
 
-  it('contains Etali because exile splices without a zone-change', () => {
+  it('models Etali’s printed cast, transform, and back-face clauses', () => {
     const def = definitions.get('Etali, Primal Conqueror // Etali, Primal Sickness')!;
-    expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Exile splices library cards without a zone-change, so leave-library events are skipped.',
+    expect(createHash('sha256').update(JSON.stringify(pr09Etali.card)).digest('hex')).toBe(
+      'e3b73f76b96885e3818faa7986a9265e04bbd1552cdf623b944dca2ae51976fa',
     );
+    expect(def.modeled).toBe(true);
+    expect(def.unmodeledReasons).toEqual([]);
+    expect(def.backFace?.name).toBe('Etali, Primal Sickness');
+    expect(def.activatedAbilities).toHaveLength(1);
+    expect(def.triggers.some((trigger) => trigger.trigger?.when === 'enters')).toBe(true);
+    expect(pr09Manifest.cards[pr09Etali.card.oracleId]?.oracleSha256).toBe(pr09Etali.sha256);
+    expect(pr09Manifest.cards[pr09Etali.card.oracleId]?.viewerScenarioIds).toEqual([
+      'pr09-etali-viewer-positive',
+      'pr09-etali-viewer-negative',
+      'pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform',
+    ]);
   });
 
   it('doubles Jacked Rabbit’s attack tokens while Mondrak is under your control', () => {

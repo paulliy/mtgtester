@@ -90,6 +90,24 @@ export const SOLDIER_1_1: TokenSpec = creatureToken({
   toughness: 1,
 });
 
+/** Recruit creates a Human Soldier, distinct from a plain Soldier. */
+export const HUMAN_SOLDIER_1_1_WHITE: TokenSpec = creatureToken({
+  name: 'Human Soldier',
+  subtypes: ['Human', 'Soldier'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+});
+
+/** Rabble Rousing creates green and white Citizens. */
+export const CITIZEN_1_1_GREEN_WHITE: TokenSpec = creatureToken({
+  name: 'Citizen',
+  subtypes: ['Citizen'],
+  colors: ['G', 'W'],
+  power: 1,
+  toughness: 1,
+});
+
 export const SOLDIER_1_1_LIFELINK: TokenSpec = creatureToken({
   name: 'Soldier',
   subtypes: ['Soldier'],

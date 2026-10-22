@@ -197,6 +197,15 @@ function exileFor(seat: string) {
   return state.value?.exile.filter((card) => card.owner === seat) ?? [];
 }
 
+/** Only show cards the server explicitly included in this viewer's authorized top reveal. */
+function revealedLibraryTopsFor(seat: string) {
+  return (
+    state.value?.revealedLibraryTops
+      ?.filter((entry) => entry.player === seat)
+      .map((entry) => entry.card) ?? []
+  );
+}
+
 /**
  * Groups identical tokens/creatures (same name, state, P/T, counters — see `stackPermanents.ts`)
  * into one tile with a count badge, so a wide go-wide board doesn't clog the screen with a dozen
@@ -1219,6 +1228,13 @@ function abandon(): void {
                 :selectable-ids="zoneTargetIds"
                 @select="chooseTarget"
               />
+              <ZoneStrip
+                v-if="revealedLibraryTopsFor(opponent.seat).length > 0"
+                label="Top of library"
+                :cards="revealedLibraryTopsFor(opponent.seat)"
+                :selectable-ids="zoneTargetIds"
+                @select="chooseTarget"
+              />
             </div>
           </article>
         </div>
@@ -1416,6 +1432,15 @@ function abandon(): void {
             <ZoneStrip
               label="Exile"
               :cards="humanExile"
+              :selectable-ids="zoneTargetIds"
+              :actionable-ids="zoneSourceIds"
+              @select="chooseTarget"
+              @activate="selectSource"
+            />
+            <ZoneStrip
+              v-if="revealedLibraryTopsFor(human.seat).length > 0"
+              label="Top of library"
+              :cards="revealedLibraryTopsFor(human.seat)"
               :selectable-ids="zoneTargetIds"
               :actionable-ids="zoneSourceIds"
               @select="chooseTarget"

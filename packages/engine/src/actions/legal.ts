@@ -720,7 +720,10 @@ export function computePriorityOptions(
       energyAlternativeCost = 0,
     ) =>
       planSpellPayment(paymentCtx, paymentPlayer, {
-        mana,
+        mana:
+          fromExile && obj.playableUntilEotBy === player.id && obj.spendAsAnyColorUntilEot === true
+            ? { ...mana, spendAsAnyColor: true }
+            : mana,
         costs,
         sourceCardId: obj.cardId,
         sourceOracleId: obj.oracleId,
@@ -747,6 +750,7 @@ export function computePriorityOptions(
     );
 
     if (def.types.includes('Land')) {
+      if (fromExile && obj.castOnlyUntilEot === true) return;
       const permission =
         fromLibraryTop || fromGraveyard
           ? playFromZonePermission(ctx, player.id, obj, fromGraveyard ? 'graveyard' : 'libraryTop')
@@ -1369,32 +1373,45 @@ export function computePriorityOptions(
       // permission applies, and which permanent-type budget it spends, is judged on the bestowed
       // Aura enchantment spell, not the creature card (CR 601.3e, 702.103b).
       for (const [index, alt] of (def.alternativeCasts ?? []).entries()) {
-        if (alt.kind !== 'bestow') continue;
-        const bestowed = bestowedDefinition(def);
-        const bestowStart = options.length;
+        if (
+          alt.kind !== 'bestow' &&
+          alt.kind !== 'adventure' &&
+          alt.kind !== 'omen' &&
+          !(alt.kind === 'mdfc' && alt.spellFace !== undefined)
+        )
+          continue;
+        // Graveyard face casts are handled by their own zone-scoped alternatives below.
+        if (!fromLibraryTop && alt.kind !== 'bestow') continue;
+        if (alt.from === 'hand' || alt.from === 'graveyard' || alt.from === 'exile') continue;
+        const face = selectedSpellDefinition(def, alt);
+        const start = options.length;
         offerCast(
           alt.manaCost,
-          spellAdditionalCosts,
-          bestowed,
+          face.spellAdditionalCosts ?? [],
+          face,
           { alternativeCast: alt.kind, altIndex: index },
-          ' via Bestow',
+          alt.kind === 'bestow'
+            ? ' via Bestow'
+            : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
+          0,
+          face.types.includes('Instant') || face.keywords.includes('flash'),
+          face.name,
         );
         applyZonePermission(
-          bestowStart,
+          start,
           playFromZonePermission(
             ctx,
             player.id,
             obj,
             fromGraveyard ? 'graveyard' : 'libraryTop',
-            bestowed,
+            face,
           ),
           fromLibraryTop &&
-            castFromLibraryTopCandidates(ctx, player.id, bestowed).some(
-              (card) => card.id === obj.id,
-            ),
+            castFromLibraryTopCandidates(ctx, player.id, face).some((card) => card.id === obj.id),
         );
       }
     }
+
     // Adventure's own exile permission allows only the permanent face. A broad temporary
     // play permission also permits choosing a spell face or paying bestow (CR 118.9); other
     // alternate costs are not offered from exile.
@@ -1432,6 +1449,8 @@ export function computePriorityOptions(
               def,
               { alternativeCast: alt.kind, altIndex: index },
               ' (alternate cost)',
+              0,
+              instantSpeed || alt.instantTiming === true,
             );
             break;
           case 'overload':
@@ -1506,8 +1525,14 @@ export function computePriorityOptions(
     if (
       topCastableAs(libraryTop) ||
       // A permission only the bestowed Aura spell satisfies ("Aura spells") still allows bestow.
-      ((topDef.alternativeCasts ?? []).some((alt) => alt.kind === 'bestow') &&
-        topCastableAs(libraryTop, bestowedDefinition(topDef)))
+      (topDef.alternativeCasts ?? []).some(
+        (alt) =>
+          (alt.kind === 'bestow' ||
+            alt.kind === 'adventure' ||
+            alt.kind === 'omen' ||
+            (alt.kind === 'mdfc' && alt.spellFace !== undefined)) &&
+          topCastableAs(libraryTop, selectedSpellDefinition(topDef, alt)),
+      )
     )
       considerCast(libraryTop, false, true);
   }

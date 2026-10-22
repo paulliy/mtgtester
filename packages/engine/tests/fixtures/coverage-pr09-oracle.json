@@ -1,0 +1,1076 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/coverage-oracle.json",
+  "pinnedAt": "2026-10-21",
+  "cards": [
+    {
+      "sha256": "0a92bef047916a597355070ad23e806e609a1f66affb5af24a5e236d1f961014",
+      "card": {
+        "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+        "scryfallId": "fb8d8106-b9bd-405c-886e-72fc301c65e1",
+        "name": "Chaos Warp",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "23f49352f91de30d07f418f38b2658e0e346bf1088ec63c1210be8b44f438b12",
+      "card": {
+        "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
+        "scryfallId": "1603aab8-731c-407a-bb44-625c36ace43e",
+        "name": "Adaptive Omnitool",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature gets +1/+1 for each artifact you control.\nWhenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\nEquip {3}",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1efd23c5a6a2393adcc2ab4c4ae0514eb36fc0719a0ec6b04533dbf42dc4ef16",
+      "card": {
+        "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
+        "scryfallId": "707e9d2e-3934-4b90-878d-4699ac1cbe89",
+        "name": "Armored Skyhunter",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Cat Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat",
+          "Knight"
+        ],
+        "oracleText": "Flying\nWhenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e",
+      "card": {
+        "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
+        "scryfallId": "2520ab23-a068-4462-b261-2754409b4108",
+        "name": "Dark Confidant",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dff902aff42d2906942f8d0e620183b454ed6bc6de9e731c0863e76ac7c2895e",
+      "card": {
+        "oracleId": "504cc26d-3fd5-4391-9d30-f0614e5c8bbc",
+        "scryfallId": "68c8d00f-23f3-429a-a99a-a6f3ec21c137",
+        "name": "Dream Pillager",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e3b73f76b96885e3818faa7986a9265e04bbd1552cdf623b944dca2ae51976fa",
+      "card": {
+        "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
+        "scryfallId": "95c14c4d-6c16-4826-8d93-d89ad04aee09",
+        "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "G",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Elder Dinosaur // Legendary Creature — Phyrexian Elder Dinosaur",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elder",
+          "Dinosaur"
+        ],
+        "oracleText": "Trample\nWhen Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.\n{9}{G/P}: Transform Etali. Activate only as a sorcery.",
+        "power": "7",
+        "toughness": "7",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible",
+          "Transform",
+          "Trample"
+        ],
+        "layout": "transform",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Etali, Primal Sickness",
+          "typeLine": "Legendary Creature — Phyrexian Elder Dinosaur",
+          "oracleText": "Trample, indestructible\nWhenever Etali deals combat damage to a player, they get that many poison counters. (A player with ten or more poison counters loses the game.)",
+          "manaCost": null,
+          "colors": [
+            "G",
+            "R"
+          ],
+          "power": "11",
+          "toughness": "11",
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "627aac8300f02188c46ce9ace0f40bff9e43f22c526c632c06b0ce9cbd6f1856",
+      "card": {
+        "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
+        "scryfallId": "0446a3df-6f77-4b86-b694-ce99feb3d9ab",
+        "name": "Keen Duelist",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7d9f1b0535da2a928bbec915f98ab6f0a26234f87f4645072076ea205b2374c0",
+      "card": {
+        "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
+        "scryfallId": "4d1e229a-ed04-4d8d-90a9-5a451ca81470",
+        "name": "Songbirds' Blessing",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "Enchant creature\nWhenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e4fff6dac7991e615f0b4bf6b98bb646ba85908af5dd83192cd29634bb3d26c1",
+      "card": {
+        "oracleId": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
+        "scryfallId": "e11174b2-2423-4a6e-9dcf-ff550eee7e5a",
+        "name": "Szarekh, the Silent King",
+        "manaCost": "{1}{B}{B}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Artifact Creature — Necron",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Necron"
+        ],
+        "oracleText": "Flying\nMy Will Be Done — Whenever Szarekh attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "My Will Be Done",
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e94f2ce5ff465845835e1127d3c99406773e2454e2054b5162cec2c00c13176b",
+      "card": {
+        "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
+        "scryfallId": "dd921e27-3e08-438c-bec2-723226d35175",
+        "name": "Tibalt's Trickery",
+        "manaCost": "{1}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Mill"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4b4ead37bd8be62cbb692c14475ead91307cd0aef4fc4b4293a640bb1a8078dd",
+      "card": {
+        "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
+        "scryfallId": "884f6948-3e03-48c6-8be2-6f2539386c9d",
+        "name": "Aetherworks Marvel",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a permanent you control is put into a graveyard, you get {E} (an energy counter).\n{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9c80cb04a907304cc5a4b3bb7c43d286f4c23345ad1abb1d5cbc149a666bbeb9",
+      "card": {
+        "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
+        "scryfallId": "0a36fe06-225f-44c6-b608-452344e3585a",
+        "name": "Herald of Amity",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Griffin",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Griffin"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost. Then put the rest on the bottom of your library in a random order.\nWhenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cf9d7ad93231927235c7773cf421c5d1865449e1166b7c23272cbce063d989dc",
+      "card": {
+        "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
+        "scryfallId": "bc0de77a-c503-4000-9eb5-aa28a5e91082",
+        "name": "Mystic Forge",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "You may look at the top card of your library any time.\nYou may cast artifact spells and colorless spells from the top of your library.\n{T}, Pay 1 life: Exile the top card of your library.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "47efe05e916a05b4078df0d57fe57f90993b3de3b20b8e8bf58e161d1231c5ea",
+      "card": {
+        "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
+        "scryfallId": "d1cf1ead-fe91-4328-89ab-6d0bc9ff6cbe",
+        "name": "Cosmic Cube",
+        "manaCost": "{5}",
+        "cmc": 5,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Ward {2}\nWhenever you attack, look at the top six cards of your library. You may cast a spell from among them with mana value less than or equal to the greatest power among attacking creatures you control without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ward"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d5590037b1223c19eec19f928c0f1efdf6cb50bc5d802cd17cfd3c9666b60980",
+      "card": {
+        "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
+        "scryfallId": "96f866ec-a163-4095-b088-d93fa0b6f6f7",
+        "name": "Expressive Iteration",
+        "manaCost": "{U}{R}",
+        "cmc": 2,
+        "colors": [
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "R",
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8185139048a7134b9e67a9e4740af3c37acafac1d1994a388e1cad0d464f6d0c",
+      "card": {
+        "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
+        "scryfallId": "0957b296-c34d-4193-9fe7-a339533ac121",
+        "name": "Franklin Richards, Ascendant",
+        "manaCost": "{5}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Mutant Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Mutant",
+          "Hero"
+        ],
+        "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, discover 6. (Exile cards from the top of your library until you exile a nonland card with mana value 6 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+        "power": "6",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Discover"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4e63fe81fc6953ad87c5b9a63b600f8854de58debbd9701cf4e53ddc11250573",
+      "card": {
+        "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
+        "scryfallId": "556dfe7a-43e8-4801-ad79-89ab2148eca6",
+        "name": "Genesis Ultimatum",
+        "manaCost": "{G}{G}{U}{U}{U}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "G",
+          "R",
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile Genesis Ultimatum.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "95e845342b47e8d0f475cb460c5bf62f12ce888cbb54353c514661f5f36d31b1",
+      "card": {
+        "oracleId": "ad9d969e-def5-45a3-b65b-0c776f62ef0e",
+        "scryfallId": "9c1763b6-c83b-4a76-af58-64c0a6418326",
+        "name": "Into the Time Vortex",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nRebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast this card from exile without paying its mana cost.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Rebound",
+          "Cascade"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c8e0377f7eee329c48107ab2ea4931f08562c81696cbdf6470863fa619c848d1",
+      "card": {
+        "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
+        "scryfallId": "9952da7c-3cfc-413f-8849-0f10e9c8dceb",
+        "name": "Lurking Predators",
+        "manaCost": "{4}{G}{G}",
+        "cmc": 6,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fea77c0072f940b3031784388d7c506a49a8855b1ccbf51e901e9970e40ba1e4",
+      "card": {
+        "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
+        "scryfallId": "4f2980ba-2468-4a36-afdb-87e6567797a9",
+        "name": "Mind's Dilation",
+        "manaCost": "{5}{U}{U}",
+        "cmc": 7,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9e969505d8c6c85221582cabd1271dfe362f20b7101e515c24483e22d74078e2",
+      "card": {
+        "oracleId": "6e27956e-ba2f-41a9-8e39-ec54424591b6",
+        "scryfallId": "162fcdec-bf3c-43ba-9ada-212f7dec5fbd",
+        "name": "Monstrous Vortex",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value. (Exile cards from the top of your library until you exile a nonland card with that mana value or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Discover"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "32d98b4752c502f2ee74f386e387f64891b5776fdf80e3a924b17fc19a2dacde",
+      "card": {
+        "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
+        "scryfallId": "f1616a07-e4a1-4574-b341-d6b31d76b3c5",
+        "name": "New Generation's Technique",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Sneak {2}{G} (You may cast this spell for {2}{G} if you also return an unblocked attacker you control to hand during the declare blockers step.)\nSearch your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Sneak"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b4bdbf47741256041b7c2497894e602a61761f70904858d66db231cec6f238f3",
+      "card": {
+        "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
+        "scryfallId": "8063528c-7347-4757-8254-5aa3e4b61c6f",
+        "name": "Path of Discovery",
+        "manaCost": "{3}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever a creature you control enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Explore"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af",
+      "card": {
+        "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
+        "scryfallId": "04f8aa71-f27b-48b3-9146-b9e785555428",
+        "name": "Power Pack",
+        "manaCost": "{1}{R}{G}{W}{U}",
+        "cmc": 5,
+        "colors": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "R",
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "Flying, vigilance, trample, haste\nWhenever Power Pack deals combat damage to a player, exile target instant or sorcery card from your graveyard chosen at random. At the beginning of your next upkeep, you may cast that card without paying its mana cost. If that spell would be put into your graveyard, exile it instead.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance",
+          "Haste",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "be08ff24672e75b23eb03cf79632ba6e9a3860e772bfddd47a592d65e9cfa160",
+      "card": {
+        "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
+        "scryfallId": "75c1eb6a-2183-4f60-b075-f7289df35be7",
+        "name": "Sunbird's Invocation",
+        "manaCost": "{5}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bcb33e09cc00ce91a1cbc0d2b24e41f7a40fc3be9ca5eef4b2dc6b27102e80ae",
+      "card": {
+        "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
+        "scryfallId": "42fbd61d-e1a6-465d-b1a3-f5ee0869d3af",
+        "name": "Celebrate the Mountain-king",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.\nWhen this enchantment enters, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Recruit"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ab61ad6ff73b0200b488f466b910106883ce2cbe49c68d940452b5389dfc68cf",
+      "card": {
+        "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
+        "scryfallId": "7b696878-bf6c-4323-baa5-93c44dde075e",
+        "name": "Chimil, the Inner Sun",
+        "manaCost": "{6}",
+        "cmc": 6,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Spells you control can't be countered.\nAt the beginning of your end step, discover 5. (Exile cards from the top of your library until you exile a nonland card with mana value 5 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Discover"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ed0c8fbc3615cff301866d51874c3a7c0c12fe681f0fc5ef55ed72b419609c62",
+      "card": {
+        "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
+        "scryfallId": "d01fe6e9-49ee-4708-833e-75cd5a9f167c",
+        "name": "Improvisation Capstone",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Sorcery — Lesson",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [
+          "Lesson"
+        ],
+        "oracleText": "Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Paradigm"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1f38ae0c31db3230f52fa616257d866895a1e898fa8d214fdbaa722b674b3872",
+      "card": {
+        "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
+        "scryfallId": "206c8529-56df-4ed9-97bc-6c9b5e2a04c4",
+        "name": "Rabble Rousing",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Hideaway 5 (When this enchantment enters, look at the top five cards of your library, exile one face down, then put the rest on the bottom in a random order.)\nWhenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may play the exiled card without paying its mana cost.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Hideaway"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0c5ea13210c3c4da02b3f6f89c624884f25632d6e12ccba9a5cad4e39a73f2d3",
+      "card": {
+        "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
+        "scryfallId": "edc035ca-f0a3-4814-9405-d6dc6f048315",
+        "name": "Trumpeting Carnosaur",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Dinosaur",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dinosaur"
+        ],
+        "oracleText": "Trample\nWhen this creature enters, discover 5.\n{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.",
+        "power": "7",
+        "toughness": "6",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Discover",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5414ea7f762d778522e75b0ee59ad593e5e325900812c02509fba7a40603cb58",
+      "card": {
+        "oracleId": "80788290-1569-4c7f-b263-b4da7b31a9d1",
+        "scryfallId": "aba981f9-ebc6-48ac-b768-557f632b82df",
+        "name": "Grenzo, Havoc Raiser",
+        "manaCost": "{R}{R}",
+        "cmc": 2,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Goblin Rogue",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin",
+          "Rogue"
+        ],
+        "oracleText": "Whenever a creature you control deals combat damage to a player, choose one —\n• Goad target creature that player controls.\n• Exile the top card of that player's library. Until end of turn, you may cast that card and you may spend mana as though it were mana of any color to cast that spell.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Goad"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

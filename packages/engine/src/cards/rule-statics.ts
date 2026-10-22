@@ -99,6 +99,8 @@ export type RuleStatic =
   | { kind: 'suppressObjectTriggers'; events: ('enters' | 'dies')[]; filter: Selector }
   /** "You may cast Dragon spells from the top of your library" (Korlessa, Scale Singer). */
   | { kind: 'castFromZone'; zone: 'libraryTop'; filter?: Selector }
+  /** Private permission to look, without revealing the library top to other players. */
+  | { kind: 'lookTopLibrary' }
   /** "You may play lands from the top of your library/your graveyard." */
   | {
       kind: 'playFromZone';

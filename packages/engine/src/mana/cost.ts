@@ -41,6 +41,8 @@ export interface ParsedManaCost {
   hybrid?: Color[][];
   /** Phyrexian pips, each payable with its color or 2 life (CR 107.4f). */
   phyrexian?: Color[];
+  /** Internal casting permission: colored pips may be paid with mana of any color. */
+  spendAsAnyColor?: true;
 }
 
 export interface ManaCostParseResult {
@@ -411,7 +413,12 @@ export function planPayment(
         if (tried.has(key)) return null;
         tried.add(key);
         return planPayment(
-          { generic: cost.generic, colorless: cost.colorless, colored },
+          {
+            generic: cost.generic,
+            colorless: cost.colorless,
+            colored,
+            ...(cost.spendAsAnyColor === true ? { spendAsAnyColor: true as const } : {}),
+          },
           poolEntries,
           sources,
           allows,
@@ -426,6 +433,18 @@ export function planPayment(
     };
     return expand(0, cost.colored);
   }
+  // This is an internal permission for the spell's colored pips only. Once alternative
+  // Phyrexian and hybrid payments are selected, those pips become generic; {C} remains strict.
+  // Source activation costs are paid separately by the activation-order check and keep their
+  // ordinary symbols and restrictions.
+  const paymentCost =
+    cost.spendAsAnyColor === true
+      ? {
+          ...cost,
+          generic: cost.generic + ALL_COLORS.reduce((sum, color) => sum + cost.colored[color], 0),
+          colored: { W: 0, U: 0, B: 0, R: 0, G: 0 },
+        }
+      : cost;
   // Drop everything this payment may not legally spend, then solve the unrestricted problem.
   const usableEntries = poolEntries.filter((e) => entryIsUsable(e, allows));
   const usableSources = sources.filter((s) => s.restriction === undefined || allows(s.restriction));
@@ -434,9 +453,9 @@ export function planPayment(
   // the first pass is byte-identical to the payment this function has always planned, so every
   // existing card's tap choices are unchanged and a filter land is only reached for.
   const freeSources = usableSources.filter((s) => s.manaCost === undefined);
-  const firstPass = solveFrom(cost, usableEntries, freeSources, lifeTotal);
+  const firstPass = solveFrom(paymentCost, usableEntries, freeSources, lifeTotal, cost);
   if (firstPass !== null || freeSources.length === usableSources.length) return firstPass;
-  return solveWithCostly(cost, usableEntries, usableSources, lifeTotal);
+  return solveWithCostly(paymentCost, usableEntries, usableSources, lifeTotal, cost);
 }
 
 /**
@@ -455,10 +474,11 @@ function solveWithCostly(
   usableEntries: readonly ManaEntry[],
   usableSources: readonly ManaSource[],
   lifeTotal: number,
+  executionCost: ParsedManaCost = cost,
 ): PaymentPlan | null {
   const entries = usableEntries.filter((e) => e.restriction === undefined);
   const sources = usableSources.filter((s) => s.restriction === undefined);
-  return solveFrom(cost, entries, sources, lifeTotal);
+  return solveFrom(cost, entries, sources, lifeTotal, executionCost);
 }
 
 /**
@@ -488,6 +508,9 @@ function addCosts(a: ParsedManaCost, b: ParsedManaCost): ParsedManaCost {
     colorless: a.colorless + b.colorless,
     ...(hybrid.length > 0 ? { hybrid } : {}),
     ...(phyrexian.length > 0 ? { phyrexian } : {}),
+    ...(a.spendAsAnyColor === true || b.spendAsAnyColor === true
+      ? { spendAsAnyColor: true as const }
+      : {}),
   };
 }
 
@@ -623,6 +646,7 @@ function solveFrom(
   usableEntries: readonly ManaEntry[],
   usableSources: readonly ManaSource[],
   lifeTotal: number,
+  executionCost: ParsedManaCost = cost,
 ): PaymentPlan | null {
   // Work on a mutable remaining-cost copy. Strategy: satisfy colored + {C} pips first
   // (they are the constrained ones), then generic from whatever remains.
@@ -752,15 +776,57 @@ function solveFrom(
     }`;
   };
   const failed = new Set<string>();
+  const convokePaymentKey = (): string =>
+    executionCost.spendAsAnyColor === true
+      ? '|convoke:' +
+        ['C', ...ALL_COLORS]
+          .map(
+            (symbol) =>
+              produced.filter(
+                (entry) =>
+                  entry.symbol === symbol &&
+                  chosen.some(
+                    (source) =>
+                      source.convoke === true &&
+                      source.cardId === entry.cardId &&
+                      source.activation === entry.activation,
+                  ),
+              ).length,
+          )
+          .join(',')
+      : '';
   const stateKey = (srcIdx: number, need2: ParsedManaCost): string =>
     `${srcIdx}|${needKey(need2)}|${chosen
       .filter((s) => hasResources || sharedIds.has(s.cardId))
       .map((s) => `${usableSources.indexOf(s)}`)
-      .join(',')}${tapKey()}`;
+      .join(',')}${tapKey()}${convokePaymentKey()}`;
 
   const solve = (srcIdx: number, need2: ParsedManaCost): boolean => {
     if (totalPips(need2) === 0) {
-      orderedPlan = orderForActivation(cost, usableEntries, {
+      // Relaxed-color arithmetic is only an optimistic search bound. Validate the
+      // original pips against actual mana and strictly color-matched convokers.
+      if (
+        executionCost.spendAsAnyColor === true &&
+        selectEntriesToSpend(
+          [
+            ...usableEntries,
+            ...produced.map((entry) => ({
+              symbol: entry.symbol,
+              ...(chosen.some(
+                (source) =>
+                  source.convoke === true &&
+                  source.cardId === entry.cardId &&
+                  source.activation === entry.activation,
+              )
+                ? { convoked: true as const }
+                : {}),
+            })),
+          ],
+          executionCost,
+        ) === null
+      )
+        return false;
+      orderedPlan = orderForActivation(executionCost, usableEntries, {
         tapSources: [...chosen],
         tapCardIds: chosen.map((s) => s.cardId),
         fromPool,

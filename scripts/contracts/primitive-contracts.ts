@@ -7,6 +7,7 @@ import {
   BOUNDED_PR08_SPELLS,
   matchesBoundedPr08Spell,
 } from './bounded-pr08-spells';
+import { PR09_LIBRARY_CONTRACT_EXTENSIONS } from './pr09-library-contract-extensions';
 import { MULTIPLAYER_CHOICE_CONTRACT_EXTENSIONS } from './multiplayer-choice-contract-extensions';
 import {
   BOUNDED_PR08_ORIGINAL_NINE,
@@ -837,6 +838,7 @@ export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = mergePrimitiveC
     ...BOUNDED_PR08_PRIMITIVE_EXTENSIONS,
     ...BOUNDED_PR08_ORIGINAL_NINE_EXTENSIONS,
     ...MULTIPLAYER_CHOICE_CONTRACT_EXTENSIONS,
+    ...PR09_LIBRARY_CONTRACT_EXTENSIONS,
   ],
 );
 

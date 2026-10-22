@@ -4,7 +4,7 @@ import type { AbilityCost } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { chooseCard } from '../effects/choose';
 import { selectMatches } from '../cards/selector';
-import { matchesSelector } from '../effects/continuous';
+import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { evaluateValueIn } from '../effects/values';
 import {
   allowanceFor,
@@ -39,6 +39,7 @@ export interface SpellPaymentChoice {
   kind:
     | 'tapOther'
     | 'sacrificeOther'
+    | 'returnUnblockedAttacker'
     | 'discardCard'
     | 'exileCardFromHand'
     | 'exileOtherCardsFromGraveyard';
@@ -114,6 +115,22 @@ export function planSpellPayment(
             (cost.kind !== 'sacrificeOther' || canBeSacrificed(ctx, permanent)) &&
             matchesSelector(ctx, permanent, cost.selector, source),
         );
+        break;
+      case 'returnUnblockedAttacker':
+        kind = cost.kind;
+        // Sneak is payable only by the active player during their declare blockers step.
+        // The blocker list stays populated when a blocker leaves combat, preserving the distinction
+        // between unblocked and "was blocked".
+        candidates =
+          ctx.state.currentTurnPlayer === player.id && ctx.state.step === 'declareBlockers'
+            ? ctx.state.battlefield.filter(
+                (permanent) =>
+                  permanent.controllerId === player.id &&
+                  permanent.attacking !== null &&
+                  permanent.blockedByOrdered.length === 0 &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              )
+            : [];
         break;
       case 'discardCard':
       case 'exileCardFromHand':
@@ -287,7 +304,7 @@ export function* chooseSpellPayment(
   for (const group of witness.choices) {
     const kind = group.kind;
     const pool =
-      kind === 'tapOther' || kind === 'sacrificeOther'
+      kind === 'tapOther' || kind === 'sacrificeOther' || kind === 'returnUnblockedAttacker'
         ? ctx.state.battlefield
         : kind === 'exileOtherCardsFromGraveyard'
           ? player.graveyard
@@ -315,9 +332,11 @@ export function* chooseSpellPayment(
         ? 'Tap'
         : kind === 'sacrificeOther'
           ? 'Sacrifice'
-          : kind === 'discardCard'
-            ? 'Discard'
-            : 'Exile';
+          : kind === 'returnUnblockedAttacker'
+            ? 'Return to hand'
+            : kind === 'discardCard'
+              ? 'Discard'
+              : 'Exile';
     const chosen = yield* chooseCard(ctx, {
       player: player.id,
       prompt: `${player.id}: choose a card to ${verb.toLowerCase()} as a spell cost.`,

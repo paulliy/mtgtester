@@ -158,6 +158,12 @@ export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
     );
   }
 
+  if (top.kind === 'spell') {
+    const player = s.players.find((player) => player.id === top.controllerId);
+    if (player !== undefined)
+      (player.resolvedSpellNames ??= []).push(spellDefinitionOf(ctx, top).name);
+  }
+
   // Destination (CR 608.3): permanent spells enter the battlefield under their caster;
   // instants/sorceries go to their owner's graveyard.
   if (top.kind === 'spell' && top.card !== null) {
@@ -199,6 +205,10 @@ export function* finishSpellCard(ctx: GameContext, spell: EngineStackObject): Ga
       // A face-down spell becomes a face-down permanent (CR 708.4).
       ...(spell.alternativeCastKind === 'faceDown' ? { faceDown: true } : {}),
     });
+    if (card.isCardCopy === true && moved?.zone === 'battlefield') {
+      moved.isToken = true;
+      delete moved.isCardCopy;
+    }
     if (spell.grantHasteOnResolution && moved && moved.zone === 'battlefield') {
       ctx.state.effects.push({
         id: `eff-${ctx.state.nextObjectNum++}`,

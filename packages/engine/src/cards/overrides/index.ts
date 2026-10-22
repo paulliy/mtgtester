@@ -70,6 +70,7 @@ import { registerCoveragePr03Overrides } from './coverage-pr03';
 import { registerCoveragePr06Overrides } from './coverage-pr06';
 import { registerCoveragePr07Overrides } from './coverage-pr07';
 import { registerCoveragePr08Overrides } from './coverage-pr08';
+import { registerCoveragePr09Overrides } from './coverage-pr09';
 import { registerWhiteBlackControlHandOverrides } from './white-black-control-hand';
 import { registerWhiteBlackControlStaxOverrides } from './white-black-control-stax';
 import { registerWhiteBlackControlDiscardOverrides } from './white-black-control-discard';
@@ -231,6 +232,7 @@ registerDeck('white-black-control-tergrid', registerWhiteBlackControlTergridOver
 registerDeck('white-black-control-aven', registerWhiteBlackControlAvenOverrides);
 registerDeck('white-black-control-gifts', registerWhiteBlackControlGiftOverrides);
 registerDeck('white-black-control-perch', registerWhiteBlackControlPerchOverrides);
+registerDeck('coverage-pr09', registerCoveragePr09Overrides);
 registerDeck('unsupported-spell-faces', registerUnsupportedSpellFaces);
 
 /** Register an override. Exported for the per-card modules and for tests. */

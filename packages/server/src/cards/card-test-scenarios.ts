@@ -99,6 +99,11 @@ import {
   whiteBlackControlKeywordScenario,
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { PR09_SCENARIO_IDS } from './pr09-scenario-catalog';
+import { pr09Scenario } from './pr09-scenarios';
+import { PR09_LIBRARY_SCENARIOS, pr09LibraryScenario } from './pr09-library-scenarios';
+import { PR09_PERMANENT_SCENARIOS, pr09PermanentScenario } from './pr09-permanent-scenarios';
+import { PR09_CHOICE_SCENARIOS, pr09ChoiceScenario } from './pr09-choice-scenarios';
 import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
 import {
   PR08_REMAINING_SCENARIO_IDS,
@@ -15123,6 +15128,10 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...PR09_SCENARIO_IDS,
+  ...PR09_LIBRARY_SCENARIOS.map((scenario) => scenario.id),
+  ...PR09_PERMANENT_SCENARIOS.map((scenario) => scenario.id),
+  ...PR09_CHOICE_SCENARIOS.map((scenario) => scenario.id),
   ...PR08_REMAINING_SCENARIO_IDS,
   ...AETHERSPOUTS_SCENARIO_IDS,
   ...BOSEIJU_SCENARIO_IDS,
@@ -15675,6 +15684,24 @@ function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTe
 }
 
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  ...Object.fromEntries(
+    PR09_CHOICE_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr09ChoiceScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    PR09_PERMANENT_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => pr09PermanentScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR09_LIBRARY_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => pr09LibraryScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR09_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr09Scenario(id, gameId)]),
+  ),
   'kazuul-viewer-decline': (gameId) => kazuulScenario(gameId, 'decline'),
   'kazuul-viewer-pay': (gameId) => kazuulScenario(gameId, 'pay'),
   'kazuul-viewer-other-defender': (gameId) => kazuulScenario(gameId, 'other-defender'),

@@ -57,12 +57,37 @@ describe('per-player target slots', () => {
     expect(validateCardDefinition(definition([perPlayer]))).toEqual([]);
   });
 
-  it('rejects a per-player slot that is not optional, not last, owns a controller, or is hand-expanded', () => {
+  it('accepts opponent-only expansion and excludes its controller and departed seats', () => {
+    const opponentOnly: TargetSpec = { ...perPlayer, controller: 'opponent' };
+    expect(validateCardDefinition(definition([opponentOnly]))).toEqual([]);
+    const ctx = createGame(
+      gameConfig(
+        Array.from({ length: 4 }, () => ({ cards: copies(3, forest) })),
+        { seed: 'opponent-only-expansion' },
+      ),
+    );
+    const ability = definition([opponentOnly]).triggers[0] as Ability;
+    const expanded = expandPerPlayerTargets(ctx, ability, 'P3');
+    expect(expanded.targets.map((spec) => spec.controllerPlayer)).toEqual(['P4', 'P1', 'P2']);
+    expect(
+      expanded.targets.every(
+        (spec) =>
+          spec.controller === undefined && spec.perPlayer === undefined && spec.slotGroup === 0,
+      ),
+    ).toBe(true);
+    ctx.state.players.find((player) => player.id === 'P4')!.hasLost = true;
+    expect(
+      expandPerPlayerTargets(ctx, ability, 'P3').targets.map((spec) => spec.controllerPlayer),
+    ).toEqual(['P1', 'P2']);
+    expect(opponentOnly.controller).toBe('opponent');
+  });
+
+  it('rejects a per-player slot that is not optional, not last, uses an unsupported controller, or is hand-expanded', () => {
     expect(paths([{ ...perPlayer, count: { min: 1, max: 1 } }])).toContain(
       'definition.triggers[0].targets[0].perPlayer',
     );
     expect(paths([{ ...perPlayer, count: { min: 0, max: 2 } }]).length).toBeGreaterThan(0);
-    expect(paths([{ ...perPlayer, controller: 'opponent' }]).length).toBeGreaterThan(0);
+    expect(paths([{ ...perPlayer, controller: 'you' }]).length).toBeGreaterThan(0);
     expect(paths([perPlayer, { kind: 'creature' }]).length).toBeGreaterThan(0);
     expect(paths([{ kind: 'creature', controllerPlayer: 'P2' }]).length).toBeGreaterThan(0);
     expect(paths([{ kind: 'creature', slotGroup: 0 }]).length).toBeGreaterThan(0);

@@ -328,7 +328,7 @@ export function validateTriggerHead(value: unknown, path: string, issues: Author
       issues.push({ path: `${path}.ordinal`, message: 'spell ordinal must be a positive integer' });
     if (
       head['castFrom'] !== undefined &&
-      !['graveyard', 'notHand'].includes(head['castFrom'] as string)
+      !['graveyard', 'notHand', 'hand'].includes(head['castFrom'] as string)
     )
       issues.push({ path: `${path}.castFrom`, message: 'unknown spell origin restriction' });
   } else if (family === 'attackDeclaration') {

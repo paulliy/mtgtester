@@ -108,6 +108,20 @@ const REASONS: Record<string, string> = {
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    // PR09 full pinned cast/trigger/activation regressions replace these historical guards.
+    'Chaos Warp',
+    'Adaptive Omnitool',
+    'Armored Skyhunter',
+    'Dream Pillager',
+    'Etali, Primal Conqueror // Etali, Primal Sickness',
+    'Keen Duelist',
+    "Songbirds' Blessing",
+    'Szarekh, the Silent King',
+    "Tibalt's Trickery",
+    'Aetherworks Marvel',
+    'Herald of Amity',
+    'Mystic Forge',
+
     'Vindictive Lich',
     'Shadrix Silverquill',
     "Olórin's Searing Light",
@@ -273,7 +287,7 @@ describe('Marchesa catalog audit containment', () => {
 
   it('pins complete Oracle records for the reviewed cards', () => {
     expect(fixture.cards.map(({ card }) => card.name).sort()).toEqual(
-      [...Object.keys(REASONS), ...restoredCards].sort(),
+      [...new Set([...Object.keys(REASONS), ...restoredCards])].sort(),
     );
     for (const { sha256, card } of fixture.cards) {
       expect(createHash('sha256').update(canonical(card)).digest('hex'), card.name).toBe(sha256);

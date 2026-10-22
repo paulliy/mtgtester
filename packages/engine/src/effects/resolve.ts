@@ -1,3 +1,13 @@
+import { copyData } from '../state/copy-data';
+import { HUMAN_SOLDIER_1_1_WHITE } from '../cards/tokens';
+import {
+  discover,
+  revealUntilAura,
+  exileEachUntilNonlandAndCast,
+  revealCreatureOrBottom,
+  bottomCards,
+} from './library-reveal';
+import { lookAtLibraryAndCast } from './library-cast';
 import { playerLifeLocked, phaseOutControlledPermanents } from '../state/phasing';
 import { returnToOwnerLibraryChoices } from './owner-library-choices';
 import {
@@ -12,6 +22,7 @@ import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { spellTargetOccurrences } from '../stack/target-occurrences';
+import { newObjectId } from '../state/objects';
 import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import {
@@ -856,6 +867,29 @@ export function* paySpellAdditionalCosts(
     );
   for (const [costIndex, cost] of orderedCosts) {
     switch (cost.kind) {
+      case 'returnUnblockedAttacker': {
+        if (ctx.state.currentTurnPlayer !== player.id || ctx.state.step !== 'declareBlockers')
+          throw new Error('Sneak requires your declare blockers step');
+        const cards = ctx.state.battlefield.filter(
+          (perm) =>
+            perm.controllerId === player.id &&
+            perm.attacking !== null &&
+            perm.blockedByOrdered.length === 0 &&
+            computeCharacteristics(ctx, perm).types.includes('Creature') &&
+            assigned(perm.id, costIndex),
+        );
+        const chosen = yield* pickCost({
+          player: player.id,
+          cards,
+          type: 'returnSneakCost',
+          verb: 'Return to hand',
+          prompt: 'Return an unblocked attacker you control to its owner’s hand as the Sneak cost.',
+        });
+        if (chosen === null) throw new Error('Sneak return cost is not payable');
+        yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
+
       case 'discardCard':
         yield* discardCards(
           ctx,
@@ -2432,6 +2466,27 @@ export function* executeAbility(
         }
         break;
       }
+      case 'exileEachChosenUntilSourceLeaves': {
+        if (source.id === undefined || !ctx.state.battlefield.some((perm) => perm.id === source.id))
+          break;
+        const permanents = legalChosenPermanents(effect.targetSlot);
+        const moved = (yield* moveObjects(ctx, permanents, { zone: 'exile' })).filter(
+          (card): card is EngineCardObject => card?.zone === 'exile',
+        );
+        if (!ctx.state.battlefield.some((perm) => perm.id === source.id)) {
+          yield* moveObjects(ctx, moved, { zone: 'battlefield' });
+        } else {
+          ctx.state.exiledUntilLeaves[source.cardId] = [
+            ...(ctx.state.exiledUntilLeaves[source.cardId] ?? []),
+            ...moved.map((card) => ({
+              cardId: card.cardId,
+              controllerId: card.ownerId,
+              objectId: card.id,
+            })),
+          ];
+        }
+        break;
+      }
       case 'exileUntilSourceLeaves': {
         // CR 610.3a: if the duration ended before this effect resolves, exile nothing.
         if (
@@ -2952,6 +3007,235 @@ export function* executeAbility(
           .flatMap((player) => player.graveyard)
           .find((card) => card.id === id);
         if (card !== undefined) yield* moveObject(ctx, card, { zone: 'exile' });
+        break;
+      }
+      case 'capstoneParadigm': {
+        const exiled: EngineCardObject[] = [];
+        let total = 0;
+        while (total < effect.minimumManaValue && controller.library.length > 0) {
+          const top = controller.library[0]!;
+          const moved = yield* moveObject(ctx, top, { zone: 'exile' });
+          if (moved === null) break;
+          if (moved.zone !== 'exile') continue;
+          exiled.push(moved);
+          total += spellManaValue(getDefByOracleId(ctx, moved.oracleId, moved.name), 0);
+        }
+        for (;;) {
+          const candidates = exiled.filter(
+            (card) =>
+              ctx.state.exile.includes(card) && freeCardIsCastable(ctx, card, controller.id),
+          );
+          if (candidates.length === 0) break;
+          const card = yield* chooseCard(ctx, {
+            player: controller.id,
+            cards: candidates,
+            type: 'castFree',
+            verb: 'Cast for free',
+            prompt: `${source.name}: you may cast any number of spells exiled this way.`,
+            decline: { type: 'stopCasting', description: 'Stop casting cards', verb: 'Stop' },
+          });
+          if (card === null) break;
+          yield* resolveFreeCard(ctx, card, controller.id);
+        }
+        const entry = source.resolvingStackObject;
+        if (entry !== undefined) {
+          const definition = spellDefinitionOf(ctx, entry);
+          if (!(controller.resolvedSpellNames ?? []).includes(definition.name)) {
+            const template = {
+              definition: copyData(definition),
+              oracleText: entry.card?.oracleText ?? '',
+              manaCost: entry.card?.manaCost ?? null,
+            };
+            ctx.state.delayedTriggers.push({
+              id: 'dt-' + ctx.state.nextObjectNum++,
+              sourceCardId: source.cardId,
+              sourceOracleId: source.oracleId,
+              controllerId: controller.id,
+              when: 'precombatMain',
+              player: 'you',
+              expiry: 'permanent',
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [{ op: 'castParadigmCopy', template }],
+                description: `Paradigm: create a copy of ${definition.name} in exile; you may cast it without paying its mana cost`,
+              },
+            });
+          }
+          entry.exileOnResolution = true;
+        }
+        break;
+      }
+      case 'castParadigmCopy': {
+        const objectId = newObjectId(ctx);
+        const oracleId = 'card-copy-definition-' + objectId;
+        const definition = { ...copyData(effect.template.definition), oracleId };
+        ctx.defs.set(oracleId, definition);
+        const card: EngineCardObject = {
+          id: objectId,
+          cardId: 'card-copy-' + objectId,
+          oracleId,
+          ownerId: controller.id,
+          name: definition.name,
+          typeLine: definition.typeLine,
+          oracleText: effect.template.oracleText,
+          manaCost: effect.template.manaCost,
+          zone: 'exile',
+          isToken: false,
+          isCommander: false,
+          isCardCopy: true,
+        };
+        ctx.state.exile.push(card);
+        emit(
+          ctx,
+          'cardCopied',
+          { name: card.name, cardId: card.cardId, zone: 'exile' },
+          controller.id,
+        );
+        if (!freeCardIsCastable(ctx, card, controller.id)) break;
+        const choice = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `Paradigm: cast the copy of ${card.name} without paying its mana cost?`,
+          options: [
+            plainOption({
+              type: 'castFree',
+              description: `Cast the copy of ${card.name} for free`,
+              verb: 'Cast',
+            }),
+            plainOption({
+              type: 'decline',
+              description: 'Decline casting the copy',
+              verb: 'Decline',
+              role: 'decline',
+            }),
+          ],
+        };
+        if (choice.index === 0) yield* resolveFreeCard(ctx, card, controller.id);
+        break;
+      }
+      case 'exileAndCastNextUpkeep': {
+        const target = ref(effect.target);
+        const card =
+          target === null ? undefined : controller.graveyard.find((card) => card.id === target);
+        if (card === undefined) break;
+        const exiled = yield* moveObject(ctx, card, { zone: 'exile' });
+        if (exiled?.zone !== 'exile') break;
+        ctx.state.delayedTriggers.push({
+          id: 'dt-' + ctx.state.nextObjectNum++,
+          sourceCardId: source.cardId,
+          sourceOracleId: source.oracleId,
+          controllerId: controller.id,
+          when: 'upkeep',
+          expiry: 'onFire',
+          player: 'you',
+          ability: {
+            kind: 'triggered',
+            targets: [],
+            effects: [{ op: 'castRememberedExile', objectId: exiled.id, exileSpell: true }],
+            description: `${source.name}: you may cast ${exiled.name} without paying its mana cost`,
+          },
+        });
+        break;
+      }
+      case 'castRememberedExile': {
+        const card = ctx.state.exile.find((card) => card.id === effect.objectId);
+        if (card === undefined || !freeCardIsCastable(ctx, card, controller.id)) break;
+        const choice = yield {
+          decisionType: 'general',
+          player: controller.id,
+          prompt: `${source.name}: cast ${card.name} without paying its mana cost?`,
+          options: [
+            plainOption({
+              type: 'castFree',
+              description: `Cast ${card.name} for free`,
+              verb: 'Cast',
+            }),
+            plainOption({
+              type: 'decline',
+              description: 'Leave the card in exile',
+              verb: 'Decline',
+              role: 'decline',
+            }),
+          ],
+        };
+        if (choice.index === 0)
+          yield* resolveFreeCard(ctx, card, controller.id, Infinity, 0, undefined, true);
+        break;
+      }
+      case 'trickery': {
+        const target = ref(effect.target);
+        const index = ctx.state.stack.findIndex(
+          (entry) => entry.id === target && entry.kind === 'spell',
+        );
+        const entry = ctx.state.stack[index];
+        if (entry === undefined) break;
+        const victim = playerById(ctx, entry.controllerId);
+        const counteredDefinition = spellDefinitionOf(ctx, entry);
+        const spellNames = counteredDefinition.alternativeCasts?.some((alt) =>
+          ['adventure', 'omen', 'mdfc'].includes(alt.kind),
+        )
+          ? [counteredDefinition.name.split(' // ')[0]!]
+          : counteredDefinition.name.split(' // ');
+        if (protectedFromCounter(ctx, entry))
+          emit(ctx, 'counterPrevented', { target: entry.description, source: source.name });
+        else {
+          ctx.state.stack.splice(index, 1);
+          emit(ctx, 'counterSpell', { countered: entry.description, by: source.name });
+          if (entry.card !== null)
+            yield* moveObject(ctx, entry.card, { zone: counteredCardZone(entry) });
+        }
+        const count = 1 + ctx.rng.nextInt(3);
+        for (let i = 0; i < count; i++) {
+          const top = victim.library[0];
+          if (top === undefined) break;
+          yield* moveObject(ctx, top, { zone: 'graveyard' });
+          emit(ctx, 'mill', { player: victim.id, cardId: top.cardId, name: top.name }, victim.id);
+        }
+        const exiled: EngineCardObject[] = [];
+        let hit: EngineCardObject | undefined;
+        while (victim.library.length > 0) {
+          const top = victim.library[0]!;
+          const definition = getDefByOracleId(ctx, top.oracleId, top.name);
+          const moved = yield* moveObject(ctx, top, { zone: 'exile' });
+          if (moved?.zone !== 'exile') continue;
+          exiled.push(moved);
+          // Adventure and modal faces have only their front name in a library (CR 201.2).
+          const name = definition.alternativeCasts?.some((alt) =>
+            ['adventure', 'omen', 'mdfc'].includes(alt.kind),
+          )
+            ? definition.name.split(' // ')[0]!
+            : definition.name;
+          if (
+            !definition.types.includes('Land') &&
+            !name.split(' // ').some((part) => spellNames.includes(part))
+          ) {
+            hit = moved;
+            break;
+          }
+        }
+        if (hit !== undefined && freeCardIsCastable(ctx, hit, victim.id)) {
+          const choice = yield {
+            decisionType: 'general',
+            player: victim.id,
+            prompt: `${source.name}: cast ${hit.name} without paying its mana cost?`,
+            options: [
+              plainOption({
+                type: 'castFree',
+                description: `Cast ${hit.name} for free`,
+                verb: 'Cast',
+              }),
+              plainOption({
+                type: 'decline',
+                description: 'Decline the free cast',
+                verb: 'Decline',
+                role: 'decline',
+              }),
+            ],
+          };
+          if (choice.index === 0) yield* resolveFreeCard(ctx, hit, victim.id);
+        }
+        yield* bottomCards(ctx, exiled);
         break;
       }
       case 'counterAndCreateTokenForController': {
@@ -4936,11 +5220,10 @@ export function* executeAbility(
         break;
       }
       case 'exileResolvingSpell': {
-        const entry = ctx.state.stack.find(
-          (stackObject) => stackObject.sourceCardId === source.cardId,
-        );
-        if (entry?.card !== null && entry?.card !== undefined)
-          yield* moveObject(ctx, entry.card, { zone: 'exile' });
+        // The resolving entry has already been popped from the stack. Its final destination
+        // is applied once by finishSpellCard, after all instructions finish (CR 608.2).
+        if (source.resolvingStackObject !== undefined)
+          source.resolvingStackObject.exileOnResolution = true;
         break;
       }
       case 'millTargetPlayer': {
@@ -4962,10 +5245,15 @@ export function* executeAbility(
         break;
       }
       case 'millAndChooseArtifact': {
+        const milled: (EngineCardObject | EnginePermanent)[] = [];
         for (let i = 0; i < 3; i++) {
           const top = controller.library[0];
           if (top === undefined) break;
-          yield* moveObject(ctx, top, { zone: 'graveyard' });
+          const moved = yield* moveObject(ctx, top, { zone: 'graveyard' });
+          // CR 701.17c: follow the milled card into its public replacement destination.
+          // Retain the new object, never another incarnation of the same physical card.
+          if (moved !== null && moved.zone !== 'library' && moved.zone !== 'hand')
+            milled.push(moved);
           emit(
             ctx,
             'mill',
@@ -4973,19 +5261,197 @@ export function* executeAbility(
             controller.id,
           );
         }
-        const choices = controller.graveyard.filter((card) => {
+        const choices = milled.filter((card) => {
           const def = getDefByOracleId(ctx, card.oracleId, card.name);
-          return def.types.includes('Artifact') && def.types.includes('Creature');
+          return (
+            findObjectById(ctx, card.id) === card &&
+            ((def.types.includes('Artifact') && def.types.includes('Creature')) ||
+              def.subtypes.includes('Vehicle'))
+          );
         });
         const chosen = yield* chooseCard(ctx, {
           player: controller.id,
-          prompt: `${source.name}: you may return an artifact creature milled this way`,
+          prompt: `${source.name}: you may return an artifact creature or Vehicle milled this way`,
           cards: choices,
           type: 'returnToHand',
           verb: 'Return',
           decline: { type: 'decline', description: 'Take none', verb: 'Skip' },
         });
         if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
+      case 'discover':
+        yield* discover(ctx, source, controller.id, amountOf(effect.count));
+        break;
+      case 'revealUntilAura':
+        yield* revealUntilAura(ctx, source, controller.id);
+        break;
+      case 'exileEachUntilNonlandCast':
+        yield* exileEachUntilNonlandAndCast(ctx, source, controller.id);
+        break;
+      case 'revealCreatureOrBottom':
+        yield* revealCreatureOrBottom(ctx, source, controller.id);
+        break;
+      case 'explore': {
+        const currentId = ref(effect.target);
+        const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
+        const last = eventObjectFacts(ctx, scope);
+        const playerId = permanent?.controllerId ?? last?.candidate.controllerId ?? controller.id;
+        const player = playerById(ctx, playerId);
+        const top = player.library[0];
+        if (top !== undefined)
+          emit(
+            ctx,
+            'revealCard',
+            { player: player.id, cardId: top.cardId, name: top.name, revealed: true },
+            player.id,
+          );
+        if (
+          top !== undefined &&
+          getDefByOracleId(ctx, top.oracleId, top.name).types.includes('Land')
+        ) {
+          yield* moveObject(ctx, top, { zone: 'hand' });
+        } else {
+          if (permanent !== undefined)
+            addCounterPlacements(ctx, source, [
+              { perm: permanent, counter: '+1/+1', count: 1, placingPlayerId: player.id },
+            ]);
+          if (top !== undefined) {
+            const choice = yield {
+              decisionType: 'general',
+              player: player.id,
+              prompt: `${source.name}: put the revealed card into your graveyard?`,
+              options: [
+                plainOption({
+                  type: 'exploreGraveyard',
+                  description: `Put ${top.name} into your graveyard`,
+                  verb: 'Put into graveyard',
+                }),
+                plainOption({
+                  type: 'keepTop',
+                  description: `Keep ${top.name} on top`,
+                  verb: 'Keep on top',
+                  role: 'decline',
+                }),
+              ],
+            };
+            if (choice.index === 0) yield* moveObject(ctx, top, { zone: 'graveyard' });
+          }
+        }
+        emit(
+          ctx,
+          'explore',
+          { player: player.id, permanent: permanent?.name ?? last?.name ?? source.name },
+          player.id,
+        );
+        break;
+      }
+      case 'exileLibraryTop': {
+        const player = effect.player === 'eventPlayer' ? drawRecipient('eventPlayer') : controller;
+        const top = player.library[0];
+        if (top === undefined) break;
+        const moved = yield* moveObject(ctx, top, { zone: 'exile' });
+        if (effect.grantCastUntilEot === true && moved?.zone === 'exile') {
+          moved.playableUntilEotBy = controller.id;
+          moved.castOnlyUntilEot = true;
+          if (effect.spendAsAnyColor === true) moved.spendAsAnyColorUntilEot = true;
+        }
+        if (
+          effect.castFree === true &&
+          moved !== null &&
+          moved.zone === 'exile' &&
+          freeCardIsCastable(ctx, moved, controller.id)
+        ) {
+          const choice = yield {
+            decisionType: 'general',
+            player: controller.id,
+            prompt: `${source.name}: cast ${moved.name} without paying its mana cost?`,
+            options: [
+              plainOption({
+                type: 'castFree',
+                description: `Cast ${moved.name} for free`,
+                verb: 'Cast',
+              }),
+              plainOption({
+                type: 'decline',
+                description: 'Leave the card in exile',
+                verb: 'Decline',
+                role: 'decline',
+              }),
+            ],
+          };
+          if (choice.index === 0) yield* resolveFreeCard(ctx, moved, controller.id);
+        }
+        break;
+      }
+      case 'partitionLibrary': {
+        const looked = controller.library.slice(0, effect.count);
+        if (effect.mode === 'handBottomExile') {
+          const hand = yield* chooseCard(ctx, {
+            player: controller.id,
+            cards: looked,
+            type: 'iterationHand',
+            verb: 'Put into hand',
+            prompt: `${source.name}: choose a card to put into your hand.`,
+          });
+          if (hand !== null) yield* moveObject(ctx, hand, { zone: 'hand' });
+          const remaining = looked.filter(
+            (card) => card !== hand && controller.library.includes(card),
+          );
+          const bottom = yield* chooseCard(ctx, {
+            player: controller.id,
+            cards: remaining,
+            type: 'iterationBottom',
+            verb: 'Put on bottom',
+            prompt: `${source.name}: choose a card to put on the bottom.`,
+          });
+          if (bottom !== null) {
+            controller.library.splice(controller.library.indexOf(bottom), 1);
+            controller.library.push(bottom);
+          }
+          const exile = remaining.find((card) => card !== bottom);
+          if (exile !== undefined) {
+            const moved = yield* moveObject(ctx, exile, { zone: 'exile' });
+            if (moved?.zone === 'exile')
+              (moved as EngineCardObject).playableUntilEotBy = controller.id;
+          }
+        } else {
+          const chosen: EngineCardObject[] = [];
+          const candidates = looked.filter((card) =>
+            isPermanentCard(getDefByOracleId(ctx, card.oracleId, card.name)),
+          );
+          for (;;) {
+            const card = yield* chooseCard(ctx, {
+              player: controller.id,
+              cards: candidates.filter((card) => !chosen.includes(card)),
+              type: 'choosePermanent',
+              verb: 'Choose',
+              prompt: `${source.name}: choose any number of permanents to put onto the battlefield.`,
+              decline: { type: 'done', description: 'Finish choosing permanents', verb: 'Done' },
+            });
+            if (card === null) break;
+            chosen.push(card);
+          }
+          yield* moveObjects(ctx, chosen, { zone: 'battlefield', controllerId: controller.id });
+          for (const card of looked)
+            if (controller.library.includes(card)) yield* moveObject(ctx, card, { zone: 'hand' });
+        }
+        break;
+      }
+      case 'recruit': {
+        yield* drawCards(ctx, controller, 1);
+        const card = yield* chooseCard(ctx, {
+          player: controller.id,
+          cards: controller.hand,
+          type: 'discard',
+          verb: 'Discard',
+          prompt: `${source.name}: discard a card.`,
+        });
+        if (card !== null) {
+          const nonland = !getDefByOracleId(ctx, card.oracleId, card.name).types.includes('Land');
+          const discarded = yield* discardCard(ctx, card, controller.id);
+          if (discarded && nonland) createTokens(ctx, HUMAN_SOLDIER_1_1_WHITE, 1, controller.id);
+        }
         break;
       }
       case 'drawRevealTopLoseManaValue': {
@@ -5000,6 +5466,37 @@ export function* executeAbility(
         );
         yield* moveObject(ctx, top, { zone: 'hand' });
         loseLife(ctx, controller, manaValue);
+        break;
+      }
+      case 'mutualRevealTopLoseManaValue': {
+        const otherId = ref(effect.target);
+        const other = ctx.state.players.find((player) => player.id === otherId && !player.hasLost);
+        if (other === undefined) break;
+        const players = [controller, other];
+        const tops = players.map((player) => player.library[0]);
+        const values = tops.map((card) =>
+          card === undefined
+            ? 0
+            : spellManaValue(getDefByOracleId(ctx, card.oracleId, card.name), undefined),
+        );
+        for (const [index, top] of tops.entries()) {
+          if (top !== undefined)
+            emit(
+              ctx,
+              'revealCard',
+              {
+                player: players[index]!.id,
+                cardId: top.cardId,
+                name: top.name,
+                revealed: true,
+              },
+              players[index]!.id,
+            );
+        }
+        loseLife(ctx, controller, values[1]!);
+        loseLife(ctx, other, values[0]!);
+        for (const top of tops)
+          if (top !== undefined) yield* moveObject(ctx, top, { zone: 'hand' });
         break;
       }
       case 'goadEachOpponent':
@@ -7600,49 +8097,22 @@ export function* executeAbility(
           const top = controller.library[0];
           if (top === undefined) break;
           const moved = (yield* moveObject(ctx, top, { zone: 'exile' })) as EngineCardObject | null;
-          if (moved !== null) moved.playableUntilEotBy = controller.id;
+          if (moved !== null) {
+            moved.playableUntilEotBy = controller.id;
+            if (effect.castOnly === true) moved.castOnlyUntilEot = true;
+          }
         }
         break;
       }
       case 'lookAtTopNCastOneFree': {
-        const top = controller.library.slice(0, effect.count);
-        const eligible = top.filter((card) => freeCardIsCastable(ctx, card, controller.id));
-        if (eligible.length === 0) break;
-        const options = [
-          ...eligible.map((card) =>
-            cardOption(ctx, card, {
-              type: 'castFree',
-              description: `Cast ${card.name} without paying its mana cost`,
-              verb: 'Cast for free',
-            }),
-          ),
-          plainOption({ type: 'decline', description: 'Cast nothing', verb: 'Decline' }),
-        ];
-        const outcome = yield {
-          decisionType: 'general',
-          player: controller.id,
-          prompt: `${source.name}: choose at most one card from the top ${effect.count} cards to cast for free.`,
-          options,
-        };
-        if (outcome.index < eligible.length) {
-          const chosen = eligible[outcome.index];
-          if (chosen !== undefined) yield* resolveFreeCard(ctx, chosen, controller.id);
-        }
-        for (const card of top) {
-          if (
-            !ctx.state.players.some((p) =>
-              p.library.some((candidate) => candidate.cardId === card.cardId),
-            )
-          )
-            continue;
-          if (card !== eligible[outcome.index]) {
-            const current = controller.library.find(
-              (candidate) => candidate.cardId === card.cardId,
-            );
-            if (current !== undefined && current !== eligible[outcome.index])
-              yield* moveObject(ctx, current, { zone: 'library', libraryPosition: 'bottom' });
-          }
-        }
+        yield* lookAtLibraryAndCast(ctx, source, controller.id, {
+          count: typeof effect.count === 'number' ? effect.count : amountOf(effect.count),
+          ...(effect.filter === undefined ? {} : { filter: effect.filter }),
+          ...(effect.maxManaValue === undefined
+            ? {}
+            : { maxManaValue: amountOf(effect.maxManaValue) }),
+          ...(effect.visibility === undefined ? {} : { visibility: effect.visibility }),
+        });
         break;
       }
       case 'castOneFromHandFreeUpTo': {
@@ -7994,38 +8464,42 @@ export function* executeAbility(
         }
         break;
       }
+      case 'hideaway':
       case 'hideawayExileTop4': {
         const player = playerById(ctx, source.controllerId);
-        const top4 = player.library.slice(0, 4);
+        const count = effect.op === 'hideaway' ? effect.count : 4;
+        const top4 = player.library.slice(0, count);
         if (top4.length === 0) break;
         const chosenCard =
           top4.length === 1
             ? top4[0]!
             : ((yield* chooseCard(ctx, {
                 player: source.controllerId,
-                prompt: 'Look at the top four cards of your library. Exile one of them face down.',
+                prompt: `Look at the top ${count} cards of your library. Exile one of them face down.`,
                 cards: top4,
                 type: 'hideawayExile',
                 verb: 'Exile face down',
               })) ?? top4[0]!);
         const moved = (yield* moveObject(ctx, chosenCard, {
           zone: 'exile',
+          faceDown: true,
         })) as EngineCardObject | null;
         if (moved !== null) {
           moved.attachedToCardId = source.cardId;
           if (source.id !== undefined) moved.attachedToObjectId = source.id;
         }
 
-        const rest = top4.filter((c) => c.id !== chosenCard.id);
-        ctx.rng.shuffle(rest);
-        for (const c of rest) {
-          yield* moveObject(ctx, c, { zone: 'library', libraryPosition: 'bottom' });
-        }
+        yield* bottomCards(
+          ctx,
+          top4.filter((card) => card !== chosenCard),
+        );
         break;
       }
       case 'playExiledCardFree': {
         const card = ctx.state.exile.find(
-          (candidate) => candidate.attachedToCardId === source.cardId,
+          (candidate) =>
+            candidate.attachedToCardId === source.cardId &&
+            (source.id === undefined || candidate.attachedToObjectId === source.id),
         );
         if (card === undefined) break;
         const def = getDefByOracleId(ctx, card.oracleId, card.name);
@@ -8249,7 +8723,9 @@ function* lookAtTopN(
   player: EnginePlayerState,
   effect: Extract<Effect, { op: 'lookAtTopN' }>,
 ): GameGen<void> {
-  const looked = player.library.splice(0, effect.count);
+  // Looking does not move cards out of the library. Keep them there while decisions or a
+  // destination replacement suspend resolution, so counts and zone queries remain accurate.
+  const looked = player.library.slice(0, effect.count);
   if (looked.length === 0) return;
 
   const mayPut = effect.mayPut;
@@ -8292,35 +8768,95 @@ function* lookAtTopN(
     }
   }
 
-  const rest = looked.filter((card) => card !== taken);
-  if (effect.rest === 'topAnyOrder') {
-    const ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
-    player.library.unshift(...ordered);
-  } else {
-    ctx.rng.shuffle(rest);
-    player.library.push(...rest);
-  }
-  emit(
-    ctx,
-    'lookAtTop',
-    { player: player.id, looked: looked.length, took: taken?.name ?? null },
-    player.id,
-  );
-
   if (taken !== undefined) {
     const destination = mayPut!.destination;
+    if (mayPut!.reveal === true) {
+      emit(
+        ctx,
+        'revealCard',
+        {
+          player: player.id,
+          cardId: taken.cardId,
+          name: taken.name,
+          revealed: true,
+        },
+        player.id,
+      );
+    }
     if (destination.zone === 'libraryTop') {
+      player.library.splice(player.library.indexOf(taken), 1);
       player.library.unshift(taken);
     } else if (destination.zone === 'battlefield') {
-      yield* moveObject(ctx, taken, {
+      const moved = yield* moveObject(ctx, taken, {
         zone: 'battlefield',
         controllerId: player.id,
         ...(destination.tapped === true ? { entersTapped: true } : {}),
       });
+      // An Aura with no legal host never entered (CR 303.4g), so it belongs to the rest.
+      if (moved === null) taken = undefined;
+      if (mayPut!.attachEquipment === true && moved?.zone === 'battlefield') {
+        const equipment = ctx.state.battlefield.find((perm) => perm.id === moved.id);
+        if (
+          equipment !== undefined &&
+          computeCharacteristics(ctx, equipment).subtypes.includes('Equipment')
+        ) {
+          const hosts = ctx.state.battlefield.filter(
+            (perm) =>
+              perm.controllerId === player.id &&
+              perm.id !== equipment.id &&
+              canAttach(ctx, equipment, perm),
+          );
+          const host = yield* chooseCard(ctx, {
+            player: player.id,
+            cards: hosts,
+            type: 'attachEquipment',
+            verb: 'Attach',
+            prompt: `${source.name}: you may attach ${equipment.name} to a creature you control.`,
+            decline: {
+              type: 'decline',
+              description: 'Leave the Equipment unattached',
+              verb: 'Decline',
+            },
+          });
+          if (host !== null) {
+            const permanent = ctx.state.battlefield.find((perm) => perm.id === host.id);
+            if (permanent !== undefined) attachPermanent(ctx, equipment, permanent);
+          }
+        }
+      }
     } else {
       yield* moveObject(ctx, taken, { zone: destination.zone });
     }
   }
+
+  // Move the chosen card first, then reorder only the remainder. Reordering within a library
+  // is not a zone change; the chosen card's actual move above uses the normal transition path.
+  const rest = looked.filter((card) => player.library.includes(card) && card !== taken);
+  let ordered = rest;
+  if (effect.rest === 'topAnyOrder') {
+    ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
+  } else {
+    ctx.rng.shuffle(ordered);
+  }
+  const restObjects = new Set(rest);
+  player.library = player.library.filter((card) => !restObjects.has(card));
+  if (effect.rest === 'topAnyOrder') {
+    const offset = taken !== undefined && mayPut?.destination.zone === 'libraryTop' ? 1 : 0;
+    player.library.splice(offset, 0, ...ordered);
+  } else {
+    player.library.push(...ordered);
+  }
+  emit(
+    ctx,
+    'lookAtTop',
+    {
+      player: player.id,
+      looked: looked.length,
+      took: taken?.name ?? null,
+      ...(taken !== undefined && mayPut?.reveal === true ? { revealed: true } : {}),
+    },
+    player.id,
+  );
 
   if (effect.mayShuffle === true) {
     const outcome = yield {
@@ -9055,6 +9591,8 @@ export function endUntilEotEffects(ctx: GameContext): void {
   }
   for (const card of ctx.state.exile) {
     if (card.playableUntilEotBy !== undefined) delete card.playableUntilEotBy;
+    delete card.castOnlyUntilEot;
+    delete card.spendAsAnyColorUntilEot;
   }
   // "Gains unearth {3} until end of turn" (Ghost Ark) ends with the other until-end-of-turn
   // effects (CR 514.2).
@@ -9685,6 +10223,8 @@ export function* payAbilityCosts(
         break;
       }
 
+      case 'returnUnblockedAttacker':
+        throw new Error('Sneak return is supported only as a spell cost');
       default:
         assertNever(cost, 'activation cost');
     }

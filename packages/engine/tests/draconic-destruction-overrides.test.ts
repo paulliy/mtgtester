@@ -383,7 +383,7 @@ describe('Spit Flame', () => {
 });
 
 describe('Dream Pillager', () => {
-  it('is catalog-contained because playableUntilEot includes playing lands', () => {
+  it('rejects an incomplete Oracle stub after its full PR09 restoration', () => {
     const card = oracle({
       oracleId: '504cc26d-3fd5-4391-9d30-f0614e5c8bbc',
       name: 'Dream Pillager',
@@ -394,9 +394,7 @@ describe('Dream Pillager', () => {
     });
     const def = interpretCard(card);
     expect(def.modeled).toBe(false);
-    expect(def.unmodeledReasons.join('\n')).toContain(
-      'Exiled cards are playable, including lands; Oracle only permits casting spells.',
-    );
+    expect(def.unmodeledReasons.join('\n')).toContain('claims a line this card no longer has');
   });
 });
 

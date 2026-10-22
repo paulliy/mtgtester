@@ -240,6 +240,7 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
             transformFace?.frontManaCostText ??
             obj.manaCost),
     isToken: obj.isToken,
+    ...(obj.isCardCopy === true ? { isCardCopy: true } : {}),
     isCommander: obj.isCommander,
     zone,
     ...(zone === 'battlefield' && obj.face !== undefined ? { face: obj.face } : {}),
@@ -828,6 +829,12 @@ export function* moveObject(
   )
     return obj;
   let target: MoveDestination = dest;
+  if (
+    obj.zone === 'stack' &&
+    dest.zone === 'graveyard' &&
+    (obj as EngineCardObject).exileIfGraveyardFromStack === true
+  )
+    target = { ...dest, zone: 'exile' };
 
   // CR 702.84a: an unearthed permanent that would leave the battlefield is exiled instead. Applied
   // before the commander replacement below; either order ends in exile, since 903.9b only offers
@@ -900,6 +907,10 @@ export function* moveObject(
               false,
             ).filter((id) => {
               const host = ctx.state.battlefield.find((perm) => perm.id === id);
+              // Attachments are chosen as the batch enters (CR 303.4f). Fellow entrants
+              // placed earlier by this implementation were not yet battlefield objects.
+              if (host !== undefined && ctx.enteringTogether?.has(host.cardId) === true)
+                return false;
               return host === undefined
                 ? !playerLifeLocked(ctx, id)
                 : !hasProtectionFrom(ctx, host, def.colors);
@@ -2757,7 +2768,34 @@ function castFromMatches(
   if (spec.castFrom === undefined) return true;
   const origin = spell.card?.castFromZone;
   if (origin === undefined) return false;
+  if (spec.castFrom === 'hand') return origin === 'hand';
   return spec.castFrom === 'graveyard' ? origin === 'graveyard' : origin !== 'hand';
+}
+
+/** CR 113.6a: a spell's own characteristic-defining power ability works on the stack.
+ * Battlefield pumps do not apply to spells. Evaluate only its self-defining layer-7a effects,
+ * against the board at cast time, before the creature itself has entered (CR 603.2).
+ */
+function castSpellPower(ctx: GameContext, spell: EngineStackObject): number {
+  const definition = spellDefinitionOf(ctx, spell);
+  let power = definition.power ?? 0;
+  for (const effect of definition.staticEffects) {
+    if (
+      effect.affects.kind !== 'self' ||
+      effect.op.layer !== 7 ||
+      effect.op.sublayer !== 'a' ||
+      effect.op.power === undefined
+    )
+      continue;
+    power =
+      typeof effect.op.power === 'number'
+        ? effect.op.power
+        : evaluateValueIn(ctx, effect.op.power, {
+            controllerId: spell.controllerId,
+            sourceCardId: spell.sourceCardId,
+          });
+  }
+  return power;
 }
 
 export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): void {
@@ -2775,8 +2813,8 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
   // battlefield, so the layer engine has produced nothing for it (CR 608.2 has not run yet).
   if (!def.types.includes('Creature')) caster.noncreatureSpellsCastThisTurn += 1;
 
-  // A spell is matched on its printed characteristics: it is not on the battlefield, so the
-  // layer engine has produced nothing for it.
+  // Match the spell itself, including its own characteristic-defining power. Battlefield
+  // continuous effects do not apply to it while it is on the stack.
   const candidate: SelectorCandidate = {
     cardId: spell.sourceCardId,
     controllerId: spell.controllerId,
@@ -2784,7 +2822,7 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
     supertypes: def.supertypes,
     subtypes: def.subtypes,
     colors: def.colors,
-    power: def.power ?? 0,
+    power: castSpellPower(ctx, spell),
     keywords: def.keywords,
     // A spell on the stack is a card, never a token (CR 111.1) — a token is only ever a
     // permanent, so nothing that gets here can be one.
@@ -3299,7 +3337,9 @@ export function* returnExiledUntilLeaves(ctx: GameContext, sourceCardId: CardId)
   if (entries === undefined) return;
   delete ctx.state.exiledUntilLeaves[sourceCardId];
   for (const entry of entries) {
-    const exiled = ctx.state.exile.find((c) => c.cardId === entry.cardId);
+    const exiled = ctx.state.exile.find((c) =>
+      entry.objectId === undefined ? c.cardId === entry.cardId : c.id === entry.objectId,
+    );
     if (exiled === undefined || playerById(ctx, exiled.ownerId).hasLost) continue;
     yield* moveObject(ctx, exiled, { zone: 'battlefield', controllerId: exiled.ownerId });
   }

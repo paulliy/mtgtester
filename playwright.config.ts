@@ -1,7 +1,14 @@
 import { defineConfig } from '@playwright/test';
 
 /** The Card Test Lab backend port. The dev server proxies `/ws`, `/api`, and `/health` here. */
-const LAB_SERVER_PORT = 3101;
+function labPort(name: string, fallback: number): number {
+  const port = Number(process.env[name] ?? fallback);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`Invalid ${name}`);
+  return port;
+}
+// Separate lab processes can debug different suites without sharing a live game session.
+const LAB_SERVER_PORT = labPort('CARD_TEST_LAB_SERVER_PORT', 3101);
+const LAB_WEB_PORT = labPort('CARD_TEST_LAB_WEB_PORT', 5173);
 // Permit the installed system browser in managed development environments.
 const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
@@ -18,7 +25,7 @@ export default defineConfig({
   // they must survive passing runs, not just failures.
   preserveOutput: 'always',
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: `http://127.0.0.1:${LAB_WEB_PORT}`,
     ...(chromiumExecutable === undefined
       ? {}
       : { launchOptions: { executablePath: chromiumExecutable } }),
@@ -34,8 +41,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'bun run --cwd apps/web dev --host 127.0.0.1 --port 5173 --strictPort',
-      url: 'http://127.0.0.1:5173',
+      command: `bun run --cwd apps/web dev --host 127.0.0.1 --port ${LAB_WEB_PORT} --strictPort`,
+      url: `http://127.0.0.1:${LAB_WEB_PORT}`,
       reuseExistingServer: !process.env['CI'],
       env: { GAME_SERVER_PORT: String(LAB_SERVER_PORT) },
     },

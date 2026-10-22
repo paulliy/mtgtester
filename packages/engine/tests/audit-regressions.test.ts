@@ -176,10 +176,6 @@ describe('audit: approximate cards fail closed', () => {
       'Scriv, the Obligator',
       'Whenever this creature enters or attacks, create a white Aura enchantment token named Contract attached to target creature an opponent controls.',
     ],
-    [
-      "Songbirds' Blessing",
-      "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
-    ],
   ])('%s is not advertised as modeled', (name, oracleText) => {
     const def = interpretCard(oracle({ name, oracleText }));
     expect(def.modeled).toBe(false);

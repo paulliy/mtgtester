@@ -88,8 +88,57 @@ export function drainPool(holder: ManaPoolHolder, includePersistent: boolean): v
  */
 export function selectEntriesToSpend(
   entries: readonly ManaEntry[],
-  cost: { generic: number; colored: Record<Color, number>; colorless: number; hybrid?: Color[][] },
+  cost: {
+    generic: number;
+    colored: Record<Color, number>;
+    colorless: number;
+    hybrid?: Color[][];
+    spendAsAnyColor?: true;
+  },
 ): ManaEntry[] | null {
+  if (cost.spendAsAnyColor === true) {
+    const available = [...entries].sort(sortRestrictedFirst);
+    // Convoke is payment, not mana: a red creature can pay a red or generic pip,
+    // even when the spell lets actual mana pay colored pips as any color.
+    const taken = available
+      .filter((entry) => entry.symbol === 'C' && entry.convoked !== true)
+      .slice(0, cost.colorless);
+    if (taken.length !== cost.colorless) return null;
+    const demands = [
+      ...ALL_COLORS.flatMap((color) => Array.from({ length: cost.colored[color] }, () => [color])),
+      ...(cost.hybrid ?? []),
+    ];
+    const assign = (index: number): boolean => {
+      if (index === demands.length) return available.length - taken.length >= cost.generic;
+      const tried = new Set<string>();
+      // Preserve flexible real mana for demands that no remaining convoker can pay.
+      for (const entry of [
+        ...available.filter((entry) => entry.convoked === true),
+        ...available.filter((entry) => entry.convoked !== true),
+      ]) {
+        const key = entry.convoked === true ? entry.symbol : 'mana';
+        if (
+          taken.includes(entry) ||
+          tried.has(key) ||
+          (entry.convoked === true && !demands[index]!.includes(entry.symbol as Color))
+        )
+          continue;
+        tried.add(key);
+        taken.push(entry);
+        if (assign(index + 1)) return true;
+        taken.pop();
+      }
+      return false;
+    };
+    if (!assign(0)) return null;
+    for (const symbol of ['C', ...ALL_COLORS] as const) {
+      for (const entry of available) {
+        if (taken.length === cost.colorless + demands.length + cost.generic) return taken;
+        if (entry.symbol === symbol && !taken.includes(entry)) taken.push(entry);
+      }
+    }
+    return taken;
+  }
   const available = [...entries].sort(sortRestrictedFirst);
   const taken: ManaEntry[] = [];
 

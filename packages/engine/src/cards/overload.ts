@@ -16,6 +16,7 @@ const abilityFields = {
   functionsInGraveyard: 'unsupported',
 } satisfies Record<keyof Ability, FieldRole>;
 const targetFields = {
+  random: 'unsupported',
   differentPlayerTargetSlots: 'unsupported',
   kind: 'lower',
   controller: 'lower',

@@ -45,6 +45,9 @@ interface Requirements {
 const pinned = JSON.parse(
   readFileSync('packages/engine/tests/fixtures/white-black-control-oracle.json', 'utf8'),
 ) as PinnedFixture;
+const pr09Pinned = JSON.parse(
+  readFileSync('packages/engine/tests/fixtures/coverage-pr09-oracle.json', 'utf8'),
+) as PinnedFixture;
 const manifest = JSON.parse(
   readFileSync('packages/server/fixtures/card-verification-manifest.json', 'utf8'),
 ) as VerificationManifest;
@@ -136,16 +139,27 @@ describe('white-black-control authored-card verification manifest', () => {
     expect(authoredNames).toHaveLength(53);
 
     for (const name of authoredNames) {
-      const pin = pinned.cards.find(({ card }) => card.name === name);
+      const pin =
+        name === 'Dark Confidant'
+          ? pr09Pinned.cards.find(({ card }) => card.name === name)
+          : pinned.cards.find(({ card }) => card.name === name);
       expect(pin, `missing wrapper pin for ${name}`).toBeDefined();
       const card = pin!.card;
       const entry = manifest.cards[card.oracleId];
       expect(entry, `missing manifest card ${name}`).toBeDefined();
-      expect(createHash('sha256').update(canonical(card)).digest('hex'), name).toBe(pin!.sha256);
+      const cardHash =
+        name === 'Dark Confidant'
+          ? createHash('sha256').update(JSON.stringify(card)).digest('hex')
+          : createHash('sha256').update(canonical(card)).digest('hex');
+      expect(cardHash, name).toBe(pin!.sha256);
       expect(entry!.name).toBe(name);
       expect(entry!.oracleSha256).toBe(pin!.sha256);
-      expect(entry!.implementationStatus).toBe('implemented-unreviewed');
-      expect(entry!.referenceAliases).toEqual([fixtureAlias(name)]);
+      expect(entry!.implementationStatus).toBe(
+        name === 'Dark Confidant' ? 'implemented-reviewed' : 'implemented-unreviewed',
+      );
+      expect(entry!.referenceAliases ?? []).toEqual(
+        name === 'Dark Confidant' ? [] : [fixtureAlias(name)],
+      );
       expect(entry!.clauses.map(({ oracleText }) => oracleText)).toEqual([
         ...card.oracleText.split('\n'),
         ...(card.backFace?.oracleText.split('\n') ?? []),
@@ -157,6 +171,11 @@ describe('white-black-control authored-card verification manifest', () => {
           clause.engineTestIds.length,
           `${name}: ${clause.oracleText} test IDs`,
         ).toBeGreaterThan(0);
+        if (name === 'Dark Confidant') {
+          const source = readFileSync('packages/engine/tests/pr09-audit-edges.test.ts', 'utf8');
+          for (const testId of clause.engineTestIds) expect(source, testId).toContain(testId);
+          continue;
+        }
         expect(
           clause.engineTestSource.length,
           `${name}: ${clause.oracleText} sources`,
@@ -268,6 +287,7 @@ describe('white-black-control authored-card verification manifest', () => {
     const requirementViewerIds = (value: string | string[] | undefined): string[] =>
       value === undefined ? [] : Array.isArray(value) ? value : [value];
     for (const requirementCard of requirements.cards) {
+      if (requirementCard.cardName === 'Dark Confidant') continue;
       const manifestCard = manifest.cards[requirementCard.oracleId];
       expect(manifestCard, requirementCard.cardName).toBeDefined();
       expect(requirementCard.clauses, requirementCard.cardName).toHaveLength(
@@ -588,7 +608,10 @@ describe('white-black-control authored-card verification manifest', () => {
       "Duelist's Heritage": [ready[1]!],
       Duress: [ready[2]!],
       Thoughtseize: [ready[3]!],
-      'Dark Confidant': [ready[4]!],
+      'Dark Confidant': [
+        'pr09-dark-confidant-viewer-positive',
+        'pr09-dark-confidant-viewer-negative',
+      ],
       'Authority of the Consuls': [ready[5]!],
       'Archon of Emeria': [ready[6]!, ready[73]!],
       'Doorkeeper Thrull': [ready[7]!, ready[75]!, ready[81]!],
@@ -730,6 +753,23 @@ describe('white-black-control authored-card verification manifest', () => {
         }
       }
     }
+    const darkConfidantPin = pr09Pinned.cards.find(({ card }) => card.name === 'Dark Confidant')!;
+    const darkConfidantEntry = manifest.cards[darkConfidantPin.card.oracleId]!;
+    expect(darkConfidantPin.sha256).toBe(
+      '5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e',
+    );
+    expect(darkConfidantEntry.oracleSha256).toBe(darkConfidantPin.sha256);
+    expect(darkConfidantEntry.implementationStatus).toBe('implemented-reviewed');
+    expect(darkConfidantEntry.clauses[0]?.viewerScenarioIds).toEqual([
+      'pr09-dark-confidant-viewer-positive',
+      'pr09-dark-confidant-viewer-negative',
+    ]);
+    const pr09DarkConfidantViewerSource = [
+      readFileSync('packages/server/src/cards/pr09-permanent-scenarios.test.ts', 'utf8'),
+      readFileSync('apps/web/e2e/pr09-permanent-card-test-lab.spec.ts', 'utf8'),
+    ].join('\n');
+    for (const id of darkConfidantEntry.clauses[0]!.viewerScenarioIds)
+      expect(pr09DarkConfidantViewerSource, id).toContain(id);
   });
 
   it('keeps future viewer and gameplay-AI checks as requirements only', () => {
