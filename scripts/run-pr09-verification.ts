@@ -5,7 +5,7 @@ import type { OracleCard } from '../packages/shared/src';
 import { interpretCard } from '../packages/engine/src/cards/interpret';
 import { createCardTestScenario } from '../packages/server/src/cards/card-test-scenarios';
 import { PR09_ALL_SCENARIOS as PR09_SCENARIOS } from '../packages/server/src/cards/pr09-scenario-catalog';
-import { sha256 } from '../packages/server/src/benchmark/hash';
+import { oraclePinMatches } from './contracts/primitive-promotions';
 import { getViewerEvidenceSourceFiles } from './card-evidence-input';
 import {
   loadPrimitiveEvidence,
@@ -74,7 +74,7 @@ const engineIds: string[] = [];
 for (const pin of pins) {
   const declaration = manifest.cards[pin.card.oracleId];
   if (
-    sha256(pin.card) !== pin.sha256 ||
+    !oraclePinMatches(pin.card, pin.sha256) ||
     declaration?.oracleSha256 !== pin.sha256 ||
     declaration.implementationStatus !== 'implemented-reviewed'
   )
