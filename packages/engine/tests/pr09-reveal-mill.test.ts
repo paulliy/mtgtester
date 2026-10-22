@@ -33,6 +33,11 @@ const pins = (
 ).cards;
 const duelistPin = pins.find(({ card }) => card.name === 'Keen Duelist')!;
 const szarekhPin = pins.find(({ card }) => card.name === 'Szarekh, the Silent King')!;
+const restInPeace = (
+  JSON.parse(
+    readFileSync(new URL('./fixtures/white-black-control-oracle.json', import.meta.url), 'utf8'),
+  ) as { cards: { card: OracleCard }[] }
+).cards.find(({ card }) => card.name === 'Rest in Peace')!.card;
 
 function pod(seed: string): GameContext {
   const ctx = createGame(
@@ -112,7 +117,11 @@ function chooseOpponent(d: PendingDecision, player = 'P2') {
   );
   return { index: Math.max(0, index), targets: new Map<number, string>() };
 }
-function attack(ctx: GameContext, creatureId: string) {
+function attack(
+  ctx: GameContext,
+  creatureId: string,
+  choose?: (decision: PendingDecision) => ReturnType<typeof pass>,
+) {
   ctx.state.currentTurnPlayer = 'P1';
   ctx.state.activePlayerIndex = 0;
   ctx.state.phase = 'combat';
@@ -120,7 +129,7 @@ function attack(ctx: GameContext, creatureId: string) {
   return pump(runCombatPhase(ctx), (d) =>
     d.decisionType === 'declareAttackers'
       ? declareAttacks(d, (id) => (id === creatureId ? 'P2' : null))
-      : pass(d),
+      : (choose?.(d) ?? pass(d)),
   );
 }
 
@@ -295,8 +304,7 @@ describe('PR09 reveal and mill cards', () => {
     const vehicle = libraryCard(ctx, 'P1', 'Milled Vehicle', 3, 'Artifact — Vehicle');
     libraryCard(ctx, 'P1', 'Milled nonmatch', 1, 'Creature — Bear');
     libraryCard(ctx, 'P1', 'Milled artifact', 2, 'Artifact');
-    attack(ctx, king.id);
-    settle(ctx, (d) =>
+    attack(ctx, king.id, (d) =>
       d.options.some((o) => o.description.includes('Milled Vehicle'))
         ? {
             index: d.options.findIndex((o) => o.description.includes('Milled Vehicle')),
@@ -307,6 +315,69 @@ describe('PR09 reveal and mill cards', () => {
     expect(playerById(ctx, 'P1').hand.map((c) => c.cardId)).toContain(vehicle.cardId);
     expect(ctx.state.eventLog.filter((e) => e.type === 'mill')).toHaveLength(3);
   });
+  it('pr09-szarekh-replaced-mill-public-zone — recovers the newly milled Vehicle from exile and excludes prior exile cards', () => {
+    const ctx = pod('pr09-szarekh-replaced-mill');
+    spawn(ctx, 'P1', restInPeace);
+    const king = spawn(ctx, 'P1', szarekhPin.card);
+    king.summoningSick = false;
+    const old = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Old exiled Vehicle', typeLine: 'Artifact — Vehicle' }),
+      'exile',
+    );
+    const vehicle = libraryCard(ctx, 'P1', 'Replaced mill Vehicle', 3, 'Artifact — Vehicle');
+    const misses = [
+      libraryCard(ctx, 'P1', 'Replaced mill creature', 1, 'Creature — Bear'),
+      libraryCard(ctx, 'P1', 'Replaced mill artifact', 2, 'Artifact'),
+    ];
+    let offered = false;
+    attack(ctx, king.id, (decision) => {
+      expect(decision.options.some((option) => option.description.includes(old.name))).toBe(false);
+      const index = decision.options.findIndex((option) =>
+        option.description.includes(vehicle.name),
+      );
+      if (index < 0) return pass(decision);
+      offered = true;
+      return { index, targets: new Map() };
+    });
+    expect(offered).toBe(true);
+    const recovered = playerById(ctx, 'P1').hand.find((card) => card.cardId === vehicle.cardId)!;
+    expect(recovered).toBeDefined();
+    expect(recovered.id).not.toBe(vehicle.id);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(0);
+    expect(ctx.state.exile.map((card) => card.cardId)).toEqual(
+      expect.arrayContaining([old.cardId, ...misses.map((card) => card.cardId)]),
+    );
+    expect(ctx.state.exile.some((card) => card.cardId === vehicle.cardId)).toBe(false);
+    expect(ctx.state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(3);
+  });
+  it('pr09-szarekh-replaced-mill-decline — may leave an eligible milled artifact creature in exile', () => {
+    const ctx = pod('pr09-szarekh-replaced-decline');
+    spawn(ctx, 'P1', restInPeace);
+    const king = spawn(ctx, 'P1', szarekhPin.card);
+    king.summoningSick = false;
+    const eligible = libraryCard(
+      ctx,
+      'P1',
+      'Replaced artifact creature',
+      2,
+      'Artifact Creature — Golem',
+    );
+    let declined = false;
+    attack(ctx, king.id, (decision) => {
+      if (!decision.options.some((option) => option.description.includes(eligible.name)))
+        return pass(decision);
+      const index = decision.options.findIndex((option) => option.type === 'decline');
+      expect(index).toBeGreaterThanOrEqual(0);
+      declined = true;
+      return { index, targets: new Map() };
+    });
+    expect(declined).toBe(true);
+    expect(playerById(ctx, 'P1').hand).toHaveLength(0);
+    expect(ctx.state.exile.some((card) => card.cardId === eligible.cardId)).toBe(true);
+    expect(playerById(ctx, 'P1').graveyard).toHaveLength(0);
+  });
   it('pr09-szarekh-excludes-generic-artifact — generic artifact alone is not an eligible card', () => {
     const ctx = pod('pr09-szarekh-artifact');
     const king = spawn(ctx, 'P1', szarekhPin.card);
@@ -314,8 +385,7 @@ describe('PR09 reveal and mill cards', () => {
     const artifact = libraryCard(ctx, 'P1', 'Only artifact', 2, 'Artifact');
     libraryCard(ctx, 'P1', 'Other nonmatch', 1, 'Creature — Bear');
     libraryCard(ctx, 'P1', 'Other nonmatch 2', 1, 'Creature — Bear');
-    attack(ctx, king.id);
-    const { decisions } = settle(ctx);
+    const { decisions } = attack(ctx, king.id);
     expect(playerById(ctx, 'P1').hand.map((c) => c.cardId)).not.toContain(artifact.cardId);
     expect(
       decisions.some((d) => d.options.some((o) => o.description.includes('Only artifact'))),
@@ -345,8 +415,7 @@ describe('PR09 reveal and mill cards', () => {
     );
     const vehicle = libraryCard(ctx, 'P1', 'Milled Vehicle', 3, 'Artifact — Vehicle');
     libraryCard(ctx, 'P1', 'Milled nonmatch', 1, 'Creature — Bear');
-    attack(ctx, king.id);
-    settle(ctx, (d) => {
+    attack(ctx, king.id, (d) => {
       const choice = d.options.findIndex((o) => o.description.includes('Milled artifact creature'));
       return choice >= 0 ? { index: choice, targets: new Map() } : pass(d);
     });
@@ -358,8 +427,7 @@ describe('PR09 reveal and mill cards', () => {
     const ctx = pod('pr09-szarekh-empty');
     const king = spawn(ctx, 'P1', szarekhPin.card);
     king.summoningSick = false;
-    attack(ctx, king.id);
-    const { decisions } = settle(ctx);
+    const { decisions } = attack(ctx, king.id);
     expect(
       decisions.some((d) => d.options.some((o) => o.description.toLowerCase().includes('hand'))),
     ).toBe(false);

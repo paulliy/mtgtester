@@ -58,6 +58,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'pr09-keen-duelist-viewer-negative',
       'pr09-szarekh-the-silent-king-viewer-positive',
       'pr09-szarekh-the-silent-king-viewer-negative',
+      'pr09-szarekh-the-silent-king-viewer-replaced-mill',
       'pr09-szarekh-the-silent-king-viewer-cast',
       'pr09-mystic-forge-viewer-positive',
       'pr09-mystic-forge-viewer-negative',

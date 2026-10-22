@@ -13873,7 +13873,9 @@
       "engineTestIds": [
         "pr09-szarekh-the-silent-king-normal-cast",
         "pr09-szarekh-the-silent-king-insufficient-cost",
-        "pr09-szarekh-the-silent-king-sorcery-timing"
+        "pr09-szarekh-the-silent-king-sorcery-timing",
+        "pr09-szarekh-replaced-mill-public-zone",
+        "pr09-szarekh-replaced-mill-decline"
       ],
       "clauses": [
         {
@@ -13898,17 +13900,21 @@
             "pr09-szarekh-attack-mills-three-and-returns-eligible",
             "pr09-szarekh-excludes-generic-artifact",
             "pr09-szarekh-only-milled-cards-and-one-return",
-            "pr09-szarekh-no-matches-or-empty"
+            "pr09-szarekh-no-matches-or-empty",
+            "pr09-szarekh-replaced-mill-public-zone",
+            "pr09-szarekh-replaced-mill-decline"
           ],
           "viewerScenarioIds": [
             "pr09-szarekh-the-silent-king-viewer-positive",
-            "pr09-szarekh-the-silent-king-viewer-negative"
+            "pr09-szarekh-the-silent-king-viewer-negative",
+            "pr09-szarekh-the-silent-king-viewer-replaced-mill"
           ]
         }
       ],
       "viewerScenarioIds": [
         "pr09-szarekh-the-silent-king-viewer-positive",
         "pr09-szarekh-the-silent-king-viewer-negative",
+        "pr09-szarekh-the-silent-king-viewer-replaced-mill",
         "pr09-szarekh-the-silent-king-viewer-cast"
       ],
       "gameplayAiScenarioIds": []

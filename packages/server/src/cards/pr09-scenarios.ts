@@ -168,6 +168,11 @@ export const PR09_SCENARIOS = [
     cardName: 'Szarekh, the Silent King',
   },
   {
+    id: 'pr09-szarekh-the-silent-king-viewer-replaced-mill',
+    title: 'Szarekh: return a newly milled card from exile under Rest in Peace',
+    cardName: 'Szarekh, the Silent King',
+  },
+  {
     id: 'pr09-szarekh-the-silent-king-viewer-cast',
     title: 'Szarekh: cast normally and confirm flying',
     cardName: 'Szarekh, the Silent King',
@@ -292,6 +297,16 @@ const details: Record<Case, { instructions: string[]; expected: string; clauses:
       'The preexisting artifact creature is not eligible; declining leaves the newly milled cards in the graveyard.',
     clauses: ['pr09-szarekh-the-silent-king-clause-2'],
   },
+  'pr09-szarekh-the-silent-king-viewer-replaced-mill': {
+    instructions: [
+      'Rest in Peace is already on the battlefield. Attack with the prepared Szarekh.',
+      'Choose Lab Vehicle from the three cards milled this way and put it into your hand.',
+      'Confirm the prior eligible card and the two other newly milled cards remain in exile.',
+    ],
+    expected:
+      'Rest in Peace exiles all three milled cards; Szarekh returns the newly milled Vehicle from exile, leaves the prior eligible exiled card untouched, and leaves both misses exiled.',
+    clauses: ['pr09-szarekh-the-silent-king-clause-2'],
+  },
   'pr09-szarekh-the-silent-king-viewer-cast': {
     instructions: [
       'Cast Szarekh normally for {1}{B}{B}{B}.',
@@ -317,6 +332,7 @@ const skyMisses = [1, 2, 3, 4, 5].map((n) => labCard(`Lab Sky Private ${n}`, 'So
 const keenP1 = labCard('Lab P1 Reveal', 'Artifact', '{3}');
 const keenP2 = labCard('Lab P2 Reveal', 'Artifact', '{1}');
 const vehicle = labCard('Lab Vehicle', 'Artifact — Vehicle', '{3}');
+const restInPeace = basic('Rest in Peace');
 const szarekhMisses = [
   labCard('Lab Milled One', 'Land'),
   labCard('Lab Milled Two', 'Land'),
@@ -350,6 +366,7 @@ function makeScenario(id: Case, gameId: GameId): CardTestScenario {
   const spec = details[id];
   const scenarioCards = [
     card,
+    ...(id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill' ? [restInPeace] : []),
     ...manyLands,
     chaosTarget,
     responseRemoval,
@@ -402,6 +419,7 @@ function makeScenario(id: Case, gameId: GameId): CardTestScenario {
   }
   if (keen && id !== 'pr09-keen-duelist-viewer-cast') p1Field.push(card.name);
   if (szarekh && !id.endsWith('cast')) p1Field.push(card.name);
+  if (id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill') p1Field.push(restInPeace.name);
   if (p1Field.length) field.push({ playerId: 'P1', cardNames: p1Field });
   const hands: Array<{ playerId: 'P1' | 'P2'; cardNames: string[] }> = [
     { playerId: 'P1', cardNames: p1Hand },
@@ -430,9 +448,10 @@ function makeScenario(id: Case, gameId: GameId): CardTestScenario {
   if (isSzarekh)
     libraryTop.push({
       playerId: 'P1',
-      cardNames: id.endsWith('positive')
-        ? [szarekhMisses[0]!.name, vehicle.name, szarekhMisses[2]!.name]
-        : szarekhMisses.map((c) => c.name),
+      cardNames:
+        id.endsWith('positive') || id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill'
+          ? [szarekhMisses[0]!.name, vehicle.name, szarekhMisses[2]!.name]
+          : szarekhMisses.map((c) => c.name),
     });
   const graveyard =
     id === 'pr09-szarekh-the-silent-king-viewer-negative'
@@ -484,6 +503,19 @@ function makeScenario(id: Case, gameId: GameId): CardTestScenario {
       },
     },
   );
+  if (id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill') {
+    const state = engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1');
+    if (p1 === undefined) throw new Error('Missing P1 in Rest in Peace Szarekh setup');
+    const priorIndex = p1.library.findIndex(
+      (candidate) => candidate.name === oldArtifactCreature.name,
+    );
+    if (priorIndex < 0)
+      throw new Error(`Missing prior eligible card ${oldArtifactCreature.name} in P1 library`);
+    const prior = p1.library.splice(priorIndex, 1)[0]!;
+    prior.zone = 'exile';
+    state.exile.push(prior);
+  }
   if (id === 'pr09-keen-duelist-viewer-negative') {
     const p1 = engine.getState().players.find((player) => player.id === 'P1');
     if (p1 === undefined) throw new Error('Missing P1 in empty-library Keen Duelist setup');

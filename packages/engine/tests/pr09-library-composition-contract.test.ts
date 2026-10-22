@@ -75,6 +75,54 @@ function settle(ctx: GameContext, answer: (decision: PendingDecision) => Decisio
   );
 }
 
+/** Independent replacement data: no production graveyard override is imported. */
+function exerciseSzarekhReplacedMill(eligible: boolean) {
+  const ctx = pod(`independent-szarekh-replaced-${eligible}`);
+  const replacement = testCard('Independent public mill replacement', '{2}', 'Enchantment');
+  registerCustomDef(ctx, {
+    ...interpretCard(replacement),
+    ruleStatics: [{ kind: 'graveyardToExile', scope: 'all', basis: 'owner', includeTokens: true }],
+  });
+  spawn(ctx, 'P1', replacement);
+  const szarekh = castComposition(ctx, 'szarekh', ['C', 'B', 'B', 'B'])!;
+  szarekh.summoningSick = false;
+  const old = conjure(
+    ctx,
+    'P1',
+    testCard('Independent prior exiled Vehicle', '{3}', 'Artifact — Vehicle'),
+    'exile',
+  );
+  const hit = testCard(
+    'Independent replaced mill card',
+    '{3}',
+    eligible ? 'Artifact — Vehicle' : 'Artifact',
+  );
+  const misses = [
+    testCard('Independent replaced miss one', '{1}', 'Artifact'),
+    testCard('Independent replaced miss two', '{2}', 'Artifact'),
+  ];
+  const milled = library(ctx, [hit, ...misses]);
+  let offered = false;
+  resolveCombat(ctx, [szarekh], (decision) => {
+    expect(decision.options.some((option) => option.description.includes(old.name))).toBe(false);
+    const index = decision.options.findIndex((option) => option.description.includes(hit.name));
+    if (index < 0) return pass(decision);
+    offered = true;
+    return { index, targets: new Map() };
+  });
+  expect(offered).toBe(eligible);
+  expect(playerById(ctx, 'P1').hand.some((card) => card.name === hit.name)).toBe(eligible);
+  expect(playerById(ctx, 'P1').graveyard).toHaveLength(0);
+  expect(ctx.state.exile.some((card) => card.id === old.id)).toBe(true);
+  expect(ctx.state.exile).toHaveLength(eligible ? 3 : 4);
+  for (const object of milled.slice(eligible ? 1 : 0)) {
+    const exiled = ctx.state.exile.find((card) => card.cardId === object.cardId)!;
+    expect(exiled).toBeDefined();
+    expect(exiled.id).not.toBe(object.id);
+  }
+  expect(ctx.state.eventLog.filter((event) => event.type === 'mill')).toHaveLength(3);
+}
+
 const byId = (id: string) => BOUNDED_PR09_LIBRARY.find((entry) => entry.id === id)!.definition;
 const capabilitySlug = (capability: string) =>
   capability
@@ -498,6 +546,7 @@ describe('independent bounded PR09 library compositions', () => {
           );
           expect(ctx.state.eventLog.filter((event) => event.type === 'revealCard')).toHaveLength(2);
         } else if (id === 'szarekh') {
+          exerciseSzarekhReplacedMill(true);
           const szarekh = castComposition(ctx, id, ['C', 'B', 'B', 'B'])!;
           szarekh.summoningSick = false;
           const oldEligible = testCard('Independent old Vehicle', '{3}', 'Artifact — Vehicle');
@@ -1616,6 +1665,7 @@ describe('independent bounded PR09 library compositions', () => {
           expect(playerById(ctx, 'P1').life).toBe(40);
           expect(playerById(ctx, 'P2').life).toBe(40);
         } else if (id === 'szarekh') {
+          exerciseSzarekhReplacedMill(false);
           const szarekh = castComposition(ctx, id, ['C', 'B', 'B', 'B'])!;
           szarekh.summoningSick = false;
           const cards = [

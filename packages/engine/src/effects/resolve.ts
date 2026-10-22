@@ -5245,12 +5245,15 @@ export function* executeAbility(
         break;
       }
       case 'millAndChooseArtifact': {
-        const milled = new Set<string>();
+        const milled: (EngineCardObject | EnginePermanent)[] = [];
         for (let i = 0; i < 3; i++) {
           const top = controller.library[0];
           if (top === undefined) break;
           const moved = yield* moveObject(ctx, top, { zone: 'graveyard' });
-          if (moved?.zone === 'graveyard') milled.add(moved.id);
+          // CR 701.17c: follow the milled card into its public replacement destination.
+          // Retain the new object, never another incarnation of the same physical card.
+          if (moved !== null && moved.zone !== 'library' && moved.zone !== 'hand')
+            milled.push(moved);
           emit(
             ctx,
             'mill',
@@ -5258,10 +5261,10 @@ export function* executeAbility(
             controller.id,
           );
         }
-        const choices = controller.graveyard.filter((card) => {
+        const choices = milled.filter((card) => {
           const def = getDefByOracleId(ctx, card.oracleId, card.name);
           return (
-            milled.has(card.id) &&
+            findObjectById(ctx, card.id) === card &&
             ((def.types.includes('Artifact') && def.types.includes('Creature')) ||
               def.subtypes.includes('Vehicle'))
           );

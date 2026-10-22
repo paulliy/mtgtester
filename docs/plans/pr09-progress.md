@@ -26,8 +26,9 @@ Review fixes include:
 - Forge's private top-card view and casting permission use the selected spell face's full
   characteristics, including its colors. An eligible front face cannot authorize an ineligible
   Adventure face, and an eligible Adventure is offered independently of its front face.
-- Szarekh chooses only eligible cards actually milled by that resolution, with their new graveyard
-  object identities. Earlier graveyard cards and replacement destinations do not qualify.
+- Szarekh chooses only eligible cards actually milled by that resolution, with their new object
+  identities. Public replacement destinations qualify under CR 701.17c, including exile under
+  Rest in Peace. Earlier graveyard/exile cards do not qualify.
 - Celebrate expands optional targets for opponents, resolves every still-legal slot, and remembers
   the actual exiled objects for return when its source leaves.
 - Power Pack chooses its random target when its trigger goes on the stack. Its one-shot delayed
@@ -45,12 +46,12 @@ Review fixes include:
 
 ## Validation and final evidence
 
-The manifest maps all 58 printed clauses to engine cases and 75 real Card Test Lab scenarios,
+The manifest maps all 58 printed clauses to engine cases and 76 real Card Test Lab scenarios,
 including Etali's back face and separate activated abilities. Binding the catalog to the manifest
-reports 31 cards, 75 scenarios, no orphan scenarios and no missing clauses.
+reports 31 cards, 76 scenarios, no orphan scenarios and no missing clauses.
 
-The four real frontend/backend browser batches passed 13, 18, 21 and 23 scenarios respectively.
-The final receipt reruns all 75 against the same committed tree and retains their traces. Later
+The four real frontend/backend browser batches passed 14, 18, 21 and 23 scenarios respectively.
+The final receipt reruns all 76 against the same committed tree and retains their traces. Later
 assertions also verify Power Pack's four visible keywords and vigilance, and the disappearance
 of a declined Paradigm copy from exile. Cosmic Cube pays and declines Ward through an actual
 opponent's targeted permanent. Forge's negative fixture is a genuinely red spell with no cast

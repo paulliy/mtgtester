@@ -316,6 +316,38 @@ test('pr09-szarekh-the-silent-king-viewer-negative', async ({ page }) => {
   ).toContainText('4');
 });
 
+test('pr09-szarekh-the-silent-king-viewer-replaced-mill', async ({ page }) => {
+  await runScenario(page, 'pr09-szarekh-the-silent-king-viewer-replaced-mill');
+  await expect(permanent(page, 'P1', 'Rest in Peace')).toBeVisible();
+  const exile = page
+    .locator('.human-zone .zone')
+    .filter({ has: page.getByRole('heading', { name: /^Exile \(/ }) });
+  await expect(
+    exile.getByRole('img', { name: 'Lab Old Artifact Creature', exact: true }),
+  ).toBeVisible();
+  await attackSzarekh(page);
+  const panel = page.locator('.decision-panel');
+  const choice = panel
+    .locator('.panel-group')
+    .filter({ hasText: 'Lab Vehicle' })
+    .getByRole('button', { name: /Return/ });
+  await passUntil(page, choice);
+  await expect(
+    panel.locator('.panel-group').filter({ hasText: 'Lab Old Artifact Creature' }),
+  ).toHaveCount(0);
+  await choice.click();
+  await expect(hand(page, 'Lab Vehicle')).toBeVisible();
+  await expect(
+    exile.getByRole('img', { name: 'Lab Old Artifact Creature', exact: true }),
+  ).toBeVisible();
+  await expect(exile.getByRole('img', { name: 'Lab Milled One', exact: true })).toBeVisible();
+  await expect(exile.getByRole('img', { name: 'Lab Milled Three', exact: true })).toBeVisible();
+  await expect(exile.getByRole('img', { name: 'Lab Vehicle', exact: true })).toHaveCount(0);
+  await expect(
+    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+  ).toContainText('0');
+});
+
 test('pr09-szarekh-the-silent-king-viewer-cast', async ({ page }) => {
   await runScenario(page, 'pr09-szarekh-the-silent-king-viewer-cast');
   await cast(page, 'Szarekh, the Silent King');

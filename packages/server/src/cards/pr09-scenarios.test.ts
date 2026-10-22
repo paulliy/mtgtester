@@ -27,6 +27,8 @@ const pinned = (name: string) => {
 describe('first-five PR09 viewer scenarios', () => {
   it('exports stable metadata ids and card names for the first five restored pins', () => {
     expect(PR09_SCENARIO_IDS).toEqual(PR09_SCENARIOS.map((scenario) => scenario.id));
+    expect(PR09_SCENARIO_IDS).toHaveLength(14);
+    expect(PR09_SCENARIO_IDS).toContain('pr09-szarekh-the-silent-king-viewer-replaced-mill');
     expect(new Set(PR09_SCENARIO_IDS).size).toBe(PR09_SCENARIO_IDS.length);
     expect(new Set(PR09_SCENARIOS.map((scenario) => scenario.cardName))).toEqual(
       new Set([
@@ -110,6 +112,7 @@ describe('first-five PR09 viewer scenarios', () => {
         id.includes('adaptive-omnitool') ||
         id.includes('armored-skyhunter');
       let finished = false;
+      let priorExileCardWasOffered = false;
       for (let decisionCount = 0; decisionCount < 500; decisionCount++) {
         const step = scenario.engine.advance();
         if (step.kind === 'gameOver') {
@@ -120,6 +123,13 @@ describe('first-five PR09 viewer scenarios', () => {
         if (step.kind === 'continue') continue;
         const request = step.request;
         const actions = request.legalActions;
+        if (
+          id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill' &&
+          request.decidingPlayer === 'P1' &&
+          actions.some((candidate) => candidate.description.includes('Lab Old Artifact Creature'))
+        ) {
+          priorExileCardWasOffered = true;
+        }
         let action = actions.find((candidate) => candidate.type === 'pass') ?? actions[0]!;
         let targets: DecisionResponse['targets'];
         if (request.decidingPlayer === 'P1') {
@@ -212,7 +222,8 @@ describe('first-five PR09 viewer scenarios', () => {
               ? 'Lab Equipment'
               : id.includes('armored-skyhunter-viewer-aura')
                 ? 'Lab Aura'
-                : id.includes('szarekh-the-silent-king-viewer-positive')
+                : id.includes('szarekh-the-silent-king-viewer-positive') ||
+                    id.includes('szarekh-the-silent-king-viewer-replaced-mill')
                   ? 'Lab Vehicle'
                   : undefined;
           if (action.type === 'pass' && wanted) {
@@ -340,6 +351,21 @@ describe('first-five PR09 viewer scenarios', () => {
         expect(p1.graveyard.some((card) => card.name === 'Lab Old Artifact Creature')).toBe(true);
         expect(p1.hand.some((card) => card.name.startsWith('Lab Milled'))).toBe(false);
         expect(p1.graveyard).toHaveLength(4);
+      } else if (id === 'pr09-szarekh-the-silent-king-viewer-replaced-mill') {
+        const p1Exile = final.exile
+          .filter((card) => card.ownerId === 'P1')
+          .map((exiled) => exiled.name);
+        expect(priorExileCardWasOffered).toBe(false);
+        expect(p1.hand.some((card) => card.name === 'Lab Vehicle')).toBe(true);
+        expect(p1Exile).toEqual(
+          expect.arrayContaining([
+            'Lab Old Artifact Creature',
+            'Lab Milled One',
+            'Lab Milled Three',
+          ]),
+        );
+        expect(p1Exile).not.toContain('Lab Vehicle');
+        expect(p1.graveyard).toHaveLength(0);
       } else if (id === 'pr09-szarekh-the-silent-king-viewer-cast') {
         expect(final.battlefield.some((permanent) => permanent.name === cardName)).toBe(true);
         expect(
