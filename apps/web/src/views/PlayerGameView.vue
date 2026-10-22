@@ -124,6 +124,18 @@ const humanExile = computed(
  * game info drawer (commander damage, the log) sit behind top-bar buttons so the table gets the
  * window. The drawer remembers whether it was open; the settings menu always starts closed.
  */
+/**
+ * The engine's "game over" line, once the game has ended. The log sits in the closed drawer, so
+ * the top bar repeats it where it can be seen (a lab scenario keeps this board after its end).
+ */
+const gameOverLine = computed(() => {
+  for (let i = store.log.length - 1; i >= 0; i--) {
+    const line = store.log[i]!;
+    if (/^game over/i.test(line.text)) return line.text;
+  }
+  return null;
+});
+
 const INFO_OPEN_KEY = 'mtg.playerGameInfoOpen';
 const settingsOpen = ref(false);
 const infoOpen = ref(
@@ -1081,6 +1093,7 @@ function abandon(): void {
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
+      <span v-if="gameOverLine" class="game-over-badge">{{ gameOverLine }}</span>
       <!-- Only a problem is worth the space: a healthy connection says nothing. -->
       <span v-if="store.connection !== 'open'" :class="['connection', store.connection]">{{
         CONNECTION_LABELS[store.connection]
@@ -1171,7 +1184,7 @@ function abandon(): void {
       <button type="button" @click="store.cancelYield()">Take priority back</button>
     </div>
 
-    <main v-if="state" class="player-layout">
+    <main v-if="state" class="player-layout" :class="{ 'info-open': infoOpen }">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
         <CombatOverlay
           :drag-source-id="draggedId"
@@ -1883,6 +1896,15 @@ function abandon(): void {
   color: var(--muted);
   white-space: nowrap;
 }
+.game-over-badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .bar-toggle {
   font-size: 0.75rem;
   padding: 0.15rem 0.55rem;
@@ -1908,14 +1930,9 @@ function abandon(): void {
   margin-top: 0.2rem;
   color: var(--danger);
 }
-/* Game info: commander damage and the log in a drawer at the right edge, over the rail. */
+/* Game info: commander damage and the log in a column beside the rail, covering nothing. */
 .info-drawer {
-  position: fixed;
-  top: 3.1rem;
-  right: 0.6rem;
-  bottom: 0.6rem;
-  z-index: 55;
-  width: min(24rem, calc(100vw - 1.2rem));
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1924,7 +1941,6 @@ function abandon(): void {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
 }
 .info-head {
   display: flex;
@@ -2017,6 +2033,9 @@ button.selected,
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22rem;
   gap: 0.6rem;
+}
+.player-layout.info-open {
+  grid-template-columns: minmax(0, 1fr) 22rem 20rem;
 }
 .table {
   position: relative;
@@ -2704,6 +2723,10 @@ button.primary {
   .rail {
     flex-shrink: 0;
     min-height: 30rem;
+  }
+  .info-drawer {
+    flex-shrink: 0;
+    min-height: 24rem;
   }
 }
 </style>

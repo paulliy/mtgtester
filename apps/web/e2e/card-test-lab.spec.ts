@@ -4800,7 +4800,7 @@ test('Triarch Praetorian: unearth it to draw two cards', async ({ page }) => {
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(handCard(page, 'Lab Ox')).toBeVisible();
   await expect(handCard(page, 'Lab Zombie')).toBeVisible();
-  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeAttached();
+  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeVisible();
   // Unearth's delayed trigger exiled it at the beginning of the end step.
   await expect(permanent(page, 'Triarch Praetorian')).toHaveCount(0);
   await expect(
