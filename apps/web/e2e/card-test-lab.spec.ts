@@ -3024,6 +3024,8 @@ test('Public zones: reanimate an opponent’s creature', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await runScenario(page, 'Public zones: reanimate an opponent’s creature');
   const p2 = page.locator('.opponent[data-seat="P2"]');
+  // An opponent's zones fold away behind the zones button beside their life.
+  await p2.locator('.zones-toggle').click();
   const graveyard = p2.locator('.zone', { hasText: 'Graveyard' });
   const ox = graveyard.locator('.zone-card-thumb').filter({
     has: page.getByRole('img', { name: 'Lab Ox', exact: true }),
