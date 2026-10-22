@@ -84,6 +84,8 @@ export interface SpectatorCommander {
   taxGeneric: number;
   /** Representative printing for the player UI; null only when no printing is available. */
   scryfallId: string | null;
+  /** The commander's color identity, which bounds its deck's colors. Absent in older snapshots. */
+  colorIdentity?: Color[];
 }
 
 export interface SpectatorSeat {

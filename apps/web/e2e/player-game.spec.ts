@@ -41,12 +41,13 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
 
   await playForest.click();
   await expect(page.getByText('Land played')).toBeVisible();
-  await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeVisible();
+  // The log lives in the closed Game info drawer, so its lines are attached, not visible.
+  await expect(page.locator('.log .line', { hasText: 'plays Forest' }).last()).toBeAttached();
 
   await playable.getByRole('button', { name: 'Cast Llanowar Elves' }).click();
   await expect(page.getByText(/Auto-pay: Forest/)).toBeVisible();
   await page.locator('.tray-actions').getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.locator('.log .line', { hasText: 'Llanowar Elves resolves' })).toBeVisible({
+  await expect(page.locator('.log .line', { hasText: 'Llanowar Elves resolves' })).toBeAttached({
     timeout: 30_000,
   });
 
@@ -76,6 +77,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Pass anyway' }).click();
   await expect(reminder).toBeHidden();
 
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Abandon', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm Abandon' }).click();
   await expect(page).toHaveURL(/\/$/);

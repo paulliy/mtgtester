@@ -85,20 +85,44 @@ const counterText = computed(() =>
 );
 
 /**
- * Counters drawn as pips rather than words: +1/+1 and -1/-1 as signed green and red numbers,
- * loyalty as a plain number, anything else as its initial and count. The words are on hover.
+ * Counters drawn as a number per kind in the bottom-right corner, as in Arena, colored by kind:
+ * green +1/+1, red -1/-1, purple loyalty, blue for anything else. The words are on hover.
  */
+const COUNTER_TONES: Record<string, string> = {
+  '+1/+1': 'plus',
+  '-1/-1': 'minus',
+  loyalty: 'loyalty',
+};
 const counterPips = computed(() =>
   Object.entries(props.permanent.counters)
     .filter(([, n]) => n !== 0)
-    .map(([kind, n]) => {
-      const title = `${n} ${kind} counter${n === 1 ? '' : 's'}`;
-      if (kind === '+1/+1') return { kind, label: `+${n}`, tone: 'plus', title };
-      if (kind === '-1/-1') return { kind, label: `-${n}`, tone: 'minus', title };
-      if (kind === 'loyalty') return { kind, label: `${n}`, tone: 'loyalty', title };
-      return { kind, label: `${kind.charAt(0).toUpperCase()}${n}`, tone: 'other', title };
-    }),
+    .map(([kind, n]) => ({
+      kind,
+      count: n,
+      tone: COUNTER_TONES[kind] ?? 'other',
+      title: `${n} ${kind} counter${n === 1 ? '' : 's'}`,
+    })),
 );
+
+/**
+ * The frame's border shows the card's colors, as a printed frame does: one color solid, several
+ * as bands of each, colorless (artifacts, lands) as silver.
+ */
+const FRAME_COLORS: Record<string, string> = {
+  W: '#efe4bf',
+  U: '#3f8fe0',
+  B: '#8b7f99',
+  R: '#e2533c',
+  G: '#3ea85e',
+};
+const framePaint = computed(() => {
+  const colors = (props.permanent.colors ?? []).map((c) => FRAME_COLORS[c]).filter(Boolean);
+  if (colors.length === 0) return 'linear-gradient(#a8a29e, #a8a29e)';
+  if (colors.length === 1) return `linear-gradient(${colors[0]}, ${colors[0]})`;
+  const step = 100 / colors.length;
+  const stops = colors.map((c, i) => `${c} ${i * step}% ${(i + 1) * step}%`);
+  return `linear-gradient(135deg, ${stops.join(', ')})`;
+});
 
 /** The tile shows these states (rotation, a desaturated or lifted card, glows); hover names them. */
 const statusLines = computed(() => {
@@ -209,15 +233,16 @@ function onLeave(): void {
       striking,
       'taking-damage': damageFlash === 'damage',
     }"
-    :style="
-      strike
+    :style="{
+      '--frame-paint': framePaint,
+      ...(strike
         ? {
             '--strike-dx': strike.dx + 'px',
             '--strike-dy': strike.dy + 'px',
             '--strike-ms': `${STRIKE_MS}ms`,
           }
-        : undefined
-    "
+        : {}),
+    }"
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
@@ -229,6 +254,10 @@ function onLeave(): void {
     >
       ×{{ count }}
     </div>
+    <!-- Attacking: a glowing chevron rises off the card, and the combat overlay draws a line
+         from it to the seat or permanent it attacks. Outside the card so it points up even
+         when the attacker taps. -->
+    <span v-if="isAttacking" class="attack-arrow" aria-hidden="true" />
     <!-- Everything on the card turns with it when it taps, name and P/T included. -->
     <div class="card">
       <div class="frame" role="img" :aria-label="permanent.name">
@@ -268,27 +297,33 @@ function onLeave(): void {
       <span v-if="artSrc && !isToken" class="name-strip" aria-hidden="true">
         {{ permanent.name }}
       </span>
-      <span
-        v-if="ptText !== null && !isToken"
-        class="pt"
-        :class="{ 'above-name': artSrc !== null, 'flash-damage': damageFlash === 'damage' }"
-        >{{ permanent.power }}/<span :class="{ hurt }">{{ permanent.toughness }}</span></span
+      <!-- Bottom-right, as in Arena: a number per counter kind, then the P/T box. -->
+      <div
+        v-if="counterPips.length > 0 || (ptText !== null && !isToken)"
+        class="corner"
+        :class="{ 'on-token': isToken }"
       >
-      <!-- Summoning sick: Zs drift up off the card until it can act. Drawn by CSS, so the tile's
-           text stays its name, P/T and counters. -->
-      <div v-if="permanent.summoningSick && isCreature" class="zzz" aria-hidden="true">
-        <span /><span /><span />
-      </div>
-      <div v-if="counterPips.length > 0" class="pips" aria-hidden="true">
         <span
           v-for="pip in counterPips"
           :key="pip.kind"
           class="pip"
           :class="pip.tone"
           :title="pip.title"
+          aria-hidden="true"
         >
-          {{ pip.label }}
+          {{ pip.count }}
         </span>
+        <span
+          v-if="ptText !== null && !isToken"
+          class="pt"
+          :class="{ 'flash-damage': damageFlash === 'damage' }"
+          >{{ permanent.power }}/<span :class="{ hurt }">{{ permanent.toughness }}</span></span
+        >
+      </div>
+      <!-- Summoning sick: Zs drift up off the card until it can act. Drawn by CSS, so the tile's
+           text stays its name, P/T and counters. -->
+      <div v-if="permanent.summoningSick && isCreature" class="zzz" aria-hidden="true">
+        <span /><span /><span />
       </div>
     </div>
     <!-- The tile shows these states without words; this text keeps them for anyone who can't see
@@ -351,8 +386,11 @@ function onLeave(): void {
   box-sizing: border-box;
   border-radius: var(--tile-radius);
   overflow: hidden;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
+  /* The border paints the card's colors (`--frame-paint`, set per tile), like a printed frame. */
+  border: 3px solid transparent;
+  background:
+    linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+    var(--frame-paint, linear-gradient(#a8a29e, #a8a29e)) border-box;
   transition: box-shadow 150ms ease;
 }
 .frame img {
@@ -381,7 +419,7 @@ function onLeave(): void {
 .zzz {
   position: absolute;
   right: 6%;
-  top: 8%;
+  top: 24%;
   width: 40%;
   height: 40%;
   z-index: 3;
@@ -467,9 +505,9 @@ function onLeave(): void {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  border: 2px solid var(--muted);
-  border-bottom-width: 3px;
-  background: radial-gradient(circle at 50% 100%, var(--surface) 0%, var(--surface-2) 70%);
+  background:
+    radial-gradient(circle at 50% 100%, var(--surface) 0%, var(--surface-2) 70%) padding-box,
+    var(--frame-paint, linear-gradient(#a8a29e, #a8a29e)) border-box;
 }
 .token-label {
   position: relative;
@@ -501,15 +539,40 @@ function onLeave(): void {
   font-size: max(0.6rem, 12cqw);
   font-weight: 700;
 }
+/* The border keeps the card's colors in combat; the glow around it carries the state. */
 .tile.attacking .frame {
-  border-color: var(--danger);
   box-shadow:
     0 0 0 2px rgb(248 113 113 / 0.7),
     0 6px 14px rgb(248 113 113 / 0.45);
   animation: attackPulse 1s ease-in-out infinite;
 }
+/* Arena's attack marker: a glowing chevron rising off the top of the card, pulsing upward. */
+.attack-arrow {
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  z-index: 4;
+  width: 46%;
+  height: 22px;
+  translate: -50% 0;
+  background: linear-gradient(to top, rgb(249 115 22 / 0.2), #fb923c 55%, #fde68a);
+  clip-path: polygon(50% 0, 100% 78%, 82% 100%, 50% 42%, 18% 100%, 0 78%);
+  filter: drop-shadow(0 0 6px rgb(249 115 22 / 0.9));
+  pointer-events: none;
+  animation: attackRise 1.1s ease-in-out infinite;
+}
+@keyframes attackRise {
+  0%,
+  100% {
+    translate: -50% 2px;
+    opacity: 0.85;
+  }
+  50% {
+    translate: -50% -3px;
+    opacity: 1;
+  }
+}
 .tile.blocking .frame {
-  border-color: #93c5fd;
   box-shadow:
     0 0 0 2px rgb(96 165 250 / 0.8),
     0 0 12px rgb(96 165 250 / 0.5);
@@ -586,16 +649,16 @@ function onLeave(): void {
 .tile.tapped .stack-count-badge {
   right: calc(21.9% - 5px);
 }
-/* The card's name across the foot of its art, like the title bar of a printed card. */
+/* The card's name across the top of its art, like the title bar of a printed card. */
 .name-strip {
   --name-size: max(0.6rem, 10.5cqw);
   position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 1px;
+  left: 3px;
+  right: 3px;
+  top: 3px;
   z-index: 1;
-  padding: 3px 5px;
-  border-radius: 0 0 7px 7px;
+  padding: 2px 5px 3px;
+  border-radius: 5px 5px 0 0;
   background: rgb(11 13 17 / 0.78);
   color: #fff;
   font-size: var(--name-size);
@@ -606,12 +669,23 @@ function onLeave(): void {
   text-overflow: ellipsis;
   pointer-events: none;
 }
-/* The P/T box sits in the art's bottom-right corner, as on a printed card, just above the name. */
-.pt {
+/* Counters and the P/T box share the art's bottom-right corner, as on a printed card. */
+.corner {
   position: absolute;
-  right: 3px;
-  bottom: 3px;
+  right: 5px;
+  bottom: 5px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+}
+/* An arch's P/T is its centered label, so its counters sit alone in the corner. */
+.corner.on-token {
+  bottom: 6px;
+  right: 6px;
+}
+.pt {
   padding: 0.05rem 0.35rem;
   border-radius: 5px;
   background: rgb(11 13 17 / 0.88);
@@ -624,9 +698,6 @@ function onLeave(): void {
   white-space: nowrap;
   pointer-events: none;
 }
-.pt.above-name {
-  bottom: calc(max(0.6rem, 10.5cqw) * 1.15 + 9px);
-}
 /* Damaged toughness turns red, as in Arena. */
 .hurt {
   color: #fca5a5;
@@ -638,51 +709,33 @@ function onLeave(): void {
 .token-label.flash-damage {
   animation: flash 0.8s ease-out;
 }
-/* Counter pips sit top-left, clear of the P/T box in the bottom-right corner. */
-.pips {
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  max-width: calc(100% - 6px);
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  pointer-events: none;
-}
-/* Inside an arch's curve, the top-left corner is outside the shape: center them under the dome. */
-.tile.token .pips {
-  top: 22%;
-  left: 0;
-  right: 0;
-  max-width: none;
-  justify-content: center;
-}
+/* A counter is just its number in a circle; blue unless its kind has a color of its own. */
 .pip {
-  min-width: 1.1rem;
-  padding: 0 0.22rem;
+  min-width: max(1.15rem, 15cqw);
+  height: max(1.15rem, 15cqw);
+  padding: 0 0.2rem;
   border-radius: 999px;
   box-sizing: border-box;
-  border: 1px solid rgb(255 255 255 / 0.6);
-  background: rgb(11 13 17 / 0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgb(255 255 255 / 0.85);
+  background: radial-gradient(circle at 35% 30%, #60a5fa, #1d4ed8);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.6);
   color: #fff;
-  font-size: max(0.58rem, 9.5cqw);
+  font-size: max(0.65rem, 10.5cqw);
   font-weight: 800;
-  line-height: 1.35;
-  text-align: center;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .pip.plus {
-  background: #15803d;
-  border-color: #bbf7d0;
+  background: radial-gradient(circle at 35% 30%, #4ade80, #15803d);
 }
 .pip.minus {
-  background: #b91c1c;
-  border-color: #fecaca;
+  background: radial-gradient(circle at 35% 30%, #f87171, #b91c1c);
 }
 .pip.loyalty {
-  background: #4c1d95;
-  border-color: #ddd6fe;
+  background: radial-gradient(circle at 35% 30%, #a78bfa, #4c1d95);
 }
 .visually-hidden {
   position: absolute;

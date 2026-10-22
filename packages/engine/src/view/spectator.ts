@@ -141,6 +141,10 @@ function commanderViews(ctx: GameContext, player: EnginePlayerState): SpectatorC
       // (brief §5.7). Mirrors `legal.ts`, which is what actually charges it.
       taxGeneric: 2 * castCount,
       scryfallId: visibleObject === null ? null : scryfallIdOf(ctx, visibleObject.oracleId),
+      colorIdentity:
+        visibleObject === null
+          ? []
+          : [...(ctx.defs.get(visibleObject.oracleId)?.colorIdentity ?? [])],
     };
   });
 }

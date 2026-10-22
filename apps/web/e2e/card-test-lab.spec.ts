@@ -35,6 +35,14 @@ test.afterAll(() => {
   expect([...exercisedScenarioIds].sort()).toEqual([...catalogScenarioIds].sort());
 });
 
+/** The player options live in the Settings menu: open it, set one, and close it again. */
+async function setPlayerOption(page: Page, label: string, checked: boolean): Promise<void> {
+  const settings = page.getByRole('button', { name: 'Settings', exact: true });
+  await settings.click();
+  await page.getByLabel(label).setChecked(checked);
+  await settings.click();
+}
+
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');
   await expect(page.getByRole('heading', { name: 'Card Test Lab' })).toBeVisible();
@@ -548,6 +556,8 @@ test('Swords to Plowshares: exile and gain life', async ({ page }) => {
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
   const p2 = page.locator('.opponent[data-seat="P2"]');
   await expect(p2).toContainText('44');
+  // An opponent's zones fold away behind the zones button beside their life.
+  await p2.locator('.zones-toggle').click();
   await expect(
     p2.locator('.zone', { hasText: 'Exile' }).getByRole('img', { name: 'Lab Ox', exact: true }),
   ).toBeVisible();
@@ -1708,7 +1718,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4).toContainText(`${drawCount} in hand`);
+  await expect(p4.locator('.meta-item', { hasText: 'hand' })).toHaveText(`hand ${drawCount}`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
@@ -1864,7 +1874,7 @@ test.describe('land confirmation', () => {
 
   test('confirm passes and lands keeps the review step', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Confirm passes & lands').check();
+    await setPlayerOption(page, 'Confirm passes & lands', true);
     await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
@@ -1876,7 +1886,7 @@ test.describe('land confirmation', () => {
 
   test('skip confirm submits the land once', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Skip confirm step').check();
+    await setPlayerOption(page, 'Skip confirm step', true);
     await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
@@ -1922,7 +1932,7 @@ test.describe('land confirmation', () => {
 
   test('the land drop reminder can be turned off', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Land drop reminder').uncheck();
+    await setPlayerOption(page, 'Land drop reminder', false);
     await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
 
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
@@ -1931,8 +1941,8 @@ test.describe('land confirmation', () => {
 
   test('confirm passes and lands still reviews when skip confirm is also on', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Confirm passes & lands').check();
-    await page.getByLabel('Skip confirm step').check();
+    await setPlayerOption(page, 'Confirm passes & lands', true);
+    await setPlayerOption(page, 'Skip confirm step', true);
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
     await expect(page.getByRole('button', { name: 'Play land', exact: true })).toBeVisible();
@@ -4790,7 +4800,7 @@ test('Triarch Praetorian: unearth it to draw two cards', async ({ page }) => {
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(handCard(page, 'Lab Ox')).toBeVisible();
   await expect(handCard(page, 'Lab Zombie')).toBeVisible();
-  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeVisible();
+  await expect(page.locator('.log .line', { hasText: /loses 2 life/ }).first()).toBeAttached();
   // Unearth's delayed trigger exiled it at the beginning of the end step.
   await expect(permanent(page, 'Triarch Praetorian')).toHaveCount(0);
   await expect(
@@ -4824,6 +4834,8 @@ test("Canoptek Tomb Sentinel: unearth it to exile P2's Lab Ox", async ({ page })
       .locator('.zones-strip .zone', { hasText: 'Exile' })
       .getByRole('img', { name: 'Canoptek Tomb Sentinel', exact: true }),
   ).toBeVisible();
+  // An opponent's zones fold away behind the zones button beside their life.
+  await page.locator('.opponent[data-seat="P2"] .zones-toggle').click();
   await expect(
     page
       .locator('.opponent[data-seat="P2"] .zone', { hasText: 'Exile' })

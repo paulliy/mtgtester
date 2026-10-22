@@ -4,7 +4,8 @@
  * only, brief §10.2), the battlefield split into Board/Lands — and, expanded via the "zones"
  * toggle, the graveyard and exile.
  */
-import { computed, ref } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import type {
   CommanderDamageEntry,
   SpectatorCard,
@@ -12,10 +13,12 @@ import type {
   SpectatorSeat,
 } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import DeckColors from './DeckColors.vue';
 import GlobalCounters from './GlobalCounters.vue';
 import HandStrip from './HandStrip.vue';
 import PermanentChip from './PermanentChip.vue';
 import ZoneStrip from './ZoneStrip.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useLifeFlash } from '../composables/useLifeFlash';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { groupPermanents, type GroupedPermanent } from '../lib/stackPermanents';
@@ -57,7 +60,6 @@ const ZONES_CAP = 6;
 
 const lands = computed(() => props.permanents.filter((p) => p.typeLine.includes('Land')));
 const nonlands = computed(() => props.permanents.filter((p) => !p.typeLine.includes('Land')));
-const untappedLands = computed(() => lands.value.filter((p) => !p.tapped).length);
 
 const lifeFlash = useLifeFlash(() => props.seat.life);
 
@@ -84,6 +86,16 @@ const flexStyles = computed(() => {
   if (l === 0) return { nonlandsFlex: 1, landsFlex: 0 };
   return { nonlandsFlex: 1.4, landsFlex: 1 };
 });
+
+/**
+ * The header is where an attack on this seat points: the combat overlay draws each attacker's
+ * line to it. One stable ref function, so re-renders don't re-register the anchor.
+ */
+const { registerAnchor, unregisterAnchor } = useBoardAnchors();
+function setHeaderEl(el: Element | ComponentPublicInstance | null): void {
+  if (el instanceof HTMLElement) registerAnchor(props.seat.seat, el);
+}
+onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
 </script>
 
 <template>
@@ -92,7 +104,7 @@ const flexStyles = computed(() => {
     :class="{ active: isActive, priority: hasPriority, eliminated }"
     :data-seat="seat.seat"
   >
-    <header>
+    <header :ref="setHeaderEl">
       <span class="id-badge">{{ seat.seat }}</span>
       <span
         v-for="cmd in seat.commanders"
@@ -112,6 +124,20 @@ const flexStyles = computed(() => {
         @mouseleave="hideCommanderPreview"
         >{{ seat.label }}</span
       >
+      <DeckColors :commanders="seat.commanders" />
+      <span class="meta-item" title="Cards in library"
+        ><strong>lib</strong> {{ seat.librarySize }}</span
+      >
+      <span class="meta-item" title="Cards in graveyard"
+        ><strong>gy</strong> {{ seat.graveyard.length }}</span
+      >
+      <span class="meta-item" title="Cards in exile"
+        ><strong>exile</strong> {{ exileCards.length }}</span
+      >
+      <span v-if="seat.mulligansTaken > 0" class="meta-item" title="Mulligans taken"
+        ><strong>mull</strong> {{ seat.mulligansTaken }}</span
+      >
+      <span class="spacer" />
       <span
         v-if="commanderTax > 0"
         class="cmdr-tax"
@@ -129,6 +155,14 @@ const flexStyles = computed(() => {
         <span class="dot" />
         <span class="ping" />
       </span>
+      <button
+        type="button"
+        class="zones-toggle"
+        :aria-expanded="zonesExpanded"
+        @click="zonesExpanded = !zonesExpanded"
+      >
+        {{ zonesExpanded ? '▾ zones' : '▸ zones' }}
+      </button>
       <span
         class="life-badge"
         :class="{
@@ -147,24 +181,6 @@ const flexStyles = computed(() => {
       :counters="seat.counters"
       compact
     />
-
-    <div class="meta">
-      <span class="meta-item"><strong>lib</strong> {{ seat.librarySize }}</span>
-      <span class="meta-item"><strong>gy</strong> {{ seat.graveyard.length }}</span>
-      <span class="meta-item"><strong>exile</strong> {{ exileCards.length }}</span>
-      <span class="meta-item"><strong>lands</strong> {{ untappedLands }}/{{ lands.length }}</span>
-      <span v-if="seat.mulligansTaken > 0" class="meta-item"
-        ><strong>mull</strong> {{ seat.mulligansTaken }}</span
-      >
-      <button
-        type="button"
-        class="zones-toggle"
-        :aria-expanded="zonesExpanded"
-        @click="zonesExpanded = !zonesExpanded"
-      >
-        {{ zonesExpanded ? '▾ zones' : '▸ zones' }}
-      </button>
-    </div>
 
     <div v-if="cmdDamageTaken.length > 0" class="cmd-damage-container">
       <span
@@ -253,6 +269,8 @@ const flexStyles = computed(() => {
 }
 header {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
@@ -266,7 +284,7 @@ header {
   border-radius: 3px;
 }
 .label {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 0.82rem;
   font-weight: 600;
@@ -330,13 +348,15 @@ header {
   color: var(--danger);
   text-transform: uppercase;
 }
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+/* Pushes the tax, monarch, priority, zones and life to the header's right end. */
+.spacer {
+  flex: 1;
+}
+.meta-item {
+  flex-shrink: 0;
   font-size: 0.66rem;
   color: var(--text-muted);
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 .meta-item strong {
   color: var(--muted);
@@ -376,7 +396,7 @@ header {
   cursor: zoom-in;
 }
 .zones-toggle {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.62rem;
   padding: 0.05rem 0.4rem;
   color: var(--muted);
@@ -420,7 +440,9 @@ header {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 0.3rem;
+  /* Room above each row for an attacker's chevron, which rises off the top of its card. */
+  gap: 1rem 0.3rem;
+  padding-top: 0.9rem;
 }
 /* Token creation / death-and-zone-change feedback (§9.8.2): brief scale-in/fade-out rather than
    an instant appear/disappear. The reduced-motion global override collapses these to ~0s. */

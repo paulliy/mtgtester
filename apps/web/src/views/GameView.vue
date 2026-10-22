@@ -11,6 +11,7 @@ import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { turnPositionLabel } from '../lib/turnLabels';
+import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import GameOverPanel from '../components/GameOverPanel.vue';
@@ -19,9 +20,27 @@ import PlaybackControls from '../components/PlaybackControls.vue';
 import PlayerGameView from './PlayerGameView.vue';
 import SeatPanel from '../components/SeatPanel.vue';
 import StackPanel from '../components/StackPanel.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useGameStore } from '../stores/game';
 
 const store = useGameStore();
+
+/**
+ * The seats are the anchor root, so the combat overlay can draw each attacker's line to the seat
+ * it attacks (each seat panel registers its header) and the strike lunge can aim at its target.
+ */
+const seatsEl = ref<HTMLElement | null>(null);
+const { setRoot, disposeRoot } = useBoardAnchors();
+// Template refs are already cleared by unmount, so remember the root this view set.
+let ownedRoot: HTMLElement | null = null;
+watch(seatsEl, (el) => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+  ownedRoot = el;
+  if (el) setRoot(el);
+});
+onUnmounted(() => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+});
 const router = useRouter();
 
 let bounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -235,7 +254,8 @@ const roundLabel = computed(() => {
 
     <main v-if="state" class="layout" :class="{ 'info-open': infoOpen }">
       <StackPanel :state="state" class="stack-strip" />
-      <div class="seats">
+      <div ref="seatsEl" class="seats">
+        <CombatOverlay :permanents="state.battlefield" />
         <SeatPanel
           v-for="seat in state.seats"
           :key="seat.seat"
@@ -433,6 +453,7 @@ const roundLabel = computed(() => {
   grid-template-columns: minmax(0, 1fr) 20rem;
 }
 .seats {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;

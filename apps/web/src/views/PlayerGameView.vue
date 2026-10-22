@@ -3,19 +3,15 @@ import type { ComponentPublicInstance } from 'vue';
 import type { ManaPool } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type {
-  DecisionRequest,
-  LegalAction,
-  ObjectId,
-  PlayerBoardSeat,
-  TargetChoice,
-} from '@mtg/shared';
+import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
+import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
+import DeckColors from '../components/DeckColors.vue';
 import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
@@ -46,9 +42,16 @@ const draggedId = ref<ObjectId | null>(null);
 const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
 const tableRef = ref<HTMLElement | null>(null);
 const dragPointer = ref<{ x: number; y: number } | null>(null);
-onMounted(() => setRoot(tableRef.value));
+// The table only renders once the first board state arrives, which can be after mount.
+// Template refs are already cleared by unmount, so remember the root this view set.
+let ownedRoot: HTMLElement | null = null;
+watch(tableRef, (el) => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+  ownedRoot = el;
+  if (el) setRoot(el);
+});
 onUnmounted(() => {
-  disposeRoot();
+  if (ownedRoot) disposeRoot(ownedRoot);
   // Game-over unmounts this view while the cursor may still be over a targeted chip.
   // Hide the App-level preview so a leftover Lab Ox image cannot outlive the battlefield.
   cardPreview.hide();
@@ -115,6 +118,52 @@ const opponents = computed(
 const humanExile = computed(
   () => state.value?.exile.filter((card) => card.owner === state.value?.viewerSeat) ?? [],
 );
+
+/**
+ * As on the spectator board, the settings (bot pace, confirmations, motion, Abandon) and the
+ * game info drawer (commander damage, the log) sit behind top-bar buttons so the table gets the
+ * window. The drawer remembers whether it was open; the settings menu always starts closed.
+ */
+const INFO_OPEN_KEY = 'mtg.playerGameInfoOpen';
+const settingsOpen = ref(false);
+const infoOpen = ref(
+  (() => {
+    try {
+      return localStorage.getItem(INFO_OPEN_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  })(),
+);
+function toggleInfo(): void {
+  infoOpen.value = !infoOpen.value;
+  try {
+    localStorage.setItem(INFO_OPEN_KEY, String(infoOpen.value));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+
+/**
+ * Each opponent's graveyard and exile fold away behind a "zones" button beside their life, and
+ * open by themselves while one of their cards is a target you can pick.
+ */
+const openZoneSeats = ref(new Set<string>());
+function toggleZones(seat: string): void {
+  const next = new Set(openZoneSeats.value);
+  if (!next.delete(seat)) next.add(seat);
+  openZoneSeats.value = next;
+}
+function zonesShown(seat: string): boolean {
+  if (openZoneSeats.value.has(seat)) return true;
+  const targets = zoneTargetIds.value;
+  if (targets.length === 0) return false;
+  const seatCards = [
+    ...(state.value?.seats.find((s) => s.seat === seat)?.graveyard ?? []),
+    ...exileFor(seat),
+  ];
+  return seatCards.some((card) => targets.includes(card.id));
+}
 const isYourTurn = computed(() => state.value?.activePlayer === state.value?.viewerSeat);
 const selectedAction = computed(
   () => request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
@@ -247,16 +296,11 @@ function adaptiveWidth(
  * (below, in `.object`) hand sizing to the browser instead: a flex basis it shrinks from only
  * once the actual row width can't fit everything at full size.
  */
-const humanPermWidth = 108;
+const humanPermWidth = 120;
 const humanPermMinWidth = 54;
 const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
-const commanderWidth = 78;
-const opponentPermWidth = 70;
+const opponentPermWidth = 92;
 const opponentPermMinWidth = 40;
-
-function primaryCommander(opponent: PlayerBoardSeat) {
-  return opponent.commanders[0] ?? null;
-}
 
 /** "P2" -> "P2 (Krenko, Mob Boss)" for combat-tray option labels; falls back to the raw id. */
 function seatLabel(seatId: string): string {
@@ -1026,19 +1070,44 @@ function abandon(): void {
       :mulligans-taken="openingHand.mulligansTaken"
       @choose="store.submitPlayerAction"
     />
-    <header class="player-bar">
-      <strong>Player mode · {{ state?.viewerSeat ?? store.humanSeat }}</strong>
+    <!-- Game status lives in the app's top bar, as on the spectator board, so the table keeps the
+         height a second bar took. Settings and game info open from buttons there. -->
+    <Teleport to="#top-bar-status" defer>
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
         Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
       </span>
-      <span v-if="state">{{ turnPositionLabel(state.phase, state.step) }}</span>
-      <span v-if="state?.priorityPlayer"
+      <span v-if="state" class="phase-label">{{ turnPositionLabel(state.phase, state.step) }}</span>
+      <span v-if="state?.priorityPlayer" class="priority-label"
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
-      <span :class="['connection', store.connection]">{{
+      <!-- Only a problem is worth the space: a healthy connection says nothing. -->
+      <span v-if="store.connection !== 'open'" :class="['connection', store.connection]">{{
         CONNECTION_LABELS[store.connection]
       }}</span>
+      <CopyGameReportButton />
+      <button
+        type="button"
+        class="bar-toggle"
+        :aria-expanded="settingsOpen"
+        aria-controls="player-settings"
+        @click="settingsOpen = !settingsOpen"
+      >
+        Settings
+      </button>
+      <button
+        type="button"
+        class="bar-toggle"
+        :aria-expanded="infoOpen"
+        aria-controls="player-game-info"
+        @click="toggleInfo"
+      >
+        {{ infoOpen ? 'Hide game info' : 'Game info' }}
+      </button>
+    </Teleport>
+
+    <!-- Bot pace, confirmations, motion and Abandon: set once, rarely touched, so folded away. -->
+    <div v-show="settingsOpen" id="player-settings" class="settings-menu" aria-label="Settings">
       <div class="pace">
         Bot turns
         <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
@@ -1087,8 +1156,8 @@ function abandon(): void {
         />
         Reduce motion
       </label>
-      <button type="button" @click="confirmingAbandon = true">Abandon</button>
-    </header>
+      <button type="button" class="abandon" @click="confirmingAbandon = true">Abandon</button>
+    </div>
 
     <div v-if="store.connection !== 'open'" class="paused">
       Reconnecting… the engine will not begin another bot decision while you are away.
@@ -1104,7 +1173,11 @@ function abandon(): void {
 
     <main v-if="state" class="player-layout">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
-        <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
+        <CombatOverlay
+          :drag-source-id="draggedId"
+          :pointer="dragPointer"
+          :permanents="state.battlefield"
+        />
         <div class="opponents" :style="{ '--opponent-columns': opponentColumns }">
           <article
             v-for="opponent in opponents"
@@ -1121,15 +1194,61 @@ function abandon(): void {
             @dragover.prevent
             @drop="dropOn(opponent.seat)"
           >
+            <!-- One line, as on the spectator board: who, their colors, their counts, then the
+                 zones button beside the life total. -->
             <header>
               <span class="id-badge">{{ opponent.seat }}</span>
-              <strong>{{ opponent.label }}</strong>
+              <span
+                v-for="commander in opponent.commanders"
+                :key="commander.cardId"
+                class="cmdr-thumb"
+                @mouseenter="showCardPreview(commander, $event)"
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
+              >
+                <CardImage
+                  :scryfall-id="commander.scryfallId"
+                  :name="commander.name"
+                  size="small"
+                />
+              </span>
+              <strong
+                class="seat-name"
+                @mouseenter="
+                  opponent.commanders[0] && showCardPreview(opponent.commanders[0], $event)
+                "
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
+                >{{ opponent.label }}</strong
+              >
+              <DeckColors :commanders="opponent.commanders" />
+              <span class="meta-item" title="Cards in hand"
+                ><b>hand</b> {{ opponent.handSize }}</span
+              >
+              <span class="meta-item" title="Cards in library"
+                ><b>lib</b> {{ opponent.librarySize }}</span
+              >
+              <span class="meta-item" title="Cards in graveyard"
+                ><b>gy</b> {{ opponent.graveyard.length }}</span
+              >
+              <span class="meta-item" title="Cards in exile"
+                ><b>exile</b> {{ exileFor(opponent.seat).length }}</span
+              >
+              <span class="spacer" />
               <span
                 v-if="state.monarchSeat === opponent.seat"
                 class="monarch-badge"
                 title="This player is the monarch"
                 >MONARCH</span
               >
+              <button
+                type="button"
+                class="zones-toggle"
+                :aria-expanded="zonesShown(opponent.seat)"
+                @click.stop="toggleZones(opponent.seat)"
+              >
+                {{ zonesShown(opponent.seat) ? '▾ zones' : '▸ zones' }}
+              </button>
               <span
                 class="life-badge"
                 :class="{
@@ -1146,16 +1265,6 @@ function abandon(): void {
               :counters="opponent.counters"
               compact
             />
-            <div class="opp-meta">
-              <div v-if="primaryCommander(opponent)" class="opp-cmdr-thumb">
-                <CardImage
-                  :scryfall-id="primaryCommander(opponent)!.scryfallId"
-                  :name="primaryCommander(opponent)!.name"
-                  size="small"
-                />
-              </div>
-              <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
-            </div>
             <TransitionGroup tag="div" name="board-card" class="permanents">
               <div
                 v-for="group in groupedPermanentsFor(opponent.seat)"
@@ -1184,7 +1293,7 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
-            <div class="zones-strip opponent-zones" @click.stop>
+            <div v-show="zonesShown(opponent.seat)" class="zones-strip opponent-zones" @click.stop>
               <ZoneStrip
                 label="Graveyard"
                 :cards="opponent.graveyard"
@@ -1214,7 +1323,80 @@ function abandon(): void {
             }"
             @click="chooseOpponent(human.seat)"
           >
-            <strong>You · {{ human.seat }} · {{ human.label }}</strong>
+            <span class="id-badge you">You · {{ human.seat }}</span>
+            <!-- The commander once, as a thumbnail: in the command zone it is the card you click
+                 to cast it, glowing when you can. -->
+            <span class="command-zone">
+              <template v-for="commander in human.commanders" :key="commander.cardId">
+                <button
+                  v-if="commander.zone === 'command' && commander.objectId !== null"
+                  type="button"
+                  class="commander-card cmdr-thumb"
+                  :title="`${commander.name}: in the command zone`"
+                  :class="{
+                    focused: focusedSourceId === commander.objectId,
+                    actionable: actionableSourceIds.has(commander.objectId),
+                    'chosen-target': isChosenTarget(commander.objectId),
+                  }"
+                  @click.stop="selectSource(commander.objectId)"
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                >
+                  <CardImage
+                    :scryfall-id="commander.scryfallId"
+                    :name="commander.name"
+                    size="small"
+                  />
+                </button>
+                <span
+                  v-else
+                  class="cmdr-thumb"
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                >
+                  <CardImage
+                    :scryfall-id="commander.scryfallId"
+                    :name="commander.name"
+                    size="small"
+                  />
+                </span>
+              </template>
+            </span>
+            <strong
+              class="seat-name"
+              @mouseenter="human.commanders[0] && showCardPreview(human.commanders[0], $event)"
+              @mousemove="moveCardPreview"
+              @mouseleave="hideCardPreview"
+              >{{ human.label }}</strong
+            >
+            <DeckColors :commanders="human.commanders" />
+            <span class="meta-item" title="Cards in hand"
+              ><b>hand</b> {{ human.hand?.length ?? human.handSize }}</span
+            >
+            <span class="meta-item" title="Cards in library"
+              ><b>lib</b> {{ human.librarySize }}</span
+            >
+            <span class="meta-item" title="Cards in graveyard"
+              ><b>gy</b> {{ human.graveyard.length }}</span
+            >
+            <span class="meta-item" title="Cards in exile"
+              ><b>exile</b> {{ humanExile.length }}</span
+            >
+            <span class="spacer" />
+            <span
+              v-if="commanderTax > 0"
+              class="cmdr-tax"
+              :title="`Commander tax: casting your commander costs {${commanderTax}} more`"
+              >+{{ commanderTax }}</span
+            >
+            <span
+              v-if="state.monarchSeat === human.seat"
+              class="monarch-badge"
+              title="You are the monarch"
+              >MONARCH</span
+            >
             <span
               class="life-badge"
               :class="{
@@ -1223,12 +1405,6 @@ function abandon(): void {
                 'flash-heal': humanLifeFlash === 'heal',
               }"
               >{{ human.life }}</span
-            >
-            <span
-              v-if="state.monarchSeat === human.seat"
-              class="monarch-badge"
-              title="You are the monarch"
-              >MONARCH</span
             >
           </header>
           <GlobalCounters
@@ -1250,21 +1426,6 @@ function abandon(): void {
             >
             <span v-if="resourceSummary(human.manaPool)" class="resource"
               >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
-            >
-            <span v-if="commanderTax > 0" class="resource"
-              >Commander tax <strong>+{{ commanderTax }}</strong></span
-            >
-            <span class="resource"
-              >Hand <strong>{{ human.hand?.length ?? human.handSize }}</strong></span
-            >
-            <span class="resource"
-              >Library <strong>{{ human.librarySize }}</strong></span
-            >
-            <span class="resource"
-              >Graveyard <strong>{{ human.graveyard.length }}</strong></span
-            >
-            <span v-if="humanExile.length > 0" class="resource"
-              >Exile <strong>{{ humanExile.length }}</strong></span
             >
           </div>
           <div class="battle-row">
@@ -1304,44 +1465,6 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
-            <div
-              v-if="human.commanders.some((commander) => commander.zone === 'command')"
-              class="command-zone"
-            >
-              <span class="command-zone-label">Command</span>
-              <button
-                v-for="commander in human.commanders.filter(
-                  (entry) => entry.zone === 'command' && entry.objectId !== null,
-                )"
-                :key="commander.cardId"
-                type="button"
-                class="commander-card"
-                :style="{ width: commanderWidth + 'px' }"
-                :class="{
-                  focused: focusedSourceId === commander.objectId,
-                  actionable:
-                    commander.objectId !== null && actionableSourceIds.has(commander.objectId),
-                  'chosen-target':
-                    commander.objectId !== null && isChosenTarget(commander.objectId),
-                }"
-                @click="commander.objectId !== null && selectSource(commander.objectId)"
-                @mouseenter="showCardPreview(commander, $event)"
-                @mousemove="moveCardPreview"
-                @mouseleave="hideCardPreview"
-              >
-                <CardImage
-                  :scryfall-id="commander.scryfallId"
-                  :name="commander.name"
-                  size="small"
-                />
-                <span
-                  >{{ commander.name
-                  }}<small v-if="commander.taxGeneric > 0">
-                    +{{ commander.taxGeneric }}</small
-                  ></span
-                >
-              </button>
-            </div>
           </div>
 
           <TransitionGroup
@@ -1695,6 +1818,17 @@ function abandon(): void {
           :is-chosen-target="isChosenTarget"
           @select="selectSource"
         />
+      </aside>
+      <!-- Commander damage and the log stay mounted while hidden, so the log keeps following play
+           and opening the drawer shows it already at the present. -->
+      <aside v-show="infoOpen" id="player-game-info" class="info-drawer" aria-label="Game info">
+        <div class="info-head">
+          <h2>Game info</h2>
+          <button type="button" class="info-close" aria-label="Close game info" @click="toggleInfo">
+            ×
+          </button>
+        </div>
+        <CommanderDamageGrid :state="state" />
         <!-- The reasoning toggle appears only once the game is over: until then the server
              withholds every opponent's reasoning, so offering the control would promise
              something it must not deliver (ADR 0022 §3). -->
@@ -1708,7 +1842,6 @@ function abandon(): void {
             store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
           "
         >
-          <template #actions><CopyGameReportButton /></template>
         </ActionLog>
       </aside>
     </main>
@@ -1743,15 +1876,76 @@ function abandon(): void {
   gap: 0.6rem;
   padding: 0.6rem;
 }
-.player-bar {
+/* The top bar's status, teleported into the app's nav. */
+.phase-label,
+.priority-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bar-toggle {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.55rem;
+}
+/* Settings drop down from the top bar's right end, over the table. */
+.settings-menu {
+  position: fixed;
+  top: 3.1rem;
+  right: 0.6rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
+  font-size: 0.78rem;
+}
+.settings-menu .abandon {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  color: var(--danger);
+}
+/* Game info: commander damage and the log in a drawer at the right edge, over the rail. */
+.info-drawer {
+  position: fixed;
+  top: 3.1rem;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 55;
+  width: min(24rem, calc(100vw - 1.2rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
+}
+.info-head {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 6px;
-  font-size: 0.78rem;
+  justify-content: space-between;
+}
+.info-head h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.info-close {
+  padding: 0 0.45rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.info-drawer :deep(.log) {
+  flex: 1;
+  min-height: 0;
 }
 .turn-badge {
   color: var(--muted);
@@ -1761,7 +1955,6 @@ function abandon(): void {
   color: var(--accent);
 }
 .pace {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -1881,17 +2074,56 @@ button.selected,
 }
 .opponent > header {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.72rem;
   flex-shrink: 0;
 }
-.opponent > header strong {
-  flex: 1;
-  min-width: 0;
+/* A seat's header: who, their colors and counts, then (pushed right) zones and life. */
+/* In a narrow seat the counts wrap under the name rather than squeeze it out. */
+.seat-name {
+  flex: 0 1 auto;
+  min-width: min(6rem, 40%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: zoom-in;
+}
+.meta-item {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.meta-item b {
+  font-weight: 700;
+}
+.spacer {
+  flex: 1;
+}
+.cmdr-thumb {
+  width: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgb(96 165 250 / 0.4);
+  cursor: zoom-in;
+}
+.cmdr-tax {
+  flex-shrink: 0;
+  color: var(--warn);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.zones-toggle {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  padding: 0.05rem 0.4rem;
+  color: var(--muted);
+  background: var(--surface-2);
 }
 .human-zone > header {
   display: flex;
@@ -1913,21 +2145,6 @@ button.selected,
   animation: none;
   box-shadow: 0 0 0 2px var(--ok);
 }
-.opp-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--muted);
-  font-size: 0.72rem;
-  flex-shrink: 0;
-}
-.opp-cmdr-thumb {
-  width: 20px;
-  flex-shrink: 0;
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid rgb(96 165 250 / 0.4);
-}
 .id-badge {
   font-weight: 800;
   font-size: 0.68rem;
@@ -1936,6 +2153,9 @@ button.selected,
   padding: 0.02rem 0.3rem;
   border-radius: 3px;
   flex-shrink: 0;
+}
+.id-badge.you {
+  white-space: nowrap;
 }
 .monarch-badge {
   flex-shrink: 0;
@@ -1978,7 +2198,9 @@ button.selected,
   flex-wrap: wrap;
   align-items: flex-start;
   align-content: flex-start;
-  gap: 0.3rem;
+  /* Room above each row for an attacker's chevron, which rises off the top of its card. */
+  gap: 1rem 0.3rem;
+  padding-top: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -2115,45 +2337,15 @@ button.selected,
   font-size: 0.65rem;
   overflow: hidden;
 }
+/* Your commander in the header; in the command zone it is the button that casts it. */
 .command-zone {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  border-left: 1px dashed var(--line);
-  padding-left: 0.45rem;
-}
-.command-zone-label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-/*
- * Natural card size, shrinking only when the battle row is shorter than the card. `flex: 1`
- * here (and on the image) stretched the commander to the full height of an empty battlefield —
- * a strip hundreds of pixels tall with the art cropped to a sliver (browser trial, Turn 4).
- */
-.commander-card {
-  flex: 0 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: inline-flex;
   gap: 0.2rem;
-  padding: 0.1rem;
-  font-size: 0.6rem;
-  text-align: center;
+  flex-shrink: 0;
 }
-.commander-card :deep(.card-image) {
-  width: 100%;
-  flex: 0 1 auto;
-  min-height: 0;
-}
-.commander-card small {
-  color: var(--warn);
+.commander-card.cmdr-thumb {
+  width: 26px;
+  cursor: pointer;
 }
 .interaction-tray {
   margin-top: 0.1rem;
@@ -2495,10 +2687,6 @@ button.primary {
 .bot-summary .actor {
   font-weight: 700;
   color: var(--accent);
-}
-.rail :deep(.log) {
-  flex: 1;
-  min-height: 7rem;
 }
 @media (max-width: 900px) {
   .player-layout {
