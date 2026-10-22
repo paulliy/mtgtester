@@ -274,6 +274,11 @@ function onLeave(): void {
         :class="{ 'above-name': artSrc !== null, 'flash-damage': damageFlash === 'damage' }"
         >{{ permanent.power }}/<span :class="{ hurt }">{{ permanent.toughness }}</span></span
       >
+      <!-- Summoning sick: Zs drift up off the card until it can act. Drawn by CSS, so the tile's
+           text stays its name, P/T and counters. -->
+      <div v-if="permanent.summoningSick && isCreature" class="zzz" aria-hidden="true">
+        <span /><span /><span />
+      </div>
       <div v-if="counterPips.length > 0" class="pips" aria-hidden="true">
         <span
           v-for="pip in counterPips"
@@ -362,9 +367,76 @@ function onLeave(): void {
 .tile.tapped .frame img {
   filter: brightness(0.82);
 }
-/* Summoning sick: the art drains of color until the creature can act. */
+/* Summoning sick: the art drains of color and slowly dims and brightens, as if dozing, while Zs
+   drift up off the card until the creature can act. */
 .tile.sick .frame img {
   filter: grayscale(0.85) brightness(0.8);
+  animation: doze 2.4s ease-in-out infinite;
+}
+@keyframes doze {
+  50% {
+    filter: grayscale(0.85) brightness(0.62);
+  }
+}
+.zzz {
+  position: absolute;
+  right: 6%;
+  top: 8%;
+  width: 40%;
+  height: 40%;
+  z-index: 3;
+  pointer-events: none;
+}
+.zzz span {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  opacity: 0;
+  font-size: max(0.85rem, 18cqw);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 1px #0b0d11;
+  text-shadow:
+    0 0 4px rgb(11 13 17 / 0.9),
+    0 0 10px rgb(56 189 248 / 0.9);
+  animation: zzzFloat 2.4s ease-out infinite;
+}
+.zzz span::before {
+  content: 'z';
+}
+.zzz span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.zzz span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+.zzz span:nth-child(3)::before {
+  content: 'Z';
+}
+/* With motion reduced the Zs stand still, climbing the corner, rather than vanish. */
+:global(.reduced-motion) .zzz span {
+  opacity: 1;
+}
+:global(.reduced-motion) .zzz span:nth-child(2) {
+  transform: translate(50%, -60%);
+}
+:global(.reduced-motion) .zzz span:nth-child(3) {
+  transform: translate(100%, -120%);
+}
+@keyframes zzzFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6) rotate(-12deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(100%, -90%) scale(1.3) rotate(8deg);
+  }
 }
 /* Art that hasn't resolved (or never will) still names the card instead of showing a blank. */
 .frame-name {
