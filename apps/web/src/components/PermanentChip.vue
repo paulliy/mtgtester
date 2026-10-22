@@ -210,6 +210,10 @@ function onLeave(): void {
       <span v-if="counterText" class="counters">{{ counterText }}</span>
       <span v-if="marks.length > 0" class="marks">{{ marks.join(' ') }}</span>
     </div>
+    <!-- Keywords show in the hover preview; this keeps them for anyone who can't hover. -->
+    <span v-if="permanent.keywords.length > 0" class="visually-hidden">
+      {{ permanent.keywords.join(', ') }}
+    </span>
   </div>
 </template>
 
@@ -480,5 +484,13 @@ function onLeave(): void {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 </style>
