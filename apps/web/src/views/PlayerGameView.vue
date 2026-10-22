@@ -16,6 +16,7 @@ import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
+import ZonePile from '../components/ZonePile.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
@@ -118,6 +119,51 @@ const opponents = computed(
 const humanExile = computed(
   () => state.value?.exile.filter((card) => card.owner === state.value?.viewerSeat) ?? [],
 );
+
+/**
+ * Your lands sit apart from the rest of your board, in a pile you open to see or use them one by
+ * one. A land that is also a creature stays on the board, where it can attack and block.
+ */
+function isPiledLand(permanent: { typeLine: string }): boolean {
+  return /\bLand\b/.test(permanent.typeLine) && !/\bCreature\b/.test(permanent.typeLine);
+}
+const humanLands = computed(() =>
+  human.value === null ? [] : permanentsFor(human.value.seat).filter(isPiledLand),
+);
+const humanBoardGroups = computed(() =>
+  human.value === null
+    ? []
+    : groupPermanents(permanentsFor(human.value.seat).filter((p) => !isPiledLand(p))),
+);
+const humanLandGroups = computed(() => groupPermanents(humanLands.value));
+const untappedLandCount = computed(() => humanLands.value.filter((land) => !land.tapped).length);
+
+/**
+ * Whether each pile (lands, graveyard, exile) is open, remembered across games the way the game
+ * info column is: someone who likes their lands spread out keeps them that way.
+ */
+type Pile = 'lands' | 'graveyard' | 'exile';
+const PILE_KEY = (pile: Pile) => `mtg.playerPile.${pile}`;
+function readPile(pile: Pile): boolean {
+  try {
+    return localStorage.getItem(PILE_KEY(pile)) === 'true';
+  } catch {
+    return false;
+  }
+}
+const pilesOpen = ref<Record<Pile, boolean>>({
+  lands: readPile('lands'),
+  graveyard: readPile('graveyard'),
+  exile: readPile('exile'),
+});
+function togglePile(pile: Pile): void {
+  pilesOpen.value[pile] = !pilesOpen.value[pile];
+  try {
+    localStorage.setItem(PILE_KEY(pile), String(pilesOpen.value[pile]));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
 
 /**
  * As on the spectator board, the settings (bot pace, confirmations, motion, Abandon) and the
@@ -310,6 +356,7 @@ function adaptiveWidth(
  */
 const humanPermWidth = 120;
 const humanPermMinWidth = 54;
+const humanLandWidth = 96;
 const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
 const opponentPermWidth = 92;
 const opponentPermMinWidth = 40;
@@ -688,6 +735,30 @@ const zoneSourceIds = computed(() =>
     ? [...actionableSourceIds.value].filter((id): id is ObjectId => id !== null)
     : [],
 );
+
+/**
+ * A pile opens on its own while a card in it is the target being chosen, as an opponent's zones
+ * do, and otherwise stays as you left it. A closed pile glows when a card inside can act.
+ */
+const landsShown = computed(
+  () =>
+    pilesOpen.value.lands ||
+    humanLands.value.some((land) => isLegalTarget(land.id) || isChosenTarget(land.id)),
+);
+const graveyardShown = computed(
+  () =>
+    pilesOpen.value.graveyard ||
+    (human.value?.graveyard ?? []).some((card) => zoneTargetIds.value.includes(card.id)),
+);
+const exileShown = computed(
+  () =>
+    pilesOpen.value.exile || humanExile.value.some((card) => zoneTargetIds.value.includes(card.id)),
+);
+function pileGlow(ids: readonly string[], targetIds: readonly string[]) {
+  if (ids.some((id) => targetIds.includes(id))) return 'targetable' as const;
+  if (ids.some((id) => actionableSourceIds.value.has(id as ObjectId))) return 'actionable' as const;
+  return null;
+}
 
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
 function tryPlanAssign(target: ObjectId | string): boolean {
@@ -1093,6 +1164,34 @@ function abandon(): void {
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
+      <!-- Your resources, beside the turn they belong to: global counters, the land drop, and the
+           mana you can spend right now. -->
+      <span v-if="human" class="bar-resources" aria-label="Your resources">
+        <GlobalCounters
+          :energy="human.energy"
+          :poison-counters="human.poisonCounters"
+          :counters="human.counters"
+          compact
+        />
+        <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+          human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
+        }}</span>
+        <span
+          class="resource"
+          title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
+          >Mana ready <strong>{{ state!.viewerMana.units }}</strong
+          ><span
+            v-for="color in state!.viewerMana.colors"
+            :key="color"
+            class="mana-dot"
+            :class="`mana-${color}`"
+            >{{ color }}</span
+          ></span
+        >
+        <span v-if="resourceSummary(human.manaPool)" class="resource"
+          >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
+        >
+      </span>
       <span v-if="gameOverLine" class="game-over-badge">{{ gameOverLine }}</span>
       <!-- Only a problem is worth the space: a healthy connection says nothing. -->
       <span v-if="store.connection !== 'open'" :class="['connection', store.connection]">{{
@@ -1413,27 +1512,7 @@ function abandon(): void {
               >{{ human.life }}</span
             >
           </header>
-          <GlobalCounters
-            :energy="human.energy"
-            :poison-counters="human.poisonCounters"
-            :counters="human.counters"
-          />
-          <div class="resource-strip" aria-label="Your resources">
-            <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
-              human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
-            }}</span>
-            <span
-              class="resource"
-              title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
-              >Mana ready <strong>{{ state.viewerMana.units }}</strong
-              ><template v-if="state.viewerMana.colors.length > 0">
-                · {{ state.viewerMana.colors.join(' ') }}</template
-              ></span
-            >
-            <span v-if="resourceSummary(human.manaPool)" class="resource"
-              >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
-            >
-          </div>
+          <!-- Your board, then your lands, then your graveyard and exile as piles: Arena's layout. -->
           <div class="battle-row">
             <TransitionGroup
               tag="div"
@@ -1443,7 +1522,7 @@ function abandon(): void {
               @drop="dropToBattlefield"
             >
               <div
-                v-for="group in groupedPermanentsFor(human.seat)"
+                v-for="group in humanBoardGroups"
                 :key="group.permanent.id"
                 class="object"
                 :style="{
@@ -1471,6 +1550,99 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
+            <!-- Lands: a pile showing how many are untapped, or spread out to use one by one. -->
+            <div
+              v-if="humanLands.length > 0"
+              id="player-lands"
+              class="land-area"
+              :class="{ spread: landsShown }"
+            >
+              <template v-if="landsShown">
+                <button
+                  type="button"
+                  class="pile-close"
+                  aria-controls="player-lands"
+                  :aria-expanded="true"
+                  @click.stop="togglePile('lands')"
+                >
+                  ▾ Lands ({{ humanLands.length }}) · {{ untappedLandCount }} untapped
+                </button>
+                <TransitionGroup tag="div" name="board-card" class="permanents lands">
+                  <div
+                    v-for="group in humanLandGroups"
+                    :key="group.permanent.id"
+                    class="object"
+                    :style="{
+                      '--chip-w': humanLandWidth + 'px',
+                      '--chip-min': humanPermMinWidth + 'px',
+                    }"
+                    :class="{
+                      focused: focusedSourceId === group.permanent.id,
+                      targetable: isLegalTarget(group.permanent.id),
+                      'chosen-target': isChosenTarget(group.permanent.id),
+                      'payment-source': isPaymentSource(group.permanent.id),
+                      actionable: actionableSourceIds.has(group.permanent.id),
+                    }"
+                    draggable="true"
+                    @dragstart="dragStart(group.permanent.id, $event)"
+                    @dragend="dragEnd"
+                    @dragover.prevent
+                    @drop.stop="dropOn(group.permanent.id)"
+                    @click="selectSource(group.permanent.id)"
+                  >
+                    <PermanentChip
+                      :permanent="group.permanent"
+                      :count="group.count"
+                      :name-by-id="nameById"
+                    />
+                  </div>
+                </TransitionGroup>
+              </template>
+              <ZonePile
+                v-else
+                label="Lands"
+                :cards="humanLands"
+                :open="false"
+                :detail="`${untappedLandCount} untapped`"
+                :glow="
+                  pileGlow(
+                    humanLands.map((land) => land.id),
+                    [],
+                  )
+                "
+                controls="player-lands"
+                @toggle="togglePile('lands')"
+              />
+            </div>
+            <div class="piles">
+              <ZonePile
+                label="Graveyard"
+                :cards="human.graveyard"
+                :open="graveyardShown"
+                :glow="
+                  pileGlow(
+                    human.graveyard.map((card) => card.id),
+                    zoneTargetIds,
+                  )
+                "
+                controls="player-zones"
+                @toggle="togglePile('graveyard')"
+              />
+              <ZonePile
+                v-if="humanExile.length > 0"
+                label="Exile"
+                :cards="humanExile"
+                :open="exileShown"
+                :glow="
+                  pileGlow(
+                    humanExile.map((card) => card.id),
+                    zoneTargetIds,
+                  )
+                "
+                controls="player-zones"
+                @toggle="togglePile('exile')"
+              />
+            </div>
           </div>
 
           <TransitionGroup
@@ -1511,8 +1683,10 @@ function abandon(): void {
             </button>
           </TransitionGroup>
 
-          <div class="zones-strip">
+          <!-- An open graveyard or exile pile spreads its cards here, under your hand. -->
+          <div id="player-zones" class="zones-strip">
             <ZoneStrip
+              v-if="graveyardShown"
               label="Graveyard"
               :cards="human.graveyard"
               :selectable-ids="zoneTargetIds"
@@ -1521,6 +1695,7 @@ function abandon(): void {
               @activate="selectSource"
             />
             <ZoneStrip
+              v-if="exileShown"
               label="Exile"
               :cards="humanExile"
               :selectable-ids="zoneTargetIds"
@@ -2275,14 +2450,18 @@ button.selected,
   border-color: var(--accent);
   box-shadow: 0 0 10px rgb(110 168 254 / 0.25);
 }
-.resource-strip {
+/* Your resources ride in the top bar, as compact chips. */
+.bar-resources {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.3rem;
-  margin: 0.15rem 0 0.25rem;
+  white-space: nowrap;
 }
 .resource {
-  padding: 0.14rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
@@ -2297,6 +2476,38 @@ button.selected,
   color: var(--ok);
   font-weight: 600;
 }
+/* The colors that mana can be, as mana-symbol circles (the same tints as a deck's colors). */
+.mana-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: #1c1917;
+  background: #d6d3d1;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+.mana-dot:first-of-type {
+  margin-left: 0.15rem;
+}
+.mana-W {
+  background: #f8f4d8;
+}
+.mana-U {
+  background: #a9cdf0;
+}
+.mana-B {
+  background: #b5aaa6;
+}
+.mana-R {
+  background: #f0a184;
+}
+.mana-G {
+  background: #9bcb98;
+}
 .battle-row {
   flex: 1;
   min-height: 150px;
@@ -2305,8 +2516,48 @@ button.selected,
   overflow: hidden;
 }
 .battle-row .permanents {
-  flex: 1;
+  flex: 1.4;
   min-width: 0;
+}
+/* Lands beside the board, behind a dashed rule as on the spectator board: a pile, or spread. */
+.land-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 0;
+  padding-left: 0.5rem;
+  border-left: 1px dashed var(--line);
+}
+.land-area.spread {
+  flex: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.land-area .permanents.lands {
+  flex: 1;
+}
+.pile-close {
+  align-self: flex-start;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.pile-close:hover {
+  color: var(--text);
+}
+/* Graveyard and exile piles at the row's right end. */
+.piles {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-left: 0.4rem;
+  border-left: 1px dashed var(--line);
 }
 .hand {
   position: relative;

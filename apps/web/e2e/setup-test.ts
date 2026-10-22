@@ -1,11 +1,15 @@
 import { expect, test } from '@playwright/test';
 
-// The player board keeps its log in a Game info column that starts closed. Specs read the log
-// as part of the board, so open it for them; it sits beside the rail and covers nothing.
+// The player board keeps its log in a Game info column, and your lands, graveyard and exile in
+// piles, all closed at first. Specs read them as part of the board, so open them; the board's own
+// spec checks the closed piles.
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     try {
       localStorage.setItem('mtg.playerGameInfoOpen', 'true');
+      for (const pile of ['lands', 'graveyard', 'exile']) {
+        localStorage.setItem(`mtg.playerPile.${pile}`, 'true');
+      }
     } catch {
       // Storage blocked: specs that read the log will say so.
     }

@@ -14,14 +14,20 @@ export default defineConfig({
   preserveOutput: 'always',
   use: {
     baseURL: 'http://127.0.0.1:5173',
-    // The player board folds its log into a Game info column that starts closed; specs read the
-    // log as part of the board, so every browser starts with that column open.
+    // The player board folds its log into a Game info column, and your lands, graveyard and exile
+    // into piles, all closed at first; specs read them as part of the board, so every browser
+    // starts with them open.
     storageState: {
       cookies: [],
       origins: [
         {
           origin: 'http://127.0.0.1:5173',
-          localStorage: [{ name: 'mtg.playerGameInfoOpen', value: 'true' }],
+          localStorage: [
+            { name: 'mtg.playerGameInfoOpen', value: 'true' },
+            { name: 'mtg.playerPile.lands', value: 'true' },
+            { name: 'mtg.playerPile.graveyard', value: 'true' },
+            { name: 'mtg.playerPile.exile', value: 'true' },
+          ],
         },
       ],
     },

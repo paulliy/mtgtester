@@ -2012,6 +2012,31 @@ test('War Room: dynamic commander identity life activation', async ({ page }) =>
   await expect(handCard(page, 'War Room Action Witness')).toBeVisible();
   const room = permanent(page, 'War Room');
   await expect(room).toHaveClass(/actionable/);
+  // Specs start with the piles open. Closing the lands stacks them into one pile that says how
+  // many are untapped, and glows while a land inside can be used.
+  await page.getByRole('button', { name: /^▾ Lands/ }).click();
+  await expect(room).toHaveCount(0);
+  await expect(permanent(page, 'Forest')).toHaveCount(0);
+  const lands = page.locator('.human-zone .zone-pile', { hasText: 'Lands' });
+  await expect(lands).toHaveAttribute('aria-expanded', 'false');
+  await expect(lands).toContainText(/\d+ untapped/);
+  await expect(lands).toHaveClass(/actionable/);
+  await lands.click();
+  await expect(room).toBeVisible();
+  await expect(room).toHaveClass(/actionable/);
+
+  // The graveyard pile opens and closes its cards under the hand.
+  const graveyard = page.locator('.human-zone .zone-pile', { hasText: 'Graveyard' });
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'true');
+  await graveyard.click();
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#player-zones .zone', { hasText: 'Graveyard' })).toHaveCount(0);
+  await graveyard.click();
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'true');
+
+  // Your resources sit in the top bar.
+  await expect(page.locator('#top-bar-status')).toContainText(/Mana ready\s*\d/);
+
   await room.click();
   await expect(page.getByText('Activate War Room')).toBeVisible();
   await confirm(page);
