@@ -1385,18 +1385,11 @@ function abandon(): void {
               >{{ human.label }}</strong
             >
             <DeckColors :commanders="human.commanders" />
-            <span class="meta-item" title="Cards in hand"
-              ><b>hand</b> {{ human.hand?.length ?? human.handSize }}</span
-            >
-            <span class="meta-item" title="Cards in library"
-              ><b>lib</b> {{ human.librarySize }}</span
-            >
-            <span class="meta-item" title="Cards in graveyard"
-              ><b>gy</b> {{ human.graveyard.length }}</span
-            >
-            <span class="meta-item" title="Cards in exile"
-              ><b>exile</b> {{ humanExile.length }}</span
-            >
+            <!-- Your own counts in full words: your row has the room, and they are yours. -->
+            <span class="meta-item"><b>Hand</b> {{ human.hand?.length ?? human.handSize }}</span>
+            <span class="meta-item"><b>Library</b> {{ human.librarySize }}</span>
+            <span class="meta-item"><b>Graveyard</b> {{ human.graveyard.length }}</span>
+            <span class="meta-item"><b>Exile</b> {{ humanExile.length }}</span>
             <span class="spacer" />
             <span
               v-if="commanderTax > 0"
