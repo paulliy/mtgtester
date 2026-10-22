@@ -2,11 +2,10 @@
 import type { ComponentPublicInstance } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { SpectatorPermanent } from '@mtg/shared';
-import CardImage from './CardImage.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useBoardFlash } from '../composables/useBoardFlash';
 import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
-import { isTokenTypeLine } from '../lib/card';
+import { isTokenTypeLine, scryfallImageUrl } from '../lib/card';
 import { useCardPreviewStore } from '../stores/cardPreview';
 
 const props = withDefaults(
@@ -23,7 +22,10 @@ const cardPreview = useCardPreviewStore();
 const { registerAnchor, unregisterAnchor } = useBoardAnchors();
 
 const isCreature = computed(() => props.permanent.power !== null);
-const isToken = computed(() => isTokenTypeLine(props.permanent.typeLine));
+/** The engine's flag; older saved snapshots lack it, so fall back to the type line. */
+const isToken = computed(
+  () => props.permanent.isToken ?? isTokenTypeLine(props.permanent.typeLine),
+);
 const isAttacking = computed(() => props.permanent.attacking !== null);
 
 /** Board-change feedback (§9.8): a brief flash when this permanent takes or sheds damage. */
@@ -91,11 +93,43 @@ const marks = computed(() => {
   return out;
 });
 
+/**
+ * Arena-style tiles: a real card shows only its illustration (Scryfall's `art_crop`) in a square;
+ * the full card, with its text and live state, is the hover preview. A token is a half-circle
+ * carrying its P/T (or its name, when it isn't a creature); a token copy of a real card also
+ * shows that card's art behind the label.
+ */
+const artFailed = ref(false);
+watch(
+  () => [props.permanent.scryfallId, props.permanent.imageFace],
+  () => {
+    artFailed.value = false;
+  },
+);
+const artSrc = computed(() => {
+  const id = props.permanent.scryfallId;
+  if (artFailed.value || id === null || id.length < 2) return null;
+  return scryfallImageUrl(id, 'art_crop', props.permanent.imageFace ?? 'front');
+});
+
+const ptText = computed(() =>
+  isCreature.value ? `${props.permanent.power}/${props.permanent.toughness}` : null,
+);
+
 function onEnter(event: MouseEvent): void {
+  const p = props.permanent;
   cardPreview.show({
-    scryfallId: props.permanent.scryfallId,
-    name: props.permanent.name,
-    imageFace: props.permanent.imageFace ?? 'front',
+    scryfallId: p.scryfallId,
+    name: p.name,
+    imageFace: p.imageFace ?? 'front',
+    typeLine: p.typeLine,
+    manaCost: p.manaCost,
+    oracleText: p.oracleText,
+    power: p.power,
+    toughness: p.toughness,
+    keywords: p.keywords,
+    counters: counterText.value,
+    damageMarked: p.damageMarked,
   });
   cardPreview.updateCursor(event.clientX, event.clientY);
 }
@@ -112,6 +146,7 @@ function onLeave(): void {
     :ref="setTileEl"
     class="tile"
     :class="{
+      token: isToken,
       creature: isCreature,
       tapped: permanent.tapped,
       attacking: isAttacking,
@@ -139,26 +174,39 @@ function onLeave(): void {
       ×{{ count }}
     </div>
     <div v-if="permanent.tapped" class="tap-badge" title="Tapped">TAP</div>
-    <CardImage
-      :scryfall-id="permanent.scryfallId"
-      :name="permanent.name"
-      :face="permanent.imageFace ?? 'front'"
-      :is-token="isToken"
-      size="small"
-      :tapped="permanent.tapped"
-    />
-    <div
-      v-if="permanent.keywords.length > 0"
-      class="keywords"
-      :title="permanent.keywords.join(', ')"
-    >
-      {{ permanent.keywords.join(' · ') }}
-    </div>
-    <div class="overlay">
-      <span v-if="isCreature" class="pt" :class="{ 'flash-damage': damageFlash === 'damage' }">
-        {{ permanent.power }}/{{ permanent.toughness }}
-        <span v-if="permanent.damageMarked > 0" class="dmg">−{{ permanent.damageMarked }}</span>
+    <div class="frame" role="img" :aria-label="permanent.name">
+      <img
+        v-if="artSrc"
+        :src="artSrc"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        @error="artFailed = true"
+      />
+      <span v-else-if="!isToken" class="frame-name">{{ permanent.name }}</span>
+      <span
+        v-if="isToken"
+        class="token-label"
+        :class="{ 'is-name': ptText === null, 'flash-damage': damageFlash === 'damage' }"
+      >
+        {{ ptText ?? permanent.name }}
       </span>
+    </div>
+    <span
+      v-if="ptText !== null && !isToken"
+      class="pt"
+      :class="{ 'flash-damage': damageFlash === 'damage' }"
+    >
+      {{ ptText }}
+    </span>
+    <span
+      v-if="permanent.damageMarked > 0"
+      class="dmg"
+      :title="`${permanent.damageMarked} damage marked`"
+    >
+      −{{ permanent.damageMarked }}
+    </span>
+    <div v-if="counterText || marks.length > 0" class="status">
       <span v-if="counterText" class="counters">{{ counterText }}</span>
       <span v-if="marks.length > 0" class="marks">{{ marks.join(' ') }}</span>
     </div>
@@ -166,35 +214,116 @@ function onLeave(): void {
 </template>
 
 <style scoped>
+/*
+ * `container-type` lets the labels below size themselves off the tile's own width (`cqw`): parents
+ * shrink tiles with flexbox once a row runs out of room, so a fixed font size would overflow a
+ * small tile and look lost on a large one.
+ */
 .tile {
+  --tile-radius: 8px;
   position: relative;
   width: var(--chip-w, 108px);
+  container-type: inline-size;
   transition:
     transform 120ms ease,
     width 150ms ease,
     opacity 200ms ease;
 }
-.tile.creature {
+.tile.token {
+  --tile-radius: 999px 999px 0 0;
+}
+.frame {
+  position: relative;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border-radius: var(--tile-radius);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  transition:
+    transform 150ms ease,
+    opacity 150ms ease;
+}
+.frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Art that hasn't resolved (or never will) still names the card instead of showing a blank. */
+.frame-name {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6%;
+  text-align: center;
+  font-size: max(0.6rem, 11cqw);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text);
+  overflow: hidden;
+}
+/* A half-circle: twice as wide as it is tall, rounded across the top. */
+.tile.token .frame {
+  aspect-ratio: 2 / 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border: 2px solid var(--muted);
+  border-bottom-width: 3px;
+  background: radial-gradient(circle at 50% 100%, var(--surface) 0%, var(--surface-2) 70%);
+}
+.token-label {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 4%;
+  text-shadow:
+    0 0 4px var(--surface),
+    0 1px 2px var(--surface);
+  font-size: max(0.75rem, 20cqw);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.token-label.is-name {
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: max(0.6rem, 12cqw);
+  font-weight: 700;
+}
+/* Tapped: an imaged card turns sideways, like the real thing. A half-circle can't turn inside its
+   own footprint, so a tapped token dims and dashes its outline instead. The TAP badge marks both. */
+.tile.tapped:not(.token) .frame {
+  transform: rotate(90deg);
+}
+.tile.tapped .frame {
+  opacity: 0.8;
+}
+.tile.token.tapped .frame {
+  opacity: 0.6;
+  border-style: dashed;
+}
+.tile.creature .frame {
   box-shadow: 0 0 0 2px var(--accent);
-  border-radius: 6%;
 }
-.tile.tapped {
-  opacity: 0.85;
-}
-.tile.attacking {
-  border-radius: 6%;
+.tile.attacking .frame {
+  border-color: var(--danger);
   box-shadow: 0 0 0 2px rgb(248 113 113 / 0.55);
   animation: attackPulse 1s ease-in-out infinite;
-}
-.tile.attacking :deep(.card-image) {
-  outline: 1px solid var(--danger);
 }
 .tile.taking-damage::after {
   content: '';
   position: absolute;
   inset: -2px;
   border: 2px solid rgb(248 113 113 / 0.85);
-  border-radius: 7%;
+  border-radius: var(--tile-radius);
   box-shadow: 0 0 16px rgb(248 113 113 / 0.65);
   opacity: 0;
   pointer-events: none;
@@ -270,51 +399,86 @@ function onLeave(): void {
   z-index: 2;
   pointer-events: none;
 }
-.keywords {
+.tile.token .tap-badge {
+  top: -4px;
+  right: -4px;
+}
+/* The P/T box sits in the art's bottom-right corner, as on a printed card. */
+.pt {
   position: absolute;
-  inset: 0 0 auto 0;
-  padding: 0.1rem 0.25rem;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 0.7), transparent);
-  border-radius: 6% 6% 0 0;
-  font-size: 0.58rem;
+  right: 3px;
+  bottom: 3px;
+  z-index: 2;
+  padding: 0.05rem 0.35rem;
+  border-radius: 5px;
+  background: rgb(11 13 17 / 0.88);
+  border: 1px solid rgb(255 255 255 / 0.55);
   color: #fff;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  font-size: max(0.65rem, 15cqw);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   pointer-events: none;
 }
-.overlay {
+.pt.flash-damage,
+.token-label.flash-damage {
+  animation: flash 0.8s ease-out;
+}
+.dmg {
   position: absolute;
-  inset: auto 0 0 0;
+  right: 3px;
+  top: 3px;
+  z-index: 3;
+  padding: 0.05rem 0.3rem;
+  border-radius: 5px;
+  background: #7f1d1d;
+  color: #fecaca;
+  font-size: max(0.6rem, 12cqw);
+  font-weight: 800;
+  pointer-events: none;
+}
+.tile.tapped .dmg {
+  top: auto;
+  bottom: 3px;
+  right: auto;
+  left: 3px;
+}
+.tile.token .dmg {
+  top: -4px;
+  right: auto;
+  left: -4px;
+}
+.status {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  max-width: 60%;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.1rem;
-  padding: 0.15rem 0.25rem;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.75), transparent);
-  border-radius: 0 0 6% 6%;
   pointer-events: none;
 }
-.pt {
-  font-size: 0.68rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
-  white-space: nowrap;
-  border-radius: 3px;
-}
-.pt.flash-damage {
-  animation: flash 0.8s ease-out;
-}
-.dmg {
-  color: #ff8a80;
+.tile.token .status {
+  bottom: auto;
+  top: -2px;
+  left: auto;
+  right: 0;
+  max-width: 45%;
+  align-items: flex-end;
 }
 .counters,
 .marks {
+  max-width: 100%;
+  padding: 0.02rem 0.25rem;
+  border-radius: 4px;
+  background: rgb(11 13 17 / 0.85);
   font-size: 0.6rem;
   color: #fff;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

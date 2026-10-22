@@ -145,6 +145,24 @@ describe('Phase 6 player board projection', () => {
     );
   });
 
+  it('marks tokens on the battlefield, since a token type line does not say "Token"', () => {
+    const ctx = createGame(pod());
+    const construct = oracle({
+      name: 'Construct',
+      typeLine: 'Artifact Creature — Construct',
+      manaCost: null,
+      oracleText: '',
+      power: '1',
+      toughness: '1',
+    });
+    const token = spawn(ctx, 'P1', construct, { isToken: true });
+    const card = spawn(ctx, 'P1', forest());
+
+    const view = buildPlayerBoardState(ctx, 'P2');
+    expect(view.battlefield.find((permanent) => permanent.id === token.id)?.isToken).toBe(true);
+    expect(view.battlefield.find((permanent) => permanent.id === card.id)?.isToken).toBe(false);
+  });
+
   it('redacts opponent hideaway cards in exile', () => {
     const ctx = createGame(pod());
     const library = ctx.state.players.find((player) => player.id === 'P2')!.library;

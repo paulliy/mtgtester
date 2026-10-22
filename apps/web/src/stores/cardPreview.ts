@@ -12,6 +12,22 @@ export interface PreviewCard {
   scryfallId: string | null;
   name: string;
   imageFace?: 'front' | 'back';
+  /**
+   * Printed text. A card with no printing (a catalog token) has no image, so the preview draws
+   * these as a text frame instead; for an imaged card the image already carries them.
+   */
+  typeLine?: string;
+  manaCost?: string | null;
+  oracleText?: string;
+  /**
+   * Live battlefield state, which the printed card cannot show: effective P/T, granted keywords,
+   * counters and marked damage. Only battlefield tiles pass these.
+   */
+  power?: number | null;
+  toughness?: number | null;
+  keywords?: string[];
+  counters?: string;
+  damageMarked?: number;
 }
 
 export const useCardPreviewStore = defineStore('cardPreview', () => {

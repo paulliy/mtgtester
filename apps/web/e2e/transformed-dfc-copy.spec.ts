@@ -119,7 +119,7 @@ for (const entry of TRANSFORMED_DFC_CASES) {
     if (!entry.token) expect(copy.keywords).toContain('haste');
     for (const chip of await permanent(page, face).all()) {
       await expect(chip).toContainText('3/2');
-      await expect(chip.locator('.card-image img')).toHaveAttribute(
+      await expect(chip.locator('.frame img')).toHaveAttribute(
         'src',
         new RegExp(`/${entry.transformed ? 'back' : 'front'}/`),
       );
