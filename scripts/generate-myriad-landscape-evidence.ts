@@ -17,6 +17,17 @@ const ORACLE_ID = '2549bc57-9ffb-4053-9f10-f2a5f792b845';
 const ORACLE_SHA256 = '696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b';
 
 const SOURCE_FILES = [
+  'packages/engine/src/cards/overrides/coverage-pr09.ts',
+  'packages/engine/src/effects/library-cast.ts',
+  'packages/engine/src/effects/library-reveal.ts',
+  'packages/engine/src/state/copy-data.ts',
+  'packages/engine/src/view/library-top.ts',
+  'packages/engine/tests/fixtures/coverage-pr09-oracle.json',
+  'packages/server/src/cards/pr09-choice-scenarios.ts',
+  'packages/server/src/cards/pr09-library-scenarios.ts',
+  'packages/server/src/cards/pr09-permanent-scenarios.ts',
+  'packages/server/src/cards/pr09-scenario-catalog.ts',
+  'packages/server/src/cards/pr09-scenarios.ts',
   'packages/engine/src/effects/owner-library-choices.ts',
   'packages/server/src/cards/pr08-boseiju-scenarios.ts',
   'packages/server/src/cards/pr08-modal-player-scenarios.ts',

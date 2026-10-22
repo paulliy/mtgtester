@@ -255,12 +255,23 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
         message: 'variable-count target slots must follow every ordinary target slot',
       });
     }
+    if (
+      spec.random !== undefined &&
+      (spec.random !== true ||
+        spec.kind !== 'cardInGraveyard' ||
+        spec.count !== undefined ||
+        spec.perPlayer !== undefined)
+    )
+      issues.push({
+        path: `${at}.random`,
+        message: 'random targets require a single graveyard card target',
+      });
     if (spec.perPlayer !== undefined) {
       if (
         spec.perPlayer !== true ||
         spec.count?.min !== 0 ||
         spec.count.max !== 1 ||
-        spec.controller !== undefined ||
+        (spec.controller !== undefined && spec.controller !== 'opponent') ||
         spec.controllerPlayer !== undefined ||
         spec.slotGroup !== undefined ||
         !knownDomain ||
@@ -270,7 +281,7 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
         issues.push({
           path: `${at}.perPlayer`,
           message:
-            'a per-player target must be the last slot, an optional (0 to 1) battlefield permanent with no controller of its own',
+            'a per-player target must be the last slot, an optional (0 to 1) battlefield permanent with either no controller restriction or opponents only',
         });
     } else if (spec.controllerPlayer !== undefined || spec.slotGroup !== undefined) {
       issues.push({
@@ -361,6 +372,7 @@ function validateCost(cost: AbilityCost, path: string, issues: AuthoringIssue[])
     case 'payLifeValue':
     case 'exileSelfFromGraveyard':
     case 'unattachSelf':
+    case 'returnUnblockedAttacker':
       break;
     case 'mana':
       validateManaCost(cost.cost, `${path}.cost`, issues);

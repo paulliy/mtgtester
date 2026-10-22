@@ -48,6 +48,7 @@
     "card-capabilities": "bun run scripts/card-capability-impact.ts",
     "test:primitive-contracts": "bun run scripts/test-primitive-contracts.ts",
     "primitive-promotions": "bun run scripts/check-primitive-promotions.ts",
+    "test:pr09-verification": "bun run scripts/run-pr09-verification.ts",
     "test:pr08-verification": "bun run scripts/run-pr08-verification.ts"
   },
   "devDependencies": {

@@ -186,6 +186,8 @@ export interface ExtraCombat {
 
 export interface EngineObject extends GameObject {
   cardId: CardId;
+  /** Copy of a card created in exile (CR 707.12); ceases outside stack/battlefield at SBAs. */
+  isCardCopy?: true;
   /** The active face while a modal DFC is on the battlefield. Non-battlefield cards use front. */
   face?: 'front' | 'back';
   /** Tokens cease to exist when they leave the battlefield (CR 704.5d). */
@@ -427,8 +429,14 @@ export interface EngineCardObject extends EngineObject, CastRecord {
    * which player may cast this exiled card, and only until the cleanup step clears the grant.
    */
   playableUntilEotBy?: PlayerId;
+  /** A temporary cast permission never permits playing a land face. */
+  castOnlyUntilEot?: true;
+  /** Grenzo: only mana spent casting this exact exiled object receives this permission. */
+  spendAsAnyColorUntilEot?: true;
   /** Rebound's one-shot permission to cast this card from exile at the next upkeep. */
   reboundCastBy?: PlayerId;
+  /** Power Pack replaces only a move from the spell’s stack object to a graveyard. */
+  exileIfGraveyardFromStack?: true;
   /**
    * Foretold (CR 702.143a): exiled face down on turn `turn`, castable by its owner on a later
    * turn for `cost`, which it keeps even if the effect that granted foretell is gone (Dream
@@ -591,6 +599,8 @@ export interface EnginePlayerState extends PlayerState {
    * Cleared at the start of each turn.
    */
   spellsCastThisTurnRecords?: CastSpellRecord[];
+  /** Names of spells this player has resolved this game, for Paradigm (CR 702.192). */
+  resolvedSpellNames?: string[];
   /** Muldrotha-style graveyard play uses, keyed by the permanent type spent. */
   playFromZoneTypeUsesThisTurn: Record<string, number>;
   mulligansTaken: number;
@@ -712,7 +722,7 @@ export interface DelayedTrigger {
    * is removed only once it has fired, which is what a delayed trigger waiting for a LATER turn
    * (Rebound's "at the beginning of your next upkeep") needs.
    */
-  expiry: 'endStep' | 'cleanup' | 'onFire';
+  expiry: 'endStep' | 'cleanup' | 'onFire' | 'permanent';
   /** Player affected by/deciding the delayed effect, independent of controller and step owner. */
   affectedPlayerId?: PlayerId;
   /**
@@ -864,7 +874,10 @@ export interface EngineState extends GameState {
    * leaves (CR 610.3c — they return under their owners' control). The exiled
    * object itself lives in `exile`; this only records which one to look for and who gets it.
    */
-  exiledUntilLeaves: Record<CardId, { cardId: CardId; controllerId: PlayerId }[]>;
+  exiledUntilLeaves: Record<
+    CardId,
+    { cardId: CardId; controllerId: PlayerId; objectId?: ObjectId }[]
+  >;
   /**
    * Which players were dealt COMBAT damage by each source THIS TURN, keyed by source card id
    * (Steel Hellkite's "whose controller was dealt combat damage by this creature this turn") —

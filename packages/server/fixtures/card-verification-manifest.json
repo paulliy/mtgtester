@@ -1322,20 +1322,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "6623cb85-fb1e-4561-8b21-0977c25096c2": {
-      "name": "Tibalt's Trickery",
-      "oracleSha256": "33ea9115ee3c1585cb09300e4cdcbec9a6aef6a31e65d0a621be61b8310b1cfd",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
-          "implementation": ["explicitly unsupported; authored as counter only"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "c0d8fef4-65f4-4769-982d-b397d2b7e977": {
       "name": "Animate Dead",
       "oracleSha256": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
@@ -1692,20 +1678,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f": {
-      "name": "Armored Skyhunter",
-      "oracleSha256": "beb1dfe1be14052bd80303cec032231511ea295c455b75da9cbb7c83ab73edeb",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield.",
-          "implementation": ["explicitly unsupported; any artifact, attach omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "27c366cf-00d7-47d4-9577-736bfc4a3b81": {
       "name": "Defacing Duskmage // Vandal's Edit",
       "oracleSha256": "90033991a5fb2a8372e6e32389d181b51b2e8c299176797700ab465a0590d165",
@@ -1907,20 +1879,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9": {
-      "name": "Herald of Amity",
-      "oracleSha256": "78af5d1e821b93ea3ab2185cba96cf7a9c7e8edeec2ce5789fb55537d20aa57f",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost.",
-          "implementation": ["explicitly unsupported; lookAtTopN put onto battlefield"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "6c948f71-5c86-450c-8828-df4d8deaf1dd": {
       "name": "Intermediate Chirography",
       "oracleSha256": "36103619e7b7020c960f42dadebdba74528c7ab39cbb5731dd80304bbe114b3f",
@@ -1929,20 +1887,6 @@
         {
           "oracleText": "{1}{B}: Level 2",
           "implementation": ["explicitly unsupported; class levels omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2": {
-      "name": "Keen Duelist",
-      "oracleSha256": "88c79237d10554689a619bcf06886276fa6c0baa5281ff28d9172a17136f21d2",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "At the beginning of your upkeep, you and target opponent each reveal the top card of your library.",
-          "implementation": ["explicitly unsupported; Dark Confidant substitute"],
           "engineTestIds": ["catalog-audit-contained"],
           "viewerScenarioIds": []
         }
@@ -3302,20 +3246,6 @@
       "gameplayAiScenarioIds": [],
       "referenceAliases": ["oracle-promise-of-loyalty"]
     },
-    "2598294c-a9a7-4bef-a562-23f297a80536": {
-      "name": "Songbirds' Blessing",
-      "oracleSha256": "851e8ce40aa9b09f46e4da79b52d82b41c8833f15d4e8e27bba9cc90fa2727ce",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
-          "implementation": ["explicitly unsupported; reveal-until-Aura unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "81a51328-b995-4f3b-90bc-a20ae21dd254": {
       "name": "Spirit Mantle",
       "oracleSha256": "d7ed1ab4d0b9878a98e1f604086d8f926c94da175da9f6f92e1c044757fd5351",
@@ -3874,22 +3804,6 @@
       ],
       "gameplayAiScenarioIds": ["myriad-landscape-ai-search-quality"]
     },
-    "994bc16d-fdc6-475c-96df-beeb4d5aa03e": {
-      "name": "Mystic Forge",
-      "oracleSha256": "5e8354b233eff99979ff0dd2d28246a320fd9c38c6c7f7b4467c7072ec2065cc",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "You may cast artifact spells and colorless spells from the top of your library.\n{T}, Pay 1 life: Exile the top card of your library.",
-          "implementation": [
-            "explicitly unsupported; colorless omitted; exile-top implemented as mill"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "52aa5a79-db0e-4eaa-b2df-e41674c47794": {
       "name": "Triarch Praetorian",
       "oracleSha256": "19702457c7e73d501b2509808cee1350b8f3944fc392e738b8f0080924578c9d",
@@ -4304,22 +4218,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "9a63f950-2e8a-4617-896c-1d0af538dbc7": {
-      "name": "Szarekh, the Silent King",
-      "oracleSha256": "7e4537aad0a0f57b009017436728f0440b1359bbfd15b6dd33c5e3715ded8cee",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.",
-          "implementation": [
-            "explicitly unsupported; any graveyard artifact creature; Vehicle omitted"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "986f510c-e2ec-423e-a443-51a169939558": {
       "name": "Tomb Fortress",
       "oracleSha256": "65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329",
@@ -4683,22 +4581,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "470ec98e-120c-446d-ade6-7d80aa836b55": {
-      "name": "Aetherworks Marvel",
-      "oracleSha256": "63bc77d8e82fbf5626d65d9995dabe5e599b43fc9327ab23c0074fc1ebbb8860",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.",
-          "implementation": [
-            "explicitly unsupported; rest not random and skipped when none are castable"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "4f63d306-cc14-405c-8424-d8990c670c74": {
       "name": "Territorial Aetherkite",
       "oracleSha256": "3106859a80bb17a69b816832c0e8eb6d49655fb09979542f8aee58130180f893",
@@ -4816,20 +4698,6 @@
             "soul-guide-lantern-draw"
           ],
           "viewerScenarioIds": ["soul-guide-lantern-viewer-draw"]
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "e91240bc-4a13-4131-9379-5ddac6555f4a": {
-      "name": "Adaptive Omnitool",
-      "oracleSha256": "9aa86291de387a49e0871732b0554f206016b51c875f1a00d90657b3af8b88c2",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
-          "implementation": ["explicitly unsupported; artifact put into hand without revealing"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
         }
       ],
       "gameplayAiScenarioIds": []
@@ -6079,29 +5947,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "2068185c-1b50-47d0-aa3f-bf505d199428": {
-      "name": "Dark Confidant",
-      "oracleSha256": "610cc74590705c15607689e64dd4afcb3eb4b411e256c58d99f39baa350377c2",
-      "implementationStatus": "implemented-unreviewed",
-      "referenceAliases": ["oracle-dark-confidant"],
-      "clauses": [
-        {
-          "oracleText": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
-          "implementation": [
-            "Faithful authored behavior for Dark Confidant: At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value."
-          ],
-          "engineTestIds": [
-            "white-black-control-hand.test.ts::reveals and puts the top card into hand, loses its mana value, and does not draw",
-            "white-black-control-hand.test.ts::does nothing with an empty library and does not lose the game",
-            "white-black-control-hand.test.ts::does not trigger during an opponent’s upkeep",
-            "white-black-control-hand.test.ts::reveals a land with mana value zero and loses no life"
-          ],
-          "engineTestSource": ["packages/engine/tests/white-black-control-hand.test.ts"],
-          "viewerScenarioIds": ["dark-confidant-viewer"]
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef": {
       "name": "Living Death",
       "oracleSha256": "9fdd5ecd5f37f4bd7362e93fbe6039b728aff07668f041473a208860ece1a1e5",
@@ -6376,34 +6221,6 @@
       ],
       "gameplayAiScenarioIds": []
     },
-    "7514e401-7aa1-405d-9f7a-312b4e630cc2": {
-      "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
-      "oracleSha256": "b9acb862459f79265bf5d1f6f98bc3738698231ac1dfe57d4c8d83d74c0a7e54",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.",
-          "implementation": ["explicitly unsupported; exile splices without a zone-change"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8": {
-      "name": "Chaos Warp",
-      "oracleSha256": "91d1633155fb401878a9c262aec1695bc6c94cf12b7c014d358242dac30f55d7",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
-          "implementation": ["explicitly unsupported; top card is not revealed"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
     "81dad7c5-5950-4c45-adb0-cf1a15a74250": {
       "name": "Firkraag, Cunning Instigator",
       "oracleSha256": "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579",
@@ -6498,20 +6315,6 @@
             "ghoulish-impetus-returns-under-controller"
           ],
           "viewerScenarioIds": ["ghoulish-impetus-viewer-return-at-end-step"]
-        }
-      ],
-      "gameplayAiScenarioIds": []
-    },
-    "504cc26d-3fd5-4391-9d30-f0614e5c8bbc": {
-      "name": "Dream Pillager",
-      "oracleSha256": "c77de1b52cd703b40e1015265602902c371995eb96966056106bd5927ac5a998",
-      "implementationStatus": "unsupported",
-      "clauses": [
-        {
-          "oracleText": "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.",
-          "implementation": ["explicitly unsupported; exiled lands can be played"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
         }
       ],
       "gameplayAiScenarioIds": []
@@ -13696,6 +13499,1316 @@
           "engineTestIds": ["pr08-alexios-varchild-11"],
           "viewerScenarioIds": ["varchild-viewer-cast-death-gains-survivors"]
         }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8": {
+      "name": "Chaos Warp",
+      "oracleSha256": "0a92bef047916a597355070ad23e806e609a1f66affb5af24a5e236d1f961014",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-chaos-warp-normal-cast",
+        "pr09-chaos-warp-insufficient-cost",
+        "pr09-chaos-warp-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-chaos-warp-clause-1",
+          "oracleText": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+          "implementation": ["Effect.chaosWarp", "TargetSpec.permanent"],
+          "engineTestIds": [
+            "pr09-chaos-reveal-nonpermanent",
+            "pr09-chaos-permanent-result",
+            "pr09-chaos-fizzle",
+            "pr09-chaos-target-domain",
+            "pr09-chaos-empty-library-token",
+            "pr09-chaos-commander-choice"
+          ],
+          "viewerScenarioIds": [
+            "pr09-chaos-warp-viewer-positive",
+            "pr09-chaos-warp-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": ["pr09-chaos-warp-viewer-positive", "pr09-chaos-warp-viewer-negative"],
+      "gameplayAiScenarioIds": []
+    },
+    "e91240bc-4a13-4131-9379-5ddac6555f4a": {
+      "name": "Adaptive Omnitool",
+      "oracleSha256": "23f49352f91de30d07f418f38b2658e0e346bf1088ec63c1210be8b44f438b12",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-adaptive-omnitool-normal-cast",
+        "pr09-adaptive-omnitool-insufficient-cost",
+        "pr09-adaptive-omnitool-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-adaptive-omnitool-clause-1",
+          "oracleText": "Equipped creature gets +1/+1 for each artifact you control.",
+          "implementation": ["StaticEffect", "Value.countPermanents"],
+          "engineTestIds": ["pr09-omnitool-equip-sorcery-artifact-count"],
+          "viewerScenarioIds": ["pr09-adaptive-omnitool-viewer-positive"]
+        },
+        {
+          "id": "pr09-adaptive-omnitool-clause-2",
+          "oracleText": "Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+          "implementation": ["Effect.lookAtTopN", "TriggerSpec.attacks", "SearchDestination"],
+          "engineTestIds": [
+            "pr09-omnitool-only-equipped-creature-attacks-trigger",
+            "pr09-omnitool-reveal-zone-change-privacy",
+            "pr09-omnitool-top-six-filter",
+            "pr09-omnitool-decline",
+            "pr09-omnitool-no-match-empty-short",
+            "pr09-omnitool-empty-and-short",
+            "pr09-omnitool-seeded-random-bottom"
+          ],
+          "viewerScenarioIds": [
+            "pr09-adaptive-omnitool-viewer-positive",
+            "pr09-adaptive-omnitool-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-adaptive-omnitool-clause-3",
+          "oracleText": "Equip {3}",
+          "implementation": ["ActivatedAbility", "AbilityCost.mana", "ActivatedAbility.timing"],
+          "engineTestIds": ["pr09-omnitool-equip-sorcery-artifact-count"],
+          "viewerScenarioIds": [
+            "pr09-adaptive-omnitool-viewer-positive",
+            "pr09-adaptive-omnitool-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-adaptive-omnitool-viewer-positive",
+        "pr09-adaptive-omnitool-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f": {
+      "name": "Armored Skyhunter",
+      "oracleSha256": "1efd23c5a6a2393adcc2ab4c4ae0514eb36fc0719a0ec6b04533dbf42dc4ef16",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-armored-skyhunter-normal-cast",
+        "pr09-armored-skyhunter-insufficient-cost",
+        "pr09-armored-skyhunter-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-armored-skyhunter-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["pr09-printed-flying-and-trample-combat"],
+          "viewerScenarioIds": ["pr09-armored-skyhunter-viewer-positive"]
+        },
+        {
+          "id": "pr09-armored-skyhunter-clause-2",
+          "oracleText": "Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.",
+          "implementation": ["Effect.lookAtTopN", "TriggerSpec.attacks", "SearchDestination"],
+          "engineTestIds": [
+            "pr09-skyhunter-only-self-attack-triggers",
+            "pr09-skyhunter-filter-and-put-equipment",
+            "pr09-skyhunter-aura-legal-attachment",
+            "pr09-skyhunter-decline-equipment-attachment",
+            "pr09-skyhunter-decline-placement",
+            "pr09-skyhunter-no-hit-short-empty",
+            "pr09-skyhunter-seeded-random-bottom",
+            "pr09-look-failed-aura-bottom-remainder"
+          ],
+          "viewerScenarioIds": [
+            "pr09-armored-skyhunter-viewer-positive",
+            "pr09-armored-skyhunter-viewer-negative",
+            "pr09-armored-skyhunter-viewer-aura"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-armored-skyhunter-viewer-positive",
+        "pr09-armored-skyhunter-viewer-negative",
+        "pr09-armored-skyhunter-viewer-aura"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2068185c-1b50-47d0-aa3f-bf505d199428": {
+      "name": "Dark Confidant",
+      "oracleSha256": "5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-dark-confidant-normal-cast",
+        "pr09-dark-confidant-insufficient-cost",
+        "pr09-dark-confidant-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-dark-confidant-clause-1",
+          "oracleText": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+          "implementation": ["Effect.drawRevealTopLoseManaValue", "TriggerSpec.upkeep"],
+          "engineTestIds": [
+            "pr09-dark-confidant-upkeep-reveal-hand-life",
+            "pr09-dark-confidant-opponent-empty-and-zero"
+          ],
+          "viewerScenarioIds": [
+            "pr09-dark-confidant-viewer-positive",
+            "pr09-dark-confidant-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-dark-confidant-viewer-positive",
+        "pr09-dark-confidant-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "504cc26d-3fd5-4391-9d30-f0614e5c8bbc": {
+      "name": "Dream Pillager",
+      "oracleSha256": "dff902aff42d2906942f8d0e620183b454ed6bc6de9e731c0863e76ac7c2895e",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-dream-pillager-normal-cast",
+        "pr09-dream-pillager-insufficient-cost",
+        "pr09-dream-pillager-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-dream-pillager-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["pr09-pillager-normal-cast"],
+          "viewerScenarioIds": [
+            "pr09-dream-pillager-viewer-positive",
+            "pr09-dream-pillager-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-dream-pillager-clause-2",
+          "oracleText": "Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.",
+          "implementation": [
+            "Effect.exileTopNPlayableUntilEot",
+            "TriggerSpec.dealsCombatDamageToPlayer",
+            "Value.damageDealt"
+          ],
+          "engineTestIds": [
+            "pr09-pillager-combat-damage",
+            "pr09-pillager-mana-and-player-permission",
+            "pr09-pillager-noncombat-wrong-source",
+            "pr09-pillager-planeswalker-and-departure",
+            "pr09-pillager-source-leaves-after-permission",
+            "pr09-pillager-cast-only-mdfc"
+          ],
+          "viewerScenarioIds": [
+            "pr09-dream-pillager-viewer-positive",
+            "pr09-dream-pillager-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-dream-pillager-viewer-positive",
+        "pr09-dream-pillager-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7514e401-7aa1-405d-9f7a-312b4e630cc2": {
+      "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+      "oracleSha256": "e3b73f76b96885e3818faa7986a9265e04bbd1552cdf623b944dca2ae51976fa",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-etali-primal-conqueror-etali-primal-sickness-normal-cast",
+        "pr09-etali-primal-conqueror-etali-primal-sickness-insufficient-cost",
+        "pr09-etali-primal-conqueror-etali-primal-sickness-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-etali-primal-conqueror-etali-primal-sickness-clause-1",
+          "oracleText": "Trample",
+          "implementation": ["Keyword.trample"],
+          "engineTestIds": ["pr09-printed-flying-and-trample-combat"],
+          "viewerScenarioIds": ["pr09-etali-viewer-positive", "pr09-etali-viewer-negative"]
+        },
+        {
+          "id": "pr09-etali-primal-conqueror-etali-primal-sickness-clause-2",
+          "oracleText": "When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.",
+          "implementation": ["Effect.exileEachUntilNonlandCast", "TriggerSpec.enters"],
+          "engineTestIds": [
+            "pr09-etali-exiles-all-first-then-casts-in-chosen-order-and-can-decline"
+          ],
+          "viewerScenarioIds": ["pr09-etali-viewer-positive", "pr09-etali-viewer-negative"]
+        },
+        {
+          "id": "pr09-etali-primal-conqueror-etali-primal-sickness-clause-3",
+          "oracleText": "{9}{G/P}: Transform Etali. Activate only as a sorcery.",
+          "implementation": [
+            "Ability.activated",
+            "AbilityCost.mana",
+            "Effect.transformSelf",
+            "ActivatedAbility.timing"
+          ],
+          "engineTestIds": [
+            "pr09-etali-transform-cost-and-sorcery-timing",
+            "pr09-etali-back-face-poison"
+          ],
+          "viewerScenarioIds": [
+            "pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform"
+          ]
+        },
+        {
+          "id": "pr09-etali-primal-conqueror-etali-primal-sickness-clause-4",
+          "oracleText": "Trample, indestructible",
+          "implementation": ["Keyword.trample", "Keyword.indestructible"],
+          "engineTestIds": ["pr09-etali-transform-cost-and-sorcery-timing"],
+          "viewerScenarioIds": [
+            "pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform"
+          ]
+        },
+        {
+          "id": "pr09-etali-primal-conqueror-etali-primal-sickness-clause-5",
+          "oracleText": "Whenever Etali deals combat damage to a player, they get that many poison counters. (A player with ten or more poison counters loses the game.)",
+          "implementation": [
+            "TriggerSpec.dealsCombatDamageToPlayer",
+            "Effect.giveTargetPoisonCounters",
+            "Value.damageDealt"
+          ],
+          "engineTestIds": ["pr09-etali-back-face-poison"],
+          "viewerScenarioIds": [
+            "pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-etali-viewer-positive",
+        "pr09-etali-viewer-negative",
+        "pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2": {
+      "name": "Keen Duelist",
+      "oracleSha256": "627aac8300f02188c46ce9ace0f40bff9e43f22c526c632c06b0ce9cbd6f1856",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-keen-duelist-normal-cast",
+        "pr09-keen-duelist-insufficient-cost",
+        "pr09-keen-duelist-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-keen-duelist-clause-1",
+          "oracleText": "At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.",
+          "implementation": [
+            "Effect.mutualRevealTopLoseManaValue",
+            "TargetSpec.player",
+            "TriggerSpec.upkeep"
+          ],
+          "engineTestIds": [
+            "pr09-duelist-own-upkeep-reveal-life-and-hand",
+            "pr09-duelist-wrong-upkeep-does-not-trigger",
+            "pr09-duelist-target-opponents-only",
+            "pr09-duelist-illegal-target-fizzles-all",
+            "pr09-duelist-empty-library",
+            "pr09-duelist-source-departure-keeps-controller",
+            "pr09-duelist-controller-change-keeps-trigger-controller"
+          ],
+          "viewerScenarioIds": [
+            "pr09-keen-duelist-viewer-positive",
+            "pr09-keen-duelist-viewer-cast",
+            "pr09-keen-duelist-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-keen-duelist-viewer-positive",
+        "pr09-keen-duelist-viewer-cast",
+        "pr09-keen-duelist-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2598294c-a9a7-4bef-a562-23f297a80536": {
+      "name": "Songbirds' Blessing",
+      "oracleSha256": "7d9f1b0535da2a928bbec915f98ab6f0a26234f87f4645072076ea205b2374c0",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-songbirds-blessing-normal-cast",
+        "pr09-songbirds-blessing-insufficient-cost",
+        "pr09-songbirds-blessing-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-songbirds-blessing-clause-1",
+          "oracleText": "Enchant creature",
+          "implementation": ["TargetSpec.creature"],
+          "engineTestIds": [
+            "pr09-songbirds-enchant-and-legal-aura-entry",
+            "pr09-songbirds-illegal-aura-host-goes-to-hand"
+          ],
+          "viewerScenarioIds": [
+            "pr09-songbirds-blessing-viewer-positive",
+            "pr09-songbirds-blessing-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-songbirds-blessing-clause-2",
+          "oracleText": "Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.",
+          "implementation": [
+            "Effect.revealUntilAura",
+            "TriggerSpec.attacks",
+            "Selector.attachedToSource"
+          ],
+          "engineTestIds": ["pr09-songbirds-illegal-aura-host-goes-to-hand"],
+          "viewerScenarioIds": [
+            "pr09-songbirds-blessing-viewer-positive",
+            "pr09-songbirds-blessing-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-songbirds-blessing-viewer-positive",
+        "pr09-songbirds-blessing-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9a63f950-2e8a-4617-896c-1d0af538dbc7": {
+      "name": "Szarekh, the Silent King",
+      "oracleSha256": "e4fff6dac7991e615f0b4bf6b98bb646ba85908af5dd83192cd29634bb3d26c1",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-szarekh-the-silent-king-normal-cast",
+        "pr09-szarekh-the-silent-king-insufficient-cost",
+        "pr09-szarekh-the-silent-king-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-szarekh-the-silent-king-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["pr09-printed-flying-and-trample-combat"],
+          "viewerScenarioIds": [
+            "pr09-szarekh-the-silent-king-viewer-positive",
+            "pr09-szarekh-the-silent-king-viewer-cast"
+          ]
+        },
+        {
+          "id": "pr09-szarekh-the-silent-king-clause-2",
+          "oracleText": "My Will Be Done — Whenever Szarekh attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.",
+          "implementation": [
+            "Effect.millAndChooseArtifact",
+            "TriggerSpec.attacks",
+            "Selector.self"
+          ],
+          "engineTestIds": [
+            "pr09-szarekh-attack-mills-three-and-returns-eligible",
+            "pr09-szarekh-excludes-generic-artifact",
+            "pr09-szarekh-only-milled-cards-and-one-return",
+            "pr09-szarekh-no-matches-or-empty"
+          ],
+          "viewerScenarioIds": [
+            "pr09-szarekh-the-silent-king-viewer-positive",
+            "pr09-szarekh-the-silent-king-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-szarekh-the-silent-king-viewer-positive",
+        "pr09-szarekh-the-silent-king-viewer-negative",
+        "pr09-szarekh-the-silent-king-viewer-cast"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6623cb85-fb1e-4561-8b21-0977c25096c2": {
+      "name": "Tibalt's Trickery",
+      "oracleSha256": "e94f2ce5ff465845835e1127d3c99406773e2454e2054b5162cec2c00c13176b",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-tibalt-s-trickery-normal-cast",
+        "pr09-tibalt-s-trickery-insufficient-cost",
+        "pr09-tibalt-s-trickery-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-tibalt-s-trickery-clause-1",
+          "oracleText": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
+          "implementation": ["Effect.trickery", "TargetSpec.spell"],
+          "engineTestIds": [
+            "pr09-trickery-target-any-spell",
+            "pr09-trickery-seeded-random-mills",
+            "pr09-trickery-public-exile-and-different-name",
+            "pr09-trickery-decline-bottom-repeatable",
+            "pr09-trickery-empty-and-fizzle",
+            "pr09-trickery-counter-prevented-still-resolves",
+            "pr09-trickery-freecast-normal-stack",
+            "pr09-trickery-no-permission-after-decline",
+            "pr09-trickery-adventure-face-name"
+          ],
+          "viewerScenarioIds": [
+            "pr09-tibalt-s-trickery-viewer-positive",
+            "pr09-tibalt-s-trickery-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-tibalt-s-trickery-viewer-positive",
+        "pr09-tibalt-s-trickery-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "470ec98e-120c-446d-ade6-7d80aa836b55": {
+      "name": "Aetherworks Marvel",
+      "oracleSha256": "4b4ead37bd8be62cbb692c14475ead91307cd0aef4fc4b4293a640bb1a8078dd",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-aetherworks-marvel-normal-cast",
+        "pr09-aetherworks-marvel-insufficient-cost",
+        "pr09-aetherworks-marvel-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-aetherworks-marvel-clause-1",
+          "oracleText": "Whenever a permanent you control is put into a graveyard, you get {E} (an energy counter).",
+          "implementation": ["Effect.gainEnergy", "TriggerSpec.dies", "TriggerSubject.permanent"],
+          "engineTestIds": [
+            "pr09-marvel-energy",
+            "pr09-marvel-self-to-graveyard",
+            "pr09-marvel-energy-exclusions"
+          ],
+          "viewerScenarioIds": ["pr09-aetherworks-marvel-viewer-positive"]
+        },
+        {
+          "id": "pr09-aetherworks-marvel-clause-2",
+          "oracleText": "{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+          "implementation": [
+            "Effect.lookAtTopNCastOneFree",
+            "AbilityCost.payEnergy",
+            "AbilityCost.tap",
+            "ActivatedAbility.timing"
+          ],
+          "engineTestIds": [
+            "pr09-marvel-cost-gates",
+            "pr09-marvel-activate-cast-one",
+            "pr09-marvel-no-eligible-decline-empty",
+            "pr09-marvel-no-land-permission"
+          ],
+          "viewerScenarioIds": [
+            "pr09-aetherworks-marvel-viewer-positive",
+            "pr09-aetherworks-marvel-viewer-negative",
+            "pr09-aetherworks-marvel-viewer-activation"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-aetherworks-marvel-viewer-positive",
+        "pr09-aetherworks-marvel-viewer-negative",
+        "pr09-aetherworks-marvel-viewer-activation"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9": {
+      "name": "Herald of Amity",
+      "oracleSha256": "9c80cb04a907304cc5a4b3bb7c43d286f4c23345ad1abb1d5cbc149a666bbeb9",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-herald-of-amity-normal-cast",
+        "pr09-herald-of-amity-insufficient-cost",
+        "pr09-herald-of-amity-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-herald-of-amity-clause-1",
+          "oracleText": "Flying",
+          "implementation": ["Keyword.flying"],
+          "engineTestIds": ["pr09-herald-normal-cast-and-flying"],
+          "viewerScenarioIds": [
+            "pr09-herald-of-amity-viewer-positive",
+            "pr09-herald-of-amity-viewer-negative",
+            "pr09-herald-of-amity-viewer-attack"
+          ]
+        },
+        {
+          "id": "pr09-herald-of-amity-clause-2",
+          "oracleText": "When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost. Then put the rest on the bottom of your library in a random order.",
+          "implementation": ["Effect.lookAtTopNCastOneFree", "TriggerSpec.enters"],
+          "engineTestIds": [
+            "pr09-herald-etb-exiles-before-aura-cast",
+            "pr09-herald-aura-filter",
+            "pr09-herald-no-host",
+            "pr09-herald-decline-and-empty"
+          ],
+          "viewerScenarioIds": [
+            "pr09-herald-of-amity-viewer-positive",
+            "pr09-herald-of-amity-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-herald-of-amity-clause-3",
+          "oracleText": "Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.",
+          "implementation": ["Effect.pumpUntilEot", "TriggerSpec.attacks", "Value.countPermanents"],
+          "engineTestIds": ["pr09-herald-attack-aura-count"],
+          "viewerScenarioIds": ["pr09-herald-of-amity-viewer-attack"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-herald-of-amity-viewer-positive",
+        "pr09-herald-of-amity-viewer-negative",
+        "pr09-herald-of-amity-viewer-attack"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "994bc16d-fdc6-475c-96df-beeb4d5aa03e": {
+      "name": "Mystic Forge",
+      "oracleSha256": "cf9d7ad93231927235c7773cf421c5d1865449e1166b7c23272cbce063d989dc",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-mystic-forge-normal-cast",
+        "pr09-mystic-forge-insufficient-cost",
+        "pr09-mystic-forge-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-mystic-forge-clause-1",
+          "oracleText": "You may look at the top card of your library any time.",
+          "implementation": ["RuleStatic.lookTopLibrary"],
+          "engineTestIds": ["pr09-mystic-forge-top-privacy-and-eligibility"],
+          "viewerScenarioIds": [
+            "pr09-mystic-forge-viewer-positive",
+            "pr09-mystic-forge-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-mystic-forge-clause-2",
+          "oracleText": "You may cast artifact spells and colorless spells from the top of your library.",
+          "implementation": [
+            "RuleStatic.castFromZone",
+            "Selector.anyOf",
+            "Selector.color",
+            "Selector.type"
+          ],
+          "engineTestIds": [
+            "pr09-mystic-forge-top-privacy-and-eligibility",
+            "pr09-mystic-forge-selected-face-permission",
+            "pr09-mystic-forge-face-filter-cannot-leak"
+          ],
+          "viewerScenarioIds": [
+            "pr09-mystic-forge-viewer-positive",
+            "pr09-mystic-forge-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-mystic-forge-clause-3",
+          "oracleText": "{T}, Pay 1 life: Exile the top card of your library.",
+          "implementation": ["Effect.exileLibraryTop", "AbilityCost.payLife", "AbilityCost.tap"],
+          "engineTestIds": ["pr09-mystic-forge-activation-costs-and-top-object"],
+          "viewerScenarioIds": ["pr09-mystic-forge-viewer-activation"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-mystic-forge-viewer-positive",
+        "pr09-mystic-forge-viewer-negative",
+        "pr09-mystic-forge-viewer-activation"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0866a630-d962-4aa9-a15f-08b2947540ef": {
+      "name": "Cosmic Cube",
+      "oracleSha256": "47efe05e916a05b4078df0d57fe57f90993b3de3b20b8e8bf58e161d1231c5ea",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-cosmic-cube-normal-cast",
+        "pr09-cosmic-cube-insufficient-cost",
+        "pr09-cosmic-cube-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-cosmic-cube-clause-1",
+          "oracleText": "Ward {2}",
+          "implementation": ["CardDefinition.ward", "WardCost.mana"],
+          "engineTestIds": ["pr09-cube-normal-cast-ward"],
+          "viewerScenarioIds": [
+            "pr09-cosmic-cube-viewer-positive",
+            "pr09-cosmic-cube-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-cosmic-cube-clause-2",
+          "oracleText": "Whenever you attack, look at the top six cards of your library. You may cast a spell from among them with mana value less than or equal to the greatest power among attacking creatures you control without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+          "implementation": [
+            "Effect.lookAtTopNCastOneFree",
+            "TriggerSpec.attackDeclared",
+            "Value.greatestPowerAmong"
+          ],
+          "engineTestIds": [
+            "pr09-cube-attack-batch",
+            "pr09-cube-resolution-power-limit",
+            "pr09-cube-no-eligible-bottom"
+          ],
+          "viewerScenarioIds": [
+            "pr09-cosmic-cube-viewer-positive",
+            "pr09-cosmic-cube-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": ["pr09-cosmic-cube-viewer-positive", "pr09-cosmic-cube-viewer-negative"],
+      "gameplayAiScenarioIds": []
+    },
+    "c7aecca5-2f67-4245-ab2d-e723d8b23a67": {
+      "name": "Expressive Iteration",
+      "oracleSha256": "d5590037b1223c19eec19f928c0f1efdf6cb50bc5d802cd17cfd3c9666b60980",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-expressive-iteration-normal-cast",
+        "pr09-expressive-iteration-insufficient-cost",
+        "pr09-expressive-iteration-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-expressive-iteration-clause-1",
+          "oracleText": "Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.",
+          "implementation": ["Effect.partitionLibrary"],
+          "engineTestIds": ["pr09-expressive-iteration-short-library-and-land-timing"],
+          "viewerScenarioIds": [
+            "pr09-expressive-iteration-viewer-positive",
+            "pr09-expressive-iteration-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-expressive-iteration-viewer-positive",
+        "pr09-expressive-iteration-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "af20f452-5cb9-47cc-9a81-71f23204ddd0": {
+      "name": "Franklin Richards, Ascendant",
+      "oracleSha256": "8185139048a7134b9e67a9e4740af3c37acafac1d1994a388e1cad0d464f6d0c",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-franklin-richards-ascendant-normal-cast",
+        "pr09-franklin-richards-ascendant-insufficient-cost",
+        "pr09-franklin-richards-ascendant-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-franklin-richards-ascendant-clause-1",
+          "oracleText": "At the beginning of combat on your turn, if you've cast a noncreature spell this turn, discover 6. (Exile cards from the top of your library until you exile a nonland card with mana value 6 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+          "implementation": [
+            "Condition.castSpellThisTurn",
+            "Effect.discover",
+            "TriggerSpec.beginningOfCombat"
+          ],
+          "engineTestIds": [
+            "pr09-franklin-own-combat-discover",
+            "pr09-franklin-no-opponent-combat"
+          ],
+          "viewerScenarioIds": [
+            "pr09-franklin-richards-ascendant-viewer-positive",
+            "pr09-franklin-richards-ascendant-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-franklin-richards-ascendant-viewer-positive",
+        "pr09-franklin-richards-ascendant-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "06f42f49-32f0-413b-8437-b8efa4d647c2": {
+      "name": "Genesis Ultimatum",
+      "oracleSha256": "4e63fe81fc6953ad87c5b9a63b600f8854de58debbd9701cf4e53ddc11250573",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-genesis-ultimatum-normal-cast",
+        "pr09-genesis-ultimatum-insufficient-cost",
+        "pr09-genesis-ultimatum-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-genesis-ultimatum-clause-1",
+          "oracleText": "Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile Genesis Ultimatum.",
+          "implementation": ["Effect.partitionLibrary", "Effect.exileResolvingSpell"],
+          "engineTestIds": [
+            "pr09-genesis-ultimatum-batch-and-remainder",
+            "pr09-batch-aura-cannot-enchant-fellow-entrant"
+          ],
+          "viewerScenarioIds": [
+            "pr09-genesis-ultimatum-viewer-positive",
+            "pr09-genesis-ultimatum-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-genesis-ultimatum-viewer-positive",
+        "pr09-genesis-ultimatum-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ad9d969e-def5-45a3-b65b-0c776f62ef0e": {
+      "name": "Into the Time Vortex",
+      "oracleSha256": "95e845342b47e8d0f475cb460c5bf62f12ce888cbb54353c514661f5f36d31b1",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-into-the-time-vortex-normal-cast",
+        "pr09-into-the-time-vortex-insufficient-cost",
+        "pr09-into-the-time-vortex-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-into-the-time-vortex-clause-1",
+          "oracleText": "Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)",
+          "implementation": ["Keyword.cascade"],
+          "engineTestIds": ["pr09-time-vortex-cascade-and-rebound"],
+          "viewerScenarioIds": [
+            "pr09-into-the-time-vortex-viewer-positive",
+            "pr09-into-the-time-vortex-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-into-the-time-vortex-clause-2",
+          "oracleText": "Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast this card from exile without paying its mana cost.)",
+          "implementation": ["Keyword.rebound"],
+          "engineTestIds": ["pr09-time-vortex-cascade-and-rebound"],
+          "viewerScenarioIds": [
+            "pr09-into-the-time-vortex-viewer-positive",
+            "pr09-into-the-time-vortex-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-into-the-time-vortex-viewer-positive",
+        "pr09-into-the-time-vortex-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "15fbb7b1-c62d-4f82-9f35-2c10299779f4": {
+      "name": "Lurking Predators",
+      "oracleSha256": "c8e0377f7eee329c48107ab2ea4931f08562c81696cbdf6470863fa619c848d1",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-lurking-predators-normal-cast",
+        "pr09-lurking-predators-insufficient-cost",
+        "pr09-lurking-predators-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-lurking-predators-clause-1",
+          "oracleText": "Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.",
+          "implementation": ["Effect.revealCreatureOrBottom", "TriggerSpec.castsSpell"],
+          "engineTestIds": [
+            "pr09-predators-opponent-creature-publicly-enters",
+            "pr09-predators-own-cast-does-not-trigger",
+            "pr09-predators-noncreature-bottom-or-keep"
+          ],
+          "viewerScenarioIds": [
+            "pr09-lurking-predators-viewer-positive",
+            "pr09-lurking-predators-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-lurking-predators-viewer-positive",
+        "pr09-lurking-predators-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d4b5e09b-9ca2-4b51-a4f8-080741810df8": {
+      "name": "Mind's Dilation",
+      "oracleSha256": "fea77c0072f940b3031784388d7c506a49a8855b1ccbf51e901e9970e40ba1e4",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-mind-s-dilation-normal-cast",
+        "pr09-mind-s-dilation-insufficient-cost",
+        "pr09-mind-s-dilation-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-mind-s-dilation-clause-1",
+          "oracleText": "Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.",
+          "implementation": ["Effect.exileLibraryTop", "TriggerSpec.castsSpell"],
+          "engineTestIds": ["pr09-minds-dilation-first-opponent-spell"],
+          "viewerScenarioIds": [
+            "pr09-minds-dilation-viewer-positive",
+            "pr09-minds-dilation-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-minds-dilation-viewer-positive",
+        "pr09-minds-dilation-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6e27956e-ba2f-41a9-8e39-ec54424591b6": {
+      "name": "Monstrous Vortex",
+      "oracleSha256": "9e969505d8c6c85221582cabd1271dfe362f20b7101e515c24483e22d74078e2",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-monstrous-vortex-normal-cast",
+        "pr09-monstrous-vortex-insufficient-cost",
+        "pr09-monstrous-vortex-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-monstrous-vortex-clause-1",
+          "oracleText": "Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value. (Exile cards from the top of your library until you exile a nonland card with that mana value or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+          "implementation": [
+            "Effect.discover",
+            "Selector.powerAtLeast",
+            "TriggerSpec.castsSpell",
+            "Value.spellManaValue"
+          ],
+          "engineTestIds": [
+            "pr09-monstrous-creature-discover",
+            "pr09-monstrous-excludes-low-power-and-opponent",
+            "pr09-monstrous-vortex-characteristic-power-on-stack"
+          ],
+          "viewerScenarioIds": [
+            "pr09-monstrous-vortex-viewer-positive",
+            "pr09-monstrous-vortex-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-monstrous-vortex-viewer-positive",
+        "pr09-monstrous-vortex-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e": {
+      "name": "New Generation's Technique",
+      "oracleSha256": "32d98b4752c502f2ee74f386e387f64891b5776fdf80e3a924b17fc19a2dacde",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-new-generation-s-technique-normal-cast",
+        "pr09-new-generation-s-technique-insufficient-cost",
+        "pr09-new-generation-s-technique-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-new-generation-s-technique-clause-1",
+          "oracleText": "Sneak {2}{G} (You may cast this spell for {2}{G} if you also return an unblocked attacker you control to hand during the declare blockers step.)",
+          "implementation": [
+            "AlternativeCast.nonMana",
+            "AbilityCost.returnUnblockedAttacker",
+            "Condition.duringStep"
+          ],
+          "engineTestIds": [
+            "pr09-sneak-blockers-step-return",
+            "pr09-sneak-availability-boundaries",
+            "pr09-sneak-missing-green",
+            "pr09-sneak-vanished-attacker"
+          ],
+          "viewerScenarioIds": [
+            "pr09-new-generation-s-technique-viewer-positive",
+            "pr09-new-generation-s-technique-viewer-sneak-positive",
+            "pr09-new-generation-s-technique-viewer-sneak-negative"
+          ]
+        },
+        {
+          "id": "pr09-new-generation-s-technique-clause-2",
+          "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+          "implementation": ["Effect.searchLibrary", "Effect.shuffle", "SearchDestination"],
+          "engineTestIds": ["pr09-sneak-pinned-normal-search"],
+          "viewerScenarioIds": [
+            "pr09-new-generation-s-technique-viewer-positive",
+            "pr09-new-generation-s-technique-viewer-negative",
+            "pr09-new-generation-s-technique-viewer-sneak-positive"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-new-generation-s-technique-viewer-positive",
+        "pr09-new-generation-s-technique-viewer-negative",
+        "pr09-new-generation-s-technique-viewer-sneak-positive",
+        "pr09-new-generation-s-technique-viewer-sneak-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "52714c3c-6821-44dd-88ba-813554df9914": {
+      "name": "Path of Discovery",
+      "oracleSha256": "b4bdbf47741256041b7c2497894e602a61761f70904858d66db231cec6f238f3",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-path-of-discovery-normal-cast",
+        "pr09-path-of-discovery-insufficient-cost",
+        "pr09-path-of-discovery-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-path-of-discovery-clause-1",
+          "oracleText": "Whenever a creature you control enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)",
+          "implementation": ["Effect.explore", "TriggerSpec.enters"],
+          "engineTestIds": [
+            "pr09-path-own-creature-enters-explore-land",
+            "pr09-path-nonland-counter-and-graveyard-choice",
+            "pr09-path-empty-library-still-counter"
+          ],
+          "viewerScenarioIds": [
+            "pr09-path-of-discovery-viewer-positive",
+            "pr09-path-of-discovery-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-path-of-discovery-viewer-positive",
+        "pr09-path-of-discovery-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3d5c98ff-fcf1-42bd-9533-2648791a4f45": {
+      "name": "Power Pack",
+      "oracleSha256": "f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-power-pack-normal-cast",
+        "pr09-power-pack-insufficient-cost",
+        "pr09-power-pack-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-power-pack-clause-1",
+          "oracleText": "Flying, vigilance, trample, haste",
+          "implementation": [
+            "Keyword.flying",
+            "Keyword.vigilance",
+            "Keyword.trample",
+            "Keyword.haste"
+          ],
+          "engineTestIds": ["pr09-power-pack-normal-paid-cast-keywords-and-timing"],
+          "viewerScenarioIds": ["pr09-power-pack-viewer-positive"]
+        },
+        {
+          "id": "pr09-power-pack-clause-2",
+          "oracleText": "Whenever Power Pack deals combat damage to a player, exile target instant or sorcery card from your graveyard chosen at random. At the beginning of your next upkeep, you may cast that card without paying its mana cost. If that spell would be put into your graveyard, exile it instead.",
+          "implementation": [
+            "Effect.exileAndCastNextUpkeep",
+            "TriggerSpec.dealsCombatDamageToPlayer",
+            "TargetSpec.cardInGraveyard"
+          ],
+          "engineTestIds": [
+            "pr09-power-pack-combat-damage-random-eligible-and-seeded",
+            "pr09-power-pack-no-eligible-card",
+            "pr09-power-pack-target-moved-before-resolution",
+            "pr09-power-pack-source-gone-and-your-upkeep-only",
+            "pr09-power-pack-decline-expires-trigger",
+            "pr09-power-pack-free-targeted-spell-pays-additional-cost-and-resolves-to-exile",
+            "pr09-power-pack-fizzled-spell-exiles",
+            "pr09-power-pack-exact-exile-object"
+          ],
+          "viewerScenarioIds": [
+            "pr09-power-pack-viewer-positive",
+            "pr09-power-pack-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": ["pr09-power-pack-viewer-positive", "pr09-power-pack-viewer-negative"],
+      "gameplayAiScenarioIds": []
+    },
+    "10d482fd-e034-4187-b148-51fe15885360": {
+      "name": "Sunbird's Invocation",
+      "oracleSha256": "be08ff24672e75b23eb03cf79632ba6e9a3860e772bfddd47a592d65e9cfa160",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-sunbird-s-invocation-normal-cast",
+        "pr09-sunbird-s-invocation-insufficient-cost",
+        "pr09-sunbird-s-invocation-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-sunbird-s-invocation-clause-1",
+          "oracleText": "Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+          "implementation": [
+            "Effect.lookAtTopNCastOneFree",
+            "TriggerSpec.castsSpell",
+            "Value.spellManaValue"
+          ],
+          "engineTestIds": ["pr09-sunbirds-captured-mana-value-and-reveal-count"],
+          "viewerScenarioIds": [
+            "pr09-sunbirds-invocation-viewer-positive",
+            "pr09-sunbirds-invocation-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-sunbirds-invocation-viewer-positive",
+        "pr09-sunbirds-invocation-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d51136fa-3c13-48a5-83fd-51fe00010a4b": {
+      "name": "Celebrate the Mountain-king",
+      "oracleSha256": "bcb33e09cc00ce91a1cbc0d2b24e41f7a40fc3be9ca5eef4b2dc6b27102e80ae",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-celebrate-the-mountain-king-normal-cast",
+        "pr09-celebrate-the-mountain-king-insufficient-cost",
+        "pr09-celebrate-the-mountain-king-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-celebrate-the-mountain-king-clause-1",
+          "oracleText": "When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.",
+          "implementation": [
+            "Effect.exileEachChosenUntilSourceLeaves",
+            "TargetSpec.nonlandPermanent"
+          ],
+          "engineTestIds": [
+            "pr09-celebrate-orders-independent-triggers-and-targets-per-opponent",
+            "pr09-celebrate-no-targets-and-land-discard",
+            "pr09-celebrate-source-gone-before-resolution",
+            "pr09-celebrate-source-leaves-returns-to-owner-as-new-object",
+            "pr09-celebrate-commander-replacement-stays-command"
+          ],
+          "viewerScenarioIds": [
+            "pr09-celebrate-the-mountain-king-viewer-exile-positive",
+            "pr09-celebrate-the-mountain-king-viewer-exile-negative"
+          ]
+        },
+        {
+          "id": "pr09-celebrate-the-mountain-king-clause-2",
+          "oracleText": "When this enchantment enters, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)",
+          "implementation": ["Effect.recruit", "TriggerSpec.enters"],
+          "engineTestIds": ["pr09-celebrate-no-targets-and-land-discard"],
+          "viewerScenarioIds": [
+            "pr09-celebrate-the-mountain-king-viewer-positive",
+            "pr09-celebrate-the-mountain-king-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-celebrate-the-mountain-king-viewer-positive",
+        "pr09-celebrate-the-mountain-king-viewer-negative",
+        "pr09-celebrate-the-mountain-king-viewer-exile-positive",
+        "pr09-celebrate-the-mountain-king-viewer-exile-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "119d9671-61ba-4629-89b1-f94bdec5cb74": {
+      "name": "Chimil, the Inner Sun",
+      "oracleSha256": "ab61ad6ff73b0200b488f466b910106883ce2cbe49c68d940452b5389dfc68cf",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-chimil-the-inner-sun-normal-cast",
+        "pr09-chimil-the-inner-sun-insufficient-cost",
+        "pr09-chimil-the-inner-sun-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-chimil-the-inner-sun-clause-1",
+          "oracleText": "Spells you control can't be countered.",
+          "implementation": ["RuleStatic.cantBeCountered"],
+          "engineTestIds": ["pr09-trickery-counter-prevented-still-resolves"],
+          "viewerScenarioIds": [
+            "pr09-chimil-the-inner-sun-viewer-positive",
+            "pr09-chimil-the-inner-sun-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-chimil-the-inner-sun-clause-2",
+          "oracleText": "At the beginning of your end step, discover 5. (Exile cards from the top of your library until you exile a nonland card with mana value 5 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+          "implementation": ["Effect.discover", "TriggerSpec.endStep"],
+          "engineTestIds": ["pr09-chimil-own-end-step-discover", "pr09-chimil-opponent-end-step"],
+          "viewerScenarioIds": ["pr09-chimil-the-inner-sun-viewer-positive"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-chimil-the-inner-sun-viewer-positive",
+        "pr09-chimil-the-inner-sun-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fd4f0315-567a-4cc5-bc7e-88a9d2cee910": {
+      "name": "Improvisation Capstone",
+      "oracleSha256": "ed0c8fbc3615cff301866d51874c3a7c0c12fe681f0fc5ef55ed72b419609c62",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-improvisation-capstone-normal-cast",
+        "pr09-improvisation-capstone-insufficient-cost",
+        "pr09-improvisation-capstone-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-improvisation-capstone-clause-1",
+          "oracleText": "Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.",
+          "implementation": ["Effect.capstoneParadigm"],
+          "engineTestIds": [
+            "pr09-paradigm-reveals-through-land-to-total-mana-value-four",
+            "pr09-paradigm-can-cast-any-number-in-any-order-and-decline-the-rest",
+            "pr09-paradigm-free-cast-keeps-targets-and-additional-costs"
+          ],
+          "viewerScenarioIds": [
+            "pr09-improvisation-capstone-viewer-positive",
+            "pr09-improvisation-capstone-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-improvisation-capstone-clause-2",
+          "oracleText": "Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+          "implementation": ["Effect.capstoneParadigm"],
+          "engineTestIds": [
+            "pr09-paradigm-normal-paid-cast-and-stack-timing",
+            "pr09-paradigm-exiles-original-and-persists-after-source-moves",
+            "pr09-paradigm-only-your-precombat-main",
+            "pr09-paradigm-creates-copy-in-exile-and-may-cast-it-through-stack",
+            "pr09-paradigm-declined-copy-ceases-at-sba",
+            "pr09-paradigm-first-resolved-name-is-per-controller",
+            "pr09-paradigm-unresolved-spell-does-not-record-a-resolved-name",
+            "pr09-paradigm-template-is-frozen-at-first-resolution"
+          ],
+          "viewerScenarioIds": [
+            "pr09-improvisation-capstone-viewer-positive",
+            "pr09-improvisation-capstone-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-improvisation-capstone-viewer-positive",
+        "pr09-improvisation-capstone-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2e420001-2b3d-4eb7-b01c-3a49d5e241c2": {
+      "name": "Rabble Rousing",
+      "oracleSha256": "1f38ae0c31db3230f52fa616257d866895a1e898fa8d214fdbaa722b674b3872",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-rabble-rousing-normal-cast",
+        "pr09-rabble-rousing-insufficient-cost",
+        "pr09-rabble-rousing-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-rabble-rousing-clause-1",
+          "oracleText": "Hideaway 5 (When this enchantment enters, look at the top five cards of your library, exile one face down, then put the rest on the bottom in a random order.)",
+          "implementation": ["Effect.hideaway", "TriggerSpec.enters"],
+          "engineTestIds": [
+            "pr09-rabble-hideaway-five-private-and-linked",
+            "pr09-rabble-empty-library"
+          ],
+          "viewerScenarioIds": ["pr09-rabble-rousing-viewer-positive"]
+        },
+        {
+          "id": "pr09-rabble-rousing-clause-2",
+          "oracleText": "Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may play the exiled card without paying its mana cost.",
+          "implementation": [
+            "Effect.createToken",
+            "Effect.playExiledCardFree",
+            "Condition.countPermanents",
+            "TriggerSpec.attackDeclared"
+          ],
+          "engineTestIds": [
+            "pr09-rabble-attack-batch-creates-one-citizen-per-attacker",
+            "pr09-rabble-opponent-attacks-do-not-trigger",
+            "pr09-rabble-ten-creatures-casts-linked-spell-free",
+            "pr09-rabble-below-ten-declines-free-play",
+            "pr09-rabble-land-limit-and-own-turn",
+            "pr09-rabble-blink-does-not-play-older-incarnation-card"
+          ],
+          "viewerScenarioIds": [
+            "pr09-rabble-rousing-viewer-positive",
+            "pr09-rabble-rousing-viewer-negative"
+          ]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-rabble-rousing-viewer-positive",
+        "pr09-rabble-rousing-viewer-negative"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f2ef8bda-373d-4387-900d-0f1b6ccf72e9": {
+      "name": "Trumpeting Carnosaur",
+      "oracleSha256": "0c5ea13210c3c4da02b3f6f89c624884f25632d6e12ccba9a5cad4e39a73f2d3",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-trumpeting-carnosaur-normal-cast",
+        "pr09-trumpeting-carnosaur-insufficient-cost",
+        "pr09-trumpeting-carnosaur-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-trumpeting-carnosaur-clause-1",
+          "oracleText": "Trample",
+          "implementation": ["Keyword.trample"],
+          "engineTestIds": ["pr09-printed-flying-and-trample-combat"],
+          "viewerScenarioIds": [
+            "pr09-trumpeting-carnosaur-viewer-positive",
+            "pr09-trumpeting-carnosaur-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-trumpeting-carnosaur-clause-2",
+          "oracleText": "When this creature enters, discover 5.",
+          "implementation": ["Effect.discover", "TriggerSpec.enters"],
+          "engineTestIds": ["pr09-carnosaur-cast-etb-discover"],
+          "viewerScenarioIds": [
+            "pr09-trumpeting-carnosaur-viewer-positive",
+            "pr09-trumpeting-carnosaur-viewer-negative"
+          ]
+        },
+        {
+          "id": "pr09-trumpeting-carnosaur-clause-3",
+          "oracleText": "{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.",
+          "implementation": [
+            "ActivatedAbility",
+            "AbilityCost.discardSelf",
+            "AbilityCost.mana",
+            "Effect.dealDamage",
+            "TargetSpec.permanent"
+          ],
+          "engineTestIds": ["pr09-carnosaur-activation-hand-only-cost"],
+          "viewerScenarioIds": ["pr09-trumpeting-carnosaur-viewer-discard"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-trumpeting-carnosaur-viewer-positive",
+        "pr09-trumpeting-carnosaur-viewer-negative",
+        "pr09-trumpeting-carnosaur-viewer-discard"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "80788290-1569-4c7f-b263-b4da7b31a9d1": {
+      "name": "Grenzo, Havoc Raiser",
+      "oracleSha256": "5414ea7f762d778522e75b0ee59ad593e5e325900812c02509fba7a40603cb58",
+      "implementationStatus": "implemented-unreviewed",
+      "engineTestIds": [
+        "pr09-grenzo-havoc-raiser-normal-cast",
+        "pr09-grenzo-havoc-raiser-insufficient-cost",
+        "pr09-grenzo-havoc-raiser-sorcery-timing"
+      ],
+      "clauses": [
+        {
+          "id": "pr09-grenzo-havoc-raiser-clause-1",
+          "oracleText": "Whenever a creature you control deals combat damage to a player, choose one —",
+          "implementation": ["TriggerSpec.dealsCombatDamageToPlayer"],
+          "engineTestIds": ["pr09-grenzo-actual-damage-modes"],
+          "viewerScenarioIds": [
+            "pr09-grenzo-havoc-raiser-viewer-positive",
+            "pr09-grenzo-havoc-raiser-viewer-negative",
+            "pr09-grenzo-havoc-raiser-viewer-goad"
+          ]
+        },
+        {
+          "id": "pr09-grenzo-havoc-raiser-clause-2",
+          "oracleText": "• Goad target creature that player controls.",
+          "implementation": ["Effect.goad", "Ability.modes", "TargetSpec.creature"],
+          "engineTestIds": ["pr09-grenzo-goad-only-damaged-player"],
+          "viewerScenarioIds": ["pr09-grenzo-havoc-raiser-viewer-goad"]
+        },
+        {
+          "id": "pr09-grenzo-havoc-raiser-clause-3",
+          "oracleText": "• Exile the top card of that player's library. Until end of turn, you may cast that card and you may spend mana as though it were mana of any color to cast that spell.",
+          "implementation": ["Effect.exileLibraryTop", "Ability.modes"],
+          "engineTestIds": [
+            "pr09-grenzo-exile-mode-no-targets",
+            "pr09-grenzo-damaged-player-top-paid-permission",
+            "pr09-grenzo-permission-source-departure-expiry",
+            "pr09-grenzo-any-color-replaces-colored-only-and-keeps-generic",
+            "pr09-grenzo-any-color-keeps-spend-restrictions",
+            "pr09-grenzo-no-land-play"
+          ],
+          "viewerScenarioIds": ["pr09-grenzo-havoc-raiser-viewer-positive"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr09-grenzo-havoc-raiser-viewer-positive",
+        "pr09-grenzo-havoc-raiser-viewer-negative",
+        "pr09-grenzo-havoc-raiser-viewer-goad"
       ],
       "gameplayAiScenarioIds": []
     }

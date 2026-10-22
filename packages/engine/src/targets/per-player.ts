@@ -26,13 +26,15 @@ export function expandPerPlayerTargets(
   if (!ability.targets.some((spec) => spec.perPlayer === true)) return ability;
   const targets = ability.targets.flatMap((spec, index) => {
     if (spec.perPlayer !== true) return [spec];
-    const { perPlayer: _perPlayer, ...rest } = spec;
-    return playersInTurnOrderFrom(ctx, controllerId).map((playerId) => ({
-      ...rest,
-      count: { min: 0, max: 1 },
-      controllerPlayer: playerId,
-      slotGroup: index,
-    }));
+    const { perPlayer: _perPlayer, controller: scope, ...rest } = spec;
+    return playersInTurnOrderFrom(ctx, controllerId)
+      .filter((id) => scope !== 'opponent' || id !== controllerId)
+      .map((playerId) => ({
+        ...rest,
+        count: { min: 0, max: 1 },
+        controllerPlayer: playerId,
+        slotGroup: index,
+      }));
   });
   return { ...ability, targets };
 }

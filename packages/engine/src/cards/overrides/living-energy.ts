@@ -1035,11 +1035,23 @@ export function registerLIVING_ENERGYOverrides(): void {
     },
   );
 
-  // Catalog audit living-energy-batch-8: Chaos Warp peeks without revealing.
-  unsupportedCard(
+  // PR09: real shuffle/zone transitions and a public reveal, including a nonpermanent result.
+  const chaosWarpTarget = targetSlots({ permanent: { kind: 'permanent' } });
+  replaceCard(
     '07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8',
     'Chaos Warp',
-    'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
+    [
+      "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+    ],
+    {
+      spellAbility: spell({
+        targets: chaosWarpTarget.targets,
+        effects: [{ op: 'chaosWarp', target: chaosWarpTarget.slot.permanent }],
+        description:
+          'Its owner shuffles target permanent into their library, reveals the top card, and puts it onto the battlefield if it is a permanent',
+      }),
+    },
+    'PR09 restores the publicly revealed owner-library shuffle through real zone changes.',
   );
 
   defineCard(

@@ -8,7 +8,7 @@
  * depend on it without a cycle.
  */
 
-import type { Color, ManaCostString, PlayerId } from '@mtg/shared';
+import type { Color, ManaCostString, PlayerId, ObjectId } from '@mtg/shared';
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { Condition } from './condition';
 import type { Selector } from './selector';
@@ -28,6 +28,8 @@ export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; 
  * the ability's own source from the battlefield, and the ability still resolves.
  */
 export type AbilityCost =
+  /** Sneak's exact additional cost; only an unblocked attacker you control can be returned. */
+  | { kind: 'returnUnblockedAttacker' }
   /** `{T}` — requires untapped, and (for creatures) not summoning-sick without haste. */
   | { kind: 'tap' }
   /**
@@ -102,6 +104,8 @@ export interface AlternativeCast {
   costs?: AbilityCost[];
   /** State condition required to choose this alternative cost at announcement. */
   condition?: Condition;
+  /** Explicit instant timing for a conditionally permitted alternative such as Sneak. */
+  instantTiming?: true;
   description: string;
   name?: string;
   typeLine?: string;
@@ -431,6 +435,8 @@ export type TargetKind =
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
   kind: TargetKind;
+  /** Select a uniformly random legal target as the trigger is put on the stack (Power Pack). */
+  random?: true;
   /** These ordinary target slots must name different players. Inactive mode slots are absent. */
   differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
@@ -724,6 +730,36 @@ export type Effect =
       count: Value | number;
     }
   | { op: 'drawRevealTopLoseManaValue' }
+  /** Reveal both players' top cards, lose the other's mana value, then put each into hand. */
+  | { op: 'mutualRevealTopLoseManaValue'; target: EffectRef }
+  /** CR 701.57: exile to a bounded hit, cast it or put it into hand, randomly bottom the rest. */
+  | { op: 'discover'; count: Value }
+  | { op: 'revealUntilAura' }
+  | { op: 'exileEachUntilNonlandCast' }
+  | { op: 'revealCreatureOrBottom' }
+  /** CR 701.44: the permanent's current (or last) controller performs the exploration. */
+  | { op: 'explore'; target: EffectRef }
+  | {
+      op: 'exileLibraryTop';
+      player: 'you' | 'eventPlayer';
+      castFree?: true;
+      grantCastUntilEot?: true;
+      spendAsAnyColor?: true;
+    }
+  | { op: 'partitionLibrary'; count: number; mode: 'handBottomExile' | 'permanentsAndHand' }
+  | { op: 'recruit' }
+  | { op: 'trickery'; target: EffectRef }
+  | { op: 'exileAndCastNextUpkeep'; target: EffectRef }
+  | { op: 'castRememberedExile'; objectId: ObjectId; exileSpell: true }
+  | { op: 'capstoneParadigm'; minimumManaValue: number }
+  | {
+      op: 'castParadigmCopy';
+      template: {
+        definition: import('./definition').CardDefinition;
+        oracleText: string;
+        manaCost: ManaCostString | null;
+      };
+    }
   | { op: 'goadEachOpponent' }
   | { op: 'createTreasureForDeaths' }
   | { op: 'preventCombatDamageAll' }
@@ -1257,6 +1293,8 @@ export type Effect =
         destination: SearchDestination;
         /** Publicly reveal only the chosen card before moving it (CR 701.16). */
         reveal?: true;
+        /** After putting Equipment onto the battlefield, optionally attach it to your creature. */
+        attachEquipment?: true;
       };
       /** Where everything not taken ends up. */
       rest: 'bottomRandom' | 'topAnyOrder';
@@ -1321,6 +1359,7 @@ export type Effect =
     }
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
+  | { op: 'exileEachChosenUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
   | { op: 'destroyTargetAndControllerMaySearchBasicTypedLand'; target: EffectRef }
   | { op: 'exileCreatureAndControllerSearchBasicLand'; target: EffectRef }
@@ -1545,7 +1584,13 @@ export type Effect =
       drawCount: number;
       millCount: number;
     }
-  | { op: 'lookAtTopNCastOneFree'; count: number }
+  | {
+      op: 'lookAtTopNCastOneFree';
+      count: number | Value;
+      filter?: Selector;
+      maxManaValue?: Value;
+      visibility?: 'look' | 'reveal' | 'exile';
+    }
   | { op: 'castAnyFromHandFree' }
   /**
    * "You may cast an artifact spell from your hand or graveyard by paying life equal to its mana
@@ -1610,6 +1655,7 @@ export type Effect =
   | { op: 'bounceUpTo6MV' }
   | { op: 'millAndReturnSpells' }
   | { op: 'hideawayExileTop4' }
+  | { op: 'hideaway'; count: number }
   | { op: 'playExiledCardFree' }
   /**
    * "Then it fights UP TO ONE target creature you don't control" (Primal Might) — the second
@@ -1770,7 +1816,7 @@ export type Effect =
    * spells from among those exiled cards" (Dream Pillager) — an impulse-draw of a DYNAMIC
    * count. `legal.ts` offers each exiled card back as a cast option for the rest of the turn.
    */
-  | { op: 'exileTopNPlayableUntilEot'; count: Value }
+  | { op: 'exileTopNPlayableUntilEot'; count: Value; castOnly?: true }
   | { op: 'noOp' };
 
 /**
@@ -1969,7 +2015,7 @@ export type TriggerHead =
        * from a graveyard" (River Kelpie) or "from anywhere other than your hand" (Keeper of
        * Secrets — the command zone, exile and the library all count).
        */
-      castFrom?: 'graveyard' | 'notHand';
+      castFrom?: 'graveyard' | 'notHand' | 'hand';
     }
   /**
    * "At the beginning of your/each upkeep|end step" — `player` says whose step counts.

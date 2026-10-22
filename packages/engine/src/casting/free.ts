@@ -44,6 +44,8 @@ function legalFreeCastSelections(
   manaValueLessThan = Infinity,
   /** Life paid instead of the mana cost (Anrakyr), paid with the other costs (CR 601.2h). */
   lifeCost = 0,
+  /** Additional restrictions apply to the chosen spell face, not only the underlying card. */
+  spellAllowed: (definition: CardDefinition) => boolean = () => true,
 ): FreeCastSelection[] {
   const player = ctx.state.players.find((candidate) => candidate.id === controllerId);
   const def = getDefByOracleId(ctx, card.oracleId, card.name);
@@ -87,6 +89,7 @@ function legalFreeCastSelections(
       });
   }
   for (const { definition, ...variant } of variants) {
+    if (!spellAllowed(definition)) continue;
     if (castingSpellsBlockedFor(ctx, controllerId, definition)) continue;
     if (spellManaValue(definition, 0) >= manaValueLessThan) continue;
     const preview = castingPreviewContext(ctx, card, controllerId, definition);
@@ -194,8 +197,12 @@ export function freeCardIsCastable(
   controllerId: PlayerId,
   manaValueLessThan = Infinity,
   lifeCost = 0,
+  spellAllowed?: (definition: CardDefinition) => boolean,
 ): boolean {
-  return legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost).length > 0;
+  return (
+    legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost, spellAllowed)
+      .length > 0
+  );
 }
 
 /**
@@ -244,8 +251,17 @@ export function* resolveFreeCard(
   manaValueLessThan = Infinity,
   /** Life paid instead of the mana cost (Anrakyr). */
   lifeCost = 0,
+  spellAllowed?: (definition: CardDefinition) => boolean,
+  exileIfGraveyardFromStack?: true,
 ): GameGen<void> {
-  const selections = legalFreeCastSelections(ctx, card, controllerId, manaValueLessThan, lifeCost);
+  const selections = legalFreeCastSelections(
+    ctx,
+    card,
+    controllerId,
+    manaValueLessThan,
+    lifeCost,
+    spellAllowed,
+  );
   if (selections.length === 0) return;
   const outcome = yield {
     decisionType: 'chooseTargets',
@@ -321,6 +337,11 @@ export function* resolveFreeCard(
         : {}),
     },
     { index: 0, targets: selection.targets },
-    { card, withoutManaCost: true, ...(lifeCost > 0 ? { lifeCost } : {}) },
+    {
+      card,
+      withoutManaCost: true,
+      ...(lifeCost > 0 ? { lifeCost } : {}),
+      ...(exileIfGraveyardFromStack === true ? { exileIfGraveyardFromStack: true } : {}),
+    },
   );
 }

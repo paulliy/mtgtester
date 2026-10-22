@@ -24,6 +24,7 @@ import type {
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
 import { copyImageFace, playerById } from '../state/objects';
+import { visibleLibraryTops } from './library-top';
 import type {
   EngineCardObject,
   EnginePermanent,
@@ -282,6 +283,10 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
     ...spectator,
     viewerSeat: playerId,
     viewerMana: viewerMana(ctx, playerId),
+    revealedLibraryTops: visibleLibraryTops(ctx, playerId).map(({ player, card }) => ({
+      player,
+      card: cardView(ctx, card),
+    })),
     seats: spectator.seats.map((seat) => ({
       ...seat,
       handSize: seat.hand.length,

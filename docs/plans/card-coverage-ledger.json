@@ -594,20 +594,6 @@
     "snapshotStatus": "override deleted; override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
-    "name": "Celebrate the Mountain-king",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.\"",
-      "unrecognized rules text: \"When this enchantment enters, recruit.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "c549b0fd-1e08-4873-952e-a14dc45a0fd2",
     "name": "Champion of Lambholt",
     "package": "PR07.01",
@@ -638,20 +624,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr02-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
-    "name": "Chimil, the Inner Sun",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Spells you control can't be countered.\"",
-      "unrecognized rules text: \"At the beginning of your end step, discover 5.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "ec3d4466-547c-4e02-b1b5-a156ec4637e9",
@@ -792,19 +764,6 @@
     "blockers": [
       "unrecognized rules text: \"At the beginning of your first main phase, add four mana in any combination of colors.\"",
       "unrecognized rules text: \"Whenever you cast a noncreature spell, you may copy it. You may choose new targets for the copy. Do this only once each turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
-    "name": "Cosmic Cube",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you attack, look at the top six cards of your library. You may cast a spell from among them with mana value less than or equal to the greatest power among attacking creatures you control without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
     "behaviorTests": [],
@@ -1165,22 +1124,6 @@
     "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
-    "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
-    "package": "W2",
-    "status": "modeled-focused-tests-passed",
-    "blockers": [
-      "back face: unrecognized rules text: \"Whenever ~ deals combat damage to a player, they get that many poison counters.\"",
-      "unrecognized rules text: \"When ~ enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.\"",
-      "unrecognized rules text: \"{9}{G/P}: Transform ~. Activate only as a sorcery.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
-    "snapshotStatus": "passed",
-    "coverageDelta": 1
-  },
-  {
     "oracleId": "c6639b52-b51d-46e7-a83c-c4621b1cecaa",
     "name": "Ever-Watching Threshold",
     "package": "PR06.22",
@@ -1196,19 +1139,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
     "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
-    "name": "Expressive Iteration",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "4b8183e6-4ff2-4254-9ee0-0ebbf8cef4a3",
@@ -1481,19 +1411,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
-    "name": "Franklin Richards, Ascendant",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, discover 6.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "4cfaa5cf-cc3d-49a7-9544-38a8bb7e9ec1",
     "name": "Frontier Siege",
     "package": "PR01.21",
@@ -1582,19 +1499,6 @@
     "blockers": [
       "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
       "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
-    "name": "Genesis Ultimatum",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile ~.\""
     ],
     "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
     "behaviorTests": [],
@@ -1763,21 +1667,6 @@
     "interpretationTests": ["packages/engine/tests/w1-power-reductions.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
-  },
-  {
-    "oracleId": "80788290-1569-4c7f-b263-b4da7b31a9d1",
-    "name": "Grenzo, Havoc Raiser",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a creature you control deals combat damage to a player, choose one —\"",
-      "unrecognized rules text: \"• Goad target creature that player controls.\"",
-      "unrecognized rules text: \"• Exile the top card of that player's library. Until end of turn, you may cast that card and you may spend mana as though it were mana of any color to cast that spell.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
@@ -1996,31 +1885,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
-    "name": "Improvisation Capstone",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\"",
-      "unrecognized rules text: \"Paradigm\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "ad9d969e-def5-45a3-b65b-0c776f62ef0e",
-    "name": "Into the Time Vortex",
-    "package": "W5",
-    "status": "pending",
-    "blockers": ["instant/sorcery with no interpretable effect"],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
@@ -2409,19 +2273,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
-    "name": "Lurking Predators",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
     "name": "Mana Vault",
     "package": "W9",
@@ -2556,19 +2407,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
-    "name": "Mind's Dilation",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
     "name": "Mirage Mirror",
     "package": "W7",
@@ -2638,19 +2476,6 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
-  },
-  {
-    "oracleId": "6e27956e-ba2f-41a9-8e39-ec54424591b6",
-    "name": "Monstrous Vortex",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
@@ -2764,17 +2589,6 @@
     "snapshotStatus": "pending"
   },
   {
-    "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
-    "name": "New Generation's Technique",
-    "package": "W5",
-    "status": "pending",
-    "blockers": ["unrecognized rules text: \"Sneak {2}{G}\""],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "ff6b52b7-ae3c-465b-b10e-901160e5230e",
     "name": "Nils, Discipline Enforcer",
     "package": "PR07.09",
@@ -2860,19 +2674,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr08-olorin.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
-    "name": "Path of Discovery",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a creature you control enters, it explores.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "9bdc1e63-1cf9-4ddb-a7d5-f2a2eb91bdfd",
@@ -2977,19 +2778,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
-    "name": "Power Pack",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, exile target instant or sorcery card from your graveyard chosen at random. At the beginning of your next upkeep, you may cast that card without paying its mana cost. If that spell would be put into your graveyard, exile it instead.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "377d0fa7-1b3d-4b97-b066-dceeff3734d0",
     "name": "Pramikon, Sky Rampart",
     "package": "PR07.20",
@@ -3055,20 +2843,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr03-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
-    "name": "Rabble Rousing",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Hideaway 5\"",
-      "unrecognized rules text: \"Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may play the exiled card without paying its mana cost.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "ad3bf726-e0c2-4038-a66e-9a9dff439563",
@@ -3593,20 +3367,6 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
-    "name": "Songbirds' Blessing",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.\"",
-      "override for \"Songbirds’ Blessing\" has no executable behavior"
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "1b5e6560-ff2e-4475-96cb-63f64c8a86db",
     "name": "Soul-Guide Lantern",
     "package": "PR02.30",
@@ -3651,19 +3411,6 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
-  },
-  {
-    "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
-    "name": "Sunbird's Invocation",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
@@ -4103,20 +3850,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr07-card-coverage.test.ts"],
     "snapshotStatus": "interpret-defs.json and override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
-    "name": "Trumpeting Carnosaur",
-    "package": "W5",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When this creature enters, discover 5.\"",
-      "unrecognized rules text: \"{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "fd6e1967-237a-41f6-bbf4-2c869f9447c8",
@@ -4677,6 +4410,516 @@
       "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr08-scheming-symmetry.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
+    "name": "Adaptive Omnitool",
+    "package": "PR09.02",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-equipment-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-scenarios.test.ts",
+      "apps/web/e2e/pr09-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
+    "name": "Aetherworks Marvel",
+    "package": "PR09.11",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-free-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
+    "name": "Armored Skyhunter",
+    "package": "PR09.03",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-equipment-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-scenarios.test.ts",
+      "apps/web/e2e/pr09-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
+    "name": "Celebrate the Mountain-king",
+    "package": "PR09.26",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-hideaway-recruit.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+    "name": "Chaos Warp",
+    "package": "PR09.01",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-card-coverage.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-look.test.ts",
+      "packages/server/src/cards/pr09-scenarios.test.ts",
+      "apps/web/e2e/pr09-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
+    "name": "Chimil, the Inner Sun",
+    "package": "PR09.27",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-trickery-grenzo.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
+    "name": "Cosmic Cube",
+    "package": "PR09.14",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-free-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
+    "name": "Dark Confidant",
+    "package": "PR09.04",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "504cc26d-3fd5-4391-9d30-f0614e5c8bbc",
+    "name": "Dream Pillager",
+    "package": "PR09.05",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-free-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
+    "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+    "package": "PR09.06",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
+    "name": "Expressive Iteration",
+    "package": "PR09.15",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
+    "name": "Franklin Richards, Ascendant",
+    "package": "PR09.16",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
+    "name": "Genesis Ultimatum",
+    "package": "PR09.17",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "80788290-1569-4c7f-b263-b4da7b31a9d1",
+    "name": "Grenzo, Havoc Raiser",
+    "package": "PR09.31",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-look.test.ts",
+      "packages/engine/tests/pr09-trickery-grenzo.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
+    "name": "Herald of Amity",
+    "package": "PR09.12",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-free-library.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
+    "name": "Improvisation Capstone",
+    "package": "PR09.28",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-paradigm.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "ad9d969e-def5-45a3-b65b-0c776f62ef0e",
+    "name": "Into the Time Vortex",
+    "package": "PR09.18",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
+    "name": "Keen Duelist",
+    "package": "PR09.07",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-reveal-mill.test.ts",
+      "packages/server/src/cards/pr09-scenarios.test.ts",
+      "apps/web/e2e/pr09-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
+    "name": "Lurking Predators",
+    "package": "PR09.19",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
+    "name": "Mind's Dilation",
+    "package": "PR09.20",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6e27956e-ba2f-41a9-8e39-ec54424591b6",
+    "name": "Monstrous Vortex",
+    "package": "PR09.21",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
+    "name": "Mystic Forge",
+    "package": "PR09.13",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
+    "name": "New Generation's Technique",
+    "package": "PR09.22",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-sneak.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
+    "name": "Path of Discovery",
+    "package": "PR09.23",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
+    "name": "Power Pack",
+    "package": "PR09.24",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-power-pack.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
+    "name": "Rabble Rousing",
+    "package": "PR09.29",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-hideaway-recruit.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
+    "name": "Songbirds' Blessing",
+    "package": "PR09.08",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-card-coverage.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/engine/tests/pr09-library-zone-edges.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
+    "name": "Sunbird's Invocation",
+    "package": "PR09.25",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-library-reveal.test.ts",
+      "packages/server/src/cards/pr09-library-scenarios.test.ts",
+      "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
+    "name": "Szarekh, the Silent King",
+    "package": "PR09.09",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-reveal-mill.test.ts",
+      "packages/server/src/cards/pr09-scenarios.test.ts",
+      "apps/web/e2e/pr09-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
+    "name": "Tibalt's Trickery",
+    "package": "PR09.10",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-card-coverage.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/engine/tests/pr09-trickery-face-name.test.ts",
+      "packages/engine/tests/pr09-trickery-grenzo.test.ts",
+      "packages/server/src/cards/pr09-choice-scenarios.test.ts",
+      "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
+    "name": "Trumpeting Carnosaur",
+    "package": "PR09.30",
+    "status": "implemented-unreviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr09-audit-edges.test.ts",
+      "packages/engine/tests/pr09-discover-explore.test.ts",
+      "packages/engine/tests/pr09-library-composition-contract.test.ts",
+      "packages/server/src/cards/pr09-permanent-scenarios.test.ts",
+      "apps/web/e2e/pr09-permanent-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr09-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

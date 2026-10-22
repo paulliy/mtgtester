@@ -16,6 +16,8 @@ export interface PlayerBoardState extends Omit<SpectatorState, 'seats' | 'battle
   viewerSeat: PlayerId;
   seats: PlayerBoardSeat[];
   battlefield: SpectatorPermanent[];
+  /** Current top cards revealed publicly or privately viewable by this player. */
+  revealedLibraryTops?: { player: PlayerId; card: SpectatorCard }[];
   /**
    * The viewer's ready mana, for the player's resource strip: floating mana plus one unit per
    * mana a currently activatable source makes without itself costing mana, and the colors those

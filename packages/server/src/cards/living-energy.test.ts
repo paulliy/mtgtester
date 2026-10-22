@@ -34,10 +34,7 @@ function realCard(name: string): OracleCard {
 const CATALOG_CONTAINED = new Set([
   'Saheeli, Radiant Creator',
   'Saheeli, Sublime Artificer',
-  'Aetherworks Marvel',
   'Duplicant',
-  'Adaptive Omnitool',
-  'Chaos Warp',
   'Reality Shift',
 ]);
 

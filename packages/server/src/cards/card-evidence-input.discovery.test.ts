@@ -168,6 +168,9 @@ const pinned = require('./pinned.json');
     "import { readFileSync as read } from 'node:fs'; read(value)",
     "import * as fs from 'node:fs'; fs.readFileSync(value)",
     "import { readFile } from 'node:fs/promises'; readFile(value)",
+    "import { readFileSync } from 'node:fs'; readFileSync(new URL(value, import.meta.url))",
+    "import { readFileSync } from 'node:fs'; readFileSync(new URL('./pin.json', value))",
+    "import { readFileSync } from 'node:fs'; readFileSync(new URL('https://example.com/pin.json', import.meta.url))",
   ])('rejects unresolved scratch consumed data %s', (source) => {
     const root = mkdtempSync(resolve(scratch, 'synthetic-runtime-'));
     try {
@@ -175,6 +178,25 @@ const pinned = require('./pinned.json');
       expect(() => discoverGeneratorSourceFiles(root, 'entry.ts')).toThrow(
         /unresolved consumed data/,
       );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('binds literal fixture URLs relative to the consuming module', () => {
+    const root = mkdtempSync(resolve(scratch, 'synthetic-runtime-'));
+    try {
+      writeFileSync(
+        resolve(root, 'entry.ts'),
+        "import { readFileSync } from 'node:fs'; readFileSync(new URL('./pin.json', import.meta.url), 'utf8');",
+      );
+      writeFileSync(resolve(root, 'pin.json'), '{"pin":true}');
+      expect(discoverGeneratorSourceFiles(root, 'entry.ts')).toContain('pin.json');
+      writeFileSync(
+        resolve(root, 'entry.ts'),
+        "import { readFileSync } from 'node:fs'; readFileSync(new URL('../outside.json', import.meta.url), 'utf8');",
+      );
+      expect(() => discoverGeneratorSourceFiles(root, 'entry.ts')).toThrow();
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

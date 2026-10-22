@@ -231,6 +231,23 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   const s = ctx.state;
   let acted = false;
 
+  // CR 704.5e: copies of cards can be cast during the creating effect, then cease if
+  // they remain in exile or have left the stack. This is not a zone change.
+  const removeCopies = (cards: EngineCardObject[]): EngineCardObject[] =>
+    cards.filter((card) => {
+      if (card.isCardCopy !== true) return true;
+      emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
+      acted = true;
+      return false;
+    });
+  s.exile = removeCopies(s.exile);
+  for (const player of s.players) {
+    player.hand = removeCopies(player.hand);
+    player.library = removeCopies(player.library);
+    player.graveyard = removeCopies(player.graveyard);
+    player.commandZone = removeCopies(player.commandZone);
+  }
+
   // --- Player checks ---
   for (const player of s.players) {
     if (player.hasLost) {
@@ -625,7 +642,15 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
       );
       return;
     }
-    ordinarySlots.push({ slot: i, options });
+    if (spec.random === true) {
+      chosen[i] = options[ctx.rng.nextInt(options.length)]!;
+      emit(
+        ctx,
+        'randomTarget',
+        { source: trigger.sourceName, target: chosen[i] },
+        trigger.controllerId,
+      );
+    } else ordinarySlots.push({ slot: i, options });
   }
 
   if (ordinarySlots.some(({ slot }) => specs[slot]?.differentPlayerTargetSlots !== undefined)) {

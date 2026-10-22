@@ -76,13 +76,10 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Wandering Archaic // Explore the Vastlands',
       // Audit: incomplete mechanics must not silently simulate approximate card text.
       'Spirit Mantle',
-      "Songbirds' Blessing",
       'Caged Sun',
-      'Mystic Forge',
       'Biotransference',
       'The War in Heaven',
       'Out of the Tombs',
-      'Szarekh, the Silent King',
       'Trazyn the Infinite',
       // Catalog audit batch 1: retarget authored as copyTargetSpell.
       'Bolt Bend',
@@ -96,18 +93,13 @@ describe.skipIf(SKIP)('remaining coverage decks — AI and single-player smoke c
       'Display of Power',
       'Nighthawk Scavenger',
       'Reverberate',
-      "Tibalt's Trickery",
       'Arcane Lighthouse',
-      'Armored Skyhunter',
       "Defacing Duskmage // Vandal's Edit",
       'Eiganjo Dynastorian // Replenish',
-      'Herald of Amity',
       'Intermediate Chirography',
-      'Keen Duelist',
       'Malakir Rebirth // Malakir Mire',
       'Valakut Awakening // Valakut Stoneforge',
       'Wear // Tear',
-      'Chaos Warp',
     ]);
     const observedUnmodeled = new Set<string>();
     for (const slug of deckSlugs) {

@@ -673,10 +673,52 @@
     "def": {}
   },
   {
+    "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
+    "name": "Genesis Ultimatum",
+    "handledLines": [
+      "unrecognized rules text: \"Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile ~.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Look at five; put any number of permanents onto the battlefield and the rest into hand; exile this spell",
+        "effects": [
+          {
+            "count": 5,
+            "mode": "permanentsAndHand",
+            "op": "partitionLibrary"
+          },
+          {
+            "op": "exileResolvingSpell"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
     "name": "Chaos Warp",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Its owner shuffles target permanent into their library, reveals the top card, and puts it onto the battlefield if it is a permanent",
+        "effects": [
+          {
+            "op": "chaosWarp",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "085016ee-4429-453f-b7f3-d61065f1214e",
@@ -758,6 +800,49 @@
       ]
     },
     "compose": "append"
+  },
+  {
+    "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
+    "name": "Cosmic Cube",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you attack, look at the top six cards of your library. You may cast a spell from among them with mana value less than or equal to the greatest power among attacking creatures you control without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; cast a spell for free up to your greatest attacking power, randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "maxManaValue": {
+                "kind": "greatestPowerAmong",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "combatRole",
+                      "role": "attacking"
+                    }
+                  ]
+                }
+              },
+              "op": "lookAtTopNCastOneFree"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "when": "attackDeclared"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "086b2564-9114-4ba2-94fd-b490f98f38a7",
@@ -1145,6 +1230,39 @@
     }
   },
   {
+    "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
+    "name": "Sunbird's Invocation",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal X; optionally cast a spell with mana value X or less for free, randomly bottom the rest",
+          "effects": [
+            {
+              "count": {
+                "kind": "spellManaValue"
+              },
+              "maxManaValue": {
+                "kind": "spellManaValue"
+              },
+              "op": "lookAtTopNCastOneFree",
+              "visibility": "reveal"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "castFrom": "hand",
+            "caster": "you",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "10f274f9-9044-447b-81c9-d4906ad9e6be",
     "name": "Illuminor Szeras",
     "handledLines": [
@@ -1180,6 +1298,41 @@
               "B"
             ]
           ]
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
+    "name": "Chimil, the Inner Sun",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your end step, discover 5.\"",
+      "unrecognized rules text: \"Spells you control can't be countered.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeCountered"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At your end step, discover five",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
         }
       ]
     }
@@ -1431,6 +1584,31 @@
             }
           ],
           "timing": "yourTurn"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
+    "name": "Lurking Predators",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal top; put a creature onto the battlefield, otherwise optionally bottom it",
+          "effects": [
+            {
+              "op": "revealCreatureOrBottom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "when": "castsSpell"
+          }
         }
       ]
     }
@@ -2496,8 +2674,32 @@
   {
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
     "name": "Songbirds' Blessing",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal until an Aura; optionally put it onto the battlefield or put it into hand, randomly bottom the rest",
+          "effects": [
+            {
+              "op": "revealUntilAura"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "2679d0dd-ba30-4a1c-b6a0-b3ac6c790496",
@@ -3049,6 +3251,87 @@
               }
             },
             "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
+    "name": "Rabble Rousing",
+    "handledLines": [
+      "unrecognized rules text: \"Hideaway 5\"",
+      "unrecognized rules text: \"Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may play the exiled card without paying its mana cost.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Hideaway five",
+          "effects": [
+            {
+              "count": 5,
+              "op": "hideaway"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Create a Citizen for each attacker, then if you control ten creatures you may play the linked exiled card for free",
+          "effects": [
+            {
+              "count": {
+                "kind": "triggerCount"
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "G",
+                  "W"
+                ],
+                "name": "Citizen",
+                "power": 1,
+                "subtypes": [
+                  "Citizen"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Citizen",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 10,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "playExiledCardFree"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "when": "attackDeclared"
           }
         }
       ]
@@ -4175,6 +4458,53 @@
     }
   },
   {
+    "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
+    "name": "Power Pack",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, exile target instant or sorcery card from your graveyard chosen at random. At the beginning of your next upkeep, you may cast that card without paying its mana cost. If that spell would be put into your graveyard, exile it instead.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile a random target instant or sorcery in your graveyard; at your next upkeep optionally cast it free, exiling it if it would go to your graveyard",
+          "effects": [
+            {
+              "op": "exileAndCastNextUpkeep",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "graveyardOwnerScope": "controller",
+              "kind": "cardInGraveyard",
+              "random": true
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "3db8466c-864f-48ba-b617-f2c863dfdcbd",
     "name": "Benevolent Offering",
     "handledLines": [
@@ -4521,8 +4851,63 @@
   {
     "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
     "name": "Aetherworks Marvel",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a permanent you control is put into a graveyard, you get {E} .\"",
+      "unrecognized rules text: \"{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Look at six, optionally cast one spell for free, randomly bottom the rest",
+            "effects": [
+              {
+                "count": 6,
+                "op": "lookAtTopNCastOneFree"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever a permanent you control is put into a graveyard, get one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "controller",
+                "who": "you"
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "473a7998-669d-4181-83fe-f178a2e781f0",
@@ -4975,8 +5360,33 @@
   {
     "oracleId": "504cc26d-3fd5-4391-9d30-f0614e5c8bbc",
     "name": "Dream Pillager",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile that many cards; until end of turn you may cast spells from among them",
+          "effects": [
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "damageDealt"
+              },
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "52241b9c-7a69-4176-9234-8bdab09d8e64",
@@ -4985,6 +5395,47 @@
       "{1}{U}, Sacrifice two artifacts: Draw a card."
     ],
     "def": {}
+  },
+  {
+    "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
+    "name": "Path of Discovery",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature you control enters, it explores.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "The entering creature explores",
+          "effects": [
+            {
+              "op": "explore",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "52bd4331-67b6-4eb8-9566-e00359889fc6",
@@ -6304,8 +6755,26 @@
   {
     "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
     "name": "Tibalt's Trickery",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell; randomly mill one to three, exile to a different nonland name, optionally cast it free, randomly bottom the rest",
+        "effects": [
+          {
+            "op": "trickery",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "66ca8a60-e028-4a5f-8177-860b888cb9d1",
@@ -6443,8 +6912,81 @@
   {
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost. Then put the rest on the bottom of your library in a random order.\"",
+      "unrecognized rules text: \"Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile eight; optionally cast one Aura for free, randomly bottom the rest",
+          "effects": [
+            {
+              "count": 8,
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Aura"
+                  }
+                ]
+              },
+              "op": "lookAtTopNCastOneFree",
+              "visibility": "exile"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Get +X/+X until end of turn for your Auras",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              },
+              "target": "source",
+              "toughness": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
@@ -6670,6 +7212,47 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "6e27956e-ba2f-41a9-8e39-ec54424591b6",
+    "name": "Monstrous Vortex",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Discover X, where X is the mana value of the creature spell with power five or greater",
+          "effects": [
+            {
+              "count": {
+                "kind": "spellManaValue"
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 5
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
     }
   },
   {
@@ -7145,8 +7728,29 @@
   {
     "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When ~ enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Each player exiles until nonland; you may cast any number of those nonland cards for free",
+          "effects": [
+            {
+              "op": "exileEachUntilNonlandCast"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "756042c5-e444-45d7-8dc6-ae7c83c98438",
@@ -7864,6 +8468,79 @@
             },
             "player": "you",
             "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "80788290-1569-4c7f-b263-b4da7b31a9d1",
+    "name": "Grenzo, Havoc Raiser",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature you control deals combat damage to a player, choose one —\"",
+      "unrecognized rules text: \"• Exile the top card of that player's library. Until end of turn, you may cast that card and you may spend mana as though it were mana of any color to cast that spell.\"",
+      "unrecognized rules text: \"• Goad target creature that player controls.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Choose goad or exile the damaged player’s top card with a paid cast permission",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Goad target creature controlled by the damaged player",
+                "effects": [
+                  {
+                    "op": "goad",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Exile their top card; until end of turn you may cast it, spending mana as any color",
+                "effects": [
+                  {
+                    "grantCastUntilEot": true,
+                    "op": "exileLibraryTop",
+                    "player": "eventPlayer",
+                    "spendAsAnyColor": true
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
           }
         }
       ]
@@ -9570,8 +10247,83 @@
   {
     "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
     "name": "Mystic Forge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You may cast artifact spells and colorless spells from the top of your library.\"",
+      "unrecognized rules text: \"{T}, Pay 1 life: Exile the top card of your library.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile the top card of your library",
+            "effects": [
+              {
+                "op": "exileLibraryTop",
+                "player": "you"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payLife"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "color",
+                      "value": "W"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "U"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "B"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "R"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "G"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "kind": "castFromZone",
+          "zone": "libraryTop"
+        }
+      ]
+    }
   },
   {
     "oracleId": "994e27e1-0bff-47c9-a1e6-b9e3ae4ffb1e",
@@ -9737,8 +10489,32 @@
   {
     "oracleId": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
     "name": "Szarekh, the Silent King",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"My Will Be Done — Whenever ~ attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Mill three; you may return one artifact creature or Vehicle milled this way to your hand",
+          "effects": [
+            {
+              "op": "millAndChooseArtifact"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "9aab386c-d48c-4611-b757-aa69b26cc1b1",
@@ -10976,6 +11752,25 @@
     }
   },
   {
+    "oracleId": "ad9d969e-def5-45a3-b65b-0c776f62ef0e",
+    "name": "Into the Time Vortex",
+    "handledLines": [
+      "instant/sorcery with no interpretable effect"
+    ],
+    "def": {
+      "keywords": [
+        "cascade",
+        "rebound"
+      ],
+      "spellAbility": {
+        "description": "Cascade; rebound",
+        "effects": [],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
     "name": "Deflecting Swat",
     "handledLines": [],
@@ -11089,6 +11884,41 @@
           }
         ]
       }
+    }
+  },
+  {
+    "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
+    "name": "Franklin Richards, Ascendant",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, discover 6.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "If you cast a noncreature spell this turn, discover six",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 6
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
     }
   },
   {
@@ -11628,14 +12458,102 @@
   {
     "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
     "name": "Armored Skyhunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; you may put an Aura or Equipment onto the battlefield, optionally attach Equipment to your creature, then randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "mayPut": {
+                "attachEquipment": true,
+                "destination": {
+                  "zone": "battlefield"
+                },
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Enchantment"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Aura"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Artifact"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Equipment"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "op": "lookAtTopN",
+              "rest": "bottomRandom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
     "name": "Keen Duelist",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You and target opponent reveal and put your top cards into hand, each losing life equal to the other card’s mana value",
+          "effects": [
+            {
+              "op": "mutualRevealTopLoseManaValue",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "b8619990-9dc2-4fcc-bc7e-457b77cd2a8e",
@@ -12963,6 +13881,27 @@
     }
   },
   {
+    "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
+    "name": "Expressive Iteration",
+    "handledLines": [
+      "unrecognized rules text: \"Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Look at three; one to hand, one to bottom, exile one playable this turn",
+        "effects": [
+          {
+            "count": 3,
+            "mode": "handBottomExile",
+            "op": "partitionLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "c857de66-f4e0-4e97-ad01-fac623af8225",
     "name": "Tomb Blade",
     "handledLines": [
@@ -13830,6 +14769,89 @@
               "kind": "spell"
             }
           ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
+    "name": "Mind's Dilation",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That opponent exiles their top card; you may cast a nonland card exiled this way for free",
+          "effects": [
+            {
+              "castFree": true,
+              "op": "exileLibraryTop",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "ordinal": 1,
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
+    "name": "Celebrate the Mountain-king",
+    "handledLines": [
+      "unrecognized rules text: \"When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.\"",
+      "unrecognized rules text: \"When this enchantment enters, recruit.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "For each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves",
+          "effects": [
+            {
+              "op": "exileEachChosenUntilSourceLeaves",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "nonlandPermanent",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Recruit: draw then discard, creating a Human Soldier if a nonland was discarded",
+          "effects": [
+            {
+              "op": "recruit"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
           "trigger": {
             "subject": {
               "kind": "self"
@@ -15194,6 +16216,50 @@
     }
   },
   {
+    "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
+    "name": "New Generation's Technique",
+    "handledLines": [
+      "unrecognized rules text: \"Sneak {2}{G}\""
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "yourTurn"
+              },
+              {
+                "kind": "duringStep",
+                "step": "declareBlockers"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "returnUnblockedAttacker"
+            }
+          ],
+          "description": "Sneak {2}{G} — return an unblocked attacker you control",
+          "instantTiming": true,
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 1,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 2
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "e7dd3e2c-34a5-4097-b6d1-2ccd097fe57f",
     "name": "Foe-Razer Regent",
     "handledLines": [
@@ -15279,8 +16345,44 @@
   {
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
     "name": "Adaptive Omnitool",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; you may reveal an artifact and put it into your hand, then randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "mayPut": {
+                "destination": {
+                  "zone": "hand"
+                },
+                "filter": {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                "reveal": true
+              },
+              "op": "lookAtTopN",
+              "rest": "bottomRandom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "e958144e-01bc-46ff-8f56-ddf2eb098630",
@@ -15914,6 +17016,95 @@
       ]
     },
     "compose": "append"
+  },
+  {
+    "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
+    "name": "Trumpeting Carnosaur",
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, discover 5.\"",
+      "unrecognized rules text: \"{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Discard this card and pay {2}{R}: deal three to target creature or planeswalker",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Discover five",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b",
@@ -16813,6 +18004,27 @@
     }
   },
   {
+    "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
+    "name": "Improvisation Capstone",
+    "handledLines": [
+      "unrecognized rules text: \"Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\"",
+      "unrecognized rules text: \"Paradigm\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile to total mana value four or greater; optionally cast any number of those spells free. Paradigm: exile this spell and copy it each of your future first main phases after its first resolution",
+        "effects": [
+          {
+            "minimumManaValue": 4,
+            "op": "capstoneParadigm"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "fd6e1967-237a-41f6-bbf4-2c869f9447c8",
     "name": "Twitching Doll",
     "handledLines": [
@@ -17237,8 +18449,44 @@
   {
     "oracleId": "oracle-adaptive-omnitool",
     "name": "Adaptive Omnitool",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever equipped creature attacks, look at the top six cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; you may reveal an artifact and put it into your hand, then randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "mayPut": {
+                "destination": {
+                  "zone": "hand"
+                },
+                "filter": {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                "reveal": true
+              },
+              "op": "lookAtTopN",
+              "rest": "bottomRandom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-aether-channeler",
@@ -17685,8 +18933,63 @@
   {
     "oracleId": "oracle-aetherworks-marvel",
     "name": "Aetherworks Marvel",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a permanent you control is put into a graveyard, you get {E} .\"",
+      "unrecognized rules text: \"{T}, Pay six {E}: Look at the top six cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Look at six, optionally cast one spell for free, randomly bottom the rest",
+            "effects": [
+              {
+                "count": 6,
+                "op": "lookAtTopNCastOneFree"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 6,
+              "kind": "payEnergy"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Whenever a permanent you control is put into a graveyard, get one energy",
+          "effects": [
+            {
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "op": "gainEnergy"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "controller",
+                "who": "you"
+              }
+            },
+            "when": "dies"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-agitator-ant",
@@ -18450,8 +19753,71 @@
   {
     "oracleId": "oracle-armored-skyhunter",
     "name": "Armored Skyhunter",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature attacks, look at the top six cards of your library. You may put an Aura or Equipment card from among them onto the battlefield. If an Equipment is put onto the battlefield this way, you may attach it to a creature you control. Put the rest of those cards on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; you may put an Aura or Equipment onto the battlefield, optionally attach Equipment to your creature, then randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "mayPut": {
+                "attachEquipment": true,
+                "destination": {
+                  "zone": "battlefield"
+                },
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Enchantment"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Aura"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Artifact"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Equipment"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "op": "lookAtTopN",
+              "rest": "bottomRandom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-atarka-monument",
@@ -20036,6 +21402,61 @@
     }
   },
   {
+    "oracleId": "oracle-celebrate-the-mountain-king",
+    "name": "Celebrate the Mountain-king",
+    "handledLines": [
+      "unrecognized rules text: \"When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield.\"",
+      "unrecognized rules text: \"When this enchantment enters, recruit.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "For each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves",
+          "effects": [
+            {
+              "op": "exileEachChosenUntilSourceLeaves",
+              "targetSlot": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "count": {
+                "max": 1,
+                "min": 0
+              },
+              "kind": "nonlandPermanent",
+              "perPlayer": true
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Recruit: draw then discard, creating a Human Soldier if a nonland was discarded",
+          "effects": [
+            {
+              "op": "recruit"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-chain-reaction",
     "name": "Chain Reaction",
     "handledLines": [
@@ -20119,8 +21540,61 @@
   {
     "oracleId": "oracle-chaos-warp",
     "name": "Chaos Warp",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield."
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Its owner shuffles target permanent into their library, reveals the top card, and puts it onto the battlefield if it is a permanent",
+        "effects": [
+          {
+            "op": "chaosWarp",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-chimil-the-inner-sun",
+    "name": "Chimil, the Inner Sun",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your end step, discover 5.\"",
+      "unrecognized rules text: \"Spells you control can't be countered.\""
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "cantBeCountered"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "At your end step, discover five",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "player": "you",
+            "when": "endStep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-chronomancer",
@@ -20827,6 +22301,49 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-cosmic-cube",
+    "name": "Cosmic Cube",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you attack, look at the top six cards of your library. You may cast a spell from among them with mana value less than or equal to the greatest power among attacking creatures you control without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Look at six; cast a spell for free up to your greatest attacking power, randomly bottom the rest",
+          "effects": [
+            {
+              "count": 6,
+              "maxManaValue": {
+                "kind": "greatestPowerAmong",
+                "scope": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "combatRole",
+                      "role": "attacking"
+                    }
+                  ]
+                }
+              },
+              "op": "lookAtTopNCastOneFree"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "when": "attackDeclared"
+          }
         }
       ]
     }
@@ -21728,8 +23245,33 @@
   {
     "oracleId": "oracle-dream-pillager",
     "name": "Dream Pillager",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever this creature deals combat damage to a player, exile that many cards from the top of your library. Until end of turn, you may cast spells from among those exiled cards.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile that many cards; until end of turn you may cast spells from among them",
+          "effects": [
+            {
+              "castOnly": true,
+              "count": {
+                "kind": "damageDealt"
+              },
+              "op": "exileTopNPlayableUntilEot"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-druid-of-purification",
@@ -22279,8 +23821,29 @@
   {
     "oracleId": "oracle-etali-primal-conqueror-etali-primal-sickness",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When ~ enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Each player exiles until nonland; you may cast any number of those nonland cards for free",
+          "effects": [
+            {
+              "op": "exileEachUntilNonlandCast"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-ever-watching-threshold",
@@ -22315,6 +23878,27 @@
           }
         }
       ]
+    }
+  },
+  {
+    "oracleId": "oracle-expressive-iteration",
+    "name": "Expressive Iteration",
+    "handledLines": [
+      "unrecognized rules text: \"Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Look at three; one to hand, one to bottom, exile one playable this turn",
+        "effects": [
+          {
+            "count": 3,
+            "mode": "handBottomExile",
+            "op": "partitionLibrary"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
     }
   },
   {
@@ -23061,6 +24645,41 @@
     }
   },
   {
+    "oracleId": "oracle-franklin-richards-ascendant",
+    "name": "Franklin Richards, Ascendant",
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of combat on your turn, if you've cast a noncreature spell this turn, discover 6.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "If you cast a noncreature spell this turn, discover six",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 6
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "condition": {
+              "category": "noncreature",
+              "cmp": ">=",
+              "kind": "castSpellThisTurn",
+              "n": 1
+            },
+            "player": "you",
+            "when": "beginningOfCombat"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-frontier-siege",
     "name": "Frontier Siege",
     "handledLines": [
@@ -23352,6 +24971,30 @@
             "kind": "permanent"
           }
         ]
+      }
+    }
+  },
+  {
+    "oracleId": "oracle-genesis-ultimatum",
+    "name": "Genesis Ultimatum",
+    "handledLines": [
+      "unrecognized rules text: \"Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile ~.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Look at five; put any number of permanents onto the battlefield and the rest into hand; exile this spell",
+        "effects": [
+          {
+            "count": 5,
+            "mode": "permanentsAndHand",
+            "op": "partitionLibrary"
+          },
+          {
+            "op": "exileResolvingSpell"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
       }
     }
   },
@@ -23819,6 +25462,79 @@
     }
   },
   {
+    "oracleId": "oracle-grenzo-havoc-raiser",
+    "name": "Grenzo, Havoc Raiser",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature you control deals combat damage to a player, choose one —\"",
+      "unrecognized rules text: \"• Exile the top card of that player's library. Until end of turn, you may cast that card and you may spend mana as though it were mana of any color to cast that spell.\"",
+      "unrecognized rules text: \"• Goad target creature that player controls.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Choose goad or exile the damaged player’s top card with a paid cast permission",
+          "effects": [],
+          "kind": "triggered",
+          "modes": {
+            "maxChoices": 1,
+            "minChoices": 1,
+            "options": [
+              {
+                "description": "Goad target creature controlled by the damaged player",
+                "effects": [
+                  {
+                    "op": "goad",
+                    "target": 0
+                  }
+                ],
+                "targetSlots": [
+                  0
+                ]
+              },
+              {
+                "description": "Exile their top card; until end of turn you may cast it, spending mana as any color",
+                "effects": [
+                  {
+                    "grantCastUntilEot": true,
+                    "op": "exileLibraryTop",
+                    "player": "eventPlayer",
+                    "spendAsAnyColor": true
+                  }
+                ],
+                "targetSlots": []
+              }
+            ]
+          },
+          "targets": [
+            {
+              "controller": "eventPlayer",
+              "kind": "creature"
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-gut-true-soul-zealot",
     "name": "Gut, True Soul Zealot",
     "handledLines": [],
@@ -23917,8 +25633,81 @@
   {
     "oracleId": "oracle-herald-of-amity",
     "name": "Herald of Amity",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, exile the top eight cards of your library. You may cast an Aura spell from among them without paying its mana cost. Then put the rest on the bottom of your library in a random order.\"",
+      "unrecognized rules text: \"Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of Auras you control.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile eight; optionally cast one Aura for free, randomly bottom the rest",
+          "effects": [
+            {
+              "count": 8,
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Aura"
+                  }
+                ]
+              },
+              "op": "lookAtTopNCastOneFree",
+              "visibility": "exile"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Get +X/+X until end of turn for your Auras",
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "power": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              },
+              "target": "source",
+              "toughness": {
+                "kind": "countPermanents",
+                "scope": "you",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              }
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-herald-of-secret-streams",
@@ -24495,6 +26284,27 @@
     }
   },
   {
+    "oracleId": "oracle-improvisation-capstone",
+    "name": "Improvisation Capstone",
+    "handledLines": [
+      "unrecognized rules text: \"Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\"",
+      "unrecognized rules text: \"Paradigm\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Exile to total mana value four or greater; optionally cast any number of those spells free. Paradigm: exile this spell and copy it each of your future first main phases after its first resolution",
+        "effects": [
+          {
+            "minimumManaValue": 4,
+            "op": "capstoneParadigm"
+          }
+        ],
+        "kind": "spell",
+        "targets": []
+      }
+    }
+  },
+  {
     "oracleId": "oracle-inkshield",
     "name": "Inkshield",
     "handledLines": [
@@ -24518,6 +26328,25 @@
     "name": "Intermediate Chirography",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-into-the-time-vortex",
+    "name": "Into the Time Vortex",
+    "handledLines": [
+      "instant/sorcery with no interpretable effect"
+    ],
+    "def": {
+      "keywords": [
+        "cascade",
+        "rebound"
+      ],
+      "spellAbility": {
+        "description": "Cascade; rebound",
+        "effects": [],
+        "kind": "spell",
+        "targets": []
+      }
+    }
   },
   {
     "oracleId": "oracle-invisible-woman",
@@ -25042,8 +26871,33 @@
   {
     "oracleId": "oracle-keen-duelist",
     "name": "Keen Duelist",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"At the beginning of your upkeep, you and target opponent each reveal the top card of your library. You each lose life equal to the mana value of the card revealed by the other player. You each put the card you revealed into your hand.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "You and target opponent reveal and put your top cards into hand, each losing life equal to the other card’s mana value",
+          "effects": [
+            {
+              "op": "mutualRevealTopLoseManaValue",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "controller": "opponent",
+              "kind": "player"
+            }
+          ],
+          "trigger": {
+            "player": "you",
+            "when": "upkeep"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-kogla-and-yidaro",
@@ -26023,6 +27877,31 @@
     }
   },
   {
+    "oracleId": "oracle-lurking-predators",
+    "name": "Lurking Predators",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal top; put a creature onto the battlefield, otherwise optionally bottom it",
+          "effects": [
+            {
+              "op": "revealCreatureOrBottom"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-madame-null-power-broker",
     "name": "Madame Null, Power Broker",
     "handledLines": [
@@ -26540,6 +28419,34 @@
     }
   },
   {
+    "oracleId": "oracle-mind-s-dilation",
+    "name": "Mind's Dilation",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "That opponent exiles their top card; you may cast a nonland card exiled this way for free",
+          "effects": [
+            {
+              "castFree": true,
+              "op": "exileLibraryTop",
+              "player": "eventPlayer"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "opponent",
+            "ordinal": 1,
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-mob-rule",
     "name": "Mob Rule",
     "handledLines": [
@@ -26694,6 +28601,47 @@
     "name": "Monster Manual // Zoological Study",
     "handledLines": [],
     "def": {}
+  },
+  {
+    "oracleId": "oracle-monstrous-vortex",
+    "name": "Monstrous Vortex",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Discover X, where X is the mana value of the creature spell with power five or greater",
+          "effects": [
+            {
+              "count": {
+                "kind": "spellManaValue"
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "caster": "you",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 5
+                }
+              ]
+            },
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-moraug-fury-of-akoum",
@@ -26956,8 +28904,83 @@
   {
     "oracleId": "oracle-mystic-forge",
     "name": "Mystic Forge",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"You may cast artifact spells and colorless spells from the top of your library.\"",
+      "unrecognized rules text: \"{T}, Pay 1 life: Exile the top card of your library.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Exile the top card of your library",
+            "effects": [
+              {
+                "op": "exileLibraryTop",
+                "player": "you"
+              }
+            ],
+            "kind": "activated",
+            "targets": []
+          },
+          "costs": [
+            {
+              "kind": "tap"
+            },
+            {
+              "amount": 1,
+              "kind": "payLife"
+            }
+          ],
+          "timing": "any"
+        }
+      ],
+      "ruleStatics": [
+        {
+          "kind": "lookTopLibrary"
+        },
+        {
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "color",
+                      "value": "W"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "U"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "B"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "R"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "G"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "kind": "castFromZone",
+          "zone": "libraryTop"
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-mystic-sanctuary",
@@ -27199,6 +29222,50 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-new-generation-s-technique",
+    "name": "New Generation's Technique",
+    "handledLines": [
+      "unrecognized rules text: \"Sneak {2}{G}\""
+    ],
+    "def": {
+      "alternativeCasts": [
+        {
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "yourTurn"
+              },
+              {
+                "kind": "duringStep",
+                "step": "declareBlockers"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "kind": "returnUnblockedAttacker"
+            }
+          ],
+          "description": "Sneak {2}{G} — return an unblocked attacker you control",
+          "instantTiming": true,
+          "kind": "nonMana",
+          "manaCost": {
+            "colored": {
+              "B": 0,
+              "G": 1,
+              "R": 0,
+              "U": 0,
+              "W": 0
+            },
+            "colorless": 0,
+            "generic": 2
+          }
         }
       ]
     }
@@ -27822,6 +29889,47 @@
     }
   },
   {
+    "oracleId": "oracle-path-of-discovery",
+    "name": "Path of Discovery",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever a creature you control enters, it explores.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "The entering creature explores",
+          "effects": [
+            {
+              "op": "explore",
+              "target": "triggerObject"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              }
+            },
+            "when": "enters"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-pawn-of-ulamog",
     "name": "Pawn of Ulamog",
     "handledLines": [
@@ -28371,6 +30479,53 @@
     }
   },
   {
+    "oracleId": "oracle-power-pack",
+    "name": "Power Pack",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, exile target instant or sorcery card from your graveyard chosen at random. At the beginning of your next upkeep, you may cast that card without paying its mana cost. If that spell would be put into your graveyard, exile it instead.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Exile a random target instant or sorcery in your graveyard; at your next upkeep optionally cast it free, exiling it if it would go to your graveyard",
+          "effects": [
+            {
+              "op": "exileAndCastNextUpkeep",
+              "target": 0
+            }
+          ],
+          "kind": "triggered",
+          "targets": [
+            {
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "graveyardOwnerScope": "controller",
+              "kind": "cardInGraveyard",
+              "random": true
+            }
+          ],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-pramikon-sky-rampart",
     "name": "Pramikon, Sky Rampart",
     "handledLines": [
@@ -28572,6 +30727,87 @@
             },
             "player": "you",
             "when": "upkeep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-rabble-rousing",
+    "name": "Rabble Rousing",
+    "handledLines": [
+      "unrecognized rules text: \"Hideaway 5\"",
+      "unrecognized rules text: \"Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may play the exiled card without paying its mana cost.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Hideaway five",
+          "effects": [
+            {
+              "count": 5,
+              "op": "hideaway"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
+          }
+        },
+        {
+          "description": "Create a Citizen for each attacker, then if you control ten creatures you may play the linked exiled card for free",
+          "effects": [
+            {
+              "count": {
+                "kind": "triggerCount"
+              },
+              "op": "createToken",
+              "spec": {
+                "colors": [
+                  "G",
+                  "W"
+                ],
+                "name": "Citizen",
+                "power": 1,
+                "subtypes": [
+                  "Citizen"
+                ],
+                "toughness": 1,
+                "typeLine": "Creature — Citizen",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            {
+              "condition": {
+                "cmp": ">=",
+                "kind": "countPermanents",
+                "n": 10,
+                "scope": "you",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              },
+              "else": [],
+              "op": "conditionalEffect",
+              "then": [
+                {
+                  "op": "playExiledCardFree"
+                }
+              ]
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "when": "attackDeclared"
           }
         }
       ]
@@ -30757,8 +32993,32 @@
   {
     "oracleId": "oracle-songbirds-blessing",
     "name": "Songbirds' Blessing",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Whenever enchanted creature attacks, reveal cards from the top of your library until you reveal an Aura card. You may put that card onto the battlefield. If you don't, put it into your hand. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal until an Aura; optionally put it onto the battlefield or put it into hand, randomly bottom the rest",
+          "effects": [
+            {
+              "op": "revealUntilAura"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-soul-guide-lantern",
@@ -31337,6 +33597,39 @@
     }
   },
   {
+    "oracleId": "oracle-sunbird-s-invocation",
+    "name": "Sunbird's Invocation",
+    "handledLines": [
+      "unrecognized rules text: \"Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Reveal X; optionally cast a spell with mana value X or less for free, randomly bottom the rest",
+          "effects": [
+            {
+              "count": {
+                "kind": "spellManaValue"
+              },
+              "maxManaValue": {
+                "kind": "spellManaValue"
+              },
+              "op": "lookAtTopNCastOneFree",
+              "visibility": "reveal"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "castFrom": "hand",
+            "caster": "you",
+            "when": "castsSpell"
+          }
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "oracle-sweet-gum-recluse",
     "name": "Sweet-Gum Recluse",
     "handledLines": [
@@ -31469,8 +33762,32 @@
   {
     "oracleId": "oracle-szarekh-the-silent-king",
     "name": "Szarekh, the Silent King",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"My Will Be Done — Whenever ~ attacks, mill three cards. You may put an artifact creature card or Vehicle card from among the cards milled this way into your hand.\""
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Mill three; you may return one artifact creature or Vehicle milled this way to your hand",
+          "effects": [
+            {
+              "op": "millAndChooseArtifact"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "self"
+              }
+            },
+            "when": "attacks"
+          }
+        }
+      ]
+    }
   },
   {
     "oracleId": "oracle-taunt-from-the-rampart",
@@ -32462,8 +34779,26 @@
   {
     "oracleId": "oracle-tibalt-s-trickery",
     "name": "Tibalt's Trickery",
-    "handledLines": [],
-    "def": {}
+    "handledLines": [
+      "unrecognized rules text: \"Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.\""
+    ],
+    "def": {
+      "spellAbility": {
+        "description": "Counter target spell; randomly mill one to three, exile to a different nonland name, optionally cast it free, randomly bottom the rest",
+        "effects": [
+          {
+            "op": "trickery",
+            "target": 0
+          }
+        ],
+        "kind": "spell",
+        "targets": [
+          {
+            "kind": "spell"
+          }
+        ]
+      }
+    }
   },
   {
     "oracleId": "oracle-tinybones-joins-up",
@@ -33071,6 +35406,95 @@
           "trigger": {
             "player": "you",
             "when": "endStep"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "oracleId": "oracle-trumpeting-carnosaur",
+    "name": "Trumpeting Carnosaur",
+    "handledLines": [
+      "unrecognized rules text: \"When this creature enters, discover 5.\"",
+      "unrecognized rules text: \"{2}{R}, Discard this card: It deals 3 damage to target creature or planeswalker.\""
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "Discard this card and pay {2}{R}: deal three to target creature or planeswalker",
+            "effects": [
+              {
+                "amount": {
+                  "kind": "const",
+                  "n": 3
+                },
+                "op": "dealDamage",
+                "target": 0
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "kind": "permanent"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 1,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "discardSelf"
+            }
+          ],
+          "timing": "any",
+          "zone": "hand"
+        }
+      ],
+      "triggers": [
+        {
+          "description": "Discover five",
+          "effects": [
+            {
+              "count": {
+                "kind": "const",
+                "n": 5
+              },
+              "op": "discover"
+            }
+          ],
+          "kind": "triggered",
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "self"
+            },
+            "when": "enters"
           }
         }
       ]
