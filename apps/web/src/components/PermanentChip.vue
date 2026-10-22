@@ -193,10 +193,15 @@ function onLeave(): void {
         {{ ptText ?? permanent.name }}
       </span>
     </div>
+    <!-- Outside the frame so it stays level when a tapped card's art turns sideways. Hidden from
+         screen readers, which already hear the name from the frame's label. -->
+    <span v-if="artSrc && !isToken" class="name-strip" aria-hidden="true">
+      {{ permanent.name }}
+    </span>
     <span
       v-if="ptText !== null && !isToken"
       class="pt"
-      :class="{ 'flash-damage': damageFlash === 'damage' }"
+      :class="{ 'above-name': artSrc !== null, 'flash-damage': damageFlash === 'damage' }"
     >
       {{ ptText }}
     </span>
@@ -412,7 +417,27 @@ function onLeave(): void {
   top: -4px;
   right: -4px;
 }
-/* The P/T box sits in the art's bottom-right corner, as on a printed card. */
+/* The card's name across the foot of its art, like the title bar of a printed card. */
+.name-strip {
+  --name-size: max(0.6rem, 10.5cqw);
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  z-index: 1;
+  padding: 3px 5px;
+  border-radius: 0 0 7px 7px;
+  background: rgb(11 13 17 / 0.78);
+  color: #fff;
+  font-size: var(--name-size);
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+/* The P/T box sits in the art's bottom-right corner, as on a printed card, just above the name. */
 .pt {
   position: absolute;
   right: 3px;
@@ -429,6 +454,9 @@ function onLeave(): void {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
+}
+.pt.above-name {
+  bottom: calc(max(0.6rem, 10.5cqw) * 1.15 + 9px);
 }
 .pt.flash-damage,
 .token-label.flash-damage {
@@ -448,10 +476,7 @@ function onLeave(): void {
   pointer-events: none;
 }
 .tile.tapped .dmg {
-  top: auto;
-  bottom: 3px;
-  right: auto;
-  left: 3px;
+  top: 20px;
 }
 .tile.token .dmg {
   top: -4px;
@@ -474,13 +499,13 @@ function onLeave(): void {
 .tile.stacked .status {
   top: 16px;
 }
+/* A half-circle is half a square's height, so the space under its dome is free for these. */
 .tile.token .status {
-  bottom: auto;
-  top: -2px;
-  left: auto;
+  top: calc(50cqw + 3px);
+  left: 0;
   right: 0;
-  max-width: 45%;
-  align-items: flex-end;
+  max-width: none;
+  align-items: center;
 }
 .counters,
 .marks {
