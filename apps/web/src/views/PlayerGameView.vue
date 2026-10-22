@@ -16,6 +16,7 @@ import CombatOverlay from '../components/CombatOverlay.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
+import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
@@ -100,6 +101,14 @@ const request = computed(() => pending.value?.request ?? null);
 const human = computed(
   () => state.value?.seats.find((seat) => seat.seat === state.value?.viewerSeat) ?? null,
 );
+/** Keep-or-mulligan and London bottoming take over the screen, Arena-style, until decided. */
+const openingHand = computed(() => {
+  const req = request.value;
+  const hand = human.value?.hand;
+  if (req === null || hand === null || hand === undefined) return null;
+  if (req.decisionType !== 'mulligan' && req.decisionType !== 'bottomCards') return null;
+  return { request: req, hand, mulligansTaken: human.value?.mulligansTaken ?? 0 };
+});
 const opponents = computed(
   () => state.value?.seats.filter((seat) => seat.seat !== state.value?.viewerSeat) ?? [],
 );
@@ -1010,6 +1019,13 @@ function abandon(): void {
 
 <template>
   <div class="player-game">
+    <OpeningHand
+      v-if="openingHand"
+      :request="openingHand.request"
+      :cards="openingHand.hand"
+      :mulligans-taken="openingHand.mulligansTaken"
+      @choose="store.submitPlayerAction"
+    />
     <header class="player-bar">
       <strong>Player mode · {{ state?.viewerSeat ?? store.humanSeat }}</strong>
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
@@ -1577,7 +1593,7 @@ function abandon(): void {
 
       <aside class="rail">
         <section class="decision">
-          <template v-if="request">
+          <template v-if="request && !openingHand">
             <DecisionPanel
               v-if="fallbackRequest && immediateActions.length === 0"
               :request="fallbackRequest"
@@ -1648,7 +1664,7 @@ function abandon(): void {
               />
             </template>
           </template>
-          <p v-else class="thinking" role="status" aria-live="polite">
+          <p v-else-if="!request" class="thinking" role="status" aria-live="polite">
             <span class="thinking-mark" aria-hidden="true" />
             {{ thinkingLabel }}
           </p>
