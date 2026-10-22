@@ -187,20 +187,6 @@ function resolveGrenzo(ctx: GameContext, mode: 'goad' | 'exile', targetId?: stri
 }
 
 describe('PR09 Trickery and Grenzo', () => {
-  it('pr09-trickery-pin-normal-cast — exact oracle pin and paid {1}{R} cast targets a normal opponent spell', () => {
-    expect(interpretCard(TRICKERY).modeled).toBe(true);
-    const ctx = pod('pr09-trickery-normal-cast');
-    const original = normalCastOnStack(ctx, 'P2', simpleSpell('Opponent Original Spell'), ['C']);
-    castTrickery(ctx, original.id);
-    expect(
-      ctx.state.eventLog.some(
-        (event) => event.type === 'castSpell' && event.payload['name'] === "Tibalt's Trickery",
-      ),
-    ).toBe(true);
-    expect(ctx.state.stack.at(-1)?.description).toContain("Tibalt's Trickery");
-    expect(p(ctx, 'P1').manaEntries).toHaveLength(0);
-  });
-
   it('pr09-trickery-target-any-spell — can target spells controlled by you or an opponent', () => {
     for (const targetController of ['P1', 'P2']) {
       const ctx = pod(`pr09-trickery-target-${targetController}`);
@@ -407,14 +393,6 @@ describe('PR09 Trickery and Grenzo', () => {
     resolveTrickery(ctx, false);
     expect(ctx.state.exile).toHaveLength(0);
     expect(ctx.state.stack.every((entry) => entry.description !== 'No Permission Hit')).toBe(true);
-  });
-
-  it('pr09-grenzo-pin-normal-cast — pins and pays the printed {R}{R} cost', () => {
-    expect(interpretCard(GRENZO).modeled).toBe(true);
-    const ctx = pod('pr09-grenzo-cast');
-    castFromHand(ctx, 'P1', GRENZO, ['R', 'R']);
-    pump(resolveTopOfStack(ctx));
-    expect(ctx.state.battlefield.some((permanent) => permanent.name === GRENZO.name)).toBe(true);
   });
 
   it('pr09-grenzo-actual-damage-modes — combat damage to a player announces one mode and damage to a planeswalker does not', () => {

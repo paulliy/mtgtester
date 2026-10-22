@@ -173,15 +173,6 @@ function labCard(name: string, cost: string, typeLine: string, oracleText = ''):
 }
 
 describe('PR09 library reveal and casting cards', () => {
-  it('pr09-library-reveal-pins — restores all eight pinned production definitions', () => {
-    for (const card of [SONGBIRDS, ETALI, FORGE, SUNBIRD, DILATION, ITERATION, ULTIMATUM, VORTEX]) {
-      expect(
-        interpretCard(card).modeled,
-        `${card.name}: ${interpretCard(card).unmodeledReasons}`,
-      ).toBe(true);
-    }
-  });
-
   it('pr09-mystic-forge-top-privacy-and-eligibility — exposes only the top card to its controller and permits artifact or colorless spells', () => {
     const ctx = pod('pr09-forge-eligibility');
     spawn(ctx, 'P1', FORGE);

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
-import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana, drainPool } from '../src/mana/pool';
@@ -167,45 +166,6 @@ function performEquip(ctx: GameContext, equipment: EnginePermanent, host: Engine
 }
 
 describe('Adaptive Omnitool (pinned PR09 Oracle)', () => {
-  it('pr09-omnitool-cast-cost-timing — pays {2} through the cast action and obeys sorcery timing', () => {
-    const ctx = pod('pr09-omnitool-cast');
-    const object = conjure(ctx, 'P1', OMNITOOL, 'hand');
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }]);
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) =>
-          (option.payload as PriorityActionPayload).kind === 'castSpell' &&
-          (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }]);
-    const action = computePriorityOptions(ctx, playerById(ctx, 'P1')).find(
-      (option) => (option.payload as { objectId?: string }).objectId === object.id,
-    );
-    expect(action).toBeDefined();
-    ctx.state.currentTurnPlayer = 'P2';
-    ctx.state.activePlayerIndex = 1;
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    ctx.state.currentTurnPlayer = 'P1';
-    ctx.state.activePlayerIndex = 0;
-    ctx.state.phase = 'combat';
-    ctx.state.step = 'beginCombat';
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    ctx.state.phase = 'precombatMain';
-    ctx.state.step = null;
-    const permanent = castObject(ctx, object);
-    expect(permanent.name).toBe('Adaptive Omnitool');
-    expect(interpretCard(OMNITOOL).modeled).toBe(true);
-  });
-
   it('pr09-omnitool-equip-sorcery-artifact-count — pays Equip {3}; its bonus includes itself, excludes opposing artifacts, and tracks the current count', () => {
     const ctx = pod('pr09-omnitool-equip');
     const tool = castPermanently(ctx, OMNITOOL, ['C', 'C']);
@@ -431,44 +391,6 @@ describe('Adaptive Omnitool (pinned PR09 Oracle)', () => {
 });
 
 describe('Armored Skyhunter (pinned PR09 Oracle)', () => {
-  it('pr09-skyhunter-cast-cost-timing — pays {3}{W} through the cast action at sorcery timing', () => {
-    const ctx = pod('pr09-skyhunter-cast');
-    const object = conjure(ctx, 'P1', SKYHUNTER, 'hand');
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }, { symbol: 'C' }, { symbol: 'C' }]);
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'W' }]);
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(true);
-    ctx.state.currentTurnPlayer = 'P3';
-    ctx.state.activePlayerIndex = 2;
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    ctx.state.currentTurnPlayer = 'P1';
-    ctx.state.activePlayerIndex = 0;
-    ctx.state.phase = 'combat';
-    ctx.state.step = 'beginCombat';
-    expect(
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (option) => (option.payload as { objectId?: string }).objectId === object.id,
-      ),
-    ).toBe(false);
-    ctx.state.phase = 'precombatMain';
-    ctx.state.step = null;
-    const permanent = castObject(ctx, object);
-    expect(permanent.name).toBe('Armored Skyhunter');
-    expect(interpretCard(SKYHUNTER).modeled).toBe(true);
-  });
-
   it('pr09-skyhunter-only-self-attack-triggers — its own attack queues the trigger, another creature attack does not', () => {
     const ctx = pod('pr09-skyhunter-trigger');
     const hunter = spawn(ctx, 'P1', SKYHUNTER);

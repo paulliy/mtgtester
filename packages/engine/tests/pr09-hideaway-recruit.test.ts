@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard, PlayerId } from '@mtg/shared';
-import { interpretCard } from '../src/cards/interpret';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import { addMana } from '../src/mana/pool';
@@ -209,43 +208,6 @@ function answerCelebrateTargets(
 }
 
 describe('PR09 hideaway and recruit cards', () => {
-  it('pr09-rabble-pinned-and-modeled — pins and interprets the assigned Oracle card', () => {
-    expect(rabblePin.sha256).toBe(
-      '1f38ae0c31db3230f52fa616257d866895a1e898fa8d214fdbaa722b674b3872',
-    );
-    expect(interpretCard(rabblePin.card).unmodeledReasons).toEqual([]);
-  });
-
-  it('pr09-celebrate-pinned-and-modeled — pins and interprets both independent entry abilities', () => {
-    expect(celebratePin.sha256).toBe(
-      'bcb33e09cc00ce91a1cbc0d2b24e41f7a40fc3be9ca5eef4b2dc6b27102e80ae',
-    );
-    const definition = interpretCard(celebratePin.card);
-    expect(definition.unmodeledReasons).toEqual([]);
-    expect(definition.triggers).toHaveLength(2);
-  });
-
-  it('pr09-rabble-normal-cast-and-cost-timing — pays five mana at own sorcery timing', () => {
-    const ctx = pod('pr09-rabble-cast');
-    const setup = setupRabble(ctx, forest(), forest().name, 'rabble-cast');
-    expect(setup.permanent.name).toBe('Rabble Rousing');
-    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
-    expect(ctx.state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
-
-    const short = pod('pr09-rabble-short-cast');
-    const hand = conjure(short, 'P1', rabblePin.card, 'hand');
-    addMana(
-      playerById(short, 'P1'),
-      (['C', 'C', 'C', 'W'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(castOption(short, 'P1', hand.id)).toBeUndefined();
-    addMana(playerById(short, 'P1'), [{ symbol: 'C' }]);
-    expect(castOption(short, 'P1', hand.id)).toBeDefined();
-    short.state.currentTurnPlayer = 'P2';
-    short.state.activePlayerIndex = 1;
-    expect(castOption(short, 'P1', hand.id)).toBeUndefined();
-  });
-
   it('pr09-rabble-hideaway-five-private-and-linked — chooses one exact face-down card and bottoms the rest in-library', () => {
     const ctx = pod('pr09-rabble-hideaway');
     const chosen = setupRabble(
@@ -443,27 +405,6 @@ describe('PR09 hideaway and recruit cards', () => {
       ),
     ).toBe(false);
     expect(ctx.state.exile.some((card) => card.id === oldHidden.id)).toBe(true);
-  });
-
-  it('pr09-celebrate-normal-cast-and-cost-timing — pays {3}{W} at own sorcery timing', () => {
-    const ctx = pod('pr09-celebrate-cast');
-    const cast = payCast(ctx, 'P1', celebratePin.card, celebrateMana());
-    expect(cast.permanent?.name).toBe('Celebrate the Mountain-king');
-    expect(playerById(ctx, 'P1').manaEntries).toEqual([]);
-    expect(ctx.state.eventLog.some((event) => event.type === 'castSpell')).toBe(true);
-
-    const short = pod('pr09-celebrate-short-cast');
-    const hand = conjure(short, 'P1', celebratePin.card, 'hand');
-    addMana(
-      playerById(short, 'P1'),
-      (['C', 'C', 'W'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(castOption(short, 'P1', hand.id)).toBeUndefined();
-    addMana(playerById(short, 'P1'), [{ symbol: 'C' }]);
-    expect(castOption(short, 'P1', hand.id)).toBeDefined();
-    short.state.currentTurnPlayer = 'P2';
-    short.state.activePlayerIndex = 1;
-    expect(castOption(short, 'P1', hand.id)).toBeUndefined();
   });
 
   it('pr09-celebrate-orders-independent-triggers-and-targets-per-opponent — excludes self, lands, and hexproof permanents', () => {

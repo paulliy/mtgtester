@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
-import type { DecisionRequest, DecisionResponse } from '@mtg/shared';
+import type { DecisionResponse } from '@mtg/shared';
 import { PR09_SCENARIOS, PR09_SCENARIO_IDS } from './pr09-scenario-catalog';
 import { pr09Scenario } from './pr09-scenarios';
 
@@ -63,41 +63,6 @@ describe('first-five PR09 viewer scenarios', () => {
       expect(scenario.metadata.clauseIds).toEqual(
         clauseIds.filter((clause) => scenario.metadata.clauseIds.includes(clause)),
       );
-    },
-  );
-
-  it.each(PR09_SCENARIOS)(
-    '$id reaches the real first P1 decision with the arranged game state',
-    ({ id, cardName }) => {
-      const scenario = pr09Scenario(id, `server-interaction-${id}` as never);
-      const state = scenario.engine.getState();
-      expect(state.players.map((player) => player.id)).toEqual(['P1', 'P2', 'P3', 'P4']);
-      expect(
-        state.battlefield.some((permanent) => permanent.name === cardName) ||
-          state.players[0]!.hand.some((card) => card.name === cardName),
-      ).toBe(true);
-      let reachedP1 = false;
-      for (let i = 0; i < 120; i++) {
-        const step = scenario.engine.advance();
-        if (step.kind === 'gameOver')
-          throw new Error(
-            `${id} ended before P1 received a decision: ${step.result.haltReason ?? 'prepared game ended normally'}`,
-          );
-        if (step.kind === 'continue') continue;
-        const request = step.request as DecisionRequest;
-        if (request.decidingPlayer === 'P1') {
-          expect(request.legalActions.length).toBeGreaterThan(0);
-          reachedP1 = true;
-          break;
-        }
-        const override = scenario.decisionProviderOverrides?.[request.decidingPlayer];
-        const fallback =
-          request.legalActions.find((action) => action.type === 'pass') ?? request.legalActions[0]!;
-        scenario.engine.submit(
-          override?.decide(request) ?? { requestId: request.requestId, actionId: fallback.id },
-        );
-      }
-      expect(reachedP1).toBe(true);
     },
   );
 

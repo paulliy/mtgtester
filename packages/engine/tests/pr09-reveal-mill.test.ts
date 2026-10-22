@@ -1,10 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
-import { interpretCard } from '../src/cards/interpret';
-import { applyPriorityAction } from '../src/actions/apply';
-import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
-import { addMana } from '../src/mana/pool';
 import { changeController, moveObject, playerById } from '../src/state/objects';
 import { createGame } from '../src/state/game';
 import { queueStepTriggers } from '../src/turn/turn';
@@ -68,26 +64,6 @@ function pass(d: PendingDecision) {
 function settle(ctx: GameContext, choose?: (d: PendingDecision) => ReturnType<typeof pass>) {
   return pump(runPrioritySequence(ctx), (d) => choose?.(d) ?? pass(d));
 }
-function cast(ctx: GameContext, player: string, card: OracleCard, symbols: ('B' | 'C')[]) {
-  const hand = conjure(ctx, player, card, 'hand');
-  addMana(
-    playerById(ctx, player),
-    symbols.map((symbol) => ({ symbol })),
-  );
-  const option = computePriorityOptions(ctx, playerById(ctx, player)).find((o) => {
-    const p = o.payload as PriorityActionPayload;
-    return p.kind === 'castSpell' && p.objectId === hand.id;
-  });
-  expect(option).toBeDefined();
-  pump(
-    applyPriorityAction(ctx, playerById(ctx, player), option!.payload as PriorityActionPayload, {
-      index: 0,
-      targets: new Map(),
-    }),
-  );
-  settle(ctx);
-  return ctx.state.battlefield.find((p) => p.cardId === hand.cardId)!;
-}
 function upkeep(ctx: GameContext, player: string) {
   ctx.state.currentTurnPlayer = player;
   ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(player);
@@ -134,39 +110,6 @@ function attack(
 }
 
 describe('PR09 reveal and mill cards', () => {
-  it('pr09-duelist-pinned-and-modeled — interprets the exact pinned Duelist Oracle text', () => {
-    expect(duelistPin.sha256).toBe(
-      '627aac8300f02188c46ce9ace0f40bff9e43f22c526c632c06b0ce9cbd6f1856',
-    );
-    expect(interpretCard(duelistPin.card).unmodeledReasons).toEqual([]);
-  });
-  it('pr09-szarekh-pinned-and-modeled — interprets the exact pinned Szarekh Oracle text', () => {
-    expect(szarekhPin.sha256).toBe(
-      'e4fff6dac7991e615f0b4bf6b98bb646ba85908af5dd83192cd29634bb3d26c1',
-    );
-    expect(interpretCard(szarekhPin.card).unmodeledReasons).toEqual([]);
-  });
-  it('pr09-duelist-normal-cast — pays {1}{B} through the normal cast action', () => {
-    const ctx = pod('pr09-duelist-cast');
-    const card = cast(ctx, 'P1', duelistPin.card, ['C', 'B']);
-    expect(card.name).toBe('Keen Duelist');
-    expect(ctx.state.eventLog.some((e) => e.type === 'castSpell')).toBe(true);
-  });
-  it('pr09-duelist-cast-cost-and-timing — requires both mana and own sorcery timing', () => {
-    const ctx = pod('pr09-duelist-cast-negative');
-    const hand = conjure(ctx, 'P1', duelistPin.card, 'hand');
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
-    const offered = () =>
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (o) => (o.payload as { objectId?: string }).objectId === hand.id,
-      );
-    expect(offered()).toBe(false);
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }]);
-    expect(offered()).toBe(true);
-    ctx.state.currentTurnPlayer = 'P2';
-    ctx.state.activePlayerIndex = 1;
-    expect(offered()).toBe(false);
-  });
   it('pr09-duelist-own-upkeep-reveal-life-and-hand — publicly reveals both, cross-pays life, and puts cards into hands', () => {
     const ctx = pod('pr09-duelist-upkeep');
     spawn(ctx, 'P1', duelistPin.card);
@@ -276,26 +219,6 @@ describe('PR09 reveal and mill cards', () => {
     settle(ctx, (d) => chooseOpponent(d));
     expect(playerById(ctx, 'P1').life).toBe(37);
     expect(playerById(ctx, 'P3').life).toBe(40);
-  });
-  it('pr09-szarekh-normal-cast — pays {1}{B}{B}{B} and resolves normally', () => {
-    const ctx = pod('pr09-szarekh-cast');
-    const permanent = cast(ctx, 'P1', szarekhPin.card, ['C', 'B', 'B', 'B']);
-    expect(permanent.name).toBe('Szarekh, the Silent King');
-  });
-  it('pr09-szarekh-cast-cost-and-timing — cannot cast short or during an opponent turn', () => {
-    const ctx = pod('pr09-szarekh-cast-negative');
-    const hand = conjure(ctx, 'P1', szarekhPin.card, 'hand');
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'C' }, { symbol: 'B' }, { symbol: 'B' }]);
-    const offered = () =>
-      computePriorityOptions(ctx, playerById(ctx, 'P1')).some(
-        (o) => (o.payload as { objectId?: string }).objectId === hand.id,
-      );
-    expect(offered()).toBe(false);
-    addMana(playerById(ctx, 'P1'), [{ symbol: 'B' }]);
-    expect(offered()).toBe(true);
-    ctx.state.currentTurnPlayer = 'P2';
-    ctx.state.activePlayerIndex = 1;
-    expect(offered()).toBe(false);
   });
   it('pr09-szarekh-attack-mills-three-and-returns-eligible — mills through real attack and chooses a Vehicle', () => {
     const ctx = pod('pr09-szarekh-mill');

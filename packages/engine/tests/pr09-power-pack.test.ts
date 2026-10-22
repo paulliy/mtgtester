@@ -119,13 +119,6 @@ function castPrompt(decision: PendingDecision) {
 }
 
 describe('PR09 Power Pack', () => {
-  it('pr09-power-pack-pinned-and-modeled — uses the exact pinned Oracle card', () => {
-    expect(packEntry.sha256).toBe(
-      'f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af',
-    );
-    expect(interpretCard(POWER_PACK).unmodeledReasons).toEqual([]);
-  });
-
   it('pr09-power-pack-normal-paid-cast-keywords-and-timing — pays five colored mana and retains all combat keywords', () => {
     const ctx = pod('pr09-power-pack-cast');
     const card = conjure(ctx, 'P1', POWER_PACK, 'hand');

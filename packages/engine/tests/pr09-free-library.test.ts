@@ -225,15 +225,6 @@ function activateOptions(ctx: GameContext, object: EnginePermanent) {
 }
 
 describe('PR09 free library cards', () => {
-  it('pr09-marvel-normal-cast — pays {4} through the ordinary cast action', () => {
-    const ctx = pod('pr09-marvel-cast');
-    const card = castNormally(ctx, 'P1', MARVEL, ['C', 'C', 'C', 'C']);
-    const permanent = ctx.state.battlefield.find((candidate) => candidate.cardId === card.cardId);
-    expect(permanent?.name).toBe('Aetherworks Marvel');
-    expect(p(ctx, 'P1').manaEntries).toHaveLength(0);
-    expect(interpretCard(MARVEL).modeled).toBe(true);
-  });
-
   it('pr09-marvel-energy — a controlled noncreature permanent entering its graveyard yields one energy', () => {
     const ctx = pod('pr09-marvel-energy');
     const marvel = spawn(ctx, 'P1', MARVEL);

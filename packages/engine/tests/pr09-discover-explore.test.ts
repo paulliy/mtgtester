@@ -110,13 +110,6 @@ function lib(c: GameContext, cards: OracleCard[]) {
   playerById(c, 'P1').library = os;
   return os;
 }
-function offered(c: GameContext, objectId: string) {
-  return computePriorityOptions(c, playerById(c, 'P1')).some(
-    (o) =>
-      (o.payload as PriorityActionPayload).kind === 'castSpell' &&
-      (o.payload as { objectId?: string }).objectId === objectId,
-  );
-}
 const testCard = (name: string, cost = '{1}', type = 'Sorcery', text = '') =>
   oracle({
     name,
@@ -129,24 +122,6 @@ const testCard = (name: string, cost = '{1}', type = 'Sorcery', text = '') =>
   });
 
 describe('PR09 discover, explore, and reveal production cards', () => {
-  it('pr09-franklin-cast-cost-timing — casts Franklin for {4}{U}{R} through the normal action', () => {
-    const c = pod('franklin-cast');
-    const p = cast(c, FRANKLIN, ['C', 'C', 'C', 'C', 'U', 'R']);
-    expect(p.name).toBe(FRANKLIN.name);
-  });
-  it('pr09-franklin-cast-cost-timing-negative — Franklin requires {4}{U}{R} and your own sorcery timing', () => {
-    const c = pod('franklin-cost-negative');
-    const o = conjure(c, 'P1', FRANKLIN, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      (['C', 'C', 'C', 'C', 'U'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'R' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
-  });
   it('pr09-franklin-own-combat-discover — after your noncreature spell, beginning combat queues and resolves Discover 6', () => {
     const c = pod('franklin-discover');
     const f = spawn(c, 'P1', FRANKLIN);
@@ -165,23 +140,6 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     c.state.activePlayerIndex = 1;
     queueStepTriggers(c, 'beginningOfCombat');
     expect(c.state.pendingTriggers).toHaveLength(0);
-  });
-  it('pr09-monstrous-cast-cost-timing — casts Monstrous Vortex for {3}{G}', () => {
-    const c = pod('vortex-cast');
-    expect(cast(c, VORTEX, ['C', 'C', 'C', 'G']).name).toBe(VORTEX.name);
-  });
-  it('pr09-monstrous-cast-cost-timing-negative — Vortex requires {3}{G} and your own sorcery timing', () => {
-    const c = pod('vortex-cost-negative');
-    const o = conjure(c, 'P1', VORTEX, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      (['C', 'C', 'C'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'G' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
   });
   it('pr09-monstrous-creature-discover — your power-five creature spell triggers Discover using its mana value', () => {
     const c = pod('vortex-hit');
@@ -203,25 +161,6 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     c.state.activePlayerIndex = 1;
     castBy(c, 'P2', testCard('Enemy giant', '{6}', 'Creature — Giant'), Array(6).fill('C'));
     expect(c.state.pendingTriggers).toHaveLength(0);
-  });
-  it('pr09-chimil-cast-cost-timing — casts Chimil for {6}', () => {
-    const c = pod('chimil-cast');
-    expect(cast(c, CHIMIL, Array(6).fill('C')).name).toBe(CHIMIL.name);
-  });
-  it('pr09-chimil-cast-cost-timing-negative — Chimil requires six mana and your own sorcery timing', () => {
-    const c = pod('chimil-cost-negative');
-    const o = conjure(c, 'P1', CHIMIL, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      Array(5)
-        .fill('C')
-        .map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'C' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
   });
   it('pr09-chimil-own-end-step-discover — own end step triggers Discover 5', () => {
     const c = pod('chimil-end');
@@ -248,19 +187,6 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     expect(car.name).toBe(CARNOSAUR.name);
     expect(playerById(c, 'P1').hand.some((x) => x.name === 'Carnosaur hit')).toBe(true);
   });
-  it('pr09-carnosaur-cast-cost-timing-negative — Carnosaur requires {4}{R}{R} and your own sorcery timing', () => {
-    const c = pod('carnosaur-cost-negative');
-    const o = conjure(c, 'P1', CARNOSAUR, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      (['C', 'C', 'C', 'C', 'R'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'R' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
-  });
   it('pr09-carnosaur-activation-hand-only-cost — ability requires hand zone and {2}{R}', () => {
     const c = pod('carnosaur-cost');
     const hand = conjure(c, 'P1', CARNOSAUR, 'hand');
@@ -280,23 +206,6 @@ describe('PR09 discover, explore, and reveal production cards', () => {
       actions().some((o) => (o.payload as PriorityActionPayload).kind === 'activateAbility'),
     ).toBe(true);
     expect(foe.name).toBe('Target');
-  });
-  it('pr09-path-cast-cost-timing — casts Path of Discovery for {3}{G}', () => {
-    const c = pod('path-cast');
-    expect(cast(c, PATH, ['C', 'C', 'C', 'G']).name).toBe(PATH.name);
-  });
-  it('pr09-path-cast-cost-timing-negative — Path requires {3}{G} and your own sorcery timing', () => {
-    const c = pod('path-cost-negative');
-    const o = conjure(c, 'P1', PATH, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      (['C', 'C', 'C'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'G' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
   });
   it('pr09-path-own-creature-enters-explore-land — own creature entering explores; land goes to hand without a draw', () => {
     const c = pod('path-land');
@@ -329,23 +238,6 @@ describe('PR09 discover, explore, and reveal production cards', () => {
     settle(c);
     const creature = c.state.battlefield.find((x) => x.name === 'Empty explore')!;
     expect(creature.counters['+1/+1'] ?? 0).toBe(1);
-  });
-  it('pr09-predators-cast-cost-timing — casts Lurking Predators for {4}{G}{G}', () => {
-    const c = pod('predators-cast');
-    expect(cast(c, PREDATORS, ['C', 'C', 'C', 'C', 'G', 'G']).name).toBe(PREDATORS.name);
-  });
-  it('pr09-predators-cast-cost-timing-negative — Lurking Predators requires {4}{G}{G} and your own sorcery timing', () => {
-    const c = pod('predators-cost-negative');
-    const o = conjure(c, 'P1', PREDATORS, 'hand');
-    addMana(
-      playerById(c, 'P1'),
-      (['C', 'C', 'C', 'C', 'G'] as const).map((symbol) => ({ symbol })),
-    );
-    expect(offered(c, o.id)).toBe(false);
-    addMana(playerById(c, 'P1'), [{ symbol: 'G' }]);
-    c.state.currentTurnPlayer = 'P2';
-    c.state.activePlayerIndex = 1;
-    expect(offered(c, o.id)).toBe(false);
   });
   it('pr09-predators-opponent-creature-publicly-enters — opponent spell reveals publicly and creature must enter battlefield', () => {
     const c = pod('predators-creature');

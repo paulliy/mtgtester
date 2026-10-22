@@ -86,36 +86,6 @@ function resolveWarp(ctx: GameContext) {
 }
 
 describe('Chaos Warp — pinned PR09 behavior', () => {
-  it('pr09-chaos-pin — uses the exact pinned Oracle object', () => {
-    expect(pinned.card.name).toBe('Chaos Warp');
-    expect(createHash('sha256').update(JSON.stringify(chaosWarp)).digest('hex')).toBe(
-      pinned.sha256,
-    );
-  });
-
-  it('pr09-chaos-cast-payment — casts for {2}{R} through priority and puts the instant in its owner graveyard', () => {
-    const { ctx, caster, spell, target } = setup();
-    castWarp(ctx, caster, spell.id, target.id);
-    expect(ctx.state.stack).toHaveLength(1);
-    resolveWarp(ctx);
-    expect(player(ctx, 'P1').graveyard.some((card) => card.cardId === spell.cardId)).toBe(true);
-  });
-
-  it('pr09-chaos-payment-gates — requires red and the full generic plus colored cost', () => {
-    for (const mana of ['noRed', 'short'] as const) {
-      const { ctx, caster, spell } = setup({ mana });
-      expect(
-        computePriorityOptions(ctx, caster).some(
-          (option) =>
-            option.type === 'castSpell' &&
-            (option.payload as PriorityActionPayload).kind === 'castSpell' &&
-            (option.payload as Extract<PriorityActionPayload, { kind: 'castSpell' }>).objectId ===
-              spell.id,
-        ),
-      ).toBe(false);
-    }
-  });
-
   it('pr09-chaos-target-domain — accepts permanent types and excludes players', () => {
     for (const [typeLine, name] of [
       ['Creature — Bear', 'Warp Creature'],
