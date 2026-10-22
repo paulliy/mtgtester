@@ -84,21 +84,45 @@ const counterText = computed(() =>
     .join(' '),
 );
 
-const marks = computed(() => {
+/**
+ * Counters drawn as pips rather than words: +1/+1 and -1/-1 as signed green and red numbers,
+ * loyalty as a plain number, anything else as its initial and count. The words are on hover.
+ */
+const counterPips = computed(() =>
+  Object.entries(props.permanent.counters)
+    .filter(([, n]) => n !== 0)
+    .map(([kind, n]) => {
+      const title = `${n} ${kind} counter${n === 1 ? '' : 's'}`;
+      if (kind === '+1/+1') return { kind, label: `+${n}`, tone: 'plus', title };
+      if (kind === '-1/-1') return { kind, label: `-${n}`, tone: 'minus', title };
+      if (kind === 'loyalty') return { kind, label: `${n}`, tone: 'loyalty', title };
+      return { kind, label: `${kind.charAt(0).toUpperCase()}${n}`, tone: 'other', title };
+    }),
+);
+
+/** The tile shows these states (rotation, a desaturated or lifted card, glows); hover names them. */
+const statusLines = computed(() => {
+  const p = props.permanent;
   const out: string[] = [];
-  if (props.permanent.attacking !== null) {
-    out.push(`⚔ ${props.nameById?.get(props.permanent.attacking) ?? props.permanent.attacking}`);
-  }
-  if (props.permanent.blocking !== null) {
-    out.push(`🛡 ${props.nameById?.get(props.permanent.blocking) ?? props.permanent.blocking}`);
-  }
-  if (props.permanent.summoningSick) out.push('zzz');
+  if (p.tapped) out.push('Tapped');
+  if (p.summoningSick && isCreature.value) out.push('Summoning sick');
+  if (p.attacking !== null)
+    out.push(`Attacking ${props.nameById?.get(p.attacking) ?? p.attacking}`);
+  if (p.blocking !== null) out.push(`Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`);
   return out;
 });
 
+/** Marked damage as a red wash rising from the foot of the art, in proportion to toughness. */
+const damageShare = computed(() => {
+  const { damageMarked, toughness } = props.permanent;
+  if (damageMarked <= 0) return 0;
+  if (toughness === null || toughness <= 0) return 0.5;
+  return Math.min(1, damageMarked / toughness);
+});
+
 /**
- * Arena-style tiles: a real card shows only its illustration (Scryfall's `art_crop`) in a square;
- * the full card, with its text and live state, is the hover preview. A token is a half-circle
+ * Arena-style tiles: a real card shows only its illustration (Scryfall's `art_crop`) in a landscape
+ * rectangle; the full card, with its text and live state, is the hover preview. A token is an arch
  * carrying its P/T (or its name, when it isn't a creature) over art: a token copy of a real card
  * shows that card's, and any other token borrows a matching printed token's (`tokenArt`).
  */
@@ -141,6 +165,7 @@ const artSrc = computed(() => {
 const ptText = computed(() =>
   isCreature.value ? `${props.permanent.power}/${props.permanent.toughness}` : null,
 );
+const hurt = computed(() => props.permanent.damageMarked > 0);
 
 function onEnter(event: MouseEvent): void {
   const p = props.permanent;
@@ -159,6 +184,7 @@ function onEnter(event: MouseEvent): void {
     keywords: p.keywords,
     counters: counterText.value,
     damageMarked: p.damageMarked,
+    status: statusLines.value,
   });
   cardPreview.updateCursor(event.clientX, event.clientY);
 }
@@ -176,10 +202,10 @@ function onLeave(): void {
     class="tile"
     :class="{
       token: isToken,
-      stacked: count > 1,
-      creature: isCreature,
       tapped: permanent.tapped,
+      sick: permanent.summoningSick && isCreature,
       attacking: isAttacking,
+      blocking: permanent.blocking !== null,
       striking,
       'taking-damage': damageFlash === 'damage',
     }"
@@ -203,53 +229,73 @@ function onLeave(): void {
     >
       ×{{ count }}
     </div>
-    <div v-if="permanent.tapped" class="tap-badge" title="Tapped">TAP</div>
-    <div class="frame" role="img" :aria-label="permanent.name">
-      <img
-        v-if="artSrc"
-        :src="artSrc"
-        alt=""
-        loading="lazy"
-        decoding="async"
-        @error="artFailed = true"
-      />
-      <span v-else-if="!isToken" class="frame-name">{{ permanent.name }}</span>
-      <span
-        v-if="isToken"
-        class="token-label"
-        :class="{
-          'is-name': ptText === null,
-          'on-art': artSrc !== null,
-          'flash-damage': damageFlash === 'damage',
-        }"
-      >
-        {{ ptText ?? permanent.name }}
+    <!-- Everything on the card turns with it when it taps, name and P/T included. -->
+    <div class="card">
+      <div class="frame" role="img" :aria-label="permanent.name">
+        <img
+          v-if="artSrc"
+          :src="artSrc"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          @error="artFailed = true"
+        />
+        <span v-else-if="!isToken" class="frame-name">{{ permanent.name }}</span>
+        <span
+          v-if="damageShare > 0"
+          class="damage-wash"
+          :style="{ height: `${damageShare * 100}%` }"
+          aria-hidden="true"
+        />
+        <span
+          v-if="isToken"
+          class="token-label"
+          :class="{
+            'is-name': ptText === null,
+            'on-art': artSrc !== null,
+            'flash-damage': damageFlash === 'damage',
+          }"
+        >
+          <template v-if="ptText === null">{{ permanent.name }}</template>
+          <template v-else
+            >{{ permanent.power }}/<span :class="{ hurt }">{{
+              permanent.toughness
+            }}</span></template
+          >
+        </span>
+      </div>
+      <!-- Hidden from screen readers, which already hear the name from the frame's label. -->
+      <span v-if="artSrc && !isToken" class="name-strip" aria-hidden="true">
+        {{ permanent.name }}
       </span>
+      <span
+        v-if="ptText !== null && !isToken"
+        class="pt"
+        :class="{ 'above-name': artSrc !== null, 'flash-damage': damageFlash === 'damage' }"
+        >{{ permanent.power }}/<span :class="{ hurt }">{{ permanent.toughness }}</span></span
+      >
+      <div v-if="counterPips.length > 0" class="pips" aria-hidden="true">
+        <span
+          v-for="pip in counterPips"
+          :key="pip.kind"
+          class="pip"
+          :class="pip.tone"
+          :title="pip.title"
+        >
+          {{ pip.label }}
+        </span>
+      </div>
     </div>
-    <!-- Outside the frame so it stays level when a tapped card's art turns sideways. Hidden from
-         screen readers, which already hear the name from the frame's label. -->
-    <span v-if="artSrc && !isToken" class="name-strip" aria-hidden="true">
-      {{ permanent.name }}
-    </span>
-    <span
-      v-if="ptText !== null && !isToken"
-      class="pt"
-      :class="{ 'above-name': artSrc !== null, 'flash-damage': damageFlash === 'damage' }"
-    >
-      {{ ptText }}
-    </span>
-    <span
-      v-if="permanent.damageMarked > 0"
-      class="dmg"
-      :title="`${permanent.damageMarked} damage marked`"
-    >
+    <!-- The tile shows these states without words; this text keeps them for anyone who can't see
+         or hover the card. -->
+    <span v-if="permanent.tapped" class="tap-badge visually-hidden">TAP</span>
+    <span v-if="permanent.damageMarked > 0" class="dmg visually-hidden">
       −{{ permanent.damageMarked }}
     </span>
-    <div v-if="counterText || marks.length > 0" class="status">
-      <span v-if="counterText" class="counters">{{ counterText }}</span>
-      <span v-if="marks.length > 0" class="marks">{{ marks.join(' ') }}</span>
-    </div>
-    <!-- Keywords show in the hover preview; this keeps them for anyone who can't hover. -->
+    <span v-if="counterText" class="counters visually-hidden">{{ counterText }}</span>
+    <span v-if="statusLines.length > 0" class="marks visually-hidden">
+      {{ statusLines.join(', ') }}
+    </span>
     <span
       v-if="permanent.keywords.length > 0"
       class="keywords visually-hidden"
@@ -276,20 +322,33 @@ function onLeave(): void {
     width 150ms ease,
     opacity 200ms ease;
 }
+/* An arch: a half-circle across the top of the same landscape footprint as a card. */
 .tile.token {
-  --tile-radius: 999px 999px 0 0;
+  --tile-radius: 50% 50% 0 0 / 66.7% 66.7% 0 0;
+}
+.card {
+  position: relative;
+  transition:
+    transform 180ms ease,
+    translate 150ms ease;
+}
+/* Tapped: the whole card turns sideways, like the real thing, scaled so it stays in its slot. */
+.tile.tapped .card {
+  transform: rotate(90deg) scale(0.75);
+}
+/* Attacking: the card steps forward. */
+.tile.attacking .card {
+  translate: 0 -5px;
 }
 .frame {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
   box-sizing: border-box;
   border-radius: var(--tile-radius);
   overflow: hidden;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  transition:
-    transform 150ms ease,
-    opacity 150ms ease;
+  transition: box-shadow 150ms ease;
 }
 .frame img {
   position: absolute;
@@ -298,6 +357,14 @@ function onLeave(): void {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: filter 200ms ease;
+}
+.tile.tapped .frame img {
+  filter: brightness(0.82);
+}
+/* Summoning sick: the art drains of color until the creature can act. */
+.tile.sick .frame img {
+  filter: grayscale(0.85) brightness(0.8);
 }
 /* Art that hasn't resolved (or never will) still names the card instead of showing a blank. */
 .frame-name {
@@ -314,9 +381,17 @@ function onLeave(): void {
   color: var(--text);
   overflow: hidden;
 }
-/* A half-circle: twice as wide as it is tall, rounded across the top. */
+.damage-wash {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgb(220 38 38 / 0.6), rgb(220 38 38 / 0.2));
+  border-top: 1px solid rgb(254 202 202 / 0.7);
+  pointer-events: none;
+  transition: height 250ms ease;
+}
 .tile.token .frame {
-  aspect-ratio: 2 / 1;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -354,25 +429,18 @@ function onLeave(): void {
   font-size: max(0.6rem, 12cqw);
   font-weight: 700;
 }
-/* Tapped: an imaged card turns sideways, like the real thing. A half-circle can't turn inside its
-   own footprint, so a tapped token dims and dashes its outline instead. The TAP badge marks both. */
-.tile.tapped:not(.token) .frame {
-  transform: rotate(90deg);
-}
-.tile.tapped .frame {
-  opacity: 0.8;
-}
-.tile.token.tapped .frame {
-  opacity: 0.6;
-  border-style: dashed;
-}
-.tile.creature .frame {
-  box-shadow: 0 0 0 2px var(--accent);
-}
 .tile.attacking .frame {
   border-color: var(--danger);
-  box-shadow: 0 0 0 2px rgb(248 113 113 / 0.55);
+  box-shadow:
+    0 0 0 2px rgb(248 113 113 / 0.7),
+    0 6px 14px rgb(248 113 113 / 0.45);
   animation: attackPulse 1s ease-in-out infinite;
+}
+.tile.blocking .frame {
+  border-color: #93c5fd;
+  box-shadow:
+    0 0 0 2px rgb(96 165 250 / 0.8),
+    0 0 12px rgb(96 165 250 / 0.5);
 }
 .tile.taking-damage::after {
   content: '';
@@ -425,10 +493,11 @@ function onLeave(): void {
     transform: scale(1);
   }
 }
+/* Outside the card, so the count stays upright when the stack taps. */
 .stack-count-badge {
   position: absolute;
   top: -5px;
-  left: -5px;
+  right: -5px;
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   border: 1.5px solid #ffffff;
@@ -441,23 +510,9 @@ function onLeave(): void {
   pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
-.tap-badge {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  background: rgba(0, 0, 0, 0.8);
-  color: var(--warn);
-  border: 1px solid var(--warn);
-  font-size: 0.52rem;
-  font-weight: 700;
-  padding: 0.05rem 0.2rem;
-  border-radius: 3px;
-  z-index: 2;
-  pointer-events: none;
-}
-.tile.token .tap-badge {
-  top: -4px;
-  right: -4px;
+/* A tapped card is 9/16 of the slot wide, centered: keep the count on its corner. */
+.tile.tapped .stack-count-badge {
+  right: calc(21.9% - 5px);
 }
 /* The card's name across the foot of its art, like the title bar of a printed card. */
 .name-strip {
@@ -500,66 +555,62 @@ function onLeave(): void {
 .pt.above-name {
   bottom: calc(max(0.6rem, 10.5cqw) * 1.15 + 9px);
 }
+/* Damaged toughness turns red, as in Arena. */
+.hurt {
+  color: #fca5a5;
+}
+.token-label:not(.on-art) .hurt {
+  color: var(--danger);
+}
 .pt.flash-damage,
 .token-label.flash-damage {
   animation: flash 0.8s ease-out;
 }
-.dmg {
-  position: absolute;
-  right: 3px;
-  top: 3px;
-  z-index: 3;
-  padding: 0.05rem 0.3rem;
-  border-radius: 5px;
-  background: #7f1d1d;
-  color: #fecaca;
-  font-size: max(0.6rem, 12cqw);
-  font-weight: 800;
-  pointer-events: none;
-}
-.tile.tapped .dmg {
-  top: 20px;
-}
-.tile.token .dmg {
-  top: -4px;
-  right: auto;
-  left: -4px;
-}
-/* Counters and combat marks sit top-left, clear of the P/T badge in the bottom-right corner. */
-.status {
+/* Counter pips sit top-left, clear of the P/T box in the bottom-right corner. */
+.pips {
   position: absolute;
   left: 3px;
   top: 3px;
-  max-width: 70%;
+  max-width: calc(100% - 6px);
   z-index: 2;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
+  flex-wrap: wrap;
+  gap: 2px;
   pointer-events: none;
 }
-.tile.stacked .status {
-  top: 16px;
-}
-/* A half-circle is half a square's height, so the space under its dome is free for these. */
-.tile.token .status {
-  top: calc(50cqw + 3px);
+/* Inside an arch's curve, the top-left corner is outside the shape: center them under the dome. */
+.tile.token .pips {
+  top: 22%;
   left: 0;
   right: 0;
   max-width: none;
-  align-items: center;
+  justify-content: center;
 }
-.counters,
-.marks {
-  max-width: 100%;
-  padding: 0.02rem 0.25rem;
-  border-radius: 4px;
+.pip {
+  min-width: 1.1rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.6);
   background: rgb(11 13 17 / 0.85);
-  font-size: 0.6rem;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: max(0.58rem, 9.5cqw);
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.pip.plus {
+  background: #15803d;
+  border-color: #bbf7d0;
+}
+.pip.minus {
+  background: #b91c1c;
+  border-color: #fecaca;
+}
+.pip.loyalty {
+  background: #4c1d95;
+  border-color: #ddd6fe;
 }
 .visually-hidden {
   position: absolute;

@@ -28,6 +28,8 @@ export interface PreviewCard {
   keywords?: string[];
   counters?: string;
   damageMarked?: number;
+  /** States the tile shows without words (tapped, summoning sick, in combat), named here. */
+  status?: string[];
 }
 
 export const useCardPreviewStore = defineStore('cardPreview', () => {

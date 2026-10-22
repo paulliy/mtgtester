@@ -48,6 +48,7 @@ const details = computed(() => {
   }
   if (c.keywords !== undefined && c.keywords.length > 0) lines.push(c.keywords.join(', '));
   if (c.counters !== undefined && c.counters !== '') lines.push(`Counters: ${c.counters}`);
+  if (c.status !== undefined && c.status.length > 0) lines.push(c.status.join(' · '));
   return lines;
 });
 
@@ -92,7 +93,8 @@ const style = computed(() => {
           card.oracleText ||
           (card.keywords && card.keywords.length > 0) ||
           card.counters ||
-          (card.damageMarked ?? 0) > 0
+          (card.damageMarked ?? 0) > 0 ||
+          (card.status && card.status.length > 0)
         "
         class="text-body"
       >
@@ -103,6 +105,9 @@ const style = computed(() => {
         <p v-if="card.counters" class="text-live">Counters: {{ card.counters }}</p>
         <p v-if="(card.damageMarked ?? 0) > 0" class="text-live">
           {{ card.damageMarked }} damage marked
+        </p>
+        <p v-if="card.status && card.status.length > 0" class="text-live">
+          {{ card.status.join(' · ') }}
         </p>
       </div>
       <div v-if="ptText" class="text-pt">{{ ptText }}</div>
