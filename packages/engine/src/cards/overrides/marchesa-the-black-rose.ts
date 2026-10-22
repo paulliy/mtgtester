@@ -150,12 +150,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   );
   // Carrion Feeder: restored in coverage PR02. The interpreter reads "can't block" and the
   // sacrifice-a-creature cost, which may sacrifice Carrion Feeder itself (allowSelf).
-  // Catalog audit batch 3: control change is permanent, not "for as long as this remains".
-  unsupportedCard(
-    '026ef98e-4f0a-4a6d-b74f-d17ac8b10e37',
-    'Cytoplast Manipulator',
-    'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
-  );
+  // Cytoplast Manipulator: restored in coverage PR08.06. The interpreter retains Graft 2;
+  // coverage-pr08.ts binds the activated control duration to this exact battlefield object.
   defineCard(
     '724767ca-bd84-4137-9133-4ad2e96b8428',
     "Dack's Duplicate",
@@ -464,11 +460,8 @@ export function registerMARCHESA_THE_BLACK_ROSEOverrides(): void {
   // Vigean Graftmage: restored in coverage PR04. The interpreter reads Graft 2 as its
   // enters-with counters and its move-a-counter trigger, so no override remains.
   // Catalog audit batch 8: one mode and one opponent, not one-or-more different players.
-  unsupportedCard(
-    '6dc7f837-158f-4ccf-86a5-a07a20891ec5',
-    'Vindictive Lich',
-    'Modes are choose-one rather than one-or-more targeting different players.',
-  );
+  // Vindictive Lich: restored in coverage PR08.
+
   // Watcher for Tomorrow: restored in coverage PR03. The interpreter reads Hideaway, the
   // leaves-the-battlefield trigger and its linked exiled card, so no override remains.
 }

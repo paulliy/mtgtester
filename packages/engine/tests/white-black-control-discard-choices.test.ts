@@ -306,8 +306,8 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
     const zero = make('rankle-zero-modes');
     rankleCombat(zero.ctx, (descriptions) => {
       expect(descriptions).toHaveLength(8);
-      expect(descriptions).toContain('');
-      return '';
+      expect(descriptions).toContain('Choose no modes');
+      return 'Choose no modes';
     });
     expect(player(zero.ctx, 'P2').life).toBe(37);
     expect(player(zero.ctx, 'P1').life).toBe(40);

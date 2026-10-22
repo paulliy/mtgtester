@@ -37,24 +37,127 @@ let actualImpact: {
 };
 const scratch: string[] = [];
 const expectedCapabilities = [
+  'Ability.activated',
   'Ability.effects',
+  'Ability.modes',
+  'Ability.optional',
   'Ability.spell',
   'Ability.targets',
+  'Ability.trigger',
+  'Ability.triggered',
+  'AbilityCost.discardSelf',
+  'AbilityCost.mana',
+  'AbilityCost.removeCounters',
+  'AbilityCost.sacrificeSelf',
+  'AbilityCost.tap',
+  'ActivatedAbility',
+  'ActivatedAbility.ability',
+  'ActivatedAbility.costs',
+  'ActivatedAbility.timing',
+  'ActivatedAbility.zone',
+  'AlternativeCast.ability',
+  'AlternativeCast.manaCost',
+  'AlternativeCast.overload',
   'CardDefinition',
+  'CardDefinition.activatedAbilities',
+  'CardDefinition.alternativeCasts',
+  'CardDefinition.entersWithCounters',
+  'CardDefinition.keywords',
+  'CardDefinition.manaAbilities',
   'CardDefinition.manaCost',
+  'CardDefinition.ruleStatics',
   'CardDefinition.spellAbility',
+  'CardDefinition.staticEffects',
+  'CardDefinition.triggers',
+  'Condition.castSpellThisTurn',
+  'Condition.eventObjectDefendingPlayerIsYou',
+  'Condition.sourceHasCounters',
+  'ContinuousOp.6',
+  'ContinuousOp.setMustAttackEachCombat',
+  'Effect.attackingCreaturesToOwnerLibraries',
+  'Effect.choosePermanentTypesThenSacrificeOthers',
+  'Effect.createToken',
+  'Effect.createTokenForPlayer',
+  'Effect.destroyTargetAndControllerMaySearchBasicTypedLand',
+  'Effect.discardTarget',
+  'Effect.draw',
+  'Effect.drawForEachOpponent',
+  'Effect.drawTarget',
+  'Effect.druidPurification',
+  'Effect.eachOpponentCreatesTokens',
+  'Effect.eachPlayerMayPutCountersAndGoad',
+  'Effect.exileCreatureAndControllerSearchBasicLand',
+  'Effect.exileEachCreatureAndControllersSearchBasicLands',
+  'Effect.gainControl',
+  'Effect.gainControlTarget',
   'Effect.gainLife',
+  'Effect.loseLifeTarget',
+  'Effect.moveCounters',
+  'Effect.putCountersOnCreaturesTargetPlayerControls',
+  'Effect.regainControlOfOwnCreatures',
   'Effect.removeCounters',
   'Effect.revealHandAndDiscard',
+  'Effect.rotateSourceAtUpkeep',
+  'Effect.sacrificeGreatestEachOpponent',
+  'Effect.sacrificeTargetPlayerCreature',
+  'Effect.schemingSymmetry',
+  'Effect.searchLibrary',
+  'Effect.shareCreatureLifeWithChosenOpponent',
+  'Effect.shareTokensWithChosenOpponent',
+  'Effect.shuffle',
+  'Effect.swapCreatureControlUntilEot',
+  'Effect.unlessPays',
+  'Effect.voteAndExileMost',
+  'Keyword.defender',
+  'Keyword.double strike',
   'Keyword.flying',
   'Keyword.lifelink',
   'Keyword.menace',
+  'Keyword.trample',
+  'ManaAbilitySpec',
+  'ManaAbilitySpec.costs',
+  'ManaAbilitySpec.units',
   'ParsedManaCost',
+  'RuleStatic.attackRestriction',
+  'RuleStatic.cantAttackOwner',
+  'RuleStatic.cantBeSacrificed',
+  'RuleStatic.cantBlockMatching',
+  'RuleStatic.costReduction',
+  'SearchDestination',
   'Selector.allOf',
+  'Selector.anyOf',
+  'Selector.controller',
+  'Selector.hasCounter',
   'Selector.not',
+  'Selector.other',
+  'Selector.powerAtLeast',
+  'Selector.powerAtMost',
+  'Selector.self',
+  'Selector.subtype',
+  'Selector.supertype',
   'Selector.type',
+  'StaticEffect',
+  'StaticEffect.affects',
+  'StaticEffect.op',
+  'TargetSpec.creature',
+  'TargetSpec.permanent',
   'TargetSpec.player',
+  'TokenSpec',
+  'TokenSpec.keywords',
+  'TokenSpec.manaAbilities',
+  'TriggerSpec.attacks',
+  'TriggerSpec.beginningOfCombat',
+  'TriggerSpec.dealsCombatDamageToPlayer',
+  'TriggerSpec.dies',
+  'TriggerSpec.endStep',
+  'TriggerSpec.enters',
+  'TriggerSpec.leavesBattlefield',
+  'TriggerSpec.upkeep',
+  'TriggerSubject.permanent',
+  'TriggerSubject.self',
   'Value.const',
+  'Value.countPermanents',
+  'Value.damageDealt',
 ];
 
 function runCommand(command: string, args: string[], options: ExecFileOptionsWithStringEncoding) {
@@ -89,7 +192,8 @@ beforeAll(async () => {
     {
       cwd: root,
       encoding: 'utf8',
-      timeout: 30_000,
+      // The registry now executes over 950 tests, including paid multiplayer compositions.
+      timeout: 120_000,
     },
   );
   if (run.status !== 0)
@@ -98,14 +202,14 @@ beforeAll(async () => {
   const impact = await runCommand(
     'bun',
     ['run', 'card-capabilities', '--primitive-evidence', runDirectory],
-    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 32 * 1024 * 1024 },
+    { cwd: root, encoding: 'utf8', timeout: 60_000, maxBuffer: 32 * 1024 * 1024 },
   );
   if (impact.status !== 0)
     throw new Error(
       `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
-}, 65_000);
+}, 185_000);
 afterEach(async () => {
   vi.restoreAllMocks();
   await yieldToEventLoop();
@@ -139,10 +243,9 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
   });
 
   it('keeps uncontracted dependencies experimental despite a passing primitive', () => {
-    const result = cardPrimitiveEligibility(
-      definition(),
-      loadPrimitiveEvidence(root, runDirectory),
-    );
+    const probe = definition();
+    probe.spellAbility!.effects.push({ op: 'mill', count: { kind: 'const', n: 1 } });
+    const result = cardPrimitiveEligibility(probe, loadPrimitiveEvidence(root, runDirectory));
     expect(result.eligible).toBe(false);
     expect(result.dependencies).toContain('Effect.removeCounters');
     expect(result.blocked.some((entry) => entry.capability === 'Effect.removeCounters')).toBe(
@@ -277,7 +380,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
     });
     const definition = interpretCard(card);
     if (variant === 'experimental')
-      definition.spellAbility!.effects = [{ op: 'draw', count: { kind: 'const', n: 1 } }];
+      definition.spellAbility!.effects = [{ op: 'mill', count: { kind: 'const', n: 1 } }];
     if (variant === 'outsideScope')
       definition.spellAbility!.effects = [{ op: 'gainLife', amount: { kind: 'const', n: 1001 } }];
     const consumer = { canonicalOracleId: card.oracleId, definition };
@@ -303,7 +406,7 @@ describe('primitive evidence and eligibility', { timeout: 30_000 }, () => {
           name: 'Primitive review CLI probe',
           typeLine: 'Sorcery',
           manaCost: '{0}',
-          oracleText: variant === 'experimental' ? 'Draw a card.' : 'You gain 3 life.',
+          oracleText: variant === 'experimental' ? 'Mill a card.' : 'You gain 3 life.',
         }),
         oracleId: 'ceca9ae4-c9ba-4018-b5f2-1288fe8792af',
       };

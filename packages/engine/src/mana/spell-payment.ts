@@ -12,6 +12,7 @@ import {
   convokeSourcesFor,
   manaSourcesFor,
   spellHasConvoke,
+  canBeSacrificed,
 } from '../state/queries';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
@@ -110,6 +111,7 @@ export function planSpellPayment(
           (permanent) =>
             permanent.controllerId === player.id &&
             (cost.kind !== 'tapOther' || !permanent.tapped) &&
+            (cost.kind !== 'sacrificeOther' || canBeSacrificed(ctx, permanent)) &&
             matchesSelector(ctx, permanent, cost.selector, source),
         );
         break;

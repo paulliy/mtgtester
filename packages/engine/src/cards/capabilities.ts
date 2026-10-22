@@ -165,6 +165,7 @@ const shapes = {
     amountFromSacrificedManaValue: leaf,
   } satisfies Fields<Objects<ManaAbilitySpec>>,
   TargetSpec: {
+    differentPlayerTargetSlots: { array: leaf },
     spellTargetsPermanentYouControl: leaf,
     spellHasSingleTarget: leaf,
     kind: leaf,
@@ -185,12 +186,15 @@ const shapes = {
     slotGroup: leaf,
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
+    damageIfGraveyardSpellsAtLeast: leaf,
+    types: { array: leaf },
     level: leaf,
     additionalMain: leaf,
     relativeTo: leaf,
     cantAttack: leaf,
     thenCombat: leaf,
     untap: leaf,
+    grantHaste: leaf,
     untapYourCreatures: leaf,
     direction: leaf,
     maximum: leaf,
@@ -271,6 +275,13 @@ const shapes = {
     sacrificeAt: leaf,
     requirements: { array: { object: { kind: leaf, player: leaf } } },
     duration: leaf,
+    // `gainControlTarget` names its recipient in exactly one of two disjoint shapes: an ordinary
+    // player target slot chosen at announcement, or the resolved-time `chooseOpponent` flag. A
+    // value naming both (or neither) matches no single branch and fails closed here as well as in
+    // `validateCardDefinition`.
+    recipient: {
+      union: [{ object: { targetPlayer: leaf } }, { object: { chooseOpponent: leaf } }],
+    },
     eachOpponent: leaf,
     goadedForRestOfGame: leaf,
     untilEot: leaf,
@@ -427,6 +438,7 @@ const shapes = {
         minChoices: leaf,
         maxChoices: leaf,
         repeatable: leaf,
+        optional: leaf,
         maxChoicesIf: {
           object: {
             condition: { node: 'Condition' },
@@ -913,6 +925,7 @@ const families = {
       mayPayEnergyThenReflexive: true,
       putCountersOnSourceThenReflexive: true,
       gainControlTarget: true,
+      swapCreatureControlUntilEot: true,
       putCounters: true,
       putCountersEach: true,
       putCountersOnCreaturesTargetPlayerControls: true,
@@ -983,6 +996,9 @@ const families = {
       createTokenForEachOpponent: true,
       createTokenForPlayer: true,
       createTokenForEachPlayerExceptTarget: true,
+      eachOpponentCreatesTokens: true,
+      shareTokensWithChosenOpponent: true,
+      shareCreatureLifeWithChosenOpponent: true,
       createTokenCopyOf: true,
       becomeCopyOf: true,
       becomeCopyOfTarget: true,
@@ -1019,6 +1035,9 @@ const families = {
       exileUntilSourceLeaves: true,
       exileTargetAndControllerMaySearchBasicLandTapped: true,
       removeTargetAndControllerMaySearchBasicLand: true,
+      destroyTargetAndControllerMaySearchBasicTypedLand: true,
+      exileCreatureAndControllerSearchBasicLand: true,
+      exileEachCreatureAndControllersSearchBasicLands: true,
       populate: true,
       untapAttackingPlayerNonlandPermanents: true,
       dealDamageDivided: true,
@@ -1067,6 +1086,11 @@ const families = {
       extraCombatPhase: true,
       becomeMonarch: true,
       druidPurification: true,
+      attackingCreaturesToOwnerLibraries: true,
+      rotateSourceAtUpkeep: true,
+      choosePermanentTypesThenSacrificeOthers: true,
+      eachPlayerMayPutCountersAndGoad: true,
+      voteAndExileMost: true,
       exileTargetWithSource: true,
       exileAndManifestTarget: true,
       blinkTarget: true,
@@ -1325,6 +1349,7 @@ const families = {
       allOf: true,
       anyOf: true,
       eventPlayerDrawCount: true,
+      eventObjectDefendingPlayerIsYou: true,
       notFirstDrawInOwnDrawStep: true,
       cardsInYourGraveyard: true,
       sourceHasCounters: true,
@@ -1339,6 +1364,9 @@ const families = {
     prefix: 'RuleStatic',
     discriminator: 'kind',
     tags: {
+      cantBlockMatching: true,
+      cantBeSacrificed: true,
+      cantAttackOwner: true,
       costReduction: true,
       opponentNonHandSpellCostIncrease: true,
       cantBeCountered: true,

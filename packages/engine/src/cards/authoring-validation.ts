@@ -34,6 +34,10 @@ export interface AuthoringIssue {
 interface Scope {
   targets: TargetSpec[];
   eventObject?: 'permanent' | 'card';
+  /** The event object is the ability's own source — a `self` subject binds no event object id. */
+  selfEventObject?: boolean;
+  /** The owning trigger binds an attacking creature's defending player (an `attacks` event). */
+  attackEventObject?: boolean;
   providedEventObject?: 'permanent' | 'card';
   eventPlayer?: boolean;
   providedEventPlayer?: boolean;
@@ -157,6 +161,34 @@ function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringI
     if (spec === null || typeof spec !== 'object') {
       issues.push({ path: at, message: 'invalid target specification' });
       continue;
+    }
+    if (spec.differentPlayerTargetSlots !== undefined) {
+      const others = spec.differentPlayerTargetSlots;
+      if (
+        spec.kind !== 'player' ||
+        spec.count !== undefined ||
+        spec.filter !== undefined ||
+        !Array.isArray(others) ||
+        others.length === 0 ||
+        others.length !== targets.length - 1 ||
+        new Set(others).size !== others.length ||
+        others.some(
+          (other) =>
+            !integer(other) ||
+            other === slot ||
+            targets[other]?.kind !== 'player' ||
+            targets[other]?.count !== undefined ||
+            targets[other]?.filter !== undefined ||
+            targets[other]?.controller !== spec.controller ||
+            targets[other]?.controllerPlayer !== spec.controllerPlayer ||
+            !targets[other]?.differentPlayerTargetSlots?.includes(slot),
+        )
+      )
+        issues.push({
+          path: `${at}.differentPlayerTargetSlots`,
+          message:
+            'distinct player targets require every other ordinary player slot in the same domain',
+        });
     }
     if (
       spec.spellTargetsPermanentYouControl !== undefined &&
@@ -480,11 +512,19 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       (trigger as { when?: string; perDefender?: boolean } | undefined)?.when ===
         'attackDeclared' &&
       (trigger as { perDefender?: boolean }).perDefender === true;
+    const attackEventObject =
+      record['kind'] === 'triggered' &&
+      trigger?.when === 'attacks' &&
+      trigger.subject?.kind === 'permanent';
     owningScope = {
       targets,
       eventPlayer,
       ...(attackedPlayer ? { attackedPlayer } : {}),
       ...(eventObject === undefined ? {} : { eventObject }),
+      ...(record['kind'] === 'triggered' && trigger?.subject?.kind === 'self'
+        ? { selfEventObject: true }
+        : {}),
+      ...(attackEventObject ? { attackEventObject: true } : {}),
     };
   }
   let checkedPermanentPossible = false;
@@ -511,6 +551,73 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   if (typeof record['op'] === 'string') {
     const op = record['op'] as Effect['op'];
     validateEffectExpressions(record as unknown as Effect, path, issues);
+    if (Object.hasOwn(record, 'recipient') && op !== 'gainControlTarget')
+      issues.push({
+        path: `${path}.recipient`,
+        message: 'recipient is implemented only for gainControlTarget',
+      });
+    if (op === 'gainControlTarget') {
+      const recipient = record['recipient'];
+      if (recipient !== undefined) {
+        if (recipient === null || typeof recipient !== 'object' || Array.isArray(recipient)) {
+          issues.push({
+            path: `${path}.recipient`,
+            message: 'recipient must be { targetPlayer: number } or { chooseOpponent: true }',
+          });
+        } else {
+          // Two disjoint recipient branches, exactly one per object. Naming both is ambiguous
+          // (which controller wins?), naming neither has no recipient at all — an empty object
+          // must not silently fall back to "the ability controller", which would read as an
+          // authored-but-absent choice rather than a mistake.
+          const r = recipient as Record<string, unknown>;
+          const namesSlot = Object.prototype.hasOwnProperty.call(r, 'targetPlayer');
+          const namesChoice = Object.prototype.hasOwnProperty.call(r, 'chooseOpponent');
+          for (const key of Object.keys(r)) {
+            if (key !== 'targetPlayer' && key !== 'chooseOpponent') {
+              issues.push({
+                path: `${path}.recipient`,
+                message: 'recipient only supports targetPlayer or chooseOpponent',
+              });
+            }
+          }
+          if (namesSlot && namesChoice) {
+            issues.push({
+              path: `${path}.recipient`,
+              message: 'recipient names targetPlayer and chooseOpponent; use exactly one branch',
+            });
+          } else if (namesSlot) {
+            const slot = r['targetPlayer'];
+            if (typeof slot !== 'number' || !Number.isSafeInteger(slot) || slot < 0) {
+              issues.push({
+                path: `${path}.recipient.targetPlayer`,
+                message: 'recipient targetPlayer must be a nonnegative integer slot',
+              });
+            } else
+              checkReference(
+                slot,
+                `${path}.recipient.targetPlayer`,
+                { domains: ['player'], selection: 'ordinary' },
+                owningScope,
+                issues,
+              );
+          } else if (namesChoice) {
+            // `chooseOpponent` is a flag, not a slot: anything other than the boolean true is a
+            // typo or a mistyped value, never a falsey branch to be ignored.
+            if (r['chooseOpponent'] !== true) {
+              issues.push({
+                path: `${path}.recipient.chooseOpponent`,
+                message: 'recipient chooseOpponent must be the boolean true',
+              });
+            }
+          } else {
+            issues.push({
+              path: `${path}.recipient`,
+              message: 'recipient must name targetPlayer or chooseOpponent',
+            });
+          }
+        }
+      }
+    }
     if (op === 'noOp')
       issues.push({
         path,
@@ -688,6 +795,30 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         message: 'an attack requirement needs at least one supported requirement',
       });
   }
+  if (
+    Array.isArray(record['targets']) &&
+    record['targets'].some(
+      (spec) => spec !== null && typeof spec === 'object' && 'differentPlayerTargetSlots' in spec,
+    )
+  ) {
+    const modes = record['modes'] as { repeatable?: boolean } | undefined;
+    if (record['kind'] !== 'triggered' || modes === undefined || modes.repeatable === true)
+      issues.push({
+        path,
+        message: 'distinct player target slots require nonrepeatable triggered modes',
+      });
+  }
+  if (
+    record['op'] === 'sacrificeGreatestEachOpponent' &&
+    record['damageIfGraveyardSpellsAtLeast'] !== undefined &&
+    (record['action'] !== 'exile' ||
+      record['metric'] !== 'power' ||
+      record['selector'] !== 'creature')
+  )
+    issues.push({
+      path,
+      message: 'conditional greatest-power damage requires exiling creatures by power',
+    });
   if (record['kind'] === 'attackRestriction') {
     if (record['includePlaneswalkers'] !== true)
       issues.push({
@@ -745,6 +876,32 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       path,
       message: 'event object information requires an owning permanent event scope',
     });
+  if (valueKind === 'eventObjectDefendingPlayerIsYou') {
+    if (owningScope?.eventObject !== 'permanent')
+      issues.push({
+        path,
+        message: 'event object defending player check requires an owning permanent event scope',
+      });
+    else if (owningScope.attackEventObject !== true)
+      issues.push({
+        path,
+        message: 'event object defending player check requires a creature attack event',
+      });
+  }
+  if (record['op'] === 'unlessPays') {
+    const payer = record['payer'];
+    if (!['eventPlayer', 'controller', 'eventObjectController'].includes(payer as string))
+      issues.push({ path: `${path}.payer`, message: 'unknown payer' });
+    else if (payer === 'eventObjectController') {
+      // A `self` subject binds no event object id, so there is no exact original permanent to
+      // read a controller from at resolution; a card-scope event has no permanent at all.
+      if (owningScope?.eventObject !== 'permanent' || owningScope.selfEventObject === true)
+        issues.push({
+          path: `${path}.payer`,
+          message: 'event object controller payer requires an owning permanent event-object scope',
+        });
+    }
+  }
   if (
     [
       'countPermanentsControlledByTarget',
@@ -844,6 +1001,18 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
             path: `${path}.${key}[${index}].ability`,
             message: 'activated entry requires an activated ability',
           });
+        if (key === 'activatedAbilities' && ability !== null && typeof ability === 'object') {
+          const timing = (ability as { timing?: unknown }).timing;
+          if (
+            timing !== undefined &&
+            (typeof timing !== 'string' || !['any', 'sorcery', 'yourTurn'].includes(timing))
+          ) {
+            issues.push({
+              path: `${path}.${key}[${index}].timing`,
+              message: 'activated timing must be any, sorcery, or yourTurn',
+            });
+          }
+        }
         if (key === 'manaAbilities' && ability !== null && typeof ability === 'object')
           validateManaRiders(ability.onActivate, `${path}.${key}[${index}].onActivate`, issues);
       }
@@ -969,12 +1138,21 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         minChoices: number;
         maxChoices: number;
         repeatable?: boolean;
+        optional?: true;
         options: { targetSlots?: number[] }[];
       };
       if (!Array.isArray(modes.options)) {
         issues.push({ path: `${path}.modes`, message: 'mode options must be an array' });
         continue;
       }
+      if (
+        modes.optional !== undefined &&
+        (modes.optional !== true || record['kind'] !== 'triggered')
+      )
+        issues.push({
+          path: `${path}.modes.optional`,
+          message: 'optional fixed modal choices require a triggered ability and true flag',
+        });
       if (
         !integer(modes.minChoices) ||
         !integer(modes.maxChoices) ||

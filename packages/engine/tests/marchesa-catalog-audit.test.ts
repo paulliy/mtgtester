@@ -83,7 +83,7 @@ describe('Marchesa override catalog audit inventory', () => {
     }
 
     const grandfathered = [...unique.entries()].filter(([id]) => !reviewed.has(id));
-    expect(restored.size).toBe(19);
+    expect(restored.size).toBe(21);
     expect(unique.size).toBe(44 - restored.size);
     expect(reviewed.size).toBe(44 - restored.size);
     expect(grandfathered.length).toBe(0);
@@ -142,6 +142,7 @@ describe('Marchesa override catalog audit inventory', () => {
       'coverage-pr03.ts',
       'coverage-pr06.ts',
       'coverage-pr07.ts',
+      'coverage-pr08.ts',
     ]);
     const remaining = readdirSync(OVERRIDES_DIR)
       .filter((file) => file.endsWith('.ts') && !skip.has(file))

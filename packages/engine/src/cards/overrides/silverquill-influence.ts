@@ -101,12 +101,7 @@ export function registerSILVERQUILL_INFLUENCEOverrides(): void {
   // Forum of Amity: restored in coverage PR01. The interpreter now models enters-tapped, the
   // {W}/{B} mana ability, and the surveil activation faithfully, so no override is registered.
 
-  unimplemented('2143f413-7baa-4fd6-a7ca-32f52bfa553f', 'Shadrix Silverquill', [
-    'At the beginning of combat on your turn, you may choose two. Each mode must target a different player.',
-    '• Target player creates a 2/1 white and black Inkling creature token with flying.',
-    '• Target player draws a card and loses 1 life.',
-    '• Target player puts a +1/+1 counter on each creature they control.',
-  ]);
+  // Shadrix Silverquill: restored in coverage PR08.
 
   unimplemented('30ac68e6-160a-41f9-9f0f-0e0eef383150', 'Arcane Lighthouse', [
     "{1}, {T}: Until end of turn, creatures your opponents control lose hexproof and shroud and can't have hexproof or shroud.",

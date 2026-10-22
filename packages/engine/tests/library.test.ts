@@ -5,8 +5,8 @@
  * These are the first effects that touch hidden information and the first that consume
  * randomness, so what they must get right is narrower than "the card works":
  *
- * - a search never obliges the searcher to find (CR 701.19c), and never finds a card the
- *   filter excludes;
+ * - a stated-quality search permits failure to find (CR 701.19b), and never finds a card the
+ *   filter excludes; an unrestricted quantity must find as many cards as possible;
  * - "put it onto the battlefield tapped" is decisive over the card's own enters-tapped rules;
  * - every shuffle and every random ordering comes from `ctx.rng`, so the same seed replays
  *   identically (brief §4/§5.9) — the tests assert reproducibility, not a specific order;
@@ -457,7 +457,7 @@ describe('library search', () => {
       expect(player.library).toHaveLength(3);
     }
   });
-  it('auto-selects when all matching cards in library share the same name', () => {
+  it('offers failure to find even when matching cards share the same name', () => {
     const ctx = pod();
     const player = p1(ctx);
     player.library.length = 0;
@@ -467,14 +467,15 @@ describe('library search', () => {
 
     const { decisions } = castSpell(ctx, farseek());
 
-    // Single distinct matching land name auto-selects without surfacing an AI decision
-    expect(decisions.some((d) => d.prompt.includes('search your library'))).toBe(false);
+    const search = decisions.find((d) => d.prompt.includes('search your library'));
+    expect(search).toBeDefined();
+    expect(search!.options.some((option) => option.type === 'findNothing')).toBe(true);
     const found = ctx.state.battlefield.find((p) => p.name === 'Island');
     expect(found?.tapped).toBe(true);
     expect(player.library.map((c) => c.name)).toEqual(['Island', 'Forest']);
   });
 
-  it('never obliges the searcher to find one (CR 701.19c)', () => {
+  it('does not oblige a stated-quality searcher to find one (CR 701.19b)', () => {
     const ctx = pod();
     p1(ctx).library.length = 0;
     conjure(ctx, 'P1', island(), 'library');

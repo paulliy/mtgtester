@@ -134,6 +134,15 @@ export const NECRON_WARRIOR_2_2: TokenSpec = creatureToken({
   artifact: true,
 });
 
+export const SPIRIT_1_1_FLYING: TokenSpec = creatureToken({
+  name: 'Spirit',
+  subtypes: ['Spirit'],
+  colors: ['W'],
+  power: 1,
+  toughness: 1,
+  keywords: ['flying'],
+});
+
 export const BIRD_1_1_FLYING: TokenSpec = creatureToken({
   name: 'Bird',
   subtypes: ['Bird'],
@@ -264,6 +273,15 @@ export const WARRIOR_1_1_RED: TokenSpec = creatureToken({
   colors: ['R'],
   power: 1,
   toughness: 1,
+});
+
+/** Kazuul, Tyrant of the Cliffs' paid-in tax refund: "create a 3/3 red Ogre creature token". */
+export const OGRE_3_3_RED: TokenSpec = creatureToken({
+  name: 'Ogre',
+  subtypes: ['Ogre'],
+  colors: ['R'],
+  power: 3,
+  toughness: 3,
 });
 
 export const NINJA_1_1_BLACK: TokenSpec = creatureToken({
@@ -506,13 +524,23 @@ export const FOOD: TokenSpec = {
  * printed Treasure once did across `overrides/`. `interpret.ts` canonicalizes its parsed spec
  * against this list (by deep structural equality) so a match returns the SAME object, not a copy.
  */
+export const SURVIVOR_1_1_RED = creatureToken({
+  name: 'Survivor',
+  subtypes: ['Survivor'],
+  colors: ['R'],
+  power: 1,
+  toughness: 1,
+});
+
 export const ALL_TOKENS: TokenSpec[] = [
+  SURVIVOR_1_1_RED,
   ZOMBIE_2_2_BLACK,
   SOLDIER_1_1_LIFELINK,
   INKLING_2_1_FLYING,
   ASSASSIN_1_1,
   NECRON_WARRIOR_2_2,
   BIRD_1_1_FLYING,
+  SPIRIT_1_1_FLYING,
   DRAGON_5_5_FLYING,
   BEAST_3_3_GREEN,
   THOPTER_1_1_FLYING,
@@ -525,6 +553,7 @@ export const ALL_TOKENS: TokenSpec[] = [
   VAMPIRE_1_1_LIFELINK_WHITE,
   SKELETON_4_1_MENACE_BLACK,
   WARRIOR_1_1_RED,
+  OGRE_3_3_RED,
   NINJA_1_1_BLACK,
   RABBIT_1_1_WHITE,
   SPIDER_2_2_REACH_GREEN,

@@ -1,4 +1,5 @@
 import { playerLifeLocked, phaseOutControlledPermanents } from '../state/phasing';
+import { returnToOwnerLibraryChoices } from './owner-library-choices';
 import {
   counterCount,
   setCounterCount,
@@ -69,7 +70,7 @@ import { withoutReserved } from '../mana/activation';
 import type { ParsedManaCost, PaymentPlan } from '../mana/cost';
 import type { SpellPaymentChoice } from '../mana/spell-payment';
 import { addMana, removeMana, selectEntriesToSpend } from '../mana/pool';
-import type { ManaEntry, PaymentPurpose } from '../cards/ability';
+import type { GainControlIRDuration, ManaEntry, PaymentPurpose } from '../cards/ability';
 import { debug, emit } from '../log/log';
 import { cardOption, plainOption, playerOption, presentedSource, valueOption } from '../present';
 import { chooseCard, type ChooseCardSpec } from './choose';
@@ -84,7 +85,9 @@ import {
   removeFromCombat,
   createToken,
   changeController,
+  refreshControlEffects,
   createTokens,
+  createTokensForPlayers,
   makePermanent,
   canAttach,
   moveObject,
@@ -124,12 +127,14 @@ import {
   convokeSourcesFor,
   spellHasConvoke,
   sacrificeCandidateAllowed,
+  canBeSacrificed,
   selfMayTap,
   resolveConditionalUnits,
   resolveDynamicAmount,
   resolveDynamicUnits,
 } from '../state/queries';
 import type {
+  ControlChangeDuration,
   AttackRequirementEntry,
   AttackRequirementRule,
   DamageKeyword,
@@ -333,17 +338,21 @@ export function* dealDamageToPlayer(
     sourceIsCommander: boolean;
     sourceHasLifelink: boolean;
     sourceHasInfect?: boolean;
+    /** Internal simultaneous player-damage batch: modifiers were planned before any life changed. */
+    preparedAmount?: true;
+    deferredObservations?: (() => void)[];
   },
 ): GameGen<number> {
   if (amount <= 0) return 0;
   // Replacement and prevention effects (CR 616.1): the combat shield, the damage doublers and
   // halvers, ordered by the damaged player when the order matters.
-  amount = (yield* applyDamageModifiers(ctx, {
-    source,
-    recipient: { kind: 'player', player: target },
-    amount,
-    combat: opts.combat,
-  })).amount;
+  if (opts.preparedAmount !== true)
+    amount = (yield* applyDamageModifiers(ctx, {
+      source,
+      recipient: { kind: 'player', player: target },
+      amount,
+      combat: opts.combat,
+    })).amount;
   if (amount <= 0) return 0;
   if (opts.sourceHasInfect === true) {
     target.poisonCounters += amount;
@@ -384,27 +393,72 @@ export function* dealDamageToPlayer(
     target.commanderDamageTaken[source.cardId] =
       (target.commanderDamageTaken[source.cardId] ?? 0) + amount;
   }
-  if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
-  emit(ctx, 'damage', {
-    source: source.name,
-    sourceCardId: source.cardId,
-    controller: source.controllerId,
-    target: target.id,
-    amount,
-    combat: opts.combat,
-    commanderDamage: opts.combat && opts.sourceIsCommander,
-  });
-  // "Whenever a source ... deals damage to you" watches damage actually dealt, once per source's
-  // damage event, infect included (CR 702.90b).
-  queuePlayerTriggersForEvent(ctx, 'playerDealtDamage', target.id, amount, source.controllerId);
-  // "Whenever this creature deals damage to an opponent" needs damage actually dealt (after every
-  // modifier), so it is queued here, only for a source still on the battlefield.
-  const damagingPermanent = ctx.state.battlefield.find((permanent) => permanent.id === source.id);
-  if (damagingPermanent !== undefined && damagingPermanent.controllerId !== target.id)
-    queueTriggersForEvent(ctx, 'dealsDamageToOpponent', [
-      { permanent: damagingPermanent, amount, playerId: target.id },
-    ]);
+  const observe = () => {
+    if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+    emit(ctx, 'damage', {
+      source: source.name,
+      sourceCardId: source.cardId,
+      controller: source.controllerId,
+      target: target.id,
+      amount,
+      combat: opts.combat,
+      commanderDamage: opts.combat && opts.sourceIsCommander,
+    });
+    // "Whenever a source ... deals damage to you" watches damage actually dealt, once per source's
+    // damage event, infect included (CR 702.90b).
+    queuePlayerTriggersForEvent(ctx, 'playerDealtDamage', target.id, amount, source.controllerId);
+    // "Whenever this creature deals damage to an opponent" needs damage actually dealt (after every
+    // modifier), so it is queued here, only for a source still on the battlefield.
+    const damagingPermanent = ctx.state.battlefield.find((permanent) => permanent.id === source.id);
+    if (damagingPermanent !== undefined && damagingPermanent.controllerId !== target.id)
+      queueTriggersForEvent(ctx, 'dealsDamageToOpponent', [
+        { permanent: damagingPermanent, amount, playerId: target.id },
+      ]);
+  };
+  if (opts.deferredObservations === undefined) observe();
+  else opts.deferredObservations.push(observe);
   return amount;
+}
+
+/** One source deals varying amounts to several players as a single damage event. */
+function* dealDamageToPlayersTogether(
+  ctx: GameContext,
+  source: EffectSource,
+  hits: { player: EnginePlayerState; amount: number }[],
+): GameGen<void> {
+  const plans: { player: EnginePlayerState; amount: number }[] = [];
+  for (const hit of hits) {
+    if (hit.amount <= 0 || hit.player.hasLost) continue;
+    const adjusted = yield* applyDamageModifiers(ctx, {
+      source,
+      recipient: { kind: 'player', player: hit.player },
+      amount: hit.amount,
+      combat: false,
+    });
+    plans.push({ player: hit.player, amount: adjusted.amount });
+  }
+  const observations: (() => void)[] = [];
+  const permanent = ctx.state.battlefield.find((entry) => entry.id === source.id);
+  const lifelink =
+    permanent === undefined
+      ? source.lastKnownDamageKeywords?.includes('lifelink') === true
+      : hasKeyword(ctx, permanent, 'lifelink');
+  const infect =
+    permanent === undefined
+      ? source.lastKnownDamageKeywords?.includes('infect') === true
+      : hasKeyword(ctx, permanent, 'infect');
+  let total = 0;
+  for (const plan of plans)
+    total += yield* dealDamageToPlayer(ctx, source, plan.player, plan.amount, {
+      combat: false,
+      sourceIsCommander: false,
+      sourceHasLifelink: false,
+      sourceHasInfect: infect,
+      preparedAmount: true,
+      deferredObservations: observations,
+    });
+  if (lifelink) gainLife(ctx, playerById(ctx, source.controllerId), total);
+  for (const observe of observations) observe();
 }
 
 /**
@@ -501,6 +555,7 @@ function* chooseEnteringAttackTarget(
               verb: 'Attack',
             })
           : cardOption(ctx, planeswalker, {
+              viewerId: controller.id,
               type: 'choosePlaneswalker',
               description: `Attack ${planeswalker.name}`,
               payload: planeswalker.id,
@@ -572,10 +627,22 @@ function* dealDamageToObject(
 }
 
 export function gainLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
-  if (amount <= 0 || playerLifeLocked(ctx, player.id)) return;
-  player.life += amount;
-  emit(ctx, 'lifeGain', { player: player.id, amount, life: player.life });
-  queuePlayerTriggersForEvent(ctx, 'gainsLife', player.id, amount);
+  gainLifeForPlayers(ctx, [{ player, amount }]);
+}
+
+/** Simultaneous gains update every life total before any trigger observes the event. */
+function gainLifeForPlayers(
+  ctx: GameContext,
+  grants: readonly { player: EnginePlayerState; amount: number }[],
+): void {
+  const gains = grants.filter(
+    ({ player, amount }) => amount > 0 && !playerLifeLocked(ctx, player.id),
+  );
+  for (const { player, amount } of gains) player.life += amount;
+  for (const { player, amount } of gains) {
+    emit(ctx, 'lifeGain', { player: player.id, amount, life: player.life });
+    queuePlayerTriggersForEvent(ctx, 'gainsLife', player.id, amount);
+  }
 }
 
 export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
@@ -605,12 +672,19 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
  * Draw cards. Drawing from an empty library sets the loss flag checked at the next SBA
  * check, not an immediate loss (brief §5.6). A generator: a drawn commander (one shuffled
  * into the library) triggers the CR 903.9b hand-replacement choice inside `moveObject`.
+ *
+ * Returns the number of cards ACTUALLY drawn: one per card whose move to hand led to the
+ * `draw` event. A draw instruction that did not move a card to hand — the empty-library
+ * flag, or the empty-library replacement putting a graveyard creature back — is not a
+ * draw, so callers such as "draw for each opponent who drew a card this way" must not
+ * count it (CR 608.2h reads what actually happened).
  */
 export function* drawCards(
   ctx: GameContext,
   player: EnginePlayerState,
   count: number,
-): GameGen<void> {
+): GameGen<number> {
+  let drawnCount = 0;
   for (let i = 0; i < count; i++) {
     const top = player.library[0];
     if (top === undefined) {
@@ -633,6 +707,7 @@ export function* drawCards(
         });
         if (chosen === null) player.hasLost = true;
         else yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: player.id });
+        // The reanimation AS A DRAW REPLACEMENT is not a draw: no card reached the hand.
         continue;
       }
       player.attemptedDrawFromEmptyLibrary = true;
@@ -642,6 +717,9 @@ export function* drawCards(
     }
     const drawn = yield* moveObject(ctx, top, { zone: 'hand' });
     if (drawn?.zone !== 'hand') continue;
+    // The count is banked exactly when this successful emitted draw exists: the card moved
+    // to hand and the `draw` event below is about to record it.
+    drawnCount += 1;
     emit(
       ctx,
       'draw',
@@ -657,6 +735,7 @@ export function* drawCards(
     player.cardsDrawnThisDrawStep += 1;
     queuePlayerTriggersForEvent(ctx, 'drawsCard', player.id);
   }
+  return drawnCount;
 }
 
 /** Discard N cards, one controller choice at a time (CR 701.8a). */
@@ -1026,8 +1105,126 @@ function doubleEachPlayerCounter(
 }
 
 /**
+ * One requested counter placement in a simultaneous batch (Agitator Ant, CR 608.2d): several
+ * placements planned together against the ONE pre-placement board state, applied together, and
+ * observed together by one `countersPut` event — not a loop of `addCounters` calls, which would
+ * let a later placement's trigger observe an earlier placement's counters.
+ */
+interface CounterPlacement {
+  perm: EnginePermanent;
+  counter: string;
+  count: number;
+  /** Whose "put counters this way" event each placement is (`countersPut` rows' `playerId`). */
+  placingPlayerId: PlayerId;
+}
+
+/**
+ * Place every requested batch of counters as one simultaneous event (CR 608.2d): plan ALL
+ * positive requested amounts and their replacements from the PRE-placement state, capture the
+ * before-counts and expire counter-bound attack restrictions correctly, then apply every
+ * mutation and timestamp BEFORE any `countersPut` trigger observes anything, one counters log
+ * per placement, ONE batched `countersPut` event whose rows name each actual placer, and then
+ * the existing counter-threshold triggers read against the batch's before/final values.
+ *
+ * Returns the amounts ACTUALLY placed per selected permanent: zero for a nonpositive request,
+ * zero for a placement fully replaced to zero (which still logs its 0, like the single path,
+ * but is never a row of the batched event — no counters were put).
+ */
+function addCounterPlacements(
+  ctx: GameContext,
+  source: EffectSource,
+  placements: readonly CounterPlacement[],
+): Map<ObjectId, number> {
+  const planned: {
+    placement: CounterPlacement;
+    before: number;
+    adjustedCount: number;
+  }[] = [];
+  // Planning reads only pre-placement state: replacements were consulted before any placement
+  // in this batch moved anything (they are counters "put ... this way", one batch).
+  for (const placement of placements) {
+    if (placement.count <= 0) continue;
+    expireCounterBoundAttackRestrictions(placement.perm);
+    planned.push({
+      placement,
+      before: counterCount(placement.perm.counters, placement.counter),
+      adjustedCount: counterAmountAfterReplacements(
+        ctx,
+        placement.perm,
+        placement.counter,
+        placement.count,
+      ),
+    });
+  }
+  for (const { placement, adjustedCount } of planned) {
+    if (adjustedCount <= 0) continue;
+    setCounterCount(
+      placement.perm.counters,
+      placement.counter,
+      counterCount(placement.perm.counters, placement.counter) + adjustedCount,
+    );
+    placement.perm.counterTimestamps ??= {};
+    setCounterCount(placement.perm.counterTimestamps, placement.counter, ctx.state.nextTimestamp++);
+  }
+  for (const { placement, adjustedCount } of planned) {
+    emit(ctx, 'counters', {
+      source: source.name,
+      target: placement.perm.name,
+      targetCardId: placement.perm.cardId,
+      counter: placement.counter,
+      added: adjustedCount,
+      total: counterCount(placement.perm.counters, placement.counter),
+    });
+  }
+  const actual = new Map<ObjectId, number>();
+  for (const placement of placements) actual.set(placement.perm.id, 0);
+  // One batched event: aggregate "one or more counters are put" triggers read every placement.
+  queueTriggersForEvent(
+    ctx,
+    'countersPut',
+    planned
+      .filter(({ adjustedCount }) => adjustedCount > 0)
+      .map(({ placement, adjustedCount }) => {
+        actual.set(placement.perm.id, adjustedCount);
+        return {
+          permanent: placement.perm,
+          playerId: placement.placingPlayerId,
+          counterKinds: [placement.counter],
+        };
+      }),
+  );
+  for (const { placement, before, adjustedCount } of planned) {
+    if (adjustedCount <= 0) continue;
+    const def = ctx.defs.get(placement.perm.oracleId);
+    for (const threshold of def?.counterThresholdTriggers ?? []) {
+      const final = counterCount(placement.perm.counters, placement.counter);
+      if (
+        threshold.counter !== placement.counter ||
+        before >= threshold.threshold ||
+        final < threshold.threshold
+      )
+        continue;
+      const copies = 1 + additionalTypedTriggerCopies(ctx, placement.perm);
+      for (let copy = 0; copy < copies; copy++) {
+        ctx.state.pendingTriggers.push({
+          controllerId: placement.perm.controllerId,
+          sourceCardId: placement.perm.cardId,
+          sourceObjectId: placement.perm.id,
+          sourceOracleId: placement.perm.oracleId,
+          sourceName: placement.perm.name,
+          ability: threshold.ability,
+        });
+      }
+    }
+  }
+  return actual;
+}
+
+/**
  * Put counters on a permanent. `+1/+1` and `-1/-1` feed layer 7c through `perm.counters`, so
  * effective P/T follows immediately; pairs of them annihilate at the next SBA check (CR 704.5r).
+ * A single placement is the one-placement case of the simultaneous batch, with the ability's
+ * controller as the placing player; the return value stays "counters actually placed".
  */
 function addCounters(
   ctx: GameContext,
@@ -1036,48 +1233,85 @@ function addCounters(
   counter: string,
   count: number,
 ): number {
-  if (count <= 0) return 0;
-  expireCounterBoundAttackRestrictions(perm);
-  const adjustedCount = counterAmountAfterReplacements(ctx, perm, counter, count);
-  const before = counterCount(perm.counters, counter);
-  setCounterCount(perm.counters, counter, counterCount(perm.counters, counter) + adjustedCount);
-  if (adjustedCount > 0) {
-    perm.counterTimestamps ??= {};
-    setCounterCount(perm.counterTimestamps, counter, ctx.state.nextTimestamp++);
+  const actual = addCounterPlacements(ctx, source, [
+    { perm, counter, count, placingPlayerId: source.controllerId },
+  ]);
+  return actual.get(perm.id) ?? 0;
+}
+
+/**
+ * "Each player may put N <counter> counters on a creature they control. Goad each creature that
+ * had counters put on it this way." — the whole clause is one resolution in APNAP order
+ * (CR 101.4): the ACTIVE player starts, not the ability's controller.
+ *
+ * Every choice is collected before any counter moves (CR 608.2d): "each player may" is one
+ * instruction, so no player's choice can see what another player's choice received. The
+ * choices are each player's own, made public as they are made; a player with no creature is
+ * not asked. A player who declines puts nothing. The goad is always applied by the ability's
+ * controller (CR 701.15a), never by the chooser merely for choosing, and only on creatures
+ * that actually received counters: a placement
+ * fully replaced to zero put none.
+ */
+function* eachPlayerMayPutCountersAndGoad(
+  ctx: GameContext,
+  source: EffectSource,
+  goaderId: PlayerId,
+  effect: Extract<Effect, { op: 'eachPlayerMayPutCountersAndGoad' }>,
+  count: number,
+): GameGen<void> {
+  const choices: { playerId: PlayerId; perm: EnginePermanent }[] = [];
+  for (const player of playersInApnapOrder(ctx)) {
+    // "on a creature they control": each player picks among the creatures THEY control as this
+    // instruction resolves — no target slots, so hexproof and shroud do not distinguish
+    // anything; and a player controlling no creature is not prompted at all.
+    const creatures = ctx.state.battlefield.filter(
+      (perm) =>
+        perm.controllerId === player.id &&
+        computeCharacteristics(ctx, perm).types.includes('Creature'),
+    );
+    if (creatures.length === 0) continue;
+    const picked = yield* chooseCard(ctx, {
+      player: player.id,
+      prompt: `${source.name}: put ${count} ${effect.counter} counters on a creature you control, or put none.`,
+      cards: creatures,
+      type: 'putCounters',
+      verb: 'Choose',
+      describe: (perm) => `Put ${count} ${effect.counter} counters on ${perm.name}`,
+      decline: { type: 'decline', description: 'Put no counters', verb: 'Decline' },
+    });
+    // The choice is public the moment it is made (druidPurification's precedent), with the
+    // chooser as the acting player. No raw card payload: the standard picker reads the choice
+    // back by index, which keeps the option reachable for hidden-zone picks too.
+    emit(
+      ctx,
+      'permanentChoice',
+      { source: source.name, name: picked?.name ?? null, objectId: picked?.id ?? null },
+      player.id,
+    );
+    if (picked !== null) choices.push({ playerId: player.id, perm: picked });
   }
-  emit(ctx, 'counters', {
-    source: source.name,
-    target: perm.name,
-    targetCardId: perm.cardId,
-    counter,
-    added: adjustedCount,
-    total: counterCount(perm.counters, counter),
-  });
-  if (adjustedCount > 0)
-    queueTriggersForEvent(ctx, 'countersPut', [
-      { permanent: perm, playerId: source.controllerId, counterKinds: [counter] },
-    ]);
-  const def = ctx.defs.get(perm.oracleId);
-  for (const threshold of def?.counterThresholdTriggers ?? []) {
-    if (
-      threshold.counter !== counter ||
-      before >= threshold.threshold ||
-      counterCount(perm.counters, counter) < threshold.threshold
-    )
-      continue;
-    const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
-    for (let copy = 0; copy < copies; copy++) {
-      ctx.state.pendingTriggers.push({
-        controllerId: perm.controllerId,
-        sourceCardId: perm.cardId,
-        sourceObjectId: perm.id,
-        sourceOracleId: perm.oracleId,
-        sourceName: perm.name,
-        ability: threshold.ability,
-      });
-    }
+  // All choices are frozen before the batch, and each frozen object is rechecked on the
+  // battlefield as the batch is assembled: a creature that left the battlefield between the
+  // choice and the counters is a new object (CR 400.7) and receives nothing.
+  const placements: CounterPlacement[] = [];
+  for (const { playerId, perm } of choices) {
+    const current = findPermanent(ctx, perm.id);
+    if (current === undefined) continue;
+    placements.push({
+      perm: current,
+      counter: effect.counter,
+      count,
+      placingPlayerId: playerId,
+    });
   }
-  return adjustedCount;
+  const placed = addCounterPlacements(ctx, source, placements);
+  for (const { perm } of choices) {
+    if ((placed.get(perm.id) ?? 0) <= 0) continue;
+    const goaded = findPermanent(ctx, perm.id);
+    if (goaded === undefined) continue;
+    addGoadRequirement(ctx, goaded, goaderId);
+    emit(ctx, 'goad', { target: goaded.name, source: source.name });
+  }
 }
 
 /**
@@ -1108,6 +1342,93 @@ function affectedBy(
 /** "Grizzly Bears, Llanowar Elves get +3/+3 until end of turn" — the locked-in set, by name. */
 function describeMassEffect(affected: EnginePermanent[], clause: string): string {
   return `${affected.map((p) => p.name).join(', ')} ${clause} until end of turn`;
+}
+
+/** A public resolution choice, independent of player targeting restrictions. */
+function* chooseOpponentForSharedEffect(
+  ctx: GameContext,
+  source: EffectSource,
+  chooserId: PlayerId,
+  purpose: string,
+): GameGen<PlayerId | null> {
+  const eligible = opponentsOf(ctx, chooserId);
+  if (eligible.length === 0) return null;
+  const outcome = yield {
+    decisionType: 'general',
+    player: chooserId,
+    prompt: `${source.name}: choose an opponent ${purpose}`,
+    options: eligible.map((player) =>
+      playerOption(player.id, player.id, {
+        type: 'choosePlayer',
+        description: `${player.id} ${purpose}`,
+        verb: 'Choose',
+      }),
+    ),
+  };
+  const chosen = eligible[outcome.index];
+  if (chosen === undefined) throw new Error('engine bug: invalid mandatory opponent choice');
+  emit(ctx, 'chooseOpponent', { source: source.name, player: chosen.id }, chooserId);
+  return chosen.id;
+}
+
+/**
+ * "An opponent gains control of …" (Wishclaw Talisman) — the recipient is not a target but a
+ * choice made as the effect resolves (CR 608.2d: the ability's controller chooses, the same
+ * player who cast the spell in a spell's case). The eligible set is the LIVING opponents of that
+ * controller, not of the permanent: an earlier control change on the permanent cannot rewrite who
+ * is asked. Nothing about the choice is a targeting restriction, so a player with hexproof or
+ * shroud is still offered; a player who has left the game is not eligible.
+ *
+ * Returns null when no opponent is left — the caller performs nothing, and the rest of the
+ * resolution (already done, e.g. the search and shuffle) stands (CR 608.2h).
+ */
+function* chooseOpponentRecipient(
+  ctx: GameContext,
+  source: EffectSource,
+  chooserId: PlayerId,
+  permanentName: string,
+): GameGen<PlayerId | null> {
+  const eligible = ctx.state.players.filter((player) => !player.hasLost && player.id !== chooserId);
+  if (eligible.length === 0) return null;
+  const outcome = yield {
+    decisionType: 'general',
+    player: chooserId,
+    prompt: `${source.name}: choose an opponent to gain control of ${permanentName}`,
+    options: eligible.map((player) =>
+      playerOption(player.id, player.id, {
+        type: 'choosePlayer',
+        description: `${player.id} gains control of ${permanentName}`,
+        verb: 'Give control to',
+      }),
+    ),
+  };
+  return eligible[outcome.index]?.id ?? null;
+}
+
+/**
+ * Resolve a control-change duration at runtime. The source-bound IR value stays declarative
+ * ('whileSourceOnBattlefield') and becomes the source's exact ObjectId here: an effect whose
+ * source is not ON the battlefield when its duration starts gives no effect at all (CR 611.2b),
+ * and a later blink incarnation carries a new id that no recorded effect ever tracks (CR 400.7).
+ */
+function resolveControlChangeDuration(
+  ctx: GameContext,
+  source: EffectSource,
+  ir: GainControlIRDuration | undefined,
+): ControlChangeDuration | null {
+  switch (ir) {
+    case 'untilEndOfTurn':
+      return { kind: 'untilEndOfTurn' };
+    case 'whileSourceOnBattlefield': {
+      const id = source.id ?? source.lastKnownFacts?.objectId;
+      return id !== undefined && ctx.state.battlefield.some((p) => p.id === id)
+        ? { kind: 'whileSourceOnBattlefield', sourceObjectId: id }
+        : null;
+    }
+    default:
+      // Omitted means permanent.
+      return { kind: 'permanent' };
+  }
 }
 
 /**
@@ -1934,6 +2255,7 @@ export function* executeAbility(
         const creatures = ctx.state.battlefield.filter(
           (p) =>
             p.controllerId === targetPlayer.id &&
+            canBeSacrificed(ctx, p) &&
             computeCharacteristics(ctx, p).types.includes('Creature'),
         );
         let sacrificed = false;
@@ -2002,6 +2324,7 @@ export function* executeAbility(
               }),
               ...available.map((permanent) =>
                 cardOption(ctx, permanent, {
+                  viewerId: controller.id,
                   type: 'untap',
                   description: `Untap ${permanent.name}`,
                   verb: 'Untap',
@@ -2127,6 +2450,95 @@ export function* executeAbility(
         ];
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
+        break;
+      }
+      case 'exileCreatureAndControllerSearchBasicLand':
+      case 'exileEachCreatureAndControllersSearchBasicLands': {
+        const targetId =
+          effect.op === 'exileCreatureAndControllerSearchBasicLand' ? ref(effect.target) : null;
+        const affected =
+          effect.op === 'exileEachCreatureAndControllersSearchBasicLands'
+            ? affectedBy(ctx, source, effect.selector)
+            : ctx.state.battlefield.filter((permanent) => permanent.id === targetId);
+        const beneficiaries = affected.map((permanent) => permanent.controllerId);
+        const moved = yield* movePermanentsTogether(ctx, affected, { zone: 'exile' });
+        const searches = new Map<PlayerId, number>();
+        affected.forEach((permanent, index) => {
+          if (permanent.isToken || moved[index]?.zone === 'exile') {
+            const player = beneficiaries[index]!;
+            searches.set(player, (searches.get(player) ?? 0) + 1);
+          }
+        });
+        const found: { card: EngineCardObject; playerId: PlayerId }[] = [];
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost) continue;
+          for (let search = 0; search < (searches.get(player.id) ?? 0); search++) {
+            const candidates = player.library.filter((card) => {
+              const def = getDefByOracleId(ctx, card.oracleId, card.name);
+              return (
+                def.types.includes('Land') &&
+                def.supertypes.includes('Basic') &&
+                !found.some((entry) => entry.card.id === card.id)
+              );
+            });
+            const card = yield* chooseCard(ctx, {
+              player: player.id,
+              prompt: `${source.name}: search for a basic land (${search + 1} of ${searches.get(player.id)})`,
+              cards: candidates,
+              type: 'search',
+              verb: 'Find',
+              decline: { type: 'decline', description: 'Fail to find a land', verb: 'Skip' },
+            });
+            if (card !== null) found.push({ card, playerId: player.id });
+          }
+        }
+        // All searches precede entry. Move as one event so entry observers see every land.
+        // Each card goes to its owner's battlefield; these library cards are owned by searchers.
+        yield* moveObjects(
+          ctx,
+          found.map((entry) => entry.card),
+          { zone: 'battlefield', entersTapped: true },
+        );
+        for (const player of playersInApnapOrder(ctx))
+          if (searches.has(player.id) && !player.hasLost) shuffleLibrary(ctx, player);
+        break;
+      }
+      case 'destroyTargetAndControllerMaySearchBasicTypedLand': {
+        const targetId = ref(effect.target);
+        const permanent = targetId === null ? undefined : findPermanent(ctx, targetId);
+        if (permanent === undefined) break;
+        const beneficiary = playerById(ctx, permanent.controllerId);
+        yield* destroyPermanent(ctx, source, permanent);
+        const response = yield {
+          decisionType: 'general',
+          player: beneficiary.id,
+          prompt: `${source.name}: search your library for a land with a basic land type?`,
+          options: [
+            { type: 'search', description: 'Search library' },
+            { type: 'decline', description: 'Do not search' },
+          ],
+        };
+        if (response.index !== 0) break;
+        const lands = beneficiary.library.filter((card) => {
+          const def = getDefByOracleId(ctx, card.oracleId, card.name);
+          return (
+            def.types.includes('Land') &&
+            def.subtypes.some((type) =>
+              ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'].includes(type),
+            )
+          );
+        });
+        const chosen = yield* chooseCard(ctx, {
+          player: beneficiary.id,
+          prompt: `${source.name}: choose a land with a basic land type`,
+          cards: lands,
+          type: 'search',
+          verb: 'Find',
+          decline: { type: 'decline', description: 'Fail to find a land', verb: 'Skip' },
+        });
+        if (chosen !== null)
+          yield* moveObject(ctx, chosen, { zone: 'battlefield', controllerId: beneficiary.id });
+        shuffleLibrary(ctx, beneficiary);
         break;
       }
       case 'removeTargetAndControllerMaySearchBasicLand': {
@@ -2264,11 +2676,85 @@ export function* executeAbility(
         break;
       }
       case 'regainControlOfOwnCreatures': {
-        for (const perm of ctx.state.battlefield) {
-          const chars = computeCharacteristics(ctx, perm);
-          if (chars.types.includes('Creature') && perm.controllerId !== perm.ownerId) {
-            changeController(ctx, perm, perm.ownerId);
-          }
+        // "Each player gains control of all creatures they own" (Trostani Disciple, Alicia Masters,
+        // Skilled Sculptor). The set of affected objects is decided ONCE, when the effect resolves:
+        // each grant is a new control-changing effect with its own effect timestamp, and a type
+        // can depend on who controls the permanent ("Artifacts you control are creatures"), so a
+        // per-iteration `computeCharacteristics` would let an earlier grant change what a later
+        // permanent is and sweep up an object that was not a creature when this effect began.
+        // Noncreatures are excluded and anything that arrives later is not.
+        //
+        // EVERY living owner's own creature is granted, including one its owner ALREADY controls:
+        // a creature's characteristics are chosen as this resolves, but the record is a fresh
+        // permanent control change that must survive whatever temporary control history sits
+        // under it. Adding it even with no controller transition (CR 613.7 sets no layer
+        // timestamp and CR 302.6/506.4 need none) is what stops an older "until end of turn" grant
+        // from taking the creature back at the cleanup step when it expires (CR 514.2).
+        //
+        // `ownerId` is the grant's recipient throughout — never the current `controllerId` — and
+        // `changeController` keeps the timestamped record stack plus its entry-facts fallback, so
+        // an expired record still falls back to what lies beneath it.
+        const livingOwners = new Set(
+          ctx.state.players.filter((player) => !player.hasLost).map((player) => player.id),
+        );
+        const grants = ctx.state.battlefield.filter(
+          (perm) =>
+            livingOwners.has(perm.ownerId) &&
+            computeCharacteristics(ctx, perm).types.includes('Creature'),
+        );
+        // No zone change and no state-based action runs between grants: the whole grant is one
+        // effect, so nothing is destroyed or exiled out from under a later owner.
+        for (const perm of grants) changeController(ctx, perm, perm.ownerId);
+        break;
+      }
+      case 'swapCreatureControlUntilEot': {
+        const opponentId = ref(effect.target);
+        const opponent = ctx.state.players.find(
+          (player) => player.id === opponentId && !player.hasLost,
+        );
+        if (opponent === undefined) break;
+        const creatures = () =>
+          ctx.state.battlefield.filter(
+            (perm) =>
+              (perm.controllerId === controller.id || perm.controllerId === opponent.id) &&
+              computeCharacteristics(ctx, perm).types.includes('Creature'),
+          );
+        const toUntap = creatures();
+        for (const perm of toUntap) perm.tapped = false;
+        emit(ctx, 'untap', {
+          source: source.name,
+          objects: toUntap.map((perm) => ({
+            id: perm.id,
+            name: perm.faceDown ? 'Face-down permanent' : perm.name,
+          })),
+        });
+        // The control instruction follows the untap instruction. Both sets must be read now,
+        // before either grant changes controller-dependent creature characteristics (CR 611.2c).
+        const affected = creatures();
+        const grants = affected.map((perm) => ({
+          perm,
+          recipient: perm.controllerId === controller.id ? opponent.id : controller.id,
+        }));
+        for (const { perm, recipient } of grants) {
+          changeController(ctx, perm, recipient, { kind: 'untilEndOfTurn' });
+          emit(ctx, 'gainControl', {
+            source: source.name,
+            target: perm.name,
+            newController: recipient,
+          });
+        }
+        for (const perm of affected) {
+          ctx.state.effects.push({
+            id: `eff-${ctx.state.nextObjectNum++}`,
+            sourceId: source.cardId,
+            description: `${perm.name} gains haste until end of turn`,
+            targetCardIds: [perm.cardId],
+            targetObjectIds: [perm.id],
+            kind: 'grantKeyword',
+            keyword: 'haste',
+            timestamp: ctx.state.nextTimestamp++,
+          });
+          emit(ctx, 'grantKeyword', { source: source.name, target: perm.name, keyword: 'haste' });
         }
         break;
       }
@@ -2703,15 +3189,34 @@ export function* executeAbility(
       case 'gainControlTarget': {
         const t = ref(effect.target);
         const perm = t === null ? undefined : findPermanent(ctx, t);
-        if (perm !== undefined && perm.controllerId !== source.controllerId) {
-          changeController(ctx, perm, source.controllerId);
-          perm.summoningSick = true;
+        const duration = resolveControlChangeDuration(ctx, source, effect.duration);
+        if (perm === undefined || duration === null) break;
+        let newController = source.controllerId;
+        const recipient = effect.recipient;
+        if (
+          recipient !== undefined &&
+          'chooseOpponent' in recipient &&
+          recipient.chooseOpponent === true
+        ) {
+          const opponent = yield* chooseOpponentRecipient(ctx, source, controller.id, perm.name);
+          if (opponent === null) break;
+          newController = opponent;
+        } else if (recipient !== undefined && 'targetPlayer' in recipient) {
+          const recipientId = ref(recipient.targetPlayer);
+          const player = ctx.state.players.find(
+            (candidate) => candidate.id === recipientId && !candidate.hasLost,
+          );
+          if (player === undefined) break;
+          newController = player.id;
+        }
+        const change = perm.controllerId !== newController;
+        changeController(ctx, perm, newController, duration);
+        if (change)
           emit(ctx, 'gainControl', {
             source: source.name,
             target: perm.name,
-            newController: source.controllerId,
+            newController,
           });
-        }
         break;
       }
       case 'putCounters': {
@@ -2749,13 +3254,21 @@ export function* executeAbility(
         const playerId = ref(effect.target);
         if (playerId === null) break;
         const count = amountOf(effect.count);
-        for (const permanent of ctx.state.battlefield.filter(
+        const permanents = ctx.state.battlefield.filter(
           (candidate) =>
             candidate.controllerId === playerId &&
             computeCharacteristics(ctx, candidate).types.includes('Creature'),
-        )) {
-          addCounters(ctx, source, permanent, effect.counter, count);
-        }
+        );
+        addCounterPlacements(
+          ctx,
+          source,
+          permanents.map((perm) => ({
+            perm,
+            counter: effect.counter,
+            count,
+            placingPlayerId: playerId as PlayerId,
+          })),
+        );
         break;
       }
       case 'returnToHandEach': {
@@ -2816,6 +3329,7 @@ export function* executeAbility(
             // payload-derived `subjectId` would strand the option (see Kairi above).
             options: candidates.map((card) =>
               cardOption(ctx, card, {
+                viewerId: source.controllerId,
                 type: 'choose',
                 description: `Return ${card.name} to the battlefield`,
                 verb: 'Return',
@@ -3054,6 +3568,7 @@ export function* executeAbility(
         const permanents = ctx.state.battlefield.filter(
           (permanent) =>
             permanent.controllerId === player.id &&
+            canBeSacrificed(ctx, permanent) &&
             !computeCharacteristics(ctx, permanent).types.includes('Land'),
         );
         const choices = [
@@ -3334,10 +3849,22 @@ export function* executeAbility(
         ctx.state.lifeFloorPlayers[controller.id] = true;
         emit(ctx, 'lifeFloor', { player: controller.id, minimum: 1 });
         break;
-      case 'drawForEachOpponent':
-        for (const opponent of opponentsOf(ctx, controller.id)) yield* drawCards(ctx, opponent, 1);
-        yield* drawCards(ctx, controller, opponentsOf(ctx, controller.id).length);
+      case 'drawForEachOpponent': {
+        // Cut a Deal (CR 608.2g/h: the instructions resolve one after the other). Each
+        // opponent still in the game (a lost player is out and draws nothing) draws one
+        // card, in APNAP order (CR 101.4). Then the SECOND instruction's count reads what
+        // actually happened: only an opponent whose draw succeeded — a card reached their
+        // hand and the `draw` event fired — is "each opponent who drew a card this way".
+        // An empty-library draw whose replacement reanimated a creature is not a draw, and
+        // neither is the empty-library flag itself. No state-based action runs between the
+        // draws: the empty-library flag waits for the next SBA check, and the caster's own
+        // draws resolve with the count fixed before they begin.
+        let opponentsWhoDrew = 0;
+        for (const opponent of opponentsOf(ctx, controller.id))
+          if ((yield* drawCards(ctx, opponent, 1)) >= 1) opponentsWhoDrew += 1;
+        yield* drawCards(ctx, controller, opponentsWhoDrew);
         break;
+      }
       case 'drawTargetAndController': {
         const targetId = ref(effect.target);
         const target =
@@ -3373,21 +3900,35 @@ export function* executeAbility(
         break;
       }
       case 'schemingSymmetry': {
-        for (const slot of [0, 1]) {
-          const targetId = ref(slot);
-          const target =
-            targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
-          if (target === undefined || target.library.length === 0) continue;
-          const chosen = yield* chooseCard(ctx, {
-            player: target.id,
-            prompt: `${source.name}: choose a card to put on top of your library`,
-            cards: target.library,
-            type: 'search',
-            verb: 'Choose',
-          });
-          if (chosen !== null)
-            yield* moveObject(ctx, chosen, { zone: 'library', libraryPosition: 'top' });
+        const targetIds = new Set(chosenReferents(effect.targetSlot));
+        const searchers = playersInApnapOrder(ctx).filter(
+          (player) => !player.hasLost && targetIds.has(player.id),
+        );
+        const selections: { player: EnginePlayerState; card: EngineCardObject | null }[] = [];
+        // Unrestricted searches must find a card in a nonempty library. Hidden choices are made
+        // in APNAP order; a search never targets or reveals the found card (CR 101.4, 701.19).
+        for (const player of searchers) {
+          const card =
+            player.library.length === 0
+              ? null
+              : yield* chooseCard(ctx, {
+                  player: player.id,
+                  prompt: `${source.name}: choose a card to put on top of your library`,
+                  cards: player.library,
+                  type: 'search',
+                  verb: 'Choose',
+                });
+          if (player.library.length > 0 && card === null)
+            throw new Error('engine bug: mandatory library search did not choose a card');
+          selections.push({ player, card });
         }
+        for (const { player, card } of selections) {
+          // Set the found card aside during the shuffle, retaining its library object identity
+          // (CR 701.19b). Even an empty library is shuffled. No moveObject/zone-change event occurs.
+          if (card !== null) player.library.splice(player.library.indexOf(card), 1);
+          shuffleLibrary(ctx, player);
+        }
+        for (const { player, card } of selections) if (card !== null) player.library.unshift(card);
         break;
       }
       case 'kambal': {
@@ -3707,7 +4248,12 @@ export function* executeAbility(
       case 'sacrificeSourceThenReflexive': {
         const perm = sourcePermanent();
         // Only a permanent you control can be sacrificed (CR 701.21a).
-        if (perm === undefined || perm.controllerId !== source.controllerId) break;
+        if (
+          perm === undefined ||
+          perm.controllerId !== source.controllerId ||
+          !canBeSacrificed(ctx, perm)
+        )
+          break;
         yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
         ctx.state.pendingTriggers.push({
           controllerId: source.controllerId,
@@ -3833,6 +4379,7 @@ export function* executeAbility(
         const metricOf = (perm: EnginePermanent): number =>
           effect.metric === 'power' ? effectivePT(ctx, perm).power : permanentManaValue(ctx, perm);
         const selected: EnginePermanent[] = [];
+        const hits: { player: EnginePlayerState; amount: number }[] = [];
         for (const opponent of opponentsOf(ctx, controller.id)) {
           const candidates = ctx.state.battlefield.filter(
             (perm) =>
@@ -3846,7 +4393,7 @@ export function* executeAbility(
                 );
               })(),
           );
-          const greatest = Math.max(0, ...candidates.map((perm) => metricOf(perm)));
+          const greatest = Math.max(-Infinity, ...candidates.map((perm) => metricOf(perm)));
           const choices = candidates.filter((perm) => metricOf(perm) === greatest);
           const metricLabel = effect.metric === 'power' ? 'power' : 'mana value';
           const verb = effect.action === 'exile' ? 'Exile' : 'Sacrifice';
@@ -3854,14 +4401,32 @@ export function* executeAbility(
             player: opponent.id,
             prompt: `${source.name}: ${verb.toLowerCase()} a permanent with the greatest ${metricLabel}`,
             cards: choices,
-            type: 'sacrifice',
+            type: effect.action,
             verb,
           });
-          if (chosen !== null) selected.push(chosen as EnginePermanent);
+          if (chosen !== null) {
+            selected.push(chosen);
+            hits.push({ player: opponent, amount: metricOf(chosen) });
+          }
         }
         // CR 101.4: each opponent chooses in APNAP order, then all of them are moved at once.
-        if (effect.action === 'exile') yield* moveObjects(ctx, selected, { zone: 'exile' });
-        else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
+        if (effect.action === 'exile') {
+          const moved = yield* moveObjects(ctx, selected, { zone: 'exile' });
+          const threshold = effect.damageIfGraveyardSpellsAtLeast;
+          if (
+            threshold !== undefined &&
+            controller.graveyard.filter((card) => {
+              const def = getDefByOracleId(ctx, card.oracleId, card.name);
+              return def.types.includes('Instant') || def.types.includes('Sorcery');
+            }).length >= threshold
+          ) {
+            yield* dealDamageToPlayersTogether(
+              ctx,
+              source,
+              hits.filter((_, index) => selected[index]?.isToken || moved[index]?.zone === 'exile'),
+            );
+          }
+        } else yield* movePermanentsToGraveyard(ctx, selected, 'sacrifice');
         break;
       }
       case 'transferCountersFromTriggerObject': {
@@ -4638,6 +5203,7 @@ export function* executeAbility(
             options: [
               ...matches.map((card) =>
                 cardOption(ctx, card, {
+                  viewerId: controller.id,
                   type: 'findCard',
                   description: `Put ${card.name} onto the battlefield tapped`,
                   verb: 'Put onto battlefield tapped',
@@ -4717,6 +5283,7 @@ export function* executeAbility(
             options: [
               ...castable.map((card) =>
                 cardOption(ctx, card, {
+                  viewerId: controller.id,
                   type: 'castSpell',
                   description: `Cast ${card.name} for free`,
                   verb: 'Cast for free',
@@ -4827,6 +5394,7 @@ export function* executeAbility(
             presentationSource: presentedSource(ctx, source),
             options: tokens.map((candidate) =>
               cardOption(ctx, candidate, {
+                viewerId: controller.id,
                 type: 'chooseToken',
                 description: `Choose ${candidate.name}`,
                 verb: 'Choose',
@@ -4917,6 +5485,7 @@ export function* executeAbility(
           options: [
             ...hosts.map((host) =>
               cardOption(ctx, host, {
+                viewerId: controller.id,
                 type: 'attach',
                 description: `Attach ${attachment.name} to ${host.name}`,
                 verb: 'Attach',
@@ -5046,6 +5615,54 @@ export function* executeAbility(
             createTokens(ctx, effect.spec, amountOf(effect.count), player.id);
           }
         }
+        break;
+      }
+      case 'eachOpponentCreatesTokens': {
+        createTokensForPlayers(
+          ctx,
+          effect.spec,
+          amountOf(effect.count),
+          opponentsOf(ctx, controller.id).map((player) => player.id),
+        );
+        break;
+      }
+      case 'shareTokensWithChosenOpponent': {
+        const chosen = yield* chooseOpponentForSharedEffect(
+          ctx,
+          source,
+          controller.id,
+          'to create tokens with you',
+        );
+        createTokensForPlayers(ctx, effect.spec, amountOf(effect.count), [
+          controller.id,
+          ...(chosen === null ? [] : [chosen]),
+        ]);
+        break;
+      }
+      case 'shareCreatureLifeWithChosenOpponent': {
+        const chosen = yield* chooseOpponentForSharedEffect(
+          ctx,
+          source,
+          controller.id,
+          'to gain life for their creatures',
+        );
+        const recipients = new Set([controller.id, ...(chosen === null ? [] : [chosen])]);
+        const amount = amountOf(effect.amount);
+        // Determine both amounts before gaining life: a life-dependent type effect must not
+        // change the other player's creature count partway through this simultaneous event.
+        const grants = playersInApnapOrder(ctx)
+          .filter((player) => !player.hasLost && recipients.has(player.id))
+          .map((player) => ({
+            player,
+            amount:
+              amount *
+              ctx.state.battlefield.filter(
+                (permanent) =>
+                  permanent.controllerId === player.id &&
+                  computeCharacteristics(ctx, permanent).types.includes('Creature'),
+              ).length,
+          }));
+        gainLifeForPlayers(ctx, grants);
         break;
       }
       case 'createTokenForEachOpponent': {
@@ -5304,20 +5921,55 @@ export function* executeAbility(
         }
         break;
       }
-      case 'gainControl':
-        for (const perm of affectedBy(ctx, source, effect.selector)) {
-          if (perm.controllerId === source.controllerId) continue;
-          changeController(ctx, perm, source.controllerId);
-          // CR 302.6: not continuously controlled by the new controller since their turn began.
-          // Left true under haste, exactly like a freshly cast creature.
-          perm.summoningSick = true;
-          emit(ctx, 'gainControl', {
+      case 'gainControl': {
+        const duration = resolveControlChangeDuration(ctx, source, effect.duration);
+        if (duration === null) break;
+        // CR 611.2c: the affected set is frozen BEFORE anything changes hands — taking a
+        // creature can change what the selector would match next (controller-dependent power,
+        // "creatures you control" scoping), and the untap/haste riders apply to that same
+        // frozen set, not to whatever matches afterwards.
+        const affected = affectedBy(ctx, source, effect.selector);
+        for (const perm of affected) {
+          const change = perm.controllerId !== source.controllerId;
+          changeController(ctx, perm, source.controllerId, duration);
+          if (change)
+            emit(ctx, 'gainControl', {
+              source: source.name,
+              target: perm.name,
+              newController: source.controllerId,
+            });
+        }
+        if (effect.untap === true) {
+          for (const perm of affected) perm.tapped = false;
+          emit(ctx, 'untap', {
             source: source.name,
-            target: perm.name,
-            newController: source.controllerId,
+            objects: affected.map((perm) => ({
+              id: perm.id,
+              name: perm.faceDown ? 'Face-down permanent' : perm.name,
+            })),
           });
         }
+        if (effect.grantHaste === true) {
+          for (const perm of affected) {
+            ctx.state.effects.push({
+              id: `eff-${ctx.state.nextObjectNum++}`,
+              sourceId: source.cardId,
+              description: `${perm.name} gains haste until end of turn`,
+              targetCardIds: [perm.cardId],
+              targetObjectIds: [perm.id],
+              kind: 'grantKeyword',
+              keyword: 'haste',
+              timestamp: ctx.state.nextTimestamp++,
+            });
+            emit(ctx, 'grantKeyword', {
+              source: source.name,
+              target: perm.name,
+              keyword: 'haste',
+            });
+          }
+        }
         break;
+      }
       case 'graveyardToBattlefield': {
         // CR 400.7e / 603.6c: a death trigger can find its first public destination,
         // including an opponent-owned card. Leaving that incarnation ends the exception.
@@ -5435,6 +6087,7 @@ export function* executeAbility(
             presentationSource: presentedSource(ctx, source),
             options: candidates.map((perm) =>
               cardOption(ctx, perm, {
+                viewerId: source.controllerId,
                 type: 'choose',
                 description: `Return ${perm.name} to its owner’s hand`,
                 payload: perm.id,
@@ -5851,6 +6504,7 @@ export function* executeAbility(
           presentationSource: presentedSource(ctx, source),
           options: byName.map((land) =>
             cardOption(ctx, land, {
+              viewerId: controller.id,
               type: 'chooseLand',
               description: `Choose ${land.name}`,
               verb: 'Choose',
@@ -6029,25 +6683,101 @@ export function* executeAbility(
         ctx.state.monarchPlayerId = controller.id;
         emit(ctx, 'monarch', { player: controller.id }, controller.id);
         break;
+      case 'rotateSourceAtUpkeep': {
+        const permanent = sourcePermanent();
+        const player = ctx.state.players.find(
+          (entry) => entry.id === ctx.state.currentTurnPlayer && !entry.hasLost,
+        );
+        if (permanent === undefined || player === undefined) break;
+        changeController(ctx, permanent, player.id);
+        permanent.tapped = false;
+        addCounters(ctx, { ...source, controllerId: player.id }, permanent, '+1/+1', 1);
+        ctx.state.effects.push({
+          id: `eff-${ctx.state.nextObjectNum++}`,
+          sourceId: source.cardId,
+          description: `${permanent.name} gains haste until end of turn`,
+          targetCardIds: [permanent.cardId],
+          targetObjectIds: [permanent.id],
+          kind: 'grantKeyword',
+          keyword: 'haste',
+          timestamp: ctx.state.nextTimestamp++,
+        });
+        emit(ctx, 'gainControl', {
+          source: source.name,
+          target: permanent.name,
+          newController: player.id,
+        });
+        break;
+      }
+      case 'attackingCreaturesToOwnerLibraries':
+        yield* returnToOwnerLibraryChoices(
+          ctx,
+          source.name,
+          ctx.state.battlefield.filter(
+            (permanent) =>
+              permanent.attacking !== null &&
+              computeCharacteristics(ctx, permanent).types.includes('Creature'),
+          ),
+        );
+        break;
+      case 'choosePermanentTypesThenSacrificeOthers': {
+        const kept = new Set<ObjectId>();
+        const board = ctx.state.battlefield.map((permanent) => ({
+          permanent,
+          types: computeCharacteristics(ctx, permanent).types,
+        }));
+        for (const player of playersInApnapOrder(ctx)) {
+          if (player.hasLost) continue;
+          for (const type of effect.types) {
+            const picked = yield* chooseCard(ctx, {
+              player: controller.id,
+              prompt: `${source.name}: choose ${player.id}'s ${type.toLowerCase()} to keep`,
+              cards: board
+                .filter(
+                  (entry) =>
+                    entry.permanent.controllerId === player.id && entry.types.includes(type),
+                )
+                .map((entry) => entry.permanent),
+              type: 'chooseCard',
+              verb: 'Keep',
+            });
+            if (picked !== null) kept.add(picked.id);
+          }
+        }
+        const sacrificed = board
+          .filter(({ permanent, types }) => !types.includes('Land') && !kept.has(permanent.id))
+          .map(({ permanent }) => permanent);
+        yield* movePermanentsToGraveyard(ctx, sacrificed, 'sacrifice');
+        break;
+      }
       case 'druidPurification': {
-        const chosen: EnginePermanent[] = [];
-        const orderedPlayers = [controller, ...opponentsOf(ctx, controller.id)];
-        for (const player of orderedPlayers) {
+        const abilityControllerId = controller.id;
+        const startIndex = ctx.state.turnOrder.indexOf(abilityControllerId);
+        if (startIndex < 0)
+          throw new Error('engine bug: Druid choice controller is absent from turn order');
+        const orderedPlayerIds = [
+          ...ctx.state.turnOrder.slice(startIndex),
+          ...ctx.state.turnOrder.slice(0, startIndex),
+        ].filter((id) => !playerById(ctx, id).hasLost);
+        const allChosen: EnginePermanent[] = [];
+        for (const playerId of orderedPlayerIds) {
+          const player = playerById(ctx, playerId);
           const options = ctx.state.battlefield.filter((perm) => {
             const chars = computeCharacteristics(ctx, perm);
             return (
-              perm.controllerId !== player.id &&
+              perm.controllerId !== abilityControllerId &&
               (chars.types.includes('Artifact') || chars.types.includes('Enchantment'))
             );
           });
           const outcome = yield {
             decisionType: 'general',
             player: player.id,
-            prompt: `${source.name}: choose an artifact or enchantment you don't control to destroy, or choose none.`,
+            prompt: `${source.name}: choose an artifact or enchantment ${controller.id} doesn't control to destroy, or choose none.`,
             options: [
               plainOption({ type: 'decline', description: 'Choose none', verb: 'Skip' }),
               ...options.map((perm) =>
                 cardOption(ctx, perm, {
+                  viewerId: player.id,
                   type: 'destroy',
                   description: `Destroy ${perm.name}`,
                   payload: perm.id,
@@ -6058,14 +6788,104 @@ export function* executeAbility(
           };
           if (outcome.index > 0) {
             const picked = options[outcome.index - 1];
-            if (picked !== undefined) chosen.push(picked);
+            if (picked !== undefined) allChosen.push(picked);
+          }
+          const picked = outcome.index > 0 ? options[outcome.index - 1] : undefined;
+          emit(
+            ctx,
+            'permanentChoice',
+            {
+              source: source.name,
+              name: picked?.name ?? null,
+              objectId: picked?.id ?? null,
+            },
+            player.id,
+          );
+        }
+        const uniqueChosen: EnginePermanent[] = [];
+        const seen = new Set<ObjectId>();
+        for (const perm of allChosen) {
+          if (seen.has(perm.id)) continue;
+          seen.add(perm.id);
+          const current = findPermanent(ctx, perm.id);
+          if (current !== undefined) uniqueChosen.push(current);
+        }
+        const protectedIds = new Set(
+          uniqueChosen
+            .filter((perm) => hasKeyword(ctx, perm, 'indestructible'))
+            .map((perm) => perm.id),
+        );
+        const destroyed: EnginePermanent[] = [];
+        for (const perm of uniqueChosen) {
+          if (protectedIds.has(perm.id)) {
+            emit(ctx, 'destroyPrevented', { target: perm.name, source: source.name });
+          } else if (!consumeRegenerationShield(ctx, perm, false)) {
+            emit(ctx, 'destroy', { target: perm.name, source: source.name });
+            destroyed.push(perm);
           }
         }
-        for (const perm of chosen) {
-          const current = findPermanent(ctx, perm.id);
-          if (current === undefined) continue;
-          yield* destroyPermanent(ctx, source, current);
+        yield* movePermanentsToGraveyard(ctx, destroyed);
+        break;
+      }
+      case 'eachPlayerMayPutCountersAndGoad':
+        yield* eachPlayerMayPutCountersAndGoad(
+          ctx,
+          source,
+          controller.id,
+          effect,
+          amountOf(effect.count),
+        );
+        break;
+      case 'voteAndExileMost': {
+        // The candidate set is fixed as the ability resolves (CR 611.2c) and is measured against
+        // the ability's ORIGINAL controller — "each player votes for a permanent you don't
+        // control". Nothing here is a target: hexproof, shroud and protection remove no option.
+        const abilityControllerId = controller.id;
+        const candidates = affectedBy(ctx, source, effect.selector);
+        if (candidates.length === 0) break;
+        const startIndex = ctx.state.turnOrder.indexOf(abilityControllerId);
+        if (startIndex < 0)
+          throw new Error('engine bug: vote controller is absent from turn order');
+        // "Starting with you": the rotation runs from the ability controller's own turn slot, not
+        // the active player's. Every living player votes — there is no "may" and no abstain — and
+        // every vote is collected before anything leaves (CR 608.2c).
+        const orderedPlayerIds = [
+          ...ctx.state.turnOrder.slice(startIndex),
+          ...ctx.state.turnOrder.slice(0, startIndex),
+        ].filter((id) => !playerById(ctx, id).hasLost);
+        const tally = new Map<ObjectId, number>();
+        for (const playerId of orderedPlayerIds) {
+          const outcome = yield {
+            decisionType: 'general',
+            player: playerId,
+            prompt: `${source.name}: vote for a permanent ${abilityControllerId} doesn't control.`,
+            options: candidates.map((perm) =>
+              cardOption(ctx, perm, {
+                viewerId: playerId,
+                type: 'chooseCard',
+                description: `Vote for ${perm.name}`,
+                verb: 'Vote',
+              }),
+            ),
+          };
+          const picked = candidates[outcome.index];
+          if (picked === undefined) throw new Error('engine bug: vote choice is not a candidate');
+          tally.set(picked.id, (tally.get(picked.id) ?? 0) + 1);
+          // Battlefield permanents are public information, so the vote itself is: source, voter,
+          // and the exact object named. No library or hand identity is involved.
+          emit(
+            ctx,
+            'vote',
+            { source: source.name, voter: playerId, objectId: picked.id, name: picked.name },
+            playerId,
+          );
         }
+        // "each permanent with the most votes or tied for most votes": counted by permanent
+        // object, never by card name, so two copies of the same card are two separate candidates.
+        // Zero-vote candidates cannot match — `most` is at least one. All winners leave together.
+        const most = Math.max(...tally.values());
+        const winners = candidates.filter((perm) => tally.get(perm.id) === most);
+        yield* movePermanentsTogether(ctx, winners, { zone: 'exile' });
         break;
       }
       case 'exileTargetWithSource': {
@@ -6123,6 +6943,7 @@ export function* executeAbility(
             plainOption({ type: 'decline', description: 'Choose none', verb: 'Skip' }),
             ...creatures.map((perm) =>
               cardOption(ctx, perm, {
+                viewerId: controller.id,
                 type: 'blink',
                 description: `Blink ${perm.name}`,
                 payload: perm.id,
@@ -6230,7 +7051,19 @@ export function* executeAbility(
         break;
       }
       case 'unlessPays': {
-        const payerId = effect.payer === 'eventPlayer' ? scope.eventPlayerId : controller.id;
+        let payerId: PlayerId | undefined;
+        if (effect.payer === 'eventPlayer') {
+          payerId = scope.eventPlayerId;
+        } else if (effect.payer === 'controller') {
+          payerId = controller.id;
+        } else {
+          // 'eventObjectController' — ask the CURRENT controller of the exact original event
+          // permanent; once it has departed, the controller it last had (departure LKI,
+          // CR 608.2h). Never the ability's event player, never a blinked new incarnation.
+          if ((scope.triggerObjectId ?? scope.eventObjectId) === undefined)
+            throw new Error(source.name + ': unlessPays has no exact event object');
+          payerId = eventObjectFacts(ctx, scope)?.candidate.controllerId as PlayerId | undefined;
+        }
         if (payerId === undefined) throw new Error(source.name + ': unlessPays has no payer');
         const payer = playerById(ctx, payerId);
         // "…pays {X}, where X is this creature's power" — resolved now, against the source as it
@@ -6240,7 +7073,11 @@ export function* executeAbility(
             ? effect.cost
             : addGeneric(effect.cost, evaluateValueIn(ctx, effect.genericValue, scope));
         const costDescription = describeManaCost(owed);
-        const canAfford = canPay(owed, payer.manaEntries, manaSourcesFor(ctx, payer.id));
+        const canAfford =
+          // A payer who left the game cannot pay (CR 800.4): no prompt, just the unpaid branch.
+          // Scoped to the event-object payer so the existing payer values behave exactly as before.
+          !(effect.payer === 'eventObjectController' && payer.hasLost) &&
+          canPay(owed, payer.manaEntries, manaSourcesFor(ctx, payer.id));
         let paid = false;
         let notPaidReason: 'declined' | 'unable' = 'unable';
         if (canAfford) {
@@ -6822,6 +7659,7 @@ export function* executeAbility(
           options: [
             ...eligible.map((card) =>
               cardOption(ctx, card, {
+                viewerId: controller.id,
                 type: 'castFree',
                 description: `Cast ${card.name} without paying its mana cost`,
                 verb: 'Cast for free',
@@ -6858,6 +7696,7 @@ export function* executeAbility(
           options: [
             ...eligible.map((card) =>
               cardOption(ctx, card, {
+                viewerId: controller.id,
                 type: 'castForLife',
                 description: `Cast ${card.name} from your ${zoneOf(card)} for ${lifeFor(card)} life`,
                 verb: 'Cast',
@@ -7098,6 +7937,7 @@ export function* executeAbility(
               // behind an unreachable "click the board object" affordance.
               ...spellsInGy.map((c) =>
                 cardOption(ctx, c, {
+                  viewerId: controller.id,
                   type: 'returnToHand',
                   description: `Return ${c.name} from graveyard`,
                   verb: 'Return to hand',
@@ -7434,6 +8274,7 @@ function* lookAtTopN(
         options: [
           ...eligible.map((card) =>
             cardOption(ctx, card, {
+              viewerId: player.id,
               type: 'putFromTop',
               description: `Put ${card.name} ${where}`,
               verb: `Put ${where}`,
@@ -7578,9 +8419,8 @@ export function shuffleLibrary(ctx: GameContext, player: EnginePlayerState): voi
 /**
  * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19).
  *
- * One decision per destination, each offering the matching cards plus "find nothing" — CR
- * 701.19c never requires a player to find a card, and a search with fewer matches than
- * destinations simply stops early.
+ * A stated quality permits failure to find (CR 701.19b); an unrestricted quantity must find
+ * as many as possible (CR 701.19d). An explicitly optional search may also find nothing.
  */
 function* searchLibrary(
   ctx: GameContext,
@@ -7595,6 +8435,8 @@ function* searchLibrary(
   cardFilter: (card: EngineCardObject) => boolean = () => true,
 ): GameGen<string[]> {
   const selectorSource = { cardId: source.cardId, controllerId: player.id };
+  const canFindNothing =
+    allowFailToFind || differentNames || filter.kind !== 'allOf' || filter.of.length > 0;
   const chosenNames = new Set<string>();
   const foundCardIds: string[] = [];
   // CR 701.16a: a revealed card is public to every player whatever zone it goes to.
@@ -7621,10 +8463,10 @@ function* searchLibrary(
           ? 'on top of your library'
           : `into your ${destination.zone}`;
 
-    // Auto-select when all matching cards share the same name (e.g., mono-color basic
-    // land search): the choice is meaningless and would waste an AI call.
+    // A mandatory unrestricted search with one matching name has no meaningful card choice.
+    // Quality searches must still offer the legal choice to find nothing.
     const distinctNames = new Set(matches.map((c) => c.name));
-    if (!allowFailToFind && distinctNames.size === 1) {
+    if (!canFindNothing && distinctNames.size === 1) {
       const card = matches[0] as EngineCardObject;
       foundCardIds.push(card.cardId);
       if (destination.zone === 'libraryTop') {
@@ -7658,18 +8500,22 @@ function* searchLibrary(
       options: [
         ...matches.map((card) =>
           cardOption(ctx, card, {
+            viewerId: player.id,
             type: 'findCard',
             description: `Put ${card.name} ${where}`,
             verb: `Put ${where}`,
           }),
         ),
-        // CR 701.19c: searching never obliges you to find.
-        plainOption({
-          type: 'findNothing',
-          description: 'Find nothing',
-          verb: 'Find nothing',
-          role: 'decline',
-        }),
+        ...(canFindNothing
+          ? [
+              plainOption({
+                type: 'findNothing',
+                description: 'Find nothing',
+                verb: 'Find nothing',
+                role: 'decline',
+              }),
+            ]
+          : []),
       ],
     };
     if (outcome.index >= matches.length) break;
@@ -7895,6 +8741,7 @@ function* searchLibraryCastFree(
     options: [
       ...matches.map((card) =>
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'findCard',
           description: `Cast ${card.name} without paying its mana cost`,
           verb: 'Cast for free',
@@ -7987,12 +8834,14 @@ function* scry(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'scryKeep',
           description: `Keep ${card.name} on top`,
           verb: 'Keep on top',
           role: 'affirm',
         }),
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'scryBottom',
           description: `Put ${card.name} on the bottom`,
           verb: 'Put on the bottom',
@@ -8029,12 +8878,14 @@ function* surveil(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'surveilKeep',
           description: `Keep ${card.name} on top`,
           verb: 'Keep on top',
           role: 'affirm',
         }),
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'surveilGraveyard',
           description: `Put ${card.name} into your graveyard`,
           verb: 'Put into graveyard',
@@ -8072,6 +8923,7 @@ function* proliferate(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, perm, {
+          viewerId: controller.id,
           type: 'proliferate',
           description: `Proliferate ${perm.name}`,
           payload: perm.id,
@@ -8080,6 +8932,7 @@ function* proliferate(
           controller: perm.controllerId,
         }),
         cardOption(ctx, perm, {
+          viewerId: controller.id,
           type: 'skipProliferate',
           description: `Do not proliferate ${perm.name}`,
           payload: perm.id,
@@ -8149,6 +9002,14 @@ export function endUntilEotEffects(ctx: GameContext): void {
   if (expiring.length > 0) {
     debug(ctx, 'effect', `ending ${expiring.length} until-end-of-turn effect(s)`);
     ctx.state.effects = ctx.state.effects.filter((effect) => effect.duration === 'permanent');
+  }
+  // Until-end-of-turn control changes end here too — for every permanent, phased-out ones
+  // included: they still expire on schedule (CR 514.2).
+  for (const perm of [
+    ...ctx.state.battlefield,
+    ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+  ]) {
+    refreshControlEffects(ctx, perm, { expireEndOfTurn: true });
   }
   for (const perm of [
     ...ctx.state.battlefield,
@@ -8333,7 +9194,7 @@ export function* payManaCost(
             .filter(
               (p) =>
                 p.controllerId === player.id &&
-                sacrificeCandidateAllowed(remaining, perm, p) &&
+                sacrificeCandidateAllowed(ctx, remaining, perm, p) &&
                 matchesSelector(ctx, p, remaining.selector, {
                   cardId: perm.cardId,
                   controllerId: player.id,
@@ -8600,7 +9461,7 @@ export function* payAbilityCosts(
         for (let i = 0; i < count; i++) {
           const options = ctx.state.battlefield.filter(
             (candidate) =>
-              sacrificeCandidateAllowed(cost, perm, candidate) &&
+              sacrificeCandidateAllowed(ctx, cost, perm, candidate) &&
               candidate.controllerId === player.id &&
               matchesSelector(ctx, candidate, cost.selector, {
                 cardId: perm.cardId,

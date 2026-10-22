@@ -40,28 +40,32 @@
   {
     "oracleId": "48369aec-a991-4bef-8554-01c84302b063",
     "name": "Aetherspouts",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"For each attacking creature, its owner puts it on their choice of the top or bottom of their library.\""
+    "package": "PR08.12",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-aetherspouts-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-aetherspouts.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-aetherspouts.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "abe377f8-35f0-4dea-a681-91d31a36815c",
     "name": "Agitator Ant",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"At the beginning of your end step, each player may put two +1/+1 counters on a creature they control. Goad each creature that had counters put on it this way.\""
+    "package": "PR08.13",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-agitator-ant.test.ts",
+      "packages/engine/tests/optional-counter-goad-contract.test.ts",
+      "packages/server/src/cards/pr08-agitator-ant-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-agitator-ant.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "9c77eb0a-543a-41db-ba1f-aa0163837ae0",
@@ -81,45 +85,18 @@
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
-    "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
-    "name": "Akroan Horse",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When this creature enters, an opponent gains control of it.\"",
-      "unrecognized rules text: \"At the beginning of your upkeep, each opponent creates a 1/1 white Soldier creature token.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
     "oracleId": "81c6c4f0-81ad-463c-a42b-60a73e6d70f3",
     "name": "Alexios, Deimos of Kosmos",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"~ attacks each combat if able, can't be sacrificed, and can't attack its owner.\"",
-      "unrecognized rules text: \"At the beginning of each player's upkeep, that player gains control of ~, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn.\""
+    "package": "PR08.21",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-rotating-survivor-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-alexios-varchild.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
-  },
-  {
-    "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
-    "name": "Alicia Masters, Skilled Sculptor",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Sense the Good — At the beginning of your end step, each player gains control of all creatures they own.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-alexios-varchild.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
@@ -322,16 +299,18 @@
   {
     "oracleId": "3db8466c-864f-48ba-b617-f2c863dfdcbd",
     "name": "Benevolent Offering",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Choose an opponent. You and that player each create three 1/1 white Spirit creature tokens with flying.\"",
-      "unrecognized rules text: \"Choose an opponent. You gain 2 life for each creature you control and that player gains 2 life for each creature they control.\""
+    "package": "PR08.22",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-benevolent-offering.test.ts",
+      "packages/engine/tests/shared-opponent-contract.test.ts",
+      "packages/server/src/cards/pr08-benevolent-offering-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-benevolent-offering.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cdfcfd2b-966a-4e03-8ed5-4fa7fab423d0",
@@ -419,15 +398,16 @@
   {
     "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
     "name": "Boseiju, Who Endures",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"{1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.\""
+    "package": "PR08.11",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-boseiju-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-boseiju.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-boseiju.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "3e41648f-c5a9-4b26-b97e-8176fe5e9c85",
@@ -848,15 +828,18 @@
   {
     "oracleId": "acf4d685-a718-42f7-9a7a-dee069ae8db2",
     "name": "Council's Judgment",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Starting with you, each player votes for a nonland permanent you don't control. Exile each permanent with the most votes or tied for most votes.\""
+    "package": "PR08.15",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-councils-judgment.test.ts",
+      "packages/engine/tests/vote-exile-contract.test.ts",
+      "packages/server/src/cards/pr08-councils-judgment-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-councils-judgment.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
@@ -2175,15 +2158,19 @@
   {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
     "name": "Kazuul, Tyrant of the Cliffs",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3}.\""
+    "package": "PR08.16",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-kazuul.test.ts",
+      "packages/engine/tests/defending-player-event-contract.test.ts",
+      "packages/engine/tests/event-object-payer-contract.test.ts",
+      "packages/server/src/cards/pr08-kazuul-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-kazuul.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "23f86ee2-b1e3-45c2-bfd5-044919033922",
@@ -2861,6 +2848,20 @@
     "coverageDelta": 1
   },
   {
+    "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
+    "name": "Olórin's Searing Light",
+    "package": "PR08.07",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-olorin-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-olorin.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-olorin.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
     "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
     "name": "Path of Discovery",
     "package": "W5",
@@ -3102,19 +3103,6 @@
     ],
     "interpretationTests": ["packages/engine/tests/pr05-card-coverage.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
-  },
-  {
-    "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
-    "name": "Reins of Power",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Untap all creatures you control and all creatures target opponent controls. You and that opponent each gain control of all creatures the other controls until end of turn. Those creatures gain haste until end of turn.\""
-    ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
   },
   {
     "oracleId": "b410f294-cbb6-4016-981f-808fd9b7bbae",
@@ -3459,6 +3447,20 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr06-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+    "name": "Shadrix Silverquill",
+    "package": "PR08.09",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-modal-player-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-modal-players.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-modal-players.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -4061,15 +4063,16 @@
   {
     "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
     "name": "Tragic Arrogance",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.\""
+    "package": "PR08.18",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-remaining-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-tragic-arrogance.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-tragic-arrogance.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
@@ -4209,17 +4212,16 @@
   {
     "oracleId": "26ae37ab-91f8-4113-beb0-1154f9b62d28",
     "name": "Varchild, Betrayer of Kjeldor",
-    "package": "W6",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Whenever ~ deals combat damage to a player, that player creates that many 1/1 red Survivor creature tokens.\"",
-      "unrecognized rules text: \"Survivors your opponents control can't block, and they can't attack you or planeswalkers you control.\"",
-      "unrecognized rules text: \"When ~ leaves the battlefield, gain control of all Survivors.\""
+    "package": "PR08.23",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-rotating-survivor-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-alexios-varchild.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-alexios-varchild.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "8ba2a7ad-a09b-4f52-9c76-c70510dc4feb",
@@ -4317,6 +4319,20 @@
       "apps/web/e2e/card-test-lab.spec.ts"
     ],
     "interpretationTests": ["packages/engine/tests/pr04-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
+    "name": "Vindictive Lich",
+    "package": "PR08.10",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-modal-player-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-modal-players.test.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-modal-players.test.ts"],
     "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
@@ -4459,15 +4475,16 @@
   {
     "oracleId": "499a4715-6776-461b-bee4-22ed172d455e",
     "name": "Winds of Abandon",
-    "package": "W4",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those cards onto the battlefield tapped, then shuffle.\""
+    "package": "PR08.19",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "apps/web/e2e/pr08-winds-of-abandon-card-test-lab.spec.ts",
+      "packages/engine/tests/pr08-winds-of-abandon.test.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr08-winds-of-abandon.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
@@ -4497,5 +4514,169 @@
     "interpretationTests": ["packages/engine/tests/w2-cards.test.ts"],
     "snapshotStatus": "passed",
     "coverageDelta": 1
+  },
+  {
+    "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+    "name": "Mob Rule",
+    "package": "PR08.08",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-card-coverage.test.ts",
+      "packages/server/src/cards/card-test-scenarios-pr08.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-card-coverage.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
+    "name": "Cut a Deal",
+    "package": "PR08.01",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-cut-a-deal.test.ts",
+      "packages/server/src/cards/pr08-cut-a-deal-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-cut-a-deal.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
+    "name": "Cytoplast Manipulator",
+    "package": "PR08.06",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-cytoplast-manipulator.test.ts",
+      "packages/server/src/cards/pr08-cytoplast-manipulator-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-cytoplast-manipulator.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "1582e16d-4825-4cc5-b12c-449c45e4e449",
+    "name": "Humble Defector",
+    "package": "PR08.03",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-humble-defector.test.ts",
+      "packages/engine/tests/pr08-humble-defector-casting.test.ts",
+      "packages/server/src/cards/pr08-humble-defector-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": [
+      "packages/engine/tests/pr08-humble-defector.test.ts",
+      "packages/engine/tests/pr08-humble-defector-casting.test.ts"
+    ],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
+    "name": "Druid of Purification",
+    "package": "PR08.02",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-druid-of-purification.test.ts",
+      "packages/engine/tests/pr08-druid-casting.test.ts",
+      "packages/server/src/cards/pr08-druid-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": [
+      "packages/engine/tests/pr08-druid-of-purification.test.ts",
+      "packages/engine/tests/pr08-druid-casting.test.ts"
+    ],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
+    "name": "Wishclaw Talisman",
+    "package": "PR08.05",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-wishclaw-talisman.test.ts",
+      "packages/engine/tests/resolution-control-recipient-contract.test.ts",
+      "packages/engine/tests/library-search-choice-contract.test.ts",
+      "packages/server/src/cards/pr08-wishclaw-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-wishclaw-talisman.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "96381388-1e82-411c-8290-1f3e909d3b5f",
+    "name": "Reins of Power",
+    "package": "PR08.17",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-reins-of-power.test.ts",
+      "packages/engine/tests/swap-creature-control-contract.test.ts",
+      "packages/server/src/cards/pr08-reins-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-reins-of-power.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "8d0213d7-9e25-49d2-93fa-1d346cb2e869",
+    "name": "Akroan Horse",
+    "package": "PR08.20",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-akroan-horse.test.ts",
+      "packages/engine/tests/multiplayer-token-creation-contract.test.ts",
+      "packages/server/src/cards/pr08-akroan-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-akroan-horse.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
+    "name": "Alicia Masters, Skilled Sculptor",
+    "package": "PR08.14",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-alicia-masters.test.ts",
+      "packages/engine/tests/owner-control-restoration-contract.test.ts",
+      "packages/server/src/cards/pr08-alicia-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-alicia-masters.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
+  },
+  {
+    "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
+    "name": "Scheming Symmetry",
+    "package": "PR08.04",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr08-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr08-scheming-symmetry.test.ts",
+      "packages/engine/tests/multiplayer-search-contract.test.ts",
+      "packages/server/src/cards/pr08-scheming-symmetry-scenarios.test.ts",
+      "apps/web/e2e/pr08-card-test-lab.spec.ts"
+    ],
+    "interpretationTests": ["packages/engine/tests/pr08-scheming-symmetry.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   }
 ]

@@ -330,6 +330,7 @@ export function* chooseDamageSource(
     candidates.push({
       id: perm.id,
       option: cardOption(ctx, perm, {
+        viewerId: playerId,
         type: 'damageSource',
         description: perm.name,
         verb: 'Choose',
@@ -341,6 +342,7 @@ export function* chooseDamageSource(
       candidates.push({
         id: entry.id,
         option: cardOption(ctx, entry.card, {
+          viewerId: playerId,
           type: 'damageSource',
           description: `${entry.card.name} (spell)`,
           verb: 'Choose',

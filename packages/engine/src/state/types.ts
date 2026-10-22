@@ -196,6 +196,24 @@ export interface EngineObject extends GameObject {
   escaped?: boolean;
 }
 
+/**
+ * How long one control-changing effect keeps hold of a permanent. `permanent` is the default;
+ * `untilEndOfTurn` ends at the cleanup step (CR 514.2); `whileSourceOnBattlefield` tracks the
+ * effect's source by its exact `ObjectId` — a blink is a NEW object id, so it never restores
+ * an expired one (CR 400.7, 611.2b).
+ */
+export type ControlChangeDuration =
+  | { kind: 'permanent' }
+  | { kind: 'untilEndOfTurn' }
+  | { kind: 'whileSourceOnBattlefield'; sourceObjectId: ObjectId };
+
+/** One recorded control-changing effect, timestamped so ordering and expiry stay decidable. */
+export interface ControlChange {
+  controllerId: PlayerId;
+  timestamp: number;
+  duration: ControlChangeDuration;
+}
+
 export interface EnginePermanent extends PermanentState, EngineObject, CastRecord {
   /** Departure facts belong to this old object only; reincarnation never copies them. */
   lastKnownFacts?: ObjectFacts;
@@ -204,8 +222,8 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
   zone: 'battlefield';
   /** Controller established by entering, distinct from later control-changing effects. */
   defaultControllerId?: PlayerId;
-  /** Control-changing effects in resolution order; the recipient leaving ends their effects. */
-  controlChanges?: PlayerId[];
+  /** Control-changing effects in resolution order; recipients leave, sources leave, EOT ends. */
+  controlChanges?: ControlChange[];
   /** Whether a transforming double-faced permanent currently uses its back face. */
   transformed: boolean;
   /**
@@ -232,6 +250,17 @@ export interface EnginePermanent extends PermanentState, EngineObject, CastRecor
    * (CR 506.4c, 510.1b); the planeswalker returning later does not put it back into combat.
    */
   attackedPlaneswalkerRemoved: boolean;
+  /**
+   * Private identity of the attack this creature made most recently: the defending player
+   * (attacked player, or the controller of the planeswalker it attacked, CR 508.1b) as that
+   * attack stood when combat assignment for it ended. Retained at every path that clears
+   * `attacking` so a CR 603.4 recheck over the exact original attacker (Kazuul) can still name
+   * the last defending player of a removed-from-combat or departed attacker; a new declaration
+   * overwrites it through the retain-then-clear order, so only the latest attack survives.
+   * Never copied into `SelectorCandidate.attackingDefendingPlayerId`, which stays strictly
+   * current-combat. Facts only for the engine; the public projections never see it.
+   */
+  lastAttackingDefendingPlayerId?: PlayerId;
   /** A chosen assignment prohibition lasts through all combats of this turn. */
   assignsNoCombatDamageTurn?: number;
   /** A resolved effect's fixed attack prohibition, active while the named counter remains. */

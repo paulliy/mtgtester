@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { choose, Engine, ScriptedDecisionProvider } from '@mtg/engine';
 import type { DecisionProvider, EnginePlayerConfig, PreparedScenarioSpec } from '@mtg/engine';
+import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import type { CardTestScenarioMetadata, Color, GameId, OracleCard, PlayerId } from '@mtg/shared';
 import type { SeatSetup } from '../match/setup';
 import { BUG_HUNT_SCENARIO_IDS, bugHuntScenario } from './bug-hunt-scenarios';
@@ -98,6 +99,28 @@ import {
   whiteBlackControlKeywordScenario,
 } from './white-black-control-keyword-scenarios';
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
+import { PR08_SCENARIO_IDS } from './pr08-scenario-catalog';
+import {
+  PR08_REMAINING_SCENARIO_IDS,
+  pr08TragicArroganceScenario,
+  AETHERSPOUTS_SCENARIO_IDS,
+  pr08AetherspoutsScenario,
+} from './pr08-remaining-scenarios';
+import {
+  PR08_MODAL_PLAYER_SCENARIO_IDS,
+  pr08ModalPlayerScenario,
+} from './pr08-modal-player-scenarios';
+import {
+  ROTATING_SURVIVOR_SCENARIO_IDS,
+  pr08RotatingSurvivorScenario,
+} from './pr08-rotating-survivor-scenarios';
+import {
+  WINDS_OF_ABANDON_SCENARIO_IDS,
+  pr08WindsOfAbandonScenario,
+} from './pr08-winds-of-abandon-scenarios';
+import { OLORIN_SCENARIO_IDS, pr08OlorinScenario } from './pr08-olorin-scenarios';
+import { BOSEIJU_SCENARIO_IDS, pr08BoseijuScenario } from './pr08-boseiju-scenarios';
+import { PR08_CUT_A_DEAL_SCENARIO_IDS, pr08CutADealScenario } from './pr08-cut-a-deal-scenarios';
 import { COMBAT_TRIGGER_SCENARIO_IDS, combatTriggerScenario } from './combat-trigger-scenarios';
 
 export interface CardTestScenario {
@@ -324,6 +347,10 @@ const COVERAGE_PR06: PinnedOracleFile = JSON.parse(
 /** Coverage PR07 cards (combat requirements, restrictions and extra combats). */
 const COVERAGE_PR07: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr07-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
+const COVERAGE_PR08: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/coverage-pr08-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
 const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
@@ -11551,6 +11578,23 @@ function neverBlocks(): DecisionProvider {
 }
 
 /**
+ * An opponent seat that votes for one named permanent whenever Council's Judgment asks it to, and
+ * otherwise passes. It answers exactly the vote it is offered — by the printed option's own
+ * description — so a seat that is never asked falls through to the ordinary pass.
+ */
+function votesFor(name: string): DecisionProvider {
+  return {
+    decide(request) {
+      const vote = request.legalActions.find(
+        (candidate) => candidate.description === `Vote for ${name}`,
+      );
+      if (vote !== undefined) return { requestId: request.requestId, actionId: vote.id };
+      return passOrNoBlock(request);
+    },
+  };
+}
+
+/**
  * An opponent seat that answers a sacrifice-or-lose prompt with `answer` ('decline' takes the
  * loss, otherwise the option whose description contains it), never blocks, and otherwise passes.
  */
@@ -12681,6 +12725,1055 @@ function keepThenAttack(keep: string, defender: PlayerId): DecisionProvider {
       return attackWithEverything.decide(request);
     },
   };
+}
+
+function kazuulScenario(
+  gameId: GameId,
+  mode: 'decline' | 'pay' | 'other-defender',
+): CardTestScenario {
+  const kazuul = pinnedFrom(COVERAGE_PR08, 'Kazuul, Tyrant of the Cliffs');
+  const witness = card({
+    oracleId: 'lab-kazuul-priority-witness',
+    name: 'Lab Kazuul Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    oracleText: 'You gain 1 life.',
+  });
+  const lands = [FOREST, FOREST, FOREST, MOUNTAIN, MOUNTAIN];
+  const attacker = attackPlayerWithEverything(mode === 'other-defender' ? 'P3' : 'P1');
+  return pr01Scenario(gameId, {
+    id: 'kazuul-viewer-' + mode,
+    title:
+      'Kazuul: ' +
+      (mode === 'decline'
+        ? 'an attacking opponent declines and you create an Ogre before blockers'
+        : mode === 'pay'
+          ? 'the attacking creature controller pays three and you create no Ogre'
+          : 'an attack on another player creates no Ogre'),
+    instructions: [
+      'Cast Kazuul for {3}{R}{R}. Keep the priority witness in hand and pass to P2 combat.',
+      mode === 'other-defender'
+        ? 'P2 attacks P3, so Kazuul must not trigger.'
+        : 'P2 attacks you and ' +
+          (mode === 'pay'
+            ? 'pays {3} using three Forests.'
+            : 'declines to pay {3}; you create an Ogre before blockers.'),
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'P1 controls a 3/3 red Ogre before declaring blockers; P2 has paid no mana.'
+        : mode === 'pay'
+          ? 'P2 tapped three Forests to pay {3}. P1 controls no Ogre.'
+          : 'P2 attacked P3. Kazuul did not trigger and no Ogre exists.',
+    oracleSha256: kazuul.sha256,
+    clauseIds: [
+      'kazuul-opponent-attack-defending-player',
+      'kazuul-event-creature-controller-payment',
+    ],
+    decks: {
+      P1: [kazuul.card, witness, ...lands],
+      P2: [LAB_SERVO, FOREST, FOREST, FOREST, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: [kazuul.card.name, witness.name] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: lands.map((land) => land.name) },
+        { playerId: 'P2', cardNames: ['Lab Servo', 'Forest', 'Forest', 'Forest'] },
+      ],
+      continueThroughNextCombat: true,
+    },
+    decisionProviderOverrides: {
+      P2: {
+        decide(request) {
+          const payment = request.legalActions.find(
+            (action) => action.description === (mode === 'pay' ? 'Pay {3}' : "Don't pay {3}"),
+          );
+          return payment === undefined
+            ? attacker.decide(request)
+            : { requestId: request.requestId, actionId: payment.id };
+        },
+      },
+    },
+  });
+}
+
+function akroanHorseScenario(
+  gameId: GameId,
+  mode: 'cast-and-gift' | 'recipient-upkeep',
+): CardTestScenario {
+  const horse = pinnedFrom(COVERAGE_PR08, 'Akroan Horse');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const upkeep = mode === 'recipient-upkeep';
+  const swamps = Array.from({ length: 4 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: 'akroan-horse-viewer-' + mode,
+    title:
+      'Akroan Horse: ' +
+      (upkeep
+        ? 'the recipient upkeep gives each opponent a Soldier'
+        : 'cast and choose an opponent to gain control'),
+    instructions: [
+      'Cast Akroan Horse with four Swamps, then choose P2 without targeting.',
+      ...(upkeep
+        ? ['Pass to P2’s upkeep. P1, P3 and P4 each create a Soldier; P2 does not.']
+        : ['P2 controls the untapped Horse with defender.']),
+    ],
+    expectedOutcome: upkeep
+      ? 'P2 controls Akroan Horse. P1, P3 and P4 each own and control an untapped 1/1 white Soldier.'
+      : 'P2 controls the untapped 0/4 Horse with defender; P1 still owns it.',
+    oracleSha256: horse.sha256,
+    clauseIds: upkeep
+      ? ['akroan-defender', 'akroan-enter-opponent-control', 'akroan-current-controller-upkeep']
+      : ['akroan-defender', 'akroan-enter-opponent-control'],
+    decks: {
+      P1: [horse.card, witness, ...swamps],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Akroan Horse', 'Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: swamps.map((p) => p.name) }],
+      ...(upkeep ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * An opponent seat that privately searches: it takes only its own named library card when asked
+ * to choose, and passes every ordinary priority window otherwise. The name it searches for is
+ * private to that seat, so this only ever answers the searcher's own decision.
+ */
+function searchOwnRelic(chosenName: string): DecisionProvider {
+  return {
+    decide(request) {
+      const pick = request.legalActions.find(
+        (action) => action.type === 'search' && action.description === `Choose ${chosenName}`,
+      );
+      if (pick !== undefined) return { requestId: request.requestId, actionId: pick.id };
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return {
+        requestId: request.requestId,
+        actionId: (pass ?? request.legalActions[0]!).id,
+      };
+    },
+  };
+}
+
+/**
+ * Coverage PR08.04 Scheming Symmetry. Both targets search their OWN library, so the seat names are
+ * the privacy boundary: P1's panel only ever offers P1's own relics, and no P2/P3 relic name may
+ * reach P1's wire, log or DOM.
+ */
+function schemingSymmetryScenario(
+  gameId: GameId,
+  mode: 'you-and-opponent' | 'two-opponents-empty-library',
+): CardTestScenario {
+  const symmetry = pinnedFrom(COVERAGE_PR08, 'Scheming Symmetry');
+  const drawWitness = card({
+    oracleId: 'lab-pr08-symmetry-draw-witness',
+    name: 'Lab Symmetry Draw Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'Draw a card.',
+  });
+  const priorityWitness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  /** Distinct plain artifacts per seat, so a leaked identity names the seat that leaked it. */
+  const relics = (seat: string) =>
+    (['Alpha', 'Beta'] as const).map((suffix) =>
+      card({
+        oracleId: `lab-pr08-symmetry-${seat.toLowerCase()}-${suffix.toLowerCase()}`,
+        name: `Lab Symmetry ${seat} ${suffix}`,
+        typeLine: 'Artifact',
+        manaCost: '{0}',
+        cmc: 0,
+      }),
+    );
+  const p1Relics = relics('P1');
+  const p2Relics = relics('P2');
+  const p3Relics = relics('P3');
+  const you = mode === 'you-and-opponent';
+  // P2's library is empty here: every card P2 owns is arranged onto the battlefield, so the search
+  // has nothing to find while P3's still has two cards. P1 is not a target in either mode.
+  const p2Deck = you ? p2Relics : [FOREST];
+  return pr01Scenario(gameId, {
+    id: `scheming-symmetry-viewer-${mode}`,
+    title: `Scheming Symmetry: ${you ? 'you and an opponent each search their own library' : 'two opponents search, one with an empty library'}`,
+    instructions: you
+      ? [
+          'Cast Scheming Symmetry with the Swamp, then pick P1 as target 1 and P2 as target 2.',
+          'Choose your own Lab Symmetry P1 Alpha; P2’s search is P2’s own private choice.',
+          'Both libraries shuffle and each chosen card sits on its owner’s top.',
+          'Cast Lab Symmetry Draw Witness to draw the card your own search put on top.',
+        ]
+      : [
+          'Cast Scheming Symmetry with the Swamp, then pick P2 as target 1 and P3 as target 2.',
+          'P1 is not a target, so P1 is never asked to search and P1’s library is untouched.',
+          'P2’s empty library needs no choice, but P2 still shuffles; P3 searches privately.',
+          'Lab Symmetry Draw Witness stays in hand so the final priority window is yours.',
+        ],
+    expectedOutcome: you
+      ? 'Each target’s own chosen card is on top of its own shuffled library, and drawing proves P1 chose from P1’s library only.'
+      : 'P2’s empty library is still shuffled, P3’s chosen card is on top of P3’s own shuffled library, and P1’s library never moved.',
+    // No opponent library card name may appear in this metadata: the lab ships it to every seat
+    // over the wire and renders it in the DOM, which is exactly the boundary under test.
+    oracleSha256: symmetry.sha256,
+    clauseIds: ['scheming-symmetry-two-target-players', 'scheming-symmetry-search-shuffle-top'],
+    decks: {
+      P1: [symmetry.card, drawWitness, priorityWitness, SWAMP, ...p1Relics],
+      P2: p2Deck,
+      P3: you ? PR01_FILLER : p3Relics,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Scheming Symmetry', 'Lab Symmetry Draw Witness', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Swamp'] },
+        ...(you ? [] : [{ playerId: 'P2' as const, cardNames: ['Forest'] }]),
+      ],
+    },
+    decisionProviderOverrides: {
+      ...(you
+        ? { P2: searchOwnRelic('Lab Symmetry P2 Alpha') }
+        : { P3: searchOwnRelic('Lab Symmetry P3 Alpha') }),
+    },
+  });
+}
+
+function wishclawScenario(
+  gameId: GameId,
+  mode: 'cast-search-and-gift' | 'empty-library' | 'off-turn',
+): CardTestScenario {
+  const talisman = pinnedFrom(COVERAGE_PR08, 'Wishclaw Talisman');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const alpha = card({
+    oracleId: 'lab-pr08-wishclaw-alpha',
+    name: 'Lab Wishclaw Alpha',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const beta = card({
+    oracleId: 'lab-pr08-wishclaw-beta',
+    name: 'Lab Wishclaw Beta',
+    typeLine: 'Artifact',
+    manaCost: '{0}',
+    cmc: 0,
+  });
+  const cast = mode === 'cast-search-and-gift';
+  const swamps = Array.from({ length: cast ? 3 : 1 }, () => SWAMP);
+  return pr01Scenario(gameId, {
+    id: `wishclaw-talisman-viewer-${mode}`,
+    title: `Wishclaw Talisman: ${cast ? 'cast, search, then choose the recipient' : mode === 'empty-library' ? 'empty library still gives control' : 'cannot activate off your turn'}`,
+    instructions:
+      mode === 'off-turn'
+        ? ['It is P2’s turn. Your instant can be cast, but Wishclaw cannot activate.']
+        : [
+            ...(cast
+              ? ['Cast Wishclaw Talisman with two Swamps; it enters with three wish counters.']
+              : []),
+            'Activate, paying one mana, tapping the artifact and removing one wish counter.',
+            cast
+              ? 'Find Lab Wishclaw Beta. The unrestricted search has no Find nothing option.'
+              : 'The empty library offers no search choice.',
+            'After the search and shuffle, choose P3 to gain control. This choice has no target.',
+          ],
+    expectedOutcome:
+      mode === 'off-turn'
+        ? 'Wishclaw stays untapped with three wish counters and cannot activate.'
+        : `P3 controls the tapped artifact with two wish counters. ${cast ? 'Lab Wishclaw Beta is in your hand.' : 'Your hand remains unchanged.'}`,
+    oracleSha256: talisman.sha256,
+    clauseIds: cast
+      ? [
+          'wishclaw-enters-three-wish',
+          'wishclaw-search-then-opponent-control',
+          'wishclaw-your-turn-timing',
+        ]
+      : mode === 'off-turn'
+        ? ['wishclaw-your-turn-timing']
+        : ['wishclaw-search-then-opponent-control'],
+    decks: {
+      P1: [talisman.card, witness, ...swamps, ...(cast ? [alpha, beta] : [])],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: mode === 'off-turn' ? 'P2' : 'P1',
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: cast
+            ? ['Wishclaw Talisman', 'Lab Priority Witness']
+            : ['Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: swamps.map((p) => p.name) },
+        ...(cast
+          ? []
+          : [{ playerId: 'P1' as const, cardNames: ['Wishclaw Talisman'], counters: { wish: 3 } }]),
+      ],
+    },
+  });
+}
+
+function druidPurificationScenario(
+  gameId: GameId,
+  mode: 'duplicates' | 'decline' | 'shroud',
+): CardTestScenario {
+  const druid = pinnedFrom(COVERAGE_PR08, 'Druid of Purification');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const own = card({
+    oracleId: 'lab-pr08-own-artifact',
+    name: 'Lab Own Artifact',
+    typeLine: 'Artifact',
+  });
+  const chosen = card({
+    oracleId: `lab-pr08-${mode}-artifact`,
+    name: mode === 'shroud' ? 'Lab Shrouded Artifact' : 'Lab Shared Artifact',
+    typeLine: 'Artifact',
+    ...(mode === 'shroud' ? { oracleText: 'Shroud' } : {}),
+  });
+  const choose: DecisionProvider = {
+    decide(request) {
+      const action = request.legalActions.some((a) => a.description === `Destroy ${chosen.name}`)
+        ? request.legalActions.find((a) =>
+            mode === 'decline' ? a.type === 'decline' : a.description === `Destroy ${chosen.name}`,
+          )
+        : (request.legalActions.find((a) => a.type === 'pass') ?? request.legalActions[0]);
+      if (!action) throw new Error('Druid lab has no scripted legal choice');
+      return { requestId: request.requestId, actionId: action.id };
+    },
+  };
+  return pr01Scenario(gameId, {
+    id: `druid-of-purification-viewer-${mode}`,
+    title: `Druid of Purification: ${mode === 'duplicates' ? 'choose the same permanent four times' : mode === 'decline' ? 'each player chooses none' : 'choose a permanent with shroud'}`,
+    instructions: [
+      'Cast Druid of Purification using four Forests and resolve its enters trigger.',
+      mode === 'decline'
+        ? 'Choose none. Each opponent also declines.'
+        : `Choose ${chosen.name}. Each opponent chooses that same permanent, including its controller.`,
+      'Earlier choices are public. Your own artifact is excluded from every choice menu.',
+    ],
+    expectedOutcome:
+      mode === 'decline'
+        ? 'Four public choices of no permanent; both artifacts remain.'
+        : 'Four public choices of the same permanent, followed by one destruction. Your own artifact remains.',
+    oracleSha256: druid.sha256,
+    clauseIds: ['druid-purification-ordered-choices-and-destruction'],
+    decks: {
+      P1: [druid.card, witness, own, FOREST, FOREST, FOREST, FOREST],
+      P2: [chosen, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Druid of Purification', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Forest', 'Forest', 'Forest', 'Forest', own.name] },
+        { playerId: 'P2', cardNames: [chosen.name] },
+      ],
+    },
+    decisionProviderOverrides: { P2: choose, P3: choose, P4: choose },
+  });
+}
+
+function humbleDefectorScenario(gameId: GameId, offTurn: boolean): CardTestScenario {
+  const humble = pinnedFrom(COVERAGE_PR08, 'Humble Defector');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  return pr01Scenario(gameId, {
+    id: offTurn
+      ? 'humble-defector-viewer-off-turn'
+      : 'humble-defector-viewer-draw-then-opponent-takes-control',
+    title: offTurn
+      ? 'Humble Defector: cannot activate off your turn'
+      : 'Humble Defector: draw two and give it to the chosen opponent',
+    instructions: offTurn
+      ? [
+          "It is P2's turn. You have priority and can cast Lab Priority Witness, an instant.",
+          'Humble Defector is untapped, but its ability is unavailable because it is not your turn.',
+        ]
+      : [
+          'Activate Humble Defector, pay the tap cost, and target P3.',
+          'Resolve the ability: you draw two cards, then P3 gains control of the same tapped creature.',
+        ],
+    expectedOutcome: offTurn
+      ? 'The instant is available, but Humble Defector has no legal activation.'
+      : 'Your hand grows by two and P3 controls Humble Defector, still tapped. No opponent draws.',
+    oracleSha256: humble.sha256,
+    clauseIds: offTurn
+      ? ['humble-defector-your-turn-timing']
+      : ['humble-defector-draw-then-transfer', 'humble-defector-your-turn-timing'],
+    decks: {
+      P1: [humble.card, witness, FOREST, FOREST, FOREST],
+      P2: PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      currentTurnPlayer: offTurn ? 'P2' : 'P1',
+      hand: [{ playerId: 'P1', cardNames: ['Lab Priority Witness'] }],
+      battlefield: [{ playerId: 'P1', cardNames: ['Humble Defector'] }],
+    },
+  });
+}
+
+function cytoplastScenario(
+  gameId: GameId,
+  mode: 'graft-yes' | 'graft-no' | 'control-duration',
+): CardTestScenario {
+  const manipulator = pinnedFrom(COVERAGE_PR08, 'Cytoplast Manipulator');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const recall = card({
+    oracleId: 'lab-pr08-source-recall',
+    name: 'Lab Source Recall',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: "Return target creature you control to its owner's hand.",
+  });
+  const control = mode === 'control-duration';
+  const islands = Array.from({ length: control ? 1 : 5 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `cytoplast-manipulator-viewer-${mode}`,
+    title: `Cytoplast Manipulator: ${control ? 'steal a countered creature until the source leaves' : mode === 'graft-yes' ? 'cast with two counters and graft one' : 'decline graft and keep two counters'}`,
+    instructions: control
+      ? [
+          'Activate Cytoplast Manipulator, paying blue and tapping it. Target the tapped Lab Ox with a +1/+1 counter; the uncountered Lab Servo is not legal.',
+          'The Ox changes control without untapping or gaining haste. Cast Lab Source Recall on Cytoplast Manipulator; the Ox returns to P2 when the source leaves.',
+        ]
+      : [
+          'Cast Cytoplast Manipulator using four Islands. It enters with two +1/+1 counters.',
+          `Cast Lab Servo with the remaining Island, then ${mode === 'graft-yes' ? 'accept' : 'decline'} the optional Graft trigger.`,
+        ],
+    expectedOutcome: control
+      ? 'The tapped Lab Ox is controlled by you until Cytoplast Manipulator leaves, then returns to P2 still tapped.'
+      : mode === 'graft-yes'
+        ? 'Cytoplast Manipulator has one counter and Lab Servo has one.'
+        : 'Cytoplast Manipulator keeps two counters and Lab Servo has none.',
+    oracleSha256: manipulator.sha256,
+    clauseIds: control ? ['cytoplast-control-duration'] : ['cytoplast-graft'],
+    decks: {
+      P1: [manipulator.card, witness, ...(control ? [recall] : [LAB_SERVO]), ...islands],
+      P2: control ? [LAB_OX, LAB_SERVO, ...PR01_FILLER] : PR01_FILLER,
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: control
+            ? ['Lab Source Recall', 'Lab Priority Witness']
+            : ['Cytoplast Manipulator', 'Lab Servo', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(control
+          ? [
+              {
+                playerId: 'P1' as const,
+                cardNames: ['Cytoplast Manipulator'],
+                counters: { '+1/+1': 2 },
+              },
+              {
+                playerId: 'P2' as const,
+                cardNames: ['Lab Ox'],
+                tapped: true,
+                counters: { '+1/+1': 1 },
+              },
+              { playerId: 'P2' as const, cardNames: ['Lab Servo'] },
+            ]
+          : []),
+      ],
+    },
+  });
+}
+
+function mobRuleScenario(gameId: GameId, mode: 'large' | 'small' | 'cleanup'): CardTestScenario {
+  const mob = pinnedFrom(COVERAGE_PR08, 'Mob Rule');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = Array.from({ length: 6 }, () => MOUNTAIN);
+  return pr01Scenario(gameId, {
+    id: `mob-rule-viewer-${mode}`,
+    title: `Mob Rule: ${mode === 'cleanup' ? 'temporary control ends at cleanup' : mode === 'large' ? 'steal power 4 or greater' : 'steal power 3 or less'}`,
+    instructions: [
+      'Cast Mob Rule using your six Mountains and choose the indicated power range.',
+      'Your own and opposing Lab Ox (4/4) and Lab Servo (1/1) are tapped before the spell.',
+      mode === 'cleanup'
+        ? 'Choose power 4 or greater and pass through cleanup to see control return.'
+        : 'Resolve the spell and verify only the chosen range untaps, gains haste, and is controlled by you.',
+    ],
+    expectedOutcome:
+      mode === 'cleanup'
+        ? 'P2 controls its Lab Ox again after cleanup; the temporary haste is gone.'
+        : `You control and untap both ${mode === 'large' ? 'Lab Oxen' : 'Lab Servos'}, and they have haste. The other creatures remain tapped under their original controllers.`,
+    oracleSha256: mob.sha256,
+    clauseIds: [
+      'mob-rule-mode-announcement',
+      mode === 'small' ? 'mob-rule-small-mode' : 'mob-rule-large-mode',
+    ],
+    decks: {
+      P1: [mob.card, witness, ...mountains, LAB_OX, LAB_SERVO, FOREST],
+      P2: [LAB_OX, LAB_SERVO, ...PR01_FILLER],
+      P3: PR01_FILLER,
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Mob Rule', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+        { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'], tapped: true },
+      ],
+      ...(mode === 'cleanup' ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * Coverage PR08.17: Reins of Power. The two scenarios differ ONLY in whether the caster starts
+ * with a creature of their own, because "all creatures you control" may legitimately be an empty
+ * set — neither group is all-or-nothing.
+ *
+ * Both arrange the same tapped creatures and the same four Islands, cast the printed {2}{U}{U}
+ * through the production cast/priority stack, and target P2. Only the caster's own creature and
+ * the target opponent's creature swap; the third player's creature never enters either set, so it
+ * stays tapped under its own controller in both.
+ */
+const LAB_TRADER = card({
+  oracleId: 'lab-pr08-trader',
+  name: 'Lab Trader',
+  typeLine: 'Creature — Trader',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '2',
+  toughness: '2',
+});
+/** Deliberately not named "Lab Servo": the uninvolved third player's creature must be nameable. */
+const LAB_UNINVOLVED_SERVO = card({
+  oracleId: 'lab-pr08-uninvolved-servo',
+  name: 'Lab Uninvolved Servo',
+  typeLine: 'Artifact Creature — Servo',
+  manaCost: '{1}',
+  cmc: 1,
+  power: '1',
+  toughness: '1',
+});
+
+function reinsOfPowerScenario(
+  gameId: GameId,
+  mode: 'swap-and-cleanup' | 'empty-caster',
+): CardTestScenario {
+  const reins = pinnedFrom(COVERAGE_PR08, 'Reins of Power');
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const cleanup = mode === 'swap-and-cleanup';
+  const islands = Array.from({ length: 4 }, () => ISLAND);
+  return pr01Scenario(gameId, {
+    id: `reins-of-power-viewer-${mode}`,
+    title: `Reins of Power: ${cleanup ? 'both groups swap, then control returns at cleanup' : 'only the opponent group exists when the caster has no creatures'}`,
+    instructions: [
+      'Cast Reins of Power with your four Islands, target P2, and let it resolve.',
+      cleanup
+        ? 'Your Lab Trader (2/2) and P2’s Lab Ox (4/4) change controllers untapped with haste; P3’s Lab Uninvolved Servo is untouched.'
+        : 'You control no creatures, so only P2’s Lab Ox moves: it becomes yours, untapped and with haste. P3’s Lab Uninvolved Servo is untouched.',
+      cleanup
+        ? 'Pass to the cleanup step: both creatures return to their original controllers, lose haste, and stay untapped.'
+        : 'P3’s Lab Uninvolved Servo stays tapped under P3 because neither player’s group ever included it.',
+    ],
+    expectedOutcome: cleanup
+      ? 'After cleanup P1 controls Lab Trader and P2 controls Lab Ox again, none of them has haste, all stay untapped, and P3’s Lab Uninvolved Servo never moved.'
+      : 'P1 controls the untapped, hasty Lab Ox; P3’s Lab Uninvolved Servo remains tapped under P3.',
+    oracleSha256: reins.sha256,
+    clauseIds: [
+      'reins-untap-both-groups',
+      'reins-swap-until-end-of-turn',
+      'reins-haste-the-affected-creatures',
+    ],
+    decks: {
+      P1: [reins.card, witness, ...islands, ...(cleanup ? [LAB_TRADER] : [])],
+      P2: [LAB_OX, ...PR01_FILLER],
+      P3: [LAB_UNINVOLVED_SERVO, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      hand: [{ playerId: 'P1', cardNames: ['Reins of Power', 'Lab Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: islands.map((land) => land.name) },
+        ...(cleanup ? [{ playerId: 'P1' as const, cardNames: ['Lab Trader'], tapped: true }] : []),
+        { playerId: 'P2', cardNames: ['Lab Ox'], tapped: true },
+        { playerId: 'P3', cardNames: ['Lab Uninvolved Servo'], tapped: true },
+      ],
+      ...(cleanup ? { continueThroughPrecombatMains: 1 } : {}),
+    },
+  });
+}
+
+/**
+ * Coverage PR08.14: Alicia Masters, Skilled Sculptor. Two prepared states of ONE board, so the
+ * only difference between them is whether P1 casts a noncreature spell before combat.
+ *
+ * The board is the part "Sense the Good" is about, and it is arranged so that every sentence can
+ * be observed rather than assumed: one creature P1 owns is held by P2, one creature P2 owns is
+ * held by P1, one NONCREATURE artifact P3 owns is held by P1, and P3 keeps a bystander creature
+ * nobody is holding. Ownership is arranged with `playerId` and only the holder with `controllerId`;
+ * nothing pokes the state afterwards, so both scenarios start from the same authoritative facts.
+ *
+ * All four fixture creatures are 0-power defenders. That is a real modeled card shape (the generic
+ * interpreter reads the printed power/toughness and the `Defender` keyword line), and it is what
+ * keeps `continueThroughCombat` free of attacker and blocker choosers: the combat that witnesses
+ * the intervening if is a combat with no combat in it.
+ */
+const LAB_RECLAIMED_OX = card({
+  oracleId: 'lab-pr08-reclaimed-ox',
+  name: 'Lab Reclaimed Ox',
+  typeLine: 'Creature — Ox',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_BORROWED_GOLEM = card({
+  oracleId: 'lab-pr08-borrowed-golem',
+  name: 'Lab Borrowed Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_PLEDGED_RELIC = card({
+  oracleId: 'lab-pr08-pledged-relic',
+  name: 'Lab Pledged Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_BYSTANDER_GOLEM = card({
+  oracleId: 'lab-pr08-bystander-golem',
+  name: 'Lab Bystander Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+
+function aliciaMastersScenario(
+  gameId: GameId,
+  mode: 'combat-treasure-and-owner-control' | 'no-noncreature-spell',
+): CardTestScenario {
+  const alicia = pinnedFrom(COVERAGE_PR08, 'Alicia Masters, Skilled Sculptor');
+  /**
+   * The cast-history witness for the intervening if. A real, fully interpreter-modeled {0} instant
+   * rather than a blank placeholder: a blank spell would have to be force-declared `modeled: true`
+   * with no interpretable effect at all, which is exactly the fake support
+   * docs/guides/card-modeling-and-testing.md forbids. Casting it gains real life, so the scenarios
+   * can prove the cast happened rather than assume it.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const mountains = [MOUNTAIN, MOUNTAIN];
+  const castWitness = mode === 'combat-treasure-and-owner-control';
+  return pr01Scenario(gameId, {
+    id: `alicia-masters-viewer-${mode}`,
+    title: castWitness
+      ? 'Alicia Masters: a noncreature spell this turn makes a Treasure, then each player reclaims their own creatures'
+      : 'Alicia Masters: no noncreature spell this turn makes no Treasure, but creatures still return to their owners',
+    instructions: [
+      'Cast Alicia Masters, Skilled Sculptor with your two Mountains and let it resolve.',
+      castWitness
+        ? "Cast Lab Priority Witness before combat: it is the noncreature spell this turn that Alicia's intervening if reads."
+        : 'Do not cast Lab Priority Witness. Only a creature spell has been cast this turn.',
+      'Pass through combat: the Treasure, if any, is created at the beginning of combat, before the end step.',
+      'Pass through your end step: each player takes back every creature they own.',
+    ],
+    expectedOutcome: castWitness
+      ? 'Exactly one Treasure you own appears when combat begins, and at your end step your Lab Reclaimed Ox and P2’s Lab Borrowed Golem each return to their owner. P3’s noncreature Lab Pledged Relic stays yours, and P3’s Lab Bystander Golem never moves.'
+      : 'No Treasure is ever created, because no noncreature spell was cast this turn. Your end step still returns your Lab Reclaimed Ox and P2’s Lab Borrowed Golem to their owners, leaves P3’s Lab Pledged Relic with you, and leaves P3’s bystander alone.',
+    oracleSha256: alicia.sha256,
+    clauseIds: [
+      'alicia-masters-begin-combat-treasure-if-noncreature-spell-this-turn',
+      'alicia-masters-end-step-each-player-reclaims-own-creatures',
+    ],
+    decks: {
+      P1: [alicia.card, witness, ...mountains, LAB_RECLAIMED_OX, ...PR01_FILLER],
+      P2: [LAB_BORROWED_GOLEM, ...PR01_FILLER],
+      P3: [LAB_BYSTANDER_GOLEM, LAB_PLEDGED_RELIC, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      // Pinned so the witness's printed life gain is a real, scenario-owned number rather than a
+      // function of the 40-life default.
+      lifeTotals: [
+        { playerId: 'P1', life: 20 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [
+        {
+          playerId: 'P1',
+          cardNames: ['Alicia Masters, Skilled Sculptor', 'Lab Priority Witness'],
+        },
+      ],
+      battlefield: [
+        { playerId: 'P1', cardNames: mountains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_RECLAIMED_OX.name], controllerId: 'P2' },
+        {
+          playerId: 'P2',
+          cardNames: [LAB_BORROWED_GOLEM.name],
+          controllerId: 'P1',
+          tapped: true,
+        },
+        { playerId: 'P3', cardNames: [LAB_PLEDGED_RELIC.name], controllerId: 'P1' },
+        { playerId: 'P3', cardNames: [LAB_BYSTANDER_GOLEM.name] },
+      ],
+      continueThroughCombat: true,
+      continueToEndStep: true,
+    },
+    decisionProviderOverrides: { P2: neverBlocks(), P3: neverBlocks(), P4: neverBlocks() },
+  });
+}
+
+/**
+ * Coverage PR08.22: Benevolent Offering. Two prepared states of ONE board, so the only difference
+ * the runs are allowed to have is the second opponent choice the rules explicitly allow to repeat.
+ *
+ * The board is arranged so both printed sentences are arithmetic rather than prose. P1 holds one
+ * creature, P2 holds one, P3 holds two, and P4 holds a NONCREATURE artifact: "for each creature you
+ * control" and "for each creature they control" therefore read four different numbers over the
+ * course of one resolution — 4, 4, 2 and 0 — and an artifact owner who never gains anything proves
+ * the count is over creatures, not permanents.
+ *
+ * Every fixture creature is a printed 0/3 with the printed `Defender` keyword line, so the generic
+ * interpreter models each of them completely. That also keeps the run out of combat entirely: the
+ * scenarios never advance past the precombat priority window the spell resolves in.
+ */
+const LAB_OFFERING_SENTINEL = card({
+  oracleId: 'lab-pr08-offering-sentinel',
+  name: 'Lab Offering Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_WALL = card({
+  oracleId: 'lab-pr08-offering-wall',
+  name: 'Lab Offering Wall',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_GOLEM = card({
+  oracleId: 'lab-pr08-offering-golem',
+  name: 'Lab Offering Golem',
+  typeLine: 'Creature — Golem',
+  manaCost: '{2}',
+  cmc: 2,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender',
+});
+const LAB_OFFERING_RELIC = card({
+  oracleId: 'lab-pr08-offering-relic',
+  name: 'Lab Silent Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+
+function benevolentOfferingScenario(
+  gameId: GameId,
+  mode: 'different-opponents' | 'same-opponent',
+): CardTestScenario {
+  const offering = pinnedFrom(COVERAGE_PR08, 'Benevolent Offering');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder: a blank spell
+   * would have to be force-declared `modeled: true` with nothing to resolve, which is the fake
+   * support docs/guides/card-modeling-and-testing.md forbids. It is never cast. It stays in hand,
+   * and it is castable, so the board still offers P1 a real action after the spell resolves — which
+   * is what makes "priority is still open, nothing else has to happen" an observation rather than
+   * an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS, PLAINS];
+  const sameOpponent = mode === 'same-opponent';
+  return pr01Scenario(gameId, {
+    id: `benevolent-offering-viewer-${mode}`,
+    title: sameOpponent
+      ? 'Benevolent Offering: choose the same opponent twice, for the Spirits and for the life'
+      : 'Benevolent Offering: choose P2 for the Spirits and P3 for the life',
+    instructions: [
+      'Cast Benevolent Offering with your four Plains and let it resolve. It asks twice, and only you are ever asked.',
+      sameOpponent
+        ? 'Choose P2 both times: the second question is fresh, so the same opponent may answer it again.'
+        : 'Choose P2 for the Spirits, then choose P3 for the life. The two instructions are independent.',
+      'The second question arrives only after all six Spirits already exist, and each creature is then counted at 2 life to its own controller.',
+      'Stop there: the run ends on the precombat priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: sameOpponent
+      ? 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you and P2 each gain 8 life — 2 for each of the four creatures you control, and 2 for each of P2’s four. P3 and P4 are untouched at 40.'
+      : 'You and P2 each control three new 1/1 white Spirit tokens with flying, and then you gain 8 life (2 for each of your four creatures) while P3 gains 4 (2 for each of its two). P2 and P4 stay at 40.',
+    oracleSha256: offering.sha256,
+    clauseIds: ['benevolent-offering-spirit-sharing', 'benevolent-offering-creature-life-sharing'],
+    decks: {
+      P1: [offering.card, witness, ...plains, LAB_OFFERING_SENTINEL, ...PR01_FILLER],
+      P2: [LAB_OFFERING_WALL, ...PR01_FILLER],
+      P3: [LAB_OFFERING_GOLEM, LAB_OFFERING_GOLEM, ...PR01_FILLER],
+      P4: [LAB_OFFERING_RELIC, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so every printed "+2 per creature" is a scenario-owned number and never a function
+      // of an incidental default. Nobody starts on a life total the counts could not distinguish.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Benevolent Offering', 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window, with the
+      // source in the graveyard and the unused witness still castable in hand.
+      battlefield: [
+        { playerId: 'P1', cardNames: plains.map((land) => land.name) },
+        { playerId: 'P1', cardNames: [LAB_OFFERING_SENTINEL.name] },
+        { playerId: 'P2', cardNames: [LAB_OFFERING_WALL.name] },
+        { playerId: 'P3', cardNames: [LAB_OFFERING_GOLEM.name, LAB_OFFERING_GOLEM.name] },
+        { playerId: 'P4', cardNames: [LAB_OFFERING_RELIC.name] },
+      ],
+    },
+  });
+}
+
+/**
+ * Coverage PR08.15: Council's Judgment. One board, two runs, and the ONLY difference is how the
+ * four votes land.
+ *
+ * Printed: {1}{W}{W} Sorcery — "Will of the council — Starting with you, each player votes for a
+ * nonland permanent you don't control. Exile each permanent with the most votes or tied for most
+ * votes."
+ *
+ * The board is arranged so every printed instruction is arithmetic rather than prose:
+ *
+ *  - P1 controls a NONLAND permanent of their own (Lab Council Relic) plus three Plains, so the
+ *    pool has something to exclude and `{1}{W}{W}` has exactly three real white sources.
+ *  - P2, P3 and P4 each control exactly ONE opponent nonland permanent, so the vote menu is three
+ *    options in a fixed order and "a permanent you don't control" cannot be satisfied by a land.
+ *  - P2 also controls a Forest, which is a land and therefore never on the menu — the exclusion is
+ *    by printed type, not by who holds the permanent.
+ *
+ * In the tied run the tally is 2:2:0, so "the most votes OR TIED FOR MOST votes" has to exile TWO
+ * permanents and spare the one nobody voted for. In the unanimous run the tally is 4:0:0, so
+ * exactly ONE leaves — and the object it names is a printed 0/3 with `Defender` and `Hexproof`,
+ * which the generic interpreter models completely. A vote is not a target, so hexproof removes no
+ * option and saves nothing: that is the printed sentence under test, not an accident of the board.
+ *
+ * The {0} instant witness is a real, fully interpreter-modeled card rather than a blank
+ * placeholder. It is never cast; it stays in hand, castable, so the run stops in the post-resolution
+ * priority window and "priority is still open" is an observation rather than an assumption.
+ */
+const LAB_COUNCIL_ALPHA = card({
+  oracleId: 'lab-pr08-council-alpha',
+  name: 'Lab Council Alpha',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_BETA = card({
+  oracleId: 'lab-pr08-council-beta',
+  name: 'Lab Council Beta',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_GAMMA = card({
+  oracleId: 'lab-pr08-council-gamma',
+  name: 'Lab Council Gamma',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+const LAB_COUNCIL_RELIC = card({
+  oracleId: 'lab-pr08-council-relic',
+  name: 'Lab Council Relic',
+  typeLine: 'Artifact',
+  manaCost: '{2}',
+  cmc: 2,
+});
+/**
+ * A printed 0/3 with two printed keyword lines. `Hexproof` is what makes the unanimous run's
+ * negative observable: the ability is non-targeting, so the keyword must cost the creature nothing.
+ */
+const LAB_COUNCIL_SENTINEL = card({
+  oracleId: 'lab-pr08-council-warded-sentinel',
+  name: 'Lab Council Warded Sentinel',
+  typeLine: 'Creature — Golem',
+  manaCost: '{3}',
+  cmc: 3,
+  power: '0',
+  toughness: '3',
+  oracleText: 'Defender\nHexproof',
+});
+
+function councilsJudgmentScenario(
+  gameId: GameId,
+  mode: 'tied-votes' | 'unanimous-hexproof',
+): CardTestScenario {
+  const council = pinnedFrom(COVERAGE_PR08, "Council's Judgment");
+  const witness = card({
+    oracleId: 'lab-pr08-priority-witness',
+    name: 'Lab Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const plains = [PLAINS, PLAINS, PLAINS];
+  const hexproofRun = mode === 'unanimous-hexproof';
+  // The two runs share every other element, so nothing but the vote pattern differs.
+  const p2Permanent = hexproofRun ? LAB_COUNCIL_SENTINEL : LAB_COUNCIL_ALPHA;
+  const unanimousTarget = LAB_COUNCIL_SENTINEL.name;
+  return pr01Scenario(gameId, {
+    id: `councils-judgment-viewer-${mode}`,
+    title: hexproofRun
+      ? "Council's Judgment: unanimous votes exile a creature with hexproof"
+      : "Council's Judgment: tied votes exile both winners and spare the unvoted permanent",
+    instructions: [
+      `Cast Council's Judgment from your hand with your three Plains and let it resolve.`,
+      hexproofRun
+        ? 'Every player votes for Lab Council Warded Sentinel, including P2 — its hexproof removes no option and spares it nothing.'
+        : 'Vote for Lab Council Alpha; P2 also votes for Lab Council Alpha, P3 and P4 both vote for Lab Council Beta.',
+      'The votes are cast in turn order starting with you, and every one of them is public before anything leaves.',
+      'Stop there: the run ends in the priority window the spell resolved in, with Lab Priority Witness still in hand.',
+    ],
+    expectedOutcome: hexproofRun
+      ? 'The four public votes name Lab Council Warded Sentinel, so it alone has the most votes and it alone is exiled. Lab Council Beta, Lab Council Gamma, your own Lab Council Relic and your three Plains stay where they are, and P2’s Forest is never a legal vote.'
+      : 'The four public votes tie 2:2 between Lab Council Alpha and Lab Council Beta, and both are exiled together as the tied highest counts. Lab Council Gamma got no vote and stays, as do your own Lab Council Relic, your three Plains and P2’s Forest.',
+    oracleSha256: council.sha256,
+    clauseIds: ['councils-judgment-public-voting', 'councils-judgment-most-votes-exile'],
+    decks: {
+      P1: [council.card, witness, ...plains, LAB_COUNCIL_RELIC, ...PR01_FILLER],
+      P2: [p2Permanent, FOREST, ...PR01_FILLER],
+      P3: [LAB_COUNCIL_BETA, ...PR01_FILLER],
+      P4: [LAB_COUNCIL_GAMMA, ...PR01_FILLER],
+    },
+    prepared: {
+      // Pinned so the unused {0} witness's printed "+1 life" would be a scenario-owned 40 -> 41
+      // rather than a function of an incidental default.
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ["Council's Judgment", 'Lab Priority Witness'] }],
+      // No continuation flag: the run is meant to stop in this very priority window.
+      battlefield: [
+        {
+          playerId: 'P1',
+          cardNames: [...plains.map((land) => land.name), LAB_COUNCIL_RELIC.name],
+        },
+        { playerId: 'P2', cardNames: [p2Permanent.name, FOREST.name] },
+        { playerId: 'P3', cardNames: [LAB_COUNCIL_BETA.name] },
+        { playerId: 'P4', cardNames: [LAB_COUNCIL_GAMMA.name] },
+      ],
+    },
+    // Only the three opponent seats are scripted; P1 is the human seat in the real lab, and the
+    // replay test answers every vote itself, so neither seat's choice is injected into an outcome.
+    decisionProviderOverrides: {
+      P2: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_ALPHA.name),
+      P3: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+      P4: votesFor(hexproofRun ? unanimousTarget : LAB_COUNCIL_BETA.name),
+    },
+  });
 }
 
 function promiseOfLoyaltyScenario(gameId: GameId): CardTestScenario {
@@ -14030,6 +15123,14 @@ function masterWarcraftAssignScenario(gameId: GameId): CardTestScenario {
 }
 
 export const CARD_TEST_SCENARIO_IDS = [
+  ...PR08_REMAINING_SCENARIO_IDS,
+  ...AETHERSPOUTS_SCENARIO_IDS,
+  ...BOSEIJU_SCENARIO_IDS,
+  ...OLORIN_SCENARIO_IDS,
+  ...WINDS_OF_ABANDON_SCENARIO_IDS,
+  ...ROTATING_SURVIVOR_SCENARIO_IDS,
+  ...PR08_MODAL_PLAYER_SCENARIO_IDS,
+  ...PR08_SCENARIO_IDS,
   ...WHITE_BLACK_COMBAT_SCENARIO_IDS,
   ...WHITE_BLACK_HAND_SCENARIO_IDS,
   ...WHITE_BLACK_ENTRY_SCENARIO_IDS,
@@ -14396,7 +15497,270 @@ export const CARD_TEST_SCENARIO_IDS = [
   'body-launderer-viewer-return',
 ] as const;
 
+// --- Coverage PR08.13: Agitator Ant (each player may put counters; goad what got them) ---
+//
+// ONE board, two runs. The clause is a single APNAP instruction, so the board is arranged to make
+// every half of it observable: P1 casts the printed {2}{R} creature normally and is asked first;
+// P2 controls one ordinary 2/2 and is asked next; P3 controls another and is asked last; P4
+// controls NO creature, so it is never asked at all. A player is only ever offered the creatures
+// THEY control, so P1's single menu naming only Agitator Ant is itself a result.
+//
+// Both runs finish P1's turn, so the counters and the goad must survive a real cleanup step, and
+// then run P2's real turn: in the accepting run P2's scripted seat sends its goaded Bear at P3,
+// which is the only place the viewer can SEE the goad (the published board projection carries no
+// goad field). In the declining run P1, P2 and P3 all decline, nothing is placed and nothing is
+// goaded — including on P2's own end step, which is not "your end step".
+const LAB_ANT_BEAR = card({
+  oracleId: 'lab-pr08-ant-bear',
+  name: 'Lab Ant Bear',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+const LAB_ANT_CUB = card({
+  oracleId: 'lab-pr08-ant-cub',
+  name: 'Lab Ant Cub',
+  typeLine: 'Creature — Bear',
+  manaCost: '{1}{G}',
+  cmc: 2,
+  colors: ['G'],
+  colorIdentity: ['G'],
+  power: '2',
+  toughness: '2',
+});
+
+/**
+ * A seat answering the Ant's per-player counter menu, then playing the rest of its turn. `pick` is
+ * the creature this seat puts counters on (or null to decline); `attack` is the player its own
+ * creatures are sent at, or null to stay home. Everything else passes.
+ */
+function antEndStepSeat(pick: string | null, attack: PlayerId | null): DecisionProvider {
+  return {
+    decide(request) {
+      const antMenu = request.legalActions.some((action) =>
+        action.description.startsWith('Put 2 +1/+1 counters on '),
+      );
+      if (antMenu) {
+        const wanted = pick === null ? 'Put no counters' : `Put 2 +1/+1 counters on ${pick}`;
+        const action = request.legalActions.find((entry) => entry.description === wanted);
+        if (action === undefined)
+          throw new Error(
+            `No "${wanted}" among [${request.legalActions.map((entry) => entry.description).join(', ')}]`,
+          );
+        return { requestId: request.requestId, actionId: action.id };
+      }
+      if (attack !== null) {
+        const declare = request.legalActions.find((action) =>
+          action.description.startsWith('Declare attackers'),
+        );
+        if (declare !== undefined) {
+          return {
+            requestId: request.requestId,
+            actionId: declare.id,
+            targets: (declare.targets ?? []).map((slot) => ({
+              slot: slot.slot,
+              choice: slot.options.includes(attack) ? attack : (slot.options[0] as string),
+            })),
+          };
+        }
+      }
+      // A creature that is NOT goaded may legally stay home, so the declining run still reaches a
+      // real attack declaration; answer it with the engine's own "attack with nothing" choice.
+      const declares = request.legalActions.find((action) => action.type === 'attackDeclaration');
+      if (declares !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: declares.id,
+          targets: (declares.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_ATTACK_TARGET)
+              ? NO_ATTACK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      // Nothing scripted here blocks: a block declaration is still a real decision, and answering
+      // it with the engine's own "no block" choice is what the viewer's "Confirm blocks" sends.
+      const blocks = request.legalActions.find((action) => action.type === 'blockDeclaration');
+      if (blocks !== undefined) {
+        return {
+          requestId: request.requestId,
+          actionId: blocks.id,
+          targets: (blocks.targets ?? []).map((slot) => ({
+            slot: slot.slot,
+            choice: slot.options.includes(NO_BLOCK_TARGET)
+              ? NO_BLOCK_TARGET
+              : (slot.options[0] as string),
+          })),
+        };
+      }
+      const pass = request.legalActions.find((action) => action.type === 'pass');
+      return { requestId: request.requestId, actionId: (pass ?? request.legalActions[0]!).id };
+    },
+  };
+}
+
+function agitatorAntScenario(gameId: GameId, mode: 'accept' | 'decline'): CardTestScenario {
+  const ant = pinnedFrom(COVERAGE_PR08, 'Agitator Ant');
+  /**
+   * A real, fully interpreter-modeled {0} instant rather than a blank placeholder (see the Benevolent
+   * Offering board): it is never cast, but it stays in hand and is castable, so the last priority
+   * window is a real one rather than an assumption.
+   */
+  const witness = card({
+    oracleId: 'lab-pr08-ant-priority-witness',
+    name: 'Lab Ant Priority Witness',
+    typeLine: 'Instant',
+    manaCost: '{0}',
+    cmc: 0,
+    oracleText: 'You gain 1 life.',
+  });
+  const accept = mode === 'accept';
+  return pr01Scenario(gameId, {
+    id: `agitator-ant-viewer-${mode}`,
+    title: accept
+      ? 'Agitator Ant: accepting counters goads the chosen creatures'
+      : 'Agitator Ant: declining counters leaves its creature ungoaded',
+    instructions: [
+      'Cast Agitator Ant from your hand with the Mountain and the two Forests. The spell has no targets.',
+      accept
+        ? 'At your end step, choose Agitator Ant for your own two +1/+1 counters. P2 then chooses its own Bear and P3 declines.'
+        : 'At your end step, decline: you put no counters, and P2 and P3 decline too. P4 controls no creature and is never asked.',
+      accept
+        ? 'On P2’s next turn the goaded Bear attacks P3 instead of you, and the counters and the goad both survive the cleanup step.'
+        : 'Agitator Ant is still a 2/2 with no counters, and P2’s end step triggers nothing.',
+    ],
+    expectedOutcome: accept
+      ? 'Agitator Ant is a 4/4 and P2’s Lab Ant Bear is a 4/4, both goaded by you; P3’s Lab Ant Cub stays 2/2. On P2’s turn the Bear attacks P3, who drops to 36, and never you.'
+      : 'Nothing is placed and nothing is goaded: Agitator Ant is a 2/2, P2’s Lab Ant Bear and P3’s Lab Ant Cub are untouched 2/2s, and only P1, P2 and P3 were ever asked.',
+    oracleSha256: ant.sha256,
+    clauseIds: ['agitator-ant-end-step-counter-choice', 'agitator-ant-goad-positive-placements'],
+    decks: {
+      P1: [ant.card, witness, MOUNTAIN, FOREST, FOREST, ...PR01_FILLER],
+      P2: [LAB_ANT_BEAR, ...PR01_FILLER],
+      P3: [LAB_ANT_CUB, ...PR01_FILLER],
+      P4: PR01_FILLER,
+    },
+    prepared: {
+      lifeTotals: [
+        { playerId: 'P1', life: 40 },
+        { playerId: 'P2', life: 40 },
+        { playerId: 'P3', life: 40 },
+        { playerId: 'P4', life: 40 },
+      ],
+      hand: [{ playerId: 'P1', cardNames: ['Agitator Ant', 'Lab Ant Priority Witness'] }],
+      battlefield: [
+        { playerId: 'P1', cardNames: ['Mountain', 'Forest', 'Forest'] },
+        { playerId: 'P2', cardNames: ['Lab Ant Bear'] },
+        { playerId: 'P3', cardNames: ['Lab Ant Cub'] },
+        // P4 deliberately starts with no creature: it is never asked for a choice.
+      ],
+      // P1's combat, postcombat main and end step, the cleanup step, then P2's whole turn.
+      continueThroughCombat: true,
+      continueToPostcombatMain: true,
+      continueToEndStep: true,
+      continueThroughNextTurn: true,
+    },
+    decisionProviderOverrides: {
+      // P1 answers in the viewer; these two are the seats whose own menus the browser never sees.
+      P2: antEndStepSeat(accept ? 'Lab Ant Bear' : null, accept ? 'P3' : null),
+      P3: antEndStepSeat(null, null),
+    },
+  });
+}
+
 const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = {
+  'kazuul-viewer-decline': (gameId) => kazuulScenario(gameId, 'decline'),
+  'kazuul-viewer-pay': (gameId) => kazuulScenario(gameId, 'pay'),
+  'kazuul-viewer-other-defender': (gameId) => kazuulScenario(gameId, 'other-defender'),
+  'akroan-horse-viewer-cast-and-gift': (gameId) => akroanHorseScenario(gameId, 'cast-and-gift'),
+  'akroan-horse-viewer-recipient-upkeep': (gameId) =>
+    akroanHorseScenario(gameId, 'recipient-upkeep'),
+  'scheming-symmetry-viewer-you-and-opponent': (gameId) =>
+    schemingSymmetryScenario(gameId, 'you-and-opponent'),
+  'scheming-symmetry-viewer-two-opponents-empty-library': (gameId) =>
+    schemingSymmetryScenario(gameId, 'two-opponents-empty-library'),
+  'agitator-ant-viewer-accept': (gameId) => agitatorAntScenario(gameId, 'accept'),
+  'agitator-ant-viewer-decline': (gameId) => agitatorAntScenario(gameId, 'decline'),
+  ...Object.fromEntries(
+    PR08_CUT_A_DEAL_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08CutADealScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_REMAINING_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08TragicArroganceScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    PR08_MODAL_PLAYER_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08ModalPlayerScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    ROTATING_SURVIVOR_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08RotatingSurvivorScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WINDS_OF_ABANDON_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08WindsOfAbandonScenario(id, gameId),
+    ]),
+  ),
+  ...Object.fromEntries(
+    OLORIN_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08OlorinScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    BOSEIJU_SCENARIO_IDS.map((id) => [id, (gameId: GameId) => pr08BoseijuScenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    AETHERSPOUTS_SCENARIO_IDS.map((id) => [
+      id,
+      (gameId: GameId) => pr08AetherspoutsScenario(id, gameId),
+    ]),
+  ),
+  'wishclaw-talisman-viewer-cast-search-and-gift': (gameId) =>
+    wishclawScenario(gameId, 'cast-search-and-gift'),
+  'wishclaw-talisman-viewer-empty-library': (gameId) => wishclawScenario(gameId, 'empty-library'),
+  'wishclaw-talisman-viewer-off-turn': (gameId) => wishclawScenario(gameId, 'off-turn'),
+  'druid-of-purification-viewer-duplicates': (gameId) =>
+    druidPurificationScenario(gameId, 'duplicates'),
+  'druid-of-purification-viewer-decline': (gameId) => druidPurificationScenario(gameId, 'decline'),
+  'druid-of-purification-viewer-shroud': (gameId) => druidPurificationScenario(gameId, 'shroud'),
+  'humble-defector-viewer-draw-then-opponent-takes-control': (gameId) =>
+    humbleDefectorScenario(gameId, false),
+  'humble-defector-viewer-off-turn': (gameId) => humbleDefectorScenario(gameId, true),
+  'cytoplast-manipulator-viewer-graft-yes': (gameId) => cytoplastScenario(gameId, 'graft-yes'),
+  'cytoplast-manipulator-viewer-graft-no': (gameId) => cytoplastScenario(gameId, 'graft-no'),
+  'cytoplast-manipulator-viewer-control-duration': (gameId) =>
+    cytoplastScenario(gameId, 'control-duration'),
+  'mob-rule-viewer-large': (gameId) => mobRuleScenario(gameId, 'large'),
+  'mob-rule-viewer-small': (gameId) => mobRuleScenario(gameId, 'small'),
+  'mob-rule-viewer-cleanup': (gameId) => mobRuleScenario(gameId, 'cleanup'),
+  'reins-of-power-viewer-swap-and-cleanup': (gameId) =>
+    reinsOfPowerScenario(gameId, 'swap-and-cleanup'),
+  'reins-of-power-viewer-empty-caster': (gameId) => reinsOfPowerScenario(gameId, 'empty-caster'),
+  'alicia-masters-viewer-combat-treasure-and-owner-control': (gameId) =>
+    aliciaMastersScenario(gameId, 'combat-treasure-and-owner-control'),
+  'alicia-masters-viewer-no-noncreature-spell': (gameId) =>
+    aliciaMastersScenario(gameId, 'no-noncreature-spell'),
+  'benevolent-offering-viewer-different-opponents': (gameId) =>
+    benevolentOfferingScenario(gameId, 'different-opponents'),
+  'benevolent-offering-viewer-same-opponent': (gameId) =>
+    benevolentOfferingScenario(gameId, 'same-opponent'),
+  'councils-judgment-viewer-tied-votes': (gameId) => councilsJudgmentScenario(gameId, 'tied-votes'),
+  'councils-judgment-viewer-unanimous-hexproof': (gameId) =>
+    councilsJudgmentScenario(gameId, 'unanimous-hexproof'),
   ...Object.fromEntries(
     TRANSFORMED_DFC_SCENARIO_IDS.map((id) => [
       id,

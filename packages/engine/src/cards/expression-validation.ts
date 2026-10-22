@@ -97,6 +97,11 @@ const numberValue: Check = (value, path, issues) =>
   validateExpression('value', value, path, issues);
 const condition: Check = (value, path, issues) =>
   validateExpression('condition', value, path, issues);
+/** Gain-control duration union — 'permanent' | 'untilEndOfTurn' | 'whileSourceOnBattlefield'. */
+const controlDuration: Check = (value, path, issues) => {
+  if (!['permanent', 'untilEndOfTurn', 'whileSourceOnBattlefield'].includes(value as string))
+    issue(path, issues, 'expected permanent | untilEndOfTurn | whileSourceOnBattlefield');
+};
 
 const selectorShapes = {
   self: {},
@@ -279,6 +284,7 @@ const conditionShapes = {
   },
   attackWasNotAtYou: {},
   attackedPlayerHasMoreLifeThanAnotherOpponent: {},
+  eventObjectDefendingPlayerIsYou: {},
   allOf: { of: arrayOf(condition) },
   anyOf: { of: arrayOf(condition) },
   eventPlayerDrawCount: { cmp: oneOf('>=', '<=', '=='), n: finite },
@@ -371,7 +377,7 @@ const effectExpressions = {
   exileAndGainLifeTargetController: {},
   damageEachCreatureController: { amount: numberValue },
   sacrificeAndDrawForPower: {},
-  sacrificeGreatestEachOpponent: {},
+  sacrificeGreatestEachOpponent: { damageIfGraveyardSpellsAtLeast: optional(nonnegativeInteger) },
   transferCountersFromTriggerObject: {},
   transferCountersFromTriggerObjectToChosenCreatures: {},
   mayForgoTriggerObjectCombatDamageForRandomDiscard: {},
@@ -448,6 +454,7 @@ const effectExpressions = {
   mayPayEnergyThenReflexive: { min: finite },
   putCountersOnSourceThenReflexive: { counter: text, count: finite },
   gainControlTarget: {},
+  swapCreatureControlUntilEot: {},
   putCounters: { count: numericExpression },
   putCountersEach: { selector: selector, count: numericExpression },
   putCountersOnCreaturesTargetPlayerControls: { count: numericExpression },
@@ -526,6 +533,9 @@ const effectExpressions = {
   createTokenForEachOpponent: {},
   createTokenForPlayer: { count: numberValue },
   createTokenForEachPlayerExceptTarget: { count: numberValue },
+  eachOpponentCreatesTokens: { count: numberValue },
+  shareTokensWithChosenOpponent: { count: numberValue },
+  shareCreatureLifeWithChosenOpponent: { amount: numberValue },
   createTokenCopyOf: {
     count: numberValue,
     powerOverride: optional(numericExpression),
@@ -566,6 +576,9 @@ const effectExpressions = {
   exileUntilSourceLeaves: {},
   exileTargetAndControllerMaySearchBasicLandTapped: {},
   removeTargetAndControllerMaySearchBasicLand: {},
+  destroyTargetAndControllerMaySearchBasicTypedLand: {},
+  exileCreatureAndControllerSearchBasicLand: {},
+  exileEachCreatureAndControllersSearchBasicLands: { selector },
   populate: {},
   untapAttackingPlayerNonlandPermanents: {},
   dealDamageDivided: { total: numberValue },
@@ -614,6 +627,13 @@ const effectExpressions = {
   extraCombatPhase: {},
   becomeMonarch: {},
   druidPurification: {},
+  attackingCreaturesToOwnerLibraries: {},
+  rotateSourceAtUpkeep: {},
+  choosePermanentTypesThenSacrificeOthers: {
+    types: arrayOf(oneOf('Artifact', 'Creature', 'Enchantment', 'Planeswalker')),
+  },
+  eachPlayerMayPutCountersAndGoad: { count: numericExpression },
+  voteAndExileMost: { selector: selector },
   exileTargetWithSource: {},
   exileAndManifestTarget: {},
   blinkTarget: {},
@@ -652,13 +672,29 @@ const effectExpressions = {
   noOp: {},
 } satisfies { [O in Effect['op']]: ExpressionFields<Extract<Effect, { op: O }>> };
 
+/**
+ * Ops with optional NON-expression fields (durations, rider flags) — the expression registry
+ * above can only carry Selector/Value/Condition operands, so anything else is checked here.
+ * Malformed payloads surface as authoring issues, never silently pass.
+ */
+const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
+  eachPlayerMayPutCountersAndGoad: { counter: text },
+  gainControlTarget: { duration: optional(controlDuration) },
+  gainControl: {
+    duration: optional(controlDuration),
+    untap: optional(flag),
+    grantHaste: optional(flag),
+  },
+};
+
 export function validateEffectExpressions(
   effect: Effect,
   path: string,
   issues: AuthoringIssue[],
 ): void {
   const fields: Record<string, Check> | undefined = effectExpressions[effect.op];
-  if (fields === undefined) return; // Unknown operations are rejected by the effect-reference registry.
-  for (const [field, check] of Object.entries(fields))
+  const extra: Record<string, Check> | undefined = effectExtraFields[effect.op];
+  if (fields === undefined && extra === undefined) return; // Unknown operations are rejected by the effect-reference registry.
+  for (const [field, check] of [...Object.entries(fields ?? {}), ...Object.entries(extra ?? {})])
     check((effect as unknown as Record<string, unknown>)[field], path + '.' + field, issues);
 }

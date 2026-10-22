@@ -186,12 +186,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     CRACKLING_DOOM,
   );
-  // Catalog audit queen-batch-5: you draw for every opponent, not those who drew.
-  unsupportedCard(
-    '8b5cffd5-5db3-4151-9275-d91387554412',
-    'Cut a Deal',
-    'You draw for each opponent, not for each opponent who drew a card.',
-  );
+  // Cut a Deal: restored in coverage PR08.01 (see coverage-pr08.ts).
   // Deflecting Palm: restored in coverage PR06 (see coverage-pr06.ts).
   // Delirium: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-1: copies keep original targets; can't-be-copied is omitted.
@@ -248,12 +243,7 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
     ],
     { ruleStatics: [{ kind: 'damageDoubledToOpponents' }, { kind: 'damageHalvedToYou' }] },
   );
-  // Catalog audit queen-batch-3: activate-only-during-your-turn is timing any.
-  unsupportedCard(
-    '1582e16d-4825-4cc5-b12c-449c45e4e449',
-    'Humble Defector',
-    'Activate-only-during-your-turn is implemented as timing any.',
-  );
+  // Humble Defector: restored in coverage PR08.03 (see coverage-pr08-humble-defector.ts).
   defineCard(
     'da93264e-4e04-401a-9809-e4e1056cf604',
     'Inkshield',
@@ -301,23 +291,15 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Nils, Discipline Enforcer: restored in coverage PR07 (see coverage-pr07.ts).
   // Catalog audit queen-batch-1: threshold damage clause is claimed but not authored.
-  unsupportedCard(
-    'e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe',
-    "Olórin's Searing Light",
-    'Graveyard-threshold opponent damage is claimed without an implementation.',
-  );
+  // Olórin: restored in coverage PR08.
+
   // Catalog audit queen-batch-1: copyTargetSpell copies original targets.
   unsupportedCard(
     'a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca',
     'Reverberate',
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   );
-  // Catalog audit queen-batch-4: shuffle-then-top is move-to-top without shuffling.
-  unsupportedCard(
-    '6dfb50d7-359b-4644-90e3-7ecdacee7c12',
-    'Scheming Symmetry',
-    'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
-  );
+  // Scheming Symmetry: restored with private APNAP searches and shuffle-then-top in PR08.
   defineCard(
     '34b90d3e-f48c-41ff-b3e4-5cab7a9cd597',
     'Secret Rendezvous',
@@ -326,11 +308,8 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Selfless Squire: restored in coverage PR06 (see coverage-pr06.ts).
   // Catalog audit queen-batch-5: optional choose-two is mandatory; duplicate modes allowed.
-  unsupportedCard(
-    '2143f413-7baa-4fd6-a7ca-32f52bfa553f',
-    'Shadrix Silverquill',
-    'Optional choose-two is mandatory, and the same mode can be chosen twice.',
-  );
+  // Shadrix Silverquill: restored in coverage PR08.
+
   defineCard(
     '153376c9-dffd-458c-8ce3-a4c8269bc4e9',
     'Smothering Tithe',
@@ -356,12 +335,9 @@ export function registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides(): void 
   );
   // Weathered Wayfarer: restored in coverage PR02. The interpreter reads the revealed land search
   // and its "an opponent controls more lands than you" activation condition.
-  // Catalog audit queen-batch-3: opponent-gains-control omitted.
-  unsupportedCard(
-    '81c70ae7-3c18-4c9b-8505-e4db9e0e6518',
-    'Wishclaw Talisman',
-    'Opponent-gains-control is omitted from the search activation.',
-  );
+  // Wishclaw Talisman: restored in coverage PR08 (see coverage-pr08.ts). The interpreter reads
+  // "enters with three wish counters"; the activation, its costs and the resolved-time opponent
+  // choice are authored there.
   // Kambal, Consul of Allocation: restored in coverage PR03. The interpreter reads the
   // opponent-cast trigger and "that player loses 2 life and you gain 2 life", so no override remains.
   // Teyo, Geometric Tactician: restored in coverage PR07 (see coverage-pr07.ts).

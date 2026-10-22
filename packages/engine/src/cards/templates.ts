@@ -362,7 +362,7 @@ export function triggered(
 export function activated(
   spec: AbilityBody & {
     costs: AbilityCost[];
-    timing?: 'any' | 'sorcery';
+    timing?: 'any' | 'sorcery' | 'yourTurn';
     oncePerTurn?: boolean;
     zone?: 'hand' | 'battlefield' | 'graveyard';
     requiresAttackedThisTurn?: true;

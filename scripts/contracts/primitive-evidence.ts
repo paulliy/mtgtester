@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { deriveCardCapabilities } from '../../packages/engine/src/cards/capabilities';
-import { discoverGeneratorSourceFiles, parseEvidenceJson } from '../card-evidence-input';
+import { discoverGeneratorSourceFilesForEntries, parseEvidenceJson } from '../card-evidence-input';
 import { PRIMITIVE_CONTRACTS } from './primitive-contracts';
 import { isPathWithinRoot } from './source-containment';
 
@@ -97,9 +97,7 @@ export function capturePrimitiveSources(repoRoot: string): PrimitiveCapture {
   const testFiles = new Set(
     PRIMITIVE_CONTRACTS.flatMap((contract) => contract.cases.map((test) => test.file)),
   );
-  for (const file of testFiles) {
-    for (const path of discoverGeneratorSourceFiles(root, file)) paths.add(path);
-  }
+  for (const path of discoverGeneratorSourceFilesForEntries(root, [...testFiles])) paths.add(path);
   for (const path of walkFiles(resolve(root, 'packages/engine/src'))) {
     if (path.endsWith('.ts')) paths.add(relative(root, path).replaceAll('\\', '/'));
   }

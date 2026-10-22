@@ -36,8 +36,6 @@ const REASONS: Record<string, string> = {
   'Bolt Bend': 'Change-the-target is implemented as copyTargetSpell; a copy is not a retarget.',
   'Chaos Warp':
     'The top card is not revealed; a nonpermanent remains hidden on top of the library.',
-  'Cytoplast Manipulator':
-    'Gain-control duration is omitted; gainControlTarget is a permanent steal.',
   'Deflecting Swat':
     'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   'Flare of Duplication':
@@ -49,7 +47,6 @@ const REASONS: Record<string, string> = {
   Smokestack: 'Upkeep sacrifice hits every player for 1 and enters with a soot counter.',
   'Twilight Diviner':
     'Graveyard-origin and once-each-turn restrictions are omitted from the enter trigger.',
-  'Vindictive Lich': 'Modes are choose-one rather than one-or-more targeting different players.',
   "Angel's Grace":
     'Split second and cannot-lose/cannot-win are implemented as a damage life floor only.',
   'Display of Power':
@@ -58,8 +55,6 @@ const REASONS: Record<string, string> = {
     'Choose a Background is claimed without a background companion implementation.',
   'Nighthawk Scavenger':
     "Power counts card types in all graveyards, not only opponents' graveyards.",
-  "Olórin's Searing Light":
-    'Graveyard-threshold opponent damage is claimed without an implementation.',
   Reverberate: 'Choose-new-targets is implemented as copyTargetSpell; a copy is not a retarget.',
   "Tibalt's Trickery": 'Mill, exile, and free-cast cascade are claimed as a counter-only spell.',
   'Arcane Lighthouse': 'Hexproof/shroud removal is implemented as granting menace.',
@@ -80,18 +75,12 @@ const REASONS: Record<string, string> = {
     'Spell face is claimed; only the land back is authored.',
   'Wear // Tear':
     'Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.',
-  'Humble Defector': 'Activate-only-during-your-turn is implemented as timing any.',
-  'Wishclaw Talisman': 'Opponent-gains-control is omitted from the search activation.',
-  'Scheming Symmetry':
-    'Shuffle-then-put-on-top is implemented as moving the chosen card to the top without shuffling.',
-  'Shadrix Silverquill': 'Optional choose-two is mandatory, and the same mode can be chosen twice.',
   'Wandering Archaic // Explore the Vastlands':
     'Modal DFC copy-on-cast with retarget is unimplemented.',
   'Verrak, Warped Sengir': 'Copy-activated-ability when life was paid is unimplemented.',
   "Songbirds' Blessing":
     'Reveal-until-Aura with optional battlefield and hand fallback is unimplemented.',
   'Spirit Mantle': 'Protection from creatures is unimplemented.',
-  'Mob Rule': 'Until-end-of-turn steal is implemented as permanent gainControl.',
   'Caged Sun': 'Land-mana of the chosen color is claimed without an additional-mana trigger.',
   'Mystic Forge':
     'Top-of-library cast omits colorless spells, and exile-top is implemented as mill.',
@@ -113,15 +102,21 @@ const REASONS: Record<string, string> = {
     'Exiled cards are playable, including lands; Oracle only permits casting spells.',
   'Atarka Monument': 'The animation does not make it red and green.',
   'Sarkhan, the Dragonspeaker': 'The +1 does not make it legendary or red.',
-  'Druid of Purification':
-    'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  'Cut a Deal': 'You draw for each opponent, not for each opponent who drew a card.',
   'Reality Shift':
     'Manifest puts the card face-down but never offers turning it face up for its mana cost.',
 };
 
 describe('Marchesa catalog audit containment', () => {
   const restoredCards = new Set([
+    'Vindictive Lich',
+    'Shadrix Silverquill',
+    "Olórin's Searing Light",
+    // PR08 normal-cast, cleanup and frozen-set tests replace the containment requirement.
+    'Mob Rule',
+    'Cytoplast Manipulator',
+    'Humble Defector',
+    'Druid of Purification',
+    'Wishclaw Talisman',
     // Dedicated white-black tests are the gate; implemented-unreviewed is not a review claim.
     'Arcane Denial',
     'Fabled Passage',
@@ -268,6 +263,10 @@ describe('Marchesa catalog audit containment', () => {
     'Champion of Lambholt',
     'Teyo, Geometric Tactician',
     'Triarch Stalker',
+    // Coverage PR08.01 (docs/plans/card-coverage-chunks.md).
+    'Cut a Deal',
+    // Coverage PR08.04 (docs/plans/card-coverage-chunks.md).
+    'Scheming Symmetry',
   ]);
 
   // catalog-audit-contained — required id for contained-catalog manifest traces.

@@ -353,6 +353,11 @@ async function validateZip(bytes: Buffer) {
     );
   }
 }
+
+/** Validate a retained trace for another bounded, source-bound verification runner. */
+export async function validateViewerTraceZip(bytes: Buffer): Promise<void> {
+  await validateZip(Buffer.from(bytes));
+}
 // JSON.parse supplies the full grammar check; token inspection adds duplicate-key rejection.
 function uniqueJson(text: string): unknown {
   const value: unknown = JSON.parse(text);
@@ -598,6 +603,20 @@ function sourceIdentity(root: string, paths: string[]): string {
 }
 export function discoverGeneratorSourceFiles(repoRoot: string, generatorPath: string): string[] {
   return discoverGeneratorSources(repoRoot, generatorPath, discoveryState(repoRoot)).files;
+}
+/** Share resolution work within one capture; every call starts with fresh routing and source state. */
+export function discoverGeneratorSourceFilesForEntries(
+  repoRoot: string,
+  entryPaths: readonly string[],
+): string[] {
+  const state = discoveryState(repoRoot);
+  return [
+    ...new Set(
+      [...new Set(entryPaths)].flatMap(
+        (path) => discoverGeneratorSources(repoRoot, path, state).files,
+      ),
+    ),
+  ].sort();
 }
 function discoverGeneratorSources(
   repoRoot: string,

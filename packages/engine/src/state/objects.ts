@@ -2,7 +2,7 @@ import { counterCount, setCounterCount } from './counters';
 import { playerLifeLocked } from './phasing';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
-import { attackedPlaneswalker, spellDefinitionOf } from './queries';
+import { attackedPlaneswalker, spellDefinitionOf, canBeSacrificed } from './queries';
 /**
  * Object identity and zone movement (CR 400.7, brief §5.2). A card changing zones becomes
  * a NEW object with a new `ObjectId`; the stable `cardId` links its zone-visits together.
@@ -58,6 +58,8 @@ import {
 } from './queries';
 import type {
   CardId,
+  ControlChange,
+  ControlChangeDuration,
   EngineCardObject,
   EngineObject,
   EnginePermanent,
@@ -260,16 +262,67 @@ function reincarnate(ctx: GameContext, obj: EngineObject, zone: Zone): EngineCar
       : {}),
   };
 }
-/** Apply a control-changing effect without replacing the permanent's initial controller. */
+/**
+ * Apply a control-changing effect without replacing the permanent's initial controller
+ * (`defaultControllerId`). EVERY effect is recorded — including one naming the controller the
+ * permanent already answers to — so an effect expiring later can still fall back to the
+ * record underneath it (`refreshControlEffects`). Each record carries a fresh *effect*
+ * timestamp; the permanent's own layer timestamp is left untouched (CR 613.7).
+ *
+ * Only an ACTUAL controller transition is an event: it sets summoning sickness (CR 302.6) and
+ * removes the permanent from combat (CR 506.4).
+ */
 export function changeController(
   ctx: GameContext,
   perm: EnginePermanent,
   controllerId: PlayerId,
+  duration: ControlChangeDuration = { kind: 'permanent' },
 ): void {
-  (perm.controlChanges ??= []).push(controllerId);
+  // CR 800.4b: an object cannot change control to a player who left the game.
+  if (ctx.state.players.some((player) => player.id === controllerId && player.hasLost)) return;
+  if (duration.kind === 'whileSourceOnBattlefield') {
+    const { sourceObjectId } = duration;
+    if (!ctx.state.battlefield.some((source) => source.id === sourceObjectId)) return;
+  }
+  // A newer permanent record for the same player outlives an older one exactly as long (both end
+  // only when that player leaves), so the older can never decide control: drop it to keep a
+  // repeating rotation (upkeep control swaps) from growing the stack without bound.
+  const kept =
+    duration.kind === 'permanent'
+      ? (perm.controlChanges ?? []).filter(
+          (entry) => !(entry.duration.kind === 'permanent' && entry.controllerId === controllerId),
+        )
+      : (perm.controlChanges ?? []);
+  perm.controlChanges = [...kept, { controllerId, timestamp: ctx.state.nextTimestamp++, duration }];
+  applyControllerTransition(ctx, perm, controllerId);
+}
+
+/**
+ * Keep the defending player of the attack combat assignment is about to end (CR 508.5). Called
+ * immediately before every path clears `attacking` — removal from combat, a controller change,
+ * combat cleanup, phasing, a player leaving — so an intervening-if over the exact original
+ * attacker (Kazuul's "if you're the defending player") still answers with the LAST defending
+ * player instead of losing the event. A still-current `attacking` wins at the read site; a new
+ * attack simply overwrites this through the same retain-then-clear order.
+ */
+export function retainAttackDefender(perm: EnginePermanent): void {
+  if (perm.attacking !== null) perm.lastAttackingDefendingPlayerId = perm.attacking;
+}
+
+/** Both a new effect and an expired effect can cause a controller transition (CR 302.6, 506.4). */
+function applyControllerTransition(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  controllerId: PlayerId,
+): void {
+  // A duration can end after the initial controller departed. The object keeps its current
+  // controller in that case (CR 800.4b); this is not a new control-changing effect.
+  if (ctx.state.players.some((player) => player.id === controllerId && player.hasLost)) return;
+  const transition = perm.controllerId !== controllerId;
   perm.controllerId = controllerId;
-  perm.timestamp = ctx.state.nextTimestamp++;
+  if (!transition) return;
   perm.summoningSick = true;
+  retainAttackDefender(perm);
   perm.attacking = null;
   perm.attackingPlaneswalker = null;
   perm.attackedPlaneswalkerRemoved = false;
@@ -281,6 +334,84 @@ export function changeController(
     if (attacker.attackingPlaneswalker === perm.id && attacker.attacking !== controllerId) {
       attacker.attackedPlaneswalkerRemoved = true;
     }
+  }
+}
+
+/** Current controller, with a record/entry fallback for card-shaped control-history queries. */
+export function controlledBy(perm: {
+  controllerId?: PlayerId;
+  controlChanges?: ControlChange[];
+  defaultControllerId?: PlayerId;
+  ownerId: PlayerId;
+}): PlayerId {
+  return (
+    perm.controllerId ??
+    perm.controlChanges?.at(-1)?.controllerId ??
+    perm.defaultControllerId ??
+    perm.ownerId
+  );
+}
+
+/**
+ * Expire control-change records whose duration has ended and recompute the controller: the
+ * latest surviving record, else the controller it entered under, else its owner (CR 613.7
+ * ordering — records are resolution-ordered, the newest one wins while it survives).
+ *
+ * Losing three kinds of duration run through here:
+ *   - recipient departed the game (CR 800.4e), even buried underneath newer records;
+ *   - a `whileSourceOnBattlefield` record whose source no longer has that exact object id on
+ *     the battlefield: the source left, or phased out (CR 702.26f), or blinked into a NEW
+ *     incarnation that no record tracks (CR 400.7);
+ *   - an `untilEndOfTurn` record, at the cleanup step (CR 514.2) — phased-out permanents
+ *     included, they still expire on schedule.
+ *
+ * Reversion records no new effect or timestamp. An actual controller transition still updates
+ * summoning sickness and combat, exactly as when a new effect changes the controller.
+ */
+export function refreshControlEffects(
+  ctx: GameContext,
+  perm: EnginePermanent,
+  opts?: { expireEndOfTurn?: boolean },
+): void {
+  if (perm.controlChanges === undefined) return;
+  const surviving = perm.controlChanges.filter((entry) => {
+    if (ctx.state.players.some((p) => p.id === entry.controllerId && p.hasLost)) return false;
+    switch (entry.duration.kind) {
+      case 'permanent':
+        return true;
+      case 'whileSourceOnBattlefield': {
+        const { sourceObjectId } = entry.duration;
+        return ctx.state.battlefield.some((p) => p.id === sourceObjectId);
+      }
+      case 'untilEndOfTurn':
+        return !(opts?.expireEndOfTurn ?? false);
+    }
+  });
+  if (surviving.length === 0) delete perm.controlChanges;
+  else perm.controlChanges = surviving;
+  const nextController = surviving.at(-1)?.controllerId ?? perm.defaultControllerId ?? perm.ownerId;
+  applyControllerTransition(ctx, perm, nextController);
+}
+
+/**
+ * Expire (via `refreshControlEffects`) every control-change record that tracks `sourceObjectId`
+ * — the source just left the battlefield, so "for as long as …" ends for every other permanent
+ * it held (CR 611.2b). The source's own copies die with it when it reincarnates.
+ */
+export function expireSourceControlEffects(ctx: GameContext, sourceObjectId: ObjectId): void {
+  for (const perm of [
+    ...ctx.state.battlefield,
+    ...(ctx.state.phasedOut ?? []).map((record) => record.permanent),
+  ]) {
+    if (
+      !perm.controlChanges?.some(
+        (entry) =>
+          entry.duration.kind === 'whileSourceOnBattlefield' &&
+          entry.duration.sourceObjectId === sourceObjectId,
+      )
+    )
+      continue;
+    refreshControlEffects(ctx, perm);
   }
 }
 
@@ -450,6 +581,7 @@ export function makePermanent(
  * that attacker's `blockedByOrdered`; it just no longer counts as a live blocker.
  */
 export function removeFromCombat(ctx: GameContext, perm: EnginePermanent): void {
+  retainAttackDefender(perm);
   perm.attacking = null;
   perm.attackingPlaneswalker = null;
   perm.attackedPlaneswalkerRemoved = false;
@@ -689,6 +821,12 @@ export function* moveObject(
   dest: MoveDestination,
 ): GameGen<EngineCardObject | EnginePermanent | null> {
   const from = obj.zone;
+  if (
+    from === 'battlefield' &&
+    dest.reason === 'sacrifice' &&
+    !canBeSacrificed(ctx, obj as EnginePermanent)
+  )
+    return obj;
   let target: MoveDestination = dest;
 
   // CR 702.84a: an unearthed permanent that would leave the battlefield is exiled instead. Applied
@@ -806,7 +944,12 @@ export function* moveObject(
   if (obj.isToken && from === 'battlefield' && target.zone !== 'battlefield') {
     emit(ctx, 'tokenCeased', { name: obj.name, cardId: obj.cardId });
     debug(ctx, 'zoneChange', `token ${obj.name} ceased to exist`);
-    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      if (target.reason === 'sacrifice')
+        queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
+    }
+    expireSourceControlEffects(ctx, obj.id);
     releaseFixedEffects(ctx, obj.cardId);
     if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
     return null;
@@ -1022,6 +1165,20 @@ export function* moveObject(
     target.zone === 'hand' || target.zone === 'library' ? null : next.id,
   );
 
+  // Leave/death triggers look back to the controller before this event (CR 603.10a).
+  // A stolen watcher still observes its control source leaving under its old controller.
+  // End source-bound control only after those firings are captured, but before post-event
+  // card-zone triggers or linked returns inspect the new battlefield. Batch departures have
+  // already captured their firings together in movePermanentsTogether.
+  if (keepForLeaveProcessing) {
+    if (!target.deferLeaveProcessing) {
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+      if (target.reason === 'sacrifice')
+        queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
+    }
+    expireSourceControlEffects(ctx, obj.id);
+  }
+
   emit(ctx, 'zoneChange', {
     cardId: obj.cardId,
     // A face-down permanent leaving the battlefield is revealed (CR 708.9).
@@ -1068,10 +1225,6 @@ export function* moveObject(
     );
   }
 
-  if (target.reason === 'sacrifice' && from === 'battlefield') {
-    queueTriggersForObject(ctx, 'sacrificed', obj as EnginePermanent);
-  }
-
   // Triggers: enters on arriving, dies on battlefield → graveyard.
   if (
     target.zone === 'battlefield' &&
@@ -1081,7 +1234,8 @@ export function* moveObject(
     queueTriggersForObject(ctx, 'enters', next as EnginePermanent);
   }
   if (from === 'battlefield') {
-    if (!target.deferLeaveProcessing) queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
+    if (!keepForLeaveProcessing && !target.deferLeaveProcessing)
+      queueLeaveBattlefieldTriggers(ctx, obj, target.zone);
     if (keepForLeaveProcessing) releaseFixedEffects(ctx, obj.cardId);
     if (!target.deferLeaveProcessing) yield* returnExiledUntilLeaves(ctx, obj.cardId);
   }
@@ -1127,9 +1281,15 @@ export function* moveObjects(
   const departing =
     destination.zone === 'battlefield'
       ? []
-      : objects.filter((object): object is EnginePermanent => object.zone === 'battlefield');
+      : objects.filter(
+          (object): object is EnginePermanent =>
+            object.zone === 'battlefield' &&
+            (destination.reason !== 'sacrifice' || canBeSacrificed(ctx, object as EnginePermanent)),
+        );
   const departed =
-    departing.length > 0 ? yield* movePermanentsTogether(ctx, departing, destination) : [];
+    departing.length > 0
+      ? yield* movePermanentsTogether(ctx, departing, destination, destination.reason)
+      : [];
   for (const object of objects) {
     const departure = departing.indexOf(object as EnginePermanent);
     if (departure >= 0) {
@@ -1445,7 +1605,19 @@ export function applyTokenCreationReplacements(
   ctx: GameContext,
   spec: TokenSpec,
   controllerId: PlayerId,
+  deferredEvents?: EnginePermanent[],
 ): void {
+  const createAdditional = (additional: TokenSpec): void => {
+    const token = createToken(
+      ctx,
+      additional,
+      controllerId,
+      false,
+      deferredEvents === undefined,
+      deferredEvents === undefined,
+    );
+    deferredEvents?.push(token);
+  };
   if (spec.types.includes('Creature')) {
     const replacements = ctx.state.battlefield
       .filter((candidate) => candidate.controllerId === controllerId)
@@ -1453,7 +1625,7 @@ export function applyTokenCreationReplacements(
         const def = ctx.defs.get(candidate.oracleId);
         return def?.tokenCreationReplacement === undefined ? [] : [def.tokenCreationReplacement];
       });
-    for (const replacement of replacements) createToken(ctx, replacement, controllerId, false);
+    for (const replacement of replacements) createAdditional(replacement);
   }
   if (
     spec.types.includes('Artifact') &&
@@ -1463,21 +1635,16 @@ export function applyTokenCreationReplacements(
       return def?.ruleStatics.some((rs) => rs.kind === 'artifactTokenCreatesThopter') ?? false;
     })
   ) {
-    createToken(
-      ctx,
-      {
-        name: 'Thopter',
-        typeLine: 'Artifact Creature — Thopter',
-        types: ['Artifact', 'Creature'],
-        subtypes: ['Thopter'],
-        colors: [],
-        power: 1,
-        toughness: 1,
-        keywords: ['flying'],
-      },
-      controllerId,
-      false,
-    );
+    createAdditional({
+      name: 'Thopter',
+      typeLine: 'Artifact Creature — Thopter',
+      types: ['Artifact', 'Creature'],
+      subtypes: ['Thopter'],
+      colors: [],
+      power: 1,
+      toughness: 1,
+      keywords: ['flying'],
+    });
   }
 }
 
@@ -1576,6 +1743,35 @@ export function createTokens(
     );
     applyTokenCreationReplacements(ctx, spec, controllerId);
   }
+  return created;
+}
+
+/** Multiple players create tokens simultaneously (CR 101.4), with ownership per creator. */
+export function createTokensForPlayers(
+  ctx: GameContext,
+  spec: TokenSpec,
+  count: number,
+  creators: readonly PlayerId[],
+): EnginePermanent[] {
+  // Read every creator's multiplier before any token enters. All entries precede any ETB or
+  // token-created observation, including additional tokens from the existing replacements.
+  const plans = [...new Set(creators)]
+    .filter((id) => ctx.state.players.some((player) => player.id === id && !player.hasLost))
+    .map((id) => ({ id, count: count * tokenCreationMultiplierFor(ctx, id) }));
+  const created: EnginePermanent[] = [];
+  for (const plan of plans) {
+    for (let index = 0; index < plan.count; index++)
+      created.push(createToken(ctx, spec, plan.id, false, false, false));
+  }
+  for (const plan of plans) {
+    if (plan.count > 0) applyTokenCreationReplacements(ctx, spec, plan.id, created);
+  }
+  queueTokenCreatedEvent(ctx, created);
+  queueTriggersForEvent(
+    ctx,
+    'enters',
+    created.map((permanent) => ({ permanent })),
+  );
   return created;
 }
 
@@ -2868,7 +3064,14 @@ export function* movePermanentsToGraveyard(
   permanents: EnginePermanent[],
   reason?: 'sacrifice',
 ): GameGen<void> {
-  yield* movePermanentsTogether(ctx, permanents, { zone: 'graveyard' }, reason);
+  yield* movePermanentsTogether(
+    ctx,
+    reason === 'sacrifice'
+      ? permanents.filter((permanent) => canBeSacrificed(ctx, permanent))
+      : permanents,
+    { zone: 'graveyard' },
+    reason,
+  );
 }
 
 /**
@@ -2880,17 +3083,29 @@ export function* movePermanentsToGraveyard(
 export function* movePermanentsTogether(
   ctx: GameContext,
   permanents: EnginePermanent[],
-  destination: Pick<MoveDestination, 'zone' | 'libraryPosition'>,
+  destination:
+    | Pick<MoveDestination, 'zone' | 'libraryPosition'>
+    | ((permanent: EnginePermanent) => Pick<MoveDestination, 'zone' | 'libraryPosition'>),
   reason?: 'sacrifice',
 ): GameGen<(EngineCardObject | EnginePermanent | null)[]> {
   if (permanents.length === 0) return [];
+  const destinationOf = (permanent: EnginePermanent) =>
+    typeof destination === 'function' ? destination(permanent) : destination;
+  // Plan the entire event before a departure can change controllers or other board facts.
+  const plannedDestinations = new Map(
+    permanents.map((permanent) => [permanent.id, destinationOf(permanent)]),
+  );
   const departureFacts = new Map(
     permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
   );
   const destinations = new Map(
     permanents.map((perm) => [
       perm.id,
-      graveyardDestination(ctx, perm, leavesBattlefieldTo(perm, destination.zone)),
+      graveyardDestination(
+        ctx,
+        perm,
+        leavesBattlefieldTo(perm, plannedDestinations.get(perm.id)!.zone),
+      ),
     ]),
   );
   // Only what really reaches the graveyard dies.
@@ -2924,7 +3139,7 @@ export function* movePermanentsTogether(
   const moved: (EngineCardObject | EnginePermanent | null)[] = [];
   for (const perm of permanents) {
     const next = yield* moveObject(ctx, perm, {
-      ...destination,
+      ...plannedDestinations.get(perm.id)!,
       zone: destinations.get(perm.id)!,
       deferLeaveProcessing: true,
       deferCardZoneTriggers: true,

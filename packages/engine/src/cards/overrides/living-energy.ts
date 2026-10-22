@@ -1101,12 +1101,6 @@ export function registerLIVING_ENERGYOverrides(): void {
     VINEGLIMMER_SNARL_DEF,
   );
 
-  unsupportedCard(
-    '5bb32efd-9e58-4021-bbda-4ffccfa1d601',
-    'Druid of Purification',
-    'Each player chooses a permanent they do not control, not a permanent you do not control.',
-  );
-
   // Stale claim removed: Scryfall's 2026-08-28 oracle update rewrote this card into current
   // templating, which the generic parser reads on its own. Keeping the claim made the
   // override look drifted. The def stays — it still wins the merge and pins the exact shape.

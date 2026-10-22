@@ -149,8 +149,8 @@ export interface ActivatedAbility {
   ability: Ability;
   /** An activation restriction checked while legal options are generated and applied. */
   condition?: Condition;
-  /** "Activate only as a sorcery" — main phase, empty stack, your turn (CR 602.5d). */
-  timing: 'any' | 'sorcery';
+  /** Sorcery requires main/empty stack/your turn; yourTurn only requires the active player. */
+  timing: 'any' | 'sorcery' | 'yourTurn';
   /**
    * "Activate only once each turn" (CR 602.5f). Tracked per *permanent*, not per card: two
    * copies of Beledros each get their own activation.
@@ -431,6 +431,8 @@ export type TargetKind =
 /** One declared target slot of an ability. Effects reference it by its index. */
 export interface TargetSpec {
   kind: TargetKind;
+  /** These ordinary target slots must name different players. Inactive mode slots are absent. */
+  differentPlayerTargetSlots?: number[];
   /** A stack spell must currently target a permanent controlled by you. */
   spellTargetsPermanentYouControl?: true;
   spellHasSingleTarget?: true;
@@ -499,6 +501,13 @@ export type AttackRequirementSpec =
   | { kind: 'notPlayer'; player: 'you' }
   /** "that player" */
   | { kind: 'player'; player: 'eventPlayer' };
+
+/**
+ * The declarative duration on `gainControl`/`gainControlTarget` IR. `'whileSourceOnBattlefield'`
+ * stays a bare enum here (IR carries no object ids); the runtime resolves it to the source's
+ * exact ObjectId when the effect resolves (CR 611.2b).
+ */
+export type GainControlIRDuration = 'permanent' | 'untilEndOfTurn' | 'whileSourceOnBattlefield';
 
 /**
  * What a "targeted" primitive acts on.
@@ -625,6 +634,8 @@ export type Effect =
       selector: 'creature' | 'creatureOrPlaneswalker';
       metric: 'power' | 'manaValue';
       action: 'sacrifice' | 'exile';
+      /** After exile, deal each player its creature's last-known power if spell mastery holds. */
+      damageIfGraveyardSpellsAtLeast?: number;
     }
   | { op: 'transferCountersFromTriggerObject'; target: EffectRef }
   | { op: 'transferCountersFromTriggerObjectToChosenCreatures'; targetSlot: number }
@@ -791,7 +802,8 @@ export type Effect =
   | { op: 'shadrixModes' }
   | { op: 'masterOfCeremonies' }
   | { op: 'drawTargetAndControllerN'; target: EffectRef; count: number }
-  | { op: 'schemingSymmetry' }
+  /** Each chosen player searches, shuffles, then puts the found card on top without a zone change. */
+  | { op: 'schemingSymmetry'; targetSlot: number }
   | { op: 'kambal' }
   | { op: 'destroyAndCreateTokensEqualToManaValue'; target: EffectRef; spec: TokenSpec }
   | { op: 'exile'; target: EffectRef } // target creature
@@ -826,7 +838,30 @@ export type Effect =
    * counters were actually put on the source — not if it left the battlefield first.
    */
   | { op: 'putCountersOnSourceThenReflexive'; counter: string; count: number; then: Ability }
-  | { op: 'gainControlTarget'; target: EffectRef }
+  /**
+   * "Gain control of target creature" — optionally until end of turn or for as long as a
+   * source-bound grant lasts (`duration: 'whileSourceOnBattlefield'`, resolved to the exact
+   * source ObjectId at runtime; a source off the battlefield at that moment gives no effect,
+   * CR 611.2b). Omitted, the steal is permanent.
+   */
+  | {
+      op: 'gainControlTarget';
+      target: EffectRef;
+      duration?: GainControlIRDuration;
+      /**
+       * Who ends up controlling the permanent. Omitted: the ability's controller.
+       *
+       * `{ targetPlayer: n }` names an ORDINARY player target slot chosen when the ability was
+       * announced (Humble Defector). `{ chooseOpponent: true }` instead makes the recipient
+       * itself a choice made as the effect resolves (CR 608.2d — the ability's controller chooses,
+       * the player who cast the spell), among the living opponents of that controller at that
+       * moment. The choice is NOT a target, so nothing about it is a targeting restriction: a
+       * player with hexproof or shroud is still eligible, and there is no target slot to announce.
+       * It is asked in instruction order, so it happens after any earlier instruction of the same
+       * resolution (Wishclaw Talisman searches and shuffles before the gift).
+       */
+      recipient?: { targetPlayer: number } | { chooseOpponent: true };
+    }
   | { op: 'putCounters'; target: EffectRef; counter: string; count: Value | number }
   | { op: 'putCountersEach'; selector: Selector; counter: string; count: Value | number }
   | {
@@ -958,8 +993,8 @@ export type Effect =
   | { op: 'damageEachOtherOpponent'; amount: Value }
   /**
    * "Search your library for a Forest card, put it onto the battlefield" (CR 701.19). One
-   * `destinations` entry per card that may be found — each independently offers "find or
-   * decline" (CR 701.19c). `count` (Harvest Season's "up to X, where X is...") repeats
+   * `destinations` entry per card. A stated quality permits finding nothing; an unrestricted
+   * quantity must find as many as possible. `count` (Harvest Season's "up to X, where X is...") repeats
    * `destinations[0]` that many times instead of a fixed-length array, since the number of
    * cards that may be found isn't known until resolution.
    */
@@ -971,7 +1006,7 @@ export type Effect =
       differentNames?: boolean;
       /** Preserve the found cards' stable identities for later effects in this resolution. */
       bind?: string;
-      /** Surface CR 701.19c's legal failure-to-find choice even for one distinct card name. */
+      /** An explicitly optional unrestricted search; stated-quality searches may always fail to find. */
       allowFailToFind?: boolean;
       /**
        * "…, reveal it, …" (CR 701.16a): each found card is shown to every player, even when its
@@ -1091,6 +1126,12 @@ export type Effect =
       opponentsOnly?: true;
     }
   | { op: 'createTokenForEachPlayerExceptTarget'; target: EffectRef; spec: TokenSpec; count: Value }
+  /** Each living opponent creates these tokens under their own control. */
+  | { op: 'eachOpponentCreatesTokens'; spec: TokenSpec; count: Value }
+  /** Resolution-time non-target opponent choice, followed by both players creating tokens. */
+  | { op: 'shareTokensWithChosenOpponent'; spec: TokenSpec; count: Value }
+  /** A fresh opponent choice; both players gain life based on their own current creatures. */
+  | { op: 'shareCreatureLifeWithChosenOpponent'; amount: Value }
   /**
    * "Create a token that's a copy of it, except the token isn't legendary" (Miirym).
    *
@@ -1142,12 +1183,23 @@ export type Effect =
   /** Untap the exact permanents stored by an earlier bound effect if the condition is true. */
   | { op: 'untapBoundIf'; binding: string; condition: Condition }
   /**
-   * "Gain control of all Dragons" (Karrthus, Tyrant of Jund) — CR 613.7's control-change
-   * timestamp is a real rules event, so the affected permanents' `timestamp` is bumped too, the
-   * same as a copy effect would. A permanent already under the caster's control is left alone
-   * (no timestamp churn for something that didn't actually change hands).
+   * "Gain control of all Dragons" (Karrthus, Tyrant of Jund). Every touched permanent records a
+   * control-change entry, even one already answering to the same controller: an effect expiring
+   * later falls back to the surviving record underneath it (`refreshControlEffects`). Each
+   * entry takes a fresh effect timestamp; the permanent's own layer timestamp is untouched.
+   *
+   * `duration` follows `gainControlTarget` (omitted = permanent). `untap`/`grantHaste` are the
+   * generic “gain control, untap them, give them haste until end of turn” riders (Mob Rule,
+   * Reins of Power style): the FROZEN CR 611.2c set is captured before any control changes and
+   * all three clauses apply to that same set.
    */
-  | { op: 'gainControl'; selector: Selector }
+  | {
+      op: 'gainControl';
+      selector: Selector;
+      duration?: GainControlIRDuration;
+      untap?: true;
+      grantHaste?: true;
+    }
   /** "Return target Dragon permanent card from your graveyard to the battlefield" (Bladewing). */
   | {
       op: 'graveyardToBattlefield';
@@ -1253,6 +1305,8 @@ export type Effect =
       returnUnder: 'owner' | 'sourceController';
     }
   | { op: 'regainControlOfOwnCreatures' }
+  /** Untap both groups, then freeze both current creature sets and swap control with haste. */
+  | { op: 'swapCreatureControlUntilEot'; target: number }
   | { op: 'exileTargetGraveyardAndBuffIfCreature'; targetSlot: number }
   | {
       op: 'pumpTargetPlayerCreaturesUntilEot';
@@ -1263,6 +1317,9 @@ export type Effect =
   | { op: 'untapTargetPlayerCreatures'; targetSlot: number }
   | { op: 'exileUntilSourceLeaves'; targetSlot: number }
   | { op: 'exileTargetAndControllerMaySearchBasicLandTapped'; targetSlot: number }
+  | { op: 'destroyTargetAndControllerMaySearchBasicTypedLand'; target: EffectRef }
+  | { op: 'exileCreatureAndControllerSearchBasicLand'; target: EffectRef }
+  | { op: 'exileEachCreatureAndControllersSearchBasicLands'; selector: Selector }
   /** Remove a target, then let its controller search for a basic land (Path/Trophy). */
   | {
       op: 'removeTargetAndControllerMaySearchBasicLand';
@@ -1324,10 +1381,16 @@ export type Effect =
    * mana whose amount is only known at resolution, ADDED to whatever `cost` prints. It is a
    * separate field rather than a `Value`-typed `cost` because every other user of this op pays
    * a printed cost, and `ParsedManaCost` is the shape `canPay` and `payManaCost` both take.
+   *
+   * `payer: 'eventObjectController'` asks the CURRENT controller of the exact original event
+   * permanent — once it has departed, the controller it last had (departure LKI, CR 608.2h),
+   * never the ability's `eventPlayer` and never a blinked new incarnation. It is only valid
+   * with an owning permanent event-object scope (a non-self trigger subject); a payer who has
+   * left the game cannot pay, so the unpaid branch runs with no prompt (CR 800.4).
    */
   | {
       op: 'unlessPays';
-      payer: 'eventPlayer' | 'controller';
+      payer: 'eventPlayer' | 'controller' | 'eventObjectController';
       cost: ParsedManaCost;
       genericValue?: Value;
       then: Effect[];
@@ -1498,6 +1561,40 @@ export type Effect =
   /** Make the ability's controller the monarch (CR  monarch). */
   | { op: 'becomeMonarch' }
   | { op: 'druidPurification' }
+  | { op: 'attackingCreaturesToOwnerLibraries' }
+  /** The active player gains this exact source, untaps it, puts a counter and grants haste. */
+  | { op: 'rotateSourceAtUpkeep' }
+  /** The controller chooses one permanent of each type for each player, then all other
+   * nonlands are sacrificed together. A multitype permanent can satisfy several choices. */
+  | { op: 'choosePermanentTypesThenSacrificeOthers'; types: string[] }
+  /**
+   * "At the beginning of your end step, each player may put N `<counter>` counters on a creature
+   * they control. Goad each creature that had counters put on it this way." (Agitator Ant) — one
+   * op rather than `putCounters` plus `goad`, because the two sentences are not independent: the
+   * goaders are exactly the creatures the counters were placed on (CR 701.15a — goading is done
+   * by this ability's controller, not by each chooser).
+   *
+   * The choices are not targets (CR 115.10a — each player picks their own creature as the
+   * ability resolves): hexproof and shroud do not matter, and "a creature they control" cannot
+   * be a target slot, because every player in the game chooses, not one announced player. All
+   * choices are collected before any counters move (CR 608.2d — "each player may" is one
+   * instruction in one resolution), so no player's choice can see the counters another player's
+   * earlier choice received. A placement whose amount survives counter-placement replacements
+   * as zero is not "counters put on it this way" (a creature had counters put on it this way
+   * only when it received at least one), so it is not goaded (CR 107.1f mirrors this distinction).
+   */
+  | { op: 'eachPlayerMayPutCountersAndGoad'; counter: string; count: Value }
+  /**
+   * "Starting with you, each player votes for a … permanent you don't control. Exile each
+   * permanent with the most votes or tied for most votes." (Council's Judgment)
+   *
+   * A public, untargeted vote, not a target spec: hexproof, shroud and protection never remove a
+   * candidate, and nobody may decline. The candidate set is the ability's `selector`, measured
+   * against the ability's original controller; the rotation starts at that controller's own turn
+   * slot and covers every living player, whoever holds priority. Every vote is recorded before
+   * anything leaves, and the winners are counted by permanent object, never by card name.
+   */
+  | { op: 'voteAndExileMost'; selector: Selector }
   | { op: 'exileTargetWithSource'; target: EffectRef }
   | { op: 'exileAndManifestTarget'; target: EffectRef }
   | { op: 'blinkTarget'; target: EffectRef }
@@ -1982,6 +2079,8 @@ export interface Ability {
     maxChoices: number;
     /** Whether a modal choice may select the same mode more than once. */
     repeatable?: boolean;
+    /** Trigger announcement may decline the entire fixed modal selection, choosing no modes. */
+    optional?: true;
     /** A state-dependent maximum announced at cast time (for example, two while controlling a commander). */
     maxChoicesIf?: { condition: import('./condition').Condition; maxChoices: number };
     /** Escalate-style cost paid once for every chosen mode beyond the first. */

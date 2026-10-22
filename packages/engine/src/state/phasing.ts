@@ -1,5 +1,6 @@
 import type { PlayerId } from '@mtg/shared';
 import { emit } from '../log/log';
+import { expireSourceControlEffects, retainAttackDefender } from './objects';
 import type { GameContext } from './types';
 
 /** Player shields expire as that player's next turn begins, before its untap step. */
@@ -39,6 +40,7 @@ export function phaseOutControlledPermanents(ctx: GameContext, playerId: PlayerI
     // Loyalty's "for as long as it has a vow counter on it") ends when it phases out, because it
     // can no longer see the permanent. The vow counter stays (CR 702.26d); the effect does not.
     delete permanent.cantAttackPlayerWhileCounter;
+    retainAttackDefender(permanent);
     permanent.attacking = null;
     permanent.attackingPlaneswalker = null;
     permanent.attackedPlaneswalkerRemoved = false;
@@ -48,6 +50,9 @@ export function phaseOutControlledPermanents(ctx: GameContext, playerId: PlayerI
     );
     (ctx.state.phasedOut ??= []).push({ permanent, phaseInPlayerId: playerId });
   }
+  // Publish the whole phased-out set first: a tracked source and the creature it controls may
+  // phase out together. Their relative battlefield order cannot preserve an expired duration.
+  for (const permanent of leaving) expireSourceControlEffects(ctx, permanent.id);
   emit(ctx, 'phaseOut', {
     player: playerId,
     objects: leaving.map((perm) => ({

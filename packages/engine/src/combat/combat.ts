@@ -46,6 +46,7 @@ import {
   queueAttackDeclarationTriggers,
   queueTriggersForEvent,
   queueTriggersForObject,
+  retainAttackDefender,
 } from '../state/objects';
 import {
   attackedPlaneswalker,
@@ -428,6 +429,12 @@ function attackRestrictionAllows(
   )
     return false;
   return !gatherRuleStatics(ctx).some((entry) => {
+    if (entry.static.kind === 'cantAttackOwner')
+      return (
+        entry.sourceCardId === creature.cardId &&
+        target.planeswalker === null &&
+        target.player.id === creature.ownerId
+      );
     if (entry.static.kind === 'attackOnlyNearestOpponent') {
       const direction = ctx.state.battlefield.find(
         (perm) => perm.cardId === entry.sourceCardId,
@@ -565,6 +572,14 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   // "Creatures with power less than this creature's power can't block creatures you control"
   // (Champion of Lambholt): a rule static of the source, read against its CURRENT power.
   for (const entry of gatherRuleStatics(ctx)) {
+    if (
+      entry.static.kind === 'cantBlockMatching' &&
+      matchesSelector(ctx, blocker, entry.static.filter, {
+        cardId: entry.sourceCardId,
+        controllerId: entry.controllerId,
+      })
+    )
+      return false;
     if (entry.static.kind !== 'cantBlockCreatures') continue;
     const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
     if (source === undefined) continue;
@@ -2061,6 +2076,7 @@ function firstStrikeStepNeeded(ctx: GameContext): boolean {
 
 function endCombatCleanup(ctx: GameContext): void {
   for (const perm of ctx.state.battlefield) {
+    retainAttackDefender(perm);
     perm.attacking = null;
     perm.attackingPlaneswalker = null;
     perm.attackedPlaneswalkerRemoved = false;

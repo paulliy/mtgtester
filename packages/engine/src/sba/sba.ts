@@ -28,9 +28,12 @@ import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
   consumeRegenerationShield,
+  controlledBy,
   enchantAllows,
   moveObject,
   movePermanentsToGraveyard,
+  refreshControlEffects,
+  retainAttackDefender,
   returnExiledUntilLeaves,
 } from '../state/objects';
 import {
@@ -132,31 +135,22 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     for (const perm of leaving) {
       debug(ctx, 'zoneChange', `${perm.name} leaves the game with its owner ${player.id}`);
     }
-    // End effects giving a departed player control. A permanent put onto the
-    // battlefield under that player's control has no such effect to end (CR 800.4a).
+    // Control-change effects end here too, with the shared refresh: entries naming a departed
+    // player expire (even underneath newer records), and source-bound entries expire because the
+    // sources the departing player owned just left the battlefield (all CR 800.4a durations).
     for (const perm of [
       ...s.battlefield,
       ...(s.phasedOut ?? []).map((record) => record.permanent),
     ]) {
-      if (perm.controllerId !== player.id) continue;
-      perm.controlChanges = (perm.controlChanges ?? []).filter(
-        (id) => !s.players.find((p) => p.id === id)?.hasLost,
-      );
-      const controller = perm.controlChanges.at(-1) ?? perm.defaultControllerId ?? perm.ownerId;
+      refreshControlEffects(ctx, perm);
+      const controller = controlledBy(perm);
       if (s.players.find((p) => p.id === controller)?.hasLost) {
+        // Its initial controller is gone as well: it leaves the game (CR 800.4a) — no die
+        // triggers, no reversion to a player no longer playing.
         leaving.push(perm);
         s.phasedOut = (s.phasedOut ?? []).filter((record) => record.permanent !== perm);
         yield* moveObject(ctx, perm, { zone: 'exile' });
-        continue;
       }
-      perm.controllerId = controller;
-      perm.timestamp = s.nextTimestamp++;
-      perm.summoningSick = true;
-      perm.attacking = null;
-      perm.attackingPlaneswalker = null;
-      perm.attackedPlaneswalkerRemoved = false;
-      perm.blocking = null;
-      perm.statuses = perm.statuses.filter((st) => st !== 'attacking' && st !== 'blocking');
     }
     // Leaving the game ends linked-exile durations too, although it queues no dies triggers.
     for (const perm of leaving) yield* returnExiledUntilLeaves(ctx, perm.cardId);
@@ -185,6 +179,7 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
     // longer exists to receive damage, so `blockedByOrdered` keeps its id.
     for (const perm of s.battlefield) {
       if (perm.attacking === player.id) {
+        retainAttackDefender(perm);
         perm.attacking = null;
         perm.attackingPlaneswalker = null;
         perm.attackedPlaneswalkerRemoved = false;
@@ -547,20 +542,18 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   let modeLabel: string | undefined;
   const modes = trigger.ability.modes;
   if (modes !== undefined) {
-    const selections = legalAbilityModeSelections(
-      trigger.ability,
-      (spec) =>
-        computeTargetOptions(
-          ctx,
-          spec,
-          trigger.controllerId,
-          sourceColors,
-          trigger.scope?.eventPlayerId,
-          undefined,
-          trigger.sourceCardId,
-          true,
-          trigger.sourceFacts,
-        ).length,
+    const selections = legalAbilityModeSelections(trigger.ability, (spec) =>
+      computeTargetOptions(
+        ctx,
+        spec,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        undefined,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      ),
     );
     if (selections.length === 0) {
       emit(
@@ -635,7 +628,40 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     ordinarySlots.push({ slot: i, options });
   }
 
-  if (ordinarySlots.length > 0) {
+  if (ordinarySlots.some(({ slot }) => specs[slot]?.differentPlayerTargetSlots !== undefined)) {
+    for (const { slot } of ordinarySlots) {
+      const options = computeTargetOptions(
+        ctx,
+        specs[slot]!,
+        trigger.controllerId,
+        sourceColors,
+        trigger.scope?.eventPlayerId,
+        chosen,
+        trigger.sourceCardId,
+        true,
+        trigger.sourceFacts,
+      );
+      if (options.length === 0)
+        throw new Error('engine bug: modal distinct-player targets have no assignment');
+      const targetSlots = [{ slot, options }];
+      const outcome = yield {
+        decisionType: 'chooseTargets',
+        player: trigger.controllerId,
+        prompt: `Choose target player for ${trigger.sourceName}: ${modes?.options.find((option) => option.targetSlots?.includes(slot))?.description ?? 'ability'}`,
+        options: [
+          {
+            type: 'chooseTargets',
+            description: `Target player for ${trigger.sourceName}`,
+            targets: targetSlots,
+            interaction: { kind: 'choice', targetSlots },
+          },
+        ],
+      };
+      const picked = outcome.targets.get(slot) ?? options[0]!;
+      if (!options.includes(picked)) throw new Error('engine bug: invalid distinct-player target');
+      chosen[slot] = picked;
+    }
+  } else if (ordinarySlots.length > 0) {
     // `trigger.sourceCardId` is the STABLE card identity (`EnginePermanent.cardId`), which
     // survives zone changes — it is NOT the battlefield object id the web UI keys permanents by
     // (`EnginePermanent.id`, freshly minted every zone change, incl. entering the battlefield;

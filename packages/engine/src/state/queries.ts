@@ -596,12 +596,21 @@ export function resolveConditionalUnits(
  */
 /** May `candidate` pay `cost` (a sacrifice) for an ability of `source`? */
 export function sacrificeCandidateAllowed(
+  ctx: GameContext,
   cost: { allowSelf?: boolean; onlyCardId?: string },
   source: EnginePermanent,
   candidate: EnginePermanent,
 ): boolean {
+  if (!canBeSacrificed(ctx, candidate)) return false;
   if (cost.onlyCardId !== undefined && candidate.cardId !== cost.onlyCardId) return false;
   return cost.allowSelf === true || candidate.id !== source.id;
+}
+
+/** Rules prohibition applies to both costs and effects, and disappears with the ability. */
+export function canBeSacrificed(ctx: GameContext, permanent: EnginePermanent): boolean {
+  return !gatherRuleStatics(ctx).some(
+    (entry) => entry.sourceCardId === permanent.cardId && entry.static.kind === 'cantBeSacrificed',
+  );
 }
 
 /**
@@ -626,7 +635,7 @@ function expandSacrificedManaValue<T extends ManaAbilitySpec>(
     .filter(
       (candidate) =>
         candidate.controllerId === perm.controllerId &&
-        sacrificeCandidateAllowed(sacrifice, perm, candidate) &&
+        sacrificeCandidateAllowed(ctx, sacrifice, perm, candidate) &&
         matchesSelector(ctx, candidate, sacrifice.selector, {
           cardId: perm.cardId,
           controllerId: perm.controllerId,
@@ -677,6 +686,7 @@ export function canPayNonManaCosts(
         }
         break;
       case 'sacrificeSelf':
+        if (!canBeSacrificed(ctx, perm)) return false;
         break;
       case 'exileSelf':
         break;
@@ -687,7 +697,7 @@ export function canPayNonManaCosts(
         const count = cost.count ?? 1;
         const payable = ctx.state.battlefield.filter(
           (candidate) =>
-            sacrificeCandidateAllowed(cost, perm, candidate) &&
+            sacrificeCandidateAllowed(ctx, cost, perm, candidate) &&
             candidate.controllerId === perm.controllerId &&
             matchesSelector(ctx, candidate, cost.selector, {
               cardId: perm.cardId,
@@ -1074,7 +1084,7 @@ export function manaSourcesFor(
           .filter(
             (p) =>
               p.controllerId === playerId &&
-              sacrificeCandidateAllowed(cost, perm, p) &&
+              sacrificeCandidateAllowed(ctx, cost, perm, p) &&
               matchesSelector(ctx, p, cost.selector, {
                 cardId: perm.cardId,
                 controllerId: playerId,

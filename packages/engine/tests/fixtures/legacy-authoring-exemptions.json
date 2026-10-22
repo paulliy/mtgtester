@@ -328,7 +328,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/living-energy.ts",
-      "sha256": "ed1874632e2c58c9846d9479ede935623491d345a7b67db64c6bdabc7987f17b",
+      "sha256": "94a9db5bdae24d9e995342ba3a9497b45f203b039c7d00527a79dd7026e36f43",
       "description": "registerLIVING_ENERGYOverrides"
     },
     {
@@ -613,7 +613,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "sha256": "5511089bf8ff05b5368d38ecb0c0374045654ac03fd31af862db2750a63733bf",
+      "sha256": "6d87bcee555d2f3c2ffd235732395f469993f802d7d62196064084a4106b9822",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBIT_REMAININGOverrides"
     },
     {
@@ -693,7 +693,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
-      "sha256": "da1ecff422785b95446b63c6995e3fd86136975870cd784f8005bf05481e0429",
+      "sha256": "6a451f058458eb545ca29ac302d38e3f099695c72a80f266d26592c8047805a0",
       "description": "registerQUEEN_MARCHESA_QUEENS_GAMBITOverrides"
     },
     {
@@ -778,7 +778,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "445abdb912c68741fc4d0b423c1cdb8a2102ac8d184ccb5bc2c2924605d077fb",
+      "sha256": "c36280fa21a4552a00a778369a7073dfd20dca031b59d798e1bb8737c5d7a15f",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {

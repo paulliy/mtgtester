@@ -5572,7 +5572,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
-      "uniqueOracleIds": 50,
+      "uniqueOracleIds": 49,
       "reviewedOracleIds": 54,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5593,14 +5593,14 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
-      "uniqueOracleIds": 26,
+      "uniqueOracleIds": 20,
       "reviewedOracleIds": 44,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
-      "uniqueOracleIds": 12,
+      "uniqueOracleIds": 11,
       "reviewedOracleIds": 12,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5614,7 +5614,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "uniqueOracleIds": 28,
+      "uniqueOracleIds": 27,
       "reviewedOracleIds": 57,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -6871,6 +6871,83 @@
       "sourceFile": "packages/engine/src/cards/overrides/necron-dynasties.ts",
       "restoredIn": "coverage-pr07",
       "note": "Registration deleted (the shadowed unimplemented placeholder, replaced together with the other registration); see the necron-dynasties-remaining.ts entry."
+    },
+    {
+      "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+      "name": "Mob Rule",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Mob Rule uses timestamped temporary control with a frozen affected set for its untap and haste riders. Required normal-cast and real-viewer scenarios are declared in the verification manifest; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
+      "name": "Cut a Deal",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The resolving spell counts actual successful draws, including empty-library and replacement cases; historical audit rows remain as history."
+    },
+    {
+      "oracleId": "026ef98e-4f0a-4a6d-b74f-d17ac8b10e37",
+      "name": "Cytoplast Manipulator",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. Existing Graft replacement and optional transfer are retained. Control lasts while the exact source object remains on the battlefield, including source departure and phasing; losing the target counter after resolution does not end it. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "1582e16d-4825-4cc5-b12c-449c45e4e449",
+      "name": "Humble Defector",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The fail-closed registration is replaced by coverage-pr08.ts. The activated ability has real your-turn timing, draws before transferring its exact source to a targeted opponent, and fizzles wholly if its sole target is illegal. Source departure and blink do not suppress the draw or transfer another incarnation. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "5bb32efd-9e58-4021-bbda-4ffccfa1d601",
+      "name": "Druid of Purification",
+      "sourceFile": "packages/engine/src/cards/overrides/living-energy.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "Replaced by coverage-pr08.ts: every chooser excludes permanents controlled by the ability controller, including when a chooser owns the chosen permanent. Current Oracle says you do not control; the historical containment note reverses that rule. Choices are public, ordered and complete before one simultaneous destruction of each distinct chosen permanent. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "81c70ae7-3c18-4c9b-8505-e4db9e0e6518",
+      "name": "Wishclaw Talisman",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. The artifact enters with three wish counters, pays {1}, tap and one wish only on its controller’s turn, searches and shuffles before a nontargeting living-opponent choice, then permanently gives that exact source object away. Empty library and source departure do not stop the remaining applicable instructions. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dfb50d7-359b-4644-90e3-7ecdacee7c12",
+      "name": "Scheming Symmetry",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The containment is replaced by coverage-pr08.ts. Exactly two player targets privately search their own libraries in APNAP order; found cards are excluded from the seeded remainder shuffles, then returned on top without changing object identity. Empty libraries still shuffle. Historical audit rows remain as history."
+    },
+    {
+      "oracleId": "6dc7f837-158f-4ccf-86a5-a07a20891ec5",
+      "name": "Vindictive Lich",
+      "sourceFile": "packages/engine/src/cards/overrides/marchesa-the-black-rose.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former choose-one containment is replaced by nonrepeatable one-to-three modes with distinct opponent targets, a genuine death trigger, and normal cast evidence. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "e6f2ba06-2c92-48b7-a95f-ea6bf35aa0fe",
+      "name": "Olórin's Searing Light",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former omitted-damage containment is replaced by greatest-power simultaneous exile and conditional simultaneous player damage using pre-exile power. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/queen-marchesa-queens-gambit-remaining.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The former modal containment is replaced by optional choose-two nonrepeatable modes and different player targets. Historical audit rows remain as history; current verification is in the card manifest."
+    },
+    {
+      "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+      "name": "Shadrix Silverquill",
+      "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
+      "restoredIn": "coverage-pr08",
+      "note": "The earlier duplicate unsupported registration is removed; coverage-pr08.ts authors the optional distinct-player modes. Historical audit rows remain as history; current verification is in the card manifest."
     }
   ]
 }
