@@ -10,6 +10,8 @@ import { applyPriorityAction } from '../src/actions/apply';
 import { buildPlayerBoardState } from '../src/view/spectator';
 import { runPrioritySequence } from '../src/turn/priority';
 import { presentedCard } from '../src/present';
+import { chooseDamageSource } from '../src/effects/damage-modifiers';
+import { permanentSource } from '../src/effects/resolve';
 import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
 const pins = (
@@ -72,22 +74,52 @@ describe('PR08 opponent permanent choices', () => {
       pump(runPrioritySequence(ctx), (decision) => {
         const pass = decision.options.findIndex((option) => option.type === 'pass');
         if (pass >= 0) return { index: pass, targets: new Map() };
-        if (decision.player === 'P1') {
-          for (const option of decision.options)
-            for (const subject of option.presentation?.subjects ?? []) {
-              if (subject.kind !== 'card' || subject.card.objectId !== hidden.id) continue;
-              inspected++;
+        // Every player's panel crosses the visibility boundary: only the face-down card's own
+        // controller (P2) may see its identity; every other voter or chooser sees it hidden.
+        for (const option of decision.options)
+          for (const subject of option.presentation?.subjects ?? []) {
+            if (subject.kind !== 'card' || subject.card.objectId !== hidden.id) continue;
+            inspected++;
+            if (decision.player === 'P2') {
+              expect(subject.card.scryfallId).toBe(pinned('Boseiju, Who Endures').scryfallId);
+            } else {
               expect(subject.card).toMatchObject({
                 name: 'Face-down permanent',
                 scryfallId: null,
                 typeLine: 'Creature',
               });
             }
-        }
+          }
         return { index: spellName === "Council's Judgment" ? 1 : 0, targets: new Map() };
       });
       expect(inspected).toBeGreaterThan(0);
       expect(ctx.state.battlefield).toContain(hidden);
     });
   }
+
+  it('generic permanent pickers show a face-down card to its controller only', () => {
+    const ctx = createGame(
+      gameConfig(
+        [0, 1].map(() => ({ cards: copies(10, forest) })),
+        { seed: 'generic-picker-privacy' },
+      ),
+    );
+    const secret = conjure(ctx, 'P2', pinned('Boseiju, Who Endures'), 'hand');
+    const hidden = pump(
+      moveObject(ctx, secret, { zone: 'battlefield', controllerId: 'P2', faceDown: true }),
+    ).value!;
+    const source = permanentSource(spawn(ctx, 'P1', oracle({ name: 'Picker source' })));
+    const seenBy = (viewer: string) => {
+      let card: { scryfallId: string | null } | undefined;
+      pump(chooseDamageSource(ctx, viewer, source), (decision) => {
+        for (const option of decision.options)
+          for (const subject of option.presentation?.subjects ?? [])
+            if (subject.kind === 'card' && subject.card.objectId === hidden.id) card = subject.card;
+        return { index: 0, targets: new Map() };
+      });
+      return card;
+    };
+    expect(seenBy('P2')?.scryfallId).toBe(pinned('Boseiju, Who Endures').scryfallId);
+    expect(seenBy('P1')?.scryfallId).toBeNull();
+  });
 });
