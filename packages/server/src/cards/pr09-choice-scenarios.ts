@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { Engine } from '@mtg/engine';
 import type { EnginePlayerConfig } from '@mtg/engine';
 import { NO_BLOCK_TARGET } from '@mtg/shared';
-import type { GameId, OracleCard } from '@mtg/shared';
+import type { Color, GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
 
 type Pin = { sha256: string; card: OracleCard };
@@ -290,28 +290,30 @@ const instructions: Record<string, string[]> = {
   ],
   'pr09-celebrate-the-mountain-king-viewer-positive': [
     'Cast Celebrate the Mountain-king for {2}{W}{W}.',
+    'Choose the ETB trigger order so Recruit resolves first.',
     'Recruit: draw the prepared card and discard the nonland card.',
     'Confirm a 1/1 white Human Soldier is created.',
   ],
   'pr09-celebrate-the-mountain-king-viewer-negative': [
     'Cast Celebrate the Mountain-king for {2}{W}{W}.',
+    'Choose the ETB trigger order so Recruit resolves first.',
     'Recruit: draw the prepared card and discard the land.',
     'Confirm no Soldier token is created.',
   ],
   'pr09-celebrate-the-mountain-king-viewer-exile-positive': [
     'Cast Celebrate the Mountain-king for {2}{W}{W}.',
-    'Target PR09 Celebrate Target controlled by P2 for the per-opponent ETB ability.',
-    'Confirm it is exiled, then confirm it returns to P2 when Celebrate leaves the battlefield.',
+    'Choose the ETB trigger order, then choose PR09 Celebrate Target for the exile trigger.',
+    'Confirm the target is exiled before P2 removes Celebrate, then confirm it returns to P2.',
   ],
   'pr09-celebrate-the-mountain-king-viewer-exile-negative': [
     'Cast Celebrate the Mountain-king for {2}{W}{W}.',
-    'P2 removes the source in response to its targeted ETB ability.',
+    'Choose the ETB trigger order and let P2 remove Celebrate before the exile trigger resolves.',
     'Confirm PR09 Celebrate Target remains on the battlefield because the source left before resolution.',
   ],
   'pr09-rabble-rousing-viewer-positive': [
     'Cast Rabble Rousing and choose a card for Hideaway 5.',
-    'Attack with the prepared creature.',
-    'Confirm one green-white Citizen token is created.',
+    'Attack with the prepared creature; the scenario has nine creatures before the Citizen.',
+    'Confirm the Citizen makes ten creatures, then cast the linked hidden card for free.',
   ],
   'pr09-rabble-rousing-viewer-negative': [
     'Cast Rabble Rousing and choose a card for Hideaway 5.',
@@ -319,13 +321,12 @@ const instructions: Record<string, string[]> = {
     'Confirm no Citizen tokens are created.',
   ],
   'pr09-tibalt-s-trickery-viewer-positive': [
-    "Cast the prepared instant, allow P2's response, then cast Tibalt's Trickery targeting that spell.",
-    'Choose to cast the different revealed card for free.',
-    'Confirm the free cast resolves.',
+    "Pass so P2 casts the prepared instant, then cast Tibalt's Trickery targeting P2's spell.",
+    'Confirm P2 casts the different revealed card for free and it resolves.',
   ],
   'pr09-tibalt-s-trickery-viewer-negative': [
-    "Cast the prepared instant, allow P2's response, then cast Tibalt's Trickery targeting that spell.",
-    'Decline the free cast when offered.',
+    "Pass so P2 casts the prepared instant, then cast Tibalt's Trickery targeting P2's spell.",
+    'Confirm P2 declines the free cast.',
   ],
   'pr09-grenzo-havoc-raiser-viewer-positive': [
     'Cast Grenzo, Havoc Raiser for {R}{R}.',
@@ -387,7 +388,7 @@ const expectedOutcome: Record<string, string> = {
   'pr09-celebrate-the-mountain-king-viewer-exile-negative':
     'P2 removes Celebrate before the targeted trigger resolves, so the chosen permanent is never exiled.',
   'pr09-rabble-rousing-viewer-positive':
-    'Hideaway exiles a linked card and the declared attack creates a Citizen token.',
+    'The declared attack creates a Citizen, reaches ten creatures, and casts the linked hidden card.',
   'pr09-rabble-rousing-viewer-negative':
     'Hideaway resolves but declaring no attackers creates no Citizens.',
   'pr09-tibalt-s-trickery-viewer-positive':
@@ -526,7 +527,7 @@ export function pr09ChoiceScenario(id: string, gameId: GameId): CardTestScenario
   if (id === 'pr09-celebrate-the-mountain-king-viewer-positive') p1Hand.push(recruitDiscard.name);
   if (id === 'pr09-celebrate-the-mountain-king-viewer-negative') p1Hand.push(recruitLand.name);
   const p1FieldNames = p1FieldLands.map((land) => land.name);
-    if (id.startsWith('pr09-rabble-rousing')) p1FieldNames.push(rabbleHost.name);
+  if (id.startsWith('pr09-rabble-rousing')) p1FieldNames.push(rabbleHost.name);
   if (id === 'pr09-rabble-rousing-viewer-positive')
     p1FieldNames.push(...rabbleHelpers.map((card) => card.name));
   if (id.startsWith('pr09-new-generation-s-technique-viewer-sneak'))
@@ -563,7 +564,7 @@ export function pr09ChoiceScenario(id: string, gameId: GameId): CardTestScenario
               ? [
                   {
                     playerId: 'P1' as const,
-                      cardNames: [rabbleHidden.name, ...rabbleFiller.map((card) => card.name)],
+                    cardNames: [rabbleHidden.name, ...rabbleFiller.map((card) => card.name)],
                   },
                 ]
               : id.startsWith('pr09-trickery')
@@ -759,6 +760,7 @@ export function pr09ChoiceScenario(id: string, gameId: GameId): CardTestScenario
     engine,
     ...(lurkingPositive ||
     id.startsWith('pr09-tibalt-s-trickery') ||
+    id.startsWith('pr09-grenzo-havoc-raiser') ||
     id.startsWith('pr09-celebrate-the-mountain-king-viewer-exile') ||
     id === 'pr09-new-generation-s-technique-viewer-sneak-positive'
       ? { decisionProviderOverrides: { P2: p2Provider } }
@@ -788,6 +790,9 @@ function makeSupport(
         'Sorcery',
       ].includes(word),
     );
+  const colors = [
+    ...new Set(manaCost.match(/\{([WUBRG])\}/g)?.map((symbol) => symbol[1]!)),
+  ] as Color[];
   return {
     ...base,
     oracleId: `pr09-${slug(name)}`,
@@ -802,8 +807,8 @@ function makeSupport(
         (total, item) => total + Number(item.slice(1, -1)),
         0,
       ) + (manaCost.match(/\{[WUBRG]\}/g)?.length ?? 0),
-    colors: [],
-    colorIdentity: [],
+    colors,
+    colorIdentity: colors,
     oracleText,
     power,
     toughness: power === null ? null : '2',

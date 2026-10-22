@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Engine } from '@mtg/engine';
 import type { EnginePlayerConfig } from '@mtg/engine';
-import type { GameId, OracleCard } from '@mtg/shared';
+import type { Color, GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
 
 type Pin = { sha256: string; card: OracleCard };
@@ -132,6 +132,9 @@ const lab = (
           0,
         ) + (manaCost.match(/\{[WUBRG]\}/g)?.length ?? 0);
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const colors = [
+    ...new Set((manaCost?.match(/\{([WUBRG])\}/g) ?? []).map((token) => token[1] as Color)),
+  ];
   return {
     ...base,
     oracleId: `lab-pr09-permanent-${slug}`,
@@ -139,8 +142,8 @@ const lab = (
     name,
     manaCost,
     cmc,
-    colors: [],
-    colorIdentity: [],
+    colors,
+    colorIdentity: colors,
     typeLine,
     types,
     supertypes: [],
@@ -154,8 +157,8 @@ const lab = (
 };
 const host = lab('PR09 Viewer Host', 'Creature — Human', '{2}', '', '2');
 const aura = lab('PR09 Viewer Aura', 'Enchantment — Aura', '{1}{W}', 'Enchant creature');
-const spell = lab('PR09 Viewer Spell', 'Sorcery', '{1}', 'You gain 1 life.');
-const discoverHit = lab('PR09 Viewer Discover Hit', 'Sorcery', '{1}', 'You gain 1 life.');
+const spell = lab('PR09 Viewer Spell', 'Sorcery', '{U}', 'You gain 1 life.');
+const discoverHit = lab('PR09 Viewer Discover Hit', 'Sorcery', '{R}', 'You gain 1 life.');
 const creature = lab('PR09 Viewer Creature', 'Creature — Beast', '{4}{G}{G}', '', '7');
 const miss = lab('PR09 Viewer Miss', 'Land', null);
 const auraCreature = lab('PR09 Aura Creature', 'Creature — Aura', '{2}', '', '2');
@@ -166,7 +169,7 @@ const artifactRemoval = lab(
   '{1}',
   'Destroy target artifact.',
 );
-const viewerInstant = lab('PR09 Viewer Instant', 'Instant', '{1}', 'You gain 1 life.');
+const viewerInstant = lab('PR09 Viewer Instant', 'Instant', '{U}', 'You gain 1 life.');
 const viewerCounter = lab('PR09 Viewer Counter', 'Instant', '{U}', 'Counter target spell.');
 const clauseIds = (slug: Slug, kind: Entry['kind']): string[] => {
   const p = `pr09-${slug}-clause-`;
@@ -226,6 +229,7 @@ export function pr09PermanentScenario(id: string, gameId: GameId): CardTestScena
     'Forest',
     'Mountain',
     'Swamp',
+    'Island',
   ].map(basic);
   const p1Permanents = [...new Set(p1)];
   if (entry.kind === 'attack' && entry.slug === 'herald-of-amity') {
@@ -249,6 +253,8 @@ export function pr09PermanentScenario(id: string, gameId: GameId): CardTestScena
     });
   }
   if (entry.kind === 'discard') battlefield.push({ playerId: 'P2', cardNames: [creature.name] });
+  if (entry.slug === 'cosmic-cube')
+    battlefield.push({ playerId: 'P2', cardNames: [source.card.name] });
   const extra = Array.from(
     { length: 7 },
     (_, i) => lab(`PR09 filler ${i}`, 'Sorcery', '{1}', 'You gain 1 life.').name,
@@ -313,6 +319,7 @@ export function pr09PermanentScenario(id: string, gameId: GameId): CardTestScena
   if (entry.slug === 'aetherworks-marvel' && entry.kind === 'positive')
     handCards = [artifactRemoval.name];
   if (entry.slug === 'chimil-the-inner-sun') handCards = [viewerInstant.name, viewerCounter.name];
+  if (entry.slug === 'cosmic-cube') handCards = [artifactRemoval.name];
   const engine = new Engine(
     { gameId, seed: `card-lab-${id}-v1`, players, turnCap: 10 },
     {

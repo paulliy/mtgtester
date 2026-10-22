@@ -306,7 +306,9 @@ describe('PR09 remaining permanent viewer scenarios', () => {
         );
         if (!action) return false;
         const target = action.targets?.find((slot) =>
-          slot.options.some((option) => scenario.engine.getState().stack.some((item) => item.id === option)),
+          slot.options.some((option) =>
+            scenario.engine.getState().stack.some((item) => item.id === option),
+          ),
         );
         expect(target?.options).toContain(scenario.engine.getState().stack.at(-1)?.id);
         submit(scenario, request, action);
@@ -464,23 +466,152 @@ describe('PR09 remaining permanent viewer scenarios', () => {
     ).toBe(false);
   });
 
-  it('Aetherworks positive viewer scenario exposes the artifact removal that triggers Marvel', () => {
+  it('Aetherworks positive viewer scenario earns the sixth energy and activates Marvel', () => {
     const scenario = pr09PermanentScenario(
       'pr09-aetherworks-marvel-viewer-positive',
       'viewer-marvel-energy' as never,
     );
-    const step = scenario.engine.advance();
-    expect(step.kind).toBe('decision');
-    if (step.kind !== 'decision') return;
-    expect(step.request.decidingPlayer).toBe('P1');
     expect(
-      step.request.legalActions.some(
-        (action) =>
-          action.type === 'castSpell' &&
-          action.description.includes('PR09 Viewer Artifact Removal'),
+      runUntil(scenario, (request) => {
+        if (request.decidingPlayer !== 'P1') return false;
+        const action = request.legalActions.find(
+          (item) =>
+            item.type === 'castSpell' && item.description.includes('PR09 Viewer Artifact Removal'),
+        );
+        if (!action) return false;
+        const sacrificeArtifact = scenario.engine
+          .view('P1')
+          .battlefield.find((permanent) => permanent.name === 'PR09 Viewer Sacrifice Artifact');
+        const targets = (action.targets ?? []).flatMap((slot) => {
+          const choice = slot.options.find((option) => option === sacrificeArtifact?.id);
+          return choice ? [{ slot: slot.slot, choice }] : [];
+        });
+        scenario.engine.submit({
+          requestId: request.requestId,
+          actionId: action.id,
+          ...(targets.length ? { targets } : {}),
+        });
+        return true;
+      }),
+    ).toBe(true);
+    expect(
+      runUntil(scenario, (request) => {
+        if (request.decidingPlayer !== 'P1') return false;
+        const action = request.legalActions.find(
+          (item) =>
+            item.type === 'activateAbility' && item.description.includes('Aetherworks Marvel'),
+        );
+        if (!action) return false;
+        submit(scenario, request, action);
+        return true;
+      }),
+    ).toBe(true);
+    expect(
+      runUntil(scenario, (request) => {
+        if (request.decidingPlayer !== 'P1') return false;
+        const action = request.legalActions.find(
+          (item) => item.type === 'castFree' && item.description.includes('PR09 Viewer Spell'),
+        );
+        if (!action) return false;
+        submit(scenario, request, action);
+        return true;
+      }),
+    ).toBe(true);
+    runUntil(scenario, () => false);
+    const state = scenario.engine.getState();
+    expect(state.players.find((player) => player.id === 'P1')?.energy).toBe(0);
+    expect(
+      state.eventLog.some(
+        (event) =>
+          event.type === 'activateAbility' && event.payload['source'] === 'Aetherworks Marvel',
+      ),
+    ).toBe(true);
+    expect(
+      state.eventLog.some(
+        (event) =>
+          event.type === 'energy' &&
+          event.payload['player'] === 'P1' &&
+          event.payload['total'] === 6,
+      ),
+    ).toBe(true);
+    expect(
+      state.eventLog.some(
+        (event) => event.type === 'castSpell' && event.payload['name'] === 'PR09 Viewer Spell',
       ),
     ).toBe(true);
   });
+
+  it.each([
+    ['pay', true],
+    ['decline', false],
+  ] as const)(
+    'Cosmic Cube Ward %s controls whether the targeted Cube is destroyed',
+    (_choice, payWard) => {
+      const scenario = pr09PermanentScenario(
+        'pr09-cosmic-cube-viewer-positive',
+        `viewer-cosmic-ward-${payWard}` as never,
+      );
+      const targetId = scenario.engine
+        .getState()
+        .battlefield.find(
+          (permanent) => permanent.name === 'Cosmic Cube' && permanent.controllerId === 'P2',
+        )?.id;
+      expect(targetId).toBeDefined();
+      expect(
+        runUntil(scenario, (request) => {
+          if (request.decidingPlayer !== 'P1') return false;
+          const action = request.legalActions.find(
+            (item) =>
+              item.type === 'castSpell' &&
+              item.description.includes('PR09 Viewer Artifact Removal'),
+          );
+          if (!action) return false;
+          const targets = (action.targets ?? []).map((slot) => {
+            expect(slot.options).toContain(targetId);
+            return { slot: slot.slot, choice: targetId! };
+          });
+          scenario.engine.submit({
+            requestId: request.requestId,
+            actionId: action.id,
+            targets,
+          });
+          return true;
+        }),
+      ).toBe(true);
+      let wardRequest: DecisionRequest | null = null;
+      expect(
+        runUntil(scenario, (request) => {
+          if (request.decidingPlayer !== 'P1' || request.decisionType !== 'general') return false;
+          const hasWardChoices =
+            request.legalActions.some((action) => action.type === 'payCost') &&
+            request.legalActions.some((action) => action.type === 'decline');
+          if (hasWardChoices) wardRequest = request;
+          return hasWardChoices;
+        }),
+      ).toBe(true);
+      expect(wardRequest).not.toBeNull();
+      const request = wardRequest!;
+      expect(request.prompt).toMatch(/pay \{2\}/i);
+      const wardChoice = request.legalActions.find(
+        (action) => action.type === (payWard ? 'payCost' : 'decline'),
+      );
+      expect(wardChoice).toBeDefined();
+      submit(scenario, request, wardChoice!);
+      runUntil(scenario, () => false);
+      const state = scenario.engine.getState();
+      expect(state.battlefield.some((permanent) => permanent.id === targetId)).toBe(!payWard);
+      expect(
+        state.players
+          .find((player) => player.id === 'P2')
+          ?.graveyard.some((card) => card.name === 'Cosmic Cube'),
+      ).toBe(payWard);
+      expect(
+        state.players
+          .find((player) => player.id === 'P1')
+          ?.graveyard.some((card) => card.name === 'PR09 Viewer Artifact Removal'),
+      ).toBe(true);
+    },
+  );
 
   it.each([
     ['pr09-dream-pillager-viewer-negative', 'PR09 Viewer Spell', null],

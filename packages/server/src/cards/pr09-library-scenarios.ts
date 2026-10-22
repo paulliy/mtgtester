@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Engine } from '@mtg/engine';
 import type { EnginePlayerConfig } from '@mtg/engine';
-import type { GameId, OracleCard } from '@mtg/shared';
+import type { Color, GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
 
 type Pin = { sha256: string; card: OracleCard };
@@ -56,7 +56,10 @@ const cases = names.flatMap(([slug, cardName]) => [
   },
   {
     id: `pr09-${slug}-viewer-negative`,
-    title: `${cardName}: resolve with no eligible library card`,
+    title:
+      slug === 'expressive-iteration'
+        ? `${cardName}: partition lands without casting them`
+        : `${cardName}: resolve with no eligible library card`,
     cardName,
   },
 ]);
@@ -108,15 +111,21 @@ const lab = (
       ].includes(word),
     );
   const subtypes = typeLine.includes(' — ') ? typeLine.split(' — ')[1]!.split(' ') : [];
+  const colors = [...new Set((manaCost?.match(/[WUBRG]/g) ?? []) as Color[])];
+  const cmc =
+    (manaCost?.match(/\{\d+\}/g) ?? []).reduce(
+      (sum, symbol) => sum + Number(symbol.slice(1, -1)),
+      0,
+    ) + (manaCost?.match(/\{[WUBRG]\}/g)?.length ?? 0);
   return {
     ...base,
     oracleId: `lab-pr09-library-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
     scryfallId: `lab-pr09-library-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
     name,
     manaCost,
-    cmc: manaCost?.match(/\{[WUBRG]\}/g)?.length ?? Number(manaCost?.match(/\{(\d+)\}/)?.[1] ?? 0),
-    colors: [],
-    colorIdentity: [],
+    cmc,
+    colors,
+    colorIdentity: colors,
     typeLine,
     types,
     supertypes: [],
@@ -164,7 +173,7 @@ export function pr09LibraryScenario(id: string, gameId: GameId): CardTestScenari
           : slug === 'expressive-iteration'
             ? positive
               ? [spell, miss, aura]
-              : [miss, spell]
+              : [miss, miss, miss]
             : positive
               ? [spell, miss]
               : [miss];
@@ -234,8 +243,8 @@ export function pr09LibraryScenario(id: string, gameId: GameId): CardTestScenari
         playerId: seat,
         cardNames: positive ? [miss.name, spell.name] : [miss.name],
       });
-  if (slug === 'minds-dilation' && positive)
-    libraryTop.push({ playerId: 'P2', cardNames: [spell.name] });
+  if (slug === 'minds-dilation')
+    libraryTop.push({ playerId: 'P2', cardNames: [positive ? spell.name : miss.name] });
   const seed = `card-lab-${id}-v1`;
   const engine = new Engine(
     { gameId, seed, players, turnCap: slug === 'into-the-time-vortex' ? 10 : 4 },
@@ -279,13 +288,18 @@ export function pr09LibraryScenario(id: string, gameId: GameId): CardTestScenari
       title: entry.title,
       instructions: [
         `Use the normal cast action for ${pin.card.name} and resolve its real trigger or spell effect.`,
-        positive
-          ? 'Choose the eligible library card when the ability offers a choice.'
-          : 'Verify that the ineligible or absent card is not offered.',
+        slug === 'expressive-iteration' && !positive
+          ? 'Partition three lands between hand, library bottom, and exile; a land is not a castable spell.'
+          : positive
+            ? 'Choose the eligible library card when the ability offers a choice.'
+            : 'Verify that the ineligible or absent card is not offered.',
       ],
-      expectedOutcome: positive
-        ? `${pin.card.name} follows its normal cast/ability path with an eligible prepared library card.`
-        : `${pin.card.name} resolves with no eligible prepared library card.`,
+      expectedOutcome:
+        slug === 'expressive-iteration' && !positive
+          ? 'Iteration puts one land into hand, one on the bottom, and one into exile without casting a land.'
+          : positive
+            ? `${pin.card.name} follows its normal cast/ability path with an eligible prepared library card.`
+            : `${pin.card.name} resolves with no eligible prepared library card.`,
       oracleSha256: pin.sha256,
       clauseIds: exercisedOracleClauseIndexes(id, slug).map(
         (index) => `pr09-${oracleSlug(pin.card.name)}-clause-${index + 1}`,

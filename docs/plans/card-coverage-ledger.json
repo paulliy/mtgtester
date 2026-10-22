@@ -4416,7 +4416,7 @@
     "oracleId": "e91240bc-4a13-4131-9379-5ddac6555f4a",
     "name": "Adaptive Omnitool",
     "package": "PR09.02",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4432,7 +4432,7 @@
     "oracleId": "470ec98e-120c-446d-ade6-7d80aa836b55",
     "name": "Aetherworks Marvel",
     "package": "PR09.11",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4448,7 +4448,7 @@
     "oracleId": "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f",
     "name": "Armored Skyhunter",
     "package": "PR09.03",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4465,7 +4465,7 @@
     "oracleId": "d51136fa-3c13-48a5-83fd-51fe00010a4b",
     "name": "Celebrate the Mountain-king",
     "package": "PR09.26",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4481,7 +4481,7 @@
     "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
     "name": "Chaos Warp",
     "package": "PR09.01",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4498,7 +4498,7 @@
     "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
     "name": "Chimil, the Inner Sun",
     "package": "PR09.27",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4515,7 +4515,7 @@
     "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
     "name": "Cosmic Cube",
     "package": "PR09.14",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4531,7 +4531,7 @@
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
     "name": "Dark Confidant",
     "package": "PR09.04",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4547,7 +4547,7 @@
     "oracleId": "504cc26d-3fd5-4391-9d30-f0614e5c8bbc",
     "name": "Dream Pillager",
     "package": "PR09.05",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4563,7 +4563,7 @@
     "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
     "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
     "package": "PR09.06",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4580,7 +4580,7 @@
     "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
     "name": "Expressive Iteration",
     "package": "PR09.15",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4596,7 +4596,7 @@
     "oracleId": "af20f452-5cb9-47cc-9a81-71f23204ddd0",
     "name": "Franklin Richards, Ascendant",
     "package": "PR09.16",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4612,7 +4612,7 @@
     "oracleId": "06f42f49-32f0-413b-8437-b8efa4d647c2",
     "name": "Genesis Ultimatum",
     "package": "PR09.17",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4628,7 +4628,7 @@
     "oracleId": "80788290-1569-4c7f-b263-b4da7b31a9d1",
     "name": "Grenzo, Havoc Raiser",
     "package": "PR09.31",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4645,7 +4645,7 @@
     "oracleId": "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9",
     "name": "Herald of Amity",
     "package": "PR09.12",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4661,7 +4661,7 @@
     "oracleId": "fd4f0315-567a-4cc5-bc7e-88a9d2cee910",
     "name": "Improvisation Capstone",
     "package": "PR09.28",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4677,7 +4677,7 @@
     "oracleId": "ad9d969e-def5-45a3-b65b-0c776f62ef0e",
     "name": "Into the Time Vortex",
     "package": "PR09.18",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4693,7 +4693,7 @@
     "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
     "name": "Keen Duelist",
     "package": "PR09.07",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4709,7 +4709,7 @@
     "oracleId": "15fbb7b1-c62d-4f82-9f35-2c10299779f4",
     "name": "Lurking Predators",
     "package": "PR09.19",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4725,7 +4725,7 @@
     "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
     "name": "Mind's Dilation",
     "package": "PR09.20",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4741,7 +4741,7 @@
     "oracleId": "6e27956e-ba2f-41a9-8e39-ec54424591b6",
     "name": "Monstrous Vortex",
     "package": "PR09.21",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4758,7 +4758,7 @@
     "oracleId": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
     "name": "Mystic Forge",
     "package": "PR09.13",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4775,7 +4775,7 @@
     "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
     "name": "New Generation's Technique",
     "package": "PR09.22",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4791,7 +4791,7 @@
     "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
     "name": "Path of Discovery",
     "package": "PR09.23",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4807,7 +4807,7 @@
     "oracleId": "3d5c98ff-fcf1-42bd-9533-2648791a4f45",
     "name": "Power Pack",
     "package": "PR09.24",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4823,7 +4823,7 @@
     "oracleId": "2e420001-2b3d-4eb7-b01c-3a49d5e241c2",
     "name": "Rabble Rousing",
     "package": "PR09.29",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4839,7 +4839,7 @@
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
     "name": "Songbirds' Blessing",
     "package": "PR09.08",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4858,7 +4858,7 @@
     "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
     "name": "Sunbird's Invocation",
     "package": "PR09.25",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4874,7 +4874,7 @@
     "oracleId": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
     "name": "Szarekh, the Silent King",
     "package": "PR09.09",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4891,7 +4891,7 @@
     "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
     "name": "Tibalt's Trickery",
     "package": "PR09.10",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [
@@ -4909,7 +4909,7 @@
     "oracleId": "f2ef8bda-373d-4387-900d-0f1b6ccf72e9",
     "name": "Trumpeting Carnosaur",
     "package": "PR09.30",
-    "status": "implemented-unreviewed",
+    "status": "implemented-reviewed",
     "blockers": [],
     "oracleFixture": "packages/engine/tests/fixtures/coverage-pr09-oracle.json",
     "behaviorTests": [

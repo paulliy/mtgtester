@@ -118,7 +118,8 @@ async function chooseGroup(page: Page, card: string, action: RegExp): Promise<vo
   const choice = page
     .locator('.decision-panel .panel-group')
     .filter({ hasText: card })
-    .getByRole('button', { name: action });
+    .getByRole('button', { name: action })
+    .first();
   await passUntil(page, choice);
   await choice.click();
 }
@@ -147,15 +148,16 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
           page.getByRole('img', { name: 'PR09 Forge Colored Spell', exact: true }),
         ).toBeVisible();
         await expect(permanent(page, 'P1', 'PR09 Forge Colored Spell')).toHaveCount(0);
-        await expect(
-          page.getByRole('button', { name: /Cast PR09 Forge Colored Spell/ }),
-        ).toHaveCount(0);
+        await expect(page.getByRole('button', { name: /^Cast o-/ })).toHaveCount(0);
       } else if (id === 'pr09-mystic-forge-viewer-activation') {
         const forge = permanent(page, 'P1', 'Mystic Forge');
         await forge.click();
-        const exile = page.getByRole('button', { name: /Exile the top card of your library/i });
-        await expect(exile).toBeVisible();
-        await exile.click();
+        await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+        await passStackUntil(page, zone(page, 'P1', 'Exile'));
+        await expect(forge).toContainText('TAP');
+        await expect(
+          zone(page, 'P1', 'Exile').getByRole('img', { name: 'PR09 Forge Artifact', exact: true }),
+        ).toBeVisible();
         await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
       } else if (id.startsWith('pr09-songbirds-blessing')) {
         await attackSongbirds(page);
@@ -172,14 +174,19 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
       } else if (id === 'pr09-etali-primal-conqueror-etali-primal-sickness-viewer-transform') {
         const etali = permanent(page, 'P1', 'Etali, Primal Conqueror');
         await etali.click();
-        const transform = page.getByRole('button', { name: /Transform/i });
-        await expect(transform).toBeVisible();
-        await transform.click();
         await expect(page.getByText(/Auto-pay/)).toBeVisible();
         await page.getByRole('button', { name: 'Confirm', exact: true }).click();
-        await expect(permanent(page, 'P1', 'Etali, Primal Sickness')).toBeVisible();
+        await passStackUntil(page, permanent(page, 'P1', 'Etali, Primal Sickness'));
+        await expect(permanent(page, 'P1', 'Etali, Primal Sickness')).toContainText(
+          'indestructible',
+        );
         await attack(page, 'Etali, Primal Sickness');
-        await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('11 poison');
+        await passUntil(
+          page,
+          page.locator('.opponent[data-seat="P2"] [aria-label="Global counters"]', {
+            hasText: /POISON\s*11/,
+          }),
+        );
         await expect(page.locator('.opponent[data-seat="P2"] .life-badge')).toHaveText('29');
       } else if (id.startsWith('pr09-etali')) {
         await cast(page, cardName);
@@ -202,23 +209,23 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
         await passStackUntil(page, permanent(page, 'P1', "Sunbird's Invocation"));
         await cast(page, 'PR09 Library Spell');
         if (id.endsWith('positive')) {
-          const freeCast = page.getByRole('button', {
-            name: /Cast PR09 Library Spell without paying/i,
-          });
+          const freeCast = page
+            .locator('.decision-panel')
+            .getByRole('button', { name: 'Cast', exact: true });
           await passUntil(page, freeCast);
           await freeCast.click();
-          await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
+          await passStackUntil(page, page.locator('.human-zone .life-badge', { hasText: '42' }));
         } else {
-          await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+          await passStackUntil(page, page.locator('.human-zone .life-badge', { hasText: '41' }));
         }
       } else if (id.startsWith('pr09-minds-dilation')) {
         if (id.endsWith('positive')) {
-          const freeCast = page.getByRole('button', {
-            name: /Cast PR09 Library Spell without paying/i,
-          });
+          const freeCast = page
+            .locator('.decision-panel')
+            .getByRole('button', { name: 'Cast', exact: true });
           await passUntil(page, freeCast);
           await freeCast.click();
-          await expect(page.locator('.human-zone .life-badge')).toHaveText('41');
+          await passStackUntil(page, page.locator('.human-zone .life-badge', { hasText: '41' }));
         } else {
           const p2LostNoLife = page.locator('.opponent[data-seat="P2"] .life-badge', {
             hasText: '41',
@@ -229,23 +236,41 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
       } else if (id.startsWith('pr09-expressive-iteration')) {
         await cast(page, cardName);
         await passStackUntil(page, page.getByText(/choose a card to put into your hand/i));
-        await chooseGroup(page, 'PR09 Library Spell', /Put into your hand/);
-        await chooseGroup(page, 'PR09 Library Aura', /Put on the bottom/);
-        await expect(hand(page, 'PR09 Library Spell')).toBeVisible();
-        await expect(zone(page, 'P1', 'Exile')).toContainText(/PR09 Library Miss/);
+        await chooseGroup(
+          page,
+          id.endsWith('positive') ? 'PR09 Library Spell' : 'PR09 Library Miss',
+          /^Put into hand$/,
+        );
+        await chooseGroup(
+          page,
+          id.endsWith('positive') ? 'PR09 Library Aura' : 'PR09 Library Miss',
+          /^Put on bottom$/,
+        );
+        await expect(
+          hand(page, id.endsWith('positive') ? 'PR09 Library Spell' : 'PR09 Library Miss'),
+        ).toBeVisible();
+        await expect(
+          zone(page, 'P1', 'Exile').getByRole('img', { name: 'PR09 Library Miss', exact: true }),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: /Cast PR09 Library Miss/ })).toHaveCount(0);
       } else if (id.startsWith('pr09-genesis-ultimatum')) {
         await cast(page, cardName);
-        await passStackUntil(page, page.getByText(/choose permanents/i));
+        await passStackUntil(page, page.getByText(/choose any number of permanents/i));
         if (id.endsWith('positive')) {
-          await chooseGroup(page, 'PR09 Genesis Creature', /Put onto the battlefield/);
-          await chooseGroup(page, 'PR09 Genesis Artifact', /Put onto the battlefield/);
-          await page.getByRole('button', { name: /Finish choosing/i }).click();
+          await chooseGroup(page, 'PR09 Genesis Creature', /^Choose$/);
+          await chooseGroup(page, 'PR09 Genesis Artifact', /^Choose$/);
+          await page.getByRole('button', { name: /^Done$/ }).click();
           await expect(permanent(page, 'P1', 'PR09 Genesis Creature')).toBeVisible();
           await expect(permanent(page, 'P1', 'PR09 Genesis Artifact')).toBeVisible();
           await expect(hand(page, 'PR09 Library Spell')).toBeVisible();
         } else {
+          await page.getByRole('button', { name: 'Done', exact: true }).click();
+          await expect(hand(page, 'PR09 Library Miss')).toHaveCount(5);
           await expect(permanent(page, 'P1', 'PR09 Genesis Creature')).toHaveCount(0);
         }
+        await expect(
+          zone(page, 'P1', 'Exile').getByRole('img', { name: 'Genesis Ultimatum', exact: true }),
+        ).toBeVisible();
       } else if (id.startsWith('pr09-into-the-time-vortex')) {
         await cast(page, cardName);
         if (id.endsWith('positive')) {
@@ -268,3 +293,7 @@ test.describe('PR09 library and reveal viewer scenarios', () => {
     });
   }
 });
+
+test.afterAll(() =>
+  expect([...exercised].sort()).toEqual(PR09_LIBRARY_SCENARIOS.map(({ id }) => id).sort()),
+);

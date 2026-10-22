@@ -13505,7 +13505,7 @@
     "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8": {
       "name": "Chaos Warp",
       "oracleSha256": "0a92bef047916a597355070ad23e806e609a1f66affb5af24a5e236d1f961014",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-chaos-warp-normal-cast",
         "pr09-chaos-warp-insufficient-cost",
@@ -13536,7 +13536,7 @@
     "e91240bc-4a13-4131-9379-5ddac6555f4a": {
       "name": "Adaptive Omnitool",
       "oracleSha256": "23f49352f91de30d07f418f38b2658e0e346bf1088ec63c1210be8b44f438b12",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-adaptive-omnitool-normal-cast",
         "pr09-adaptive-omnitool-insufficient-cost",
@@ -13588,7 +13588,7 @@
     "b4dbbf56-d7df-4183-bb48-cfc6b4d0468f": {
       "name": "Armored Skyhunter",
       "oracleSha256": "1efd23c5a6a2393adcc2ab4c4ae0514eb36fc0719a0ec6b04533dbf42dc4ef16",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-armored-skyhunter-normal-cast",
         "pr09-armored-skyhunter-insufficient-cost",
@@ -13633,7 +13633,7 @@
     "2068185c-1b50-47d0-aa3f-bf505d199428": {
       "name": "Dark Confidant",
       "oracleSha256": "5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-dark-confidant-normal-cast",
         "pr09-dark-confidant-insufficient-cost",
@@ -13663,7 +13663,7 @@
     "504cc26d-3fd5-4391-9d30-f0614e5c8bbc": {
       "name": "Dream Pillager",
       "oracleSha256": "dff902aff42d2906942f8d0e620183b454ed6bc6de9e731c0863e76ac7c2895e",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-dream-pillager-normal-cast",
         "pr09-dream-pillager-insufficient-cost",
@@ -13711,7 +13711,7 @@
     "7514e401-7aa1-405d-9f7a-312b4e630cc2": {
       "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
       "oracleSha256": "e3b73f76b96885e3818faa7986a9265e04bbd1552cdf623b944dca2ae51976fa",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-etali-primal-conqueror-etali-primal-sickness-normal-cast",
         "pr09-etali-primal-conqueror-etali-primal-sickness-insufficient-cost",
@@ -13784,7 +13784,7 @@
     "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2": {
       "name": "Keen Duelist",
       "oracleSha256": "627aac8300f02188c46ce9ace0f40bff9e43f22c526c632c06b0ce9cbd6f1856",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-keen-duelist-normal-cast",
         "pr09-keen-duelist-insufficient-cost",
@@ -13825,7 +13825,7 @@
     "2598294c-a9a7-4bef-a562-23f297a80536": {
       "name": "Songbirds' Blessing",
       "oracleSha256": "7d9f1b0535da2a928bbec915f98ab6f0a26234f87f4645072076ea205b2374c0",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-songbirds-blessing-normal-cast",
         "pr09-songbirds-blessing-insufficient-cost",
@@ -13869,7 +13869,7 @@
     "9a63f950-2e8a-4617-896c-1d0af538dbc7": {
       "name": "Szarekh, the Silent King",
       "oracleSha256": "e4fff6dac7991e615f0b4bf6b98bb646ba85908af5dd83192cd29634bb3d26c1",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-szarekh-the-silent-king-normal-cast",
         "pr09-szarekh-the-silent-king-insufficient-cost",
@@ -13916,7 +13916,7 @@
     "6623cb85-fb1e-4561-8b21-0977c25096c2": {
       "name": "Tibalt's Trickery",
       "oracleSha256": "e94f2ce5ff465845835e1127d3c99406773e2454e2054b5162cec2c00c13176b",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-tibalt-s-trickery-normal-cast",
         "pr09-tibalt-s-trickery-insufficient-cost",
@@ -13953,7 +13953,7 @@
     "470ec98e-120c-446d-ade6-7d80aa836b55": {
       "name": "Aetherworks Marvel",
       "oracleSha256": "4b4ead37bd8be62cbb692c14475ead91307cd0aef4fc4b4293a640bb1a8078dd",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-aetherworks-marvel-normal-cast",
         "pr09-aetherworks-marvel-insufficient-cost",
@@ -14003,7 +14003,7 @@
     "6c25c6b5-d98c-4eb4-aacd-b6960a8779a9": {
       "name": "Herald of Amity",
       "oracleSha256": "9c80cb04a907304cc5a4b3bb7c43d286f4c23345ad1abb1d5cbc149a666bbeb9",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-herald-of-amity-normal-cast",
         "pr09-herald-of-amity-insufficient-cost",
@@ -14054,7 +14054,7 @@
     "994bc16d-fdc6-475c-96df-beeb4d5aa03e": {
       "name": "Mystic Forge",
       "oracleSha256": "cf9d7ad93231927235c7773cf421c5d1865449e1166b7c23272cbce063d989dc",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-mystic-forge-normal-cast",
         "pr09-mystic-forge-insufficient-cost",
@@ -14108,18 +14108,24 @@
     "0866a630-d962-4aa9-a15f-08b2947540ef": {
       "name": "Cosmic Cube",
       "oracleSha256": "47efe05e916a05b4078df0d57fe57f90993b3de3b20b8e8bf58e161d1231c5ea",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-cosmic-cube-normal-cast",
         "pr09-cosmic-cube-insufficient-cost",
-        "pr09-cosmic-cube-sorcery-timing"
+        "pr09-cosmic-cube-sorcery-timing",
+        "pr09-cube-ward-pay",
+        "pr09-cube-ward-decline"
       ],
       "clauses": [
         {
           "id": "pr09-cosmic-cube-clause-1",
           "oracleText": "Ward {2}",
           "implementation": ["CardDefinition.ward", "WardCost.mana"],
-          "engineTestIds": ["pr09-cube-normal-cast-ward"],
+          "engineTestIds": [
+            "pr09-cube-normal-cast-ward",
+            "pr09-cube-ward-pay",
+            "pr09-cube-ward-decline"
+          ],
           "viewerScenarioIds": [
             "pr09-cosmic-cube-viewer-positive",
             "pr09-cosmic-cube-viewer-negative"
@@ -14150,7 +14156,7 @@
     "c7aecca5-2f67-4245-ab2d-e723d8b23a67": {
       "name": "Expressive Iteration",
       "oracleSha256": "d5590037b1223c19eec19f928c0f1efdf6cb50bc5d802cd17cfd3c9666b60980",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-expressive-iteration-normal-cast",
         "pr09-expressive-iteration-insufficient-cost",
@@ -14177,7 +14183,7 @@
     "af20f452-5cb9-47cc-9a81-71f23204ddd0": {
       "name": "Franklin Richards, Ascendant",
       "oracleSha256": "8185139048a7134b9e67a9e4740af3c37acafac1d1994a388e1cad0d464f6d0c",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-franklin-richards-ascendant-normal-cast",
         "pr09-franklin-richards-ascendant-insufficient-cost",
@@ -14211,7 +14217,7 @@
     "06f42f49-32f0-413b-8437-b8efa4d647c2": {
       "name": "Genesis Ultimatum",
       "oracleSha256": "4e63fe81fc6953ad87c5b9a63b600f8854de58debbd9701cf4e53ddc11250573",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-genesis-ultimatum-normal-cast",
         "pr09-genesis-ultimatum-insufficient-cost",
@@ -14241,7 +14247,7 @@
     "ad9d969e-def5-45a3-b65b-0c776f62ef0e": {
       "name": "Into the Time Vortex",
       "oracleSha256": "95e845342b47e8d0f475cb460c5bf62f12ce888cbb54353c514661f5f36d31b1",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-into-the-time-vortex-normal-cast",
         "pr09-into-the-time-vortex-insufficient-cost",
@@ -14278,7 +14284,7 @@
     "15fbb7b1-c62d-4f82-9f35-2c10299779f4": {
       "name": "Lurking Predators",
       "oracleSha256": "c8e0377f7eee329c48107ab2ea4931f08562c81696cbdf6470863fa619c848d1",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-lurking-predators-normal-cast",
         "pr09-lurking-predators-insufficient-cost",
@@ -14309,7 +14315,7 @@
     "d4b5e09b-9ca2-4b51-a4f8-080741810df8": {
       "name": "Mind's Dilation",
       "oracleSha256": "fea77c0072f940b3031784388d7c506a49a8855b1ccbf51e901e9970e40ba1e4",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-mind-s-dilation-normal-cast",
         "pr09-mind-s-dilation-insufficient-cost",
@@ -14336,7 +14342,7 @@
     "6e27956e-ba2f-41a9-8e39-ec54424591b6": {
       "name": "Monstrous Vortex",
       "oracleSha256": "9e969505d8c6c85221582cabd1271dfe362f20b7101e515c24483e22d74078e2",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-monstrous-vortex-normal-cast",
         "pr09-monstrous-vortex-insufficient-cost",
@@ -14372,7 +14378,7 @@
     "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e": {
       "name": "New Generation's Technique",
       "oracleSha256": "32d98b4752c502f2ee74f386e387f64891b5776fdf80e3a924b17fc19a2dacde",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-new-generation-s-technique-normal-cast",
         "pr09-new-generation-s-technique-insufficient-cost",
@@ -14422,7 +14428,7 @@
     "52714c3c-6821-44dd-88ba-813554df9914": {
       "name": "Path of Discovery",
       "oracleSha256": "b4bdbf47741256041b7c2497894e602a61761f70904858d66db231cec6f238f3",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-path-of-discovery-normal-cast",
         "pr09-path-of-discovery-insufficient-cost",
@@ -14453,7 +14459,7 @@
     "3d5c98ff-fcf1-42bd-9533-2648791a4f45": {
       "name": "Power Pack",
       "oracleSha256": "f25d0c1c02ee8d07ec889e88ed83b5c610fbd4e0f8b87c4a266f761ced1248af",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-power-pack-normal-cast",
         "pr09-power-pack-insufficient-cost",
@@ -14502,7 +14508,7 @@
     "10d482fd-e034-4187-b148-51fe15885360": {
       "name": "Sunbird's Invocation",
       "oracleSha256": "be08ff24672e75b23eb03cf79632ba6e9a3860e772bfddd47a592d65e9cfa160",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-sunbird-s-invocation-normal-cast",
         "pr09-sunbird-s-invocation-insufficient-cost",
@@ -14533,7 +14539,7 @@
     "d51136fa-3c13-48a5-83fd-51fe00010a4b": {
       "name": "Celebrate the Mountain-king",
       "oracleSha256": "bcb33e09cc00ce91a1cbc0d2b24e41f7a40fc3be9ca5eef4b2dc6b27102e80ae",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-celebrate-the-mountain-king-normal-cast",
         "pr09-celebrate-the-mountain-king-insufficient-cost",
@@ -14581,7 +14587,7 @@
     "119d9671-61ba-4629-89b1-f94bdec5cb74": {
       "name": "Chimil, the Inner Sun",
       "oracleSha256": "ab61ad6ff73b0200b488f466b910106883ce2cbe49c68d940452b5389dfc68cf",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-chimil-the-inner-sun-normal-cast",
         "pr09-chimil-the-inner-sun-insufficient-cost",
@@ -14615,7 +14621,7 @@
     "fd4f0315-567a-4cc5-bc7e-88a9d2cee910": {
       "name": "Improvisation Capstone",
       "oracleSha256": "ed0c8fbc3615cff301866d51874c3a7c0c12fe681f0fc5ef55ed72b419609c62",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-improvisation-capstone-normal-cast",
         "pr09-improvisation-capstone-insufficient-cost",
@@ -14665,7 +14671,7 @@
     "2e420001-2b3d-4eb7-b01c-3a49d5e241c2": {
       "name": "Rabble Rousing",
       "oracleSha256": "1f38ae0c31db3230f52fa616257d866895a1e898fa8d214fdbaa722b674b3872",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-rabble-rousing-normal-cast",
         "pr09-rabble-rousing-insufficient-cost",
@@ -14714,7 +14720,7 @@
     "f2ef8bda-373d-4387-900d-0f1b6ccf72e9": {
       "name": "Trumpeting Carnosaur",
       "oracleSha256": "0c5ea13210c3c4da02b3f6f89c624884f25632d6e12ccba9a5cad4e39a73f2d3",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-trumpeting-carnosaur-normal-cast",
         "pr09-trumpeting-carnosaur-insufficient-cost",
@@ -14765,7 +14771,7 @@
     "80788290-1569-4c7f-b263-b4da7b31a9d1": {
       "name": "Grenzo, Havoc Raiser",
       "oracleSha256": "5414ea7f762d778522e75b0ee59ad593e5e325900812c02509fba7a40603cb58",
-      "implementationStatus": "implemented-unreviewed",
+      "implementationStatus": "implemented-reviewed",
       "engineTestIds": [
         "pr09-grenzo-havoc-raiser-normal-cast",
         "pr09-grenzo-havoc-raiser-insufficient-cost",

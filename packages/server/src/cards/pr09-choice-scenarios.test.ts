@@ -248,12 +248,11 @@ function drive(scenario: ReturnType<typeof pr09ChoiceScenario>, id: string): voi
     }
     if (
       id === 'pr09-grenzo-havoc-raiser-viewer-goad' &&
-      gameState(scenario)
-        .battlefield.some(
-          (permanent) =>
-            permanent.name === 'PR09 Goad Target' &&
-            permanent.goadedBy?.some((requirement) => requirement.goaderId === 'P1'),
-        )
+      gameState(scenario).battlefield.some(
+        (permanent) =>
+          permanent.name === 'PR09 Goad Target' &&
+          permanent.goadedBy?.some((requirement) => requirement.goaderId === 'P1'),
+      )
     )
       return;
   }
@@ -549,8 +548,9 @@ describe('remaining PR09 viewer choice scenarios', () => {
       'pr09-celebrate-the-mountain-king-viewer-exile-positive',
       'server-celebrate-exile-positive' as never,
     );
-    const original = gameState(scenario)
-      .battlefield.find((permanent) => permanent.name === 'PR09 Celebrate Target')!;
+    const original = gameState(scenario).battlefield.find(
+      (permanent) => permanent.name === 'PR09 Celebrate Target',
+    )!;
     drive(scenario, scenario.metadata.id);
     const final = gameState(scenario);
     const returned = final.battlefield.find(
@@ -596,8 +596,9 @@ describe('remaining PR09 viewer choice scenarios', () => {
       'pr09-celebrate-the-mountain-king-viewer-exile-negative',
       'server-celebrate-exile-negative' as never,
     );
-    const original = gameState(scenario)
-      .battlefield.find((permanent) => permanent.name === 'PR09 Celebrate Target')!;
+    const original = gameState(scenario).battlefield.find(
+      (permanent) => permanent.name === 'PR09 Celebrate Target',
+    )!;
     drive(scenario, scenario.metadata.id);
     const final = gameState(scenario);
     const unchanged = final.battlefield.find(
@@ -648,9 +649,9 @@ describe('remaining PR09 viewer choice scenarios', () => {
           event.payload['duringResolution'] === true,
       ),
     ).toBe(true);
-    expect(
-      final.battlefield.some((permanent) => permanent.name === 'PR09 Rabble Hidden'),
-    ).toBe(true);
+    expect(final.battlefield.some((permanent) => permanent.name === 'PR09 Rabble Hidden')).toBe(
+      true,
+    );
   });
 
   it('Rabble negative with no declared attackers creates no Citizen', () => {
@@ -780,9 +781,7 @@ describe('remaining PR09 viewer choice scenarios', () => {
     expect(final.exile.some((card) => card.name === 'PR09 Pack Spell')).toBe(true);
     expect(final.players.find((player) => player.id === 'P2')!.life).toBe(36);
     expect(
-      final.eventLog.some(
-        (event) => event.type === 'damage' && event.payload['amount'] === 4,
-      ),
+      final.eventLog.some((event) => event.type === 'damage' && event.payload['amount'] === 4),
     ).toBe(true);
   });
 

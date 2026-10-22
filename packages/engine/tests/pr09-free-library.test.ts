@@ -736,6 +736,39 @@ describe('PR09 free library cards', () => {
     expect(interpretCard(CUBE).modeled).toBe(true);
   });
 
+  it.each([
+    ['pr09-cube-ward-pay', 'payCost', false],
+    ['pr09-cube-ward-decline', 'decline', true],
+  ] as const)(
+    '%s — an opponent pays exactly {2} or its normal targeting spell is countered',
+    (id, choice, cubeSurvives) => {
+      const ctx = pod(id);
+      const cube = spawn(ctx, 'P2', CUBE);
+      let wardChoices = 0;
+      const removal = castNormally(
+        ctx,
+        'P1',
+        libraryCard('PR09 Cube Removal', 1, 'Instant', { oracleText: 'Destroy target artifact.' }),
+        ['C', 'C', 'C'],
+        new Map([[0, cube.id]]),
+        (decision) => {
+          wardChoices++;
+          const index = decision.options.findIndex((option) => option.type === choice);
+          expect(index).toBeGreaterThanOrEqual(0);
+          return { index, targets: new Map() };
+        },
+      );
+      expect(wardChoices).toBe(1);
+      expect(ctx.state.battlefield.some((permanent) => permanent.id === cube.id)).toBe(
+        cubeSurvives,
+      );
+      expect(p(ctx, 'P1').manaEntries).toHaveLength(cubeSurvives ? 2 : 0);
+      expect(p(ctx, 'P1').graveyard.some((card) => card.cardId === removal.cardId)).toBe(true);
+      expect(ctx.state.eventLog.some((event) => event.type === 'wardPaid')).toBe(!cubeSurvives);
+      expect(ctx.state.eventLog.some((event) => event.type === 'counterSpell')).toBe(cubeSurvives);
+    },
+  );
+
   it('pr09-cube-attack-batch — one attack event from multiple creatures resolves one optional library choice', () => {
     const ctx = pod('pr09-cube-batch');
     const cube = spawn(ctx, 'P1', CUBE);

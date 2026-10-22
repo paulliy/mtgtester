@@ -23,6 +23,25 @@ import { replaceCard } from './index';
 
 /** Replace contained approximations only with complete printed abilities. */
 export function registerCoveragePr09Overrides(): void {
+  // PR09: real shuffle/zone transitions and a public reveal, including a nonpermanent result.
+  const chaosWarpTarget = targetSlots({ permanent: { kind: 'permanent' } });
+  replaceCard(
+    '07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8',
+    'Chaos Warp',
+    [
+      "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+    ],
+    {
+      spellAbility: spell({
+        targets: chaosWarpTarget.targets,
+        effects: [{ op: 'chaosWarp', target: chaosWarpTarget.slot.permanent }],
+        description:
+          'Its owner shuffles target permanent into their library, reveals the top card, and puts it onto the battlefield if it is a permanent',
+      }),
+    },
+    'PR09 restores the publicly revealed owner-library shuffle through real zone changes.',
+  );
+
   const duelist = targetSlots({ opponent: { kind: 'player', controller: 'opponent' } });
   const carnosaur = targetSlots({
     permanent: { kind: 'permanent', filter: anyOf(ofType('Creature'), ofType('Planeswalker')) },

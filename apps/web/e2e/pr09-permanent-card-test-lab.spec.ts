@@ -104,16 +104,28 @@ async function castTargetingPermanent(
   await expect(page.getByRole('button', { name: 'Confirm', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 }
+async function resolveWard(page: Page, shouldPay: boolean): Promise<void> {
+  const decision = shouldPay
+    ? page.getByRole('button', { name: 'Pay {2}', exact: true })
+    : page.getByRole('button', { name: /Let .* be countered/i });
+  await passUntil(page, decision);
+  await decision.click();
+  await passStackUntil(
+    page,
+    seatZone(page, 'P1', 'Graveyard').getByRole('img', {
+      name: 'PR09 Viewer Artifact Removal',
+      exact: true,
+    }),
+  );
+}
 async function activate(page: Page, source: Locator, ability: RegExp): Promise<void> {
   await expect(source).toBeVisible();
   await source.click();
   const action = page.getByRole('button').filter({ hasText: ability }).last();
-  await expect(action).toBeVisible();
-  await action.click();
-  if ((await page.getByText(/Target \d+ of \d+/).count()) === 0) {
-    const confirm = page.getByRole('button', { name: 'Confirm', exact: true });
-    if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
-  }
+  if (await action.isVisible()) await action.click();
+  if ((await page.getByText(/Target \d+ of \d+/).count()) > 0) return;
+  const confirm = page.getByRole('button', { name: 'Confirm', exact: true });
+  if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
 async function passUntil(page: Page, target: Locator): Promise<void> {
   const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
@@ -184,12 +196,14 @@ async function castFree(page: Page, name: string): Promise<void> {
     await passUntil(page, action);
     await action.click();
   } else {
-    const lookedCard = page
+    const group = page
       .locator('.decision-panel .panel-group')
-      .filter({ hasText: name })
-      .getByRole('button', { name: 'Cast', exact: true });
-    await passUntil(page, lookedCard);
-    await lookedCard.click();
+      .filter({ has: page.getByRole('img', { name, exact: true }) });
+    await expect(group).toBeVisible();
+    const cast = group.getByRole('button', { name: /^Cast(?: for free)?$/i });
+    await expect(cast).toHaveCount(1);
+    await expect(cast).toBeVisible();
+    await cast.click();
   }
 }
 
@@ -283,6 +297,15 @@ test.describe('PR09 permanent Card Test Lab scenarios', () => {
         }
       } else if (id.startsWith('pr09-cosmic-cube')) {
         await expect(permanent(page, 'P1', cardName)).toBeVisible();
+        await castTargetingPermanent(page, 'PR09 Viewer Artifact Removal', 'P2', cardName);
+        await resolveWard(page, id.endsWith('positive'));
+        if (id.endsWith('positive')) {
+          await expect(
+            seatZone(page, 'P2', 'Graveyard').getByRole('img', { name: cardName, exact: true }),
+          ).toBeVisible();
+        } else {
+          await expect(permanent(page, 'P2', cardName)).toBeVisible();
+        }
         if (id.endsWith('positive')) {
           await attack(page, 'PR09 Viewer Creature');
           await castFree(page, 'PR09 Viewer Spell');
@@ -317,7 +340,7 @@ test.describe('PR09 permanent Card Test Lab scenarios', () => {
         await expect(permanent(page, 'P1', cardName)).toBeVisible();
         await cast(page, 'PR09 Viewer Instant');
         await castTargetingStack(page, 'PR09 Viewer Counter', 'PR09 Viewer Instant');
-        await passUntilText(page.locator('.human-zone .life-badge'), '42');
+        await passUntilText(page.locator('.human-zone .life-badge'), '41');
         await expect(page.locator('.log')).toContainText(/PR09 Viewer Instant resolves/i);
         if (id.endsWith('positive')) {
           await castFree(page, 'PR09 Viewer Spell');
@@ -330,7 +353,7 @@ test.describe('PR09 permanent Card Test Lab scenarios', () => {
       } else if (id.startsWith('pr09-trumpeting-carnosaur')) {
         if (id.endsWith('discard')) {
           const carnosaur = hand(page, cardName);
-          await activate(page, carnosaur, /discard a card/i);
+          await activate(page, carnosaur, /discard this card/i);
           const target = permanent(page, 'P2', 'PR09 Viewer Creature');
           await expect(target).toHaveClass(/targetable/);
           await target.click();
@@ -359,4 +382,8 @@ test.describe('PR09 permanent Card Test Lab scenarios', () => {
       }
     });
   }
+
+  test.afterAll(() => {
+    expect([...exercised].sort()).toEqual([...titles.keys()].sort());
+  });
 });

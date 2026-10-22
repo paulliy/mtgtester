@@ -147,8 +147,8 @@ describe('internal spend-as-any-color mana permission', () => {
       ...parseManaCost('{R}{G}').cost!,
       spendAsAnyColor: true as const,
     };
-    const restriction = {
-      purposes: ['castSpell'] as const,
+    const restriction: NonNullable<ManaEntry['restriction']> = {
+      purposes: ['castSpell'],
       description: 'cast a Dragon spell',
     };
     const restrictedMana: ManaEntry = { symbol: 'C', restriction };

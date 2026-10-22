@@ -15,6 +15,7 @@ function run(id: string) {
   const initialP1View = JSON.stringify(scenario.engine.view('P1'));
   const initialP2View = JSON.stringify(scenario.engine.view('P2'));
   let cast = false;
+  let offeredForgeColoredSpell = false;
   let activated = false;
   let reboundCast = false;
   let etaliExiledAllBeforeChoice = false;
@@ -38,6 +39,15 @@ function run(id: string) {
           .exile.some((card) => card.ownerId === seat && card.name === 'PR09 Library Spell'),
       );
     }
+    if (
+      req.decidingPlayer === 'P1' &&
+      req.legalActions.some(
+        (candidate) =>
+          candidate.type === 'castSpell' &&
+          candidate.description.includes('PR09 Forge Colored Spell'),
+      )
+    )
+      offeredForgeColoredSpell = true;
     const expectedCard = scenario.metadata.title.split(':')[0]!;
     let action = req.legalActions.find(
       (candidate) =>
@@ -120,6 +130,7 @@ function run(id: string) {
   }
   return {
     scenario,
+    offeredForgeColoredSpell,
     cast,
     activated,
     reboundCast,
@@ -235,13 +246,15 @@ describe('PR09 library viewer scenarios', () => {
         expect(result.initialP1View).toContain(topName);
         expect(result.initialP2View).not.toContain(topName);
       }
-      if (id === 'pr09-mystic-forge-viewer-negative')
+      if (id === 'pr09-mystic-forge-viewer-negative') {
+        expect(result.offeredForgeColoredSpell).toBe(false);
         expect(
           result.state.eventLog.some(
             (event) =>
               event.type === 'castSpell' && event.payload['name'] === 'PR09 Forge Colored Spell',
           ),
         ).toBe(false);
+      }
       if (id.endsWith('activation'))
         expect(result.state.exile.some((card) => card.name === 'PR09 Forge Artifact')).toBe(true);
       if (id.startsWith('pr09-etali')) {
@@ -289,6 +302,21 @@ describe('PR09 library viewer scenarios', () => {
             named.filter((name) => result.state.exile.some((card) => card.name === name)),
           ).toHaveLength(1);
         }
+      }
+      if (id === 'pr09-expressive-iteration-viewer-negative') {
+        expect(
+          result.state.players
+            .find((player) => player.id === 'P1')!
+            .hand.filter((card) => card.name === 'PR09 Library Miss'),
+        ).toHaveLength(1);
+        expect(result.state.exile.filter((card) => card.name === 'PR09 Library Miss')).toHaveLength(
+          1,
+        );
+        expect(
+          log.some(
+            (event) => event.type === 'castSpell' && event.payload['name'] === 'PR09 Library Miss',
+          ),
+        ).toBe(false);
       }
       if (id.startsWith('pr09-genesis-ultimatum') && id.endsWith('positive')) {
         expect(
