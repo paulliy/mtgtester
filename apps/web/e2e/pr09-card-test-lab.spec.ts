@@ -1,5 +1,12 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import type { ServerToClientMessage } from '../../../packages/shared/src/index';
+import { expect, test, type Page } from '@playwright/test';
+import {
+  hand,
+  permanent,
+  priorityHelpers,
+  selectScenario,
+  launchScenario,
+  observePriority,
+} from './pr09-viewer-helpers';
 import {
   PR09_SCENARIOS,
   PR09_SCENARIO_IDS,
@@ -13,48 +20,18 @@ const exercised = new Set<string>();
 const frontiers = new WeakMap<Page, { requestId: string; stackSize: number }>();
 const titles = new Map(PR09_SCENARIOS.map((scenario) => [scenario.id, scenario.title]));
 
+const { passUntil, passStackUntil, attack } = priorityHelpers(frontiers, 20_000);
+
 async function runScenario(page: Page, id: string): Promise<void> {
   const title = titles.get(id);
   if (title === undefined) throw new Error(`Missing PR09 title ${id}`);
-  const frontier = { requestId: '', stackSize: 0 };
-  frontiers.set(page, frontier);
-  page.on('websocket', (socket) =>
-    socket.on('framereceived', ({ payload }) => {
-      try {
-        const frame = JSON.parse(payload.toString()) as ServerToClientMessage;
-        if (frame.type === 'playerActionRequired') {
-          frontier.requestId = frame.payload.request.requestId;
-          frontier.stackSize = frame.payload.request.state.stack.length;
-        } else if (frame.type === 'playerStateSnapshot')
-          frontier.stackSize = frame.payload.state.stack.length;
-      } catch {
-        /* Ignore non-JSON websocket frames. */
-      }
-    }),
-  );
-  await page.goto('/card-test-lab');
-  await expect(page.getByRole('heading', { name: 'Card Test Lab' })).toBeVisible();
-  const picker = page.locator('#scenario-select');
-  await picker.selectOption({ label: title });
-  const selected = await picker.inputValue();
-  expect(PR09_SCENARIO_IDS).toContain(selected);
-  expect(selected).toBe(id);
+  frontiers.set(page, observePriority(page));
+  await selectScenario(page, id, title);
   expect(exercised.has(id), `${id} ran more than once`).toBe(false);
   exercised.add(id);
-  await page.getByRole('button', { name: 'Run scenario' }).click();
-  await expect(page).toHaveURL(/\/game$/);
-  await expect(page.getByText(title).first()).toBeVisible();
+  await launchScenario(page, title);
 }
 
-function hand(page: Page, name: string): Locator {
-  return page.locator('.hand-card:not(.hand-card-leave-active)', { hasText: name });
-}
-function permanent(page: Page, seat: string, name: string): Locator {
-  const zone = seat === 'P1' ? '.human-zone' : `.opponent[data-seat="${seat}"]`;
-  return page
-    .locator(`${zone} .object:not(.board-card-leave-active)`)
-    .filter({ has: page.getByRole('img', { name, exact: true }) });
-}
 async function cast(page: Page, name: string): Promise<void> {
   const card = hand(page, name);
   await expect(card).toHaveClass(/actionable/);
@@ -69,61 +46,6 @@ async function selectTargetingCast(page: Page, name: string): Promise<void> {
   await card.click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
-}
-async function passUntil(page: Page, target: Locator): Promise<void> {
-  const pass = page
-    .getByRole('button', { name: 'Pass priority', exact: true })
-    .and(page.locator('button:enabled'));
-  await expect
-    .poll(
-      async () => {
-        if (await target.isVisible()) return true;
-        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-        return false;
-      },
-      { timeout: 20_000 },
-    )
-    .toBe(true);
-}
-async function passStackUntil(page: Page, target: Locator): Promise<void> {
-  const frontier = frontiers.get(page)!;
-  const pass = page
-    .getByRole('button', { name: 'Pass priority', exact: true })
-    .and(page.locator('button:enabled'));
-  let submitted = '';
-  await expect
-    .poll(
-      async () => {
-        if (await target.isVisible()) return true;
-        if (
-          frontier.stackSize > 0 &&
-          frontier.requestId !== submitted &&
-          (await pass.isVisible())
-        ) {
-          const requestId = frontier.requestId;
-          try {
-            await pass.click({ timeout: 1_000 });
-            submitted = requestId;
-          } catch {
-            // A new decision can replace the button between observing and clicking it.
-          }
-        }
-        return false;
-      },
-      { timeout: 20_000 },
-    )
-    .toBe(true);
-}
-async function attack(page: Page, attacker: string): Promise<void> {
-  const declare = page.getByRole('button', { name: /Declare attackers/ });
-  await passUntil(page, declare);
-  await declare.click();
-  await page
-    .locator('.combat-assignment-row')
-    .filter({ hasText: attacker })
-    .getByRole('button', { name: 'P2', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Confirm attacks', exact: true }).click();
 }
 async function choosePlayerTarget(page: Page, seat: string): Promise<void> {
   const player = page.locator(`.opponent[data-seat="${seat}"]`);

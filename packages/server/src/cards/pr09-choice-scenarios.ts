@@ -1,39 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { Engine } from '@mtg/engine';
 import type { EnginePlayerConfig } from '@mtg/engine';
 import { NO_BLOCK_TARGET } from '@mtg/shared';
 import type { Color, GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
+import { pin, supportCard } from './pr09-scenario-fixtures';
 
-type Pin = { sha256: string; card: OracleCard };
-const pins = (
-  JSON.parse(
-    readFileSync(
-      new URL(
-        '../../../../packages/engine/tests/fixtures/coverage-pr09-oracle.json',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  ) as { cards: Pin[] }
-).cards;
-for (const pin of pins)
-  if (createHash('sha256').update(JSON.stringify(pin.card)).digest('hex') !== pin.sha256)
-    throw new Error(`PR09 Oracle pin drift: ${pin.card.name}`);
-const pin = (name: string): Pin => {
-  const found = pins.find((entry) => entry.card.name === name);
-  if (!found) throw new Error(`Missing PR09 Oracle pin ${name}`);
-  return found;
-};
-const basics = JSON.parse(
-  readFileSync(new URL('../../fixtures/coverage-oracle.json', import.meta.url), 'utf8'),
-) as OracleCard[];
-const basic = (name: string) => {
-  const found = basics.find((card) => card.name === name);
-  if (!found) throw new Error(`Missing supporting Oracle card ${name}`);
-  return found;
-};
+const basic = (name: string) => supportCard(name, 'supporting Oracle card');
 const slug = (name: string) =>
   name
     .toLowerCase()

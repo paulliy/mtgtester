@@ -39,6 +39,10 @@ function pinned(name: string): OracleCard {
   expect(createHash('sha256').update(JSON.stringify(entry.card)).digest('hex')).toBe(entry.sha256);
   return entry.card;
 }
+const facePins = JSON.parse(
+  readFileSync(new URL('./fixtures/selected-spell-faces-oracle.json', import.meta.url), 'utf8'),
+) as { cards: { card: OracleCard }[] };
+const foulmire = facePins.cards.find(({ card }) => card.name.startsWith('Foulmire Knight'))!.card;
 const TRICKERY = pinned("Tibalt's Trickery");
 const GRENZO = pinned('Grenzo, Havoc Raiser');
 const CHIMIL = pinned('Chimil, the Inner Sun');
@@ -593,4 +597,71 @@ describe('PR09 Trickery and Grenzo', () => {
       ),
     ).toBe(false);
   });
+});
+
+it('pr09-trickery-adventure-face-name — treats Profane Insight as different from the Foulmire Knight library card', () => {
+  const ctx = pod('pr09-trickery-adventure-name');
+  const p1 = playerById(ctx, 'P1');
+  const adventureCard = conjure(ctx, 'P1', foulmire, 'hand');
+  addMana(p1, [{ symbol: 'C' }, { symbol: 'C' }, { symbol: 'B' }]);
+  const adventureOption = computePriorityOptions(ctx, p1).find((option) => {
+    const payload = option.payload as Partial<PriorityActionPayload>;
+    return (
+      payload.kind === 'castSpell' &&
+      payload.objectId === adventureCard.id &&
+      payload.alternativeCast === 'adventure'
+    );
+  });
+  expect(adventureOption).toBeDefined();
+  pump(
+    applyPriorityAction(ctx, p1, adventureOption!.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map(),
+    }),
+  );
+  const adventureSpell = ctx.state.stack.at(-1)!;
+  expect(adventureSpell.kind).toBe('spell');
+  if (adventureSpell.kind !== 'spell') throw new Error('Adventure did not create a spell');
+  expect(adventureSpell.description).toBe('Profane Insight');
+
+  const pad = oracle({
+    name: 'Trickery name-check pad',
+    typeLine: 'Land',
+    manaCost: '',
+    cmc: 0,
+    oracleText: '',
+  });
+  const library = [...Array.from({ length: 12 }, () => pad), foulmire].map((definition) =>
+    conjure(ctx, 'P1', definition, 'library'),
+  );
+  p1.library = library;
+  const trickeryCard = conjure(ctx, 'P1', TRICKERY, 'hand');
+  addMana(p1, [{ symbol: 'R' }, { symbol: 'C' }]);
+  const trickeryOption = computePriorityOptions(ctx, p1).find((option) => {
+    const payload = option.payload as Partial<PriorityActionPayload>;
+    return payload.kind === 'castSpell' && payload.objectId === trickeryCard.id;
+  });
+  expect(trickeryOption).toBeDefined();
+  pump(
+    applyPriorityAction(ctx, p1, trickeryOption!.payload as PriorityActionPayload, {
+      index: 0,
+      targets: new Map([[0, adventureSpell.id]]),
+    }),
+  );
+  let freeCastWasOffered = false;
+  pump(resolveTopOfStack(ctx), (decision) => {
+    const index = decision.options.findIndex((option) =>
+      /Cast Foulmire Knight/.test(option.description),
+    );
+    if (index >= 0) {
+      freeCastWasOffered = true;
+      return { index, targets: new Map() };
+    }
+    const passIndex = decision.options.findIndex((option) => option.type === 'pass');
+    return { index: Math.max(0, passIndex), targets: new Map() };
+  });
+  expect(freeCastWasOffered).toBe(true);
+  const freeCast = ctx.state.stack.at(-1)!;
+  expect(freeCast.description).toBe('Foulmire Knight // Profane Insight');
+  expect(freeCast.card?.name).toBe('Foulmire Knight // Profane Insight');
 });

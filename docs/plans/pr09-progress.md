@@ -88,3 +88,17 @@ and is not a code-validation result.
 Reports, browser traces and scratch files stay under ignored `.tmp/` paths. No gameplay-AI strategy
 assessment with a live provider has been performed. Lab opponents make scripted legal decisions;
 that is separate from rules and viewer correctness.
+
+## Test and scenario cleanup
+
+The failed-Aura and selected-Adventure-name regressions now live in the existing library-look
+and Trickery suites. Their three case IDs and assertions are retained; the two standalone edge
+files and their duplicate fixture/setup imports are removed. The coverage ledger points to the
+remaining suites.
+
+The four scenario builders share one validated Oracle fixture loader. The four browser batches
+share card/zone locators, scenario navigation, priority passing and attack helpers, while keeping
+their separate scenario assertions, exact exercised-ID checks and choice-specific socket history.
+All 76 scenario entries remain necessary for the declared clause and interaction coverage. No
+scenario IDs, clauses or engine cases were dropped. Evidence source lists include the new shared
+fixture dependency, and fresh receipts must be generated from the cleanup commit.

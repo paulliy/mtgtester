@@ -1,37 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { Engine } from '@mtg/engine';
 import type { EnginePlayerConfig } from '@mtg/engine';
 import type { Color, GameId, OracleCard } from '@mtg/shared';
 import type { CardTestScenario } from './card-test-scenarios';
+import { pin, supportCard, type Pin } from './pr09-scenario-fixtures';
 
-type Pin = { sha256: string; card: OracleCard };
-const pins = (
-  JSON.parse(
-    readFileSync(
-      new URL(
-        '../../../../packages/engine/tests/fixtures/coverage-pr09-oracle.json',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  ) as { cards: Pin[] }
-).cards;
-const coverage = JSON.parse(
-  readFileSync(new URL('../../fixtures/coverage-oracle.json', import.meta.url), 'utf8'),
-) as OracleCard[];
-for (const entry of pins)
-  if (createHash('sha256').update(JSON.stringify(entry.card)).digest('hex') !== entry.sha256)
-    throw new Error(`PR09 Oracle pin drift: ${entry.card.name}`);
-const pin = (name: string): Pin => {
-  const found = pins.find((entry) => entry.card.name === name);
-  if (!found) throw new Error(`Missing PR09 Oracle pin ${name}`);
-  return found;
-};
 const basic = (name: string): OracleCard => {
-  const found = coverage.find((card) => card.name === name);
-  if (!found) throw new Error(`Missing coverage card ${name}`);
-  return found;
+  return supportCard(name, 'coverage card');
 };
 const definitions = [
   ['dark-confidant', 'Dark Confidant'],
@@ -107,8 +81,7 @@ const lab = (
   oracleText = '',
   power: string | null = null,
 ): OracleCard => {
-  const base = coverage.find((card) => card.name === 'Forest');
-  if (!base) throw new Error('Missing Forest from coverage Oracle');
+  const base = basic('Forest');
   const [left, right] = typeLine.split(' — ');
   const types = (left ?? '')
     .split(' ')

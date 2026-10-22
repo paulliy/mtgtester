@@ -4847,7 +4847,7 @@
       "packages/engine/tests/pr09-card-coverage.test.ts",
       "packages/engine/tests/pr09-library-composition-contract.test.ts",
       "packages/engine/tests/pr09-library-reveal.test.ts",
-      "packages/engine/tests/pr09-library-zone-edges.test.ts",
+      "packages/engine/tests/pr09-library-look.test.ts",
       "packages/server/src/cards/pr09-library-scenarios.test.ts",
       "apps/web/e2e/pr09-library-card-test-lab.spec.ts"
     ],
@@ -4897,7 +4897,6 @@
     "behaviorTests": [
       "packages/engine/tests/pr09-card-coverage.test.ts",
       "packages/engine/tests/pr09-library-composition-contract.test.ts",
-      "packages/engine/tests/pr09-trickery-face-name.test.ts",
       "packages/engine/tests/pr09-trickery-grenzo.test.ts",
       "packages/server/src/cards/pr09-choice-scenarios.test.ts",
       "apps/web/e2e/pr09-choice-card-test-lab.spec.ts"

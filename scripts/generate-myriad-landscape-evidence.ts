@@ -27,6 +27,7 @@ const SOURCE_FILES = [
   'packages/server/src/cards/pr09-library-scenarios.ts',
   'packages/server/src/cards/pr09-permanent-scenarios.ts',
   'packages/server/src/cards/pr09-scenario-catalog.ts',
+  'packages/server/src/cards/pr09-scenario-fixtures.ts',
   'packages/server/src/cards/pr09-scenarios.ts',
   'packages/engine/src/effects/owner-library-choices.ts',
   'packages/server/src/cards/pr08-boseiju-scenarios.ts',

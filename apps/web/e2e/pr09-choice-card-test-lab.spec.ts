@@ -1,4 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import {
+  hand,
+  permanent as allPermanents,
+  priorityHelpers,
+  selectScenario,
+  launchScenario,
+} from './pr09-viewer-helpers';
 import type { ServerToClientMessage } from '../../../packages/shared/src/index';
 import { PR09_CHOICE_SCENARIOS } from '../../../packages/server/src/cards/pr09-choice-scenarios';
 
@@ -21,6 +28,12 @@ const frontiers = new WeakMap<
     }[];
   }
 >();
+
+const { passUntil, passStackUntil, attack } = priorityHelpers(frontiers, 40_000, true);
+
+function permanent(page: Page, seat: string, name: string): Locator {
+  return allPermanents(page, seat, name).first();
+}
 
 async function start(page: Page, id: string): Promise<void> {
   const title = titles.get(id);
@@ -65,28 +78,12 @@ async function start(page: Page, id: string): Promise<void> {
       }
     }),
   );
-  await page.goto('/card-test-lab');
-  await expect(page.getByRole('heading', { name: 'Card Test Lab' })).toBeVisible();
-  const picker = page.locator('#scenario-select');
-  await picker.selectOption({ label: title });
-  expect(await picker.inputValue()).toBe(id);
+  await selectScenario(page, id, title);
   expect(exercised.has(id), `${id} ran more than once`).toBe(false);
   exercised.add(id);
-  await page.getByRole('button', { name: 'Run scenario' }).click();
-  await expect(page).toHaveURL(/\/game$/);
-  await expect(page.getByText(title).first()).toBeVisible();
+  await launchScenario(page, title);
 }
 
-function hand(page: Page, name: string): Locator {
-  return page.locator('.hand-card:not(.hand-card-leave-active)', { hasText: name });
-}
-function permanent(page: Page, seat: string, name: string): Locator {
-  const zone = seat === 'P1' ? '.human-zone' : `.opponent[data-seat="${seat}"]`;
-  return page
-    .locator(`${zone} .object:not(.board-card-leave-active)`)
-    .filter({ has: page.getByRole('img', { name, exact: true }) })
-    .first();
-}
 async function cast(page: Page, name: string): Promise<void> {
   const card = hand(page, name);
   await expect(card).toHaveClass(/actionable/);
@@ -104,69 +101,10 @@ async function castTarget(page: Page, name: string, target: Locator): Promise<vo
   const confirm = page.getByRole('button', { name: 'Confirm', exact: true });
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
-async function passUntil(page: Page, target: Locator): Promise<void> {
-  const pass = page
-    .getByRole('button', { name: 'Pass priority', exact: true })
-    .and(page.locator('button:enabled'));
-  const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
-  await expect
-    .poll(
-      async () => {
-        if (await reminder.isVisible()) await reminder.click();
-        if (await target.isVisible()) return true;
-        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
-        return false;
-      },
-      { timeout: 40_000 },
-    )
-    .toBe(true);
-}
-async function passStackUntil(page: Page, target: Locator): Promise<void> {
-  const frontier = frontiers.get(page)!;
-  const pass = page
-    .getByRole('button', { name: 'Pass priority', exact: true })
-    .and(page.locator('button:enabled'));
-  const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
-  let submitted = '';
-  await expect
-    .poll(
-      async () => {
-        if (await reminder.isVisible()) await reminder.click();
-        if (await target.isVisible()) return true;
-        if (
-          frontier.stackSize > 0 &&
-          frontier.requestId !== submitted &&
-          (await pass.isVisible())
-        ) {
-          const requestId = frontier.requestId;
-          try {
-            await pass.click({ timeout: 1_000 });
-            submitted = requestId;
-          } catch {
-            // A new decision can replace the button between observing and clicking it.
-          }
-        }
-        return false;
-      },
-      { timeout: 40_000 },
-    )
-    .toBe(true);
-}
 async function passUntilStackCard(page: Page, name: string): Promise<Locator> {
   const target = page.locator('.stack li').filter({ hasText: name }).first();
   await passStackUntil(page, target);
   return target;
-}
-async function attack(page: Page, attacker: string): Promise<void> {
-  const declare = page.getByRole('button', { name: /Declare attackers/ });
-  await passUntil(page, declare);
-  await declare.click();
-  await page
-    .locator('.combat-assignment-row')
-    .filter({ hasText: attacker })
-    .getByRole('button', { name: 'P2', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Confirm attacks', exact: true }).click();
 }
 async function chooseCard(page: Page, name: string, action: RegExp): Promise<void> {
   const frontier = frontiers.get(page)!;
