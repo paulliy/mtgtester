@@ -71,7 +71,9 @@ async function selectTargetingCast(page: Page, name: string): Promise<void> {
   await expect(page.getByText(/Target 1 of 1/)).toBeVisible();
 }
 async function passUntil(page: Page, target: Locator): Promise<void> {
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   await expect
     .poll(
       async () => {
@@ -85,7 +87,9 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
 }
 async function passStackUntil(page: Page, target: Locator): Promise<void> {
   const frontier = frontiers.get(page)!;
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   let submitted = '';
   await expect
     .poll(
@@ -94,11 +98,15 @@ async function passStackUntil(page: Page, target: Locator): Promise<void> {
         if (
           frontier.stackSize > 0 &&
           frontier.requestId !== submitted &&
-          (await pass.isVisible()) &&
-          (await pass.isEnabled())
+          (await pass.isVisible())
         ) {
-          submitted = frontier.requestId;
-          await pass.click();
+          const requestId = frontier.requestId;
+          try {
+            await pass.click({ timeout: 1_000 });
+            submitted = requestId;
+          } catch {
+            // A new decision can replace the button between observing and clicking it.
+          }
         }
         return false;
       },

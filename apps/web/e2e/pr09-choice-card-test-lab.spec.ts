@@ -105,15 +105,16 @@ async function castTarget(page: Page, name: string, target: Locator): Promise<vo
   if ((await confirm.isVisible()) && (await confirm.isEnabled())) await confirm.click();
 }
 async function passUntil(page: Page, target: Locator): Promise<void> {
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
   await expect
     .poll(
       async () => {
         if (await reminder.isVisible()) await reminder.click();
         if (await target.isVisible()) return true;
-        if ((await pass.isVisible()) && (await pass.isEnabled()))
-          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 40_000 },
@@ -122,7 +123,9 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
 }
 async function passStackUntil(page: Page, target: Locator): Promise<void> {
   const frontier = frontiers.get(page)!;
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   const reminder = page.getByRole('button', { name: 'Pass anyway', exact: true });
   let submitted = '';
   await expect
@@ -133,11 +136,15 @@ async function passStackUntil(page: Page, target: Locator): Promise<void> {
         if (
           frontier.stackSize > 0 &&
           frontier.requestId !== submitted &&
-          (await pass.isVisible()) &&
-          (await pass.isEnabled())
+          (await pass.isVisible())
         ) {
-          submitted = frontier.requestId;
-          await pass.click();
+          const requestId = frontier.requestId;
+          try {
+            await pass.click({ timeout: 1_000 });
+            submitted = requestId;
+          } catch {
+            // A new decision can replace the button between observing and clicking it.
+          }
         }
         return false;
       },
@@ -198,32 +205,22 @@ async function orderCelebrateTriggers(page: Page): Promise<void> {
   await chooseAction(page, /Celebrate the Mountain-king: For each opponent, exile/);
 }
 
-async function finishCapstoneChoices(page: Page, mayAlreadyBeComplete = false): Promise<void> {
+async function finishCapstoneChoices(page: Page): Promise<void> {
   const stop = page.getByRole('button', { name: 'Stop', exact: true });
-  const prompt = page.locator('.decision-panel .panel-prompt');
-  if (mayAlreadyBeComplete) {
-    await expect
-      .poll(async () => (await stop.isVisible()) || !(await prompt.isVisible()), { timeout: 5_000 })
-      .toBe(true);
-  } else await expect(stop).toBeVisible();
-  if (!(await stop.isVisible())) return;
-
-  const frontier = frontiers.get(page)!;
-  const priorSnapshotCount = frontier.snapshotCount;
+  await expect(stop).toBeVisible();
   await stop.click();
-  await expect
-    .poll(() => frontier.snapshotCount > priorSnapshotCount, { timeout: 5_000 })
-    .toBe(true);
+  await expect(stop).toBeHidden();
 }
 async function passUntilSourceLeaves(page: Page, sourceName: string): Promise<void> {
   const source = permanent(page, 'P1', sourceName);
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   await expect
     .poll(
       async () => {
         if ((await source.count()) === 0) return true;
-        if ((await pass.isVisible()) && (await pass.isEnabled()))
-          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 40_000 },
@@ -419,7 +416,11 @@ test.describe('PR09 choice-card Card Test Lab scenarios', () => {
         if (id.endsWith('positive')) {
           await chooseCard(page, 'PR09 Capstone One', /Cast for free/i);
           await chooseCard(page, 'PR09 Capstone Two', /Cast for free/i);
-          await finishCapstoneChoices(page, true);
+          // Casting the last eligible card completes these choices without a Stop decision.
+          const resolutions = page.locator('.log .line .text').filter({
+            hasText: /^Improvisation Capstone resolves$/,
+          });
+          await expect(resolutions).toHaveCount(1);
           await passUntil(page, page.locator('.human-zone .life-badge').getByText('42'));
           await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
           await expect(page.locator('.decision-panel')).toContainText(
@@ -430,13 +431,16 @@ test.describe('PR09 choice-card Card Test Lab scenarios', () => {
             exact: true,
           });
           await passUntil(page, castCopy);
-          const frontier = frontiers.get(page)!;
-          const priorSnapshotCount = frontier.snapshotCount;
           await castCopy.click();
-          await expect
-            .poll(() => frontier.snapshotCount > priorSnapshotCount, { timeout: 5_000 })
-            .toBe(true);
+          // Decline the copy's revealed spells, then observe that copy resolve.
           await finishCapstoneChoices(page);
+          await passStackUntil(page, resolutions.nth(1));
+          await expect(resolutions).toHaveCount(2);
+          await expect(
+            page.locator('.human-zone .zone-card-thumb').filter({
+              has: page.getByRole('img', { name: cardName, exact: true }),
+            }),
+          ).toHaveCount(1);
           await expect(page.locator('.log')).toContainText(/copy.*Improvisation Capstone/i);
           await expect(page.locator('.human-zone .life-badge')).toHaveText('42');
         } else {

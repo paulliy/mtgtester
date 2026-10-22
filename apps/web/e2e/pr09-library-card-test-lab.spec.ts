@@ -67,13 +67,14 @@ async function cast(page: Page, name: string): Promise<void> {
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 }
 async function passUntil(page: Page, target: Locator): Promise<void> {
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   await expect
     .poll(
       async () => {
         if (await target.isVisible()) return true;
-        if ((await pass.isVisible()) && (await pass.isEnabled()))
-          await pass.click({ timeout: 1_000 }).catch(() => undefined);
+        if (await pass.isVisible()) await pass.click({ timeout: 1_000 }).catch(() => undefined);
         return false;
       },
       { timeout: 30_000 },
@@ -82,7 +83,9 @@ async function passUntil(page: Page, target: Locator): Promise<void> {
 }
 async function passStackUntil(page: Page, target: Locator): Promise<void> {
   const frontier = stackSizes.get(page)!;
-  const pass = page.getByRole('button', { name: 'Pass priority', exact: true });
+  const pass = page
+    .getByRole('button', { name: 'Pass priority', exact: true })
+    .and(page.locator('button:enabled'));
   let submitted = '';
   await expect
     .poll(
@@ -91,11 +94,15 @@ async function passStackUntil(page: Page, target: Locator): Promise<void> {
         if (
           frontier.stackSize > 0 &&
           frontier.requestId !== submitted &&
-          (await pass.isVisible()) &&
-          (await pass.isEnabled())
+          (await pass.isVisible())
         ) {
-          submitted = frontier.requestId;
-          await pass.click();
+          const requestId = frontier.requestId;
+          try {
+            await pass.click({ timeout: 1_000 });
+            submitted = requestId;
+          } catch {
+            // A new decision can replace the button between observing and clicking it.
+          }
         }
         return false;
       },
