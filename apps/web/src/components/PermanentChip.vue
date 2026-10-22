@@ -147,6 +147,7 @@ function onLeave(): void {
     class="tile"
     :class="{
       token: isToken,
+      stacked: count > 1,
       creature: isCreature,
       tapped: permanent.tapped,
       attacking: isAttacking,
@@ -457,17 +458,21 @@ function onLeave(): void {
   right: auto;
   left: -4px;
 }
+/* Counters and combat marks sit top-left, clear of the P/T badge in the bottom-right corner. */
 .status {
   position: absolute;
   left: 3px;
-  bottom: 3px;
-  max-width: 60%;
+  top: 3px;
+  max-width: 70%;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.1rem;
   pointer-events: none;
+}
+.tile.stacked .status {
+  top: 16px;
 }
 .tile.token .status {
   bottom: auto;

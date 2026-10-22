@@ -68,6 +68,12 @@ const style = computed(() => {
   const top = onBottomHalf ? store.cursorY - OFFSET - box.height : store.cursorY + OFFSET;
 
   const clampedLeft = Math.min(Math.max(8, left), window.innerWidth - box.width - 8);
+  // A text frame is sized to its content, so its height is unknown here: below the middle of the
+  // screen, pin its bottom edge above the cursor rather than guessing where its top goes.
+  if (textMode.value && onBottomHalf) {
+    const bottom = Math.max(8, window.innerHeight - store.cursorY + OFFSET);
+    return { left: `${clampedLeft}px`, bottom: `${bottom}px` };
+  }
   const clampedTop = Math.min(Math.max(8, top), window.innerHeight - box.height - 8);
   return { left: `${clampedLeft}px`, top: `${clampedTop}px` };
 });
@@ -81,7 +87,15 @@ const style = computed(() => {
         <span v-if="card.manaCost" class="text-cost">{{ card.manaCost }}</span>
       </div>
       <div v-if="card.typeLine" class="text-type">{{ card.typeLine }}</div>
-      <div class="text-body">
+      <div
+        v-if="
+          card.oracleText ||
+          (card.keywords && card.keywords.length > 0) ||
+          card.counters ||
+          (card.damageMarked ?? 0) > 0
+        "
+        class="text-body"
+      >
         <p v-if="card.oracleText" class="text-oracle">{{ card.oracleText }}</p>
         <p v-if="card.keywords && card.keywords.length > 0" class="text-live">
           {{ card.keywords.join(', ') }}
@@ -130,8 +144,8 @@ const style = computed(() => {
   font-size: 0.8rem;
   line-height: 1.5;
 }
+/* Sized to its content: a vanilla token is a few lines, not a card-sized blank frame. */
 .text-card {
-  aspect-ratio: 63 / 88;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -169,7 +183,6 @@ const style = computed(() => {
   border-bottom: 1px solid var(--line);
 }
 .text-body {
-  flex-grow: 1;
   padding: 0.5rem 0.6rem;
   font-size: 0.82em;
   line-height: 1.45;
@@ -186,7 +199,7 @@ const style = computed(() => {
 }
 .text-pt {
   align-self: flex-end;
-  margin: 0 0.5rem 0.5rem;
+  margin: 0.5rem;
   padding: 0.15rem 0.6rem;
   border-radius: 6px;
   background: var(--surface-2);

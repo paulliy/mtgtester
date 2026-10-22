@@ -393,7 +393,9 @@ header {
   margin-bottom: 0.2rem;
   flex-shrink: 0;
 }
+/* Square art tiles at this size fit two rows in a seat panel, where full-height cards fit one. */
 .chips-grid {
+  --chip-w: 76px;
   position: relative;
   display: flex;
   flex-wrap: wrap;
