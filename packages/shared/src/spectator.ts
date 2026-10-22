@@ -18,7 +18,7 @@
 
 import type { LossReason, Phase, Step } from './enums';
 import type { GameId, ObjectId, PlayerId } from './ids';
-import type { ManaCostString, ManaPool } from './mana';
+import type { Color, ManaCostString, ManaPool } from './mana';
 import type { PermanentStatus } from './objects';
 
 /** A card in a visible non-battlefield zone. */
@@ -64,6 +64,11 @@ export interface SpectatorPermanent extends SpectatorCard {
    * UI can't tell from the text. Optional only because snapshots saved before it lack the field.
    */
   isToken?: boolean;
+  /**
+   * Current colors, after effects. The UI matches a token to a printed token's art by them.
+   * Optional only because snapshots saved before it lack the field.
+   */
+  colors?: Color[];
 }
 
 /** One commander, wherever it currently is, with its accumulated tax (brief §5.7). */

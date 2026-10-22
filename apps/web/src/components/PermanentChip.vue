@@ -6,7 +6,9 @@ import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useBoardFlash } from '../composables/useBoardFlash';
 import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
 import { isTokenTypeLine, scryfallImageUrl } from '../lib/card';
+import type { TokenArtKey } from '../lib/tokenArt';
 import { useCardPreviewStore } from '../stores/cardPreview';
+import { useTokenArtStore } from '../stores/tokenArt';
 
 const props = withDefaults(
   defineProps<{
@@ -19,6 +21,7 @@ const props = withDefaults(
 );
 
 const cardPreview = useCardPreviewStore();
+const tokenArtStore = useTokenArtStore();
 const { registerAnchor, unregisterAnchor } = useBoardAnchors();
 
 const isCreature = computed(() => props.permanent.power !== null);
@@ -96,20 +99,43 @@ const marks = computed(() => {
 /**
  * Arena-style tiles: a real card shows only its illustration (Scryfall's `art_crop`) in a square;
  * the full card, with its text and live state, is the hover preview. A token is a half-circle
- * carrying its P/T (or its name, when it isn't a creature); a token copy of a real card also
- * shows that card's art behind the label.
+ * carrying its P/T (or its name, when it isn't a creature) over art: a token copy of a real card
+ * shows that card's, and any other token borrows a matching printed token's (`tokenArt`).
  */
+const tokenArtKey = computed<TokenArtKey | null>(() => {
+  const p = props.permanent;
+  // Colors pick the right printing; a snapshot saved before they were sent can't be matched.
+  if (!isToken.value || p.scryfallId !== null || p.colors === undefined) return null;
+  return {
+    name: p.name,
+    typeLine: p.typeLine,
+    colors: p.colors,
+    power: p.power,
+    toughness: p.toughness,
+  };
+});
+const tokenArt = computed(() =>
+  tokenArtKey.value === null ? null : (tokenArtStore.lookup(tokenArtKey.value) ?? null),
+);
+/** The printing this tile draws from: its own, or a borrowed token printing. */
+const printing = computed(() =>
+  props.permanent.scryfallId !== null
+    ? { scryfallId: props.permanent.scryfallId, face: props.permanent.imageFace ?? 'front' }
+    : tokenArt.value === null
+      ? null
+      : { scryfallId: tokenArt.value.scryfallId, face: tokenArt.value.face },
+);
 const artFailed = ref(false);
 watch(
-  () => [props.permanent.scryfallId, props.permanent.imageFace],
+  () => [printing.value?.scryfallId, printing.value?.face],
   () => {
     artFailed.value = false;
   },
 );
 const artSrc = computed(() => {
-  const id = props.permanent.scryfallId;
-  if (artFailed.value || id === null || id.length < 2) return null;
-  return scryfallImageUrl(id, 'art_crop', props.permanent.imageFace ?? 'front');
+  const p = printing.value;
+  if (artFailed.value || p === null || p.scryfallId.length < 2) return null;
+  return scryfallImageUrl(p.scryfallId, 'art_crop', p.face);
 });
 
 const ptText = computed(() =>
@@ -118,10 +144,13 @@ const ptText = computed(() =>
 
 function onEnter(event: MouseEvent): void {
   const p = props.permanent;
+  // A borrowed token printing shows whole only when it matched on P/T too; otherwise the preview
+  // falls back to the token's own text rather than a card with the wrong numbers.
+  const exactArt = tokenArt.value?.exact === true ? tokenArt.value : null;
   cardPreview.show({
-    scryfallId: p.scryfallId,
+    scryfallId: p.scryfallId ?? exactArt?.scryfallId ?? null,
     name: p.name,
-    imageFace: p.imageFace ?? 'front',
+    imageFace: p.scryfallId !== null ? (p.imageFace ?? 'front') : (exactArt?.face ?? 'front'),
     typeLine: p.typeLine,
     manaCost: p.manaCost,
     oracleText: p.oracleText,
@@ -188,7 +217,11 @@ function onLeave(): void {
       <span
         v-if="isToken"
         class="token-label"
-        :class="{ 'is-name': ptText === null, 'flash-damage': damageFlash === 'damage' }"
+        :class="{
+          'is-name': ptText === null,
+          'on-art': artSrc !== null,
+          'flash-damage': damageFlash === 'damage',
+        }"
       >
         {{ ptText ?? permanent.name }}
       </span>
@@ -304,6 +337,15 @@ function onLeave(): void {
   font-variant-numeric: tabular-nums;
   color: var(--text);
   white-space: nowrap;
+}
+/* Over art, the label sits on a dark pill so it reads against any illustration. */
+.token-label.on-art {
+  margin-bottom: 4%;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  background: rgb(11 13 17 / 0.82);
+  color: #fff;
+  text-shadow: none;
 }
 .token-label.is-name {
   max-width: 80%;

@@ -68,6 +68,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     blockedBy: [...perm.blockedByOrdered],
     keywords: [...chars.keywords],
     isToken: perm.isToken,
+    colors: [...chars.colors],
     imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,
@@ -289,6 +290,7 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
         oracleText: '',
         scryfallId: null,
         isToken: false,
+        colors: [],
       };
     }),
     exile: spectator.exile.map((card) => {
