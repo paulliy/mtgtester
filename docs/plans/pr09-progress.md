@@ -72,10 +72,13 @@ From a clean committed tree, generate the final receipts with:
 
 ```bash
 bun run test:primitive-contracts --output .tmp/pr09-final-primitives
-bun run card-capabilities --primitive-evidence .tmp/pr09-final-primitives --review-manifest packages/server/fixtures/card-verification-manifest.json
 bun run primitive-promotions --base 89f6605f8b7dfa82d5b9c13a48b2a8adb5684c7a --primitive-evidence .tmp/pr09-final-primitives
 bun run test:pr09-verification .tmp/pr09-final-verification .tmp/pr09-final-primitives
 ```
+
+The PR09 verifier enforces primitive eligibility for the exact 31 pinned definitions. The
+promotion command checks every new or changed reviewed declaration against `main`; historical
+review labels elsewhere in the repository do not provide current evidence for this PR.
 
 These commands reject stale sources, unsupported primitive scope, missing clause mappings,
 missing/failed browser cases, retries and invalid traces. The pull request records the final
