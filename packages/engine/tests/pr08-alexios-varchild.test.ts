@@ -10,6 +10,7 @@ import {
   moveObject,
   createToken,
   movePermanentsToGraveyard,
+  refreshControlEffects,
 } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -140,6 +141,28 @@ describe('PR08 Alexios and Varchild', () => {
       permanentRecords++;
       expect(computeCharacteristics(ctx, alexios).keywords).toContain('haste');
     }
+  });
+
+  it('pr08-alexios-varchild-02b — repeated upkeep rotation keeps one permanent record per player', () => {
+    const ctx = pod('alexios-rotation-bound');
+    const alexios = cast(ctx, 'P1', alexiosPin.card, ['C', 'C', 'C', 'R']);
+    const rotation = ['P1', 'P2', 'P3', 'P4'];
+    for (let upkeep = 0; upkeep < 12; upkeep++) {
+      const who = rotation[upkeep % rotation.length]!;
+      ctx.state.currentTurnPlayer = who;
+      ctx.state.activePlayerIndex = ctx.state.turnOrder.indexOf(who);
+      ctx.state.step = 'upkeep';
+      queueStepTriggers(ctx, 'upkeep');
+      settle(ctx);
+      expect(alexios.controllerId).toBe(who);
+    }
+    expect(alexios.controlChanges!.length).toBeLessThanOrEqual(rotation.length);
+    // A departed controller's record ends and control falls back to the next newest survivor.
+    const newest = alexios.controlChanges!.at(-1)!.controllerId;
+    const previous = alexios.controlChanges!.at(-2)!.controllerId;
+    playerById(ctx, newest).hasLost = true;
+    refreshControlEffects(ctx, alexios);
+    expect(alexios.controllerId).toBe(previous);
   });
 
   it('pr08-alexios-varchild-03 — Alexios resists single sacrifice', () => {

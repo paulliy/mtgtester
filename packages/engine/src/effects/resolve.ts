@@ -566,6 +566,7 @@ function* chooseEnteringAttackTarget(
               verb: 'Attack',
             })
           : cardOption(ctx, planeswalker, {
+              viewerId: controller.id,
               type: 'choosePlaneswalker',
               description: `Attack ${planeswalker.name}`,
               payload: planeswalker.id,
@@ -2357,6 +2358,7 @@ export function* executeAbility(
               }),
               ...available.map((permanent) =>
                 cardOption(ctx, permanent, {
+                  viewerId: controller.id,
                   type: 'untap',
                   description: `Untap ${permanent.name}`,
                   verb: 'Untap',
@@ -3611,6 +3613,7 @@ export function* executeAbility(
             // payload-derived `subjectId` would strand the option (see Kairi above).
             options: candidates.map((card) =>
               cardOption(ctx, card, {
+                viewerId: source.controllerId,
                 type: 'choose',
                 description: `Return ${card.name} to the battlefield`,
                 verb: 'Return',
@@ -5694,6 +5697,7 @@ export function* executeAbility(
             options: [
               ...matches.map((card) =>
                 cardOption(ctx, card, {
+                  viewerId: controller.id,
                   type: 'findCard',
                   description: `Put ${card.name} onto the battlefield tapped`,
                   verb: 'Put onto battlefield tapped',
@@ -5773,6 +5777,7 @@ export function* executeAbility(
             options: [
               ...castable.map((card) =>
                 cardOption(ctx, card, {
+                  viewerId: controller.id,
                   type: 'castSpell',
                   description: `Cast ${card.name} for free`,
                   verb: 'Cast for free',
@@ -5883,6 +5888,7 @@ export function* executeAbility(
             presentationSource: presentedSource(ctx, source),
             options: tokens.map((candidate) =>
               cardOption(ctx, candidate, {
+                viewerId: controller.id,
                 type: 'chooseToken',
                 description: `Choose ${candidate.name}`,
                 verb: 'Choose',
@@ -5973,6 +5979,7 @@ export function* executeAbility(
           options: [
             ...hosts.map((host) =>
               cardOption(ctx, host, {
+                viewerId: controller.id,
                 type: 'attach',
                 description: `Attach ${attachment.name} to ${host.name}`,
                 verb: 'Attach',
@@ -6574,6 +6581,7 @@ export function* executeAbility(
             presentationSource: presentedSource(ctx, source),
             options: candidates.map((perm) =>
               cardOption(ctx, perm, {
+                viewerId: source.controllerId,
                 type: 'choose',
                 description: `Return ${perm.name} to its owner’s hand`,
                 payload: perm.id,
@@ -6990,6 +6998,7 @@ export function* executeAbility(
           presentationSource: presentedSource(ctx, source),
           options: byName.map((land) =>
             cardOption(ctx, land, {
+              viewerId: controller.id,
               type: 'chooseLand',
               description: `Choose ${land.name}`,
               verb: 'Choose',
@@ -7262,6 +7271,7 @@ export function* executeAbility(
               plainOption({ type: 'decline', description: 'Choose none', verb: 'Skip' }),
               ...options.map((perm) =>
                 cardOption(ctx, perm, {
+                  viewerId: player.id,
                   type: 'destroy',
                   description: `Destroy ${perm.name}`,
                   payload: perm.id,
@@ -7427,6 +7437,7 @@ export function* executeAbility(
             plainOption({ type: 'decline', description: 'Choose none', verb: 'Skip' }),
             ...creatures.map((perm) =>
               cardOption(ctx, perm, {
+                viewerId: controller.id,
                 type: 'blink',
                 description: `Blink ${perm.name}`,
                 payload: perm.id,
@@ -8115,6 +8126,7 @@ export function* executeAbility(
           options: [
             ...eligible.map((card) =>
               cardOption(ctx, card, {
+                viewerId: controller.id,
                 type: 'castFree',
                 description: `Cast ${card.name} without paying its mana cost`,
                 verb: 'Cast for free',
@@ -8151,6 +8163,7 @@ export function* executeAbility(
           options: [
             ...eligible.map((card) =>
               cardOption(ctx, card, {
+                viewerId: controller.id,
                 type: 'castForLife',
                 description: `Cast ${card.name} from your ${zoneOf(card)} for ${lifeFor(card)} life`,
                 verb: 'Cast',
@@ -8391,6 +8404,7 @@ export function* executeAbility(
               // behind an unreachable "click the board object" affordance.
               ...spellsInGy.map((c) =>
                 cardOption(ctx, c, {
+                  viewerId: controller.id,
                   type: 'returnToHand',
                   description: `Return ${c.name} from graveyard`,
                   verb: 'Return to hand',
@@ -8733,6 +8747,7 @@ function* lookAtTopN(
         options: [
           ...eligible.map((card) =>
             cardOption(ctx, card, {
+              viewerId: player.id,
               type: 'putFromTop',
               description: `Put ${card.name} ${where}`,
               verb: `Put ${where}`,
@@ -9018,6 +9033,7 @@ function* searchLibrary(
       options: [
         ...matches.map((card) =>
           cardOption(ctx, card, {
+            viewerId: player.id,
             type: 'findCard',
             description: `Put ${card.name} ${where}`,
             verb: `Put ${where}`,
@@ -9258,6 +9274,7 @@ function* searchLibraryCastFree(
     options: [
       ...matches.map((card) =>
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'findCard',
           description: `Cast ${card.name} without paying its mana cost`,
           verb: 'Cast for free',
@@ -9350,12 +9367,14 @@ function* scry(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'scryKeep',
           description: `Keep ${card.name} on top`,
           verb: 'Keep on top',
           role: 'affirm',
         }),
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'scryBottom',
           description: `Put ${card.name} on the bottom`,
           verb: 'Put on the bottom',
@@ -9392,12 +9411,14 @@ function* surveil(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'surveilKeep',
           description: `Keep ${card.name} on top`,
           verb: 'Keep on top',
           role: 'affirm',
         }),
         cardOption(ctx, card, {
+          viewerId: player.id,
           type: 'surveilGraveyard',
           description: `Put ${card.name} into your graveyard`,
           verb: 'Put into graveyard',
@@ -9435,6 +9456,7 @@ function* proliferate(
       presentationSource: presentedSource(ctx, source),
       options: [
         cardOption(ctx, perm, {
+          viewerId: controller.id,
           type: 'proliferate',
           description: `Proliferate ${perm.name}`,
           payload: perm.id,
@@ -9443,6 +9465,7 @@ function* proliferate(
           controller: perm.controllerId,
         }),
         cardOption(ctx, perm, {
+          viewerId: controller.id,
           type: 'skipProliferate',
           description: `Do not proliferate ${perm.name}`,
           payload: perm.id,

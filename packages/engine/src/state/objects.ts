@@ -285,11 +285,16 @@ export function changeController(
     const { sourceObjectId } = duration;
     if (!ctx.state.battlefield.some((source) => source.id === sourceObjectId)) return;
   }
-  (perm.controlChanges ??= []).push({
-    controllerId,
-    timestamp: ctx.state.nextTimestamp++,
-    duration,
-  });
+  // A newer permanent record for the same player outlives an older one exactly as long (both end
+  // only when that player leaves), so the older can never decide control: drop it to keep a
+  // repeating rotation (upkeep control swaps) from growing the stack without bound.
+  const kept =
+    duration.kind === 'permanent'
+      ? (perm.controlChanges ?? []).filter(
+          (entry) => !(entry.duration.kind === 'permanent' && entry.controllerId === controllerId),
+        )
+      : (perm.controlChanges ?? []);
+  perm.controlChanges = [...kept, { controllerId, timestamp: ctx.state.nextTimestamp++, duration }];
   applyControllerTransition(ctx, perm, controllerId);
 }
 
