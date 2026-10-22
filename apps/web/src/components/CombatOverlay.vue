@@ -8,7 +8,7 @@
  * "overlay absent, existing badges stand alone" fallback.
  *
  * Declared combat is drawn too, from the board itself (`permanents`): Arena-style, each attacker
- * gets a short arrow from the edge of its own board straight into the board it attacks (see
+ * gets a chevron at its edge and an arrow from it straight across into the board it attacks (see
  * `attackArrow`), and each blocker a blue line to the attacker it blocks. These are still pictures, not motion, so they stay when
  * motion is reduced.
  */
@@ -44,6 +44,8 @@ interface Line {
   current: boolean;
   isDrag?: boolean;
   kind?: 'attack' | 'block';
+  /** An attack's chevron, at the creature's edge and turned the way the arrow points. */
+  chevron?: { x: number; y: number; angle: number };
 }
 
 function center(id: string): { x: number; y: number } | null {
@@ -73,8 +75,8 @@ function edgePoint(
 }
 
 /**
- * Declared combat on the board: each attacker with the seat it attacks from and the seat whose
- * board it attacks (a planeswalker's or battle's controller), and each blocker with its attacker.
+ * Declared combat on the board: each attacker with the seat whose board it attacks (a
+ * planeswalker's or battle's controller), and each blocker with the attacker it blocks.
  */
 const combatPairs = computed(() => {
   const permanents = props.permanents ?? [];
@@ -86,74 +88,66 @@ const combatPairs = computed(() => {
             from: p.id,
             to: p.attacking,
             kind: 'attack' as const,
-            fromSeat: p.controller,
             toSeat: controllerOf.get(p.attacking) ?? p.attacking,
+            tapped: p.tapped,
           },
         ]
       : []),
     ...(p.blocking !== null
-      ? [{ from: p.id, to: p.blocking, kind: 'block' as const, fromSeat: '', toSeat: '' }]
+      ? [{ from: p.id, to: p.blocking, kind: 'block' as const, toSeat: '', tapped: p.tapped }]
       : []),
   ]);
 });
 
-/** How far an attack arrow reaches into each board from the border it crosses. */
+/** How far an attack arrow reaches past the border of the board it attacks. */
 const ARROW_REACH = 34;
-/** Keeps a straight arrow off the very corner of the shorter board. */
-const ARROW_INSET = 18;
+/** Room at the arrow's base for the chevron, which sits at the creature's edge. */
+const CHEVRON_GAP = 28;
 
-function clamp(value: number, low: number, high: number): number {
-  return low > high ? (low + high) / 2 : Math.min(high, Math.max(low, value));
+/**
+ * The card as drawn: a tapped tile turns sideways at three quarters size (PermanentChip), so it
+ * is 9/16 of its slot wide; the registry measures the slot.
+ */
+function cardRect(slot: AnchorRect, tapped: boolean): AnchorRect {
+  if (!tapped) return slot;
+  const width = slot.width * 0.5625;
+  return { x: slot.x + (slot.width - width) / 2, y: slot.y, width, height: slot.height };
+}
+
+interface AttackArrow {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  chevron: { x: number; y: number; angle: number };
 }
 
 /**
- * An attack arrow, Arena-style: not a line from the card across the table, but a short arrow at
- * the edge of the attacker's board, crossing the shortest way into the attacked board. Boards
- * side by side get a level arrow (at the attacker's height), boards one above the other an
- * upright one (at the attacker's column), and diagonal boards one from corner to corner.
+ * An attack arrow, Arena-style: from the attacking creature straight to the nearest point of the
+ * attacked board's border, and a little past it. A board beside the creature's row gets a level
+ * arrow, one above or below gets an upright one, and only a diagonal board a slanted one. The
+ * chevron sits at the creature's edge on that side, pointing the same way.
  */
-function attackArrow(
-  from: AnchorRect,
-  to: AnchorRect,
-  card: { x: number; y: number } | null,
-): { x1: number; y1: number; x2: number; y2: number } | null {
-  const fromRight = from.x + from.width;
-  const fromBottom = from.y + from.height;
-  const toRight = to.x + to.width;
-  const toBottom = to.y + to.height;
-  const dirX = fromRight <= to.x ? 1 : toRight <= from.x ? -1 : 0;
-  const dirY = fromBottom <= to.y ? 1 : toBottom <= from.y ? -1 : 0;
-  if (dirX === 0 && dirY === 0) return null;
-  if (dirY === 0) {
-    const y = clamp(
-      card?.y ?? from.y + from.height / 2,
-      Math.max(from.y, to.y) + ARROW_INSET,
-      Math.min(fromBottom, toBottom) - ARROW_INSET,
-    );
-    const edgeFrom = dirX > 0 ? fromRight : from.x;
-    const edgeTo = dirX > 0 ? to.x : toRight;
-    return { x1: edgeFrom - dirX * ARROW_REACH, y1: y, x2: edgeTo + dirX * ARROW_REACH, y2: y };
-  }
-  if (dirX === 0) {
-    const x = clamp(
-      card?.x ?? from.x + from.width / 2,
-      Math.max(from.x, to.x) + ARROW_INSET,
-      Math.min(fromRight, toRight) - ARROW_INSET,
-    );
-    const edgeFrom = dirY > 0 ? fromBottom : from.y;
-    const edgeTo = dirY > 0 ? to.y : toBottom;
-    return { x1: x, y1: edgeFrom - dirY * ARROW_REACH, x2: x, y2: edgeTo + dirY * ARROW_REACH };
-  }
-  const cornerFrom = { x: dirX > 0 ? fromRight : from.x, y: dirY > 0 ? fromBottom : from.y };
-  const cornerTo = { x: dirX > 0 ? to.x : toRight, y: dirY > 0 ? to.y : toBottom };
-  const length = Math.hypot(cornerTo.x - cornerFrom.x, cornerTo.y - cornerFrom.y) || 1;
-  const ux = (cornerTo.x - cornerFrom.x) / length;
-  const uy = (cornerTo.y - cornerFrom.y) / length;
+function attackArrow(card: AnchorRect, board: AnchorRect): AttackArrow | null {
+  const cx = card.x + card.width / 2;
+  const cy = card.y + card.height / 2;
+  const px = Math.min(Math.max(cx, board.x), board.x + board.width);
+  const py = Math.min(Math.max(cy, board.y), board.y + board.height);
+  const length = Math.hypot(px - cx, py - cy);
+  if (length === 0) return null;
+  const ux = (px - cx) / length;
+  const uy = (py - cy) / length;
+  const edge = edgePoint(card, { x: px, y: py });
   return {
-    x1: cornerFrom.x - ux * ARROW_REACH,
-    y1: cornerFrom.y - uy * ARROW_REACH,
-    x2: cornerTo.x + ux * ARROW_REACH,
-    y2: cornerTo.y + uy * ARROW_REACH,
+    x1: edge.x + ux * CHEVRON_GAP,
+    y1: edge.y + uy * CHEVRON_GAP,
+    x2: px + ux * ARROW_REACH,
+    y2: py + uy * ARROW_REACH,
+    chevron: {
+      x: edge.x + ux * (CHEVRON_GAP / 2),
+      y: edge.y + uy * (CHEVRON_GAP / 2),
+      angle: (Math.atan2(uy, ux) * 180) / Math.PI,
+    },
   };
 }
 
@@ -161,11 +155,11 @@ const liveLines = computed<Line[]>(() => {
   const out: Line[] = [];
   for (const pair of combatPairs.value) {
     if (pair.kind === 'attack') {
-      const fromSeat = anchors.get(pair.fromSeat);
-      const toSeat = anchors.get(pair.toSeat);
+      const slot = anchors.get(pair.from);
+      const board = anchors.get(pair.toSeat);
       const arrow =
-        fromSeat !== undefined && toSeat !== undefined
-          ? attackArrow(fromSeat, toSeat, center(pair.from))
+        slot !== undefined && board !== undefined
+          ? attackArrow(cardRect(slot, pair.tapped), board)
           : null;
       if (arrow !== null) {
         out.push({
@@ -302,6 +296,13 @@ const lines = computed<Line[]>(() => {
         line.kind ? `live ${line.kind}` : '',
       ]"
     />
+    <g
+      v-for="line in lines.filter((l) => l.chevron)"
+      :key="`chevron:${line.key}`"
+      :transform="`translate(${line.chevron!.x} ${line.chevron!.y}) rotate(${line.chevron!.angle})`"
+    >
+      <path class="chevron" d="M -7 -14 L 7 0 L -7 14" />
+    </g>
   </svg>
 </template>
 
@@ -343,6 +344,27 @@ line.live.attack {
 line.live.block {
   stroke: #60a5fa;
   filter: drop-shadow(0 0 4px rgb(59 130 246 / 0.8));
+}
+/* The attack chevron, pulsing along the way the attack points. */
+.chevron {
+  fill: none;
+  stroke: #fb923c;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgb(249 115 22 / 0.95));
+  animation: chevronPulse 1.1s ease-in-out infinite;
+}
+@keyframes chevronPulse {
+  0%,
+  100% {
+    transform: translateX(-2px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
 }
 .head.attack {
   fill: #fb923c;

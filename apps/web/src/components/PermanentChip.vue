@@ -254,10 +254,6 @@ function onLeave(): void {
     >
       ×{{ count }}
     </div>
-    <!-- Attacking: a glowing chevron rises off the card, and the combat overlay draws a line
-         from it to the seat or permanent it attacks. Outside the card so it points up even
-         when the attacker taps. -->
-    <span v-if="isAttacking" class="attack-arrow" aria-hidden="true" />
     <!-- Everything on the card turns with it when it taps, name and P/T included. -->
     <div class="card">
       <div class="frame" role="img" :aria-label="permanent.name">
@@ -545,32 +541,6 @@ function onLeave(): void {
     0 0 0 2px rgb(248 113 113 / 0.7),
     0 6px 14px rgb(248 113 113 / 0.45);
   animation: attackPulse 1s ease-in-out infinite;
-}
-/* Arena's attack marker: a glowing chevron rising off the top of the card, pulsing upward. */
-.attack-arrow {
-  position: absolute;
-  left: 50%;
-  top: -16px;
-  z-index: 4;
-  width: 46%;
-  height: 22px;
-  translate: -50% 0;
-  background: linear-gradient(to top, rgb(249 115 22 / 0.2), #fb923c 55%, #fde68a);
-  clip-path: polygon(50% 0, 100% 78%, 82% 100%, 50% 42%, 18% 100%, 0 78%);
-  filter: drop-shadow(0 0 6px rgb(249 115 22 / 0.9));
-  pointer-events: none;
-  animation: attackRise 1.1s ease-in-out infinite;
-}
-@keyframes attackRise {
-  0%,
-  100% {
-    translate: -50% 2px;
-    opacity: 0.85;
-  }
-  50% {
-    translate: -50% -3px;
-    opacity: 1;
-  }
 }
 .tile.blocking .frame {
   box-shadow:

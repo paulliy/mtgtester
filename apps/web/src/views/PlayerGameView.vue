@@ -2210,9 +2210,9 @@ button.selected,
   flex-wrap: wrap;
   align-items: flex-start;
   align-content: flex-start;
-  /* Room above each row for an attacker's chevron, which rises off the top of its card. */
-  gap: 1rem 0.3rem;
-  padding-top: 0.9rem;
+  gap: 0.3rem;
+  /* Room for a stack's ×N badge, which sits over the top corner of its tile. */
+  padding-top: 6px;
   overflow-x: hidden;
   overflow-y: auto;
 }
