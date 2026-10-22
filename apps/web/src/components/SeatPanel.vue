@@ -88,11 +88,12 @@ const flexStyles = computed(() => {
 });
 
 /**
- * The header is where an attack on this seat points: the combat overlay draws each attacker's
- * line to it. One stable ref function, so re-renders don't re-register the anchor.
+ * This seat's board is where an attack on it points: the combat overlay draws each attack arrow
+ * across the border between the attacker's board and this one. One stable ref function, so
+ * re-renders don't re-register the anchor.
  */
 const { registerAnchor, unregisterAnchor } = useBoardAnchors();
-function setHeaderEl(el: Element | ComponentPublicInstance | null): void {
+function setSeatEl(el: Element | ComponentPublicInstance | null): void {
   if (el instanceof HTMLElement) registerAnchor(props.seat.seat, el);
 }
 onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
@@ -100,11 +101,12 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
 
 <template>
   <section
+    :ref="setSeatEl"
     class="seat"
     :class="{ active: isActive, priority: hasPriority, eliminated }"
     :data-seat="seat.seat"
   >
-    <header :ref="setHeaderEl">
+    <header>
       <span class="id-badge">{{ seat.seat }}</span>
       <span
         v-for="cmd in seat.commanders"
