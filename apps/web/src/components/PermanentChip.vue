@@ -211,7 +211,11 @@ function onLeave(): void {
       <span v-if="marks.length > 0" class="marks">{{ marks.join(' ') }}</span>
     </div>
     <!-- Keywords show in the hover preview; this keeps them for anyone who can't hover. -->
-    <span v-if="permanent.keywords.length > 0" class="visually-hidden">
+    <span
+      v-if="permanent.keywords.length > 0"
+      class="keywords visually-hidden"
+      :title="permanent.keywords.join(', ')"
+    >
       {{ permanent.keywords.join(', ') }}
     </span>
   </div>
