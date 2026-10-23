@@ -60,6 +60,11 @@ PR11 is split in two. Its first part models the 18 protection, phasing and game-
 and reviewed evidence; the 12 layout cards (Sagas, Class, prepare, split, Room and modal double-faced
 cards) move to a separate PR11b. See [PR11 progress](pr11-progress.md).
 
+PR12 models the seven reopened quality-audit cards (Black Bolt, Inhuman King; Dingus Staff;
+Sivitri, Dragon Master; Zurgo and Ojutai; Bloomvine Regent; Marang River Regent; Monster Manual)
+with reviewed evidence, and retires their containment. It stacks on PR11. See
+[PR12 progress](pr12-progress.md).
+
 When the plan was prepared, the 302 remaining cards fell into two groups (PR01 and PR02 have since
 modeled 62 of them):
 
@@ -798,12 +803,12 @@ Depends on PR09–PR11 where their shared primitives apply. Each card still requ
 commit, and explicit containment until every clause is faithfully implemented. Completing PR12
 is necessary for the frozen population to reach 906/906.
 
-|     # | Card                     | Population | Reopened blocker                                                   |
-| ----: | ------------------------ | ---------- | ------------------------------------------------------------------ |
-| 12.01 | Black Bolt, Inhuman King | FF4        | Event-player reference without an event scope fails IR validation. |
-| 12.02 | Dingus Staff             | PRA        | Event-player reference without an event scope fails IR validation. |
-| 12.03 | Sivitri, Dragon Master   | URD        | Executable `noOp` is rejected.                                     |
-| 12.04 | Zurgo and Ojutai         | URD        | Executable `noOp` is rejected.                                     |
-| 12.05 | Bloomvine Regent         | URD        | Explicitly contained; implement and verify all relevant faces.     |
-| 12.06 | Marang River Regent      | URD        | Explicitly contained; implement and verify all relevant faces.     |
-| 12.07 | Monster Manual           | URD        | Explicitly contained; implement and verify all relevant faces.     |
+|     # | Card                     | Population | Reopened blocker                                                   | Status   |
+| ----: | ------------------------ | ---------- | ------------------------------------------------------------------ | -------- |
+| 12.01 | Black Bolt, Inhuman King | FF4        | Event-player reference without an event scope fails IR validation. | reviewed |
+| 12.02 | Dingus Staff             | PRA        | Event-player reference without an event scope fails IR validation. | reviewed |
+| 12.03 | Sivitri, Dragon Master   | URD        | Executable `noOp` is rejected.                                     | reviewed |
+| 12.04 | Zurgo and Ojutai         | URD        | Executable `noOp` is rejected.                                     | reviewed |
+| 12.05 | Bloomvine Regent         | URD        | Explicitly contained; implement and verify all relevant faces.     | reviewed |
+| 12.06 | Marang River Regent      | URD        | Explicitly contained; implement and verify all relevant faces.     | reviewed |
+| 12.07 | Monster Manual           | URD        | Explicitly contained; implement and verify all relevant faces.     | reviewed |
