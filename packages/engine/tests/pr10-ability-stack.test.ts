@@ -3,6 +3,7 @@ import { applyPriorityAction } from '../src/actions/apply';
 import type { PriorityActionPayload } from '../src/actions/legal';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { moveObject } from '../src/state/objects';
 import { queueStepTriggers } from '../src/turn/turn';
 import type { EnginePermanent, GameContext } from '../src/state/types';
 import { conjure, oracle, pump, spawn } from './fixtures';
@@ -264,6 +265,35 @@ describe('PR10.21 Mister Fantastic', () => {
     expect([a.damageMarked, b.damageMarked, c.damageMarked]).toEqual([1, 1, 1]);
   });
 
+  it("pr10-mister-fantastic-copies-keep-source-lki — copies of a gone source's trigger keep its lifelink", () => {
+    const ctx = pod('pr10-fantastic-lki');
+    const fantastic = spawn(ctx, 'P1', pinned('Mister Fantastic'));
+    const a = spawn(ctx, 'P2', bear('Fantastic Bear A', { toughness: '5' }));
+    castFromHand(
+      ctx,
+      'P1',
+      lab(
+        'Fantastic Lifelinker',
+        'Lifelink\nWhen this creature enters, this creature deals 1 damage to any target.',
+      ),
+    );
+    pump(resolveTopOfStack(ctx));
+    putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, a.id]]) }));
+    const trigger = ctx.state.stack.at(-1)!;
+    const source = ctx.state.battlefield.find((perm) => perm.name === 'Fantastic Lifelinker')!;
+    pump(moveObject(ctx, source, { zone: 'graveyard' }));
+    expect(trigger.sourceDamageKeywords).toEqual(['lifelink']);
+    addMana(p(ctx, 'P1'), mana('R', 'G', 'W', 'U'));
+    activate(ctx, 'P1', fantastic, new Map([[0, trigger.id]]));
+    pump(resolveTopOfStack(ctx), choose('Keep'));
+    const copies = ctx.state.stack.filter((entry) => entry.description.startsWith('Copy of'));
+    expect(copies.map((copy) => copy.sourceDamageKeywords)).toEqual([['lifelink'], ['lifelink']]);
+    const life = p(ctx, 'P1').life;
+    settle(ctx);
+    expect(a.damageMarked).toBe(3);
+    expect(p(ctx, 'P1').life).toBe(life + 3);
+  });
+
   it('pr10-mister-fantastic-only-your-triggered-abilities — not a spell, not an opponent trigger', () => {
     const ctx = pod('pr10-fantastic-illegal');
     const fantastic = spawn(ctx, 'P1', pinned('Mister Fantastic'));
@@ -377,6 +407,28 @@ describe('PR10.10 Verrak, Warped Sengir', () => {
     const source = spawn(ctx, 'P1', lab('Verrak Scholar', '{1}: Draw a card.'));
     addMana(p(ctx, 'P1'), mana('C'));
     activate(ctx, 'P1', source);
+    putPendingTriggersOnStack(ctx);
+    expect(ctx.state.stack).toHaveLength(1);
+  });
+
+  it('pr10-verrak-mana-ability-life-not-counted — life paid for a mana ability used to pay is not paid for the watched ability', () => {
+    const { ctx } = setup('pr10-verrak-mana-life');
+    const source = spawn(ctx, 'P1', lab('Verrak Scholar', '{1}: Draw a card.'));
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Verrak Blood Well',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        cmc: 1,
+        power: null,
+        toughness: null,
+        oracleText: '{T}, Pay 1 life: Add {C}.',
+      }),
+    );
+    activate(ctx, 'P1', source);
+    expect(p(ctx, 'P1').life).toBe(39);
     putPendingTriggersOnStack(ctx);
     expect(ctx.state.stack).toHaveLength(1);
   });

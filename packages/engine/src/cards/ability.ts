@@ -15,6 +15,8 @@ import type { Selector } from './selector';
 import type { Value } from './value';
 import type { StaticEffect } from './continuous-types';
 import type { RuleStatic } from './rule-statics';
+import type { ObjectFacts } from './source-identity';
+import type { DamageKeyword } from '../state/types';
 
 /** A ward payment (CR 702.21b). Target legality never depends on ability to pay it. */
 export type WardCost = { kind: 'mana'; cost: ParsedManaCost } | { kind: 'life'; amount: number };
@@ -415,6 +417,9 @@ export interface StackAbilitySnapshot {
   sourceOracleId: string;
   sourceCardId: string;
   sourceColors?: Color[];
+  /** The source's last known facts and damage keywords, if it had left (CR 707.10, 113.7a). */
+  sourceFacts?: ObjectFacts;
+  sourceDamageKeywords?: DamageKeyword[];
   /** The original's event facts, carried unchanged (CR 707.10). */
   triggerScope?: import('./value').TriggerScope;
   triggerObjectCardId?: string;

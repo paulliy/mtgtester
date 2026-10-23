@@ -3143,6 +3143,10 @@ export function stackAbilitySnapshot(entry: EngineStackObject): StackAbilitySnap
     sourceOracleId: entry.sourceOracleId,
     sourceCardId: entry.sourceCardId,
     ...(entry.sourceColors === undefined ? {} : { sourceColors: [...entry.sourceColors] }),
+    ...(entry.sourceFacts === undefined ? {} : { sourceFacts: entry.sourceFacts }),
+    ...(entry.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...entry.sourceDamageKeywords] }),
     ...(entry.triggerScope === undefined ? {} : { triggerScope: { ...entry.triggerScope } }),
     ...(entry.triggerObjectCardId === undefined
       ? {}

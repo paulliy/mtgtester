@@ -184,6 +184,10 @@ export function queueAbilityCopy(
     sourceOracleId: original.sourceOracleId as OracleId,
     sourceCardId: original.sourceCardId,
     ...(original.sourceColors === undefined ? {} : { sourceColors: [...original.sourceColors] }),
+    ...(original.sourceFacts === undefined ? {} : { sourceFacts: original.sourceFacts }),
+    ...(original.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...original.sourceDamageKeywords] }),
     ...(original.triggerScope === undefined ? {} : { triggerScope: { ...original.triggerScope } }),
     ...(original.triggerObjectCardId === undefined
       ? {}

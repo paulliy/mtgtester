@@ -369,6 +369,8 @@ const shapes = {
         sourceOracleId: leaf,
         sourceCardId: leaf,
         sourceColors: { array: leaf },
+        sourceFacts: leaf,
+        sourceDamageKeywords: { array: leaf },
         triggerScope: leaf,
         triggerObjectCardId: leaf,
       } satisfies Fields<Objects<Property<Effect, 'stackAbility'>>>,
