@@ -15334,6 +15334,51 @@
     }
   },
   {
+    "oracleId": "c0adbddc-b070-4c5f-afe0-0474c72a9251",
+    "name": "Gemstone Caverns",
+    "handledLines": [
+      "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
+      "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "conditionalUnits": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "counter": "luck",
+                "kind": "hasCounter"
+              }
+            },
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          },
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        }
+      ],
+      "ruleStatics": [
+        {
+          "exileCardFromHand": true,
+          "kind": "beginOnBattlefieldFromOpeningHand",
+          "notStartingPlayer": true,
+          "withCounter": "luck"
+        }
+      ]
+    }
+  },
+  {
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [
@@ -27941,6 +27986,51 @@
           "Forest"
         ]
       }
+    }
+  },
+  {
+    "oracleId": "oracle-gemstone-caverns",
+    "name": "Gemstone Caverns",
+    "handledLines": [
+      "unrecognized rules text: \"If this card is in your opening hand and you're not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.\"",
+      "unrecognized rules text: \"{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.\""
+    ],
+    "def": {
+      "manaAbilities": [
+        {
+          "conditionalUnits": {
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "counter": "luck",
+                "kind": "hasCounter"
+              }
+            },
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          },
+          "units": [
+            [
+              "C"
+            ]
+          ]
+        }
+      ],
+      "ruleStatics": [
+        {
+          "exileCardFromHand": true,
+          "kind": "beginOnBattlefieldFromOpeningHand",
+          "notStartingPlayer": true,
+          "withCounter": "luck"
+        }
+      ]
     }
   },
   {

@@ -23,7 +23,17 @@ export type RuleStatic =
   | { kind: 'cantBeTargetedByOpponentAbilities' }
   | { kind: 'cantAttackOwner' }
   | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
-  | { kind: 'beginOnBattlefieldFromOpeningHand' }
+  /**
+   * CR 103.6a: a Leyline begins the game on the battlefield. Gemstone Caverns adds conditions and
+   * a cost: only for a player who isn't the starting player, with one counter of `withCounter`,
+   * and "if you do, exile a card from your hand".
+   */
+  | {
+      kind: 'beginOnBattlefieldFromOpeningHand';
+      notStartingPlayer?: true;
+      withCounter?: string;
+      exileCardFromHand?: true;
+    }
   | { kind: 'effectDiscardMayGoToLibraryTop' }
   /** Redirect a matching graveyard move before any zone-change or dies event. */
   | {

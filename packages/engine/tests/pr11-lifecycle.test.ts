@@ -4,6 +4,7 @@ import { interpretCard } from '../src/cards/interpret';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
+import { runOpeningHandBattlefieldActions } from '../src/turn/mulligan';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
 import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
@@ -642,5 +643,85 @@ describe('Negative Zone Portal', () => {
     expect(ctx.state.exile.filter((card) => ['A', 'B', 'C', 'D'].includes(card.name))).toHaveLength(
       3,
     );
+  });
+});
+
+const CAVERNS = pinned('Gemstone Caverns');
+
+describe('Gemstone Caverns', () => {
+  const spellCosting = (cost: string): OracleCard =>
+    oracle({
+      name: `Spell ${cost}`,
+      typeLine: 'Sorcery',
+      manaCost: cost,
+      oracleText: 'You gain 1 life.',
+    });
+  const castable = (ctx: GameContext, playerId: string, cost: string): boolean => {
+    const spell = conjure(ctx, playerId, spellCosting(cost), 'hand');
+    const ok =
+      priorityOption(
+        ctx,
+        playerId,
+        (payload) => payload.kind === 'castSpell' && payload.objectId === spell.id,
+      ) !== undefined;
+    player(ctx, playerId).hand = player(ctx, playerId).hand.filter(
+      (entry) => entry.id !== spell.id,
+    );
+    return ok;
+  };
+  function openingHand(ctx: GameContext, playerId: string): void {
+    player(ctx, playerId).hand = [];
+    conjure(ctx, playerId, CAVERNS, 'hand');
+    conjure(
+      ctx,
+      playerId,
+      oracle({ name: 'Spare Card', typeLine: 'Sorcery', manaCost: '{1}' }),
+      'hand',
+    );
+    conjure(ctx, playerId, plains(), 'hand');
+  }
+
+  it('caverns-c01-positive — not the starting player: begin with it, a luck counter, and exile a card', () => {
+    const ctx = game('pr11-caverns-begin');
+    expect(interpretCard(CAVERNS).modeled).toBe(true);
+    openingHand(ctx, 'P2');
+    pump(runOpeningHandBattlefieldActions(ctx), preferring('beginOnBattlefield'));
+    const caverns = battlefield(ctx, 'Gemstone Caverns');
+    expect(caverns).toHaveLength(1);
+    expect(caverns[0]!.controllerId).toBe('P2');
+    expect(caverns[0]!.counters['luck']).toBe(1);
+    expect(player(ctx, 'P2').hand).toHaveLength(1);
+    expect(ctx.state.exile.filter((card) => card.ownerId === 'P2')).toHaveLength(1);
+  });
+
+  it('caverns-c01-negative — the starting player is not offered it, and declining keeps it in hand', () => {
+    const ctx = game('pr11-caverns-starting');
+    openingHand(ctx, 'P1');
+    const decisions = pump(
+      runOpeningHandBattlefieldActions(ctx),
+      preferring('beginOnBattlefield'),
+    ).decisions;
+    expect(decisions.some((decision) => decision.player === 'P1')).toBe(false);
+    expect(battlefield(ctx, 'Gemstone Caverns')).toEqual([]);
+
+    const declined = game('pr11-caverns-decline');
+    openingHand(declined, 'P2');
+    pump(runOpeningHandBattlefieldActions(declined), preferring('decline'));
+    expect(battlefield(declined, 'Gemstone Caverns')).toEqual([]);
+    expect(player(declined, 'P2').hand).toHaveLength(3);
+  });
+
+  it('caverns-c02 — with a luck counter it taps for any color; without one, only {C}', () => {
+    const ctx = game('pr11-caverns-mana');
+    const lucky = spawn(ctx, 'P1', CAVERNS);
+    lucky.counters['luck'] = 1;
+    expect(castable(ctx, 'P1', '{R}')).toBe(true);
+    expect(castable(ctx, 'P1', '{U}')).toBe(true);
+    expect(castable(ctx, 'P1', '{R}{U}')).toBe(false);
+
+    const plain = game('pr11-caverns-plain');
+    spawn(plain, 'P1', CAVERNS);
+    expect(castable(plain, 'P1', '{1}')).toBe(true);
+    expect(castable(plain, 'P1', '{R}')).toBe(false);
   });
 });
