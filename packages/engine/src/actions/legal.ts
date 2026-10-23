@@ -21,6 +21,7 @@ export {
   permanentManaValue,
 } from '../targets/legality';
 import { activationManaSources } from '../mana/activation';
+import { manualManaOptions, type ActivateManaAbilityPayload } from '../mana/manual';
 import {
   abilityModeLabel,
   abilityModeTargetSlots,
@@ -163,6 +164,8 @@ export type PriorityActionPayload =
       modes?: number[];
     }
   | { kind: 'companionToHand' }
+  /** Activate a mana ability by hand (CR 605.3a, ADR 0030). */
+  | ActivateManaAbilityPayload
   /** Foretell (CR 702.143a): pay {2} and exile this hand card face down. */
   | { kind: 'foretell'; objectId: ObjectId }
   /**
@@ -2171,12 +2174,18 @@ export function computePriorityOptions(
     });
   }
 
+  // Mana abilities by hand, for a player who asked for them (ADR 0030).
+  if (player.manualMana === true) options.push(...manualManaOptions(ctx, player));
+
   // Strategic usefulness belongs to the decision provider, not legal-action generation.
-  // CR 702.61a: split second leaves only passing, yielding and special actions (CR 116.2).
+  // CR 702.61a-b: split second permits mana abilities and special actions (CR 116.2).
+  // Presentation types also label face-up and foretell actions as activateAbility; only the
+  // payload identifies a spell cast or a nonmana ability activation.
   if (splitSecondOnStack(ctx))
-    return options.filter(
-      (option) => option.type !== 'castSpell' && option.type !== 'activateAbility',
-    );
+    return options.filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return payload.kind !== 'castSpell' && payload.kind !== 'activateAbility';
+    });
   return options;
 }
 

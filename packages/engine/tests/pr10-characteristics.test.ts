@@ -69,6 +69,24 @@ describe('PR10.15 Nighthawk Scavenger', () => {
     expect(pt(ctx, nighthawk)).toEqual([4, 3]);
   });
 
+  it('pr10-nighthawk-scavenger-kindred — Kindred is a card type of its own (CR 308)', () => {
+    const { ctx, nighthawk } = scavenger('pr10-nighthawk-kindred');
+    conjure(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Graveyard Kindred Rite',
+        typeLine: 'Kindred Instant — Elf',
+        manaCost: '{G}',
+        power: null,
+        toughness: null,
+        oracleText: 'Draw a card.',
+      }),
+      'graveyard',
+    );
+    expect(pt(ctx, nighthawk)).toEqual([3, 3]);
+  });
+
   it('pr10-nighthawk-scavenger-own-graveyard — cards in your own graveyard do not count', () => {
     const { ctx, nighthawk } = scavenger('pr10-nighthawk-own');
     conjure(ctx, 'P1', artifactCreature('Own Golem'), 'graveyard');

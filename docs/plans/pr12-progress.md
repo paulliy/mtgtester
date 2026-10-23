@@ -42,25 +42,30 @@ needed their containment removed and evidence added. The two authored faces live
 ## Evidence
 
 - Engine behavior tests: `packages/engine/tests/pr12-triggers.test.ts`, `pr12-sivitri.test.ts`
-  and `pr12-spell-faces.test.ts` (44 tests), with helpers in `pr12-helpers.ts` and the pins in
+  and `pr12-spell-faces.test.ts` (45 tests), with helpers in `pr12-helpers.ts` and the pins in
   `tests/fixtures/coverage-pr12-oracle.json`.
-- 17 Card Test Lab scenarios in
+- 18 Card Test Lab scenarios in
   [pr12-scenarios.ts](../../packages/server/src/cards/pr12-scenarios.ts).
   [pr12-scenarios.test.ts](../../packages/server/src/cards/pr12-scenarios.test.ts) plays each one
   headlessly through the production decision path and checks the outcome. The scripted P2 casts
   once with an empty stack and declares its planned attacks, which is how the Sivitri tax is shown
   being paid and being unaffordable.
-- [pr12-card-test-lab.spec.ts](../../apps/web/e2e/pr12-card-test-lab.spec.ts) runs all 17 in a
-  real browser against the lab server, records traces, and enforces the exact scenario-ID set. All
-  17 passed locally. The generic Card Test Lab walkthrough skips these ids.
+- [pr12-card-test-lab.spec.ts](../../apps/web/e2e/pr12-card-test-lab.spec.ts) runs all 18 in a
+  real browser against the lab server, records traces, and enforces the exact scenario-ID set.
+  All 18 passed locally, including the multiplayer regression. The generic
+  Card Test Lab walkthrough skips these ids.
 - `card-verification-manifest.json` has `implemented-reviewed` entries for the seven cards, with
   clause-level engine test ids and viewer scenario ids; spell-face clauses use `clause-face-N` ids.
   The coverage ledger rows are `implemented-reviewed` under `PR12.NN`.
 - Measured over `packages/server/fixtures/coverage-oracle.json` with `interpretCard`: 939 → 946 of
   958 modeled, and exactly these seven cards changed.
 
-Two clauses have engine tests but no viewer scenario: Zurgo's hexproof on the turn it entered and
-Sivitri's "can be your commander".
+Zurgo's multiplayer viewer scenario attacks P2 and P3 simultaneously with separate Dragons. It
+checks the two look-three selections and confirms each optional return is limited to the Dragon
+that damaged that trigger's event player. The engine regression is `zurgo-c03-multiplayer`.
+
+One clause has an engine test but no viewer scenario: Zurgo's hexproof on the turn it entered.
+Sivitri's "can be your commander" also has no viewer scenario.
 
 ## Residuals
 

@@ -1353,7 +1353,15 @@
             "PlayerState.cantLoseTurn",
             "Replacement.damageLifeFloor"
           ],
-          "engineTestIds": ["grace-c02-positive", "grace-c02-expiry", "grace-c02-negative"],
+          "engineTestIds": [
+            "grace-c02-positive",
+            "grace-c02-expiry",
+            "grace-c02-negative",
+            "grace-c03-positive",
+            "grace-c03-below-one",
+            "grace-c03-at-one",
+            "grace-c03-negative"
+          ],
           "viewerScenarioIds": ["pr11-angel-s-grace-viewer-life-floor"]
         }
       ],
@@ -3775,7 +3783,8 @@
           "engineTestIds": [
             "spirit-mantle-c02-positive",
             "spirit-mantle-c02-negative",
-            "spirit-mantle-c02-fight"
+            "spirit-mantle-c02-fight",
+            "spirit-mantle-c02-last-known"
           ],
           "viewerScenarioIds": [
             "pr11-spirit-mantle-viewer-cast",
@@ -7898,17 +7907,20 @@
             "zurgo-c03-positive",
             "zurgo-c03-decline",
             "zurgo-c03-negative",
-            "zurgo-c03-left"
+            "zurgo-c03-left",
+            "zurgo-c03-multiplayer"
           ],
           "viewerScenarioIds": [
             "pr12-zurgo-and-ojutai-viewer-return",
-            "pr12-zurgo-and-ojutai-viewer-keep"
+            "pr12-zurgo-and-ojutai-viewer-keep",
+            "pr12-zurgo-and-ojutai-viewer-multiplayer"
           ]
         }
       ],
       "viewerScenarioIds": [
         "pr12-zurgo-and-ojutai-viewer-return",
-        "pr12-zurgo-and-ojutai-viewer-keep"
+        "pr12-zurgo-and-ojutai-viewer-keep",
+        "pr12-zurgo-and-ojutai-viewer-multiplayer"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -16433,7 +16445,7 @@
             "Effect.exileFromHandWithSource",
             "ExiledWithLink"
           ],
-          "engineTestIds": ["mox-c01"],
+          "engineTestIds": ["mox-c01", "mox-c01-off-battlefield-types"],
           "viewerScenarioIds": [
             "pr11-chrome-mox-viewer-imprint",
             "pr11-chrome-mox-viewer-no-imprint"
@@ -16536,7 +16548,7 @@
           "id": "pr11-mana-vault-clause-1",
           "oracleText": "This artifact doesn't untap during your untap step.",
           "implementation": ["CardDefinition.doesntUntapDuringUntapStep"],
-          "engineTestIds": ["vault-c01"],
+          "engineTestIds": ["vault-c01", "vault-c01-lost-abilities"],
           "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
         },
         {
@@ -16554,7 +16566,7 @@
             "Condition.sourceTapped",
             "Effect.damageController"
           ],
-          "engineTestIds": ["vault-c02-c03", "vault-c03-negative"],
+          "engineTestIds": ["vault-c02-c03", "vault-c03-negative", "vault-c03-departed"],
           "viewerScenarioIds": ["pr11-mana-vault-viewer-pay-untap", "pr11-mana-vault-viewer-damage"]
         },
         {
@@ -16758,7 +16770,12 @@
             "Effect.flipCoin",
             "Effect.returnRandomExiledWithSourceToHand"
           ],
-          "engineTestIds": ["portal-c02-negative", "portal-c02-win", "portal-c02-lose"],
+          "engineTestIds": [
+            "portal-c02-negative",
+            "portal-c02-win",
+            "portal-c02-lose",
+            "portal-c02-departed"
+          ],
           "viewerScenarioIds": []
         }
       ],
@@ -16913,9 +16930,14 @@
             "room-c01-sorcery-timing",
             "room-c01-positive",
             "room-c01-negative-toy",
-            "room-c01-negative-planeswalker"
+            "room-c01-negative-planeswalker",
+            "room-c01-multiplayer",
+            "room-c01-multiplayer-toy"
           ],
-          "viewerScenarioIds": ["pr11b-dollmaker-s-shop-viewer-toy-attack"]
+          "viewerScenarioIds": [
+            "pr11b-dollmaker-s-shop-viewer-toy-attack",
+            "pr11b-dollmaker-s-shop-viewer-multiplayer"
+          ]
         },
         {
           "id": "pr11b-dollmaker-s-shop-clause-2",
@@ -16947,6 +16969,7 @@
       ],
       "viewerScenarioIds": [
         "pr11b-dollmaker-s-shop-viewer-toy-attack",
+        "pr11b-dollmaker-s-shop-viewer-multiplayer",
         "pr11b-dollmaker-s-shop-viewer-unlock"
       ],
       "gameplayAiScenarioIds": []

@@ -233,6 +233,37 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, hand(page, 'PR12 Lab Relic'));
     await expect(permanent(page, 'P1', ZURGO)).toBeVisible();
   },
+  'pr12-zurgo-and-ojutai-viewer-multiplayer': async (page) => {
+    const declare = page.getByRole('button', { name: /Declare attackers/ });
+    await passUntil(page, declare);
+    await declare.click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: ZURGO })
+      .getByRole('button', { name: 'P2', exact: true })
+      .click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: 'PR12 Lab Dragon' })
+      .getByRole('button', { name: 'P3', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Confirm attacks', exact: true }).click();
+    await choose(page, /Zurgo and Ojutai.*event player: P2/);
+    await pick(page, 'PR12 Lab Relic', 'Put into your hand');
+    await choose(page, 'Keep current order');
+    await pick(page, 'PR12 Lab Dragon', 'Return');
+    await pick(page, 'PR12 Lab Dragon', 'Put into your hand');
+    await choose(page, 'Keep current order');
+    await pick(page, ZURGO, 'Return');
+    await passUntil(page, hand(page, ZURGO));
+    await expect(hand(page, 'PR12 Lab Dragon')).toHaveCount(2);
+    await expect(hand(page, 'PR12 Lab Relic')).toBeVisible();
+    await expect(hand(page, ZURGO)).toBeVisible();
+    await expect(life(page, 'P2')).toHaveText('36');
+    await expect(life(page, 'P3')).toHaveText('36');
+    await expect(permanent(page, 'P1', ZURGO)).toHaveCount(0);
+    await expect(permanent(page, 'P1', 'PR12 Lab Dragon')).toHaveCount(0);
+  },
 
   'pr12-bloomvine-regent-claim-territory-viewer-claim-territory': async (page) => {
     await castFace(page, BLOOMVINE, true);

@@ -580,6 +580,23 @@ const DEFS: Def[] = [
       prepared: { continueThroughCombat: true },
     },
   ),
+  entry(
+    'pr11b-dollmaker-s-shop-viewer-multiplayer',
+    ROOM,
+    "Dollmaker's Shop: separate attacks on two players create two Toys",
+    [1],
+    [
+      "Cast the Room as Dollmaker's Shop for {1}{W}.",
+      'Attack P2 with PR11b Lab Bear and P3 with PR11b Lab Red Bear.',
+    ],
+    'Both non-Toy creatures attack players, creating one 1/1 white Toy artifact creature token for each player attacked. P2 and P3 each take 2 damage.',
+    {
+      p1Hand: [card(ROOM)],
+      p1Field: [BEAR, RED_BEAR],
+      p1Lands: lands('Plains', 2),
+      prepared: { continueThroughCombat: true },
+    },
+  ),
 
   // PR11b.12 Mila, Crafty Companion // Lukka, Wayward Bonder
   entry(

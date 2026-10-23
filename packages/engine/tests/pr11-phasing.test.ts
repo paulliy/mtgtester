@@ -139,6 +139,9 @@ describe("Teferi's Protection", () => {
     expect(ctx.state.phasedOut ?? []).toEqual([]);
     expect(battlefield(ctx, 'Test Bear')[0]).toBe(mine);
     expect(mine.tapped).toBe(false);
+    nextTurnOf(ctx, 'P2');
+    expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
+    expect(playerLifeLocked(ctx, 'P1')).toBe(false);
   });
 });
 
@@ -184,6 +187,9 @@ describe('The One Ring', () => {
     nextTurnOf(ctx, 'P2');
     expect(playerProtectedFromEverything(ctx, 'P1')).toBe(true);
     nextTurnOf(ctx, 'P1');
+    expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
+    // Gone for good: an opponent's later turn does not bring it back.
+    nextTurnOf(ctx, 'P2');
     expect(playerProtectedFromEverything(ctx, 'P1')).toBe(false);
   });
 
@@ -383,6 +389,28 @@ describe("Angel's Grace", () => {
     castFromHand(ctx, 'P2', bigBolt(), new Map([[0, 'P1']]), { R: 1 });
     resolve(ctx);
     expect(player(ctx, 'P1').life).toBe(1);
+  });
+
+  it('grace-c03-below-one — damage never raises a total already below 1', () => {
+    const ctx = game('pr11-grace-below-one');
+    castGrace(ctx);
+    resolve(ctx);
+    loseLife(ctx, player(ctx, 'P1'), player(ctx, 'P1').life + 1);
+    expect(player(ctx, 'P1').life).toBe(-1);
+    castFromHand(ctx, 'P2', bigBolt(), new Map([[0, 'P1']]), { R: 1 });
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(-1);
+  });
+
+  it('grace-c03-at-one — damage at 1 life leaves the total unchanged and loses no life', () => {
+    const ctx = game('pr11-grace-at-one');
+    castGrace(ctx);
+    resolve(ctx);
+    player(ctx, 'P1').life = 1;
+    castFromHand(ctx, 'P2', bigBolt(), new Map([[0, 'P1']]), { R: 1 });
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(1);
+    expect(ctx.state.lifeLostThisTurn['P1']).not.toBe(true);
   });
 
   it('grace-c03-negative — life loss is not damage and still goes below 1', () => {

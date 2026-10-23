@@ -7913,7 +7913,7 @@ export function interpretCard(card: OracleCard): CardDefinition {
     triggers.push(
       triggered(
         whenPermanent('dealsCombatDamageToPlayer', allOf(ofSubtype('Dragon'), YOURS), {
-          aggregate: true,
+          aggregate: 'byEventPlayer',
         }),
         {
           // "Look at the top three cards of your library. Put one of them into your hand and the

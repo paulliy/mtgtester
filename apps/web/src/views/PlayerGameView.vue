@@ -4,22 +4,21 @@ import type { ManaPool } from '@mtg/shared';
 import { ATTACKS_TARGET } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type {
-  DecisionRequest,
-  LegalAction,
-  ObjectId,
-  PlayerBoardSeat,
-  TargetChoice,
-} from '@mtg/shared';
+import type { DecisionRequest, LegalAction, ObjectId, TargetChoice } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
+import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import DecisionPanel from '../components/DecisionPanel.vue';
+import DeckColors from '../components/DeckColors.vue';
+import ManaTaps from '../components/ManaTaps.vue';
+import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import StackPanel from '../components/StackPanel.vue';
+import ZonePile from '../components/ZonePile.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
@@ -28,7 +27,7 @@ import { actionLabel } from '../lib/actionLabels';
 import { isTokenTypeLine } from '../lib/card';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
-import { groupPermanents } from '../lib/stackPermanents';
+import { groupPermanents, stackKey } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
 import { useGameStore } from '../stores/game';
@@ -46,9 +45,16 @@ const draggedId = ref<ObjectId | null>(null);
 const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
 const tableRef = ref<HTMLElement | null>(null);
 const dragPointer = ref<{ x: number; y: number } | null>(null);
-onMounted(() => setRoot(tableRef.value));
+// The table only renders once the first board state arrives, which can be after mount.
+// Template refs are already cleared by unmount, so remember the root this view set.
+let ownedRoot: HTMLElement | null = null;
+watch(tableRef, (el) => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+  ownedRoot = el;
+  if (el) setRoot(el);
+});
 onUnmounted(() => {
-  disposeRoot();
+  if (ownedRoot) disposeRoot(ownedRoot);
   // Game-over unmounts this view while the cursor may still be over a targeted chip.
   // Hide the App-level preview so a leftover Lab Ox image cannot outlive the battlefield.
   cardPreview.hide();
@@ -101,12 +107,139 @@ const request = computed(() => pending.value?.request ?? null);
 const human = computed(
   () => state.value?.seats.find((seat) => seat.seat === state.value?.viewerSeat) ?? null,
 );
+/** Keep-or-mulligan and London bottoming take over the screen, Arena-style, until decided. */
+const openingHand = computed(() => {
+  const req = request.value;
+  const hand = human.value?.hand;
+  if (req === null || hand === null || hand === undefined) return null;
+  if (req.decisionType !== 'mulligan' && req.decisionType !== 'bottomCards') return null;
+  return { request: req, hand, mulligansTaken: human.value?.mulligansTaken ?? 0 };
+});
 const opponents = computed(
   () => state.value?.seats.filter((seat) => seat.seat !== state.value?.viewerSeat) ?? [],
 );
 const humanExile = computed(
   () => state.value?.exile.filter((card) => card.owner === state.value?.viewerSeat) ?? [],
 );
+
+/**
+ * Your lands sit apart from the rest of your board, in a pile you open to see or use them one by
+ * one. A land that is also a creature stays on the board, where it can attack and block.
+ */
+function isPiledLand(permanent: { typeLine: string }): boolean {
+  return /\bLand\b/.test(permanent.typeLine) && !/\bCreature\b/.test(permanent.typeLine);
+}
+const humanLands = computed(() =>
+  human.value === null ? [] : permanentsFor(human.value.seat).filter(isPiledLand),
+);
+const humanBoardGroups = computed(() =>
+  human.value === null
+    ? []
+    : groupPermanents(permanentsFor(human.value.seat).filter((p) => !isPiledLand(p))),
+);
+const humanLandGroups = computed(() => groupPermanents(humanLands.value));
+const untappedLandCount = computed(() => humanLands.value.filter((land) => !land.tapped).length);
+
+/**
+ * Whether each pile (lands, graveyard, exile) is open, remembered across games the way the game
+ * info column is: someone who likes their lands spread out keeps them that way.
+ */
+type Pile = 'lands' | 'graveyard' | 'exile';
+const PILE_KEY = (pile: Pile) => `mtg.playerPile.${pile}`;
+function readPile(pile: Pile): boolean {
+  try {
+    return localStorage.getItem(PILE_KEY(pile)) === 'true';
+  } catch {
+    return false;
+  }
+}
+const pilesOpen = ref<Record<Pile, boolean>>({
+  lands: readPile('lands'),
+  graveyard: readPile('graveyard'),
+  exile: readPile('exile'),
+});
+function togglePile(pile: Pile): void {
+  pilesOpen.value[pile] = !pilesOpen.value[pile];
+  try {
+    localStorage.setItem(PILE_KEY(pile), String(pilesOpen.value[pile]));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+
+/**
+ * As on the spectator board, the settings (bot pace, confirmations, motion, Abandon) and the
+ * game info drawer (commander damage, the log) sit behind top-bar buttons so the table gets the
+ * window. The drawer remembers whether it was open; the settings menu always starts closed.
+ */
+/**
+ * The engine's "game over" line, once the game has ended. The log sits in the closed drawer, so
+ * the top bar repeats it where it can be seen (a lab scenario keeps this board after its end).
+ */
+const gameOverLine = computed(() => {
+  for (let i = store.log.length - 1; i >= 0; i--) {
+    const line = store.log[i]!;
+    if (/^game over/i.test(line.text)) return line.text;
+  }
+  return null;
+});
+
+const INFO_OPEN_KEY = 'mtg.playerGameInfoOpen';
+const settingsOpen = ref(false);
+const infoOpen = ref(
+  (() => {
+    try {
+      return localStorage.getItem(INFO_OPEN_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  })(),
+);
+function toggleInfo(): void {
+  infoOpen.value = !infoOpen.value;
+  try {
+    localStorage.setItem(INFO_OPEN_KEY, String(infoOpen.value));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+
+/**
+ * Each opponent's graveyard and exile fold away behind a "zones" button beside their life, and
+ * open by themselves while one of their cards is a target you can pick. Every opponent starts
+ * the way you last left one, remembered like the piles.
+ */
+const OPPONENT_ZONES_KEY = 'mtg.playerOpponentZonesOpen';
+const zonesByDefault = ref(
+  (() => {
+    try {
+      return localStorage.getItem(OPPONENT_ZONES_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  })(),
+);
+const zoneChoices = ref(new Map<string, boolean>());
+function toggleZones(seat: string): void {
+  const open = !(zoneChoices.value.get(seat) ?? zonesByDefault.value);
+  zoneChoices.value = new Map(zoneChoices.value).set(seat, open);
+  zonesByDefault.value = open;
+  try {
+    localStorage.setItem(OPPONENT_ZONES_KEY, String(open));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+function zonesShown(seat: string): boolean {
+  if (zoneChoices.value.get(seat) ?? zonesByDefault.value) return true;
+  const targets = zoneTargetIds.value;
+  if (targets.length === 0) return false;
+  const seatCards = [
+    ...(state.value?.seats.find((s) => s.seat === seat)?.graveyard ?? []),
+    ...exileFor(seat),
+  ];
+  return seatCards.some((card) => targets.includes(card.id));
+}
 const isYourTurn = computed(() => state.value?.activePlayer === state.value?.viewerSeat);
 const selectedAction = computed(
   () => request.value?.legalActions.find((action) => action.id === selectedActionId.value) ?? null,
@@ -248,16 +381,12 @@ function adaptiveWidth(
  * (below, in `.object`) hand sizing to the browser instead: a flex basis it shrinks from only
  * once the actual row width can't fit everything at full size.
  */
-const humanPermWidth = 108;
+const humanPermWidth = 120;
 const humanPermMinWidth = 54;
+const humanLandWidth = 96;
 const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
-const commanderWidth = 78;
-const opponentPermWidth = 70;
+const opponentPermWidth = 92;
 const opponentPermMinWidth = 40;
-
-function primaryCommander(opponent: PlayerBoardSeat) {
-  return opponent.commanders[0] ?? null;
-}
 
 /** "P2" -> "P2 (Krenko, Mob Boss)" for combat-tray option labels; falls back to the raw id. */
 function seatLabel(seatId: string): string {
@@ -326,9 +455,14 @@ function sourceId(action: LegalAction): string | null {
   return null;
 }
 
+/**
+ * Every source action but making mana by hand (ADR 0030): that lives on the land itself, in the
+ * open lands pile, so untapped lands never glow, crowd "Playable now", or hold up a pass.
+ */
 const sourceActions = computed(() =>
   (request.value?.legalActions ?? []).filter(
-    (action) => !isImmediate(action) && sourceId(action) !== null,
+    (action) =>
+      !isImmediate(action) && sourceId(action) !== null && action.type !== 'activateManaAbility',
   ),
 );
 const selectedSourceActions = computed(() =>
@@ -671,6 +805,79 @@ const zoneSourceIds = computed(() =>
     : [],
 );
 
+/**
+ * A pile opens on its own while a card in it is the target being chosen, as an opponent's zones
+ * do, and otherwise stays as you left it. A closed pile glows when a card inside can act.
+ */
+const landsShown = computed(
+  () =>
+    pilesOpen.value.lands ||
+    humanLands.value.some((land) => isLegalTarget(land.id) || isChosenTarget(land.id)),
+);
+const graveyardShown = computed(
+  () =>
+    pilesOpen.value.graveyard ||
+    (human.value?.graveyard ?? []).some((card) => zoneTargetIds.value.includes(card.id)),
+);
+const exileShown = computed(
+  () =>
+    pilesOpen.value.exile || humanExile.value.some((card) => zoneTargetIds.value.includes(card.id)),
+);
+/**
+ * Mana you can make by hand right now, by the permanent that makes it (ADR 0030). Not while a
+ * spell's targets are being chosen or combat is being declared: a click there means that.
+ */
+const manaActionsBySource = computed(() => {
+  const bySource = new Map<string, LegalAction[]>();
+  if (selectedAction.value !== null || combatPlan.mode === 'composing') return bySource;
+  for (const action of request.value?.legalActions ?? []) {
+    if (action.type !== 'activateManaAbility' || action.interaction?.kind !== 'source') continue;
+    const id = action.interaction.sourceId;
+    bySource.set(id, [...(bySource.get(id) ?? []), action]);
+  }
+  return bySource;
+});
+/**
+ * The mana each tile of yours can make by hand, lands and the rest of your board (a Sol Ring, a
+ * mana creature, a Treasure) alike: that of its first member that can, so clicking "×6 Forest"
+ * taps one untapped Forest.
+ */
+const manaByGroup = computed(() => {
+  const byGroup = new Map<string, LegalAction[]>();
+  const yours = human.value === null ? [] : permanentsFor(human.value.seat);
+  for (const group of [...humanBoardGroups.value, ...humanLandGroups.value]) {
+    const key = stackKey(group.permanent);
+    const member = yours.find(
+      (permanent) => stackKey(permanent) === key && manaActionsBySource.value.has(permanent.id),
+    );
+    byGroup.set(group.permanent.id, member ? manaActionsBySource.value.get(member.id)! : []);
+  }
+  return byGroup;
+});
+function tapForMana(action: LegalAction): void {
+  store.submitPlayerAction(action.id);
+}
+/**
+ * A land tile in the open pile: one that only makes one kind of mana taps for it; anything else
+ * (a choice of colors, another ability, a target being chosen) goes through the usual source
+ * flow, with the mana buttons on the tile alongside.
+ */
+function clickLand(id: ObjectId): void {
+  const mana = manaByGroup.value.get(id) ?? [];
+  const hasOther = sourceActions.value.some((action) => sourceId(action) === id);
+  if (mana.length === 1 && !hasOther) {
+    tapForMana(mana[0]!);
+    return;
+  }
+  selectSource(id);
+}
+
+function pileGlow(ids: readonly string[], targetIds: readonly string[]) {
+  if (ids.some((id) => targetIds.includes(id))) return 'targetable' as const;
+  if (ids.some((id) => actionableSourceIds.value.has(id as ObjectId))) return 'actionable' as const;
+  return null;
+}
+
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
 function tryPlanAssign(target: ObjectId | string): boolean {
   if (combatPlan.mode !== 'composing' || focusedSourceId.value === null) return false;
@@ -920,9 +1127,9 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
-/** The highest tax on any of your commanders — what recasting the next one adds. */
-const commanderTax = computed(() =>
-  Math.max(0, ...(human.value?.commanders ?? []).map((commander) => commander.taxGeneric)),
+/** Each commander's own tax: partners are taxed separately (CR 903.8). */
+const taxedCommanders = computed(() =>
+  (human.value?.commanders ?? []).filter((commander) => commander.taxGeneric > 0),
 );
 
 function resourceSummary(pool: ManaPool): string {
@@ -1057,19 +1264,80 @@ function abandon(): void {
 
 <template>
   <div class="player-game">
-    <header class="player-bar">
-      <strong>Player mode · {{ state?.viewerSeat ?? store.humanSeat }}</strong>
+    <OpeningHand
+      v-if="openingHand"
+      :request="openingHand.request"
+      :cards="openingHand.hand"
+      :mulligans-taken="openingHand.mulligansTaken"
+      @choose="store.submitPlayerAction"
+    />
+    <!-- Game status lives in the app's top bar, as on the spectator board, so the table keeps the
+         height a second bar took. Settings and game info open from buttons there. -->
+    <Teleport to="#top-bar-status" defer>
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
         Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
       </span>
-      <span v-if="state">{{ turnPositionLabel(state.phase, state.step) }}</span>
-      <span v-if="state?.priorityPlayer"
+      <span v-if="state" class="phase-label">{{ turnPositionLabel(state.phase, state.step) }}</span>
+      <span v-if="state?.priorityPlayer" class="priority-label"
         >Priority:
         {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
       >
-      <span :class="['connection', store.connection]">{{
+      <!-- Your resources, beside the turn they belong to: global counters, the land drop, and the
+           mana you can spend right now. -->
+      <span v-if="human" class="bar-resources" aria-label="Your resources">
+        <GlobalCounters
+          :energy="human.energy"
+          :poison-counters="human.poisonCounters"
+          :counters="human.counters"
+          compact
+        />
+        <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+          human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
+        }}</span>
+        <span
+          class="resource"
+          title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
+          >Mana ready <strong>{{ state!.viewerMana.units }}</strong
+          ><span
+            v-for="color in state!.viewerMana.colors"
+            :key="color"
+            class="mana-dot"
+            :class="`mana-${color}`"
+            >{{ color }}</span
+          ></span
+        >
+        <span v-if="resourceSummary(human.manaPool)" class="resource"
+          >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
+        >
+      </span>
+      <span v-if="gameOverLine" class="game-over-badge">{{ gameOverLine }}</span>
+      <!-- Only a problem is worth the space: a healthy connection says nothing. -->
+      <span v-if="store.connection !== 'open'" :class="['connection', store.connection]">{{
         CONNECTION_LABELS[store.connection]
       }}</span>
+      <CopyGameReportButton />
+      <button
+        type="button"
+        class="bar-toggle"
+        :aria-expanded="settingsOpen"
+        aria-controls="player-settings"
+        @click="settingsOpen = !settingsOpen"
+      >
+        Settings
+      </button>
+      <button
+        type="button"
+        class="bar-toggle"
+        :aria-expanded="infoOpen"
+        aria-controls="player-game-info"
+        @click="toggleInfo"
+      >
+        {{ infoOpen ? 'Hide game info' : 'Game info' }}
+      </button>
+    </Teleport>
+
+    <!-- Bot pace, confirmations, motion and Abandon: set once, rarely touched, so folded away. -->
+    <div v-show="settingsOpen" id="player-settings" class="settings-menu" aria-label="Settings">
       <div class="pace">
         Bot turns
         <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
@@ -1118,8 +1386,8 @@ function abandon(): void {
         />
         Reduce motion
       </label>
-      <button type="button" @click="confirmingAbandon = true">Abandon</button>
-    </header>
+      <button type="button" class="abandon" @click="confirmingAbandon = true">Abandon</button>
+    </div>
 
     <div v-if="store.connection !== 'open'" class="paused">
       Reconnecting… the engine will not begin another bot decision while you are away.
@@ -1133,9 +1401,13 @@ function abandon(): void {
       <button type="button" @click="store.cancelYield()">Take priority back</button>
     </div>
 
-    <main v-if="state" class="player-layout">
+    <main v-if="state" class="player-layout" :class="{ 'info-open': infoOpen }">
       <section ref="tableRef" class="table" @dragover="onBoardDragOver">
-        <CombatOverlay :drag-source-id="draggedId" :pointer="dragPointer" />
+        <CombatOverlay
+          :drag-source-id="draggedId"
+          :pointer="dragPointer"
+          :permanents="state.battlefield"
+        />
         <div class="opponents" :style="{ '--opponent-columns': opponentColumns }">
           <article
             v-for="opponent in opponents"
@@ -1152,15 +1424,61 @@ function abandon(): void {
             @dragover.prevent
             @drop="dropOn(opponent.seat)"
           >
+            <!-- One line, as on the spectator board: who, their colors, their counts, then the
+                 zones button beside the life total. -->
             <header>
               <span class="id-badge">{{ opponent.seat }}</span>
-              <strong>{{ opponent.label }}</strong>
+              <span
+                v-for="commander in opponent.commanders"
+                :key="commander.cardId"
+                class="cmdr-thumb"
+                @mouseenter="showCardPreview(commander, $event)"
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
+              >
+                <CardImage
+                  :scryfall-id="commander.scryfallId"
+                  :name="commander.name"
+                  size="small"
+                />
+              </span>
+              <strong
+                class="seat-name"
+                @mouseenter="
+                  opponent.commanders[0] && showCardPreview(opponent.commanders[0], $event)
+                "
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
+                >{{ opponent.label }}</strong
+              >
+              <DeckColors :commanders="opponent.commanders" />
+              <span class="meta-item opp-meta" title="Cards in hand"
+                >{{ opponent.handSize }} in hand</span
+              >
+              <span class="meta-item" title="Cards in library"
+                ><b>lib</b> {{ opponent.librarySize }}</span
+              >
+              <span class="meta-item" title="Cards in graveyard"
+                ><b>gy</b> {{ opponent.graveyard.length }}</span
+              >
+              <span class="meta-item" title="Cards in exile"
+                ><b>exile</b> {{ exileFor(opponent.seat).length }}</span
+              >
+              <span class="spacer" />
               <span
                 v-if="state.monarchSeat === opponent.seat"
                 class="monarch-badge"
                 title="This player is the monarch"
                 >MONARCH</span
               >
+              <button
+                type="button"
+                class="zones-toggle"
+                :aria-expanded="zonesShown(opponent.seat)"
+                @click.stop="toggleZones(opponent.seat)"
+              >
+                {{ zonesShown(opponent.seat) ? '▾ zones' : '▸ zones' }}
+              </button>
               <span
                 class="life-badge"
                 :class="{
@@ -1177,16 +1495,6 @@ function abandon(): void {
               :counters="opponent.counters"
               compact
             />
-            <div class="opp-meta">
-              <div v-if="primaryCommander(opponent)" class="opp-cmdr-thumb">
-                <CardImage
-                  :scryfall-id="primaryCommander(opponent)!.scryfallId"
-                  :name="primaryCommander(opponent)!.name"
-                  size="small"
-                />
-              </div>
-              <span>{{ opponent.handSize }} in hand · {{ opponent.librarySize }} in library</span>
-            </div>
             <TransitionGroup tag="div" name="board-card" class="permanents">
               <div
                 v-for="group in groupedPermanentsFor(opponent.seat)"
@@ -1215,7 +1523,7 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
-            <div class="zones-strip opponent-zones" @click.stop>
+            <div v-show="zonesShown(opponent.seat)" class="zones-strip opponent-zones" @click.stop>
               <ZoneStrip
                 label="Graveyard"
                 :cards="opponent.graveyard"
@@ -1252,7 +1560,74 @@ function abandon(): void {
             }"
             @click="chooseOpponent(human.seat)"
           >
-            <strong>You · {{ human.seat }} · {{ human.label }}</strong>
+            <span class="id-badge you">You · {{ human.seat }}</span>
+            <!-- The commander once, as a thumbnail: in the command zone it is the card you click
+                 to cast it, glowing when you can. -->
+            <span class="command-zone">
+              <template v-for="commander in human.commanders" :key="commander.cardId">
+                <button
+                  v-if="commander.zone === 'command' && commander.objectId !== null"
+                  type="button"
+                  class="commander-card cmdr-thumb"
+                  :title="`${commander.name}: in the command zone`"
+                  :class="{
+                    focused: focusedSourceId === commander.objectId,
+                    actionable: actionableSourceIds.has(commander.objectId),
+                    'chosen-target': isChosenTarget(commander.objectId),
+                  }"
+                  @click.stop="selectSource(commander.objectId)"
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                >
+                  <CardImage
+                    :scryfall-id="commander.scryfallId"
+                    :name="commander.name"
+                    size="small"
+                  />
+                </button>
+                <span
+                  v-else
+                  class="cmdr-thumb"
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                >
+                  <CardImage
+                    :scryfall-id="commander.scryfallId"
+                    :name="commander.name"
+                    size="small"
+                  />
+                </span>
+              </template>
+            </span>
+            <strong
+              class="seat-name"
+              @mouseenter="human.commanders[0] && showCardPreview(human.commanders[0], $event)"
+              @mousemove="moveCardPreview"
+              @mouseleave="hideCardPreview"
+              >{{ human.label }}</strong
+            >
+            <DeckColors :commanders="human.commanders" />
+            <!-- Your own counts in full words: your row has the room, and they are yours. -->
+            <span class="meta-item"><b>Hand</b> {{ human.hand?.length ?? human.handSize }}</span>
+            <span class="meta-item"><b>Library</b> {{ human.librarySize }}</span>
+            <span class="meta-item"><b>Graveyard</b> {{ human.graveyard.length }}</span>
+            <span class="meta-item"><b>Exile</b> {{ humanExile.length }}</span>
+            <span class="spacer" />
+            <span
+              v-for="commander in taxedCommanders"
+              :key="commander.cardId"
+              class="cmdr-tax"
+              :title="`Commander tax: casting ${commander.name} costs {${commander.taxGeneric}} more`"
+              >+{{ commander.taxGeneric }}</span
+            >
+            <span
+              v-if="state.monarchSeat === human.seat"
+              class="monarch-badge"
+              title="You are the monarch"
+              >MONARCH</span
+            >
             <span
               class="life-badge"
               :class="{
@@ -1262,49 +1637,8 @@ function abandon(): void {
               }"
               >{{ human.life }}</span
             >
-            <span
-              v-if="state.monarchSeat === human.seat"
-              class="monarch-badge"
-              title="You are the monarch"
-              >MONARCH</span
-            >
           </header>
-          <GlobalCounters
-            :energy="human.energy"
-            :poison-counters="human.poisonCounters"
-            :counters="human.counters"
-          />
-          <div class="resource-strip" aria-label="Your resources">
-            <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
-              human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
-            }}</span>
-            <span
-              class="resource"
-              title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
-              >Mana ready <strong>{{ state.viewerMana.units }}</strong
-              ><template v-if="state.viewerMana.colors.length > 0">
-                · {{ state.viewerMana.colors.join(' ') }}</template
-              ></span
-            >
-            <span v-if="resourceSummary(human.manaPool)" class="resource"
-              >Floating <strong>{{ resourceSummary(human.manaPool) }}</strong></span
-            >
-            <span v-if="commanderTax > 0" class="resource"
-              >Commander tax <strong>+{{ commanderTax }}</strong></span
-            >
-            <span class="resource"
-              >Hand <strong>{{ human.hand?.length ?? human.handSize }}</strong></span
-            >
-            <span class="resource"
-              >Library <strong>{{ human.librarySize }}</strong></span
-            >
-            <span class="resource"
-              >Graveyard <strong>{{ human.graveyard.length }}</strong></span
-            >
-            <span v-if="humanExile.length > 0" class="resource"
-              >Exile <strong>{{ humanExile.length }}</strong></span
-            >
-          </div>
+          <!-- Your board, then your lands, then your graveyard and exile as piles: Arena's layout. -->
           <div class="battle-row">
             <TransitionGroup
               tag="div"
@@ -1314,7 +1648,7 @@ function abandon(): void {
               @drop="dropToBattlefield"
             >
               <div
-                v-for="group in groupedPermanentsFor(human.seat)"
+                v-for="group in humanBoardGroups"
                 :key="group.permanent.id"
                 class="object"
                 :style="{
@@ -1327,6 +1661,7 @@ function abandon(): void {
                   'chosen-target': isChosenTarget(group.permanent.id),
                   'payment-source': isPaymentSource(group.permanent.id),
                   actionable: actionableSourceIds.has(group.permanent.id),
+                  'makes-mana': (manaByGroup.get(group.permanent.id) ?? []).length > 0,
                 }"
                 draggable="true"
                 @dragstart="dragStart(group.permanent.id, $event)"
@@ -1340,45 +1675,112 @@ function abandon(): void {
                   :count="group.count"
                   :name-by-id="nameById"
                 />
+                <ManaTaps
+                  v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
+                  :actions="manaByGroup.get(group.permanent.id)!"
+                  @tap="tapForMana"
+                />
               </div>
             </TransitionGroup>
+            <!-- Lands: a pile showing how many are untapped, or spread out to use one by one. -->
             <div
-              v-if="human.commanders.some((commander) => commander.zone === 'command')"
-              class="command-zone"
+              v-if="humanLands.length > 0"
+              id="player-lands"
+              class="land-area"
+              :class="{ spread: landsShown }"
             >
-              <span class="command-zone-label">Command</span>
-              <button
-                v-for="commander in human.commanders.filter(
-                  (entry) => entry.zone === 'command' && entry.objectId !== null,
-                )"
-                :key="commander.cardId"
-                type="button"
-                class="commander-card"
-                :style="{ width: commanderWidth + 'px' }"
-                :class="{
-                  focused: focusedSourceId === commander.objectId,
-                  actionable:
-                    commander.objectId !== null && actionableSourceIds.has(commander.objectId),
-                  'chosen-target':
-                    commander.objectId !== null && isChosenTarget(commander.objectId),
-                }"
-                @click="commander.objectId !== null && selectSource(commander.objectId)"
-                @mouseenter="showCardPreview(commander, $event)"
-                @mousemove="moveCardPreview"
-                @mouseleave="hideCardPreview"
-              >
-                <CardImage
-                  :scryfall-id="commander.scryfallId"
-                  :name="commander.name"
-                  size="small"
-                />
-                <span
-                  >{{ commander.name
-                  }}<small v-if="commander.taxGeneric > 0">
-                    +{{ commander.taxGeneric }}</small
-                  ></span
+              <template v-if="landsShown">
+                <button
+                  type="button"
+                  class="pile-close"
+                  aria-controls="player-lands"
+                  :aria-expanded="true"
+                  @click.stop="togglePile('lands')"
                 >
-              </button>
+                  ▾ Lands ({{ humanLands.length }}) · {{ untappedLandCount }} untapped
+                </button>
+                <TransitionGroup tag="div" name="board-card" class="permanents lands">
+                  <div
+                    v-for="group in humanLandGroups"
+                    :key="group.permanent.id"
+                    class="object"
+                    :style="{
+                      '--chip-w': humanLandWidth + 'px',
+                      '--chip-min': humanPermMinWidth + 'px',
+                    }"
+                    :class="{
+                      focused: focusedSourceId === group.permanent.id,
+                      targetable: isLegalTarget(group.permanent.id),
+                      'chosen-target': isChosenTarget(group.permanent.id),
+                      'payment-source': isPaymentSource(group.permanent.id),
+                      actionable: actionableSourceIds.has(group.permanent.id),
+                      'makes-mana': (manaByGroup.get(group.permanent.id) ?? []).length > 0,
+                    }"
+                    draggable="true"
+                    @dragstart="dragStart(group.permanent.id, $event)"
+                    @dragend="dragEnd"
+                    @dragover.prevent
+                    @drop.stop="dropOn(group.permanent.id)"
+                    @click="clickLand(group.permanent.id)"
+                  >
+                    <PermanentChip
+                      :permanent="group.permanent"
+                      :count="group.count"
+                      :name-by-id="nameById"
+                    />
+                    <!-- Tap it for mana by hand: one button per kind of mana it can make. -->
+                    <ManaTaps
+                      v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
+                      :actions="manaByGroup.get(group.permanent.id)!"
+                      @tap="tapForMana"
+                    />
+                  </div>
+                </TransitionGroup>
+              </template>
+              <ZonePile
+                v-else
+                label="Lands"
+                :cards="humanLands"
+                :open="false"
+                :detail="`${untappedLandCount} untapped`"
+                :glow="
+                  pileGlow(
+                    humanLands.map((land) => land.id),
+                    [],
+                  )
+                "
+                controls="player-lands"
+                @toggle="togglePile('lands')"
+              />
+            </div>
+            <div class="piles">
+              <ZonePile
+                label="Graveyard"
+                :cards="human.graveyard"
+                :open="graveyardShown"
+                :glow="
+                  pileGlow(
+                    human.graveyard.map((card) => card.id),
+                    zoneTargetIds,
+                  )
+                "
+                controls="player-zones"
+                @toggle="togglePile('graveyard')"
+              />
+              <ZonePile
+                v-if="humanExile.length > 0"
+                label="Exile"
+                :cards="humanExile"
+                :open="exileShown"
+                :glow="
+                  pileGlow(
+                    humanExile.map((card) => card.id),
+                    zoneTargetIds,
+                  )
+                "
+                controls="player-zones"
+                @toggle="togglePile('exile')"
+              />
             </div>
           </div>
 
@@ -1420,8 +1822,10 @@ function abandon(): void {
             </button>
           </TransitionGroup>
 
-          <div class="zones-strip">
+          <!-- An open graveyard or exile pile spreads its cards here, under your hand. -->
+          <div id="player-zones" class="zones-strip">
             <ZoneStrip
+              v-if="graveyardShown"
               label="Graveyard"
               :cards="human.graveyard"
               :selectable-ids="zoneTargetIds"
@@ -1430,6 +1834,7 @@ function abandon(): void {
               @activate="selectSource"
             />
             <ZoneStrip
+              v-if="exileShown"
               label="Exile"
               :cards="humanExile"
               :selectable-ids="zoneTargetIds"
@@ -1634,7 +2039,7 @@ function abandon(): void {
 
       <aside class="rail">
         <section class="decision" :data-request-id="request?.requestId">
-          <template v-if="request">
+          <template v-if="request && !openingHand">
             <DecisionPanel
               v-if="fallbackRequest && immediateActions.length === 0"
               :request="fallbackRequest"
@@ -1705,7 +2110,7 @@ function abandon(): void {
               />
             </template>
           </template>
-          <p v-else class="thinking" role="status" aria-live="polite">
+          <p v-else-if="!request" class="thinking" role="status" aria-live="polite">
             <span class="thinking-mark" aria-hidden="true" />
             {{ thinkingLabel }}
           </p>
@@ -1736,6 +2141,17 @@ function abandon(): void {
           :is-chosen-target="isChosenTarget"
           @select="selectSource"
         />
+      </aside>
+      <!-- Commander damage and the log stay mounted while hidden, so the log keeps following play
+           and opening the drawer shows it already at the present. -->
+      <aside v-show="infoOpen" id="player-game-info" class="info-drawer" aria-label="Game info">
+        <div class="info-head">
+          <h2>Game info</h2>
+          <button type="button" class="info-close" aria-label="Close game info" @click="toggleInfo">
+            ×
+          </button>
+        </div>
+        <CommanderDamageGrid :state="state" />
         <!-- The reasoning toggle appears only once the game is over: until then the server
              withholds every opponent's reasoning, so offering the control would promise
              something it must not deliver (ADR 0022 §3). -->
@@ -1749,7 +2165,6 @@ function abandon(): void {
             store.setDebugFlags({ ...store.debugFlags, showAIResponses: $event })
           "
         >
-          <template #actions><CopyGameReportButton /></template>
         </ActionLog>
       </aside>
     </main>
@@ -1784,15 +2199,79 @@ function abandon(): void {
   gap: 0.6rem;
   padding: 0.6rem;
 }
-.player-bar {
+/* The top bar's status, teleported into the app's nav. */
+.phase-label,
+.priority-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.game-over-badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.bar-toggle {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.55rem;
+}
+/* Settings drop down from the top bar's right end, over the table. */
+.settings-menu {
+  position: fixed;
+  top: 3.1rem;
+  right: 0.6rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.35);
+  font-size: 0.78rem;
+}
+.settings-menu .abandon {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  color: var(--danger);
+}
+/* Game info: commander damage and the log in a column beside the rail, covering nothing. */
+.info-drawer {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.info-head {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 6px;
-  font-size: 0.78rem;
+  justify-content: space-between;
+}
+.info-head h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.info-close {
+  padding: 0 0.45rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.info-drawer :deep(.log) {
+  flex: 1;
+  min-height: 0;
 }
 .turn-badge {
   color: var(--muted);
@@ -1802,7 +2281,6 @@ function abandon(): void {
   color: var(--accent);
 }
 .pace {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -1866,6 +2344,9 @@ button.selected,
   grid-template-columns: minmax(0, 1fr) 22rem;
   gap: 0.6rem;
 }
+.player-layout.info-open {
+  grid-template-columns: minmax(0, 1fr) 22rem 20rem;
+}
 .table {
   position: relative;
   min-height: 0;
@@ -1922,17 +2403,56 @@ button.selected,
 }
 .opponent > header {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.72rem;
   flex-shrink: 0;
 }
-.opponent > header strong {
-  flex: 1;
-  min-width: 0;
+/* A seat's header: who, their colors and counts, then (pushed right) zones and life. */
+/* In a narrow seat the counts wrap under the name rather than squeeze it out. */
+.seat-name {
+  flex: 0 1 auto;
+  min-width: min(6rem, 40%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: zoom-in;
+}
+.meta-item {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.meta-item b {
+  font-weight: 700;
+}
+.spacer {
+  flex: 1;
+}
+.cmdr-thumb {
+  width: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgb(96 165 250 / 0.4);
+  cursor: zoom-in;
+}
+.cmdr-tax {
+  flex-shrink: 0;
+  color: var(--warn);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.zones-toggle {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  padding: 0.05rem 0.4rem;
+  color: var(--muted);
+  background: var(--surface-2);
 }
 .human-zone > header {
   display: flex;
@@ -1954,21 +2474,6 @@ button.selected,
   animation: none;
   box-shadow: 0 0 0 2px var(--ok);
 }
-.opp-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--muted);
-  font-size: 0.72rem;
-  flex-shrink: 0;
-}
-.opp-cmdr-thumb {
-  width: 20px;
-  flex-shrink: 0;
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid rgb(96 165 250 / 0.4);
-}
 .id-badge {
   font-weight: 800;
   font-size: 0.68rem;
@@ -1977,6 +2482,9 @@ button.selected,
   padding: 0.02rem 0.3rem;
   border-radius: 3px;
   flex-shrink: 0;
+}
+.id-badge.you {
+  white-space: nowrap;
 }
 .monarch-badge {
   flex-shrink: 0;
@@ -2020,6 +2528,8 @@ button.selected,
   align-items: flex-start;
   align-content: flex-start;
   gap: 0.3rem;
+  /* Room for a stack's ×N badge, which sits over the top corner of its tile. */
+  padding-top: 6px;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -2082,14 +2592,18 @@ button.selected,
   border-color: var(--accent);
   box-shadow: 0 0 10px rgb(110 168 254 / 0.25);
 }
-.resource-strip {
+/* Your resources ride in the top bar, as compact chips. */
+.bar-resources {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.3rem;
-  margin: 0.15rem 0 0.25rem;
+  white-space: nowrap;
 }
 .resource {
-  padding: 0.14rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
@@ -2104,6 +2618,38 @@ button.selected,
   color: var(--ok);
   font-weight: 600;
 }
+/* The colors that mana can be, as mana-symbol circles (the same tints as a deck's colors). */
+.mana-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: #1c1917;
+  background: #d6d3d1;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+.mana-dot:first-of-type {
+  margin-left: 0.15rem;
+}
+.mana-W {
+  background: #f8f4d8;
+}
+.mana-U {
+  background: #a9cdf0;
+}
+.mana-B {
+  background: #b5aaa6;
+}
+.mana-R {
+  background: #f0a184;
+}
+.mana-G {
+  background: #9bcb98;
+}
 .battle-row {
   flex: 1;
   min-height: 150px;
@@ -2112,8 +2658,52 @@ button.selected,
   overflow: hidden;
 }
 .battle-row .permanents {
-  flex: 1;
+  flex: 1.4;
   min-width: 0;
+}
+/* Lands beside the board, behind a dashed rule as on the spectator board: a pile, or spread. */
+.land-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 0;
+  padding-left: 0.5rem;
+  border-left: 1px dashed var(--line);
+}
+.land-area.spread {
+  flex: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.land-area .permanents.lands {
+  flex: 1;
+}
+.pile-close {
+  align-self: flex-start;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.pile-close:hover {
+  color: var(--text);
+}
+/* A permanent you can tap by hand: its mana buttons (ManaTaps) sit over its tile. */
+.object.makes-mana {
+  position: relative;
+}
+/* Graveyard and exile piles at the row's right end. */
+.piles {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-left: 0.4rem;
+  border-left: 1px dashed var(--line);
 }
 .hand {
   position: relative;
@@ -2156,45 +2746,15 @@ button.selected,
   font-size: 0.65rem;
   overflow: hidden;
 }
+/* Your commander in the header; in the command zone it is the button that casts it. */
 .command-zone {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  border-left: 1px dashed var(--line);
-  padding-left: 0.45rem;
-}
-.command-zone-label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-/*
- * Natural card size, shrinking only when the battle row is shorter than the card. `flex: 1`
- * here (and on the image) stretched the commander to the full height of an empty battlefield —
- * a strip hundreds of pixels tall with the art cropped to a sliver (browser trial, Turn 4).
- */
-.commander-card {
-  flex: 0 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: inline-flex;
   gap: 0.2rem;
-  padding: 0.1rem;
-  font-size: 0.6rem;
-  text-align: center;
+  flex-shrink: 0;
 }
-.commander-card :deep(.card-image) {
-  width: 100%;
-  flex: 0 1 auto;
-  min-height: 0;
-}
-.commander-card small {
-  color: var(--warn);
+.commander-card.cmdr-thumb {
+  width: 26px;
+  cursor: pointer;
 }
 .interaction-tray {
   margin-top: 0.1rem;
@@ -2537,10 +3097,6 @@ button.primary {
   font-weight: 700;
   color: var(--accent);
 }
-.rail :deep(.log) {
-  flex: 1;
-  min-height: 7rem;
-}
 @media (max-width: 900px) {
   .player-layout {
     display: flex;
@@ -2557,6 +3113,10 @@ button.primary {
   .rail {
     flex-shrink: 0;
     min-height: 30rem;
+  }
+  .info-drawer {
+    flex-shrink: 0;
+    min-height: 24rem;
   }
 }
 </style>

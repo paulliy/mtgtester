@@ -351,6 +351,25 @@ const DEFS: Def[] = [
       prepared: COMBAT,
     },
   ),
+  entry(
+    ZURGO,
+    'multiplayer',
+    'Zurgo and Ojutai: simultaneous Dragon damage to two players triggers twice',
+    [3],
+    [
+      'Attack P2 with Zurgo and Ojutai and P3 with PR12 Lab Dragon.',
+      'Put one card from each look-three into your hand and keep the rest in current order.',
+      'For the P2 damage trigger, return Zurgo and Ojutai.',
+      'For the P3 damage trigger, return PR12 Lab Dragon.',
+    ],
+    'P2 takes 4 and P3 takes 4. Both Dragon damage triggers resolve: two cards go to your hand, and each trigger can return only the Dragon that damaged its event player.',
+    {
+      p1Hand: [],
+      p1Field: [card(ZURGO), DRAGON],
+      p1LibraryTop: [RELIC, BEAR, SHOCK, TRINKET, DRAGON, card(ZURGO)],
+      prepared: COMBAT,
+    },
+  ),
 
   // PR12.05 Bloomvine Regent // Claim Territory
   entry(

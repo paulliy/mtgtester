@@ -45,21 +45,26 @@ entries are deleted and recorded in the catalog audit's `interpreterRestored` li
 - Modal double-faced instant and sorcery faces; transforming once (CR 701.27f); planeswalker-only
   attack triggers; attack triggers that count only attackers matching a filter ("non-Toy").
 - Grants locked to one object (CR 400.7): a returned creature's dies trigger, a Saga's chapter
-  abilities, and "they're artifacts in addition to their other types".
+  abilities, and "they're artifacts in addition to their other types". Room attack triggers are
+  grouped per attacked player; non-Toy attackers sent at two players create two Toy tokens.
+- Split second filters spell casts and nonmana ability activations by their action payloads, so
+  turning a permanent face up through morph or manifest and activating mana abilities remain legal.
 
 ## Evidence
 
 - Engine behavior tests: `packages/engine/tests/pr11b-mdfc.test.ts`, `pr11b-transform.test.ts`,
   `pr11b-class.test.ts`, `pr11b-saga.test.ts`, `pr11b-split.test.ts`, `pr11b-archaic.test.ts`,
-  `pr11b-mila.test.ts`, `pr11b-prepare.test.ts` and `pr11b-room.test.ts`. Each test id names
+  `pr11b-mila.test.ts`, `pr11b-prepare.test.ts`, `pr11b-room.test.ts` and
+  `pr11b-split-second.test.ts`. Each test id names
   its card and clause (for example `room-c01-negative-toy`).
-- 24 Card Test Lab scenarios, two per card, in
+- 25 Card Test Lab scenarios in
   [pr11b-scenarios.ts](../../packages/server/src/cards/pr11b-scenarios.ts).
   [pr11b-scenarios.test.ts](../../packages/server/src/cards/pr11b-scenarios.test.ts) plays each
   one headlessly through the production decision path and checks the outcome.
-- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 24 in a
+- [pr11b-card-test-lab.spec.ts](../../apps/web/e2e/pr11b-card-test-lab.spec.ts) runs all 25 in a
   real browser against the lab server, records traces, and enforces the exact scenario-ID set.
-  The generic Card Test Lab walkthrough skips these ids.
+  All 25 passed locally, including simultaneous attacks against two players. The generic Card
+  Test Lab walkthrough skips these ids.
 - `card-verification-manifest.json` has `implemented-reviewed` entries for the 12 cards, with
   clause-level engine test ids and viewer scenario ids. The coverage ledger rows for the five
   cards it tracks are `implemented-reviewed` under `PR11.NN`.

@@ -32,6 +32,7 @@ import { computeCharacteristics } from '../effects/continuous';
 import { emit, debug } from '../log/log';
 
 import { emptyCost, subtractGeneric, totalPips, withX } from '../mana/cost';
+import { manualManaPlan } from '../mana/manual';
 import {
   discardCard,
   makePermanent,
@@ -633,6 +634,22 @@ export function* applyPriorityAction(
       delete perm.manifested;
       perm.name = getDefByOracleId(ctx, perm.oracleId, perm.name).name;
       emit(ctx, 'turnedFaceUp', { name: perm.name, cardId: perm.cardId }, player.id);
+      return;
+    }
+
+    case 'activateManaAbility': {
+      // CR 605.3a: a mana ability resolves at once, without the stack, and its mana stays in the
+      // pool for whatever the player does next. The same executor as auto-pay, given a one-source
+      // plan and nothing to buy, so costs, riders, restrictions and triggers apply the same way.
+      const plan = manualManaPlan(ctx, player.id, player, payload);
+      const name = s.battlefield.find((p) => p.cardId === payload.cardId)?.name ?? 'a permanent';
+      yield* payManaCost(ctx, player, emptyCost(), { kind: 'other' }, [], new Set(), plan);
+      emit(
+        ctx,
+        'manaAbilityActivated',
+        { name, mana: payload.symbols.map((symbol) => `{${symbol}}`).join('') },
+        player.id,
+      );
       return;
     }
 

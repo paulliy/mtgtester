@@ -371,6 +371,34 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await expect(pt(page, 'P1', 'Toy')).toHaveText('1/1');
     await passUntil(page, life(page, 'P2').filter({ hasText: '36' }));
   },
+  'pr11b-dollmaker-s-shop-viewer-multiplayer': async (page) => {
+    await cast(page, "Dollmaker's Shop // Porcelain Gallery");
+    await resolveStack(page, "Dollmaker's Shop");
+    const declare = page.getByRole('button', { name: /Declare attackers/ });
+    await passUntil(page, declare);
+    await declare.click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: 'PR11b Lab Bear' })
+      .getByRole('button', { name: 'P2', exact: true })
+      .click();
+    await page
+      .locator('.combat-assignment-row')
+      .filter({ hasText: 'PR11b Lab Red Bear' })
+      .getByRole('button', { name: 'P3', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Confirm attacks', exact: true }).click();
+    await choose(page, /Dollmaker's Shop/);
+    const toys = permanent(page, 'P1', 'Toy');
+    // The viewer groups identical tokens into one tile and shows their actual count.
+    const count = toys.locator('.stack-count-badge');
+    await passUntil(page, count.filter({ hasText: '×2' }));
+    await expect(toys).toHaveCount(1);
+    await expect(count).toHaveText('×2');
+    await expect(toys.locator('.pt')).toHaveText('1/1');
+    await passUntil(page, life(page, 'P2').filter({ hasText: '38' }));
+    await expect(life(page, 'P3')).toHaveText('38');
+  },
 
   'pr11b-mila-crafty-companion-viewer-walker-attack': async (page) => {
     await passUntil(page, logLine(page, /Mila, Crafty Companion[^]*loyalty counter/));

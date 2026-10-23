@@ -84,14 +84,22 @@ function unlock(ctx: GameContext, door: string): void {
 }
 
 /** P1 attacks with `attackers` at `defender` until triggers wait on the stack. */
-function p1Attacks(ctx: GameContext, attackers: EnginePermanent[], defender: string): void {
+function p1Attacks(
+  ctx: GameContext,
+  attackers: EnginePermanent[],
+  defender: string | ((attackerId: string) => string | null),
+): void {
   Object.assign(ctx.state, { phase: 'combat' });
   const ids = new Set(attackers.map((perm) => perm.id));
   const gen = runCombatPhase(ctx);
   let step = gen.next();
   while (!step.done) {
     if (step.value.decisionType === 'declareAttackers') {
-      step = gen.next(declareAttacks(step.value, (id) => (ids.has(id) ? defender : null)));
+      step = gen.next(
+        declareAttacks(step.value, (id) =>
+          ids.has(id) ? (typeof defender === 'string' ? defender : defender(id)) : null,
+        ),
+      );
       continue;
     }
     if (ctx.state.stack.length > 0) return;
@@ -207,6 +215,28 @@ describe("Dollmaker's Shop // Porcelain Gallery", () => {
       1,
       1,
     ]);
+  });
+
+  it('room-c01-multiplayer — non-Toys attacking two players create one Toy per attacked player', () => {
+    const ctx = game('room-shop-multiplayer');
+    castDoor(ctx, SHOP);
+    const attackers = Array.from({ length: 3 }, () => ready(spawn(ctx, 'P1', bear())));
+    p1Attacks(ctx, attackers, (id) => (id === attackers[2]!.id ? 'P3' : 'P2'));
+    expect(ctx.state.stack).toHaveLength(2);
+    resolve(ctx);
+    resolve(ctx);
+    expect(battlefield(ctx, 'Toy')).toHaveLength(2);
+  });
+
+  it('room-c01-multiplayer-toy — attacking another player with only a Toy adds no trigger', () => {
+    const ctx = game('room-shop-multiplayer-toy');
+    castDoor(ctx, SHOP);
+    const bearAttacker = ready(spawn(ctx, 'P1', bear()));
+    const toyAttacker = ready(spawn(ctx, 'P1', toy()));
+    p1Attacks(ctx, [bearAttacker, toyAttacker], (id) => (id === toyAttacker.id ? 'P3' : 'P2'));
+    expect(ctx.state.stack).toHaveLength(1);
+    resolve(ctx);
+    expect(battlefield(ctx, 'Toy')).toHaveLength(1);
   });
 
   it('room-c01-negative-toy — an attack by Toys alone does not trigger', () => {

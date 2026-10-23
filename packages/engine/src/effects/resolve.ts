@@ -24,7 +24,7 @@ import {
 } from '../state/counters';
 import { isPermanentCard } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
-import { eventObjectFacts, sourceObjectFacts } from '../cards/source-identity';
+import { eventObjectFacts, sourceObjectFacts, sourceObjectState } from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
@@ -279,7 +279,10 @@ export interface EffectSource {
   resolvingStackObject?: EngineStackObject;
   /** The source's colors as its ability went on the stack — protection's last known information. */
   lastKnownColors?: readonly Color[];
-  /** The resolving spell's card types (its selected face), for protection from a card type. */
+  /**
+   * The source's card types for protection from a card type: a resolving spell's selected face,
+   * or a departed trigger object's types as it last existed (CR 113.7a).
+   */
   lastKnownTypes?: readonly string[];
   /** The source's damage keywords as it left the battlefield — LKI for damage it deals after. */
   lastKnownDamageKeywords?: readonly DamageKeyword[];
@@ -410,15 +413,17 @@ export function* dealDamageToPlayer(
     );
   } else {
     const before = target.life;
+    // Angel's Grace: damage that would reduce the total below 1 reduces it to 1 instead. A total
+    // already below 1 is left alone; the replacement never raises it.
     target.life =
       ctx.state.lifeFloorPlayers[target.id] === true
-        ? Math.max(1, target.life - amount)
-        : target.life - amount;
+        ? Math.min(before, Math.max(1, before - amount))
+        : before - amount;
     // CR 120.3: damage dealt to a player causes that player to lose that much life. Cards that
     // ask who "lost life this turn" (Gev, Scaled Scorch) must see damage, not just `loseLife`.
     // The infect branch above is deliberately excluded: it gives poison counters instead.
     noteLifeLost(ctx, target.id, before - target.life);
-    ctx.state.lifeLostThisTurn[target.id] = true;
+    if (target.life < before) ctx.state.lifeLostThisTurn[target.id] = true;
   }
   ctx.state.damageDealtToPlayersThisTurn[target.id] =
     (ctx.state.damageDealtToPlayersThisTurn[target.id] ?? 0) + amount;
@@ -1781,6 +1786,7 @@ export function* executeAbility(
       oracleId: facts.oracleId,
       controllerId: facts.candidate.controllerId as PlayerId,
       lastKnownColors: facts.candidate.colors,
+      lastKnownTypes: facts.candidate.types,
       lastKnownDamageKeywords: (['deathtouch', 'lifelink', 'infect'] as const).filter((keyword) =>
         facts.candidate.keywords.includes(keyword),
       ),
@@ -7875,9 +7881,12 @@ export function* executeAbility(
       case 'exileFromHandWithSource': {
         const candidates = controller.hand.filter(
           (card) =>
-            !getDefByOracleId(ctx, card.oracleId, card.name).types.some((type) =>
-              effect.excludeTypes.includes(type),
-            ),
+            // Card types in hand, including Biotransference's added Artifact (CR 611.3c).
+            !offBattlefieldTypes(
+              ctx,
+              getDefByOracleId(ctx, card.oracleId, card.name).types,
+              card.ownerId,
+            ).some((type) => effect.excludeTypes.includes(type)),
         );
         const chosen = yield* chooseCard(ctx, {
           player: controller.id,
@@ -9095,8 +9104,10 @@ export function* executeAbility(
         break;
       }
       case 'returnRandomExiledWithSourceToHand': {
-        const self = ctx.state.battlefield.find((perm) => perm.cardId === source.cardId);
-        const exiled = (self?.exiledWithIds ?? []).flatMap((objectId) => {
+        // The source as it is, or as it last was once sacrificed: its link survives (CR 607.2a).
+        const self = sourceObjectState(ctx, scope);
+        const linked = self !== undefined && 'exiledWithIds' in self ? self.exiledWithIds : [];
+        const exiled = (linked ?? []).flatMap((objectId: string) => {
           const card = ctx.state.exile.find((entry) => entry.id === objectId);
           return card === undefined ? [] : [card];
         });
@@ -9971,7 +9982,9 @@ function* replicateCopies(
       effect.count,
       ability,
       targetingFromDefinition(def, 'spell'),
-      original?.sourceCardId ?? '',
+      // The copy is a new object (its id comes later), so the original spell is a legal
+      // target for it; only a spell targeting itself is barred (CR 115.5).
+      '',
       originalTargets,
       originalCounted,
       originalDivision,
@@ -10428,76 +10441,84 @@ export function* payManaCost(
       removeMana(player, spentOnSource);
     }
     const future = plan.tapSources.slice(sourceIndex + 1);
-    yield* payAbilityCosts(
-      ctx,
-      player,
-      perm,
-      source.costs,
-      // Tapping a creature for convoke is not activating a mana ability (CR 702.51b).
-      source.convoke === true ? 'tap' : 'tapForMana',
-      0,
-      // A tap cost (Springleaf Drum) may not take a permanent a later source of this payment
-      // taps (a convoking creature, a mana elf), and must leave the later tap costs payable —
-      // the distinct assignment `planPayment` proved.
-      (candidate, remainingCosts) => {
-        const taken = new Set([candidate.cardId, ...future.map((s) => s.cardId)]);
-        if (future.some((s) => s.cardId === candidate.cardId)) return false;
-        const untapped = new Set(
-          ctx.state.battlefield.filter((p) => !p.tapped).map((p) => p.cardId),
-        );
-        // This source's own tap costs still to pay are the last entries of its `taps`.
-        const ownLeft = remainingCosts.reduce(
-          (sum, remaining) =>
-            sum +
-            (remaining.kind === 'tapOther'
-              ? 1
-              : remaining.kind === 'tapOthers'
-                ? remaining.count
-                : 0),
-          0,
-        );
-        const own = ownLeft === 0 ? [] : (source.taps ?? []).slice(-ownLeft);
-        const groups = [...own, ...future.flatMap((s) => [...(s.taps ?? [])])].map((group) =>
-          group.filter((id) => untapped.has(id)),
-        );
-        return sacrificesArePayable(groups, taken);
-      },
-      (candidate, remainingCosts) => {
-        // A permanent reserved for another part of the same cost is never sacrifice fodder.
-        if (reservedObjectIds.has(candidate.id)) return false;
-        const available = new Set(
-          ctx.state.battlefield.filter((p) => !reservedObjectIds.has(p.id)).map((p) => p.cardId),
-        );
-        const unavailable = new Set([
-          candidate.cardId,
-          ...future.map((s) => s.cardId),
-          ...sources.map((s) => s.cardId).filter((id) => !available.has(id)),
-        ]);
-        const groups = future.flatMap((s) => [...(s.sacrifices ?? [])]);
-        for (const remaining of remainingCosts) {
-          if (remaining.kind !== 'sacrificeOther') continue;
-          const candidates = ctx.state.battlefield
-            .filter(
-              (p) =>
-                p.controllerId === player.id &&
-                sacrificeCandidateAllowed(ctx, remaining, perm, p) &&
-                matchesSelector(ctx, p, remaining.selector, {
-                  cardId: perm.cardId,
-                  controllerId: player.id,
-                }),
+    // Life paid here is paid to activate the mana ability, not the ability or spell this mana
+    // pays for (CR 605.3b), so it stays out of an enclosing activation's tally (Verrak).
+    const enclosingLifeTally = ctx.costLifePaid;
+    delete ctx.costLifePaid;
+    try {
+      yield* payAbilityCosts(
+        ctx,
+        player,
+        perm,
+        source.costs,
+        // Tapping a creature for convoke is not activating a mana ability (CR 702.51b).
+        source.convoke === true ? 'tap' : 'tapForMana',
+        0,
+        // A tap cost (Springleaf Drum) may not take a permanent a later source of this payment
+        // taps (a convoking creature, a mana elf), and must leave the later tap costs payable —
+        // the distinct assignment `planPayment` proved.
+        (candidate, remainingCosts) => {
+          const taken = new Set([candidate.cardId, ...future.map((s) => s.cardId)]);
+          if (future.some((s) => s.cardId === candidate.cardId)) return false;
+          const untapped = new Set(
+            ctx.state.battlefield.filter((p) => !p.tapped).map((p) => p.cardId),
+          );
+          // This source's own tap costs still to pay are the last entries of its `taps`.
+          const ownLeft = remainingCosts.reduce(
+            (sum, remaining) =>
+              sum +
+              (remaining.kind === 'tapOther'
+                ? 1
+                : remaining.kind === 'tapOthers'
+                  ? remaining.count
+                  : 0),
+            0,
+          );
+          const own = ownLeft === 0 ? [] : (source.taps ?? []).slice(-ownLeft);
+          const groups = [...own, ...future.flatMap((s) => [...(s.taps ?? [])])].map((group) =>
+            group.filter((id) => untapped.has(id)),
+          );
+          return sacrificesArePayable(groups, taken);
+        },
+        (candidate, remainingCosts) => {
+          // A permanent reserved for another part of the same cost is never sacrifice fodder.
+          if (reservedObjectIds.has(candidate.id)) return false;
+          const available = new Set(
+            ctx.state.battlefield.filter((p) => !reservedObjectIds.has(p.id)).map((p) => p.cardId),
+          );
+          const unavailable = new Set([
+            candidate.cardId,
+            ...future.map((s) => s.cardId),
+            ...sources.map((s) => s.cardId).filter((id) => !available.has(id)),
+          ]);
+          const groups = future.flatMap((s) => [...(s.sacrifices ?? [])]);
+          for (const remaining of remainingCosts) {
+            if (remaining.kind !== 'sacrificeOther') continue;
+            const candidates = ctx.state.battlefield
+              .filter(
+                (p) =>
+                  p.controllerId === player.id &&
+                  sacrificeCandidateAllowed(ctx, remaining, perm, p) &&
+                  matchesSelector(ctx, p, remaining.selector, {
+                    cardId: perm.cardId,
+                    controllerId: player.id,
+                  }),
+              )
+              .map((p) => p.cardId);
+            for (let i = 0; i < (remaining.count ?? 1); i++) groups.push(candidates);
+          }
+          return (
+            !future.some((s) => s.cardId === candidate.cardId) &&
+            sacrificesArePayable(
+              groups.map((g) => g.filter((id) => available.has(id))),
+              unavailable,
             )
-            .map((p) => p.cardId);
-          for (let i = 0; i < (remaining.count ?? 1); i++) groups.push(candidates);
-        }
-        return (
-          !future.some((s) => s.cardId === candidate.cardId) &&
-          sacrificesArePayable(
-            groups.map((g) => g.filter((id) => available.has(id))),
-            unavailable,
-          )
-        );
-      },
-    );
+          );
+        },
+      );
+    } finally {
+      if (enclosingLifeTally !== undefined) ctx.costLifePaid = enclosingLifeTally;
+    }
 
     const production =
       source.productionSpec === undefined

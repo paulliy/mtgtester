@@ -123,6 +123,10 @@ export function queueReplicateCopy(
     ...((original?.announcedX ?? spell.announcedX) !== undefined
       ? { announcedX: original?.announcedX ?? spell.announcedX }
       : {}),
+    // The gift promise is a choice made while casting, which a copy keeps (CR 707.10).
+    ...((original?.giftRecipientId ?? spell.giftRecipientId) !== undefined
+      ? { giftRecipientId: original?.giftRecipientId ?? spell.giftRecipientId }
+      : {}),
     // A copy copies every decision made for the spell (CR 707.10), into its own records.
     ...((original?.countTargets ?? spell.countTargets) !== undefined
       ? {
@@ -184,6 +188,10 @@ export function queueAbilityCopy(
     sourceOracleId: original.sourceOracleId as OracleId,
     sourceCardId: original.sourceCardId,
     ...(original.sourceColors === undefined ? {} : { sourceColors: [...original.sourceColors] }),
+    ...(original.sourceFacts === undefined ? {} : { sourceFacts: original.sourceFacts }),
+    ...(original.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...original.sourceDamageKeywords] }),
     ...(original.triggerScope === undefined ? {} : { triggerScope: { ...original.triggerScope } }),
     ...(original.triggerObjectCardId === undefined
       ? {}

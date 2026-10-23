@@ -392,9 +392,10 @@ function registerPr11LifecycleOverrides(): void {
               op: 'flipCoin',
               onWin: [],
               onLose: [
-                // Read the linked cards before the sacrifice ends the link (CR 607.2a).
-                { op: 'returnRandomExiledWithSourceToHand' },
+                // In printed order: the return reads the sacrificed Portal's linked cards from
+                // its last known information (CR 607.2a).
                 { op: 'sacrifice', target: 'source' },
+                { op: 'returnRandomExiledWithSourceToHand' },
               ],
             },
           ],

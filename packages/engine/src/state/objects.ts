@@ -3193,6 +3193,7 @@ function castSpellSnapshot(
     definition: def,
     ...(spell.ability === null ? {} : { ability: spell.ability }),
     ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+    ...(spell.giftRecipientId === undefined ? {} : { giftRecipientId: spell.giftRecipientId }),
     ...(spell.countTargets === undefined
       ? {}
       : {
@@ -3239,6 +3240,10 @@ export function stackAbilitySnapshot(entry: EngineStackObject): StackAbilitySnap
     sourceOracleId: entry.sourceOracleId,
     sourceCardId: entry.sourceCardId,
     ...(entry.sourceColors === undefined ? {} : { sourceColors: [...entry.sourceColors] }),
+    ...(entry.sourceFacts === undefined ? {} : { sourceFacts: entry.sourceFacts }),
+    ...(entry.sourceDamageKeywords === undefined
+      ? {}
+      : { sourceDamageKeywords: [...entry.sourceDamageKeywords] }),
     ...(entry.triggerScope === undefined ? {} : { triggerScope: { ...entry.triggerScope } }),
     ...(entry.triggerObjectCardId === undefined
       ? {}

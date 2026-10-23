@@ -128,6 +128,10 @@ const PLANS: Record<string, Plan> = {
     steps: [{ cast: "Dollmaker's Shop", includes: "as Dollmaker's Shop" }],
     attacks: { 'PR11b Lab Bear': 'P2', 'PR11b Lab Red Bear': 'P2' },
   },
+  'pr11b-dollmaker-s-shop-viewer-multiplayer': {
+    steps: [{ cast: "Dollmaker's Shop", includes: "as Dollmaker's Shop" }],
+    attacks: { 'PR11b Lab Bear': 'P2', 'PR11b Lab Red Bear': 'P3' },
+  },
   'pr11b-mila-crafty-companion-viewer-walker-attack': { steps: [] },
   'pr11b-mila-crafty-companion-viewer-lukka': {
     steps: [
@@ -477,6 +481,24 @@ const CHECKS: Record<string, (result: Result) => void> = {
       1,
     ]);
     expect(r.player('P2').life).toBe(36);
+  },
+  'pr11b-dollmaker-s-shop-viewer-multiplayer': (r) => {
+    expect(r.done).toEqual(["Dollmaker's Shop"]);
+    expect(r.permanent("Dollmaker's Shop")!.unlockedDoors).toEqual(['left']);
+    const toys = r.state.battlefield.filter((permanent) => permanent.name === 'Toy');
+    expect(toys).toHaveLength(2);
+    for (const toy of toys) {
+      const characteristics = computeCharacteristics(r.ctx, toy);
+      expect([
+        characteristics.types,
+        characteristics.subtypes,
+        characteristics.colors,
+        characteristics.power,
+        characteristics.toughness,
+      ]).toEqual([['Artifact', 'Creature'], ['Toy'], ['W'], 1, 1]);
+    }
+    expect(r.player('P2').life).toBe(38);
+    expect(r.player('P3').life).toBe(38);
   },
   'pr11b-mila-crafty-companion-viewer-walker-attack': (r) => {
     // The Bear's two damage took the attacked walker from 3 +1 to 2; the other walker kept its +1.

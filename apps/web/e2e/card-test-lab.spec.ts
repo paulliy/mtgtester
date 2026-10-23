@@ -61,6 +61,14 @@ test.afterAll(() => {
   expect([...exercisedScenarioIds].sort()).toEqual([...catalogScenarioIds].sort());
 });
 
+/** The player options live in the Settings menu: open it, set one, and close it again. */
+async function setPlayerOption(page: Page, label: string, checked: boolean): Promise<void> {
+  const settings = page.getByRole('button', { name: 'Settings', exact: true });
+  await settings.click();
+  await page.getByLabel(label).setChecked(checked);
+  await settings.click();
+}
+
 async function runScenario(page: Page, title: string): Promise<void> {
   await page.goto('/card-test-lab');
   await expect(page.getByRole('heading', { name: 'Card Test Lab' })).toBeVisible();
@@ -1942,7 +1950,7 @@ test.describe('land confirmation', () => {
 
   test('confirm passes and lands keeps the review step', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Confirm passes & lands').check();
+    await setPlayerOption(page, 'Confirm passes & lands', true);
     await expect(page.getByLabel('Skip confirm step')).not.toBeChecked();
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
@@ -1954,7 +1962,7 @@ test.describe('land confirmation', () => {
 
   test('skip confirm submits the land once', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Skip confirm step').check();
+    await setPlayerOption(page, 'Skip confirm step', true);
     await expect(page.getByLabel('Confirm passes & lands')).not.toBeChecked();
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
@@ -2000,7 +2008,7 @@ test.describe('land confirmation', () => {
 
   test('the land drop reminder can be turned off', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Land drop reminder').uncheck();
+    await setPlayerOption(page, 'Land drop reminder', false);
     await page.getByRole('button', { name: 'Pass priority', exact: true }).click();
 
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
@@ -2009,8 +2017,8 @@ test.describe('land confirmation', () => {
 
   test('confirm passes and lands still reviews when skip confirm is also on', async ({ page }) => {
     await runLandScenario(page);
-    await page.getByLabel('Confirm passes & lands').check();
-    await page.getByLabel('Skip confirm step').check();
+    await setPlayerOption(page, 'Confirm passes & lands', true);
+    await setPlayerOption(page, 'Skip confirm step', true);
     await page.locator('.hand-card', { hasText: 'Myriad Landscape' }).click();
 
     await expect(page.getByRole('button', { name: 'Play land', exact: true })).toBeVisible();
@@ -2080,6 +2088,45 @@ test('War Room: dynamic commander identity life activation', async ({ page }) =>
   await expect(handCard(page, 'War Room Action Witness')).toBeVisible();
   const room = permanent(page, 'War Room');
   await expect(room).toHaveClass(/actionable/);
+  // Specs start with the piles open. Closing the lands stacks them into one pile that says how
+  // many are untapped, and glows while a land inside can be used.
+  await page.getByRole('button', { name: /^▾ Lands/ }).click();
+  await expect(room).toHaveCount(0);
+  await expect(permanent(page, 'Forest')).toHaveCount(0);
+  const lands = page.locator('.human-zone .zone-pile', { hasText: 'Lands' });
+  await expect(lands).toHaveAttribute('aria-expanded', 'false');
+  await expect(lands).toContainText(/\d+ untapped/);
+  await expect(lands).toHaveClass(/actionable/);
+  await lands.click();
+  await expect(room).toBeVisible();
+  await expect(room).toHaveClass(/actionable/);
+
+  // The graveyard pile opens and closes its cards under the hand.
+  const graveyard = page.locator('.human-zone .zone-pile', { hasText: 'Graveyard' });
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'true');
+  await graveyard.click();
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#player-zones .zone', { hasText: 'Graveyard' })).toHaveCount(0);
+  await graveyard.click();
+  await expect(graveyard).toHaveAttribute('aria-expanded', 'true');
+
+  // Your resources sit in the top bar.
+  await expect(page.locator('#top-bar-status')).toContainText(/Mana ready\s*\d/);
+
+  // Tap a Forest by hand (ADR 0030): its {G} floats, and War Room's {3} spends it first, so only
+  // two more Forests tap for it below.
+  const untappedForests = page
+    .locator('.human-zone .object')
+    .filter({ has: page.getByRole('img', { name: 'Forest', exact: true }) })
+    .filter({ hasNot: page.locator('.tile.tapped') });
+  await expect(untappedForests.locator('.mana-tap')).toHaveCount(1);
+  await untappedForests.click();
+  await expect(page.locator('#top-bar-status')).toContainText(/Floating\s*1G/);
+  await expect(
+    page.locator('.player-game .log .line .text', { hasText: 'adds {G} with Forest' }),
+  ).toHaveCount(1);
+  await expect(room).toHaveClass(/actionable/);
+
   await room.click();
   await expect(page.getByText('Activate War Room')).toBeVisible();
   await confirm(page);

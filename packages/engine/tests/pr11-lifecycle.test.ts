@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '../src/cards/interpret';
+import { ofType } from '../src/cards/selector';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { moveObject } from '../src/state/objects';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runOpeningHandBattlefieldActions } from '../src/turn/mulligan';
+import { queueStepTriggers } from '../src/turn/turn';
 import type { GameContext } from '../src/state/types';
 import { drawCards } from '../src/effects/resolve';
 import { runCombatPhase } from '../src/combat/combat';
@@ -95,6 +97,21 @@ describe('Mana Vault', () => {
     expect(vault.tapped).toBe(true);
   });
 
+  it('vault-c01-lost-abilities — a Vault that has lost its abilities untaps normally', () => {
+    const ctx = game('pr11-vault-song');
+    const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
+    const song = oracle({ name: 'Test Song', typeLine: 'Enchantment', manaCost: '{2}' });
+    spawn(ctx, 'P2', song);
+    const songDef = ctx.defs.get(song.oracleId as never)!;
+    ctx.defs.set(song.oracleId as never, {
+      ...songDef,
+      staticEffects: [{ affects: ofType('Artifact'), op: { layer: 6, loseAllAbilities: true } }],
+    });
+    expect(computeCharacteristics(ctx, vault).loseAbilities).toBe(true);
+    nextTurnOf(ctx, 'P1', preferring('decline'));
+    expect(vault.tapped).toBe(false);
+  });
+
   it('vault-c02-positive — paying {4} at upkeep untaps it, before the draw-step damage', () => {
     const ctx = game('pr11-vault-pay');
     const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
@@ -128,6 +145,22 @@ describe('Mana Vault', () => {
     const otherLife = player(other, 'P1').life;
     nextTurnOf(other, 'P2', preferring('decline'));
     expect(player(other, 'P1').life).toBe(otherLife);
+  });
+  it('vault-c03-departed — a tapped Vault that leaves before its trigger resolves still deals 1 damage', () => {
+    // CR 603.4 rechecks "if this artifact is tapped" on resolution, and CR 608.2h answers it
+    // for a source that has left with last known information: it was tapped.
+    const ctx = game('pr11-vault-departed');
+    const vault = spawn(ctx, 'P1', VAULT, { tapped: true });
+    turnOf(ctx, 'P1');
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'draw';
+    queueStepTriggers(ctx, 'drawStep');
+    checkpoint(ctx);
+    expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
+    const life = player(ctx, 'P1').life;
+    pump(moveObject(ctx, vault, { zone: 'graveyard' }));
+    resolve(ctx);
+    expect(player(ctx, 'P1').life).toBe(life - 1);
   });
 });
 
@@ -520,6 +553,27 @@ describe('Chrome Mox', () => {
     expect(mox.exiledWithIds).toEqual([exiled!.id]);
   });
 
+  it('mox-c01-off-battlefield-types — a creature card that Biotransference makes an artifact is not offered', () => {
+    const ctx = game('pr11-mox-biotransference');
+    player(ctx, 'P1').hand = [];
+    const shrine = oracle({
+      name: 'Test Artifice Shrine',
+      typeLine: 'Enchantment',
+      manaCost: '{2}',
+    });
+    spawn(ctx, 'P1', shrine);
+    const shrineDef = ctx.defs.get(shrine.oracleId as never)!;
+    ctx.defs.set(shrine.oracleId as never, {
+      ...shrineDef,
+      ruleStatics: [
+        { kind: 'alsoTypesOffBattlefield', ifType: 'Creature', addTypes: ['Artifact'] },
+      ],
+    });
+    conjure(ctx, 'P1', card('Red Spell', { colors: ['R'], manaCost: '{R}' }), 'hand');
+    conjure(ctx, 'P1', bear(), 'hand');
+    expect(moxImprinting(ctx, 'Red Spell')).toEqual(['Exile Red Spell']);
+  });
+
   it("mox-c02 — {T} adds one mana of any of the exiled card's colors, and only those", () => {
     const ctx = game('pr11-mox-gold');
     player(ctx, 'P1').hand = [];
@@ -655,6 +709,32 @@ describe('Negative Zone Portal', () => {
     expect(ctx.state.exile.filter((card) => ['A', 'B', 'C', 'D'].includes(card.name))).toHaveLength(
       3,
     );
+    // In printed order: the Portal is sacrificed before the card leaves exile.
+    const moves = ctx.state.eventLog
+      .filter((event) => event.type === 'zoneChange')
+      .map((event) => (event.payload as { name: string }).name);
+    const sacrificed = moves.lastIndexOf('Negative Zone Portal');
+    const returned = moves.findLastIndex((name) => ['A', 'B', 'C', 'D'].includes(name));
+    expect(sacrificed).toBeGreaterThanOrEqual(0);
+    expect(sacrificed).toBeLessThan(returned);
+  });
+
+  it('portal-c02-departed — removed in response, its trigger still flips and returns a linked card', () => {
+    const ctx = game('pr11-portal-departed');
+    const portal = portalWith(ctx, ['A', 'B', 'C', 'D'].map(creatureCard));
+    rig(ctx, 1);
+    turnOf(ctx, 'P1');
+    ctx.state.phase = 'beginning';
+    ctx.state.step = 'upkeep';
+    queueStepTriggers(ctx, 'upkeep');
+    checkpoint(ctx);
+    expect(ctx.state.stack.at(-1)?.kind).toBe('triggeredAbility');
+    pump(moveObject(ctx, portal, { zone: 'graveyard' }));
+    const theirHand = player(ctx, 'P2').hand.length;
+    const before = ctx.state.eventLog.length;
+    resolve(ctx);
+    expect(ctx.state.eventLog.slice(before).some((event) => event.type === 'coinFlip')).toBe(true);
+    expect(player(ctx, 'P2').hand.length).toBe(theirHand + 1);
   });
 });
 

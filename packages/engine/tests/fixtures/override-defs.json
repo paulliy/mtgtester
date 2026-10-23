@@ -10985,11 +10985,11 @@
             {
               "onLose": [
                 {
-                  "op": "returnRandomExiledWithSourceToHand"
-                },
-                {
                   "op": "sacrifice",
                   "target": "source"
+                },
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
                 }
               ],
               "onWin": [],
@@ -19322,6 +19322,7 @@
                     "planeswalkers": false,
                     "who": "opponent"
                   },
+                  "perDefender": true,
                   "when": "attackDeclared"
                 }
               }
@@ -19549,6 +19550,7 @@
                   "planeswalkers": false,
                   "who": "opponent"
                 },
+                "perDefender": true,
                 "when": "attackDeclared"
               }
             }
@@ -28134,6 +28136,7 @@
                     "planeswalkers": false,
                     "who": "opponent"
                   },
+                  "perDefender": true,
                   "when": "attackDeclared"
                 }
               }
@@ -28361,6 +28364,7 @@
                   "planeswalkers": false,
                   "who": "opponent"
                 },
+                "perDefender": true,
                 "when": "attackDeclared"
               }
             }
@@ -35777,11 +35781,11 @@
             {
               "onLose": [
                 {
-                  "op": "returnRandomExiledWithSourceToHand"
-                },
-                {
                   "op": "sacrifice",
                   "target": "source"
+                },
+                {
+                  "op": "returnRandomExiledWithSourceToHand"
                 }
               ],
               "onWin": [],

@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import type { OracleCard } from '@mtg/shared';
 import { applyPriorityAction } from '../src/actions/apply';
 import type { PriorityActionPayload } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
+import { registerWhiteBlackControlGiftOverrides } from '../src/cards/overrides/white-black-control-gifts';
 import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { addMana } from '../src/mana/pool';
 import { resolveTopOfStack } from '../src/stack/stack';
@@ -246,6 +249,72 @@ describe('PR10.26 Cosmic Crucible', () => {
     resolveAll(ctx);
     expect(a.damageMarked).toBe(2);
     expect(b.damageMarked).toBe(2);
+  });
+
+  it('pr10-cosmic-crucible-copies-permanent-spell — a copied artifact spell becomes a token', () => {
+    const ctx = pod('pr10-crucible-artifact');
+    spawn(ctx, 'P1', card);
+    castFromHand(ctx, 'P1', labArtifact());
+    putPendingTriggersOnStack(ctx);
+    const { decisions } = pump(resolveTopOfStack(ctx), choose('Copy Lab Trinket'));
+    expect(decisions).toHaveLength(1);
+    expect(ctx.state.stack.at(-1)!.permanentSpellCopy).toBeDefined();
+    resolveAll(ctx);
+    const trinkets = ctx.state.battlefield.filter((perm) => perm.name === 'Lab Trinket');
+    expect(trinkets).toHaveLength(2);
+    expect(trinkets.filter((perm) => perm.isToken)).toHaveLength(1);
+  });
+
+  it('pr10-cosmic-crucible-copy-may-target-original — the copy may target the spell it copies', () => {
+    const ctx = pod('pr10-crucible-target-original');
+    spawn(ctx, 'P1', card);
+    const shock = castFromHand(ctx, 'P2', labShock(), new Map([[0, 'P3']]));
+    const negate = castFromHand(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Negate',
+        typeLine: 'Instant',
+        manaCost: '{U}',
+        cmc: 1,
+        colors: ['U'],
+        power: null,
+        toughness: null,
+        oracleText: 'Counter target spell.',
+      }),
+      new Map([[0, shock.id]]),
+    );
+    putPendingTriggersOnStack(ctx);
+    pump(resolveTopOfStack(ctx), (decision) =>
+      decision.prompt.endsWith('?')
+        ? choose('Copy Lab Negate')(decision)
+        : choose('Target Lab Negate')(decision),
+    );
+    const copy = ctx.state.stack.at(-1)!;
+    expect(copy.description).toBe('Copy of Lab Negate');
+    expect(copy.targets).toEqual([negate.id]);
+  });
+
+  it('pr10-cosmic-crucible-copy-keeps-gift — a copy of a gifted spell keeps the promised gift', () => {
+    registerWhiteBlackControlGiftOverrides();
+    const ctx = pod('pr10-crucible-gift');
+    spawn(ctx, 'P1', card);
+    const truce = (
+      JSON.parse(
+        readFileSync('packages/engine/tests/fixtures/white-black-control-oracle.json', 'utf8'),
+      ) as { cards: { card: OracleCard }[] }
+    ).cards.find((entry) => entry.card.name === "Dawn's Truce")!.card;
+    const before = p(ctx, 'P2').hand.length;
+    castFromHand(ctx, 'P1', truce, new Map(), (decision) =>
+      decision.prompt.startsWith('Promise an opponent a gift')
+        ? choose('Promise P2 a gift')(decision)
+        : { index: 0, targets: new Map() },
+    );
+    putPendingTriggersOnStack(ctx);
+    pump(resolveTopOfStack(ctx), choose("Copy Dawn's Truce"));
+    expect(ctx.state.stack.at(-1)!.giftRecipientId).toBe('P2');
+    resolveAll(ctx);
+    expect(p(ctx, 'P2').hand.length).toBe(before + 2);
   });
 
   it('pr10-cosmic-crucible-once-each-turn — a second spell that turn is not copied', () => {

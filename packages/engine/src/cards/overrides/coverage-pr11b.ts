@@ -714,6 +714,7 @@ function registerPr11bRoom(): void {
           attacker: 'you',
           attacking: { who: 'opponent', planeswalkers: false },
           attackerFilter: allOf(ofType('Creature'), not(ofSubtype('Toy'))),
+          perDefender: true,
         },
         {
           effects: [{ op: 'createToken', spec: TOY_1_1_WHITE_ARTIFACT, count: constant(1) }],

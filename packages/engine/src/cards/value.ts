@@ -288,17 +288,22 @@ export type Value =
 
 export const constant = (n: number): Value => ({ kind: 'const', n });
 
-/** The eight card types a permanent/card can have (for graveyard-type counting). */
+/**
+ * The card types a card can have, for graveyard-type counting (CR 205.2a). Kindred was named
+ * Tribal on older cards; both count as the one type.
+ */
 const CARD_TYPES = [
   'Artifact',
   'Battle',
   'Creature',
   'Enchantment',
   'Instant',
+  'Kindred',
   'Land',
   'Planeswalker',
   'Sorcery',
 ] as const;
+const cardType = (type: string): string => (type === 'Tribal' ? 'Kindred' : type);
 
 /**
  * Does evaluating this read game state outside the permanent itself? Used by the layer cache
@@ -445,7 +450,7 @@ export function cardTypesInAllGraveyards(ctx: GameContext, owner?: PlayerId): nu
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
-      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId)) {
+      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId).map(cardType)) {
         if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
       }
     }
@@ -464,7 +469,7 @@ export function cardTypesInOpponentsGraveyards(ctx: GameContext, controllerId: P
     for (const card of player.graveyard) {
       const def = ctx.defs.get(card.oracleId);
       if (def === undefined) continue;
-      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId)) {
+      for (const t of offBattlefieldTypes(ctx, def.types, card.ownerId).map(cardType)) {
         if ((CARD_TYPES as readonly string[]).includes(t)) present.add(t);
       }
     }

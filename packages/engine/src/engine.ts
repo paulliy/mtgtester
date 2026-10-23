@@ -304,6 +304,15 @@ export class Engine implements EngineDriver {
    * player-experience overhaul, Workstream 2). Returns whether anything changed, so the caller
    * knows whether the yield banner and board need republishing.
    */
+  /**
+   * Offer `playerId` their mana abilities as priority actions from now on (ADR 0030). For an
+   * engine built elsewhere (a Card Test Lab scenario); a fresh game sets it in its config.
+   */
+  enableManualMana(playerId: string): void {
+    const player = this.ctx.state.players.find((p) => p.id === playerId);
+    if (player !== undefined) player.manualMana = true;
+  }
+
   cancelYield(playerId: string): boolean {
     const player = this.ctx.state.players.find((p) => p.id === playerId);
     if (player === undefined || player.yieldUntilEndOfTurn !== true) return false;

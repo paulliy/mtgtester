@@ -9,9 +9,9 @@ import { useRouter } from 'vue-router';
 import { LOOKAHEAD_TURNS } from '@mtg/shared';
 import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
-import { PROVIDER_LABELS } from '../lib/providerLabels';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { turnPositionLabel } from '../lib/turnLabels';
+import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import GameOverPanel from '../components/GameOverPanel.vue';
@@ -20,9 +20,27 @@ import PlaybackControls from '../components/PlaybackControls.vue';
 import PlayerGameView from './PlayerGameView.vue';
 import SeatPanel from '../components/SeatPanel.vue';
 import StackPanel from '../components/StackPanel.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useGameStore } from '../stores/game';
 
 const store = useGameStore();
+
+/**
+ * The seats are the anchor root, so the combat overlay can draw each attacker's line to the seat
+ * it attacks (each seat panel registers its header) and the strike lunge can aim at its target.
+ */
+const seatsEl = ref<HTMLElement | null>(null);
+const { setRoot, disposeRoot } = useBoardAnchors();
+// Template refs are already cleared by unmount, so remember the root this view set.
+let ownedRoot: HTMLElement | null = null;
+watch(seatsEl, (el) => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+  ownedRoot = el;
+  if (el) setRoot(el);
+});
+onUnmounted(() => {
+  if (ownedRoot) disposeRoot(ownedRoot);
+});
 const router = useRouter();
 
 let bounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -113,6 +131,36 @@ watch(
   },
 );
 
+/**
+ * Commander damage and the action log sit behind a "Game info" toggle, and the playback bar
+ * behind "Playback", so by default the four seats get the whole window. Both choices are
+ * remembered per browser; both start closed.
+ */
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === 'true';
+  } catch {
+    return false;
+  }
+}
+function writeFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+const infoOpen = ref(readFlag('mtg.gameInfoOpen'));
+function toggleInfo(): void {
+  infoOpen.value = !infoOpen.value;
+  writeFlag('mtg.gameInfoOpen', infoOpen.value);
+}
+const playbackOpen = ref(readFlag('mtg.playbackOpen'));
+function togglePlayback(): void {
+  playbackOpen.value = !playbackOpen.value;
+  writeFlag('mtg.playbackOpen', playbackOpen.value);
+}
+
 const roundLabel = computed(() => {
   const s = state.value;
   if (!s) return '';
@@ -132,11 +180,9 @@ const roundLabel = computed(() => {
   </aside>
   <PlayerGameView v-if="store.gameMode === 'singlePlayer' && !store.gameOver" />
   <div v-else class="game">
-    <header class="bar">
-      <span class="app-title">MTG Commander Simulator</span>
-      <span v-if="state" class="phase-badge">
-        {{ roundLabel }}
-      </span>
+    <!-- Game status lives in the app's top bar, so the board keeps the height of a second bar. -->
+    <Teleport to="#top-bar-status" defer>
+      <span v-if="state" class="phase-badge">{{ roundLabel }}</span>
       <span
         v-if="store.gameOver"
         class="game-over-badge"
@@ -162,16 +208,39 @@ const roundLabel = computed(() => {
         <span class="priority-dot"><span class="dot" /><span class="ping" /></span>
         Priority: {{ state.priorityPlayer }}
       </span>
-      <span class="provider-tag">{{ PROVIDER_LABELS[store.providerKind] }}</span>
       <span v-if="store.apiCost" class="cost">
         {{ store.apiCost.calls }} calls · {{ store.apiCost.promptTokens.toLocaleString() }}+{{
           store.apiCost.responseTokens.toLocaleString()
         }}
         tok
       </span>
-      <span class="conn" :class="store.connection">{{ CONNECTION_LABELS[store.connection] }}</span>
+      <!-- Only a problem is worth the space: a healthy connection says nothing. -->
+      <span v-if="store.connection !== 'open'" class="conn" :class="store.connection">{{
+        CONNECTION_LABELS[store.connection]
+      }}</span>
       <CopyGameReportButton v-if="store.gameMode === 'singlePlayer' && store.sessionToken" />
-    </header>
+      <span v-if="waitingForView && !playbackOpen" class="waiting-hint"
+        >Paused · open playback to step on</span
+      >
+      <button
+        type="button"
+        class="info-toggle"
+        :aria-expanded="playbackOpen"
+        aria-controls="playback-controls"
+        @click="togglePlayback"
+      >
+        {{ playbackOpen ? 'Hide playback' : 'Playback' }}
+      </button>
+      <button
+        type="button"
+        class="info-toggle"
+        :aria-expanded="infoOpen"
+        aria-controls="game-info"
+        @click="toggleInfo"
+      >
+        {{ infoOpen ? 'Hide game info' : 'Game info' }}
+      </button>
+    </Teleport>
 
     <HeldDecision
       v-if="store.heldDecision"
@@ -183,8 +252,10 @@ const roundLabel = computed(() => {
       <p v-for="(error, index) in store.errors" :key="index">{{ error }}</p>
     </div>
 
-    <main v-if="state" class="layout">
-      <div class="seats">
+    <main v-if="state" class="layout" :class="{ 'info-open': infoOpen }">
+      <StackPanel :state="state" class="stack-strip" />
+      <div ref="seatsEl" class="seats">
+        <CombatOverlay :permanents="state.battlefield" />
         <SeatPanel
           v-for="seat in state.seats"
           :key="seat.seat"
@@ -200,8 +271,15 @@ const roundLabel = computed(() => {
         />
       </div>
 
-      <aside class="side">
-        <StackPanel :state="state" />
+      <!-- Commander damage and the log stay mounted while hidden, so the log keeps following play
+           and opening the panel shows it already scrolled to the present. -->
+      <aside v-show="infoOpen" id="game-info" class="info-panel" aria-label="Game info">
+        <div class="info-head">
+          <h2>Game info</h2>
+          <button type="button" class="info-close" aria-label="Close game info" @click="toggleInfo">
+            ×
+          </button>
+        </div>
         <CommanderDamageGrid :state="state" />
         <ActionLog
           :lines="store.log"
@@ -221,6 +299,8 @@ const roundLabel = computed(() => {
     <p v-else class="waiting-board">Waiting for the first board state…</p>
 
     <PlaybackControls
+      v-show="playbackOpen"
+      id="playback-controls"
       class="controls-slot"
       :view-turn="store.viewTurn"
       :frontier-turn="store.frontierTurn"
@@ -287,22 +367,6 @@ const roundLabel = computed(() => {
 .game > .controls-slot {
   flex-shrink: 0;
 }
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.8rem;
-  color: var(--muted);
-  background: var(--surface);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-}
-.app-title {
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.01em;
-}
 .phase-badge {
   color: var(--accent);
   font-weight: 700;
@@ -363,15 +427,6 @@ const roundLabel = computed(() => {
 .priority-dot .ping {
   animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
-.provider-tag {
-  color: var(--muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  background: var(--surface-2);
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
-}
 .cost {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
@@ -388,12 +443,17 @@ const roundLabel = computed(() => {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 18rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.6rem;
   flex: 1;
   min-height: 0;
 }
+.layout.info-open {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+}
 .seats {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -401,18 +461,60 @@ const roundLabel = computed(() => {
   min-height: 0;
   height: 100%;
 }
-.side {
+/* The stack as one slim row above the seats: its heading, then the objects left to right. */
+.stack-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.25rem 0.6rem;
+}
+.stack-strip :deep(h3) {
+  margin: 0;
+}
+.stack-strip :deep(ol) {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.info-panel {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
   min-height: 0;
 }
-/* Stack and damage grid are sized by their content; the log takes the rest and scrolls. */
-.side > .stack,
-.side > .grid-wrap {
+.info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.info-head h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.info-close {
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+/* The damage grid is sized by its content; the log takes the rest and scrolls. */
+.info-panel > .grid-wrap {
   flex-shrink: 0;
   max-height: 30%;
   overflow-y: auto;
+}
+.info-toggle {
+  font-size: 0.78rem;
+}
+.waiting-hint {
+  color: var(--warn);
+  font-size: 0.75rem;
 }
 .banner {
   border-radius: 4px;

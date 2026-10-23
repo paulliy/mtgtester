@@ -8,6 +8,7 @@ import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 
 import type { Phase, PlayerId, Step } from '@mtg/shared';
 import { evaluateCondition } from '../cards/condition';
+import { computeCharacteristics } from '../effects/continuous';
 import { runCombatPhase } from '../combat/combat';
 import type { GameGen } from '../decisions';
 import { addSagaLoreCounters, drawCards, endUntilEotEffects } from '../effects/resolve';
@@ -155,12 +156,28 @@ function untapStep(ctx: GameContext): void {
         entry.expires.setTurn >= ctx.state.turnNumber,
     );
 
+  // Teferi's Protection and The One Ring last until this player's next turn; once it begins they
+  // are gone for good, so a later turn of another player cannot bring them back.
+  for (const shields of [
+    ctx.state.playerProtectionUntilNextTurn,
+    ctx.state.playerProtectionFromEverythingUntilNextTurn,
+  ]) {
+    const since = shields?.[ap.id];
+    if (since !== undefined && since < ctx.state.turnNumber) delete shields![ap.id];
+  }
+
   let untapped = 0;
   for (const perm of ctx.state.battlefield) {
     if (perm.controllerId !== ap.id) continue;
     // CR 302.6: controlled continuously since the turn began → no longer summoning sick.
     perm.summoningSick = false;
-    if (ctx.defs.get(perm.oracleId)?.doesntUntapDuringUntapStep === true) continue;
+    // Mana Vault's restriction is a static ability: a permanent that has lost its abilities
+    // (Song of the Dryads) untaps normally (CR 613.1f).
+    if (
+      ctx.defs.get(perm.oracleId)?.doesntUntapDuringUntapStep === true &&
+      computeCharacteristics(ctx, perm).loseAbilities !== true
+    )
+      continue;
     if (perm.tapped) {
       perm.tapped = false;
       untapped += 1;

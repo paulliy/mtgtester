@@ -4417,7 +4417,7 @@
         "kind": "triggered",
         "targets": [],
         "trigger": {
-          "aggregate": true,
+          "aggregate": "byEventPlayer",
           "subject": {
             "kind": "permanent",
             "selector": {
