@@ -1966,15 +1966,42 @@
     },
     "27c366cf-00d7-47d4-9577-736bfc4a3b81": {
       "name": "Defacing Duskmage // Vandal's Edit",
-      "oracleSha256": "90033991a5fb2a8372e6e32389d181b51b2e8c299176797700ab465a0590d165",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "893dd89057bd4227854f34bd35cd06a3c453a6cdce3ea8dd377ee6d7f844f2db",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["prepare-modeled"],
       "clauses": [
         {
-          "oracleText": "Whenever an opponent draws their second card each turn, this creature becomes prepared.",
-          "implementation": ["explicitly unsupported; Prepare authored as a pump"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "id": "pr11b-defacing-duskmage-clause-1",
+          "oracleText": "Deathtouch",
+          "implementation": ["Keyword.deathtouch"],
+          "engineTestIds": ["prepare-modeled"],
           "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-defacing-duskmage-clause-2",
+          "oracleText": "Whenever an opponent draws their second card each turn, this creature becomes prepared.",
+          "implementation": ["TriggerHead.drawsCard.ordinalThisTurn", "Effect.becomePrepared"],
+          "engineTestIds": ["duskmage-c01-positive", "duskmage-c01-negative", "duskmage-c01-event"],
+          "viewerScenarioIds": [
+            "pr11b-defacing-duskmage-viewer-prepared",
+            "pr11b-defacing-duskmage-viewer-first-draw"
+          ]
+        },
+        {
+          "id": "pr11b-defacing-duskmage-clause-3",
+          "oracleText": "Vandal's Edit: Draw two cards. Each player loses 2 life.",
+          "implementation": [
+            "CardDefinition.prepareSpell",
+            "Effect.draw",
+            "Effect.eachPlayerLosesLife"
+          ],
+          "engineTestIds": ["duskmage-c02-positive", "duskmage-c02-once", "duskmage-c02-leaves"],
+          "viewerScenarioIds": ["pr11b-defacing-duskmage-viewer-prepared"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-defacing-duskmage-viewer-prepared",
+        "pr11b-defacing-duskmage-viewer-first-draw"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -2025,15 +2052,38 @@
     },
     "09b7ea91-2620-4c45-af3c-60bbeab89966": {
       "name": "Eiganjo Dynastorian // Replenish",
-      "oracleSha256": "23d1962201101f39e58a700ef72285eecce3a7f2b89adf3f352dc928a5a04762",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "6c4b262016dc94d02325fc2f0ae096b8169a558d8ce1bce59c14ba11d5447b2a",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["prepare-modeled"],
       "clauses": [
         {
-          "oracleText": "Whenever you attack with two or more creatures, this creature becomes prepared.",
-          "implementation": ["explicitly unsupported; Prepare authored as a self-attack pump"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "id": "pr11b-eiganjo-dynastorian-clause-1",
+          "oracleText": "Vigilance",
+          "implementation": ["Keyword.vigilance"],
+          "engineTestIds": ["prepare-modeled"],
           "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-eiganjo-dynastorian-clause-2",
+          "oracleText": "Whenever you attack with two or more creatures, this creature becomes prepared.",
+          "implementation": ["TriggerHead.attackDeclared.minAttackers", "Effect.becomePrepared"],
+          "engineTestIds": ["dynastorian-c01-positive"],
+          "viewerScenarioIds": [
+            "pr11b-eiganjo-dynastorian-viewer-prepared",
+            "pr11b-eiganjo-dynastorian-viewer-one-attacker"
+          ]
+        },
+        {
+          "id": "pr11b-eiganjo-dynastorian-clause-3",
+          "oracleText": "Replenish: Return all enchantment cards from your graveyard to the battlefield.",
+          "implementation": ["CardDefinition.prepareSpell", "Effect.graveyardToBattlefieldEach"],
+          "engineTestIds": ["replenish-c02-positive"],
+          "viewerScenarioIds": ["pr11b-eiganjo-dynastorian-viewer-prepared"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-eiganjo-dynastorian-viewer-prepared",
+        "pr11b-eiganjo-dynastorian-viewer-one-attacker"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -2167,15 +2217,69 @@
     },
     "6c948f71-5c86-450c-8828-df4d8deaf1dd": {
       "name": "Intermediate Chirography",
-      "oracleSha256": "36103619e7b7020c960f42dadebdba74528c7ab39cbb5731dd80304bbe114b3f",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "cc793f0486cdb04f472c10c7449ef03a7813227931f526a6b8d296ccdbabe932",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["chirography-modeled"],
       "clauses": [
         {
+          "id": "pr11b-intermediate-chirography-clause-1",
+          "oracleText": "When this Class enters, create a 2/1 white and black Inkling creature token with flying.",
+          "implementation": ["TriggerHead.enters", "Effect.createToken"],
+          "engineTestIds": ["chirography-c01-positive"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-intermediate-chirography-clause-2",
           "oracleText": "{1}{B}: Level 2",
-          "implementation": ["explicitly unsupported; class levels omitted"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "implementation": ["ActivatedAbility.sorcery", "Effect.gainClassLevel"],
+          "engineTestIds": ["chirography-c02-positive", "chirography-c02-negative"],
+          "viewerScenarioIds": ["pr11b-intermediate-chirography-viewer-level-two"]
+        },
+        {
+          "id": "pr11b-intermediate-chirography-clause-3",
+          "oracleText": "Whenever you lose life for the first time each turn, put a +1/+1 counter on target creature you control.",
+          "implementation": [
+            "Condition.sourceClassLevel",
+            "TriggerHead.losesLife.firstTimeEachTurn",
+            "Effect.putCounters"
+          ],
+          "engineTestIds": [
+            "chirography-c03-positive",
+            "chirography-c03-first-only",
+            "chirography-c03-damage",
+            "chirography-c03-already-lost"
+          ],
+          "viewerScenarioIds": [
+            "pr11b-intermediate-chirography-viewer-level-two",
+            "pr11b-intermediate-chirography-viewer-level-one"
+          ]
+        },
+        {
+          "id": "pr11b-intermediate-chirography-clause-4",
+          "oracleText": "{2}{B}: Level 3",
+          "implementation": ["ActivatedAbility.sorcery", "Effect.gainClassLevel"],
+          "engineTestIds": ["chirography-c04-level2"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-intermediate-chirography-clause-5",
+          "oracleText": "At the beginning of each end step, if a modified creature died under your control this turn, create a 2/1 white and black Inkling creature token with flying.",
+          "implementation": [
+            "Condition.modifiedCreatureDiedUnderYourControlThisTurn",
+            "TriggerHead.endStep",
+            "Effect.createToken"
+          ],
+          "engineTestIds": [
+            "chirography-c04-positive",
+            "chirography-c04-equipped",
+            "chirography-c04-negative"
+          ],
           "viewerScenarioIds": []
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-intermediate-chirography-viewer-level-two",
+        "pr11b-intermediate-chirography-viewer-level-one"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -2675,15 +2779,39 @@
     },
     "a731e87b-8d99-4b64-8ee3-8e540d652366": {
       "name": "Malakir Rebirth // Malakir Mire",
-      "oracleSha256": "dd7265539660a0e48ff683b0eff60130edb7370e10e9d5d44315a6c3daee6743",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "e0707453e36b4abf8fa1bdc6bb1870907515b78f1a6deab2881d497ca1431b7f",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11b-mdfc-modeled"],
       "clauses": [
         {
+          "id": "pr11b-malakir-rebirth-clause-1",
           "oracleText": "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\"",
-          "implementation": ["explicitly unsupported; spell face claimed; only land authored"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "AlternativeCast.mdfc.spellFace",
+            "Effect.loseLife",
+            "Effect.grantAbilityUntilEot",
+            "Effect.returnDiedSourceToBattlefield"
+          ],
+          "engineTestIds": [
+            "malakir-c01-positive",
+            "malakir-c01-owner",
+            "malakir-c01-negative",
+            "malakir-c01-fizzle",
+            "malakir-c01-targets"
+          ],
+          "viewerScenarioIds": ["pr11b-malakir-rebirth-viewer-return"]
+        },
+        {
+          "id": "pr11b-malakir-rebirth-clause-2",
+          "oracleText": "Malakir Mire: This land enters tapped. {T}: Add {B}.",
+          "implementation": ["AlternativeCast.mdfc.landFace", "ManaAbility.addMana"],
+          "engineTestIds": ["malakir-land-face"],
+          "viewerScenarioIds": ["pr11b-malakir-rebirth-viewer-land-face"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-malakir-rebirth-viewer-return",
+        "pr11b-malakir-rebirth-viewer-land-face"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -2782,30 +2910,67 @@
     },
     "ff0ab867-b710-4b1a-baed-95fc3cf68f79": {
       "name": "Valakut Awakening // Valakut Stoneforge",
-      "oracleSha256": "e05cfd39ee3588b870dad5d06b10581f57c0513fe175233c8c0c47ade8672b90",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "2e683a7ba9875b006532bca335c30b7a298b97b5f42738a0c93a6e1149953c7c",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["pr11b-mdfc-modeled"],
       "clauses": [
         {
+          "id": "pr11b-valakut-awakening-clause-1",
           "oracleText": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one.",
-          "implementation": ["explicitly unsupported; spell face claimed; only land authored"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": [
+            "AlternativeCast.mdfc.spellFace",
+            "Effect.handToLibraryBottomThenDraw"
+          ],
+          "engineTestIds": ["valakut-c01-positive", "valakut-c01-none", "valakut-c01-empty-hand"],
+          "viewerScenarioIds": ["pr11b-valakut-awakening-viewer-redraw"]
+        },
+        {
+          "id": "pr11b-valakut-awakening-clause-2",
+          "oracleText": "Valakut Stoneforge: This land enters tapped. {T}: Add {R}.",
+          "implementation": ["AlternativeCast.mdfc.landFace", "ManaAbility.addMana"],
+          "engineTestIds": ["valakut-land-face"],
+          "viewerScenarioIds": ["pr11b-valakut-awakening-viewer-land-face"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-valakut-awakening-viewer-redraw",
+        "pr11b-valakut-awakening-viewer-land-face"
       ],
       "gameplayAiScenarioIds": []
     },
     "9842734c-1eac-4509-a731-4c22017ae586": {
       "name": "Wear // Tear",
-      "oracleSha256": "0ab03040cece0181c7b948f48ef7acca7b54b47affbee2e523c37b1d59bff6b8",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "fe984b8abf1ac010710964b66352478f43b6cb9de73b93cf0baa4b179a1e091f",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["wear-tear-modeled", "wear-tear-combined", "wear-tear-no-whole"],
       "clauses": [
         {
+          "id": "pr11b-wear-tear-clause-1",
+          "oracleText": "Wear: Destroy target artifact.",
+          "implementation": ["AlternativeCast.split", "Effect.destroy"],
+          "engineTestIds": ["wear-c01-positive"],
+          "viewerScenarioIds": ["pr11b-wear-tear-viewer-fused"]
+        },
+        {
+          "id": "pr11b-wear-tear-clause-2",
+          "oracleText": "Tear: Destroy target enchantment.",
+          "implementation": ["AlternativeCast.split", "Effect.destroy"],
+          "engineTestIds": ["tear-c02-positive"],
+          "viewerScenarioIds": ["pr11b-wear-tear-viewer-half", "pr11b-wear-tear-viewer-fused"]
+        },
+        {
+          "id": "pr11b-wear-tear-clause-3",
           "oracleText": "Fuse (You may cast one or both halves of this card from your hand.)",
-          "implementation": ["explicitly unsupported; Fuse authored as a third extra-cost mode"],
-          "engineTestIds": ["catalog-audit-contained"],
-          "viewerScenarioIds": []
+          "implementation": ["AlternativeCast.split.fused"],
+          "engineTestIds": [
+            "wear-tear-c03-fused",
+            "wear-tear-c03-partial",
+            "wear-tear-c03-hand-only"
+          ],
+          "viewerScenarioIds": ["pr11b-wear-tear-viewer-fused"]
         }
       ],
+      "viewerScenarioIds": ["pr11b-wear-tear-viewer-fused", "pr11b-wear-tear-viewer-half"],
       "gameplayAiScenarioIds": []
     },
     "a00e5eb6-b916-4cd6-8ff2-c02f4929abc7": {
@@ -3416,15 +3581,40 @@
     },
     "6556c4c0-b10d-4208-821b-0c0a49abd188": {
       "name": "Wandering Archaic // Explore the Vastlands",
-      "oracleSha256": "efd5a189a30c5361e8f8a26916921ec44ed3c1dd5b9edbc9dfb02d1d809d5339",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "c94c5d90da630eecadefc1d848d8d6b5ff17143dcc0cc52e96628bf3172ab308",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["archaic-modeled"],
       "clauses": [
         {
+          "id": "pr11b-wandering-archaic-clause-1",
           "oracleText": "Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.",
-          "implementation": ["explicitly unsupported; modal DFC copy-on-cast unimplemented"],
-          "engineTestIds": ["catalog-audit-contained"],
+          "implementation": ["TriggerHead.castSpell", "Effect.unlessPays", "Effect.copyCastSpell"],
+          "engineTestIds": [
+            "archaic-c01-positive",
+            "archaic-c01-paid",
+            "archaic-c01-decline",
+            "archaic-c01-negative"
+          ],
+          "viewerScenarioIds": [
+            "pr11b-wandering-archaic-viewer-copy",
+            "pr11b-wandering-archaic-viewer-paid"
+          ]
+        },
+        {
+          "id": "pr11b-wandering-archaic-clause-2",
+          "oracleText": "Explore the Vastlands: Each player looks at the top five cards of their library and may reveal a land card and/or an instant or sorcery card from among them. Each player puts the cards they revealed this way into their hand and the rest on the bottom of their library in a random order. Each player gains 3 life.",
+          "implementation": [
+            "AlternativeCast.mdfc.spellFace",
+            "Effect.eachPlayerLooksAtTopRevealsToHand",
+            "Effect.eachPlayerGainsLife"
+          ],
+          "engineTestIds": ["vastlands-c02-positive"],
           "viewerScenarioIds": []
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-wandering-archaic-viewer-copy",
+        "pr11b-wandering-archaic-viewer-paid"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -4439,17 +4629,49 @@
     },
     "5924cbb0-19b5-449c-a7c5-722e744a54f8": {
       "name": "The War in Heaven",
-      "oracleSha256": "88d4102eb65da82a8c6d1619a81105566ca397c2832e97435b7ba4c5e7ba6c93",
-      "implementationStatus": "unsupported",
+      "oracleSha256": "34c80ebeb69c7ccffe0143a205a1e08d8fd70ccd80065988f57c57a202a77f26",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["saga-modeled"],
       "clauses": [
         {
+          "id": "pr11b-the-war-in-heaven-clause-1",
+          "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+          "implementation": ["Saga.loreCounters", "SBA.sagaSacrifice"],
+          "engineTestIds": ["war-c01-positive", "war-c02-positive", "war-c03-positive"],
+          "viewerScenarioIds": [
+            "pr11b-the-war-in-heaven-viewer-chapter-one",
+            "pr11b-the-war-in-heaven-viewer-chapter-three"
+          ]
+        },
+        {
+          "id": "pr11b-the-war-in-heaven-clause-2",
           "oracleText": "I — You draw three cards and you lose 3 life.",
-          "implementation": [
-            "explicitly unsupported; saga chapters implemented as enter/upkeep/end-step"
-          ],
-          "engineTestIds": ["catalog-audit-contained"],
+          "implementation": ["TriggerHead.countersPut.chapter", "Effect.draw", "Effect.loseLife"],
+          "engineTestIds": ["war-c01-positive"],
+          "viewerScenarioIds": ["pr11b-the-war-in-heaven-viewer-chapter-one"]
+        },
+        {
+          "id": "pr11b-the-war-in-heaven-clause-3",
+          "oracleText": "II — Mill three cards.",
+          "implementation": ["TriggerHead.countersPut.chapter", "Effect.mill"],
+          "engineTestIds": ["war-c02-positive"],
           "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-the-war-in-heaven-clause-4",
+          "oracleText": "III — Choose up to three target creature cards with total mana value 8 or less in your graveyard. Return each of them to the battlefield with a necrodermis counter on it. They're artifacts in addition to their other types.",
+          "implementation": [
+            "TargetSpec.totalManaValueAtMost",
+            "Effect.reanimateEachChosen",
+            "MoveDestination.addTypes"
+          ],
+          "engineTestIds": ["war-c03-positive", "war-c03-budget", "war-c03-artifact-lasts"],
+          "viewerScenarioIds": ["pr11b-the-war-in-heaven-viewer-chapter-three"]
         }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-the-war-in-heaven-viewer-chapter-one",
+        "pr11b-the-war-in-heaven-viewer-chapter-three"
       ],
       "gameplayAiScenarioIds": []
     },
@@ -16578,6 +16800,209 @@
         }
       ],
       "viewerScenarioIds": ["pr11-unquestioned-authority-viewer-cast"],
+      "gameplayAiScenarioIds": []
+    },
+    "4c6a0c30-b547-4eff-8ff4-0ca25803c076": {
+      "name": "Urza's Saga",
+      "oracleSha256": "af2957876fc1d3287eaf3740e9ebd11d65924f1b62859fb62ceafb570f68d339",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["saga-modeled"],
+      "clauses": [
+        {
+          "id": "pr11b-urza-s-saga-clause-1",
+          "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+          "implementation": ["Saga.loreCounters", "SBA.sagaSacrifice"],
+          "engineTestIds": ["urza-c01-positive", "urza-c03-positive"],
+          "viewerScenarioIds": ["pr11b-urza-s-saga-viewer-chapter-three"]
+        },
+        {
+          "id": "pr11b-urza-s-saga-clause-2",
+          "oracleText": "I — This Saga gains \"{T}: Add {C}.\"",
+          "implementation": ["Effect.sourceGainsAbility.manaAbility"],
+          "engineTestIds": ["urza-c01-positive"],
+          "viewerScenarioIds": ["pr11b-urza-s-saga-viewer-construct"]
+        },
+        {
+          "id": "pr11b-urza-s-saga-clause-3",
+          "oracleText": "II — This Saga gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'\"",
+          "implementation": [
+            "Effect.sourceGainsAbility.activatedAbility",
+            "Effect.createToken",
+            "StaticEffect.layer7d.countPermanents"
+          ],
+          "engineTestIds": ["urza-c02-positive"],
+          "viewerScenarioIds": ["pr11b-urza-s-saga-viewer-construct"]
+        },
+        {
+          "id": "pr11b-urza-s-saga-clause-4",
+          "oracleText": "III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.",
+          "implementation": ["Effect.searchLibrary", "Selector.manaCostIs"],
+          "engineTestIds": ["urza-c03-positive"],
+          "viewerScenarioIds": ["pr11b-urza-s-saga-viewer-chapter-three"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-urza-s-saga-viewer-chapter-three",
+        "pr11b-urza-s-saga-viewer-construct"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f7d8b91b-6541-4d3e-af51-7e000eac69c1": {
+      "name": "Legion's Landing // Adanto, the First Fort",
+      "oracleSha256": "5d88da81550d51ce2fbf34bdeaafbfb9958fe87cf30749d041660cdb0e6bdb49",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["landing-modeled"],
+      "clauses": [
+        {
+          "id": "pr11b-legion-s-landing-clause-1",
+          "oracleText": "When Legion's Landing enters, create a 1/1 white Vampire creature token with lifelink.",
+          "implementation": ["TriggerHead.enters", "Effect.createToken"],
+          "engineTestIds": ["landing-c01-positive"],
+          "viewerScenarioIds": ["pr11b-legion-s-landing-viewer-transform"]
+        },
+        {
+          "id": "pr11b-legion-s-landing-clause-2",
+          "oracleText": "When you attack with three or more creatures, transform Legion's Landing.",
+          "implementation": ["TriggerHead.attackDeclared.minAttackers", "Effect.transformSource"],
+          "engineTestIds": [
+            "landing-c02-positive",
+            "landing-c02-negative",
+            "landing-c02-opponent",
+            "landing-c02-once"
+          ],
+          "viewerScenarioIds": [
+            "pr11b-legion-s-landing-viewer-transform",
+            "pr11b-legion-s-landing-viewer-two-attackers"
+          ]
+        },
+        {
+          "id": "pr11b-legion-s-landing-clause-3",
+          "oracleText": "Adanto, the First Fort: {T}: Add {W}. {2}{W}, {T}: Create a 1/1 white Vampire creature token with lifelink.",
+          "implementation": [
+            "BackFace",
+            "ManaAbility.addMana",
+            "ActivatedAbility",
+            "Effect.createToken"
+          ],
+          "engineTestIds": ["adanto-c03-positive"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-legion-s-landing-viewer-transform",
+        "pr11b-legion-s-landing-viewer-two-attackers"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e633412b-e36b-4ec5-b0d0-7cb24c7503f4": {
+      "name": "Dollmaker's Shop // Porcelain Gallery",
+      "oracleSha256": "1c35524e7fddd802fb1b0914bd1b6b10a1548ca20a8eaae70c839e1401173412",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["room-modeled", "room-combined", "room-not-cast", "room-leaves"],
+      "clauses": [
+        {
+          "id": "pr11b-dollmaker-s-shop-clause-1",
+          "oracleText": "Dollmaker's Shop: Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.",
+          "implementation": [
+            "CardDefinition.roomDoors",
+            "TriggerHead.attackDeclared.attackerFilter",
+            "Effect.createToken"
+          ],
+          "engineTestIds": [
+            "room-c01-cast",
+            "room-c01-sorcery-timing",
+            "room-c01-positive",
+            "room-c01-negative-toy",
+            "room-c01-negative-planeswalker"
+          ],
+          "viewerScenarioIds": ["pr11b-dollmaker-s-shop-viewer-toy-attack"]
+        },
+        {
+          "id": "pr11b-dollmaker-s-shop-clause-2",
+          "oracleText": "Porcelain Gallery: Creatures you control have base power and toughness each equal to the number of creatures you control.",
+          "implementation": [
+            "CardDefinition.roomDoors",
+            "StaticEffect.layer7b",
+            "Value.countPermanents"
+          ],
+          "engineTestIds": ["room-c02-locked", "room-c02-layer-7b", "room-unlock"],
+          "viewerScenarioIds": ["pr11b-dollmaker-s-shop-viewer-unlock"]
+        },
+        {
+          "id": "pr11b-dollmaker-s-shop-clause-3",
+          "oracleText": "(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)",
+          "implementation": [
+            "AlternativeCast.split.room",
+            "PriorityAction.unlockDoor",
+            "EnginePermanent.unlockedDoors"
+          ],
+          "engineTestIds": [
+            "room-c01-cast",
+            "room-unlock",
+            "room-c01-sorcery-timing",
+            "room-not-cast"
+          ],
+          "viewerScenarioIds": ["pr11b-dollmaker-s-shop-viewer-unlock"]
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-dollmaker-s-shop-viewer-toy-attack",
+        "pr11b-dollmaker-s-shop-viewer-unlock"
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "ee524e82-35c4-4cae-b65e-3e147eac2927": {
+      "name": "Mila, Crafty Companion // Lukka, Wayward Bonder",
+      "oracleSha256": "beec0bc6f8009ea5b35aecec0c61d7d09af83775755f8f748ae128c5c74d7bde",
+      "implementationStatus": "implemented-reviewed",
+      "engineTestIds": ["mila-modeled", "lukka-face"],
+      "clauses": [
+        {
+          "id": "pr11b-mila-crafty-companion-clause-1",
+          "oracleText": "Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control.",
+          "implementation": [
+            "TriggerHead.attackDeclared.planeswalkersOnly",
+            "Effect.putCountersEach"
+          ],
+          "engineTestIds": ["mila-c01-positive", "mila-c01-negative"],
+          "viewerScenarioIds": ["pr11b-mila-crafty-companion-viewer-walker-attack"]
+        },
+        {
+          "id": "pr11b-mila-crafty-companion-clause-2",
+          "oracleText": "Whenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card.",
+          "implementation": ["TriggerHead.becomesTarget", "Effect.draw"],
+          "engineTestIds": ["mila-c02-positive", "mila-c02-negative"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-mila-crafty-companion-clause-3",
+          "oracleText": "Lukka +1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead.",
+          "implementation": ["LoyaltyAbility", "Effect.mayDiscardThenDraw"],
+          "engineTestIds": ["lukka-c03-positive", "lukka-c03-decline"],
+          "viewerScenarioIds": []
+        },
+        {
+          "id": "pr11b-mila-crafty-companion-clause-4",
+          "oracleText": "Lukka −2: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of your next upkeep.",
+          "implementation": [
+            "LoyaltyAbility",
+            "Effect.reanimateTargetHasteExileAtYourNextEndStep.exileAt"
+          ],
+          "engineTestIds": ["lukka-c04-positive"],
+          "viewerScenarioIds": ["pr11b-mila-crafty-companion-viewer-lukka"]
+        },
+        {
+          "id": "pr11b-mila-crafty-companion-clause-5",
+          "oracleText": "Lukka −7: You get an emblem with \"Whenever a creature you control enters, it deals damage equal to its power to any target.\"",
+          "implementation": ["LoyaltyAbility", "Effect.createEmblem", "Effect.dealDamage"],
+          "engineTestIds": ["lukka-c05-positive"],
+          "viewerScenarioIds": []
+        }
+      ],
+      "viewerScenarioIds": [
+        "pr11b-mila-crafty-companion-viewer-walker-attack",
+        "pr11b-mila-crafty-companion-viewer-lukka"
+      ],
       "gameplayAiScenarioIds": []
     }
   }

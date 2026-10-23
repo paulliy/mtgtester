@@ -58,7 +58,8 @@ merge modeled ahead of PR10, is recorded with them. See [PR10 progress](pr10-pro
 PR11 is split in two. Its first part models the 18 protection, phasing and game-lifecycle cards
 (Arcane Lighthouse through Unquestioned Authority in the PR11 table below) with production overrides
 and reviewed evidence; the 12 layout cards (Sagas, Class, prepare, split, Room and modal double-faced
-cards) move to a separate PR11b. See [PR11 progress](pr11-progress.md).
+cards) move to a separate PR11b, which models them with reviewed evidence. See
+[PR11 progress](pr11-progress.md) and [PR11b progress](pr11b-progress.md).
 
 PR12 models the seven reopened quality-audit cards (Black Bolt, Inhuman King; Dingus Staff;
 Sivitri, Dragon Master; Zurgo and Ojutai; Bloomvine Regent; Marang River Regent; Monster Manual)
@@ -750,38 +751,38 @@ worth splitting further.
   - coin flips with linked exile (Negative Zone Portal);
   - Choose a Background as a second commander (Gut).
 
-|     # | Card                                            | Population | Kind        | Primary blocker (first reason; +N = more)                                                                       |
-| ----: | ----------------------------------------------- | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| 11.01 | Arcane Lighthouse                               | SIL        | modeled     | Modeled: opposing creatures lose and cannot gain hexproof or shroud until end of turn (PR11 evidence).          |
-| 11.02 | Malakir Rebirth // Malakir Mire                 | QMQ        | fail-closed | Spell face is claimed; only the land back is authored.                                                          |
-| 11.03 | Smokestack                                      | MAR        | modeled     | Modeled: optional soot counter; each upkeep player sacrifices one permanent per counter (PR11 evidence).        |
-| 11.04 | Valakut Awakening // Valakut Stoneforge         | QMQ        | fail-closed | Spell face is claimed; only the land back is authored.                                                          |
-| 11.05 | Angel's Grace                                   | QMQ        | modeled     | Modeled: split second; you cannot lose and damage leaves you at 1 this turn (PR11 evidence).                    |
-| 11.06 | Defacing Duskmage // Vandal's Edit              | SIL        | fail-closed | Prepare is implemented as a pump trigger on any draw step.                                                      |
-| 11.07 | Eiganjo Dynastorian // Replenish                | SIL        | fail-closed | Prepare is implemented as a pump trigger when this creature attacks.                                            |
-| 11.08 | Gut, True Soul Zealot                           | PRA        | modeled     | Modeled: attack trigger sacrifices for a tapped, attacking menace Skeleton; Background pairing (PR11 evidence). |
-| 11.09 | Out of the Tombs                                | NEC        | modeled     | Modeled: eon counters and mill each upkeep; empty-library draw returns a creature (PR11 evidence).              |
-| 11.10 | Wandering Archaic // Explore the Vastlands      | QMQ        | fail-closed | Modal DFC copy-on-cast with retarget is unimplemented.                                                          |
-| 11.11 | Wear // Tear                                    | QMQ        | fail-closed | Fuse is authored as a third mode with an extra {2}{W} rather than casting both halves.                          |
-| 11.12 | Caged Sun                                       | NEC        | modeled     | Modeled: chosen color, lord, and extra land mana of that color (PR11 evidence).                                 |
-| 11.13 | The War in Heaven                               | NEC        | fail-closed | Saga chapters are implemented as enter, upkeep, and end-step triggers.                                          |
-| 11.14 | Intermediate Chirography                        | SIL        | fail-closed | Class levels and later abilities are claimed without an implementation.                                         |
-| 11.15 | Mystic Remora                                   | S          | modeled     | Modeled: cumulative upkeep; draw unless the opponent pays {4} (PR11 evidence).                                  |
-| 11.16 | Chrome Mox                                      | S          | modeled     | Modeled: imprint a nonartifact, nonland card; tap for its colors (PR11 evidence).                               |
-| 11.17 | Gemstone Caverns                                | S          | modeled     | Modeled: opening-hand start with a luck counter; luck makes any color (PR11 evidence).                          |
-| 11.18 | Teferi's Protection                             | S          | modeled     | Modeled: life lock, protection from everything, phase out, exiled (PR11 evidence).                              |
-| 11.19 | Mana Vault                                      | S          | modeled     | Modeled: doesn't untap; {4} upkeep untap; draw-step damage while tapped (PR11 evidence).                        |
-| 11.20 | The One Ring                                    | S          | modeled     | Modeled: cast protection until your next turn; burden counters (PR11 evidence).                                 |
-| 11.21 | Urza's Saga                                     | S          | unmodeled   | unsupported layout "saga (+3)                                                                                   |
-| 11.22 | Clever Concealment                              | FF4        | modeled     | Modeled: convoke; chosen nonland permanents phase out (PR11 evidence).                                          |
-| 11.23 | Legion's Landing // Adanto, the First Fort      | BRI        | unmodeled   | When you attack with three or more creatures, transform ~.                                                      |
-| 11.24 | Shanna, Sisay's Legacy                          | BRI        | modeled     | Modeled: opponents' abilities cannot target her; +1/+1 per creature (PR11 evidence).                            |
-| 11.25 | Basri's Lieutenant                              | BRI        | modeled     | Modeled: protection from multicolored; counter on enter; Knight on a countered death (PR11 evidence).           |
-| 11.26 | Dollmaker's Shop // Porcelain Gallery           | BRI        | unmodeled   | unsupported layout "split (+1)                                                                                  |
-| 11.27 | Mila, Crafty Companion // Lukka, Wayward Bonder | PRA        | unmodeled   | unsupported layout "modal_dfc (+1)                                                                              |
-| 11.28 | Negative Zone Portal                            | FF4        | modeled     | Modeled: linked exile and creature draw; four-creature coin flip (PR11 evidence).                               |
-| 11.29 | Spirit Mantle                                   | SIL        | modeled     | Modeled: +1/+1 and protection from creatures (PR11 evidence).                                                   |
-| 11.30 | Unquestioned Authority                          | PRA        | modeled     | Modeled: draw on enter; protection from creatures (PR11 evidence).                                              |
+|     # | Card                                            | Population | Kind    | Primary blocker (first reason; +N = more)                                                                       |
+| ----: | ----------------------------------------------- | ---------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| 11.01 | Arcane Lighthouse                               | SIL        | modeled | Modeled: opposing creatures lose and cannot gain hexproof or shroud until end of turn (PR11 evidence).          |
+| 11.02 | Malakir Rebirth // Malakir Mire                 | QMQ        | modeled | Modeled: spell face loses 2 life and grants a tapped return on death; Mire land back (PR11b evidence).          |
+| 11.03 | Smokestack                                      | MAR        | modeled | Modeled: optional soot counter; each upkeep player sacrifices one permanent per counter (PR11 evidence).        |
+| 11.04 | Valakut Awakening // Valakut Stoneforge         | QMQ        | modeled | Modeled: any number of hand cards to the bottom, then draw that many plus one; land back (PR11b evidence).      |
+| 11.05 | Angel's Grace                                   | QMQ        | modeled | Modeled: split second; you cannot lose and damage leaves you at 1 this turn (PR11 evidence).                    |
+| 11.06 | Defacing Duskmage // Vandal's Edit              | SIL        | modeled | Modeled: deathtouch; an opponent's second draw each turn prepares it; Vandal's Edit copy (PR11b evidence).      |
+| 11.07 | Eiganjo Dynastorian // Replenish                | SIL        | modeled | Modeled: vigilance; attacking with two or more prepares it; Replenish copy (PR11b evidence).                    |
+| 11.08 | Gut, True Soul Zealot                           | PRA        | modeled | Modeled: attack trigger sacrifices for a tapped, attacking menace Skeleton; Background pairing (PR11 evidence). |
+| 11.09 | Out of the Tombs                                | NEC        | modeled | Modeled: eon counters and mill each upkeep; empty-library draw returns a creature (PR11 evidence).              |
+| 11.10 | Wandering Archaic // Explore the Vastlands      | QMQ        | modeled | Modeled: opponent pays {2} or you copy their instant or sorcery; Explore the Vastlands face (PR11b evidence).   |
+| 11.11 | Wear // Tear                                    | QMQ        | modeled | Modeled: split halves cast separately, or fused from hand with both halves' targets (PR11b evidence).           |
+| 11.12 | Caged Sun                                       | NEC        | modeled | Modeled: chosen color, lord, and extra land mana of that color (PR11 evidence).                                 |
+| 11.13 | The War in Heaven                               | NEC        | modeled | Modeled: lore counters and chapters; III returns creatures (total MV 8) as artifacts (PR11b evidence).          |
+| 11.14 | Intermediate Chirography                        | SIL        | modeled | Modeled: Class levels at sorcery speed; first-life-loss counter; modified-death Inkling (PR11b evidence).       |
+| 11.15 | Mystic Remora                                   | S          | modeled | Modeled: cumulative upkeep; draw unless the opponent pays {4} (PR11 evidence).                                  |
+| 11.16 | Chrome Mox                                      | S          | modeled | Modeled: imprint a nonartifact, nonland card; tap for its colors (PR11 evidence).                               |
+| 11.17 | Gemstone Caverns                                | S          | modeled | Modeled: opening-hand start with a luck counter; luck makes any color (PR11 evidence).                          |
+| 11.18 | Teferi's Protection                             | S          | modeled | Modeled: life lock, protection from everything, phase out, exiled (PR11 evidence).                              |
+| 11.19 | Mana Vault                                      | S          | modeled | Modeled: doesn't untap; {4} upkeep untap; draw-step damage while tapped (PR11 evidence).                        |
+| 11.20 | The One Ring                                    | S          | modeled | Modeled: cast protection until your next turn; burden counters (PR11 evidence).                                 |
+| 11.21 | Urza's Saga                                     | S          | modeled | Modeled: chapter grants {C} and Construct abilities; III fetches a {0}/{1} artifact (PR11b evidence).           |
+| 11.22 | Clever Concealment                              | FF4        | modeled | Modeled: convoke; chosen nonland permanents phase out (PR11 evidence).                                          |
+| 11.23 | Legion's Landing // Adanto, the First Fort      | BRI        | modeled | Modeled: Vampire on enter; attacking with three transforms it into Adanto (PR11b evidence).                     |
+| 11.24 | Shanna, Sisay's Legacy                          | BRI        | modeled | Modeled: opponents' abilities cannot target her; +1/+1 per creature (PR11 evidence).                            |
+| 11.25 | Basri's Lieutenant                              | BRI        | modeled | Modeled: protection from multicolored; counter on enter; Knight on a countered death (PR11 evidence).           |
+| 11.26 | Dollmaker's Shop // Porcelain Gallery           | BRI        | modeled | Modeled: Room doors cast separately; unlock special action; Toy on attack; base P/T (PR11b evidence).           |
+| 11.27 | Mila, Crafty Companion // Lukka, Wayward Bonder | PRA        | modeled | Modeled: walker-attack loyalty and targeted draw; Lukka back face with emblem (PR11b evidence).                 |
+| 11.28 | Negative Zone Portal                            | FF4        | modeled | Modeled: linked exile and creature draw; four-creature coin flip (PR11 evidence).                               |
+| 11.29 | Spirit Mantle                                   | SIL        | modeled | Modeled: +1/+1 and protection from creatures (PR11 evidence).                                                   |
+| 11.30 | Unquestioned Authority                          | PRA        | modeled | Modeled: draw on enter; protection from creatures (PR11 evidence).                                              |
 
 ## Keeping this plan current
 

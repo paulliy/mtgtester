@@ -864,16 +864,17 @@
   {
     "oracleId": "e633412b-e36b-4ec5-b0d0-7cb24c7503f4",
     "name": "Dollmaker's Shop // Porcelain Gallery",
-    "package": "W10",
-    "status": "pending",
-    "blockers": [
-      "unsupported layout \"split\"",
-      "unrecognized rules text: \"Whenever one or more non-Toy creatures you control attack a player, create a 1/1 white Toy artifact creature token.\""
+    "package": "PR11.26",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11b-room.test.ts",
+      "packages/server/src/cards/pr11b-scenarios.test.ts",
+      "apps/web/e2e/pr11b-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11b-room.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b9bacb46-fd1d-459b-81c2-d7d08fe73848",
@@ -2096,15 +2097,17 @@
   {
     "oracleId": "f7d8b91b-6541-4d3e-af51-7e000eac69c1",
     "name": "Legion's Landing // Adanto, the First Fort",
-    "package": "W3",
-    "status": "pending",
-    "blockers": [
-      "unrecognized rules text: \"When you attack with three or more creatures, transform ~.\""
+    "package": "PR11.23",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11b-transform.test.ts",
+      "packages/server/src/cards/pr11b-scenarios.test.ts",
+      "apps/web/e2e/pr11b-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11b-transform.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "b2d1f87b-a11f-43eb-8b89-b48945320d73",
@@ -2317,16 +2320,17 @@
   {
     "oracleId": "ee524e82-35c4-4cae-b65e-3e147eac2927",
     "name": "Mila, Crafty Companion // Lukka, Wayward Bonder",
-    "package": "W10",
-    "status": "pending",
-    "blockers": [
-      "unsupported layout \"modal_dfc\"",
-      "unrecognized rules text: \"Whenever an opponent attacks one or more planeswalkers you control, put a loyalty counter on each planeswalker you control.\""
+    "package": "PR11.27",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11b-mila.test.ts",
+      "packages/server/src/cards/pr11b-scenarios.test.ts",
+      "apps/web/e2e/pr11b-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11b-mila.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "bb5c1817-ac22-4779-9005-251bc354f181",
@@ -3782,18 +3786,17 @@
   {
     "oracleId": "4c6a0c30-b547-4eff-8ff4-0ca25803c076",
     "name": "Urza's Saga",
-    "package": "W10",
-    "status": "pending",
-    "blockers": [
-      "unsupported layout \"saga\"",
-      "unrecognized rules text: \"I — ~ gains \"{T}: Add {C}.\"\"",
-      "unrecognized rules text: \"II — ~ gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with '~ gets +1/+1 for each artifact you control.'\"\"",
-      "unrecognized rules text: \"III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.\""
+    "package": "PR11.21",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11b-saga.test.ts",
+      "packages/server/src/cards/pr11b-scenarios.test.ts",
+      "apps/web/e2e/pr11b-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11b-saga.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "26ae37ab-91f8-4113-beb0-1154f9b62d28",
@@ -3945,17 +3948,17 @@
   {
     "oracleId": "6556c4c0-b10d-4208-821b-0c0a49abd188",
     "name": "Wandering Archaic // Explore the Vastlands",
-    "package": "W10",
-    "status": "pending",
-    "blockers": [
-      "unsupported layout \"modal_dfc\"",
-      "unrecognized rules text: \"Whenever an opponent casts an instant or sorcery spell, they may pay {2}. If they don't, you may copy that spell. You may choose new targets for the copy.\"",
-      "override for \"Wandering Archaic // Explore the Vastlands\" has no executable behavior"
+    "package": "PR11.10",
+    "status": "implemented-reviewed",
+    "blockers": [],
+    "oracleFixture": "packages/engine/tests/fixtures/coverage-pr11-oracle.json",
+    "behaviorTests": [
+      "packages/engine/tests/pr11b-archaic.test.ts",
+      "packages/server/src/cards/pr11b-scenarios.test.ts",
+      "apps/web/e2e/pr11b-card-test-lab.spec.ts"
     ],
-    "oracleFixture": "packages/server/fixtures/coverage-oracle.json",
-    "behaviorTests": [],
-    "interpretationTests": [],
-    "snapshotStatus": "pending"
+    "interpretationTests": ["packages/engine/tests/pr11b-archaic.test.ts"],
+    "snapshotStatus": "override-defs.json regenerated and reviewed"
   },
   {
     "oracleId": "ba4e4afb-24bb-47de-aba8-89d21b11d45c",
