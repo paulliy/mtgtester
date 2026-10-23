@@ -133,6 +133,8 @@ export interface SelectorSource {
   chosenOption?: string;
   /** The source's power, or its last-known power once it has left, for `powerAtMostSource`. */
   sourcePower?: number;
+  /** The source permanent's current name, for `sameNameAsSource`. */
+  sourceName?: string;
 }
 
 export type Selector =
@@ -151,6 +153,11 @@ export type Selector =
    * a layer this selector would be read inside.
    */
   | { kind: 'name'; value: string }
+  /**
+   * "with the same name as this creature" (Mocking Doppelganger): the source's own current
+   * name, which a copy effect may have changed, so it reads `source.sourceName`, not a value.
+   */
+  | { kind: 'sameNameAsSource' }
   | { kind: 'color'; value: Color }
   /**
    * "of the chosen color" (Caged Sun) — the color is per-permanent state
@@ -339,6 +346,7 @@ export function selectorIsEventOnly(selector: Selector): boolean {
     case 'subtype':
     case 'supertype':
     case 'name':
+    case 'sameNameAsSource':
     case 'color':
     case 'chosenColor':
     case 'chosenType':
@@ -385,6 +393,12 @@ export function selectMatches(
       return candidate.supertypes.includes(selector.value);
     case 'name':
       return candidate.name !== undefined && candidate.name === selector.value;
+    case 'sameNameAsSource':
+      return (
+        source.sourceName !== undefined &&
+        candidate.name !== undefined &&
+        candidate.name === source.sourceName
+      );
     case 'color':
       return candidate.colors.includes(selector.value);
     case 'chosenColor':

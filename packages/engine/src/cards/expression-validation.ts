@@ -115,6 +115,7 @@ const selectorShapes = {
   chosenColor: {},
   chosenType: {},
   chosenSubtype: {},
+  sameNameAsSource: {},
   controller: { who: oneOf('you', 'opponents', 'eventPlayer') },
   powerAtLeast: { n: finite },
   powerAtMost: { n: finite },

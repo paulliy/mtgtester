@@ -227,6 +227,10 @@ export interface CardDefinition {
     addTriggers?: import('./ability').Ability[];
     /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
     removeSupertypes?: string[];
+    /** Static abilities the copy has beyond the copied object's (Mocking Doppelganger's "Other
+     * creatures with the same name as this creature are goaded"). Part of the copiable values
+     * (CR 707.9b), so a copy of the copy has them too. */
+    addStaticEffects?: StaticEffect[];
     /** A counter added on entry, chosen by the copy's own resulting type (Spark Double). */
     addCounterByType?: { creatureCounter: string; planeswalkerCounter: string; count: number };
   };

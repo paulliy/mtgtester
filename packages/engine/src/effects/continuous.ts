@@ -197,6 +197,7 @@ function gatherEffects(ctx: GameContext): LayerEffect[] {
             // Equipment/Auras: `attachedTo` is an ObjectId, and selectors work in card ids.
             attachedToCardId: attachedCardId(ctx, source),
             ...(source.chosenOption !== undefined ? { chosenOption: source.chosenOption } : {}),
+            sourceName: source.name,
           },
         },
         op: s.op,

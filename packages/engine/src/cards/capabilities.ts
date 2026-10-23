@@ -627,6 +627,7 @@ const shapes = {
         addKeywords: { array: leaf },
         addTriggers: { array: { node: 'Ability' } },
         removeSupertypes: { array: leaf },
+        addStaticEffects: { array: { node: 'StaticEffect' } },
         addCounterByType: {
           object: {
             creatureCounter: leaf,
@@ -1287,6 +1288,7 @@ const families = {
       chosenColor: true,
       chosenType: true,
       chosenSubtype: true,
+      sameNameAsSource: true,
       controller: true,
       powerAtLeast: true,
       powerAtMost: true,

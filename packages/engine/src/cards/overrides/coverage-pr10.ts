@@ -9,6 +9,7 @@ import {
   ofSubtype,
   ofSupertype,
   ofType,
+  OPPONENTS,
   powerAtLeast,
   YOURS,
 } from '../selector';
@@ -653,5 +654,27 @@ export function registerPr10TokenCopyOverrides(): void {
       ],
     },
     'PR10 chooses the copy target after the energy is paid.',
+  );
+
+  // PR10.22: the goad static is part of the copiable values (CR 707.9b), and "this creature"
+  // reads the Doppelganger's copied name. Flash is interpreted and kept.
+  replaceCard(
+    '3b8eb602-01e8-432e-8dfc-8fdb62c3aa43',
+    'Mocking Doppelganger',
+    [
+      'You may have this creature enter as a copy of a creature an opponent controls, except it has "Other creatures with the same name as this creature are goaded."',
+    ],
+    {
+      entersAsCopy: {
+        selector: allOf(ofType('Creature'), OPPONENTS),
+        addStaticEffects: [
+          {
+            affects: allOf(ofType('Creature'), { kind: 'other' }, { kind: 'sameNameAsSource' }),
+            op: { layer: 6, addGoad: true },
+          },
+        ],
+      },
+    },
+    "PR10 copies an opponent's creature and goads the other creatures sharing its name.",
   );
 }

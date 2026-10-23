@@ -28,7 +28,7 @@ import type {
 import { captureObjectFacts, eventObjectScope } from '../cards/source-identity';
 import type { ObjectFacts } from '../cards/source-identity';
 import { evaluateCondition, resolveCondition } from '../cards/condition';
-import type { BackFace, CardDefinition } from '../cards/definition';
+import type { BackFace, CardDefinition, StaticEffect } from '../cards/definition';
 import { assertValidModeledDefinition } from '../cards/authoring-validation';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
 import { selectMatches } from '../cards/selector';
@@ -676,6 +676,8 @@ export interface ApplyCopyOptions {
   addTriggers?: Ability[] | undefined;
   /** Supertypes stripped from the copy ("except it isn't legendary" — Spark Double). */
   removeSupertypes?: string[] | undefined;
+  /** Static abilities folded into the copiable values (CR 707.9b — Mocking Doppelganger). */
+  addStaticEffects?: StaticEffect[] | undefined;
   /** Supertypes the copy has that the copied object doesn't ("it's legendary in addition to
    * its other types" — Sarkhan, Soul Aflame). */
   addSupertypes?: string[] | undefined;
@@ -695,7 +697,11 @@ export function applyCopy(
   target: EnginePermanent,
   opts: ApplyCopyOptions = {},
 ): void {
-  const copied = copiableDefinition(ctx, target);
+  const base = copiableDefinition(ctx, target);
+  const copied =
+    opts.addStaticEffects === undefined || opts.addStaticEffects.length === 0
+      ? base
+      : { ...base, staticEffects: [...base.staticEffects, ...opts.addStaticEffects] };
   const imageFace = copyImageFace(ctx, target);
   perm.copyOriginal ??= {
     oracleId: perm.oracleId,
@@ -1112,6 +1118,7 @@ export function* moveObject(
           addKeywords: config.addKeywords,
           addTriggers: config.addTriggers,
           removeSupertypes: config.removeSupertypes,
+          addStaticEffects: config.addStaticEffects,
         });
         if (config.addCounterByType !== undefined) {
           const copiedTypes = computeCharacteristics(ctx, perm).types;
