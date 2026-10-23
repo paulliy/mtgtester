@@ -143,7 +143,13 @@ export interface AttackDeclarationSubject {
   /** Legal defenders for this creature alone. `attackTax` is what THIS creature pays to attack
    * that defender (it can differ by creature, e.g. by its counters); the total for a defender
    * receiving several attackers is the sum over them, checked jointly on submission. */
-  defenders: Array<{ playerId: PlayerId; life: number; attackTax: number }>;
+  defenders: Array<{
+    playerId: PlayerId;
+    life: number;
+    attackTax: number;
+    /** Life THIS creature's controller pays for it to attack that defender (Sivitri). */
+    attackLifeTax?: number;
+  }>;
   /**
    * Legal planeswalkers for this creature alone (CR 508.1b): planeswalkers its opponents control,
    * each offered as a slot option by its `objectId` alongside the `defenders` player ids.
@@ -155,6 +161,7 @@ export interface AttackDeclarationSubject {
     name: string;
     loyalty: number;
     attackTax: number;
+    attackLifeTax?: number;
   }>;
   mustAttack: boolean;
   /** A creature that puts something on the stack when it attacks is worth attacking with at

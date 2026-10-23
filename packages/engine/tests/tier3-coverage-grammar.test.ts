@@ -325,12 +325,8 @@ describe('Tier 3 residual generic grammar', () => {
 
     for (const card of cards) {
       const def = interpretCard(card);
-      if (card.name === 'Dingus Staff Test') {
-        expect(def.modeled, card.name).toBe(false);
-        expect(def.unmodeledReasons.join('; ')).toContain(
-          'event player reference has no owning event player scope',
-        );
-      } else expect(def.modeled, `${card.name}: ${def.unmodeledReasons.join('; ')}`).toBe(true);
+      // Dingus Staff's "that creature's controller" binds the dying creature's controller (PR12).
+      expect(def.modeled, `${card.name}: ${def.unmodeledReasons.join('; ')}`).toBe(true);
     }
 
     const ctx = pod('tier3-target-relative-values');

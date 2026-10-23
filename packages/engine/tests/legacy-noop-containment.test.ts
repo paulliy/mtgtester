@@ -15,17 +15,9 @@ const fixture = [
     readFileSync(new URL('./fixtures/invalid-ir-oracle.json', import.meta.url), 'utf8'),
   ) as OracleCard[]),
 ];
+// Sivitri and Zurgo and Ojutai left this list in coverage PR12, which implements both placeholders.
+// Forbidding Spirit's attack tax is paid in mana, so the life-tax grammar leaves its line unread.
 const cases = [
-  [
-    'sivitri-noop-contained',
-    'Sivitri, Dragon Master',
-    'f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64',
-  ],
-  [
-    'zurgo-noop-contained',
-    'Zurgo and Ojutai',
-    '45392f93794edf49d1b74a1d73be74a4c4ce7f0815f3f49262a78b6a94618493',
-  ],
   [
     'forbidding-spirit-noop-contained',
     'Forbidding Spirit',
@@ -41,12 +33,14 @@ describe('legacy executable placeholder containment', () => {
       expect(createHash('sha256').update(JSON.stringify(card)).digest('hex')).toBe(sha);
       const definition = interpretCard(card);
       expect(definition.modeled).toBe(false);
-      expect(definition.unmodeledReasons.join('; ')).toContain('executable noOp');
+      expect(definition.unmodeledReasons.join('; ')).toContain(
+        'unrecognized rules text: "When this creature enters, until your next turn, creatures can\'t attack you',
+      );
       const ctx = createGame(gameConfig([0, 1].map(() => ({ cards: copies(4, forest) }))));
       conjure(ctx, 'P1', card, 'hand');
       ctx.state.currentTurnPlayer = 'P1';
       ctx.state.phase = 'precombatMain';
-      expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow('executable noOp');
+      expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow('Unmodeled card');
       expect(ctx.state.stack).toHaveLength(0);
     },
   );

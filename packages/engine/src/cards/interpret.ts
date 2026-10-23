@@ -1329,11 +1329,6 @@ function parseEffectSentence(
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
   }
 
-  if (
-    s === 'search your library for a dragon card, reveal it, put it into your hand, then shuffle'
-  ) {
-    return [{ op: 'searchLibrary', filter: ofSubtype('Dragon'), destinations: [{ zone: 'hand' }] }];
-  }
   if (s === 'destroy all non-dragon creatures') {
     return [{ op: 'destroyEach', selector: allOf(ofType('Creature'), not(ofSubtype('Dragon'))) }];
   }
@@ -1408,8 +1403,12 @@ function parseEffectSentence(
   if (s === 'put your commander into your hand from the command zone') {
     return [{ op: 'commandZoneToHand' }];
   }
-  if (s.startsWith("until your next turn, creatures can't attack you")) {
-    return [{ op: 'noOp' }];
+  // Sivitri, Dragon Master's +1: a life tax on attacks on you and your planeswalkers.
+  {
+    const m = s.match(
+      /^until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays (\d+) life for each of those creatures$/,
+    );
+    if (m !== null) return [{ op: 'attackLifeTaxUntilYourNextTurn', amount: Number(m[1]) }];
   }
 
   // "When enchanted creature dies, return it to the battlefield under your control" (Changing
@@ -5167,6 +5166,20 @@ function parseTriggerLine(line: string, card: OracleCard): Ability[] | null {
     heads = heads.map((head) => ({ ...head, defendingPlayerIsEventPlayer: true as const }));
     body = body.replace(/ defending player controls\b/g, ' that player controls');
   }
+  // "Whenever a creature dies, this artifact deals 2 damage to that creature's controller"
+  // (Dingus Staff): the event player is the dying creature's controller as it last existed on
+  // the battlefield (CR 603.10a). One dying creature per firing, so not for aggregate heads.
+  if (
+    / that creature's controller\b/.test(body) &&
+    heads.every(
+      (head) =>
+        head.when === 'dies' &&
+        'subject' in head &&
+        head.subject.kind === 'permanent' &&
+        head.aggregate === undefined,
+    )
+  )
+    heads = heads.map((head) => ({ ...head, subjectControllerIsEventPlayer: true as const }));
   // "You may pay {R}{G}{W}{U}. When you do, …" (The Thing) / "Put a +1/+1 counter on ~. When you
   // do, …" (Lockjaw): a reflexive trigger (CR 603.12) whose ability announces its own targets
   // when it goes on the stack, after this one has resolved.
@@ -7748,8 +7761,20 @@ export function interpretCard(card: OracleCard): CardDefinition {
           aggregate: true,
         }),
         {
-          effects: [{ op: 'noOp' }],
-          description: 'Combat damage look top 3',
+          // "Look at the top three cards of your library. Put one of them into your hand and the
+          // rest on the bottom of your library in any order. You may return one of those Dragons
+          // to its owner's hand." "Those Dragons" are the ones that dealt the damage.
+          effects: [
+            {
+              op: 'lookAtTopN',
+              count: 3,
+              mayPut: { filter: allOf(), destination: { zone: 'hand' }, required: true },
+              rest: 'bottomAnyOrder',
+            },
+            { op: 'mayReturnEventGroupMemberToHand' },
+          ],
+          description:
+            'Look at the top three cards, put one into your hand and the rest on the bottom in any order; you may return one of those Dragons to its owner’s hand',
         },
       ),
     );

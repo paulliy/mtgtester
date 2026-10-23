@@ -744,7 +744,8 @@ describe('casting from exile', () => {
 });
 
 describe('casting a contained spell face from the top of the library', () => {
-  it('halts before offering the formerly substituted Omen card', () => {
+  // Claim Territory itself is modeled since coverage PR12; this projection omits its spell face.
+  it('halts before offering an Omen card whose spell face is missing', () => {
     const ctx = pod();
     ctx.state.phase = 'precombatMain';
     for (let i = 0; i < 6; i++) spawn(ctx, 'P1', forest());
@@ -772,7 +773,7 @@ describe('casting a contained spell face from the top of the library', () => {
     );
     const before = structuredClone(ctx.state);
     expect(() => computePriorityOptions(ctx, ctx.state.players[0]!)).toThrow(
-      /explicitly unsupported: Claim Territory/,
+      /Unmodeled card "Bloomvine Regent \/\/ Claim Territory"/,
     );
     expect(ctx.state).toEqual(before);
     expect(ctx.state.players[0]!.library[0]?.id).toBe(card.id);

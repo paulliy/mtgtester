@@ -5648,12 +5648,6 @@
       "status": "reviewed"
     },
     {
-      "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
-      "uniqueOracleIds": 3,
-      "status": "unreviewed",
-      "note": "Explicit support exclusions for three confirmed omitted or substituted spell faces. Pinned Oracle and negative engine evidence are recorded in the verification manifest; no completed-card claim."
-    },
-    {
       "sourceFile": "packages/engine/src/cards/overrides/white-black-control-aven.ts",
       "uniqueOracleIds": 1,
       "status": "unreviewed"
@@ -6969,6 +6963,27 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "coverage-pr11",
       "note": "Placeholder deleted: coverage-pr11.ts replaces the silverquill-influence-remaining.ts containment with a lose-and-can't-have hexproof/shroud activation; engine evidence in packages/engine/tests/pr11-protection.test.ts."
+    },
+    {
+      "oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
+      "name": "Bloomvine Regent // Claim Territory",
+      "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
+      "restoredIn": "coverage-pr12",
+      "note": "Containment deleted: coverage-pr12.ts authors Claim Territory's two-Forest search (one onto the battlefield tapped, one into hand, revealed, then shuffle); engine evidence in packages/engine/tests/pr12-spell-faces.test.ts."
+    },
+    {
+      "oracleId": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
+      "name": "Marang River Regent // Coil and Catch",
+      "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
+      "restoredIn": "coverage-pr12",
+      "note": "Containment deleted: the interpreter reads Coil and Catch as draw three, then discard a card, and the Omen face shuffles the card into its owner's library; engine evidence in packages/engine/tests/pr12-spell-faces.test.ts."
+    },
+    {
+      "oracleId": "6d4e7943-1fdf-4085-8af0-658badbd0cb8",
+      "name": "Monster Manual // Zoological Study",
+      "sourceFile": "packages/engine/src/cards/overrides/unsupported-spell-faces.ts",
+      "restoredIn": "coverage-pr12",
+      "note": "Containment deleted: coverage-pr12.ts authors Zoological Study's mill five and mandatory creature return, and the Adventure face exiles the card with its permission; engine evidence in packages/engine/tests/pr12-spell-faces.test.ts."
     }
   ]
 }

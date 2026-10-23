@@ -156,6 +156,19 @@ export interface CombatChoiceEntry {
  * direction and planeswalkers controlled by that opponent" (Teyo, Geometric Tactician). A newer
  * effect from the same card replaces the older one, so only the last choice is ever in force.
  */
+/**
+ * "Until your next turn, creatures can't attack you or planeswalkers you control unless their
+ * controller pays 2 life for each of those creatures" (Sivitri, Dragon Master): a life tax on
+ * attacks on `controllerId` and their planeswalkers, made by a resolved ability.
+ */
+export interface AttackLifeTaxEntry {
+  id: string;
+  controllerId: PlayerId;
+  /** Life paid for each creature attacking. */
+  amount: number;
+  expires: EffectExpiry;
+}
+
 export interface AttackDirectionEntry {
   id: string;
   controllerId: PlayerId;
@@ -886,6 +899,7 @@ export interface EngineState extends GameState {
   combatChoices?: CombatChoiceEntry[];
   /** Seat-direction limits on whom players may attack, until they expire (Teyo). */
   attackDirections?: AttackDirectionEntry[];
+  attackLifeTaxes?: AttackLifeTaxEntry[];
   normalTurnResumeAfter?: PlayerId;
   /**
    * "Creatures can't be blocked this turn" (Venser, the Sojourner). A rule, not a characteristic,

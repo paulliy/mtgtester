@@ -893,6 +893,12 @@ export type Effect =
    * is copied from its last known information (CR 707.2, 608.2h).
    */
   | { op: 'createTokenCopyOfEventGroupMember'; count: Value }
+  /**
+   * "You may return one of those Dragons to its owner's hand" (Zurgo and Ojutai): the controller
+   * may choose one permanent of the aggregate group that fired this trigger. Only a member still on
+   * the battlefield as the same object can be returned (CR 400.7).
+   */
+  | { op: 'mayReturnEventGroupMemberToHand' }
   | {
       op: 'replicateCopies';
       count: number;
@@ -1388,6 +1394,12 @@ export type Effect =
    * Scourge's single bounded pick and Last March of the Ents' unbounded "any number" share one
    * op because both are the same decision loop, asked once or repeated to a decline.
    */
+  /**
+   * "Mill five cards, then return a creature card milled this way to your hand" (Zoological
+   * Study): mill `count`, then return one card matching `filter` from among the milled cards still
+   * in the graveyard they went to. Mandatory when one exists (CR 701.17c follows a milled card).
+   */
+  | { op: 'millThenReturnMilledCard'; count: number; filter: Selector }
   | {
       op: 'handToBattlefield';
       filter: Selector;
@@ -1413,9 +1425,11 @@ export type Effect =
         reveal?: true;
         /** After putting Equipment onto the battlefield, optionally attach it to your creature. */
         attachEquipment?: true;
+        /** "Put one of them into your hand": a matching card must be taken, with no decline. */
+        required?: true;
       };
       /** Where everything not taken ends up. */
-      rest: 'bottomRandom' | 'topAnyOrder';
+      rest: 'bottomRandom' | 'topAnyOrder' | 'bottomAnyOrder';
       /** After replacing the looked-at cards, offer to shuffle the whole library. */
       mayShuffle?: true;
     }
@@ -1659,6 +1673,14 @@ export type Effect =
       direction: 'left' | 'right';
       duration: 'untilYourNextTurn';
     }
+  /**
+   * "Until your next turn, creatures can't attack you or planeswalkers you control unless their
+   * controller pays 2 life for each of those creatures" (Sivitri, Dragon Master's +1): a tax in
+   * life, paid by the attacking player for each creature attacking this ability's controller or a
+   * planeswalker they control (CR 508.1g-h). It outlasts its source and ends as the controller's
+   * next turn begins.
+   */
+  | { op: 'attackLifeTaxUntilYourNextTurn'; amount: number }
   /**
    * "Choose an opponent" as this resolves (Triarch Stalker's Targeting Relay): the controller
    * picks one, stored on the source permanent as its chosen option so a later choice replaces it
@@ -2131,6 +2153,12 @@ export type TriggerHead =
       defendingPlayerIsEventPlayer?: true;
       /** Keep the attacking player as eventPlayer while grouping attacks per defender. */
       attackingPlayerIsEventPlayer?: true;
+      /**
+       * "Whenever a creature dies, ~ deals 2 damage to that creature's controller" (Dingus Staff):
+       * for a `dies` trigger, `eventPlayer` is the dying permanent's controller as it last existed
+       * on the battlefield (CR 603.10a).
+       */
+      subjectControllerIsEventPlayer?: true;
       /**
        * Battalion: "whenever ~ and at least two other creatures attack" — part of the attack
        * event, counted among the attackers declared with it, not an intervening-if (CR 603.4).

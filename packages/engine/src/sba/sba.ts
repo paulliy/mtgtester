@@ -105,6 +105,7 @@ function outlastDepartedPlayer(s: GameContext['state'], departedId: PlayerId): v
   };
   remap(s.attackRequirements);
   remap(s.attackDirections);
+  remap(s.attackLifeTaxes);
   remap(s.blockRestrictions);
   for (const perm of [...s.battlefield, ...(s.phasedOut ?? []).map((record) => record.permanent)]) {
     for (const goad of perm.goadedBy ?? []) {

@@ -5372,6 +5372,44 @@ export function* executeAbility(
         if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
         break;
       }
+      case 'millThenReturnMilledCard': {
+        const milled: (EngineCardObject | EnginePermanent)[] = [];
+        for (let i = 0; i < effect.count; i++) {
+          const top = controller.library[0];
+          if (top === undefined) break;
+          const moved = yield* moveObject(ctx, top, { zone: 'graveyard' });
+          // CR 701.13c: a milled card is found in the public zone it moved to, as the new object.
+          if (moved !== null && moved.zone !== 'library' && moved.zone !== 'hand')
+            milled.push(moved);
+          emit(
+            ctx,
+            'mill',
+            { player: controller.id, cardId: top.cardId, name: top.name },
+            controller.id,
+          );
+        }
+        const selectorSource = { cardId: source.cardId, controllerId: controller.id };
+        const choices = milled.filter(
+          (card): card is EngineCardObject =>
+            findObjectById(ctx, card.id) === card &&
+            card.zone !== 'battlefield' &&
+            selectMatches(
+              cardZoneCandidate(ctx, card as EngineCardObject, card.ownerId),
+              effect.filter,
+              selectorSource,
+            ),
+        );
+        // "Return a creature card milled this way": mandatory whenever one exists.
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: return a card milled this way to your hand`,
+          cards: choices,
+          type: 'returnToHand',
+          verb: 'Return',
+        });
+        if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
       case 'discover':
         yield* discover(ctx, source, controller.id, amountOf(effect.count));
         break;
@@ -6361,6 +6399,23 @@ export function* executeAbility(
         }
         break;
       }
+      case 'mayReturnEventGroupMemberToHand': {
+        // Only a member still on the battlefield as the same object can be returned (CR 400.7).
+        const members = (scope.eventGroupIds ?? []).flatMap((id) => {
+          const live = ctx.state.battlefield.find((permanent) => permanent.id === id);
+          return live === undefined ? [] : [live];
+        });
+        const chosen = yield* chooseCard(ctx, {
+          player: controller.id,
+          prompt: `${source.name}: you may return one of them to its owner's hand`,
+          cards: members,
+          type: 'returnToHand',
+          verb: 'Return',
+          decline: { type: 'decline', description: 'Return none', verb: 'Skip' },
+        });
+        if (chosen !== null) yield* moveObject(ctx, chosen, { zone: 'hand' });
+        break;
+      }
       case 'createTokenCopyOf':
       case 'createTokenCopyOfEventGroupMember': {
         const copyOptions: Partial<Extract<Effect, { op: 'createTokenCopyOf' }>> =
@@ -6930,6 +6985,18 @@ export function* executeAbility(
         });
         break;
       }
+      case 'attackLifeTaxUntilYourNextTurn':
+        (ctx.state.attackLifeTaxes ??= []).push({
+          id: `alt-${ctx.state.nextObjectNum++}`,
+          controllerId: controller.id,
+          amount: effect.amount,
+          expires: {
+            kind: 'untilNextTurn',
+            playerId: controller.id,
+            setTurn: ctx.state.turnNumber,
+          },
+        });
+        break;
       case 'chooseOpponentForSource': {
         const opponents = opponentsOf(ctx, controller.id);
         if (opponents.length === 0) break;
@@ -9037,7 +9104,10 @@ function* lookAtTopN(
       const outcome = yield {
         decisionType: 'general',
         player: player.id,
-        prompt: `${source.name}: you may put a card from among the top ${looked.length} ${where}.`,
+        prompt:
+          mayPut.required === true
+            ? `${source.name}: put a card from among the top ${looked.length} ${where}.`
+            : `${source.name}: you may put a card from among the top ${looked.length} ${where}.`,
         options: [
           ...eligible.map((card) =>
             cardOption(ctx, card, {
@@ -9047,12 +9117,16 @@ function* lookAtTopN(
               verb: `Put ${where}`,
             }),
           ),
-          plainOption({
-            type: 'decline',
-            description: 'Put none of them',
-            verb: 'Put none of them',
-            role: 'decline',
-          }),
+          ...(mayPut.required === true
+            ? []
+            : [
+                plainOption({
+                  type: 'decline',
+                  description: 'Put none of them',
+                  verb: 'Put none of them',
+                  role: 'decline',
+                }),
+              ]),
         ],
       };
       if (outcome.index < eligible.length) taken = eligible[outcome.index];
@@ -9126,6 +9200,8 @@ function* lookAtTopN(
   let ordered = rest;
   if (effect.rest === 'topAnyOrder') {
     ordered = yield* orderForLibrary(ctx, source, player, rest, 'top');
+  } else if (effect.rest === 'bottomAnyOrder') {
+    ordered = yield* orderForLibrary(ctx, source, player, rest, 'bottom');
   } else {
     ctx.rng.shuffle(ordered);
   }
