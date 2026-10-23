@@ -3097,6 +3097,7 @@ function castSpellSnapshot(
     definition: def,
     ...(spell.ability === null ? {} : { ability: spell.ability }),
     ...(spell.announcedX === undefined ? {} : { announcedX: spell.announcedX }),
+    ...(spell.giftRecipientId === undefined ? {} : { giftRecipientId: spell.giftRecipientId }),
     ...(spell.countTargets === undefined
       ? {}
       : {

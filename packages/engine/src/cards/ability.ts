@@ -902,6 +902,8 @@ export type Effect =
         definition?: import('./definition').CardDefinition;
         ability?: Ability;
         announcedX?: number;
+        /** The opponent promised a gift as it was cast (CR 702.174); a copy keeps the promise. */
+        giftRecipientId?: PlayerId;
         countTargets?: Record<number, string[]>;
         divisionAmounts?: Record<string, number>;
         optionalCostCounts?: Partial<

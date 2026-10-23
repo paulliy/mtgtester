@@ -387,6 +387,7 @@ const shapes = {
         definition: { node: 'CardDefinition' },
         ability: { node: 'Ability' },
         announcedX: leaf,
+        giftRecipientId: leaf,
         countTargets: { record: { array: leaf } },
         divisionAmounts: { record: leaf },
         optionalCostCounts: { record: leaf },
