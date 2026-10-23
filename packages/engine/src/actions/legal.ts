@@ -18,6 +18,7 @@ export {
   permanentManaValue,
 } from '../targets/legality';
 import { activationManaSources } from '../mana/activation';
+import { manualManaOptions, type ActivateManaAbilityPayload } from '../mana/manual';
 import {
   abilityModeLabel,
   abilityModeTargetSlots,
@@ -156,6 +157,8 @@ export type PriorityActionPayload =
       modes?: number[];
     }
   | { kind: 'companionToHand' }
+  /** Activate a mana ability by hand (CR 605.3a, ADR 0030). */
+  | ActivateManaAbilityPayload
   /** Foretell (CR 702.143a): pay {2} and exile this hand card face down. */
   | { kind: 'foretell'; objectId: ObjectId }
   /**
@@ -2082,6 +2085,9 @@ export function computePriorityOptions(
       payload: { kind: 'companionToHand' },
     });
   }
+
+  // Mana abilities by hand, for a player who asked for them (ADR 0030).
+  if (player.manualMana === true) options.push(...manualManaOptions(ctx, player));
 
   // Strategic usefulness belongs to the decision provider, not legal-action generation.
   return options;

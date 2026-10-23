@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 import CardPreviewOverlay from './components/CardPreviewOverlay.vue';
 import { useCardPreviewStore } from './stores/cardPreview';
 import { useGameStore } from './stores/game';
 
 const cardPreview = useCardPreviewStore();
 const game = useGameStore();
+const route = useRoute();
 const showCardTestLab = import.meta.env['DEV'] === true;
 
 /**
@@ -44,7 +45,10 @@ onUnmounted(() => {
       <RouterLink to="/debug">Debug</RouterLink>
       <RouterLink to="/batch">Batch</RouterLink>
       <RouterLink v-if="showCardTestLab" to="/card-test-lab">Card Test Lab</RouterLink>
-      <span class="brand">MTG Commander AI Simulator</span>
+      <!-- The board view fills this with the game's status (round, phase, priority) via a
+           Teleport, so the board itself keeps the space a second header bar would take. -->
+      <div id="top-bar-status" class="status-slot" />
+      <span v-if="route.name !== 'game'" class="brand">MTG Commander AI Simulator</span>
     </nav>
     <main class="view">
       <RouterView />
@@ -75,7 +79,8 @@ onUnmounted(() => {
 }
 nav {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
   padding: 0.4rem 0.8rem;
   border-bottom: 1px solid var(--line);
@@ -89,6 +94,16 @@ nav a {
 nav a.router-link-active {
   color: var(--text);
   font-weight: 600;
+}
+.status-slot {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.status-slot:empty {
+  display: none;
 }
 .brand {
   margin-left: auto;

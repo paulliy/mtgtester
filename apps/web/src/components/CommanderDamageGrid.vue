@@ -5,9 +5,14 @@
  * shades as it approaches.
  */
 import { computed } from 'vue';
-import type { SpectatorState } from '@mtg/shared';
+import type { SpectatorSeat, SpectatorState } from '@mtg/shared';
 
-const props = defineProps<{ state: SpectatorState }>();
+/** Only the seats' ids and commanders are read, so the player board's seats fit as well. */
+const props = defineProps<{
+  state: Pick<SpectatorState, 'commanderDamage'> & {
+    seats: readonly Pick<SpectatorSeat, 'seat' | 'commanders'>[];
+  };
+}>();
 
 const LETHAL = 21;
 

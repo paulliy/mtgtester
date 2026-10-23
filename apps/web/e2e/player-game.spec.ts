@@ -49,7 +49,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await preview.getByRole('button', { name: 'Play' }).click();
   await expect(page).toHaveURL(/\/game$/);
 
-  await page.getByRole('button', { name: 'Keep this hand' }).click({ timeout: 60_000 });
+  await page.getByRole('button', { name: /^Keep \d+$/ }).click({ timeout: 60_000 });
 
   const playable = page.locator('.playable-now');
   const playForest = playable.getByRole('button', { name: /^Play Forest(?: ×\d+)?$/ }).first();
@@ -128,6 +128,7 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   await page.getByRole('button', { name: 'Pass anyway' }).click();
   await expect(reminder).toBeHidden();
 
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Abandon', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm Abandon' }).click();
   await expect(page).toHaveURL(/\/$/);

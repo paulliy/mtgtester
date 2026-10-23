@@ -4,7 +4,8 @@
  * only, brief §10.2), the battlefield split into Board/Lands — and, expanded via the "zones"
  * toggle, the graveyard and exile.
  */
-import { computed, ref } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import type {
   CommanderDamageEntry,
   SpectatorCard,
@@ -12,11 +13,14 @@ import type {
   SpectatorSeat,
 } from '@mtg/shared';
 import CardImage from './CardImage.vue';
+import DeckColors from './DeckColors.vue';
 import GlobalCounters from './GlobalCounters.vue';
 import HandStrip from './HandStrip.vue';
 import PermanentChip from './PermanentChip.vue';
 import ZoneStrip from './ZoneStrip.vue';
+import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useLifeFlash } from '../composables/useLifeFlash';
+import { useCardPreviewStore } from '../stores/cardPreview';
 import { groupPermanents, type GroupedPermanent } from '../lib/stackPermanents';
 
 const props = defineProps<{
@@ -33,11 +37,30 @@ const props = defineProps<{
 }>();
 
 const zonesExpanded = ref(false);
+const cardPreview = useCardPreviewStore();
+
+/** The seat is labelled by its commander, so hovering the label shows that commander's card. */
+function previewCommander(
+  commander: { scryfallId: string | null; name: string },
+  event: MouseEvent,
+): void {
+  cardPreview.show({ scryfallId: commander.scryfallId, name: commander.name });
+  cardPreview.updateCursor(event.clientX, event.clientY);
+}
+function moveCommanderPreview(event: MouseEvent): void {
+  cardPreview.updateCursor(event.clientX, event.clientY);
+}
+function hideCommanderPreview(): void {
+  cardPreview.hide();
+}
+/** Each commander's own tax: partners are taxed separately (CR 903.8). */
+const taxedCommanders = computed(() =>
+  props.seat.commanders.filter((commander) => commander.taxGeneric > 0),
+);
 const ZONES_CAP = 6;
 
 const lands = computed(() => props.permanents.filter((p) => p.typeLine.includes('Land')));
 const nonlands = computed(() => props.permanents.filter((p) => !p.typeLine.includes('Land')));
-const untappedLands = computed(() => lands.value.filter((p) => !p.tapped).length);
 
 const lifeFlash = useLifeFlash(() => props.seat.life);
 
@@ -64,17 +87,67 @@ const flexStyles = computed(() => {
   if (l === 0) return { nonlandsFlex: 1, landsFlex: 0 };
   return { nonlandsFlex: 1.4, landsFlex: 1 };
 });
+
+/**
+ * This seat's board is where an attack on it points: the combat overlay draws each attack arrow
+ * across the border between the attacker's board and this one. One stable ref function, so
+ * re-renders don't re-register the anchor.
+ */
+const { registerAnchor, unregisterAnchor } = useBoardAnchors();
+function setSeatEl(el: Element | ComponentPublicInstance | null): void {
+  if (el instanceof HTMLElement) registerAnchor(props.seat.seat, el);
+}
+onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
 </script>
 
 <template>
   <section
+    :ref="setSeatEl"
     class="seat"
     :class="{ active: isActive, priority: hasPriority, eliminated }"
     :data-seat="seat.seat"
   >
     <header>
       <span class="id-badge">{{ seat.seat }}</span>
-      <span class="label">{{ seat.label }}</span>
+      <span
+        v-for="cmd in seat.commanders"
+        :key="cmd.cardId"
+        class="cmdr-thumb"
+        @mouseenter="previewCommander(cmd, $event)"
+        @mousemove="moveCommanderPreview"
+        @mouseleave="hideCommanderPreview"
+      >
+        <CardImage :scryfall-id="cmd.scryfallId" :name="cmd.name" size="small" />
+      </span>
+      <span
+        class="label"
+        :class="{ 'has-preview': seat.commanders.length > 0 }"
+        @mouseenter="seat.commanders[0] && previewCommander(seat.commanders[0], $event)"
+        @mousemove="moveCommanderPreview"
+        @mouseleave="hideCommanderPreview"
+        >{{ seat.label }}</span
+      >
+      <DeckColors :commanders="seat.commanders" />
+      <span class="meta-item" title="Cards in library"
+        ><strong>lib</strong> {{ seat.librarySize }}</span
+      >
+      <span class="meta-item" title="Cards in graveyard"
+        ><strong>gy</strong> {{ seat.graveyard.length }}</span
+      >
+      <span class="meta-item" title="Cards in exile"
+        ><strong>exile</strong> {{ exileCards.length }}</span
+      >
+      <span v-if="seat.mulligansTaken > 0" class="meta-item" title="Mulligans taken"
+        ><strong>mull</strong> {{ seat.mulligansTaken }}</span
+      >
+      <span class="spacer" />
+      <span
+        v-for="commander in taxedCommanders"
+        :key="commander.cardId"
+        class="cmdr-tax"
+        :title="`Commander tax: casting ${commander.name} from the command zone costs {${commander.taxGeneric}} more`"
+        >+{{ commander.taxGeneric }}</span
+      >
       <span
         v-if="isMonarch"
         class="monarch-badge"
@@ -86,6 +159,14 @@ const flexStyles = computed(() => {
         <span class="dot" />
         <span class="ping" />
       </span>
+      <button
+        type="button"
+        class="zones-toggle"
+        :aria-expanded="zonesExpanded"
+        @click="zonesExpanded = !zonesExpanded"
+      >
+        {{ zonesExpanded ? '▾ zones' : '▸ zones' }}
+      </button>
       <span
         class="life-badge"
         :class="{
@@ -105,16 +186,6 @@ const flexStyles = computed(() => {
       compact
     />
 
-    <div class="meta">
-      <span class="meta-item"><strong>lib</strong> {{ seat.librarySize }}</span>
-      <span class="meta-item"><strong>gy</strong> {{ seat.graveyard.length }}</span>
-      <span class="meta-item"><strong>exile</strong> {{ exileCards.length }}</span>
-      <span class="meta-item"><strong>lands</strong> {{ untappedLands }}/{{ lands.length }}</span>
-      <span v-if="seat.mulligansTaken > 0" class="meta-item"
-        ><strong>mull</strong> {{ seat.mulligansTaken }}</span
-      >
-    </div>
-
     <div v-if="cmdDamageTaken.length > 0" class="cmd-damage-container">
       <span
         v-for="entry in cmdDamageTaken"
@@ -124,20 +195,6 @@ const flexStyles = computed(() => {
       >
         ⚔ {{ entry.damage }} cmd dmg (from {{ entry.sourceSeat }} {{ entry.sourceName }})
       </span>
-    </div>
-
-    <div v-if="seat.commanders.length > 0" class="commander-row">
-      <template v-for="cmd in seat.commanders" :key="cmd.cardId">
-        <div class="cmdr-thumb">
-          <CardImage :scryfall-id="cmd.scryfallId" :name="cmd.name" size="small" />
-        </div>
-        <span class="cmdr-tag">CMDR</span>
-        <span class="cmdr-name">{{ cmd.name }}</span>
-        <span v-if="cmd.taxGeneric > 0" class="cmdr-tax">+{{ cmd.taxGeneric }}</span>
-      </template>
-      <button type="button" class="zones-toggle" @click="zonesExpanded = !zonesExpanded">
-        {{ zonesExpanded ? '▾ zones' : '▸ zones' }}
-      </button>
     </div>
 
     <div class="battlefield-grid">
@@ -168,12 +225,13 @@ const flexStyles = computed(() => {
       <p v-if="permanents.length === 0" class="empty">no permanents on battlefield</p>
     </div>
 
-    <div class="hand-section">
-      <div class="hand-header">
-        <span>HAND ({{ seat.hand.length }})</span>
-        <span class="spectator-badge">SPECTATOR VIEW</span>
+    <!-- The hand is a one-line handle; hovering or focusing it pops the cards up over the board,
+         so the battlefield keeps the height a permanent hand row took. -->
+    <div class="hand-section" :tabindex="seat.hand.length > 0 ? 0 : undefined">
+      <div class="hand-header">Hand ({{ seat.hand.length }})</div>
+      <div v-if="seat.hand.length > 0" class="hand-popup">
+        <HandStrip :cards="seat.hand" />
       </div>
-      <HandStrip :cards="seat.hand" />
     </div>
 
     <div v-if="zonesExpanded" class="detail">
@@ -215,6 +273,8 @@ const flexStyles = computed(() => {
 }
 header {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
@@ -228,7 +288,7 @@ header {
   border-radius: 3px;
 }
 .label {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 0.82rem;
   font-weight: 600;
@@ -292,13 +352,15 @@ header {
   color: var(--danger);
   text-transform: uppercase;
 }
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+/* Pushes the tax, monarch, priority, zones and life to the header's right end. */
+.spacer {
+  flex: 1;
+}
+.meta-item {
+  flex-shrink: 0;
   font-size: 0.66rem;
   color: var(--text-muted);
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 .meta-item strong {
   color: var(--muted);
@@ -321,42 +383,24 @@ header {
   padding: 0.1rem 0.35rem;
   border-radius: 3px;
 }
-.commander-row {
-  display: flex;
-  align-items: center;
-  gap: 0.32rem;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-  background: rgb(96 165 250 / 0.08);
-  border: 1px solid rgb(96 165 250 / 0.2);
-  border-radius: 4px;
-  padding: 0.12rem 0.4rem 0.12rem 0.15rem;
-}
 .cmdr-thumb {
   width: 22px;
   flex-shrink: 0;
   border-radius: 3px;
   overflow: hidden;
   border: 1px solid rgb(96 165 250 / 0.4);
-}
-.cmdr-tag {
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: var(--accent);
-  letter-spacing: 0.03em;
-}
-.cmdr-name {
-  font-weight: 600;
-  font-size: 0.7rem;
-  color: var(--text);
+  cursor: zoom-in;
 }
 .cmdr-tax {
   color: var(--warn);
   font-size: 0.7rem;
   font-weight: 700;
 }
+.label.has-preview {
+  cursor: zoom-in;
+}
 .zones-toggle {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.62rem;
   padding: 0.05rem 0.4rem;
   color: var(--muted);
@@ -393,12 +437,16 @@ header {
   margin-bottom: 0.2rem;
   flex-shrink: 0;
 }
+/* Landscape art tiles: about five rows fit a seat panel now that the board has the window. */
 .chips-grid {
+  --chip-w: 120px;
   position: relative;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 0.3rem;
+  /* Room for a stack's ×N badge, which sits over the top corner of its tile. */
+  padding-top: 6px;
 }
 /* Token creation / death-and-zone-change feedback (§9.8.2): brief scale-in/fade-out rather than
    an instant appear/disappear. The reduced-motion global override collapses these to ~0s. */
@@ -417,26 +465,48 @@ header {
   position: absolute;
 }
 .hand-section {
+  position: relative;
   flex-shrink: 0;
   border-top: 1px solid var(--line);
   padding-top: 0.25rem;
 }
 .hand-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   font-size: 0.62rem;
   font-weight: 700;
+  text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 0.15rem;
 }
-.spectator-badge {
-  color: var(--danger);
-  font-weight: 600;
-  font-size: 0.58rem;
-  background: rgb(248 113 113 / 0.12);
-  padding: 0.05rem 0.3rem;
-  border-radius: 2px;
+.hand-section[tabindex]:hover .hand-header,
+.hand-section[tabindex]:focus-within .hand-header {
+  color: var(--text);
+}
+/* Pops up over the board from the handle; the gap is bridged by padding so moving the pointer
+   from the handle into the cards never drops the hover. */
+.hand-popup {
+  display: none;
+  position: absolute;
+  left: -0.3rem;
+  right: -0.3rem;
+  bottom: 100%;
+  z-index: 20;
+  padding-bottom: 0.3rem;
+}
+.hand-section:hover .hand-popup,
+.hand-section:focus-within .hand-popup {
+  display: block;
+}
+.hand-popup > :deep(*) {
+  width: fit-content;
+  box-sizing: border-box;
+  padding: 0.4rem;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+/* Popped up, the cards are big enough to read; the board strip's 40px thumbs are not. */
+.hand-popup :deep(.thumb) {
+  width: 92px;
 }
 .detail {
   border-top: 1px solid var(--line);

@@ -475,6 +475,61 @@ describe('MatchSession - Phase 6 single-player control', () => {
     expect(sent.some((message) => message.type === 'replayUnlocked')).toBe(false);
   });
 
+  it('offers the human its mana abilities, and never stops for them alone (ADR 0030)', async () => {
+    const sent: ServerToClientMessage[] = [];
+    const session = new MatchSession({
+      gameId: 'g-player-mana',
+      seed: 'player-mana',
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'singlePlayer',
+      humanSeat: 'P1',
+      turnCap: 40,
+      livePaceMs: 0,
+      send: (message) => sent.push(message),
+    });
+    const chooser = new RandomDecisionProvider('browser-mana');
+    const quiet = ['pass', 'passAndYieldTurn', 'yieldToAbility', 'activateManaAbility'];
+    let consumed = 0;
+    let offered = false;
+    session.start();
+
+    const deadline = Date.now() + 10_000;
+    // Forty human decisions is plenty to see the offer, and to see no stop made for it alone.
+    while (
+      !sent.some((message) => message.type === 'gameOver') &&
+      !(offered && consumed >= 40) &&
+      Date.now() < deadline
+    ) {
+      const required = sent.filter(
+        (message): message is Extract<ServerToClientMessage, { type: 'playerActionRequired' }> =>
+          message.type === 'playerActionRequired',
+      );
+      const next = required[consumed];
+      if (next === undefined) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        continue;
+      }
+      consumed += 1;
+      const { request } = next.payload;
+      if (request.decisionType === 'priority') {
+        const types = request.legalActions.map((action) => action.type);
+        if (types.includes('activateManaAbility')) offered = true;
+        expect(types.every((type) => quiet.includes(type))).toBe(false);
+      }
+      const response = chooser.decide(request);
+      session.submitPlayerAction({
+        requestId: response.requestId,
+        actionId: response.actionId,
+        revision: next.payload.revision,
+        ...(response.targets !== undefined ? { targets: response.targets } : {}),
+      });
+    }
+    session.abandon();
+    await session.settled();
+    expect(offered).toBe(true);
+  }, 15_000);
+
   it('refuses timeline seeking before a player game has ended', () => {
     const sent: ServerToClientMessage[] = [];
     const session = new MatchSession({

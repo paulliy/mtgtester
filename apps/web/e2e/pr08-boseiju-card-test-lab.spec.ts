@@ -57,7 +57,7 @@ for (const [index, id] of BOSEIJU_SCENARIO_IDS.entries()) {
     await expect(artifact).toHaveCount(0, { timeout: 15_000 });
     await expect(handCard(page, 'Boseiju, Who Endures')).toHaveCount(0);
     await expect(
-      page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+      page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
     ).toContainText('1');
     if (id === BOSEIJU_SCENARIO_IDS[1]) {
       const forest = opponentPermanent(page, 'Forest');

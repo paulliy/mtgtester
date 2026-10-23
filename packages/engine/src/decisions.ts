@@ -77,12 +77,21 @@ function isPassOption(opt: EngineActionOption): boolean {
 }
 
 /**
+ * A priority option that alone never makes a window worth stopping for: a pass, or activating
+ * a mana ability by hand (ADR 0030). Mana with nothing to spend it on empties at the end of the
+ * step, so a menu of only these is a quiet window, as it was before mana could be made by hand.
+ */
+function isQuietPriorityOption(opt: EngineActionOption): boolean {
+  return isPassOption(opt) || opt.type === 'activateManaAbility';
+}
+
+/**
  * True when a pending decision has no real choice: a single option whose every target
  * slot has at most one candidate, or a priority window where all options are pass variations.
  * The pump resolves these itself (brief §5.1).
  */
 export function isForced(decision: PendingDecision): boolean {
-  if (decision.decisionType === 'priority' && decision.options.every(isPassOption)) {
+  if (decision.decisionType === 'priority' && decision.options.every(isQuietPriorityOption)) {
     return true;
   }
   if (!decision.options || decision.options.length !== 1) return false;
@@ -92,7 +101,7 @@ export function isForced(decision: PendingDecision): boolean {
 
 /** Build the outcome for a forced decision. */
 export function forcedOutcome(decision: PendingDecision): DecisionOutcome {
-  if (decision.decisionType === 'priority' && decision.options.every(isPassOption)) {
+  if (decision.decisionType === 'priority' && decision.options.every(isQuietPriorityOption)) {
     return { index: 0, targets: new Map() };
   }
   const only = decision.options[0] as EngineActionOption;

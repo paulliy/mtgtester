@@ -230,7 +230,7 @@ test('pr09-szarekh-the-silent-king-viewer-positive', async ({ page }) => {
   await choice.click();
   await expect(hand(page, 'Lab Vehicle')).toBeVisible();
   await expect(
-    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+    page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
   ).toContainText('2');
 });
 
@@ -242,7 +242,7 @@ test('pr09-szarekh-the-silent-king-viewer-negative', async ({ page }) => {
   if (await decline.isVisible()) await decline.click();
   await expect(permanent(page, 'P1', 'Lab Old Artifact Creature')).toHaveCount(0);
   await expect(
-    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+    page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
   ).toContainText('4');
 });
 
@@ -274,7 +274,7 @@ test('pr09-szarekh-the-silent-king-viewer-replaced-mill', async ({ page }) => {
   await expect(exile.getByRole('img', { name: 'Lab Milled Three', exact: true })).toBeVisible();
   await expect(exile.getByRole('img', { name: 'Lab Vehicle', exact: true })).toHaveCount(0);
   await expect(
-    page.locator('.human-zone .resource').filter({ hasText: 'Graveyard' }),
+    page.locator('.human-zone .meta-item').filter({ hasText: 'Graveyard' }),
   ).toContainText('0');
 });
 

@@ -115,6 +115,7 @@ export function createGame(config: GameConfig): GameContext {
       companionMovedToHand: false,
       yieldUntilEndOfTurn: false,
       yieldedAbilities: [],
+      ...(pc.manualMana === true ? { manualMana: true } : {}),
     };
   });
 
