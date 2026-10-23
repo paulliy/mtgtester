@@ -2037,6 +2037,20 @@ test('War Room: dynamic commander identity life activation', async ({ page }) =>
   // Your resources sit in the top bar.
   await expect(page.locator('#top-bar-status')).toContainText(/Mana ready\s*\d/);
 
+  // Tap a Forest by hand (ADR 0030): its {G} floats, and War Room's {3} spends it first, so only
+  // two more Forests tap for it below.
+  const untappedForests = page
+    .locator('.human-zone .object')
+    .filter({ has: page.getByRole('img', { name: 'Forest', exact: true }) })
+    .filter({ hasNot: page.locator('.tile.tapped') });
+  await expect(untappedForests.locator('.mana-tap')).toHaveCount(1);
+  await untappedForests.click();
+  await expect(page.locator('#top-bar-status')).toContainText(/Floating\s*1G/);
+  await expect(
+    page.locator('.player-game .log .line .text', { hasText: 'adds {G} with Forest' }),
+  ).toHaveCount(1);
+  await expect(room).toHaveClass(/actionable/);
+
   await room.click();
   await expect(page.getByText('Activate War Room')).toBeVisible();
   await confirm(page);

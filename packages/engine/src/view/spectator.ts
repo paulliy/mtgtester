@@ -397,6 +397,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'foretold':
       return { ...base, text: 'foretells a card' };
 
+    case 'manaAbilityActivated':
+      return {
+        ...base,
+        text: `adds ${str(p, 'mana') ?? 'mana'} with ${str(p, 'name') ?? 'a permanent'}`,
+      };
+
     case 'turnedFaceUp':
       return { ...base, text: `turns ${str(p, 'name') ?? 'a permanent'} face up` };
 

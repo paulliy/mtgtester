@@ -25,7 +25,7 @@ import { actionLabel } from '../lib/actionLabels';
 import { isTokenTypeLine } from '../lib/card';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { playerFacingPrompt, turnPositionLabel } from '../lib/turnLabels';
-import { groupPermanents } from '../lib/stackPermanents';
+import { groupPermanents, stackKey } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
 import { useGameStore } from '../stores/game';
@@ -391,9 +391,14 @@ function sourceId(action: LegalAction): string | null {
   return null;
 }
 
+/**
+ * Every source action but making mana by hand (ADR 0030): that lives on the land itself, in the
+ * open lands pile, so untapped lands never glow, crowd "Playable now", or hold up a pass.
+ */
 const sourceActions = computed(() =>
   (request.value?.legalActions ?? []).filter(
-    (action) => !isImmediate(action) && sourceId(action) !== null,
+    (action) =>
+      !isImmediate(action) && sourceId(action) !== null && action.type !== 'activateManaAbility',
   ),
 );
 const selectedSourceActions = computed(() =>
@@ -754,6 +759,57 @@ const exileShown = computed(
   () =>
     pilesOpen.value.exile || humanExile.value.some((card) => zoneTargetIds.value.includes(card.id)),
 );
+/**
+ * Mana you can make by hand right now, by the permanent that makes it (ADR 0030). Not while a
+ * spell's targets are being chosen or combat is being declared: a click there means that.
+ */
+const manaActionsBySource = computed(() => {
+  const bySource = new Map<string, LegalAction[]>();
+  if (selectedAction.value !== null || combatPlan.mode === 'composing') return bySource;
+  for (const action of request.value?.legalActions ?? []) {
+    if (action.type !== 'activateManaAbility' || action.interaction?.kind !== 'source') continue;
+    const id = action.interaction.sourceId;
+    bySource.set(id, [...(bySource.get(id) ?? []), action]);
+  }
+  return bySource;
+});
+/**
+ * The mana a stacked tile of identical lands can make: that of its first member that can, so
+ * clicking "×6 Forest" taps one untapped Forest.
+ */
+const landManaByGroup = computed(() => {
+  const byGroup = new Map<string, LegalAction[]>();
+  for (const group of humanLandGroups.value) {
+    const key = stackKey(group.permanent);
+    const member = humanLands.value.find(
+      (land) => stackKey(land) === key && manaActionsBySource.value.has(land.id),
+    );
+    byGroup.set(group.permanent.id, member ? manaActionsBySource.value.get(member.id)! : []);
+  }
+  return byGroup;
+});
+function manaSymbols(action: LegalAction): string[] {
+  const symbols = actionData(action, 'symbols');
+  return Array.isArray(symbols) ? symbols.filter((s): s is string => typeof s === 'string') : [];
+}
+function tapForMana(action: LegalAction): void {
+  store.submitPlayerAction(action.id);
+}
+/**
+ * A land tile in the open pile: one that only makes one kind of mana taps for it; anything else
+ * (a choice of colors, another ability, a target being chosen) goes through the usual source
+ * flow, with the mana buttons on the tile alongside.
+ */
+function clickLand(id: ObjectId): void {
+  const mana = landManaByGroup.value.get(id) ?? [];
+  const hasOther = sourceActions.value.some((action) => sourceId(action) === id);
+  if (mana.length === 1 && !hasOther) {
+    tapForMana(mana[0]!);
+    return;
+  }
+  selectSource(id);
+}
+
 function pileGlow(ids: readonly string[], targetIds: readonly string[]) {
   if (ids.some((id) => targetIds.includes(id))) return 'targetable' as const;
   if (ids.some((id) => actionableSourceIds.value.has(id as ObjectId))) return 'actionable' as const;
@@ -1582,19 +1638,43 @@ function abandon(): void {
                       'chosen-target': isChosenTarget(group.permanent.id),
                       'payment-source': isPaymentSource(group.permanent.id),
                       actionable: actionableSourceIds.has(group.permanent.id),
+                      'makes-mana': (landManaByGroup.get(group.permanent.id) ?? []).length > 0,
                     }"
                     draggable="true"
                     @dragstart="dragStart(group.permanent.id, $event)"
                     @dragend="dragEnd"
                     @dragover.prevent
                     @drop.stop="dropOn(group.permanent.id)"
-                    @click="selectSource(group.permanent.id)"
+                    @click="clickLand(group.permanent.id)"
                   >
                     <PermanentChip
                       :permanent="group.permanent"
                       :count="group.count"
                       :name-by-id="nameById"
                     />
+                    <!-- Tap it for mana by hand: one button per kind of mana it can make. -->
+                    <div
+                      v-if="(landManaByGroup.get(group.permanent.id) ?? []).length > 0"
+                      class="mana-taps"
+                    >
+                      <button
+                        v-for="action in landManaByGroup.get(group.permanent.id)"
+                        :key="action.id"
+                        type="button"
+                        class="mana-tap"
+                        :title="`Tap for ${action.description.split(': add ')[1] ?? 'mana'}`"
+                        :aria-label="`Tap ${action.description}`"
+                        @click.stop="tapForMana(action)"
+                      >
+                        <span
+                          v-for="(symbol, i) in manaSymbols(action)"
+                          :key="i"
+                          class="mana-dot"
+                          :class="`mana-${symbol}`"
+                          >{{ symbol }}</span
+                        >
+                      </button>
+                    </div>
                   </div>
                 </TransitionGroup>
               </template>
@@ -2549,6 +2629,37 @@ button.selected,
 }
 .pile-close:hover {
   color: var(--text);
+}
+/* A land you can tap by hand: its mana buttons sit over the art's bottom-left corner. */
+.object.makes-mana {
+  position: relative;
+}
+.mana-taps {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  display: flex;
+  gap: 2px;
+}
+.mana-tap {
+  display: inline-flex;
+  gap: 1px;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(28 25 23 / 0.75);
+  cursor: pointer;
+}
+.mana-tap:hover {
+  background: var(--accent);
+}
+.mana-tap .mana-dot {
+  width: 16px;
+  height: 16px;
+  font-size: 0.6rem;
+}
+.mana-tap .mana-dot:first-of-type {
+  margin-left: 0;
 }
 /* Graveyard and exile piles at the row's right end. */
 .piles {
