@@ -191,6 +191,7 @@ const SOURCE_FILES = [
   'packages/engine/src/stack/stack.ts',
   'packages/engine/src/state/game.ts',
   'packages/engine/src/state/objects.ts',
+  'packages/engine/src/state/off-battlefield-types.ts',
   'packages/engine/src/state/queries.ts',
   'packages/engine/src/testing/prepared-scenario.ts',
   'packages/engine/src/turn/mulligan.ts',
